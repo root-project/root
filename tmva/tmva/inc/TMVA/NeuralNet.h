@@ -70,6 +70,68 @@ int randomInt (int maxValue);
 
 
 
+class MeanVariance
+{
+public:
+    MeanVariance() 
+    : m_n(0)
+    , m_sumWeights(0)
+    , m_sumWeightsSquared(0)
+    , m_mean(0)
+    , m_squared(0)
+    {}
+
+    inline void clear() 
+    { 
+        m_n = 0; 
+        m_sumWeights = 0;
+        m_sumWeightsSquared = 0;
+    }
+
+    template <typename T>
+        inline void add(T value, double weight = 1.0)
+    {
+        m_n++; // a value has been added
+
+        double dValue = (double)value;
+        if (m_n == 1) // initialization
+        {
+            m_mean = dValue;
+            m_squared = 0.0;
+            m_sumWeightsSquared = weight*weight;
+            m_sumWeights = weight;
+            return;
+        }
+
+        double tmpWeight = m_sumWeights+weight;
+        double diff      = dValue - m_mean;
+
+        double tmp = diff*weight/tmpWeight;
+        m_mean    = m_mean + tmp;
+        m_squared = m_squared + tmpWeight*diff*tmp;
+
+        m_sumWeights = tmpWeight;
+        m_sumWeightsSquared += weight*weight;
+    }
+
+
+
+    inline int    count()      const { return m_n; }
+    inline double weights()    const { if(m_n==0) return 0; return m_sumWeights; }
+    inline double mean()       const { if(m_n==0) return 0; return m_mean; }
+    inline double var_N() const { if(m_n==0) return 0; return (m_squared/m_sumWeights); }
+//        inline double var ()   const { return (Variance_N()*m_n/(m_n-1)); }    // unbiased for small sample sizes
+    inline double var ()   const { if(m_n==0) return 0; if(m_squared<=0) return 0.0; return (m_squared*m_sumWeights/(m_sumWeights*m_sumWeights-m_sumWeightsSquared)); }    // unbiased for small sample sizes
+    inline double stdDev_N () const { return sqrt( var_N() ); }
+    inline double stdDev ()   const { return sqrt( var() ); } // unbiased for small sample sizes
+
+private:
+    size_t m_n;
+    double m_sumWeights;
+    double m_sumWeightsSquared;
+    double m_mean;
+    double m_squared;
+};
 
 
 
@@ -84,8 +146,7 @@ enum class EnumFunction
     SIGMOID = 's',
     SOFTSIGN = 'S',
     GAUSS = 'G',
-    GAUSSCOMPLEMENT = 'C',
-    DOUBLEINVERTEDGAUSS = 'D'
+    GAUSSCOMPLEMENT = 'C'
 };
 
 
@@ -98,10 +159,31 @@ enum class EnumRegularization
 
 enum class ModeOutputValues
 {
-    DIRECT = 'd',
-    SIGMOID = 's',
-    SOFTMAX = 'S'
+    DIRECT = 0x01,
+    SIGMOID = 0x02,
+    SOFTMAX = 0x04,
+    BATCHNORMALIZATION = 0x08
 };
+
+
+
+inline ModeOutputValues operator| (ModeOutputValues lhs, ModeOutputValues rhs)
+{
+    return (ModeOutputValues)(static_cast<std::underlying_type_t<ModeOutputValues>>(lhs) | static_cast<std::underlying_type_t<ModeOutputValues>>(rhs));
+}
+
+inline ModeOutputValues operator|= (ModeOutputValues& lhs, ModeOutputValues rhs)
+{
+    lhs = (ModeOutputValues)(static_cast<std::underlying_type_t<ModeOutputValues>>(lhs) | static_cast<std::underlying_type_t<ModeOutputValues>>(rhs));
+    return lhs;
+}
+
+template <typename T>
+    bool isFlagSet (T flag, T value)
+{
+    return (value & flag) != 0;
+}
+
 
 
 class Net;
@@ -373,8 +455,8 @@ public:
     LayerData (size_t size, 
 	       const_iterator_type itWeightBegin, 
 	       iterator_type itGradientBegin, 
-	       const_function_iterator_type itFunctionBegin, 
-	       const_function_iterator_type itInverseFunctionBegin,
+	       std::shared_ptr<std::function<double(double)>> activationFunction, 
+	       std::shared_ptr<std::function<double(double)>> inverseActivationFunction,
 	       ModeOutputValues eModeOutput = ModeOutputValues::DIRECT);
 
    /*! \brief c'tor of LayerData
@@ -391,7 +473,7 @@ public:
     *                    output values (mutually exclusive probability)
     */
     LayerData (size_t size, const_iterator_type itWeightBegin, 
-	       const_function_iterator_type itFunctionBegin, 
+	       std::shared_ptr<std::function<double(double)>> activationFunction, 
 	       ModeOutputValues eModeOutput = ModeOutputValues::DIRECT);
 
    /*! \brief copy c'tor of LayerData
@@ -408,8 +490,8 @@ public:
     , m_hasDropOut (false)
     , m_itConstWeightBegin   (other.m_itConstWeightBegin)
     , m_itGradientBegin (other.m_itGradientBegin)
-    , m_itFunctionBegin (other.m_itFunctionBegin)
-    , m_itInverseFunctionBegin (other.m_itInverseFunctionBegin)
+    , m_activationFunction (other.m_activationFunction)
+    , m_inverseActivationFunction (other.m_inverseActivationFunction)
     , m_isInputLayer (other.m_isInputLayer)
     , m_hasWeights (other.m_hasWeights)
     , m_hasGradients (other.m_hasGradients)
@@ -430,8 +512,8 @@ public:
     , m_hasDropOut (false)
     , m_itConstWeightBegin   (other.m_itConstWeightBegin)
     , m_itGradientBegin (other.m_itGradientBegin)
-    , m_itFunctionBegin (other.m_itFunctionBegin)
-    , m_itInverseFunctionBegin (other.m_itInverseFunctionBegin)
+    , m_activationFunction (other.m_activationFunction)
+    , m_inverseActivationFunction (other.m_inverseActivationFunction)
     , m_isInputLayer (other.m_isInputLayer)
     , m_hasWeights (other.m_hasWeights)
     , m_hasGradients (other.m_hasGradients)
@@ -463,45 +545,57 @@ public:
         m_deltas.assign (m_deltas.size (), 0.0);
     }
 
-    const_iterator_type valuesBegin () const { return m_isInputLayer ? m_itInputBegin : begin (m_values); }
-    const_iterator_type valuesEnd   () const { return m_isInputLayer ? m_itInputEnd   : end (m_values); }
+    const_iterator_type valuesBegin () const { return m_isInputLayer ? m_itInputBegin : begin (m_values); } ///< returns const iterator to the begin of the (node) values
+    const_iterator_type valuesEnd   () const { return m_isInputLayer ? m_itInputEnd   : end (m_values); } ///< returns iterator to the end of the (node) values
     
-    iterator_type valuesBegin () { assert (!m_isInputLayer); return begin (m_values); }
-    iterator_type valuesEnd   () { assert (!m_isInputLayer); return end (m_values); }
+    iterator_type valuesBegin () { assert (!m_isInputLayer); return begin (m_values); }  ///< returns iterator to the begin of the (node) values
+    iterator_type valuesEnd   () { assert (!m_isInputLayer); return end (m_values); } ///< returns iterator to the end of the (node) values
 
-    ModeOutputValues outputMode () const { return m_eModeOutput; }
-    container_type probabilities () { return computeProbabilities (); }
+    ModeOutputValues outputMode () const { return m_eModeOutput; } ///< returns the output mode
+    container_type probabilities () { return computeProbabilities (); } ///< computes the probabilities from the current node values and returns them 
 
-    iterator_type deltasBegin () { return begin (m_deltas); }
-    iterator_type deltasEnd   () { return end   (m_deltas); }
+    iterator_type deltasBegin () { return begin (m_deltas); } ///< returns iterator to the begin of the deltas (back-propagation)
+    iterator_type deltasEnd   () { return end   (m_deltas); } ///< returns iterator to the end of the deltas (back-propagation)
 
-    const_iterator_type deltasBegin () const { return begin (m_deltas); }
-    const_iterator_type deltasEnd   () const { return end   (m_deltas); }
+    const_iterator_type deltasBegin () const { return begin (m_deltas); } ///< returns const iterator to the begin of the deltas (back-propagation)
+    const_iterator_type deltasEnd   () const { return end   (m_deltas); } ///< returns const iterator to the end of the deltas (back-propagation)
 
-    iterator_type valueGradientsBegin () { return begin (m_valueGradients); }
-    iterator_type valueGradientsEnd   () { return end   (m_valueGradients); }
+    iterator_type valueGradientsBegin () { return begin (m_valueGradients); } ///< returns iterator to the begin of the gradients of the node values
+    iterator_type valueGradientsEnd   () { return end   (m_valueGradients); } ///< returns iterator to the end of the gradients of the node values
 
-    const_iterator_type valueGradientsBegin () const { return begin (m_valueGradients); }
-    const_iterator_type valueGradientsEnd   () const { return end   (m_valueGradients); }
+    const_iterator_type valueGradientsBegin () const { return begin (m_valueGradients); } ///< returns const iterator to the begin of the gradients
+    const_iterator_type valueGradientsEnd   () const { return end   (m_valueGradients); } ///< returns const iterator to the end of the gradients
 
-    iterator_type gradientsBegin () { assert (m_hasGradients); return m_itGradientBegin; }
-    const_iterator_type gradientsBegin () const { assert (m_hasGradients); return m_itGradientBegin; }
-    const_iterator_type weightsBegin   () const { assert (m_hasWeights); return m_itConstWeightBegin; }
+    iterator_type gradientsBegin () { assert (m_hasGradients); return m_itGradientBegin; } ///< returns iterator to the begin of the gradients
+    const_iterator_type gradientsBegin () const { assert (m_hasGradients); return m_itGradientBegin; } ///< returns const iterator to the begin of the gradients
+    const_iterator_type weightsBegin   () const { assert (m_hasWeights); return m_itConstWeightBegin; } ///< returns const iterator to the begin of the weights for this layer
 
-    const_function_iterator_type functionBegin () const { return m_itFunctionBegin; }
-    const_function_iterator_type inverseFunctionBegin () const { return m_itInverseFunctionBegin; }
+    std::shared_ptr<std::function<double(double)>> activationFunction () const { return m_activationFunction; }
+    std::shared_ptr<std::function<double(double)>> inverseActivationFunction () const { return m_inverseActivationFunction; }
 
+   /*! \brief set the drop-out info for this layer
+    *
+    */
     template <typename Iterator>
         void setDropOut (Iterator itDrop) { m_itDropOut = itDrop; m_hasDropOut = true; }
+
+    /*! \brief clear the drop-out-data for this layer
+    *
+    * 
+    */
     void clearDropOut () { m_hasDropOut = false; }
     
-    bool hasDropOut () const { return m_hasDropOut; }
-    const_dropout_iterator dropOut () const { return m_itDropOut; }
+    bool hasDropOut () const { return m_hasDropOut; } ///< has this layer drop-out turned on?
+    const_dropout_iterator dropOut () const { return m_itDropOut; } ///< return the begin of the drop-out information
     
-    size_t size () const { return m_size; }
+    size_t size () const { return m_size; } ///< return the size of the layer
 
 private:
 
+   /*! \brief compute the probabilities from the node values
+    *
+    * 
+    */
     container_type computeProbabilities ();
 
 private:
@@ -520,8 +614,8 @@ private:
     const_iterator_type m_itConstWeightBegin; ///< const iterator to the first weight of this layer in the weight vector
     iterator_type       m_itGradientBegin;  ///< const iterator to the first gradient of this layer in the gradient vector
 
-    const_function_iterator_type m_itFunctionBegin; ///< const iterator to the first activation funciton of this layer in the vector of activation functions
-    const_function_iterator_type m_itInverseFunctionBegin;  ///< const iterator to the first inverse activation function of this layer in the vector of inverse activation functions
+    std::shared_ptr<std::function<double(double)>> m_activationFunction; ///< activation function for this layer
+    std::shared_ptr<std::function<double(double)>> m_inverseActivationFunction; ///< inverse activation function for this layer
 
     bool m_isInputLayer; ///< is this layer an input layer
     bool m_hasWeights;  ///< does this layer have weights (it does not if it is the input layer)
@@ -554,28 +648,28 @@ public:
     */
     Layer (size_t numNodes, EnumFunction activationFunction, ModeOutputValues eModeOutputValues = ModeOutputValues::DIRECT);
 
-    ModeOutputValues modeOutputValues () const { return m_eModeOutputValues; }
-    void modeOutputValues (ModeOutputValues eModeOutputValues) { m_eModeOutputValues = eModeOutputValues; }
+    ModeOutputValues modeOutputValues () const { return m_eModeOutputValues; } ///< get the mode-output-value (direct, probabilities)
+    void modeOutputValues (ModeOutputValues eModeOutputValues) { m_eModeOutputValues = eModeOutputValues; } ///< set the mode-output-value
 
-    size_t numNodes () const { return m_numNodes; }
-    size_t numWeights (size_t numInputNodes) const { return numInputNodes * numNodes (); } // fully connected
+    size_t numNodes () const { return m_numNodes; } ///< return the number of nodes of this layer
+    size_t numWeights (size_t numInputNodes) const { return numInputNodes * numNodes (); } ///< return the number of weights for this layer (fully connected)
 
-    const std::vector<std::function<double(double)> >& activationFunctions  () const { return m_vecActivationFunctions; }
-    const std::vector<std::function<double(double)> >& inverseActivationFunctions  () const { return m_vecInverseActivationFunctions; }
+    std::shared_ptr<std::function<double(double)>> activationFunction  () const { return m_activationFunction; } ///< fetch the activation function for this layer
+    std::shared_ptr<std::function<double(double)>> inverseActivationFunction  () const { return m_inverseActivationFunction; } ///< fetch the inverse activation function for this layer
 
-    EnumFunction activationFunction () const { return m_activationFunction; }
+    EnumFunction activationFunctionType () const { return m_activationFunctionType; } ///< get the activation function type for this layer
 
 private:
 
 
-    std::vector<std::function<double(double)> > m_vecActivationFunctions;
-    std::vector<std::function<double(double)> > m_vecInverseActivationFunctions;
+    std::shared_ptr<std::function<double(double)>> m_activationFunction;  ///< stores the activation function
+    std::shared_ptr<std::function<double(double)>> m_inverseActivationFunction;  ///< stores the inverse activation function
 
-    EnumFunction m_activationFunction;
 
     size_t m_numNodes;
 
-    ModeOutputValues m_eModeOutputValues;
+    ModeOutputValues m_eModeOutputValues; ///< do the output values of this layer have to be transformed somehow (e.g. to probabilities) or returned as such
+    EnumFunction m_activationFunctionType;
 
     friend class Net;
 };
@@ -600,103 +694,122 @@ template <typename LAYERDATA>
 
 
 
+/*! \brief Settings for the training of the neural net
+ *
+ * 
+ */
 class Settings
 {
 public:
 
+   /*! \brief c'tor
+    *
+    * 
+    */
     Settings (TString name,
               size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7, 
 	      double _factorWeightDecay = 1e-5, TMVA::NN::EnumRegularization _regularization = TMVA::NN::EnumRegularization::NONE,
               MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
               double _learningRate = 1e-5, double _momentum = 0.3, 
               int _repetitions = 3,
-	      bool _multithreading = true);
+	      bool _multithreading = true,
+	      bool _doBatchNormalization = true);
     
+   /*! \brief d'tor
+    *
+    * 
+    */
     virtual ~Settings ();
 
 
+   /*! \brief set the drop-out configuration (layer-wise)
+    *
+    * \param begin begin of an array or vector denoting the drop-out probabilities for each layer
+    * \param end end of an array or vector denoting the drop-out probabilities for each layer 
+    * \param _dropRepetitions denotes after how many repetitions the drop-out setting (which nodes are dropped out exactly) is changed
+   */
     template <typename Iterator>
         void setDropOut (Iterator begin, Iterator end, size_t _dropRepetitions) { m_dropOut.assign (begin, end); m_dropRepetitions = _dropRepetitions; }
 
     size_t dropRepetitions () const { return m_dropRepetitions; }
     const std::vector<double>& dropFractions () const { return m_dropOut; }
 
-    
-    void setMonitoring (std::shared_ptr<Monitoring> ptrMonitoring) { fMonitoring = ptrMonitoring; }
+    void setMonitoring (std::shared_ptr<Monitoring> ptrMonitoring) { fMonitoring = ptrMonitoring; } ///< prepared for monitoring
 
-    size_t convergenceSteps () const { return m_convergenceSteps; }
-    size_t batchSize () const { return m_batchSize; }
-    size_t testRepetitions () const { return m_testRepetitions; }
-    double factorWeightDecay () const { return m_factorWeightDecay; }
+    size_t convergenceSteps () const { return m_convergenceSteps; } ///< how many steps until training is deemed to have converged
+    size_t batchSize () const { return m_batchSize; } ///< mini-batch size
+    size_t testRepetitions () const { return m_testRepetitions; } ///< how often is the test data tested
+    double factorWeightDecay () const { return m_factorWeightDecay; } ///< get the weight-decay factor
 
-    double learningRate () const { return fLearningRate; }
-    double momentum () const { return fMomentum; }
-    int repetitions () const { return fRepetitions; }
-    MinimizerType minimizerType () const { return fMinimizerType; }
-
+    double learningRate () const { return fLearningRate; } ///< get the learning rate
+    double momentum () const { return fMomentum; } ///< get the momentum (e.g. for SGD)
+    int repetitions () const { return fRepetitions; } ///< how many steps have to be gone until the batch is changed
+    MinimizerType minimizerType () const { return fMinimizerType; } ///< which minimizer shall be used (e.g. SGD)
 
 
 
 
-    virtual void testSample (double /*error*/, double /*output*/, double /*target*/, double /*weight*/) {}
-    virtual void startTrainCycle ()
+
+    virtual void testSample (double /*error*/, double /*output*/, double /*target*/, double /*weight*/) {} ///< virtual function to be used for monitoring (callback)
+    virtual void startTrainCycle () ///< callback for monitoring and logging
     {
         m_convergenceCount = 0;
         m_maxConvergenceCount= 0;
         m_minError = 1e10;
     }
-    virtual void endTrainCycle (double /*error*/) {}
+    virtual void endTrainCycle (double /*error*/) {} ///< callback for monitoring and logging
 
-    virtual void setProgressLimits (double minProgress = 0, double maxProgress = 100) 
+    virtual void setProgressLimits (double minProgress = 0, double maxProgress = 100) ///< for monitoring and logging (set the current "progress" limits for the display of the progress)
     { 
         m_minProgress = minProgress;
         m_maxProgress = maxProgress; 
     }
-    virtual void startTraining () 
+    virtual void startTraining () ///< start drawing the progress bar
     {
         m_timer.DrawProgressBar (Int_t(m_minProgress));
     }
-    virtual void cycle (double progress, TString text) 
+    virtual void cycle (double progress, TString text) ///< advance on the progress bar
     {
         m_timer.DrawProgressBar (Int_t(m_minProgress+(m_maxProgress-m_minProgress)*(progress/100.0)), text);
     }
 
-    virtual void startTestCycle () {}
-    virtual void endTestCycle () {}
-    virtual void testIteration () {}
-    virtual void drawSample (const std::vector<double>& /*input*/, const std::vector<double>& /* output */, const std::vector<double>& /* target */, double /* patternWeight */) {}
+    virtual void startTestCycle () {} ///< callback for monitoring and loggging
+    virtual void endTestCycle () {} ///< callback for monitoring and loggging
+    virtual void testIteration () {} ///< callback for monitoring and loggging
+    virtual void drawSample (const std::vector<double>& /*input*/, const std::vector<double>& /* output */, const std::vector<double>& /* target */, double /* patternWeight */) {} ///< callback for monitoring and loggging
 
-    virtual void computeResult (const Net& /* net */, std::vector<double>& /* weights */) {}
+    virtual void computeResult (const Net& /* net */, std::vector<double>& /* weights */) {} ///< callback for monitoring and loggging
 
-    virtual bool hasConverged (double testError);
+    virtual bool hasConverged (double testError); ///< has this training converged already?
 
-    EnumRegularization regularization () const { return m_regularization; }
+    EnumRegularization regularization () const { return m_regularization; } ///< some regularization of the NN is turned on?
 
-    bool useMultithreading () const { return m_useMultithreading; }
+    bool useMultithreading () const { return m_useMultithreading; } ///< is multithreading turned on?
+    bool doBatchNormalization () const { return m_doBatchNormalization; }
 
 
-    void pads (int numPads) { if (fMonitoring) fMonitoring->pads (numPads); }
-    void create (std::string histoName, int bins, double min, double max) { if (fMonitoring) fMonitoring->create (histoName, bins, min, max); }
-    void create (std::string histoName, int bins, double min, double max, int bins2, double min2, double max2) { if (fMonitoring) fMonitoring->create (histoName, bins, min, max, bins2, min2, max2); }
-    void addPoint (std::string histoName, double x) { if (fMonitoring) fMonitoring->addPoint (histoName, x); }
-    void addPoint (std::string histoName, double x, double y) {if (fMonitoring) fMonitoring->addPoint (histoName, x, y); }
-    void plot (std::string histoName, std::string options, int pad, EColor color) { if (fMonitoring) fMonitoring->plot (histoName, options, pad, color); }
-    void clear (std::string histoName) { if (fMonitoring) fMonitoring->clear (histoName); }
-    bool exists (std::string histoName) { if (fMonitoring) return fMonitoring->exists (histoName); return false; }
+    void pads (int numPads) { if (fMonitoring) fMonitoring->pads (numPads); } ///< preparation for monitoring
+    void create (std::string histoName, int bins, double min, double max) { if (fMonitoring) fMonitoring->create (histoName, bins, min, max); } ///< for monitoring
+    void create (std::string histoName, int bins, double min, double max, int bins2, double min2, double max2) { if (fMonitoring) fMonitoring->create (histoName, bins, min, max, bins2, min2, max2); } ///< for monitoring
+    void addPoint (std::string histoName, double x) { if (fMonitoring) fMonitoring->addPoint (histoName, x); } ///< for monitoring
+    void addPoint (std::string histoName, double x, double y) {if (fMonitoring) fMonitoring->addPoint (histoName, x, y); } ///< for monitoring
+    void plot (std::string histoName, std::string options, int pad, EColor color) { if (fMonitoring) fMonitoring->plot (histoName, options, pad, color); } ///< for monitoring
+    void clear (std::string histoName) { if (fMonitoring) fMonitoring->clear (histoName); } ///< for monitoring
+    bool exists (std::string histoName) { if (fMonitoring) return fMonitoring->exists (histoName); return false; } ///< for monitoring
 
-    size_t convergenceCount () const { return m_convergenceCount; }
-    size_t maxConvergenceCount () const { return m_maxConvergenceCount; }
-    size_t minError () const { return m_minError; }
+    size_t convergenceCount () const { return m_convergenceCount; } ///< returns the current convergence count
+    size_t maxConvergenceCount () const { return m_maxConvergenceCount; } ///< returns the max convergence count so far
+    size_t minError () const { return m_minError; } ///< returns the smallest error so far
     
 public:
-    Timer  m_timer;
-    double m_minProgress;
-    double m_maxProgress;
+    Timer  m_timer; ///< timer for monitoring
+    double m_minProgress; ///< current limits for the progress bar
+    double m_maxProgress; ///< current limits for the progress bar
 
 
-    size_t m_convergenceSteps;
-    size_t m_batchSize;
-    size_t m_testRepetitions;
+    size_t m_convergenceSteps; ///< number of steps without improvement to consider the NN to have converged
+    size_t m_batchSize; ///< mini-batch size
+    size_t m_testRepetitions; 
     double m_factorWeightDecay;
 
     size_t count_E;
@@ -721,8 +834,9 @@ public:
 
 protected:
     bool m_useMultithreading;
-    std::shared_ptr<Monitoring> fMonitoring;
+    bool m_doBatchNormalization;
 
+    std::shared_ptr<Monitoring> fMonitoring;
 };
 
 
@@ -747,19 +861,26 @@ protected:
 
 
 
-// enthaelt additional zu den settings die plot-kommandos fuer die graphischen
-// ausgaben. 
+/*! \brief Settings for classification
+ *
+ * contains additional settings if the NN problem is classification
+ */
 class ClassificationSettings : public Settings
 {
 public:
+    /*! \brief c'tor
+     *
+     * 
+    */
     ClassificationSettings (TString name,
                             size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7, 
 			    double _factorWeightDecay = 1e-5, EnumRegularization _regularization = EnumRegularization::NONE, 
 			    size_t _scaleToNumEvents = 0, MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
                             double _learningRate = 1e-5, double _momentum = 0.3, int _repetitions = 3,
-                            bool _useMultithreading = true)
+                            bool _useMultithreading = true,
+                            bool _useBatchNormalization = true)
         : Settings (name, _convergenceSteps, _batchSize, _testRepetitions, _factorWeightDecay, 
-                    _regularization, _eMinimizerType, _learningRate, _momentum, _repetitions, _useMultithreading)
+                    _regularization, _eMinimizerType, _learningRate, _momentum, _repetitions, _useMultithreading, _useBatchNormalization)
         , m_ams ()
         , m_sumOfSigWeights (0)
         , m_sumOfBkgWeights (0)
@@ -771,6 +892,10 @@ public:
     {
     }
 
+    /*! \brief d'tor
+     *
+     * 
+    */
     virtual ~ClassificationSettings () 
     {
     }
@@ -875,13 +1000,16 @@ public:
 
 
 
-
+///< used to distinguish between different function signatures
 enum class ModeOutput
 {
     FETCH
 };
 
-
+/*! \brief error functions to be chosen from 
+ *
+ * 
+ */
 enum class ModeErrorFunction
 {
     SUMOFSQUARES = 'S',
@@ -889,6 +1017,10 @@ enum class ModeErrorFunction
     CROSSENTROPY_MUTUALEXCLUSIVE = 'M'
 };
 
+/*! \brief weight initialization strategies to be chosen from
+ *
+ * 
+ */
 enum class WeightInitializationStrategy
 {
     XAVIER, TEST, LAYERSIZE, XAVIERUNIFORM
@@ -896,6 +1028,11 @@ enum class WeightInitializationStrategy
 
 
 
+/*! \brief neural net 
+ *
+ * holds the structure of all layers and some data for the whole net
+ * does not know the layer data though (i.e. values of the nodes and weights)
+ */
 class Net
 {
 public:
@@ -905,6 +1042,10 @@ public:
     typedef std::pair<iterator_type,iterator_type> begin_end_type;
 
 
+    /*! \brief c'tor
+     *
+     * 
+    */
     Net () 
 	: m_eErrorFunction (ModeErrorFunction::SUMOFSQUARES)
 	, m_sizeInput (0)
@@ -912,6 +1053,10 @@ public:
     {
     }
 
+    /*! \brief d'tor
+     *
+     * 
+    */
     Net (const Net& other)
         : m_eErrorFunction (other.m_eErrorFunction)
         , m_sizeInput (other.m_sizeInput)
@@ -919,26 +1064,42 @@ public:
     {
     }
 
-    void setInputSize (size_t sizeInput) { m_sizeInput = sizeInput; }
-    void setOutputSize (size_t sizeOutput) { m_sizeOutput = sizeOutput; }
-    void addLayer (Layer& layer) { m_layers.push_back (layer); }
-    void addLayer (Layer&& layer) { m_layers.push_back (layer); }
-    void setErrorFunction (ModeErrorFunction eErrorFunction) { m_eErrorFunction = eErrorFunction; }
+    void setInputSize (size_t sizeInput) { m_sizeInput = sizeInput; } ///< set the input size of the NN
+    void setOutputSize (size_t sizeOutput) { m_sizeOutput = sizeOutput; } ///< set the output size of the NN
+    void addLayer (Layer& layer) { m_layers.push_back (layer); } ///< add a layer (layout)
+    void addLayer (Layer&& layer) { m_layers.push_back (layer); } 
+    void setErrorFunction (ModeErrorFunction eErrorFunction) { m_eErrorFunction = eErrorFunction; } ///< which error function is to be used
     
-    size_t inputSize () const { return m_sizeInput; }
-    size_t outputSize () const { return m_sizeOutput; }
+    size_t inputSize () const { return m_sizeInput; } ///< input size of the NN
+    size_t outputSize () const { return m_sizeOutput; } ///< output size of the NN
 
+    /*! \brief set the drop out configuration
+     *
+     * 
+    */
     template <typename WeightsType, typename DropProbabilities>
         void dropOutWeightFactor (WeightsType& weights,
                                   const DropProbabilities& drops, 
                                   bool inverse = false);
 
+    /*! \brief start the training
+     *
+     * \param weights weight vector
+     * \param trainPattern training pattern 
+     * \param testPattern test pattern
+     * \param minimizer use this minimizer for training (e.g. SGD)
+     * \param settings settings used for this training run
+    */
     template <typename Minimizer>
     double train (std::vector<double>& weights, 
 		  std::vector<Pattern>& trainPattern, 
 		  const std::vector<Pattern>& testPattern, 
                   Minimizer& minimizer, Settings& settings);
 
+    /*! \brief pre-training for future use
+     *
+     * 
+    */
     template <typename Minimizer>
     void preTrain (std::vector<double>& weights,
                      std::vector<Pattern>& trainPattern,
@@ -946,23 +1107,32 @@ public:
                      Minimizer& minimizer, Settings& settings);
 
     
+    /*! \brief executes one training cycle
+     *
+     * \param minimizier the minimizer to be used
+     * \param weights the weight vector to be used
+     * \param itPatternBegin the pattern to be trained with
+     * \param itPatternEnd the pattern to be trainied with
+     * \param settings the settings for the training
+     * \param dropContainer the configuration for NN drop-out
+    */
     template <typename Iterator, typename Minimizer>
     inline double trainCycle (Minimizer& minimizer, std::vector<double>& weights, 
 			      Iterator itPatternBegin, Iterator itPatternEnd, Settings& settings, DropContainer& dropContainer);
 
-    size_t numWeights (size_t trainingStartLayer = 0) const;
+    size_t numWeights (size_t trainingStartLayer = 0) const; ///< returns the number of weights in this net
 
     template <typename Weights>
-        std::vector<double> compute (const std::vector<double>& input, const Weights& weights) const;
+        std::vector<double> compute (const std::vector<double>& input, const Weights& weights) const; ///< compute the net with the given input and the given weights
 
     template <typename Weights, typename PassThrough>
-        double operator() (PassThrough& settingsAndBatch, const Weights& weights) const;
+        double operator() (PassThrough& settingsAndBatch, const Weights& weights) const; ///< execute computation of the NN for one mini-batch (used by the minimizer); no computation of gradients
 
     template <typename Weights, typename PassThrough, typename OutContainer>
-        double operator() (PassThrough& settingsAndBatch, const Weights& weights, ModeOutput eFetch, OutContainer& outputContainer) const;
+        double operator() (PassThrough& settingsAndBatch, const Weights& weights, ModeOutput eFetch, OutContainer& outputContainer) const; ///< execute computation of the NN for one mini-batch; helper function
     
     template <typename Weights, typename Gradients, typename PassThrough>
-        double operator() (PassThrough& settingsAndBatch, const Weights& weights, Gradients& gradients) const;
+        double operator() (PassThrough& settingsAndBatch, const Weights& weights, Gradients& gradients) const;  ///< execute computation of the NN for one mini-batch (used by the minimizer); returns gradients as well
 
     template <typename Weights, typename Gradients, typename PassThrough, typename OutContainer>
         double operator() (PassThrough& settingsAndBatch, const Weights& weights, Gradients& gradients, ModeOutput eFetch, OutContainer& outputContainer) const;
@@ -970,6 +1140,10 @@ public:
 
 
 
+    /*! \brief main NN computation function
+     *
+     * 
+    */
     template <typename LayerContainer, typename PassThrough, typename ItWeight, typename ItGradient, typename OutContainer>
     double forward_backward (LayerContainer& layers, PassThrough& settingsAndBatch, 
 			     ItWeight itWeightBegin, 
@@ -983,6 +1157,10 @@ public:
     void dE ();
 
 
+    /*! \brief computes the error of the NN
+     *
+     * 
+    */
     template <typename Container, typename ItWeight>
         double errorFunction (LayerData& layerData,
                               Container truth,
@@ -993,13 +1171,13 @@ public:
                               EnumRegularization eRegularization) const;
 
 
-    const std::vector<Layer>& layers () const { return m_layers; }
-    std::vector<Layer>& layers ()  { return m_layers; }
+    const std::vector<Layer>& layers () const { return m_layers; } ///< returns the layers (structure)
+    std::vector<Layer>& layers ()  { return m_layers; } ///< returns the layers (structure)
 
-    void removeLayer () { m_layers.pop_back (); }
+    void removeLayer () { m_layers.pop_back (); } ///< remove one layer
     
 
-    void clear () 
+    void clear () ///< clear one layer
     {
         m_layers.clear ();
 	m_eErrorFunction = ModeErrorFunction::SUMOFSQUARES;
@@ -1008,20 +1186,19 @@ public:
 
     template <typename OutIterator>
     void initializeWeights (WeightInitializationStrategy eInitStrategy, 
-			    OutIterator itWeight);
+			    OutIterator itWeight); ///< initialize the weights with the given strategy
 
 protected:
 
-    void fillDropContainer (DropContainer& dropContainer, double dropFraction, size_t numNodes) const;
+    void fillDropContainer (DropContainer& dropContainer, double dropFraction, size_t numNodes) const; ///< prepare the drop-out-container (select the nodes which are to be dropped out)
     
     
-
 private:
 
-    ModeErrorFunction m_eErrorFunction;
-    size_t m_sizeInput;
-    size_t m_sizeOutput;
-    std::vector<Layer> m_layers;
+    ModeErrorFunction m_eErrorFunction; ///< denotes the error function
+    size_t m_sizeInput; ///< input size of this NN
+    size_t m_sizeOutput; ///< outut size of this NN
+    std::vector<Layer> m_layers; ///< layer-structure-data
 };
 
 

@@ -71,16 +71,16 @@ double studenttDouble (double distributionParameter)
 
 
     LayerData::LayerData (size_t _size, 
-	       const_iterator_type itWeightBegin, 
-	       iterator_type itGradientBegin, 
-	       const_function_iterator_type itFunctionBegin, 
-	       const_function_iterator_type itInverseFunctionBegin,
-	       ModeOutputValues eModeOutput)
+                          const_iterator_type itWeightBegin, 
+                          iterator_type itGradientBegin, 
+                          std::shared_ptr<std::function<double(double)>> activationFunction, 
+                          std::shared_ptr<std::function<double(double)>> inverseActivationFunction,
+                          ModeOutputValues eModeOutput)
 	: m_size (_size)
 	, m_itConstWeightBegin   (itWeightBegin)
 	, m_itGradientBegin (itGradientBegin)
-	, m_itFunctionBegin (itFunctionBegin)
-	, m_itInverseFunctionBegin (itInverseFunctionBegin)
+	, m_activationFunction (activationFunction)
+	, m_inverseActivationFunction (inverseActivationFunction)
 	, m_isInputLayer (false)
 	, m_hasWeights (true)
 	, m_hasGradients (true)
@@ -95,11 +95,11 @@ double studenttDouble (double distributionParameter)
 
 
     LayerData::LayerData (size_t _size, const_iterator_type itWeightBegin, 
-	       const_function_iterator_type itFunctionBegin, 
-	       ModeOutputValues eModeOutput)
+                          std::shared_ptr<std::function<double(double)>> activationFunction, 
+                          ModeOutputValues eModeOutput)
 	: m_size (_size)
 	, m_itConstWeightBegin   (itWeightBegin)
-	, m_itFunctionBegin (itFunctionBegin)
+	, m_activationFunction (activationFunction)
 	, m_isInputLayer (false)
 	, m_hasWeights (true)
 	, m_hasGradients (false)
@@ -117,7 +117,7 @@ double studenttDouble (double distributionParameter)
 	{
 	case ModeOutputValues::SIGMOID:
         {
-	    std::transform (begin (m_values), end (m_values), std::back_inserter (probabilitiesContainer), Sigmoid);
+	    std::transform (begin (m_values), end (m_values), std::back_inserter (probabilitiesContainer), (*Sigmoid.get ()));
 	    break;
         }
 	case ModeOutputValues::SOFTMAX:
@@ -144,72 +144,57 @@ double studenttDouble (double distributionParameter)
     Layer::Layer (size_t _numNodes, EnumFunction _activationFunction, ModeOutputValues eModeOutputValues) 
 	: m_numNodes (_numNodes) 
 	, m_eModeOutputValues (eModeOutputValues)
+        , m_activationFunctionType (_activationFunction)
     {
 	for (size_t iNode = 0; iNode < _numNodes; ++iNode)
 	{
 	    auto actFnc = Linear;
 	    auto invActFnc = InvLinear;
-	    m_activationFunction = EnumFunction::LINEAR;
 	    switch (_activationFunction)
 	    {
 	    case EnumFunction::ZERO:
 		actFnc = ZeroFnc;
 		invActFnc = ZeroFnc;
-		m_activationFunction = EnumFunction::ZERO;
 		break;
 	    case EnumFunction::LINEAR:
 		actFnc = Linear;
 		invActFnc = InvLinear;
-		m_activationFunction = EnumFunction::LINEAR;
 		break;
 	    case EnumFunction::TANH:
 		actFnc = Tanh;
 		invActFnc = InvTanh;
-		m_activationFunction = EnumFunction::TANH;
 		break;
 	    case EnumFunction::RELU:
 		actFnc = ReLU;
 		invActFnc = InvReLU;
-		m_activationFunction = EnumFunction::RELU;
 		break;
 	    case EnumFunction::SYMMRELU:
 		actFnc = SymmReLU;
 		invActFnc = InvSymmReLU;
-		m_activationFunction = EnumFunction::SYMMRELU;
 		break;
 	    case EnumFunction::TANHSHIFT:
 		actFnc = TanhShift;
 		invActFnc = InvTanhShift;
-		m_activationFunction = EnumFunction::TANHSHIFT;
 		break;
 	    case EnumFunction::SOFTSIGN:
 		actFnc = SoftSign;
 		invActFnc = InvSoftSign;
-		m_activationFunction = EnumFunction::SOFTSIGN;
 		break;
 	    case EnumFunction::SIGMOID:
 		actFnc = Sigmoid;
 		invActFnc = InvSigmoid;
-		m_activationFunction = EnumFunction::SIGMOID;
 		break;
 	    case EnumFunction::GAUSS:
 		actFnc = Gauss;
 		invActFnc = InvGauss;
-		m_activationFunction = EnumFunction::GAUSS;
 		break;
 	    case EnumFunction::GAUSSCOMPLEMENT:
 		actFnc = GaussComplement;
 		invActFnc = InvGaussComplement;
-		m_activationFunction = EnumFunction::GAUSSCOMPLEMENT;
-		break;
-	    case EnumFunction::DOUBLEINVERTEDGAUSS:
-		actFnc = DoubleInvertedGauss;
-		invActFnc = InvDoubleInvertedGauss;
-		m_activationFunction = EnumFunction::DOUBLEINVERTEDGAUSS;
 		break;
 	    }
-	    m_vecActivationFunctions.push_back (actFnc);
-	    m_vecInverseActivationFunctions.push_back (invActFnc);
+	    m_activationFunction = actFnc;
+	    m_inverseActivationFunction = invActFnc;
 	}
     }
 
@@ -226,7 +211,8 @@ double studenttDouble (double distributionParameter)
                         size_t _convergenceSteps, size_t _batchSize, size_t _testRepetitions, 
                         double _factorWeightDecay, EnumRegularization eRegularization,
                         MinimizerType _eMinimizerType, double _learningRate, 
-                        double _momentum, int _repetitions, bool _useMultithreading)
+                        double _momentum, int _repetitions, bool _useMultithreading, 
+                        bool _doBatchNormalization)
         : m_timer (100, name)
         , m_minProgress (0)
         , m_maxProgress (100)
@@ -247,6 +233,7 @@ double studenttDouble (double distributionParameter)
         , m_maxConvergenceCount (0)
         , m_minError (1e10)
         , m_useMultithreading (_useMultithreading)
+        , m_doBatchNormalization (_doBatchNormalization)
         , fMonitoring (NULL)
     {
     }
@@ -484,8 +471,15 @@ void ClassificationSettings::startTestCycle ()
 
 
 
-    void ClassificationSettings::setWeightSums (double sumOfSigWeights, double sumOfBkgWeights) { m_sumOfSigWeights = sumOfSigWeights; m_sumOfBkgWeights = sumOfBkgWeights; }
-    void ClassificationSettings::setResultComputation (std::string _fileNameNetConfig, std::string _fileNameResult, std::vector<Pattern>* _resultPatternContainer)
+    void ClassificationSettings::setWeightSums (double sumOfSigWeights, double sumOfBkgWeights)
+    {
+        m_sumOfSigWeights = sumOfSigWeights; m_sumOfBkgWeights = sumOfBkgWeights;
+    }
+    
+    void ClassificationSettings::setResultComputation (
+        std::string _fileNameNetConfig,
+        std::string _fileNameResult,
+        std::vector<Pattern>* _resultPatternContainer)
     {
 	m_pResultPatternContainer = _resultPatternContainer;
 	m_fileNameResult = _fileNameResult;
