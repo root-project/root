@@ -169,7 +169,7 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
    if (code != PoolCode::kProcTree ||
       (code == PoolCode::kProcTree && fTree->GetCurrentFile())) {
       //open file
-      if (fTree->GetCurrentFile()) {
+     if (code == PoolCode::kProcTree && fTree->GetCurrentFile()) {
          // Single tree from file: we need to reopen, because file descriptor gets invalidated across Fork
          fp.reset(OpenFile(fTree->GetCurrentFile()->GetName()));
       } else {
