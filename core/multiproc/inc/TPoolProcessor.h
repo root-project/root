@@ -150,6 +150,11 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
    unsigned fileN = 0;
    unsigned nProcessed = 0;
    if (code == PoolCode::kProcRange || code == PoolCode::kProcTree) {
+      if (code == PoolCode::kProcTree && !fTree) {
+         // This must be defined
+         std::cerr << "[S]: Process:kProcTree fTree undefined!\n";
+         return;
+      }
       //retrieve the total number of entries ranges processed so far by TPool
       nProcessed = ReadBuffer<unsigned>(msg.second.get());
       //evaluate the file and the entries range to process
@@ -161,9 +166,15 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
 
    std::unique_ptr<TFile> fp;
    TTree *tree = nullptr;
-   if (code != PoolCode::kProcTree) {
+   if (code != PoolCode::kProcTree ||
+      (code == PoolCode::kProcTree && fTree->GetCurrentFile())) {
       //open file
-      fp.reset(OpenFile(fFileNames[fileN]));
+      if (fTree->GetCurrentFile()) {
+         // Single tree from file: we need to reopen, because file descriptor gets invalidated across Fork
+         fp.reset(OpenFile(fTree->GetCurrentFile()->GetName()));
+      } else {
+         fp.reset(OpenFile(fFileNames[fileN]));
+      }
       if (fp == nullptr) {
          //errors are handled inside OpenFile
          return;
@@ -177,9 +188,9 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
          return;
       }
    } else {
+      // Tree in memory: OK
       tree = fTree;
    }
-   
 
    //create entries range
    Long64_t start = 0;
