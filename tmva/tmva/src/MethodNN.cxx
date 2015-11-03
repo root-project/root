@@ -770,7 +770,7 @@ void TMVA::MethodNN::AddWeightsXMLTo( void* parent ) const
    {
        const TMVA::NN::Layer& layer = fNet.layers ().at (i);
        int numNodes = layer.numNodes ();
-       char activationFunction = (char)(layer.activationFunction ());
+       char activationFunction = (char)(layer.activationFunctionType ());
        char outputMode = (char)layer.modeOutputValues ();
 
        void* layerxml = gTools().xmlengine().NewChild(xmlLayout, 0, "Layer");
