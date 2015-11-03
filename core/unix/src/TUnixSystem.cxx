@@ -293,6 +293,8 @@ struct TUtmpContent {
 #ifdef __has_feature
 #  if __has_feature(modules)
          if (ue->ut_user[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
+#  else
+         if (ue->ut_name[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
 #  endif
 #elif
          if (ue->ut_name[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))

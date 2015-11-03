@@ -206,12 +206,14 @@ static STRUCT_UTMP *SearchEntry(int n, const char *tty)
       // (See https://llvm.org/bugs/show_bug.cgi?id=24533)
 #ifdef __has_feature
 #  if __has_feature(modules)
-      if (ue->ut_user[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
+     if (ue->ut_user[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
+#  else
+     if (ue->ut_name[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
 #  endif
 #elif
-         if (ue->ut_name[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
+     if (ue->ut_name[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
 #endif
-            return ue;
+        return ue;
       ue++;
    }
    return 0;
