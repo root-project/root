@@ -38,6 +38,8 @@
 // is due to different locations/angles.                                  //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "TMVA/MethodCategory.h"
+
 #include <algorithm>
 #include <iomanip>
 #include <vector>
@@ -60,7 +62,6 @@
 #include "TMVA/DataSetManager.h"
 #include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
-#include "TMVA/MethodCategory.h"
 #include "TMVA/MethodCompositeBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/PDF.h"
