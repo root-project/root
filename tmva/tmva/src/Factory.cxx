@@ -1251,6 +1251,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
          Double_t biasT, devT, rmsT, mInfT;
          Double_t rho;
 
+         Log() << kINFO << "TestRegression(testing)" << Endl;
          theMethod->TestRegression( bias, biasT, dev, devT, rms, rmsT, mInf, mInfT, rho, TMVA::Types::kTesting  );
          biastest[0]  .push_back( bias );
          devtest[0]   .push_back( dev );
@@ -1262,6 +1263,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
          rmstestT[0]  .push_back( rmsT );
          minftestT[0] .push_back( mInfT );
 
+         Log() << kINFO << "TestRegression(training)" << Endl;
          theMethod->TestRegression( bias, biasT, dev, devT, rms, rmsT, mInf, mInfT, rho, TMVA::Types::kTraining  );
          biastrain[0] .push_back( bias );
          devtrain[0]  .push_back( dev );

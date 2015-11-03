@@ -758,8 +758,9 @@ void TMVA::MethodBase::AddRegressionOutput(Types::ETreeType type)
       Data()->SetCurrentEvent(ievt);
       std::vector< Float_t > vals = GetRegressionValues();
       regRes->SetValue( vals, ievt );
-      timer.DrawProgressBar( ievt );
+      if ((ievt & 0xFF) == 0) timer.DrawProgressBar(ievt);
    }
+   timer.DrawProgressBar(nEvents - 1);
 
    Log() << kINFO << "Elapsed time for evaluation of " << nEvents <<  " events: "
          << timer.GetElapsedTime() << "       " << Endl;
@@ -946,6 +947,8 @@ void TMVA::MethodBase::TestRegression( Double_t& bias, Double_t& biasT,
    Float_t* tV = new Float_t[nevt];
    Float_t* wV = new Float_t[nevt];
    Float_t  xmin = 1e30, xmax = -1e30;
+   Log() << kINFO << "Calculate regression for all events" << Endl;
+   Timer timer( nevt, GetName(), kTRUE );
    for (Long64_t ievt=0; ievt<nevt; ievt++) {
 
       const Event* ev = Data()->GetEvent(ievt); // NOTE: need untransformed event here !
@@ -973,7 +976,11 @@ void TMVA::MethodBase::TestRegression( Double_t& bias, Double_t& biasT,
       m1  += t*w; s1 += t*t*w;
       m2  += r*w; s2 += r*r*w;
       s12 += t*r;
+      if ((ievt & 0xFF) == 0) timer.DrawProgressBar(ievt);
    }
+   timer.DrawProgressBar(nevt - 1);
+   Log() << kINFO << "Elapsed time for evaluation of " << nevt <<  " events: "
+         << timer.GetElapsedTime() << "       " << Endl;
 
    // standard quantities
    bias /= sumw;
