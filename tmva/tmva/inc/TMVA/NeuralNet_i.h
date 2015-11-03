@@ -10,43 +10,6 @@ namespace NN
 
 
 
-static std::function<double(double)> ZeroFnc = [](double /*value*/){ return 0; };
-
-
-static std::function<double(double)> Sigmoid = [](double value){ value = std::max (-100.0, std::min (100.0,value)); return 1.0/(1.0 + std::exp (-value)); };
-static std::function<double(double)> InvSigmoid = [](double value){ double s = Sigmoid (value); return s*(1.0-s); };
-
-static std::function<double(double)> Tanh = [](double value){ return tanh (value); };
-static std::function<double(double)> InvTanh = [](double value){ return 1.0 - std::pow (value, 2.0); };
-
-static std::function<double(double)> Linear = [](double value){ return value; };
-static std::function<double(double)>  InvLinear = [](double /*value*/){ return 1.0; };
-
-static std::function<double(double)> SymmReLU = [](double value){ const double margin = 0.3; return value > margin ? value-margin : value < -margin ? value+margin : 0; };
-static std::function<double(double)> InvSymmReLU = [](double value){ const double margin = 0.3; return value > margin ? 1.0 : value < -margin ? 1.0 : 0; };
-
-static std::function<double(double)> ReLU = [](double value){ return value > 0 ? value : 0; };
-static std::function<double(double)> InvReLU = [](double value){ return value > 0 ? 1.0 : 0; };
-
-static std::function<double(double)> SoftPlus = [](double value){ return std::log (1.0+ std::exp (value)); };
-static std::function<double(double)> InvSoftPlus = [](double value){ return 1.0 / (1.0 + std::exp (-value)); };
-
-static std::function<double(double)> TanhShift = [](double value){ return tanh (value-0.3); };
-static std::function<double(double)> InvTanhShift = [](double value){ return 0.3 + (1.0 - std::pow (value, 2.0)); };
-
-static std::function<double(double)> SoftSign = [](double value){ return value / (1.0 + fabs (value)); };
-static std::function<double(double)> InvSoftSign = [](double value){ return std::pow ((1.0 - fabs (value)),2.0); };
-
-static std::function<double(double)> Gauss = [](double value){ const double s = 6.0; return exp (-std::pow(value*s,2.0)); };
-static std::function<double(double)> InvGauss = [](double value){ const double s = 6.0; return -2.0 * value * s*s * Gauss (value); };
-
-static std::function<double(double)> GaussComplement = [](double value){ const double s = 6.0; return 1.0 - exp (-std::pow(value*s,2.0));; };
-static std::function<double(double)> InvGaussComplement = [](double value){ const double s = 6.0; return +2.0 * value * s*s * GaussComplement (value); };
-
-static std::function<double(double)> DoubleInvertedGauss = [](double value)
-{ const double s = 8.0; const double shift = 0.1; return exp (-std::pow((value-shift)*s,2.0)) - exp (-std::pow((value+shift)*s,2.0)); };
-static std::function<double(double)> InvDoubleInvertedGauss = [](double value)
-{ const double s = 8.0; const double shift = 0.1; return -2.0 * (value-shift) * s*s * DoubleInvertedGauss (value-shift) + 2.0 * (value+shift) * s*s * DoubleInvertedGauss (value+shift);  };
 
 
 
@@ -70,9 +33,45 @@ void uniform (Container& container, T maxValue)
 }
 
 
+static std::shared_ptr<std::function<double(double)>> ZeroFnc = std::make_shared<std::function<double(double)>> ([](double /*value*/){ return 0; });
 
-// apply weights using drop-out
-// itDrop correlates with itSource
+
+static std::shared_ptr<std::function<double(double)>> Sigmoid = std::make_shared<std::function<double(double)>> ([](double value){ value = std::max (-100.0, std::min (100.0,value)); return 1.0/(1.0 + std::exp (-value)); });
+static std::shared_ptr<std::function<double(double)>> InvSigmoid = std::make_shared<std::function<double(double)>> ([](double value){ double s = (*Sigmoid.get ()) (value); return s*(1.0-s); });
+
+static std::shared_ptr<std::function<double(double)>> Tanh = std::make_shared<std::function<double(double)>> ([](double value){ return tanh (value); });
+static std::shared_ptr<std::function<double(double)>> InvTanh = std::make_shared<std::function<double(double)>> ([](double value){ return 1.0 - std::pow (value, 2.0); });
+
+static std::shared_ptr<std::function<double(double)>> Linear = std::make_shared<std::function<double(double)>> ([](double value){ return value; });
+static std::shared_ptr<std::function<double(double)>> InvLinear = std::make_shared<std::function<double(double)>> ([](double /*value*/){ return 1.0; });
+
+static std::shared_ptr<std::function<double(double)>> SymmReLU = std::make_shared<std::function<double(double)>> ([](double value){ const double margin = 0.3; return value > margin ? value-margin : value < -margin ? value+margin : 0; });
+static std::shared_ptr<std::function<double(double)>> InvSymmReLU = std::make_shared<std::function<double(double)>> ([](double value){ const double margin = 0.3; return value > margin ? 1.0 : value < -margin ? 1.0 : 0; });
+
+static std::shared_ptr<std::function<double(double)>> ReLU = std::make_shared<std::function<double(double)>> ([](double value){ const double margin = 0.0; return value > margin ? value-margin : 0; });
+static std::shared_ptr<std::function<double(double)>> InvReLU = std::make_shared<std::function<double(double)>> ([](double value){ const double margin = 0.0; return value > margin ? 1.0 : 0; });
+
+static std::shared_ptr<std::function<double(double)>> SoftPlus = std::make_shared<std::function<double(double)>> ([](double value){ return std::log (1.0+ std::exp (value)); });
+static std::shared_ptr<std::function<double(double)>> InvSoftPlus = std::make_shared<std::function<double(double)>> ([](double value){ return 1.0 / (1.0 + std::exp (-value)); });
+
+static std::shared_ptr<std::function<double(double)>> TanhShift = std::make_shared<std::function<double(double)>> ([](double value){ return tanh (value-0.3); });
+static std::shared_ptr<std::function<double(double)>> InvTanhShift = std::make_shared<std::function<double(double)>> ([](double value){ return 0.3 + (1.0 - std::pow (value, 2.0)); });
+
+static std::shared_ptr<std::function<double(double)>> SoftSign = std::make_shared<std::function<double(double)>> ([](double value){ return value / (1.0 + fabs (value)); });
+static std::shared_ptr<std::function<double(double)>> InvSoftSign = std::make_shared<std::function<double(double)>> ([](double value){ return std::pow ((1.0 - fabs (value)),2.0); });
+
+static std::shared_ptr<std::function<double(double)>> Gauss = std::make_shared<std::function<double(double)>> ([](double value){ const double s = 6.0; return exp (-std::pow(value*s,2.0)); });
+static std::shared_ptr<std::function<double(double)>> InvGauss = std::make_shared<std::function<double(double)>> ([](double value){ const double s = 6.0; return -2.0 * value * s*s * (*Gauss.get ()) (value); });
+
+static std::shared_ptr<std::function<double(double)>> GaussComplement = std::make_shared<std::function<double(double)>> ([](double value){ const double s = 6.0; return 1.0 - exp (-std::pow(value*s,2.0)); });
+static std::shared_ptr<std::function<double(double)>> InvGaussComplement = std::make_shared<std::function<double(double)>> ([](double value){ const double s = 6.0; return +2.0 * value * s*s * (*GaussComplement.get ()) (value); });
+
+
+
+/*! \brief apply weights using drop-out
+ *
+ * itDrop correlates with itSourceBegin 
+ */
 template <typename ItSource, typename ItWeight, typename ItTarget, typename ItDrop>
     void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd,
                        ItWeight itWeight,
@@ -93,7 +92,10 @@ template <typename ItSource, typename ItWeight, typename ItTarget, typename ItDr
 
 
 
-// apply weights without drop-out
+/*! \brief apply weights without drop-out
+ *
+ * 
+ */
 template <typename ItSource, typename ItWeight, typename ItTarget>
     void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd,
                        ItWeight itWeight,
@@ -111,7 +113,11 @@ template <typename ItSource, typename ItWeight, typename ItTarget>
 
 
 
-// apply weights backwards (for backprop)
+
+/*! \brief apply weights backwards (for backprop)
+ *
+ * 
+ */
 template <typename ItSource, typename ItWeight, typename ItPrev>
 void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd,
                             ItWeight itWeight,
@@ -129,8 +135,10 @@ void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd,
 
 
 
-// apply weights backwards (for backprop)
-// itDrop correlates with itPrev (to be in agreement with "applyWeights" where it correlates with itSource (same node as itTarget here in applybackwards)
+/*! \brief apply weights backwards (for backprop)
+ *
+ * itDrop correlates with itPrev (to be in agreement with "applyWeights" where it correlates with itSources (same node as itTarget here in applyBackwards)
+ */
 template <typename ItSource, typename ItWeight, typename ItPrev, typename ItDrop>
 void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd,
                             ItWeight itWeight,
@@ -153,34 +161,47 @@ void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd,
 
 
 
-template <typename ItValue, typename ItFunction>
-void applyFunctions (ItValue itValue, ItValue itValueEnd, ItFunction itFunction)
+/*! \brief apply the activation functions 
+ *
+ * 
+ */
+
+template <typename ItValue, typename Fnc>
+void applyFunctions (ItValue itValue, ItValue itValueEnd, Fnc fnc)
 {
     while (itValue != itValueEnd)
     {
         auto& value = (*itValue);
-        value = (*itFunction) (value);
+        value = (*fnc.get ()) (value);
 
-        ++itValue; ++itFunction;
+        ++itValue; 
     }
 }
 
 
-template <typename ItValue, typename ItFunction, typename ItInverseFunction, typename ItGradient>
-void applyFunctions (ItValue itValue, ItValue itValueEnd, ItFunction itFunction, ItInverseFunction itInverseFunction, ItGradient itGradient)
+/*! \brief apply the activation functions and compute the gradient
+ *
+ * 
+ */
+template <typename ItValue, typename Fnc, typename InvFnc, typename ItGradient>
+void applyFunctions (ItValue itValue, ItValue itValueEnd, Fnc fnc, InvFnc invFnc, ItGradient itGradient)
 {
     while (itValue != itValueEnd)
     {
         auto& value = (*itValue);
-        value = (*itFunction) (value);
-        (*itGradient) = (*itInverseFunction) (value);
+        value = (*fnc.get ()) (value);
+        (*itGradient) = (*invFnc.get ()) (value);
         
-        ++itValue; ++itFunction; ++itInverseFunction; ++itGradient;
+        ++itValue; ++itGradient;
     }
 }
 
 
 
+/*! \brief update the gradients
+ *
+ * 
+ */
 template <typename ItSource, typename ItDelta, typename ItTargetGradient, typename ItGradient>
 void update (ItSource itSource, ItSource itSourceEnd, 
 	     ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
@@ -203,6 +224,10 @@ void update (ItSource itSource, ItSource itSourceEnd,
 
 
 
+/*! \brief compute the regularization (L1, L2)
+ *
+ * 
+ */
 template <EnumRegularization Regularization>
     inline double computeRegularization (double weight, const double& factorWeightDecay)
 {
@@ -224,6 +249,10 @@ template <>
 }
 
 
+/*! \brief update the gradients, using regularization
+ *
+ * 
+ */
 template <EnumRegularization Regularization, typename ItSource, typename ItDelta, typename ItTargetGradient, typename ItGradient, typename ItWeight>
 void update (ItSource itSource, ItSource itSourceEnd, 
 	     ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
@@ -254,6 +283,10 @@ void update (ItSource itSource, ItSource itSourceEnd,
 
 
 
+/*! \brief implementation of the steepest gradient descent algorithm
+ *
+ * Can be used with multithreading (i.e. "HogWild!" style); see call in trainCycle
+ */
     template <typename Function, typename Weights, typename PassThrough>
         double Steepest::operator() (Function& fitnessFunction, Weights& weights, PassThrough& passThrough) 
     {
@@ -323,13 +356,6 @@ void update (ItSource itSource, ItSource itSourceEnd,
                                    *itW += g;
                                    ++itW;
                                });
-//                std::copy (std::begin (localWeights), std::end (localWeights), std::begin (weights));
-                /* for (auto itL = std::begin (localWeights), itLEnd = std::end (localWeights), itW = std::begin (weights), itG = std::begin (gradients); */
-                /*      itL != itLEnd; ++itL, ++itW, ++itG) */
-                /* { */
-                /*     if (*itG > maxGrad/2.0) */
-                /*         *itW = *itL; */
-                /* } */
             }
 
             ++currentRepetition;
@@ -349,59 +375,17 @@ void update (ItSource itSource, ItSource itSourceEnd,
 
 
 
-    /* template <typename Function, typename Weights, typename PassThrough> */
-    /*     double MaxGradWeight::operator() (Function& fitnessFunction, const Weights& weights, PassThrough& passThrough)  */
-    /* { */
-    /*     double alpha = m_learningRate; */
-
-    /*     size_t numWeights = weights.size (); */
-    /*     std::vector<double> gradients (numWeights, 0.0); */
-    /*     std::vector<double> localWeights (begin (weights), end (weights)); */
-
-
-    /*     double Ebase = fitnessFunction (passThrough, weights, gradients); */
-    /*     double Emin = Ebase; */
-
-    /*     bool success = true; */
-    /*     size_t currentRepetition = 0; */
-    /*     while (success) */
-    /*     { */
-    /*         if (currentRepetition >= m_repetitions) */
-    /*             break; */
-
-    /*         auto itMaxGradElement = std::max_element (begin (gradients), end (gradients)); */
-    /*         auto idx = std::distance (begin (gradients), itMaxGradElement); */
-    /*         localWeights.at (idx) += alpha*(*itMaxGradElement); */
-    /*         gradients.assign (numWeights, 0.0); */
-    /*         double E = fitnessFunction (passThrough, localWeights, gradients); */
-
-    /*         if (E < Emin) */
-    /*         { */
-    /*             Emin = E; */
-
-    /*             auto itLocW = begin (localWeights); */
-    /*             auto itLocWEnd = end (localWeights); */
-    /*             auto itW = begin (weights); */
-    /*             for (; itLocW != itLocWEnd; ++itLocW, ++itW) */
-    /*             { */
-    /*                 (*itW) = (*itLocW); */
-    /*             } */
-    /*         } */
-    /*         ++currentRepetition; */
-    /*     } */
-    /*     return Emin; */
-    /* } */
 
 
 
 
 
-
-
-
-
-template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvActFnc>
-double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc itInvActFnc, double patternWeight) 
+/*! \brief sum of squares error function
+ *
+ * 
+ */
+template <typename ItOutput, typename ItTruth, typename ItDelta, typename InvFnc>
+double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, ItDelta itDelta, ItDelta itDeltaEnd, InvFnc invFnc, double patternWeight) 
 {
     double errorSum = 0.0;
 
@@ -415,8 +399,8 @@ double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTru
 	double error = output - (*itTruth);
 	if (hasDeltas)
 	{
-	    (*itDelta) = (*itInvActFnc)(output) * error * patternWeight;
-	    ++itDelta; ++itInvActFnc;
+	    (*itDelta) = (*invFnc.get ()) (output) * error * patternWeight;
+	    ++itDelta; 
 	}
 	errorSum += error*error  * patternWeight;
     }
@@ -426,6 +410,10 @@ double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTru
 
 
 
+/*! \brief cross entropy error function
+ *
+ * 
+ */
 template <typename ItProbability, typename ItTruth, typename ItDelta, typename ItInvActFnc>
 double crossEntropy (ItProbability itProbabilityBegin, ItProbability itProbabilityEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc /*itInvActFnc*/, double patternWeight) 
 {
@@ -467,6 +455,10 @@ double crossEntropy (ItProbability itProbabilityBegin, ItProbability itProbabili
 
 
 
+/*! \brief soft-max-cross-entropy error function (for mutual exclusive cross-entropy)
+ *
+ * 
+ */
 template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvActFnc>
 double softMaxCrossEntropy (ItOutput itProbabilityBegin, ItOutput itProbabilityEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc /*itInvActFnc*/, double patternWeight) 
 {
@@ -503,6 +495,10 @@ double softMaxCrossEntropy (ItOutput itProbabilityBegin, ItOutput itProbabilityE
 
 
 
+/*! \brief compute the weight decay for regularization (L1 or L2)
+ *
+ * 
+ */
 template <typename ItWeight>
     double weightDecay (double error, ItWeight itWeight, ItWeight itWeightEnd, double factorWeightDecay, EnumRegularization eRegularization)
 {
@@ -547,6 +543,10 @@ template <typename ItWeight>
 
 
 
+/*! \brief apply the weights (and functions) in forward direction of the NN
+ *
+ * 
+ */
 template <typename LAYERDATA>
 void forward (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData)
 {
@@ -563,9 +563,13 @@ void forward (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData)
                       currLayerData.weightsBegin (), 
                       currLayerData.valuesBegin (), currLayerData.valuesEnd ());
     }
-    applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.functionBegin ());
+    //applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.activationFunction ());
 }
 
+/*! \brief apply weights (and functions) in forward direction and compute the gradients
+ *
+ * 
+ */
 template <typename LAYERDATA>
 void forward_training (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData)
 {
@@ -582,11 +586,22 @@ void forward_training (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData)
                       currLayerData.weightsBegin (), 
                       currLayerData.valuesBegin (), currLayerData.valuesEnd ());
     }
-    applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.functionBegin (), 
-		    currLayerData.inverseFunctionBegin (), currLayerData.valueGradientsBegin ());
+
+//    if (isFlagSet (ModeOutputValues::BATCHNORMALIZATION))
+    {
+        // http://docs.chainer.org/en/stable/_modules/chainer/functions/normalization/batch_normalization.html
+        
+    }
+    
+//    applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.activationFunction (), 
+//		    currLayerData.inverseActivationFunction (), currLayerData.valueGradientsBegin ());
 }
 
 
+/*! \brief backward application of the weights (back-propagation of the error)
+ *
+ * 
+ */
 template <typename LAYERDATA>
 void backward (LAYERDATA& prevLayerData, LAYERDATA& currLayerData)
 {
@@ -607,6 +622,10 @@ void backward (LAYERDATA& prevLayerData, LAYERDATA& currLayerData)
 
 
 
+/*! \brief update the node values
+ *
+ * 
+ */
 template <typename LAYERDATA>
 void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double factorWeightDecay, EnumRegularization regularization)
 {
@@ -652,6 +671,13 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 
 
 
+/*! \brief compute the drop-out-weight factor
+ *
+ * when using drop-out a fraction of the nodes is turned off at each cycle of the computation
+ * once all nodes are turned on again (for instances when the test samples are evaluated), 
+ * the weights have to be adjusted to account for the different number of active nodes
+ * this function computes the factor and applies it to the weights
+ */
     template <typename WeightsType, typename DropProbabilities>
         void Net::dropOutWeightFactor (WeightsType& weights,
                                        const DropProbabilities& drops, 
@@ -683,7 +709,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
             if (inverse)
             {
                 p = 1.0/p;
-            }
+	    }
 	    size_t _numWeights = layer.numWeights (numNodesPrev);
             for (size_t iWeight = 0; iWeight < _numWeights; ++iWeight)
             {
@@ -704,6 +730,14 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
         
     
 
+/*! \brief execute the training until convergence emerges
+ *
+ * \param weights the container with the weights (synapses)
+ * \param trainPattern the pattern for the training
+ * \param testPattern the pattern for the testing
+ * \param minimizer the minimizer (e.g. steepest gradient descent) to be used
+ * \param settings the settings for the training (e.g. multithreading or not, regularization etc.)
+ */
     template <typename Minimizer>
         double Net::train (std::vector<double>& weights, 
 		  std::vector<Pattern>& trainPattern, 
@@ -843,6 +877,17 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 
 
 
+/*! \brief execute a single training cycle
+ *
+ * uses multithreading if turned on
+ *
+ * \param minimizer the minimizer to be used (e.g. SGD)
+ * \param weights the weight container with all the synapse weights
+ * \param itPatternBegin begin of the pattern container
+ * \parama itPatternEnd the end of the pattern container
+ * \param settings the settings for this training (e.g. multithreading or not, regularization, etc.)
+ * \param dropContainer the data for dropping-out nodes (regularization technique)
+ */
     template <typename Iterator, typename Minimizer>
         inline double Net::trainCycle (Minimizer& minimizer, std::vector<double>& weights, 
 			      Iterator itPatternBegin, Iterator itPatternEnd, Settings& settings, DropContainer& dropContainer)
@@ -852,9 +897,9 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 	size_t numBatches = numPattern/settings.batchSize ();
 	size_t numBatches_stored = numBatches;
 
+	std::random_shuffle (itPatternBegin, itPatternEnd);
 	Iterator itPatternBatchBegin = itPatternBegin;
 	Iterator itPatternBatchEnd = itPatternBatchBegin;
-	std::random_shuffle (itPatternBegin, itPatternEnd);
 
         // create batches
         std::vector<Batch> batches;
@@ -871,6 +916,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
             batches.push_back (Batch (itPatternBatchEnd, itPatternEnd));
 
 
+        ///< turn on multithreading if requested
         if (settings.useMultithreading ())
         {
             // -------------------- divide the batches into bunches for each thread --------------
@@ -895,6 +941,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
             std::vector<std::future<double>> futures;
             for (auto& batchRange : batchVec)
             {
+                // -------------------- execute each of the batch ranges on a different thread -------------------------------
                 futures.push_back (
                     std::async (std::launch::async, [&]() 
                                 {
@@ -903,7 +950,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
                                     {
                                         Batch& batch = *it;
                                         std::tuple<Settings&, Batch&, DropContainer&> settingsAndBatch (settings, batch, dropContainer);
-                                        localError += minimizer ((*this), weights, settingsAndBatch);
+                                        localError += minimizer ((*this), weights, settingsAndBatch); /// call the minimizer
                                     }
                                     return localError;
                                 })
@@ -922,6 +969,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
             }
         }
         
+        numBatches_stored = std::max (numBatches_stored, size_t(1)); /// normalize the error
 	error /= numBatches_stored;
         settings.testIteration ();
     
@@ -932,6 +980,11 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 
 
 
+/*! \brief compute the neural net
+ *
+ * \param input the input data
+ * \param weights the weight data
+ */
     template <typename Weights>
         std::vector<double> Net::compute (const std::vector<double>& input, const Weights& weights) const
     {
@@ -945,7 +998,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 	for (auto& layer: m_layers)
 	{
 	    layerData.push_back (LayerData (layer.numNodes (), itWeight, 
-						   begin (layer.activationFunctions ()),
+						   layer.activationFunction (),
 						   layer.modeOutputValues ()));
 	    size_t _numWeights = layer.numWeights (numNodesPrev);
 	    itWeight += _numWeights;
@@ -978,7 +1031,8 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
         double Net::operator() (PassThrough& settingsAndBatch, const Weights& weights) const
     {
 	std::vector<double> nothing; // empty gradients; no backpropagation is done, just forward
-	double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::begin (nothing), std::end (nothing), 100, nothing, false);
+        assert (numWeights () == weights.size ());
+	double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::begin (nothing), std::end (nothing), 10000, nothing, false);
         return error;
     }
 
@@ -986,7 +1040,8 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
         double Net::operator() (PassThrough& settingsAndBatch, const Weights& weights, ModeOutput /*eFetch*/, OutContainer& outputContainer) const
     {
 	std::vector<double> nothing; // empty gradients; no backpropagation is done, just forward
-	double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::begin (nothing), std::end (nothing), 1000, outputContainer, true);
+        assert (numWeights () == weights.size ());
+	double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::begin (nothing), std::end (nothing), 10000, outputContainer, true);
         return error;
     }
 
@@ -995,6 +1050,8 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
         double Net::operator() (PassThrough& settingsAndBatch, const Weights& weights, Gradients& gradients) const
     {
         std::vector<double> nothing;
+        assert (numWeights () == weights.size ());
+        assert (weights.size () == gradients.size ());
 	double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::begin (gradients), std::end (gradients), 0, nothing, false);
         return error;
     }
@@ -1002,6 +1059,8 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
     template <typename Weights, typename Gradients, typename PassThrough, typename OutContainer>
         double Net::operator() (PassThrough& settingsAndBatch, const Weights& weights, Gradients& gradients, ModeOutput eFetch, OutContainer& outputContainer) const
     {
+        assert (numWeights () == weights.size ());
+        assert (weights.size () == gradients.size ());
 	double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::begin (gradients), std::end (gradients), 0, outputContainer, true);
         return error;
     }
@@ -1010,6 +1069,10 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 
 
 
+/*! \brief forward propagation and backward propagation
+ *
+ * 
+ */
     template <typename LayerContainer, typename PassThrough, typename ItWeight, typename ItGradient, typename OutContainer>
         double Net::forward_backward (LayerContainer& _layers, PassThrough& settingsAndBatch, 
 			     ItWeight itWeightBegin, 
@@ -1021,6 +1084,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
         Batch& batch = std::get<1>(settingsAndBatch);
 	DropContainer& dropContainer = std::get<2>(settingsAndBatch);
 
+        bool doBatchNormalization = settings.doBatchNormalization ();
 	bool usesDropOut = !dropContainer.empty ();
 
         LayerData::const_dropout_iterator itDropOut;
@@ -1037,35 +1101,67 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 	double sumError = 0.0;
 	double sumWeights = 0.0;	// -------------
 
-        // ----------- create layer data -----------------
+        // ----------- create layer data -------------------------------------------------------
         assert (_layers.back ().numNodes () == outputSize ());
         size_t totalNumWeights = 0;
-        std::vector<LayerData> layerData;
-        layerData.reserve (_layers.size ()+1);
+        std::vector<std::vector<LayerData>> layerPatternData;
+        layerPatternData.reserve (_layers.size ()+1);
         ItWeight itWeight = itWeightBegin;
         ItGradient itGradient = itGradientBegin;
         size_t numNodesPrev = inputSize ();
-        layerData.push_back (LayerData (numNodesPrev));
-        if (usesDropOut)
-        {
-            layerData.back ().setDropOut (itDropOut);
-            itDropOut += _layers.back ().numNodes ();
-        }
-        for (auto& layer: _layers)
-        {
-            if (itGradientBegin == itGradientEnd)
-                layerData.push_back (LayerData (layer.numNodes (), itWeight, 
-                                                std::begin (layer.activationFunctions ()),
-                                                layer.modeOutputValues ()));
-            else
-                layerData.push_back (LayerData (layer.numNodes (), itWeight, itGradient, 
-                                                std::begin (layer.activationFunctions ()),
-                                                std::begin (layer.inverseActivationFunctions ()),
-                                                layer.modeOutputValues ()));
+        typename Pattern::const_iterator itInputBegin;
+        typename Pattern::const_iterator itInputEnd;
 
+        // --------------------- prepare layer data for input layer ----------------------------
+        layerPatternData.push_back (std::vector<LayerData>());
+	for (const Pattern& _pattern : batch)
+        {
+            std::vector<LayerData>& layerData = layerPatternData.back ();
+            layerData.push_back (LayerData (numNodesPrev));
+
+            itInputBegin = _pattern.beginInput ();
+            itInputEnd = _pattern.endInput ();
+            layerData.back ().setInput (itInputBegin, itInputEnd);
+            
             if (usesDropOut)
             {
                 layerData.back ().setDropOut (itDropOut);
+            }
+        }
+        if (usesDropOut)
+        {
+            itDropOut += _layers.back ().numNodes ();
+        }
+
+        // ---------------- prepare subsequent layers ---------------------------------------------
+        // for each of the layers
+        for (auto& layer: _layers)
+        {
+            layerPatternData.push_back (std::vector<LayerData>());
+            // for each pattern, prepare a layerData
+            for (const Pattern& _pattern : batch)
+            {
+                std::vector<LayerData>& layerData = layerPatternData.back ();
+                //layerData.push_back (LayerData (numNodesPrev));
+
+                if (itGradientBegin == itGradientEnd)
+                    layerData.push_back (LayerData (layer.numNodes (), itWeight, 
+                                                    layer.activationFunction (),
+                                                    layer.modeOutputValues ()));
+                else
+                    layerData.push_back (LayerData (layer.numNodes (), itWeight, itGradient, 
+                                                    layer.activationFunction (),
+                                                    layer.inverseActivationFunction (),
+                                                    layer.modeOutputValues ()));
+
+                if (usesDropOut)
+                {
+                    layerData.back ().setDropOut (itDropOut);
+                }
+            }
+
+            if (usesDropOut)
+            {
                 itDropOut += layer.numNodes ();
             }
             size_t _numWeights = layer.numWeights (numNodesPrev);
@@ -1073,94 +1169,148 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
             itWeight += _numWeights;
             itGradient += _numWeights;
             numNodesPrev = layer.numNodes ();
-//                std::cout << layerData.back () << std::endl;
         }
 	assert (totalNumWeights > 0);
 
 
 
-        // ---------------------------------- loop over pattern -------------------------------------------------------
-        typename Pattern::const_iterator itInputBegin;
-        typename Pattern::const_iterator itInputEnd;
-	for (const Pattern& _pattern : batch)
+        // ---------------------------------- loop over layers and pattern -------------------------------------------------------
+	for (size_t idxLayer = 0, idxLayerEnd = layerPatternData.size (); idxLayer < idxLayerEnd-1; ++idxLayer) //std::vector<LayerData>& layerPattern : layerPatternData)
 	{
-            bool isFirst = true;
-            for (auto& _layerData: layerData)
+	    bool doTraining = idxLayer >= trainFromLayer;
+
+            // get layer-pattern data for this and the corresponding one from the next layer
+            std::vector<LayerData>& prevLayerPatternData = layerPatternData.at (idxLayer);
+            std::vector<LayerData>& currLayerPatternData = layerPatternData.at (idxLayer+1);
+
+            size_t numPattern = prevLayerPatternData.size ();
+
+            std::vector<MeanVariance> means (_layers.at (idxLayer).numNodes ());
+            // ---------------- loop over layerDatas of pattern compute forward ----------------------------
+            for (size_t idxPattern = 0; idxPattern < numPattern; ++idxPattern)
             {
-                _layerData.clear ();
-                if (isFirst)
-                {
-                    itInputBegin = _pattern.beginInput ();
-                    itInputEnd = _pattern.endInput ();
-                    _layerData.setInput (itInputBegin, itInputEnd);
-                    isFirst = false;
-                }
-            }
+		const LayerData& prevLayerData = prevLayerPatternData.at (idxPattern);
+		LayerData& currLayerData = currLayerPatternData.at (idxPattern);
+                
             
-	    // --------- forward -------------
-//            std::cout << "forward" << std::endl;
-	    bool doTraining (true);
-	    size_t idxLayer = 0, idxLayerEnd = _layers.size ();
-	    for (; idxLayer < idxLayerEnd; ++idxLayer)
-	    {
-		LayerData& prevLayerData = layerData.at (idxLayer);
-		LayerData& currLayerData = layerData.at (idxLayer+1);
-		
-		doTraining = idxLayer >= trainFromLayer;
 		if (doTraining)
 		    forward_training (prevLayerData, currLayerData);
 		else
 		    forward (prevLayerData, currLayerData);
-	    }
 
-            
-            // ------------- fetch output ------------------
-            if (fetchOutput)
-            {
-		if (layerData.back ().outputMode () == ModeOutputValues::DIRECT)
-		    outputContainer.insert (outputContainer.end (), layerData.back ().valuesBegin (), layerData.back ().valuesEnd ());
-		else
-		    outputContainer = layerData.back ().probabilities ();
+
+                // -------- compute batch mean and variance if batch normalization is turned on ------------------
+                if (doBatchNormalization && doTraining)
+                {
+//                    means.at (idxPattern).add (*(prevLayerData.valuesBegin ()+idxPattern));
+                }
             }
 
+            // ---------------- do batch normalization ----------------------------
+            if (doBatchNormalization)
+            {
+                if (doTraining) // take means and variances from batch
+                {
+                    for (size_t idxPattern = 0; idxPattern < numPattern; ++idxPattern)
+                    {
+                    }
+                }
+                else // take average mean and variance for batch normalization
+                {
+                }
+            }
+            
+            // ---------------- loop over layerDatas of pattern apply non-linearities ----------------------------
+            for (size_t idxPattern = 0; idxPattern < numPattern; ++idxPattern)
+            {
+		const LayerData& prevLayerData = prevLayerPatternData.at (idxPattern);
+		LayerData& currLayerData = currLayerPatternData.at (idxPattern);
+                
+		if (doTraining)
+                    applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.activationFunction (), 
+                                    currLayerData.inverseActivationFunction (), currLayerData.valueGradientsBegin ());
+		else
+                    applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.activationFunction ());
+            }
 
-	    // ------------- error computation -------------
-	    // compute E and the deltas of the computed output and the true output 
-	    itWeight = itWeightBegin;
-	    double error = errorFunction (layerData.back (), _pattern.output (), 
-					  itWeight, itWeight + totalNumWeights, 
-					  _pattern.weight (), settings.factorWeightDecay (),
+        }
+            
+        // ------------- fetch output ------------------
+        if (fetchOutput)
+        {
+            for (LayerData& lastLayerData : layerPatternData.back ())
+            {
+                if (lastLayerData.outputMode () == ModeOutputValues::DIRECT)
+                    outputContainer.insert (outputContainer.end (), lastLayerData.valuesBegin (), lastLayerData.valuesEnd ());
+                else
+                    outputContainer = lastLayerData.probabilities ();
+            }
+        }
+
+
+        // ------------- error computation -------------
+        std::vector<LayerData>& lastLayerData = layerPatternData.back ();
+
+        bool doTraining = layerPatternData.size () > trainFromLayer;
+
+        typename std::vector<LayerData>::iterator itLayerData    = lastLayerData.begin ();
+        typename std::vector<LayerData>::iterator itLayerDataEnd = lastLayerData.end ();
+
+        typename std::vector<Pattern>::const_iterator itPattern = batch.begin ();
+        typename std::vector<Pattern>::const_iterator itPatternEnd = batch.end ();
+
+        size_t idxPattern = 0;
+        for ( ; itPattern != itPatternEnd; ++itPattern, ++itLayerData)
+        {
+            ++idxPattern;
+                
+            // compute E and the deltas of the computed output and the true output
+            LayerData& layerData = (*itLayerData);
+            const Pattern& _pattern = (*itPattern);
+            itWeight = itWeightBegin;
+            double error = errorFunction (layerData, _pattern.output (), 
+                                          itWeight, itWeight + totalNumWeights, 
+                                          _pattern.weight (), settings.factorWeightDecay (),
                                           settings.regularization ());
-	    sumWeights += fabs (_pattern.weight ());
-	    sumError += error;
+            sumWeights += fabs (_pattern.weight ());
+            sumError += error;
+        }
+            
+        if (doTraining) // training
+        {
+            // ------------- backpropagation -------------
+            size_t idxLayer = layerPatternData.size ();
+            for (auto itLayerPatternData = layerPatternData.rbegin (), itLayerPatternDataBegin = layerPatternData.rend ();
+                 itLayerPatternData != itLayerPatternDataBegin; ++itLayerPatternData)
+            {
+                --idxLayer;
+                if (idxLayer <= trainFromLayer) // no training
+                    break;
 
-	    if (!doTraining) // no training
-		continue;
+                std::vector<LayerData>& currLayerDataColl = *(itLayerPatternData);
+                std::vector<LayerData>& prevLayerDataColl = *(itLayerPatternData+1);
+                
+                idxPattern = 0;
+                for (typename std::vector<LayerData>::iterator itCurrLayerData = begin (currLayerDataColl), itCurrLayerDataEnd = end (currLayerDataColl),
+                     itPrevLayerData = begin (prevLayerDataColl), itPrevLayerDataEnd = end (prevLayerDataColl);
+                     itCurrLayerData != itCurrLayerDataEnd; ++itCurrLayerData, ++itPrevLayerData, ++idxPattern)
+                {
+                    LayerData& currLayerData = (*itCurrLayerData);
+                    LayerData& prevLayerData = *(itPrevLayerData);
 
-	    // ------------- backpropagation -------------
-	    idxLayer = layerData.size ();
-	    for (auto itLayer = end (_layers), itLayerBegin = begin (_layers); itLayer != itLayerBegin; --itLayer)
-	    {
-		--idxLayer;
-		doTraining = idxLayer >= trainFromLayer;
-		if (!doTraining) // no training
-		    break;
+                    backward (prevLayerData, currLayerData);
 
-		LayerData& currLayerData = layerData.at (idxLayer);
-		LayerData& prevLayerData = layerData.at (idxLayer-1);
-
-		backward (prevLayerData, currLayerData);
-
-                // the factorWeightDecay has to be scaled by 1/n where n is the number of weights (synapses)
-                // because L1 and L2 regularization
-                //
-                //  http://neuralnetworksanddeeplearning.com/chap3.html#overfitting_and_regularization
-                //
-                // L1 : -factorWeightDecay*sgn(w)/numWeights
-                // L2 : -factorWeightDecay/numWeights
-		update (prevLayerData, currLayerData, settings.factorWeightDecay ()/totalNumWeights, settings.regularization ());
-	    }
-	}
+                    // the factorWeightDecay has to be scaled by 1/n where n is the number of weights (synapses)
+                    // because L1 and L2 regularization
+                    //
+                    //  http://neuralnetworksanddeeplearning.com/chap3.html#overfitting_and_regularization
+                    //
+                    // L1 : -factorWeightDecay*sgn(w)/numWeights
+                    // L2 : -factorWeightDecay/numWeights
+                    update (prevLayerData, currLayerData, settings.factorWeightDecay ()/totalNumWeights, settings.regularization ());
+                }
+            }
+        }
         
         double batchSize = std::distance (std::begin (batch), std::end (batch));
         for (auto it = itGradientBegin; it != itGradientEnd; ++it)
@@ -1173,6 +1323,10 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 
 
 
+/*! \brief initialization of the weights
+ *
+ * 
+ */
     template <typename OutIterator>
     void Net::initializeWeights (WeightInitializationStrategy eInitStrategy, OutIterator itWeight)
     {
@@ -1277,6 +1431,10 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
     
 
 
+/*! \brief compute the error function
+ *
+ * 
+ */
     template <typename Container, typename ItWeight>
         double Net::errorFunction (LayerData& layerData,
                                    Container truth,
@@ -1293,7 +1451,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 	{
 	    error = sumOfSquares (layerData.valuesBegin (), layerData.valuesEnd (), begin (truth), end (truth), 
 				  layerData.deltasBegin (), layerData.deltasEnd (), 
-				  layerData.inverseFunctionBegin (), 
+				  layerData.inverseActivationFunction (), 
 				  patternWeight);
 	    break;
 	}
@@ -1304,7 +1462,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 	    error = crossEntropy (begin (probabilities), end (probabilities), 
 				  begin (truth), end (truth), 
 				  layerData.deltasBegin (), layerData.deltasEnd (), 
-				  layerData.inverseFunctionBegin (), 
+				  layerData.inverseActivationFunction (), 
 				  patternWeight);
 	    break;
 	}
@@ -1315,7 +1473,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 	    error = softMaxCrossEntropy (begin (probabilities), end (probabilities), 
 					 begin (truth), end (truth), 
 					 layerData.deltasBegin (), layerData.deltasEnd (), 
-					 layerData.inverseFunctionBegin (), 
+					 layerData.inverseActivationFunction (), 
 					 patternWeight);
 	    break;
 	}
@@ -1334,6 +1492,10 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 
 
 
+/*! \brief pre-training
+ *
+ * in development
+ */
     template <typename Minimizer>
         void Net::preTrain (std::vector<double>& weights,
         	  std::vector<Pattern>& trainPattern,
@@ -1383,7 +1545,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
             // define the preNet (pretraining-net) for this layer
             // outputSize == inputSize, because this is an autoencoder;
             preNet.setInputSize (_inputSize);
-            preNet.addLayer (NN::Layer (numNodes, _layer.activationFunction ()));
+            preNet.addLayer (NN::Layer (numNodes, _layer.activationFunctionType ()));
             preNet.addLayer (NN::Layer (_inputSize, NN::EnumFunction::LINEAR, NN::ModeOutputValues::DIRECT)); 
             preNet.setErrorFunction (NN::ModeErrorFunction::SUMOFSQUARES);
             preNet.setOutputSize (_inputSize); // outputSize is the inputSize (autoencoder)
@@ -1394,6 +1556,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 
             // overwrite already existing weights from the "general" weights
             std::copy (itWeightGeneral, itWeightGeneral+numWeights, preWeights.begin ());
+            std::copy (itWeightGeneral, itWeightGeneral+numWeights, preWeights.begin ()+numWeights); // set identical weights for the temporary output layer
             
 
             // train the "preNet"
@@ -1417,18 +1580,21 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
             // transform pattern using the created preNet
             auto proceedPattern = [&](std::vector<Pattern>& pttrn)
             {
+                std::vector<Pattern> newPttrn;
                 std::for_each (std::begin (pttrn), std::end (pttrn),
-                                [&preNet,&preWeights](Pattern& p)
+                               [&preNet,&preWeights,&newPttrn](Pattern& p)
                 {
                     std::vector<double> output = preNet.compute (p.input (), preWeights);
                     Pattern pat (output, output, p.weight ());
-                    p = pat;
+                    newPttrn.push_back (pat);
+//                    p = pat;
                 });
+                return newPttrn;
             };
 
 
-            proceedPattern (prePatternTrain);
-            proceedPattern (prePatternTest);
+            prePatternTrain = proceedPattern (prePatternTrain);
+            prePatternTest = proceedPattern (prePatternTest);
 
 
             // the new input size is the output size of the already reduced preNet
