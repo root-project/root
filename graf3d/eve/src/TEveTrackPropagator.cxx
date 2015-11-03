@@ -346,7 +346,8 @@ void TEveTrackPropagator::ResetTrack()
 {
    // Reset cache holding particle trajectory.
 
-   fPoints.clear();
+   fLastPoints.clear();
+   fPoints.swap(fLastPoints);
 
    // reset helix
    fH.fPhi = 0;
