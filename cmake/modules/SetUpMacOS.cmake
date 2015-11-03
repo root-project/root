@@ -94,7 +94,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      set(EXEEXT "")
      set(SOEXT "so")
 
-  elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+  elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 
      message(STATUS "Found LLVM compiler collection")
 
@@ -128,7 +128,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      set(EXEEXT "")
      set(SOEXT "so")
   else()
-    MESSAGE(FATAL_ERROR "There is no setup for this compiler up to now. Don't know waht to do. Stop cmake at this point.")
+    MESSAGE(FATAL_ERROR "There is no setup for this compiler with ID=${CMAKE_CXX_COMPILER_ID} up to now. Don't know what to do. Stop cmake at this point.")
   endif()
 
   #---Set Linker flags----------------------------------------------------------------------
