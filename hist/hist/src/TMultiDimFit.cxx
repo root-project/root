@@ -13,7 +13,7 @@
  An example in high energy physics is the evaluation of the momentum of
  a charged particle from the observation of its trajectory in a magnetic
  field.  The problem is to relate the momentum of the particle to the
- observations, which may consists of of positional measurements at
+ observations, which may consists of positional measurements at
  intervals along the particle trajectory.
 
  The exact functional relationship between the measured quantities
@@ -377,12 +377,12 @@
  - <a name="wind81"></a>H. Wind. 1. principal component analysis, 2. pattern recognition for track
    finding, 3. interpolation and functional representation. Yellow report EP/81-12, CERN, 1981.
 
-[1]: TMultiFimFit.html#bevington
-[2]: TMultiFimFit.html#mudifi
-[4]: TMultiFimFit.html#minuit
-[5]: TMultiFimFit.html#wind72
-[6]: TMultiFimFit.html#wind81
-[9]: TMultiFimFit.html#eq:dS2
+[1]: classTMultiFimFit.html#bevington
+[2]: classTMultiFimFit.html#mudifi
+[4]: classTMultiFimFit.html#minuit
+[5]: classTMultiFimFit.html#wind72
+[6]: classTMultiFimFit.html#wind81
+[9]: classTMultiFimFit.html#eq:dS2
 */
 
 
