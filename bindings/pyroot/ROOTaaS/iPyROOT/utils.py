@@ -1,8 +1,8 @@
 import os
 import sys
 import select
-import time
 import tempfile
+import pty
 import itertools
 import re
 import fnmatch
@@ -209,15 +209,14 @@ def invokeAclic(cell):
     else:
         processCppCode(".L %s+" %fileName)
 
-
 class StreamCapture(object):
     def __init__(self, stream, ip=get_ipython()):
-        streamsFileNo={sys.stderr:2,sys.stdout:1}
-        self.pipe_out = None
-        self.pipe_in = None
-        self.sysStreamFile = stream
-        self.sysStreamFileNo = streamsFileNo[stream]
+        nbStreamsPyStreamsMap={sys.stderr:sys.__stderr__,sys.stdout:sys.__stdout__}
         self.shell = ip
+        self.nbStream = stream
+        self.pyStream = nbStreamsPyStreamsMap[stream]
+        self.pipe_out, self.pipe_in = pty.openpty()
+        os.dup2(self.pipe_in, self.pyStream.fileno())
         # Platform independent flush
         # With ctypes, the name of the libc library is not known a priori
         # We use jitted function
@@ -226,27 +225,21 @@ class StreamCapture(object):
            declareCppCode("void %s(){fflush(nullptr);};" %flushFunctionName)
         self.flush = getattr(ROOT,flushFunctionName)
 
-
     def more_data(self):
         r, _, _ = select.select([self.pipe_out], [], [], 0)
         return bool(r)
-
-    def pre_execute(self):
-        self.pipe_out, self.pipe_in = os.pipe()
-        os.dup2(self.pipe_in, self.sysStreamFileNo)
 
     def post_execute(self):
         out = ''
         if self.pipe_out:
             while self.more_data():
-                out += os.read(self.pipe_out, 1024)
+                out += os.read(self.pipe_out, 8192)
 
         self.flush()
-        self.sysStreamFile.write(out) # important to print the value printing output
+        self.nbStream.write(out) # important to print the value printing output
         return 0
 
     def register(self):
-        self.shell.events.register('pre_execute', self.pre_execute)
         self.shell.events.register('post_execute', self.post_execute)
 
 class CaptureDrawnCanvases(object):
