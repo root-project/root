@@ -108,6 +108,7 @@
 
 #include <math.h>
 #include <fstream>
+#include <unordered_map>
 
 #include "Riostream.h"
 #include "TRandom3.h"
@@ -1451,28 +1452,32 @@ Double_t TMVA::MethodBDT::GetWeightedQuantile(vector<  std::pair<Double_t, Doubl
 ////////////////////////////////////////////////////////////////////////////////
 ///Calculate the desired response value for each region
 
-Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt, UInt_t cls)
+Double_t TMVA::MethodBDT::GradBoost(const std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt, UInt_t cls)
 {
-   std::map<TMVA::DecisionTreeNode*,std::vector<Double_t> > leaves;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-      Double_t weight = (*e)->GetWeight();
-      TMVA::DecisionTreeNode* node = dt->GetEventNode(*(*e));
-      if ((leaves[node]).empty()){
-         (leaves[node]).push_back((*e)->GetTarget(cls)* weight);
-         (leaves[node]).push_back(fabs((*e)->GetTarget(cls))*(1.0-fabs((*e)->GetTarget(cls))) * weight* weight);
+   std::unordered_map<TMVA::DecisionTreeNode*, std::vector<Double_t>> leaves;
+   for (auto e : eventSample) {
+      Double_t weight = e->GetWeight();
+      TMVA::DecisionTreeNode* node = dt->GetEventNode(*e);
+      auto &v = leaves[node];
+      auto target = e->GetTarget(cls);
+      if (v.empty()) {
+         v.push_back(target * weight);
+         v.push_back(fabs(target) * (1.0-fabs(target)) * weight * weight);
       }
       else {
-         (leaves[node])[0]+=((*e)->GetTarget(cls)* weight);
-         (leaves[node])[1]+=fabs((*e)->GetTarget(cls))*(1.0-fabs((*e)->GetTarget(cls))) * weight* weight;
+         v[0] += target * weight;
+         v[1] += fabs(target) * (1.0-fabs(target)) * weight * weight;
       }
    }
-   for (std::map<TMVA::DecisionTreeNode*,std::vector<Double_t> >::iterator iLeave=leaves.begin();
-        iLeave!=leaves.end();++iLeave){
-      if ((iLeave->second)[1]<1e-30) (iLeave->second)[1]=1e-30;
 
-      (iLeave->first)->SetResponse(fShrinkage/DataInfo().GetNClasses()*(iLeave->second)[0]/((iLeave->second)[1]));
+   for (auto &iLeave : leaves) {
+      constexpr auto minValue = 1e-30;
+      if (iLeave.second[1] < minValue) {
+         iLeave.second[1] = minValue;
+      }
+      iLeave.first->SetResponse(fShrinkage/DataInfo().GetNClasses() * iLeave.second[0]/iLeave.second[1]);
    }
-   
+
    //call UpdateTargets before next tree is grown
 
    DoMulticlass() ? UpdateTargets(fEventSample, cls) : UpdateTargets(fEventSample);
@@ -1482,29 +1487,33 @@ Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation of M_TreeBoost using a Huber loss function as desribed by Friedman 1999
 
-Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt )
+Double_t TMVA::MethodBDT::GradBoostRegression(const std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt )
 {
-   std::map<TMVA::DecisionTreeNode*,Double_t > leaveWeights;
-   std::map<TMVA::DecisionTreeNode*,vector< std::pair<Double_t, Double_t> > > leaves;
-   UInt_t i =0;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-      TMVA::DecisionTreeNode* node = dt->GetEventNode(*(*e));      
-      (leaves[node]).push_back(make_pair(fWeightedResiduals[*e].first,(*e)->GetWeight()));
-      (leaveWeights[node]) += (*e)->GetWeight();
-      i++;
+   struct DTNodeAdditionalInformation {
+      Double_t leafWeight = 0;
+      std::vector<std::pair<Double_t, Double_t>> leaves;
+   };
+   std::unordered_map<TMVA::DecisionTreeNode*, DTNodeAdditionalInformation> nodeInfos;
+
+   for (auto e : eventSample) {
+      auto eventWeight = e->GetWeight();
+      TMVA::DecisionTreeNode* node = dt->GetEventNode(*e);
+      auto &nodeInfo = nodeInfos[node];
+      nodeInfo.leaves.push_back(make_pair(fWeightedResiduals[e].first, eventWeight));
+      nodeInfo.leafWeight += eventWeight;
    }
 
-   for (std::map<TMVA::DecisionTreeNode*,vector< std::pair<Double_t, Double_t> > >::iterator iLeave=leaves.begin();
-        iLeave!=leaves.end();++iLeave){
-      Double_t shift=0,diff= 0;
-      Double_t ResidualMedian = GetWeightedQuantile(iLeave->second,0.5,leaveWeights[iLeave->first]);
-      for(UInt_t j=0;j<((iLeave->second).size());j++){
-         diff = (iLeave->second)[j].first-ResidualMedian;
-         shift+=1.0/((iLeave->second).size())*((diff<0)?-1.0:1.0)*TMath::Min(fTransitionPoint,fabs(diff));
+   for (auto &node_to_info : nodeInfos) {
+      Double_t shift = 0;
+      Double_t diff = 0;
+      Double_t ResidualMedian = GetWeightedQuantile(node_to_info.second.leaves, 0.5, node_to_info.second.leafWeight);
+      for (auto &leafPair : node_to_info.second.leaves) {
+         diff = leafPair.first - ResidualMedian;
+         shift += 1.0 / node_to_info.second.leaves.size() * ((diff<0)?-1.0:1.0)*TMath::Min(fTransitionPoint,fabs(diff));
       }
-      (iLeave->first)->SetResponse(fShrinkage*(ResidualMedian+shift));          
+      node_to_info.first->SetResponse(fShrinkage * (ResidualMedian + shift));
    }
-   
+
    UpdateTargetsRegression(*fTrainSample);
    return 1;
 }

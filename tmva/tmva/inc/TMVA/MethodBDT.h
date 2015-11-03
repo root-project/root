@@ -196,8 +196,8 @@ namespace TMVA {
       // binomial likelihood gradient boost for classification
       // (see Friedman: "Greedy Function Approximation: a Gradient Boosting Machine"
       // Technical report, Dept. of Statistics, Stanford University)
-      Double_t GradBoost( std::vector<const TMVA::Event*>&, DecisionTree *dt, UInt_t cls = 0);
-      Double_t GradBoostRegression(std::vector<const TMVA::Event*>&, DecisionTree *dt );
+      Double_t GradBoost(const std::vector<const TMVA::Event*>&, DecisionTree *dt, UInt_t cls = 0);
+      Double_t GradBoostRegression(const std::vector<const TMVA::Event*>&, DecisionTree *dt);
       void InitGradBoost( std::vector<const TMVA::Event*>&);
       void UpdateTargets( std::vector<const TMVA::Event*>&, UInt_t cls = 0);
       void UpdateTargetsRegression( std::vector<const TMVA::Event*>&,Bool_t first=kFALSE);
