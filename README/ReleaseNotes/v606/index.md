@@ -296,6 +296,11 @@ or in clear text specify IP address to which http socket should be bind:
 If host has several network interfaces, one could select one for binding:
     new THttpServer("http:192.168.1.17:8080")
 
+### TNetXNGFileStager
+Fixed ROOT-7703. This restores the behavior of Locate() to that found with
+TXNetFileStager: Rather than return only the xrootd server's reply, the endpoint
+hostname is looked up and Locate() returns the full url, including the path.
+
 
 ## GUI Libraries
 

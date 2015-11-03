@@ -23,6 +23,8 @@
 
 #include "TSystem.h"
 #include "TCollection.h"
+#include "TMutex.h"
+#include "THashList.h"
 #include <set>
 
 namespace XrdCl {
@@ -39,6 +41,8 @@ private:
 private:
    XrdCl::URL        *fUrl;        // URL of this TSystem
    XrdCl::FileSystem *fFileSystem; // Cached for convenience
+   static THashList   fgAddrFQDN;  // Cache of addresses to FQDNs
+   static TMutex      fgAddrMutex; // Serialise access to the FQDN list
 
 #endif
 
