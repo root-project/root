@@ -11,17 +11,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGX11TTF                                                             //
-//                                                                      //
-// Interface to low level X11 (Xlib). This class gives access to basic  //
-// X11 graphics via the parent class TGX11. However, all text and font  //
-// handling is done via the Freetype TrueType library. When the         //
-// shared library containing this class is loaded the global gVirtualX  //
-// is redirected to point to this class.                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGX11TTF
+\ingroup GraphicsBackends
+
+Interface to low level X11 (Xlib). This class gives access to basic
+X11 graphics via the parent class TGX11. However, all text and font
+handling is done via the Freetype TrueType library. When the
+shared library containing this class is loaded the global gVirtualX
+is redirected to point to this class.
+*/
 
 #include <stdlib.h>
 
@@ -125,15 +123,13 @@ public:
 };
 #endif  // R__HAS_XFT
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTFX11Init                                                           //
-//                                                                      //
-// Small utility class that takes care of switching the current         //
-// gVirtualX to the new TGX11TTF class as soon as the shared library    //
-// containing this class is loaded.                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTFX11Init
+\ingroup GraphicsBackends
+
+Small utility class that takes care of switching the current
+gVirtualX to the new TGX11TTF class as soon as the shared library
+containing this class is loaded.
+*/
 
 class TTFX11Init {
 public:
@@ -302,7 +298,7 @@ void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
       delete [] bcol;
 
       // if fore or background have changed from previous character
-      // recalculate the 3 smooting colors (interpolation between fore-
+      // recalculate the 3 smoothing colors (interpolation between fore-
       // and background colors)
       if (fore != col[4].pixel || back != col[0].pixel) {
          col[4].pixel = fore;
@@ -316,7 +312,7 @@ void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
             QueryColors(fColormap, &col[4], 1);
          }
 
-         // interpolate between fore and backgound colors
+         // interpolate between fore and background colors
          for (x = 3; x > 0; x--) {
             col[x].red   = (col[4].red  *x + col[0].red  *(4-x)) /4;
             col[x].green = (col[4].green*x + col[0].green*(4-x)) /4;
@@ -614,7 +610,7 @@ FontStruct_t TGX11TTF::LoadQueryFont(const char *font_name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Explicitely delete font structure obtained with LoadQueryFont().
+/// Explicitly delete font structure obtained with LoadQueryFont().
 
 void TGX11TTF::DeleteFont(FontStruct_t fs)
 {
@@ -630,7 +626,7 @@ void TGX11TTF::DeleteFont(FontStruct_t fs)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Explicitely delete a graphics context.
+/// Explicitly delete a graphics context.
 
 void TGX11TTF::DeleteGC(GContext_t gc)
 {
