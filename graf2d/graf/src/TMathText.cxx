@@ -41,7 +41,7 @@ End_Macro
 
 The list of all available symbols is given in the following example:
 
-Begin_Macro(source)
+Begin_Macro
 ../../../tutorials/graphics/tmathtext2.C
 End_Macro
 */

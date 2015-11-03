@@ -84,7 +84,7 @@ be changed using the method `SetTextAngle` and retrieved using the
 method `GetTextAngle`.
 The following picture shows the text angle:
 
-Begin_Macro(source)
+Begin_Macro
 textangle.C
 End_Macro
 
@@ -110,11 +110,10 @@ be changed using the method `SetTextColor` and retrieved using the
 method `GetTextColor`.
 The following table shows the first 50 default colors.
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c","Text colors",0,0,500,200);
    c->DrawColorTable();
-   return c;
 }
 End_Macro
 
@@ -239,7 +238,7 @@ printout given by this command:
 The following picture shows how each font looks. The number on the left
 is the "text font code". In this picture precision 2 was selected.
 
-Begin_Macro(source)
+Begin_Macro
 fonts.C
 End_Macro
 */
