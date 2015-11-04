@@ -14,16 +14,16 @@ import sys
 COMMAND_HELP = "Remove objects from ROOT files"
 
 EPILOG = """Examples:
-- roorm example.root:hist
+- rootrm example.root:hist
   Remove the object 'hist' from the ROOT file 'example.root'
 
-- roorm example.root:dir/hist
+- rootrm example.root:dir/hist
   Remove the object 'hist' from the direcory 'dir' inside the ROOT file 'example.root'
 
-- roorm example.root
+- rootrm example.root
   Remove the ROOT file 'example.root'
 
-- roorm -i example.root:hist
+- rootrm -i example.root:hist
   Display a confirmation request before deleting: 'remove 'hist' from 'example.root' ? (y/n) :'
 """
 
