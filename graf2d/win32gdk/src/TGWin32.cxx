@@ -9,8 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/// \defgroup win32 Win32 backend
+/// \brief Interface Windows graphics.
+/// \ingroup GraphicsBackends
+
 /** \class TGWin32
-\ingroup GraphicsBackends
+\ingroup win32
 This class is the basic interface to the Win32 graphics system.
 It is  an implementation of the abstract TVirtualX class.
 
