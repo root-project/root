@@ -899,13 +899,15 @@ directory - this behavior is now implement by the default constructor.
 *   [[ROOT-7715](https://sft.its.cern.ch/jira/browse/ROOT-7715)] - Building ROOT with CMake not in my PATH fails
 
 -------------------------------------------------------------------------------------------------------------------------
-## HEAD of the v6-04-00-patches branch
 
-Changes will be part of the future 6.04/08
+## Release 6.04/08
 
 ### Build
 - Add --disable-search-usrlocal to configure/make to be able to avoid conflict with incompatible installation (e.g. homebrew).
 - Add /opt/X11 to configure/make search for include files and libraries.
+- Updates PCRE to 8.37 (current upstream version) which can detect PPC64LE machine.
+- Fail cmake configuration if the specified CMAKE_BUILD_TYPE is unknown
+- Fix RPATH for MacOSX (El Capitan) to avoid building with -Drpath=ON. The default uses rpath=@loader_path/../lib.
 
 ### Core
 - Add missing protection when creating new StreamerInfo.
@@ -921,7 +923,36 @@ Changes will be part of the future 6.04/08
 - For backward compatibility with ROOT5, allow to define IO constructors with the signature MyClass::MyClass(__void__&) where void is a forward declared type.
 - In TBuffer shrink buffers when requested.
 
+### Histograms
+- Fix interval calculation in Divide for the Poisson ratio case
+
 ### Minuit
 - Make function pointer held by TMinuitMinimize thread local
 
+Release Notes - ROOT - Version 6.04/08
+
+### Bugs
+
+*   [[ROOT-7627](https://sft.its.cern.ch/jira/browse/ROOT-7627)] - [ICC][CMake][PATCH] Pass CC and CXX to builtin_lzma if Intel C++ Compiler (ICC) Is used
+*   [[ROOT-7629](https://sft.its.cern.ch/jira/browse/ROOT-7629)] - [CMake][PPC64LE][PATCH] Set correct ROOT architecture on PPC64LE -- linuxppc64gcc
+*   [[ROOT-7708](https://sft.its.cern.ch/jira/browse/ROOT-7708)] - Failure in dictionary generation of HEPMC3
+*   [[ROOT-7713](https://sft.its.cern.ch/jira/browse/ROOT-7713)] - Menus not highlighted under mouse cursor using Cocoa backend in OS X El Capitan
+*   [[ROOT-7723](https://sft.its.cern.ch/jira/browse/ROOT-7723)] -  allow IOCtors to have as argument a ref to a type called __void__
+*   [[ROOT-7725](https://sft.its.cern.ch/jira/browse/ROOT-7725)] - MANPATH not correctly set by thisroot.sh
+*   [[ROOT-7727](https://sft.its.cern.ch/jira/browse/ROOT-7727)] - CMake: include/compiledata.h has empty CXXOPT and CXXDEBUG
+*   [[ROOT-7737](https://sft.its.cern.ch/jira/browse/ROOT-7737)] - Assert in cling when using undeclared variables
+*   [[ROOT-7744](https://sft.its.cern.ch/jira/browse/ROOT-7744)] - Crash in llvm::cl::AddLiteralOption
+
+### Improvement
+
+*   [[ROOT-7630](https://sft.its.cern.ch/jira/browse/ROOT-7630)] - [pcre][PPC64LE][PATCH] Update builtin_pcre to 8.37 version
+
+### Task
+
+*   [[ROOT-7773](https://sft.its.cern.ch/jira/browse/ROOT-7773)] - find_package(ROOT) should include a set of default libraries
+
+-------------------------------------------------------------------------------------------------------------------------
+## HEAD of the v6-04-00-patches branch
+
+Changes will be part of the future 6.04/08
 
