@@ -211,6 +211,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
   add_test(NAME ${COMPILE_MACRO_TEST}
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
                                     --target ${compile_target}${fast})
+  set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY FAIL_REGULAR_EXPRESSION "Warning in")
 
 endmacro(ROOTTEST_COMPILE_MACRO)
 
