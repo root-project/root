@@ -12,7 +12,7 @@
  *************************************************************************/
 
 /** \class TGX11TTF
-\ingroup GraphicsBackends
+\ingroup x11
 
 Interface to low level X11 (Xlib). This class gives access to basic
 X11 graphics via the parent class TGX11. However, all text and font

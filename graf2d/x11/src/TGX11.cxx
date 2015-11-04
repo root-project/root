@@ -9,8 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/// \defgroup x11 X11 backend
+/// \brief Interface X11 graphics.
+/// \ingroup GraphicsBackends
+
 /** \class TGX11
-\ingroup GraphicsBackends
+\ingroup x11
 This class is the basic interface to the X11 (Xlib) graphics system.
 It is an implementation of the abstract TVirtualX class.
 
