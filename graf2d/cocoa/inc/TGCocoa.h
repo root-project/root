@@ -29,17 +29,21 @@
 #include "X11Atoms.h"
 #endif
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// This class implements TVirtualX interface                            //
-// for MacOS X, using Cocoa and Quartz 2D.                              //
-// TVirtualX is a typical fat interface, it's a "C++ wrapper" for       //
-// X11 library. It's a union of several orthogonal interfaces like:     //
-// color management, window management, pixmap management, cursors,     //
-// events, images, drag and drop, font management, gui-rendering,       //
-// non-gui graphics, etc. etc.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/// \defgroup cocoa Cocoa backend
+/// \brief Interface for MacOS native graphics system.
+/// \ingroup GraphicsBackends
+
+/** \class TGCocoa
+\ingroup cocoa
+
+This class implements TVirtualX interface for MacOS X, using Cocoa and Quartz 2D.
+
+TVirtualX is a typical fat interface, it's a "C++ wrapper" for
+X11 library. It's a union of several orthogonal interfaces like:
+color management, window management, pixmap management, cursors,
+events, images, drag and drop, font management, gui-rendering,
+non-gui graphics, etc. etc.
+*/
 
 namespace ROOT {
 namespace MacOSX {
@@ -373,7 +377,7 @@ public:
    //"Drag and drop" and "Copy and paste".
    /////////////////////////////
 
-   //The remaining bunch of functions is not sorted yet (and not imlemented at the moment).
+   //The remaining bunch of functions is not sorted yet (and not implemented at the moment).
 
    virtual UInt_t    ExecCommand(TGWin32Command *code);
    virtual void      GetCharacterUp(Float_t &chupx, Float_t &chupy);
