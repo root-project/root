@@ -69,6 +69,7 @@ class TRandom3;
 namespace TMVA {
 
    class Event;
+   class DecisionTreeVariableDetail;
 
    class DecisionTree : public BinaryTree {
 
@@ -116,9 +117,10 @@ namespace TMVA {
       Double_t TrainNode( const EventConstList & eventSample,  DecisionTreeNode *node ) { return TrainNodeFast( eventSample, node ); }
       Double_t TrainNodeFast( const EventConstList & eventSample,  DecisionTreeNode *node );
       Double_t TrainNodeFull( const EventConstList & eventSample,  DecisionTreeNode *node );
-      void    GetRandomisedVariables(Bool_t *useVariable, UInt_t *variableMap, UInt_t & nVars);
-      std::vector<Double_t>  GetFisherCoefficients(const EventConstList &eventSample, UInt_t nFisherVars, UInt_t *mapVarInFisher);
-    
+//       void    GetRandomisedVariables(Bool_t *useVariable, UInt_t *variableMap, UInt_t & nVars);
+      void GetRandomisedVariables(std::vector<DecisionTreeVariableDetail> &vars);
+      std::vector<Double_t>  GetFisherCoefficients(const EventConstList &eventSample, UInt_t nFisherVars, std::vector<UInt_t> &mapVarInFisher);
+
       // fill at tree with a given structure already (just see how many signa/bkgr
       // events end up in each node
 
@@ -210,6 +212,21 @@ namespace TMVA {
 
       // calculates the purity S/(S+B) of a given event sample
       Double_t SamplePurity(EventList eventSample);
+
+      // Helper functions for TrainNodeFast
+      struct TrainNodeFastTotalWeights {
+         Double_t sumSB() const { return nTotS + nTotB; }
+
+         Double_t  nTotS = 0, nTotB = 0;
+         Int_t     nTotS_unWeighted = 0, nTotB_unWeighted = 0;
+      };
+
+      void CalculateSeparationGain(std::vector<DecisionTreeVariableDetail> &vars, const TrainNodeFastTotalWeights &totals);
+      std::vector<Double_t> ApplyFisher(const EventConstList &eventSample, std::vector<DecisionTreeVariableDetail> &vars);
+      void TrainNodeFastPrepareBinning(std::vector<TMVA::DecisionTreeVariableDetail> &vars, TMVA::DecisionTreeNode *node, const std::vector<Double_t> &fisherCoeff, const EventConstList &eventSample);
+
+      TrainNodeFastTotalWeights TrainNodeFastCalculateWeights(const EventConstList &eventSample, std::vector<DecisionTreeVariableDetail> &vars, const std::vector<Double_t> &fisherCoeff);
+      void BetterSeparationGainFound(size_t imxVar, const std::vector<TMVA::DecisionTreeVariableDetail> &vars, const std::vector<Double_t> &fisherCoeff, const TrainNodeFastTotalWeights &totals, TMVA::DecisionTreeNode *node);
 
       UInt_t    fNvars;          // number of variables used to separate S and B
       Int_t     fNCuts;          // number of grid point in variable cut scans
