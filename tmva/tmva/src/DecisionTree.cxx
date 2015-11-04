@@ -62,6 +62,7 @@
 #include <fstream>
 #include <algorithm>
 #include <cassert>
+#include <thread>
 
 #include "TRandom3.h"
 #include "TMath.h"
@@ -1561,52 +1562,69 @@ void TMVA::DecisionTree::TrainNodeFastPrepareBinning(vector<TMVA::DecisionTreeVa
 
 }
 
+// std::mutex gAddWeightsMutex;
+
 TMVA::DecisionTree::TrainNodeFastTotalWeights TMVA::DecisionTree::TrainNodeFastCalculateWeights(const EventConstList &eventSample, vector<DecisionTreeVariableDetail> &vars, const vector<Double_t> &fisherCoeff) {
    TrainNodeFastTotalWeights totals;
-   for (auto event : eventSample) {
-      Double_t eventWeight = event->GetWeight();
-      if (event->GetClass() == fSigClass) {
-         totals.nTotS+=eventWeight;
-         totals.nTotS_unWeighted++;
-      } else {
-         totals.nTotB+=eventWeight;
-         totals.nTotB_unWeighted++;
-      }
-      for (UInt_t ivar=0; ivar < vars.size(); ivar++) {
-         // now scan trough the cuts for each varable and find which one gives
-         // the best separationGain at the current stage.
-         auto &var = vars[ivar];
-         if (!var.useVariable) continue;
 
-         Double_t eventData;
-         if (ivar < fNvars) {
-            eventData = event->GetValueFast(ivar);
-         } else {
-            // the fisher variable
-            eventData = fisherCoeff[fNvars];
-            for (UInt_t jvar=0; jvar<fNvars; jvar++) {
-               eventData += fisherCoeff[jvar] * event->GetValueFast(jvar);
+   auto job = [&eventSample, &vars, &fisherCoeff, &totals, this](size_t vars_begin, size_t vars_end, Bool_t sumTotals) -> void {
+      for (auto event : eventSample) {
+         Double_t eventWeight = event->GetWeight();
+         if (sumTotals) {
+            if (event->GetClass() == fSigClass) {
+               totals.nTotS += eventWeight;
+               ++totals.nTotS_unWeighted;
+            } else {
+               totals.nTotB += eventWeight;
+               ++totals.nTotB_unWeighted;
             }
          }
-         // "maximum" is nbins-1 (the "-1" because we start counting from 0 !!
-         Int_t iBin = TMath::Min(Int_t(var.bins.size()-1),
-                                 TMath::Max(0, int (var.bins.size()*(eventData-var.xmin)/ var.getXWidth() ) ));
-         BinDetail &bin = var.bins[iBin];
-         if (event->GetClass() == fSigClass) {
-            bin.nSelS += eventWeight;
-            ++bin.nSelS_unWeighted;
-         }
-         else {
-            bin.nSelB +=eventWeight;
-            ++bin.nSelB_unWeighted;
-         }
-         if (DoRegression()) {
-            auto weightTarget = event->GetTarget(0); // noch float, gleich nicht mehr
-            bin.target += eventWeight*weightTarget;
-            bin.target2+= eventWeight*weightTarget*weightTarget;
+
+         //for (UInt_t ivar=0; ivar < vars.size(); ivar++) {
+         for (auto ivar = vars_begin; ivar < vars_end; ++ivar) {
+            // now scan trough the cuts for each varable and find which one gives
+            // the best separationGain at the current stage.
+            auto &var = vars[ivar];
+            if (!var.useVariable) continue;
+
+            Double_t eventData;
+            if (ivar < fNvars) {
+               eventData = event->GetValue(ivar);
+            } else {
+               // the fisher variable
+               eventData = fisherCoeff[fNvars];
+               for (UInt_t jvar=0; jvar<fNvars; jvar++) {
+                  eventData += fisherCoeff[jvar] * event->GetValue(jvar);
+               }
+            }
+            // "maximum" is nbins-1 (the "-1" because we start counting from 0 !!
+            Int_t iBin = TMath::Min(Int_t(var.bins.size()-1),
+                                    TMath::Max(0, int (var.bins.size()*(eventData-var.xmin)/ var.getXWidth() ) ));
+            BinDetail &bin = var.bins[iBin];
+            if (event->GetClass() == fSigClass) {
+               bin.nSelS += eventWeight;
+               ++bin.nSelS_unWeighted;
+            }
+            else {
+               bin.nSelB +=eventWeight;
+               ++bin.nSelB_unWeighted;
+            }
+            if (DoRegression()) {
+               auto weightTarget = event->GetTarget(0); // noch float, gleich nicht mehr
+               bin.target += eventWeight*weightTarget;
+               bin.target2+= eventWeight*weightTarget*weightTarget;
+            }
          }
       }
-   }
+   };
+
+   // one of the job has to sum has to add the event weights to the
+   // totals variable, thus call one job with sumTotals=true, the other with false
+   auto mid = vars.size() / 2;
+   auto thread2 = std::thread(job, mid, vars.size(), kTRUE);
+
+   job(0, mid, kFALSE);
+   thread2.join();
 
    return totals;
 }

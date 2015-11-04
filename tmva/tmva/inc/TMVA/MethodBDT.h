@@ -259,6 +259,7 @@ namespace TMVA {
       Bool_t                           fTrainWithNegWeights; // yes there are negative event weights and we don't ignore them
       Bool_t                           fDoBoostMonitor; //create control plot with ROC integral vs tree number
 
+      UInt_t                           fMaxThreads; // number of threads the algorithm is allowed to use
 
       //some histograms for monitoring
       TTree*                           fMonitorNtuple;   // monitoring ntuple
