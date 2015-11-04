@@ -516,7 +516,7 @@ void TMVA::MethodNN::Train()
         const std::vector<Float_t>& values  = event->GetValues  ();
         if (fAnalysisType == Types::kClassification)
         {
-            double outputValue = event->GetClass () == 1 ? 0.1 : 0.9;
+            double outputValue = event->GetClass () == 1 ? 0.0 : 1.0;
             trainPattern.push_back (Pattern (values.begin  (), values.end (), outputValue, event->GetWeight ()));
             trainPattern.back ().addInput (1.0); // bias node
         }
@@ -534,7 +534,7 @@ void TMVA::MethodNN::Train()
         const std::vector<Float_t>& values  = event->GetValues  ();
         if (fAnalysisType == Types::kClassification)
         {
-            double outputValue = event->GetClass () == 0 ? 0.1 : 0.9;
+            double outputValue = event->GetClass () == 1 ? 0.0 : 1.0;
             testPattern.push_back (Pattern (values.begin  (), values.end (), outputValue, event->GetWeight ()));
             testPattern.back ().addInput (1.0); // bias node
         }
@@ -593,7 +593,7 @@ void TMVA::MethodNN::Train()
               << Endl << Endl;
         fNet.setErrorFunction (fModeErrorFunction); 
 
-        size_t numWeights = fNet.numWeights (inputSize);
+        size_t numWeights = fNet.numWeights ();
         Log() << kINFO 
               << "Total number of Synapses = " 
               << numWeights
