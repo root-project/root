@@ -48,15 +48,15 @@
  Let \f$ D \f$ by the dependent quantity of interest, which depends smoothly
  on the observable quantities \f$ x_1, \ldots, x_N \f$ which we'll denote by
  \f$\mathbf{x}\f$. Given a training sample of \f$ M\f$ tuples of the form, (TMultiDimFit::AddRow)
- 
+
  \f[
      \left(\mathbf{x}_j, D_j, E_j\right)\quad,
  \f]
  where \f$\mathbf{x}_j = (x_{1,j},\ldots,x_{N,j})\f$ are \f$ N\f$ independent
- variables, \f$ D_j\f$ is the known, quantity dependent at \f$\mathbf{x}_j\f$ and \f$ E_j\f$ is 
+ variables, \f$ D_j\f$ is the known, quantity dependent at \f$\mathbf{x}_j\f$ and \f$ E_j\f$ is
  the square error in \f$ D_j\f$, the class will try to find the parameterization
  \f[
-     D_p(\mathbf{x}) = \sum_{l=1}^{L} c_l \prod_{i=1}^{N} p_{li}\left(x_i\right) 
+     D_p(\mathbf{x}) = \sum_{l=1}^{L} c_l \prod_{i=1}^{N} p_{li}\left(x_i\right)
      = \sum_{l=1}^{L} c_l F_l(\mathbf{x})
  \f]
  such that
@@ -73,7 +73,7 @@
 
  Of course it's more than a little unlikely that \f$ S\f$ will ever become
  exact zero as a result of the procedure outlined below. Therefore, the
- user is asked to provide a minimum relative error \f$ \epsilon\f$ (TMultiDimFit::SetMinRelativeError), 
+ user is asked to provide a minimum relative error \f$ \epsilon\f$ (TMultiDimFit::SetMinRelativeError),
  and \f$ S\f$ will be considered minimized when
 
  \f[
@@ -84,7 +84,7 @@
  In that case, only the coefficients \f$ c_l\f$ is calculated by the class.
 
  ## Limiting the Number of Terms
- As always when dealing with fits, there's a real chance of *over fitting*. As is well-known, it's 
+ As always when dealing with fits, there's a real chance of *over fitting*. As is well-known, it's
  always possible to fit an \f$ N-1\f$ polynomial in \f$ x\f$ to \f$ N\f$ points \f$ (x,y)\f$ with
  \f$\chi^2 = 0\f$, but the polynomial is not likely to fit new data at all [1].
  Therefore, the user is asked to provide an upper limit, \f$ L_{max}\f$ to the number of terms in
@@ -98,7 +98,7 @@
  to perform a regular fit to the dependent quantity \f$ D\f$, using a
  polynomial only in \f$ x_i\f$. The maximum power is \f$ P_{max,i}\f$ is then the
  power that does not significantly improve the one-dimensional
- least-square fit over \f$ x_i\f$ to \f$ D\f$ [5]. 
+ least-square fit over \f$ x_i\f$ to \f$ D\f$ [5].
 
  There are still a huge amount of possible choices for \f$ F_l\f$; in fact
  there are \f$\prod_{i=1}^{N} (P_{max,i} + 1)\f$ possible
@@ -253,7 +253,7 @@
  Having found a parameterization, that is the \f$ F_l\f$'s and \f$ L\f$, that
  minimizes \f$ S\f$, we still need to determine the coefficients
  \f$ c_l\f$. However, it's a feature of how we choose the significant
- functions, that the evaluation of the \f$ c_l\f$'s becomes trivial [5]. To derive 
+ functions, that the evaluation of the \f$ c_l\f$'s becomes trivial [5]. To derive
  \f$\mathbf{c}\f$, we first note that
  equation (4) can be written as
  \f[
@@ -273,7 +273,7 @@
  \f]
  The model \f$\mathsf{W}\mathbf{a}\f$ can therefore be written as
  \f$(\mathsf{F}\mathsf{B}^{-1})\mathbf{a} = \mathsf{F}(\mathsf{B}^{-1}\mathbf{a})\,.\f$
- 
+
  The original model \f$\mathsf{F}\mathbf{c}\f$ is therefore identical with
  this if
  \f[
@@ -318,7 +318,7 @@
  5. Perform a Principal Component Analysis (using TPrincipal), and use
  to get a linear transformation \f$\mathbf{x} \rightarrow \mathbf{x}^\prime\f$, so that
  \f$\mathbf{x}^\prime\f$ are constrained and linear independent.
- 6. Perform a Principal Component Analysis on 
+ 6. Perform a Principal Component Analysis on
  \f$Q_i = P_i / P^\prime_i\, i = 1, \ldots, 5\f$, to get linear
  indenpendent (among themselves, but not independent of \f$\mathbf{x}\f$) quantities
  \f$\mathbf{Q}^\prime\f$
@@ -339,7 +339,7 @@
  ## Testing the parameterization
  The class also provides functionality for testing the, over the
  training sample, found parameterization (TMultiDimFit::Fit). This is done by passing
- the class a test sample of \f$ M_t\f$ tuples of the form 
+ the class a test sample of \f$ M_t\f$ tuples of the form
  \f$(\mathbf{x}_{t,j},D_{t,j}, E_{t,j})\f$, where \f$\mathbf{x}_{t,j}\f$ are the independent
  variables, \f$ D_{t,j}\f$ the known, dependent quantity, and \f$ E_{t,j}\f$ is
  the square error in \f$ D_{t,j}\f$ (TMultiDimFit::AddTestRow).
@@ -366,7 +366,7 @@
  Christian Holm
 
  ## Bibliography
- - <a name="bevington"></a> Philip R. Bevington and D. Keith Robinson. *Data Reduction and Error Analysis for 
+ - <a name="bevington"></a> Philip R. Bevington and D. Keith Robinson. *Data Reduction and Error Analysis for
    the Physical Sciences*. McGraw-Hill, 2 edition, 1992.
  - <a name="mudifi"></a> R. Brun et al. *Long writeup DD/75-23*, CERN, 1980.
  - Gene H. Golub and Charles F. van Loan. *Matrix Computations*.
@@ -377,12 +377,12 @@
  - <a name="wind81"></a>H. Wind. 1. principal component analysis, 2. pattern recognition for track
    finding, 3. interpolation and functional representation. Yellow report EP/81-12, CERN, 1981.
 
-[1]: classTMultiFimFit.html#bevington
-[2]: classTMultiFimFit.html#mudifi
-[4]: classTMultiFimFit.html#minuit
-[5]: classTMultiFimFit.html#wind72
-[6]: classTMultiFimFit.html#wind81
-[9]: classTMultiFimFit.html#eq:dS2
+[1]: classTMultiDimFit.html#bevington
+[2]: classTMultiDimFit.html#mudifi
+[4]: classTMultiDimFit.html#minuit
+[5]: classTMultiDimFit.html#wind72
+[6]: classTMultiDimFit.html#wind81
+[9]: classTMultiDimFit.html#eq:dS2
 */
 
 
