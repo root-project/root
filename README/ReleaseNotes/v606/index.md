@@ -145,6 +145,11 @@ maximum was used which may hide some points like in the following example
 ```
 The problem was reported [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20484).
 
+### TGraph
+
+`TGraph::GetHistogram()` was resetting the TimeDisplay attribute of axis.
+The problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-7766).
+
 ## Math Libraries
 
 
