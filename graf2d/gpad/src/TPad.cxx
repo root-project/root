@@ -538,7 +538,7 @@ TVirtualPad *TPad::cd(Int_t subpadnumber)
 ///
 /// If the bit kClearAfterCR has been set for this pad, the Clear function
 /// will execute only after having pressed a CarriageReturn
-/// Set the bit with mypad->SetBit(TPad::kClearAfterCR)
+/// Set the bit with `mypad->SetBit(TPad::kClearAfterCR)`
 
 void TPad::Clear(Option_t *option)
 {
@@ -1044,7 +1044,7 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 ///  - ymargin is the space along y between pads in percent of canvas.
 ///  - color is the color of the new pads. If 0, color is the canvas color.
 ///
-/// Pads are automatically named canvasname_n where n is the division number
+/// Pads are automatically named `canvasname_n` where `n` is the division number
 /// starting from top left pad.
 ///
 /// Example if canvasname=c1 , nx=2, ny=3:
@@ -2969,13 +2969,6 @@ void TPad::Paint(Option_t * /*option*/)
    if (began3DScene) {
       fViewer3D->EndScene();
    }
-
-///// Generate the PS output using gl2ps
-///if (GetGLDevice()!=-1 && gVirtualPS) {
-///   gPad = this;
-///   gGLManager->PrintViewer(GetViewer3D());
-///   gPad = padsav;
-///}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3399,7 +3392,7 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///   This function paints hatched fill area arcording to the FillStyle value
+/// This function paints hatched fill area according to the FillStyle value
 /// The convention for the Hatch is the following:
 ///
 ///     `FillStyle = 3ijk`
@@ -5314,9 +5307,9 @@ void TPad::SetLogx(Int_t value)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set Lin/Log scale for Y
-///   value = 0 Y scale will be linear
-///   value = 1 Y scale will be logarithmic (base 10)
-///   value > 1 reserved for possible support of base e or other
+///  - value = 0 Y scale will be linear
+///  - value = 1 Y scale will be logarithmic (base 10)
+///  - value > 1 reserved for possible support of base e or other
 
 void TPad::SetLogy(Int_t value)
 {
@@ -5512,11 +5505,10 @@ void TPad::DrawDist(Rectangle_t aBBox, Rectangle_t bBBox, char mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// struct used by ShowGuidelines to store the distance Field between objects
+/// in the canvas.
 
 struct dField {
-   // Used by ShowGuidelines to store the distance Field between
-   // objects in the canvas
-
    TAttBBox2D *fa;
    TAttBBox2D *fb;
    Int_t fdist;
@@ -6279,7 +6271,6 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
 TObject *TPad::CreateToolTip(const TBox *box, const char *text, Long_t delayms)
 {
    if (gPad->IsBatch()) return 0;
-   // return new TGToolTip(box, text, delayms);
    return (TObject*)gROOT->ProcessLineFast(Form("new TGToolTip((TBox*)0x%lx,\"%s\",%d)",
                                            (Long_t)box,text,(Int_t)delayms));
 }
@@ -6323,8 +6314,7 @@ void TPad::x3d(Option_t *type)
 {
    ::Info("TPad::x3d()", "Fn is depreciated - use TPad::GetViewer3D() instead");
 
-   // Default on GetViewer3D is pad - for x3d
-   // it was x3d...
+   // Default on GetViewer3D is pad - for x3d it was x3d...
    if (!type || !type[0]) {
       type = "x3d";
    }
