@@ -1629,6 +1629,8 @@ TH1F *TGraph::GetHistogram() const
       fHistogram->GetXaxis()->SetTitleSize(historg->GetXaxis()->GetTitleSize());
       fHistogram->GetXaxis()->SetTitleOffset(historg->GetXaxis()->GetTitleOffset());
       fHistogram->GetXaxis()->SetTitleFont(historg->GetXaxis()->GetTitleFont());
+      fHistogram->GetXaxis()->SetTimeDisplay(historg->GetXaxis()->GetTimeDisplay());
+      fHistogram->GetXaxis()->SetTimeFormat(historg->GetXaxis()->GetTimeFormat());
 
       fHistogram->GetYaxis()->SetTitle(historg->GetYaxis()->GetTitle());
       fHistogram->GetYaxis()->CenterTitle(historg->GetYaxis()->GetCenterTitle());
@@ -1641,7 +1643,8 @@ TH1F *TGraph::GetHistogram() const
       fHistogram->GetYaxis()->SetTitleSize(historg->GetYaxis()->GetTitleSize());
       fHistogram->GetYaxis()->SetTitleOffset(historg->GetYaxis()->GetTitleOffset());
       fHistogram->GetYaxis()->SetTitleFont(historg->GetYaxis()->GetTitleFont());
-
+      fHistogram->GetYaxis()->SetTimeDisplay(historg->GetYaxis()->GetTimeDisplay());
+      fHistogram->GetYaxis()->SetTimeFormat(historg->GetYaxis()->GetTimeFormat());
       delete historg;
    }
    return fHistogram;
