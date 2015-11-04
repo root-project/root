@@ -2492,7 +2492,12 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
 #else
    TString touch = "echo > "; touch += "\"" + depfilename + "\"";
 #endif
-   TString builddep = "rmkdepend \"-f";
+#ifdef ROOTBINDIR
+   TString builddep = ROOTBINDIR;
+#else
+   TString builddep = TString(gRootDir) + "/bin";
+#endif
+   builddep += "/rmkdepend \"-f";
    builddep += depfilename;
    builddep += "\" -o_" + extension + "." + gSystem->GetSoExt() + " ";
    if (build_loc.BeginsWith(gSystem->WorkingDirectory())) {
