@@ -1,5 +1,5 @@
 #include "TFormula.h"
-#include "TThread.h"
+#include "TROOT.h"
 #include "TObject.h"
 #include <thread>
 #include <memory>
@@ -12,8 +12,8 @@ int main()
  std::atomic<int> canStart{kNThreads};
  std::vector<std::thread> threads;
 
- //Tell Root we want to be multi-threaded 
- TThread::Initialize();
+ //Tell Root we want to be multi-threaded
+ ROOT::EnableMT();
  //When threading, also have to keep ROOT from logging all TObjects into a list
  TObject::SetObjectStat(false);
 

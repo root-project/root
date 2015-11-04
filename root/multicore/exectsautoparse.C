@@ -4,8 +4,8 @@ int exectsautoparse(){
 
    gEnv->SetValue("RooFit.Banner", 0);
 
-   TThread::Initialize();
-
+   ROOT::EnableMT();
+   
    std::atomic<bool> fire(false);
    vector<thread> threads;
    for (auto const & key : keys){

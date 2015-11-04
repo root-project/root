@@ -2,7 +2,7 @@
 
 void execautoloadts(){
 
-   TThread::Initialize();
+   ROOT::EnableMT();
    gEnv->SetValue("RooFit.Banner",0);
 
    //    gSystem->ListLibraries();

@@ -1,5 +1,5 @@
 #include "TFile.h"
-#include "TThread.h"
+#include "TROOT.h"
 #include "TDirectory.h"
 
 #include <cassert>
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
   std::string fileName("empty_file.root");
 
   //Tell Root we want to be multi-threaded
-  TThread::Initialize();
+  ROOT::EnableMT();
   //When threading, also have to keep ROOT from logging all TObjects into a list
   TObject::SetObjectStat(false);
 

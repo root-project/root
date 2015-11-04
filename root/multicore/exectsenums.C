@@ -13,7 +13,7 @@ private:
 };
 
 void exectsenums (){
-   TThread::Initialize();
+   ROOT::EnableMT();
    vector<thread> threads;
    auto enumNames {"enum1",
                    "enum2",

@@ -1,5 +1,5 @@
 #include "TClass.h"
-#include "TThread.h"
+#include "TROOT.h"
 #include "TObject.h"
 #include <thread>
 #include <memory>
@@ -44,7 +44,7 @@ int main(int argc, char** argv)
   std::atomic<int> firstMethodGotten{0};
 
   //Tell Root we want to be multi-threaded
-  TThread::Initialize();
+  ROOT::EnableMT();
   //When threading, also have to keep ROOT from logging all TObjects into a list
   TObject::SetObjectStat(false);
 

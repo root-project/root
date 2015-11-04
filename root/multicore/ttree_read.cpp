@@ -2,7 +2,7 @@
 #include "TTree.h"
 #include "TBranch.h"
 #include "TClass.h"
-#include "TThread.h"
+#include "TROOT.h"
 
 #include "TList.h"
 #include "TMap.h"
@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
 //  AutoLibraryLoader::enable();
 
   //Tell Root we want to be multi-threaded
-  TThread::Initialize();
+  ROOT::EnableMT();
   //When threading, also have to keep ROOT from logging all TObjects into a list
   TObject::SetObjectStat(false);
 

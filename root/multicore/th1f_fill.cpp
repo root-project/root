@@ -5,7 +5,7 @@
 #include "TFile.h"
 #include "TNtuple.h"
 #include "TInterpreter.h"
-#include "TThread.h"
+#include "TROOT.h"
 
 void fillHisto(const char* filename, TH1F& histo){
   printf("Reading file %s\n",filename);
@@ -27,7 +27,7 @@ void fillHisto(const char* filename, TH1F& histo){
 int main() {
 
   // Initialize ROOT threading support
-  TThread::Initialize();
+   ROOT::EnableMT();
 
   // Don't link histos to a particular TDirectory
   TH1::AddDirectory(false);

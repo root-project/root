@@ -1,6 +1,6 @@
 
 #include "TProfile.h"
-#include "TThread.h"
+#include "TROOT.h"
 #include "TObject.h"
 #include <thread>
 #include <memory>
@@ -17,7 +17,7 @@ int main()
   TH1::AddDirectory(kFALSE);
 
   //Tell Root we want to be multi-threaded
-  TThread::Initialize();
+  ROOT::EnableMT();
   //When threading, also have to keep ROOT from logging all TObjects into a list
   TObject::SetObjectStat(false);
 
