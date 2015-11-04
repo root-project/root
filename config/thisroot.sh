@@ -32,7 +32,7 @@ if [ "x${BASH_ARGV[0]}" = "x" ]; then
     if [ -f bin/thisroot.sh ]; then
         ROOTSYS="$PWD"; export ROOTSYS
     elif [ -f ./thisroot.sh ]; then
-        ROOTSYS=$(cd ..; pwd); export ROOTSYS
+        ROOTSYS=$(cd ..  > /dev/null; pwd); export ROOTSYS
     else
         echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of bash!
         ROOTSYS=; export ROOTSYS
@@ -41,7 +41,7 @@ if [ "x${BASH_ARGV[0]}" = "x" ]; then
 else
     # get param to "."
     thisroot=$(dirname ${BASH_ARGV[0]})
-    ROOTSYS=$(cd ${thisroot}/..;pwd); export ROOTSYS
+    ROOTSYS=$(cd ${thisroot}/.. > /dev/null;pwd); export ROOTSYS
 fi
 
 if [ -n "${old_rootsys}" ] ; then
