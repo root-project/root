@@ -50,13 +50,14 @@ protected:
    char            *fBuffer;        //Buffer used to store objects
    char            *fBufCur;        //Current position in buffer
    char            *fBufMax;        //End of buffer
+   Bool_t           fBufEndian;     //Big endian is default (0)
    TObject         *fParent;        //Pointer to parent object owning this buffer
    ReAllocCharFun_t fReAllocFunc;   //! Realloc function to be used when extending the buffer.
    CacheList_t      fCacheStack;    //Stack of pointers to the cache where to temporarily store the value of 'missing' data members
 
    // Default ctor
    TBuffer() : TObject(), fMode(0), fVersion(0), fBufSize(0), fBuffer(0),
-     fBufCur(0), fBufMax(0), fParent(0), fReAllocFunc(0), fCacheStack(0,(TVirtualArray*)0) {}
+     fBufCur(0), fBufMax(0), fBufEndian(0), fParent(0), fReAllocFunc(0), fCacheStack(0,(TVirtualArray*)0) {}
 
    // TBuffer objects cannot be copied or assigned
    TBuffer(const TBuffer &);           // not implemented
@@ -70,6 +71,7 @@ protected:
 
 public:
    enum EMode { kRead = 0, kWrite = 1 };
+   enum EEndian { kBig = 0, kLittle = 1 };
    enum { kIsOwner = BIT(16) };                        //if set TBuffer owns fBuffer
    enum { kCannotHandleMemberWiseStreaming = BIT(17)}; //if set TClonesArray should not use member wise streaming
    enum { kInitialSize = 1024, kMinimalSize = 128 };
