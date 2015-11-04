@@ -122,20 +122,21 @@ static bool InstallNbFiles(string source, string dest)
 /// Creates the IPython notebook configuration file that sets the
 /// necessary environment.
 
-static bool CreateIPythonConfig(string dest, string rootsys)
+static bool CreateIPythonConfig(string dest, string rootbin, string rootlib)
 {
    string ipyconfig = dest + pathsep + ipyconfigpath;
    ofstream out(ipyconfig, ios::trunc);
    if (out.is_open()) {
       out << "import os" << endl;
-      out << "rootsys = '" << rootsys << "'" << endl;
+      out << "rootbin = '" << rootbin << "'" << endl;
+      out << "rootlib = '" << rootlib << "'" << endl;
 #ifdef WIN32
-      out << "os.environ['PYTHONPATH']      = '%s\\lib' % rootsys + ':' + os.getenv('PYTHONPATH', '')" << endl;
-      out << "os.environ['PATH']            = '%s\\bin:%s\\bin\\bin' % (rootsys,rootsys) + ':' + '%s\\lib' % rootsys + ':' + os.getenv('PATH', '')" << endl;
+      out << "os.environ['PYTHONPATH']      = '%s' % rootlib + ':' + os.getenv('PYTHONPATH', '')" << endl;
+      out << "os.environ['PATH']            = '%s:%s\\bin' % (rootbin,rootbin) + ':' + '%s' % rootlib + ':' + os.getenv('PATH', '')" << endl;
 #else
-      out << "os.environ['PYTHONPATH']      = '%s/lib' % rootsys + ':' + os.getenv('PYTHONPATH', '')" << endl;
-      out << "os.environ['PATH']            = '%s/bin:%s/bin/bin' % (rootsys,rootsys) + ':' + os.getenv('PATH', '')" << endl;
-      out << "os.environ['LD_LIBRARY_PATH'] = '%s/lib' % rootsys + ':' + os.getenv('LD_LIBRARY_PATH', '')" << endl;
+      out << "os.environ['PYTHONPATH']      = '%s' % rootlib + ':' + os.getenv('PYTHONPATH', '')" << endl;
+      out << "os.environ['PATH']            = '%s:%s/bin' % (rootbin,rootbin) + ':' + os.getenv('PATH', '')" << endl;
+      out << "os.environ['LD_LIBRARY_PATH'] = '%s' % rootlib + ':' + os.getenv('LD_LIBRARY_PATH', '')" << endl;
 #endif
       out.close();
       return true;
@@ -172,12 +173,14 @@ static bool CreateStamp(string dest)
 
 int main()
 {
-   // Get etc directory, it contains the ROOT notebook files to install
-   string rootsys(getenv("ROOTSYS"));
-#ifdef ROOTETCDIR
+#ifdef ROOTPREFIX
+   string rootbin(ROOTBINDIR);
+   string rootlib(ROOTLIBDIR);
    string rootetc(ROOTETCDIR);
 #else
-   string rootetc(rootsys + pathsep + "etc");
+   string rootbin(getenv("ROOTSYS") + pathsep + "bin");
+   string rootlib(getenv("ROOTSYS") + pathsep + "lib");
+   string rootetc(getenv("ROOTSYS") + pathsep + "etc");
 #endif
 
    // If needed, install ROOT notebook files in the user's home directory
@@ -188,10 +191,11 @@ int main()
 #endif
    int inst = CheckNbInstallation(homedir);
    if (inst == -1) {
+      // The etc directory contains the ROOT notebook files to install
       string source(rootetc + pathsep + NB_CONF_DIR);
       string dest(homedir + pathsep + rootnbdir);
       bool res = InstallNbFiles(source, dest) &&
-                 CreateIPythonConfig(dest, rootsys) &&
+                 CreateIPythonConfig(dest, rootbin, rootlib) &&
                  CreateStamp(dest);
       if (!res) return 1;
    }
