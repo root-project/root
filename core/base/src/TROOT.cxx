@@ -262,7 +262,8 @@ Bool_t TROOT::fgRootInit = kFALSE;
 Bool_t TROOT::fgMemCheck = kFALSE;
 
 static void at_exit_of_TROOT() {
-   gROOT->~TROOT();
+   if (ROOT::gROOTLocal)
+      ROOT::gROOTLocal->~TROOT();
 }
 
 // This local static object initializes the ROOT system
