@@ -22,14 +22,14 @@ A conical tube.
 \image html g3d_cone.png
 It has 8 parameters:
 
-  - name       name of the shape
-  - title      shape's title
-  - material  (see TMaterial)
-  - dz         half-length in z
-  - rmin1      inside radius at -DZ in z
-  - rmax1      outside radius at -DZ in z
-  - rmin2      inside radius at +DZ in z
-  - rmax2      outside radius at +DZ in z
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - dz:         half-length in z
+  - rmin1:      inside radius at -DZ in z
+  - rmax1:      outside radius at -DZ in z
+  - rmin2:      inside radius at +DZ in z
+  - rmax2:      outside radius at +DZ in z
 */
 
 ////////////////////////////////////////////////////////////////////////////////

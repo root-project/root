@@ -19,13 +19,13 @@ An hyperboloid (not implemented)
 
 It has 4 parameters:
 
-  - name       name of the shape
-  - title      shape's title
-  - material  (see TMaterial)
-  - rmin       inner radius of the tube
-  - rmax       outer radius of the tube
-  - dz         half-length of the box along the z-axis
-  - phi        stereo angle
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - rmin:       inner radius of the tube
+  - rmax:       outer radius of the tube
+  - dz:         half-length of the box along the z-axis
+  - phi:        stereo angle
 */
 
 ////////////////////////////////////////////////////////////////////////////////

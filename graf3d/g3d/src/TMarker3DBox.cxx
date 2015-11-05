@@ -32,15 +32,15 @@ ClassImp(TMarker3DBox)
 A special 3-D marker designed for event display.
 
 It has the following parameters:
-  - fX;               X coordinate of the center of the box
-  - fY;               Y coordinate of the center of the box
-  - fZ;               Z coordinate of the center of the box
-  - fDx;              half length in X
-  - fDy;              half length in Y
-  - fDz;              half length in Z
-  - fTheta;           Angle of box z axis with respect to main Z axis
-  - fPhi;             Angle of box x axis with respect to main Xaxis
-  - fRefObject;       A reference to an object
+  - fX:               X coordinate of the center of the box
+  - fY:               Y coordinate of the center of the box
+  - fZ:               Z coordinate of the center of the box
+  - fDx:              half length in X
+  - fDy:              half length in Y
+  - fDz:              half length in Z
+  - fTheta:           Angle of box z axis with respect to main Z axis
+  - fPhi:             Angle of box x axis with respect to main Xaxis
+  - fRefObject:       A reference to an object
 */
 
 ////////////////////////////////////////////////////////////////////////////////

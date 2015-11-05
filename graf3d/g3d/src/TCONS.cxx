@@ -22,16 +22,16 @@ A segment of a conical tube.
 
 It has 10 parameters:
 
-  - name       name of the shape
-  - title      shape's title
-  - material  (see TMaterial)
-  - dz         half-length in z
-  - rmin1      inside radius at -DZ in z
-  - rmax1      outside radius at -DZ in z
-  - rmin2      inside radius at +DZ in z
-  - rmax2      outside radius at +DZ in z
-  - phi1       starting angle of the segment
-  - phi2       ending angle of the segment
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - dz:         half-length in z
+  - rmin1:      inside radius at -DZ in z
+  - rmax1:      outside radius at -DZ in z
+  - rmin2:      inside radius at +DZ in z
+  - rmax2:      outside radius at +DZ in z
+  - phi1:       starting angle of the segment
+  - phi2:       ending angle of the segment
 
 NOTE: phi1 should be smaller than phi2. If this is not the case,
       the system adds 360 degrees to phi2.

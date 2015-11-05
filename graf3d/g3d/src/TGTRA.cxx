@@ -32,33 +32,33 @@ straight lines joining points on the boundary of the trapezoidal face at z=-DZ
 to the corresponding points on the face at z=DZ. Divisions are not allowed.
 It has 15 parameters:
 
-  - name       name of the shape
-  - title      shape's title
-  - material   (see TMaterial)
-  - dZ         half-length along the z axis
-  - theta      polar angle of the line joining the centre of the face
-               at -DZ to the centre of the one at +DZ
-  - phi        azimuthal angle of the line joining the centre of
-               the face at -DZ to the centre of the one at +DZ
-  - twist      twist angle of the faces parallel to the x-y plane
-               at z = +/- DZ around an axis parallel to z passing
-               through their centre
-  - h1         half-length along y of the face at -DZ
-  - bl1        half-length along x of the side at -H1 in y of
-               the face at -DZ in z
-  - tl1        half-length along x of the side at +H1 in y of the face
-               at -DZ in z
-  - alpha1     angle with respect to the y axis from the centre of
-               the side at -H1 in y to the centre of the side at
-               +H1 in y of the face at -DZ in z
-  - h2         half-length along y of the face at +DZ
-  - bL2        half-length along x of the side at -H2 in y of the face at
+  - name:       name of the shape
+  - title:      shape's title
+  - material:   (see TMaterial)
+  - dZ:         half-length along the z axis
+  - theta:      polar angle of the line joining the centre of the face
+                at -DZ to the centre of the one at +DZ
+  - phi:        azimuthal angle of the line joining the centre of
+                the face at -DZ to the centre of the one at +DZ
+  - twist:      twist angle of the faces parallel to the x-y plane
+                at z = +/- DZ around an axis parallel to z passing
+                through their centre
+  - h1:         half-length along y of the face at -DZ
+  - bl1:        half-length along x of the side at -H1 in y of
+                the face at -DZ in z
+  - tl1:        half-length along x of the side at +H1 in y of the face
+                at -DZ in z
+  - alpha1:     angle with respect to the y axis from the centre of
+                the side at -H1 in y to the centre of the side at
+                +H1 in y of the face at -DZ in z
+  - h2:         half-length along y of the face at +DZ
+  - bL2:        half-length along x of the side at -H2 in y of the face at
                +DZ in z
-  - tl2        half-length along x of the side at +H2 in y of the face
-               at +DZ in z
-  - alpha2     angle with respect to the y axis from the centre of the side
-               at -H2 in y to the centre of the side at +H2 in y of the
-               face at +DZ in z
+  - tl2:        half-length along x of the side at +H2 in y of the face
+                at +DZ in z
+  - alpha2:     angle with respect to the y axis from the centre of the side
+                at -H2 in y to the centre of the side at +H2 in y of the
+                face at +DZ in z
 */
 
 ////////////////////////////////////////////////////////////////////////////////

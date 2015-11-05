@@ -25,12 +25,12 @@ the conical curve is:
 
 ELTU is not divisible.
 
-  - name       name of the shape
-  - title      shape's title
-  - material  (see TMaterial)
-  - rx         the  ellipse  semi-axis   in  X
-  - ry         the  ellipse  semi-axis   in  Y
-  - dz         half-length in z
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - rx:         the  ellipse  semi-axis   in  X
+  - ry:         the  ellipse  semi-axis   in  Y
+  - dz:         half-length in z
 */
 
 ////////////////////////////////////////////////////////////////////////////////

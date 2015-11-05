@@ -25,12 +25,12 @@ A box with faces perpendicular to the axes.
 \image html g3d_brik.png
 It has 6 parameters:
 
-  - name       name of the shape
-  - title      shape's title
-  - material  (see TMaterial)
-  - dx         half-length of the box along the x-axis
-  - dy         half-length of the box along the y-axis
-  - dz         half-length of the box along the z-axis
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - dx:         half-length of the box along the x-axis
+  - dy:         half-length of the box along the y-axis
+  - dz:         half-length of the box along the z-axis
 */
 
 ////////////////////////////////////////////////////////////////////////////////

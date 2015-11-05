@@ -26,20 +26,20 @@ are the same as for the TUBS. The remaining 6 parameters
 are the director cosines of the surfaces cutting the tube
 respectively at the low and high Z values.
 
-  - name       name of the shape
-  - title      shape's title
-  - material  (see TMaterial)
-  - rmin       inside radius
-  - rmax       outside radius
-  - dz         half length in z
-  - phi1       starting angle of the segment
-  - phi2       ending angle of the segment
-  - coslx      x dir cosinus at low z face
-  - cosly      y dir cosinus at low z face
-  - coslz      z dir cosinus at low z face
-  - coshx      x dir cosinus at high z face
-  - coshy      y dir cosinus at high z face
-  - coshz      z dir cosinus at high z face
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - rmin:       inside radius
+  - rmax:       outside radius
+  - dz:         half length in z
+  - phi1:       starting angle of the segment
+  - phi2:       ending angle of the segment
+  - coslx:      x dir cosinus at low z face
+  - cosly:      y dir cosinus at low z face
+  - coslz:      z dir cosinus at low z face
+  - coshx:      x dir cosinus at high z face
+  - coshy:      y dir cosinus at high z face
+  - coshz:      z dir cosinus at high z face
 */
 
 ////////////////////////////////////////////////////////////////////////////////
