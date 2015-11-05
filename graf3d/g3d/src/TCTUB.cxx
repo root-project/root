@@ -15,29 +15,32 @@
 
 ClassImp(TCTUB)
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/ctub.gif"> </P> End_Html
-//                                                                        //
-// 'CTUB' is a cut  tube with 11 parameters.  The  first 5 parameters     //
-//        are the same  as for the TUBS.  The  remaining 6 parameters     //
-//        are the director  cosines of the surfaces  cutting the tube     //
-//        respectively at the low and high Z values.                      //
-//                                                                        //
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - rmin       inside radius
-//     - rmax       outside radius
-//     - dz         half length in z
-//     - phi1       starting angle of the segment
-//     - phi2       ending angle of the segment
-//     - coslx      x dir cosinus at low z face
-//     - cosly      y dir cosinus at low z face
-//     - coslz      z dir cosinus at low z face
-//     - coshx      x dir cosinus at high z face
-//     - coshy      y dir cosinus at high z face
-//     - coshz      z dir cosinus at high z face
+/** \class TCTUB
+\ingroup g3d
+A cut tube with 11 parameters.
 
+\image html g3d_ctub.png
+
+The first 5 parameters
+are the same as for the TUBS. The remaining 6 parameters
+are the director cosines of the surfaces cutting the tube
+respectively at the low and high Z values.
+
+  - name       name of the shape
+  - title      shape's title
+  - material  (see TMaterial)
+  - rmin       inside radius
+  - rmax       outside radius
+  - dz         half length in z
+  - phi1       starting angle of the segment
+  - phi2       ending angle of the segment
+  - coslx      x dir cosinus at low z face
+  - cosly      y dir cosinus at low z face
+  - coslz      z dir cosinus at low z face
+  - coshx      x dir cosinus at high z face
+  - coshy      y dir cosinus at high z face
+  - coshz      z dir cosinus at high z face
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// CTUB shape default constructor
@@ -51,7 +54,6 @@ TCTUB::TCTUB()
    fCosHigh[1] = 0.;
    fCosHigh[2] = 0.;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// CTUB shape normal constructor
@@ -72,7 +74,6 @@ TCTUB::TCTUB(const char *name, const char *title, const char *material, Float_t 
    TMath::Normalize(fCosHigh);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// CTUB shape normal constructor
 
@@ -87,14 +88,12 @@ TCTUB::TCTUB(const char *name, const char *title, const char *material, Float_t 
    TMath::Normalize(fCosHigh);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// CTUB shape default destructor
 
 TCTUB::~TCTUB()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Product.
@@ -105,7 +104,6 @@ static Double_t Product(const Double_t *x, const Float_t *y)
    for (int i= 0 ; i <2 ; i++ ) s += x[i]*y[i];
    return s;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create TUBS points
@@ -148,7 +146,6 @@ void TCTUB::SetPoints(Double_t *points) const
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TCTUB.
