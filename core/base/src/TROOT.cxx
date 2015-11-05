@@ -369,6 +369,28 @@ namespace ROOT {
       static TString macroPath;
       return macroPath;
    }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Enables the global mutex to make ROOT thread safe/aware.
+   void EnableMT()
+   {
+      static void (*tthreadInitialize)() = nullptr;
+
+      if (!tthreadInitialize) {
+         const static auto loadSuccess = -1 != gSystem->Load("libThread");
+         if (loadSuccess) {
+            if (auto sym = dlsym(0, "__TThread__Initialize")) {
+               tthreadInitialize = (void(*)()) sym;
+               tthreadInitialize();
+            } else {
+               Error("EnableMT","Cannot initialize multithreading support.");
+            }
+         } else {
+            Error("EnableMT","Cannot load Thread library.");
+         }
+      }
+   }
+
 }
 
 TROOT *ROOT::gROOTLocal = ROOT::GetROOT();
@@ -1654,16 +1676,8 @@ void TROOT::InitSystem()
 
 void TROOT::InitThreads()
 {
-   if (gEnv->GetValue("Root.UseThreads", 0)) {
-      char *path;
-      if ((path = gSystem->DynamicPathName("libThread", kTRUE))) {
-         delete [] path;
-         TInterpreter::EErrorCode code = TInterpreter::kNoError;
-         fInterpreter->Calc("TThread::Initialize();", &code);
-         if (code != TInterpreter::kNoError) {
-            Error("InitThreads","Thread mechanism not initialization properly.");
-         }
-      }
+   if (gEnv->GetValue("Root.UseThreads", 0) || gEnv->GetValue("Root.EnableMT", 0)) {
+      ROOT::EnableMT();
    }
 }
 

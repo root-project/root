@@ -67,6 +67,7 @@ R__EXTERN TVirtualMutex *gROOTMutex;
 namespace ROOT {
    class TROOTAllocator;
    TROOT *GetROOT2();
+   void EnableMT();
 }
 
 class TROOT : public TDirectory {
