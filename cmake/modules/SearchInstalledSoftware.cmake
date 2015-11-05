@@ -390,15 +390,39 @@ if(xml)
 endif()
 
 #---Check for OpenSSL------------------------------------------------------------------
-if(ssl)
-  message(STATUS "Looking for OpenSSL")
-  find_package(OpenSSL)
-  if(NOT OPENSSL_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "OpenSSL libraries not found and they are required (ssl option enabled)")
+if(ssl OR builtin_openssl)
+  if(builtin_openssl)
+    set(openssl_version 1.0.2d)
+    message(STATUS "Downloading and building OpenSSL version ${openssl_version}")
+    if(APPLE)
+      set(openssl_config_cmd ./Configure darwin64-x86_64-cc)
     else()
-      message(STATUS "OpenSSL not found. Switching off ssl option")
-      set(ssl OFF CACHE BOOL "" FORCE)
+      set(openssl_config_cmd ./config)
+    endif()
+    ExternalProject_Add(
+      OPENSSL
+      URL ${repository_tarfiles}/openssl-${openssl_version}.tar.gz
+      CONFIGURE_COMMAND ${openssl_config_cmd} no-shared --prefix=<INSTALL_DIR>
+      BUILD_COMMAND make -j1 CC=${CMAKE_C_COMPILER}
+      INSTALL_COMMAND make install_sw
+      BUILD_IN_SOURCE 1
+      LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
+    )
+    ExternalProject_Get_Property(OPENSSL INSTALL_DIR)
+    set(OPENSSL_INCLUDE_DIR ${INSTALL_DIR}/include)
+    set(OPENSSL_LIBRARIES ${INSTALL_DIR}/lib/libcrypto.a ${INSTALL_DIR}/lib/libssl.a)
+    set(OPENSSL_PREFIX ${INSTALL_DIR})
+    set(ssl ON CACHE BOOL "" FORCE)
+  else()
+    message(STATUS "Looking for OpenSSL")
+    find_package(OpenSSL)
+    if(NOT OPENSSL_FOUND)
+      if(fail-on-missing)
+        message(FATAL_ERROR "OpenSSL libraries not found and they are required (ssl option enabled)")
+      else()
+        message(STATUS "OpenSSL not found. Switching off ssl option")
+        set(ssl OFF CACHE BOOL "" FORCE)
+      endif()
     endif()
   endif()
 endif()
@@ -841,10 +865,9 @@ if(davix OR builtin_davix)
     ROOT_ADD_C_FLAG(__cflags -Wno-implicit-function-declaration)
     ExternalProject_Add(
       DAVIX
-      PREFIX DAVIX
       # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
       URL ${repository_tarfiles}/davix-embedded-${DAVIX_VERSION}.tar.gz
-      INSTALL_DIR ${CMAKE_BINARY_DIR}/DAVIX-install
+      CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                  -DBOOST_EXTERNAL=OFF
@@ -857,18 +880,23 @@ if(davix OR builtin_davix)
                  -DCMAKE_CXX_FLAGS=${__cxxflags}
                  -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                  -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+      LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
     )
+    ExternalProject_Get_Property(DAVIX INSTALL_DIR)
     if(${SYSCTL_OUTPUT} MATCHES x86_64)
       set(_LIBDIR "lib64")
     else()
       set(_LIBDIR "lib")
     endif()
-    set(DAVIX_INCLUDE_DIR ${CMAKE_BINARY_DIR}/DAVIX-install/include/davix)
-    set(DAVIX_LIBRARY ${CMAKE_BINARY_DIR}/DAVIX-install/${_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DAVIX_INCLUDE_DIR ${INSTALL_DIR}/include/davix)
+    set(DAVIX_LIBRARY ${INSTALL_DIR}/${_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIR})
     foreach(l davix neon boost_static_internal)
-      list(APPEND DAVIX_LIBRARIES ${CMAKE_BINARY_DIR}/DAVIX-install/${_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+      list(APPEND DAVIX_LIBRARIES ${INSTALL_DIR}/${_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
     endforeach()
+    if(builtin_openssl)
+      add_dependencies(DAVIX OPENSSL)  # Build first OpenSSL
+    endif()
   else()
     message(STATUS "Looking for DAVIX")
     find_package(Davix)
