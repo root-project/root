@@ -32,4 +32,9 @@ if(builtin_xrootd)
   add_dependencies(proofd XROOTD)
 endif()
 
+if(builtin_openssl)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(proofd OPENSSL)
+endif()
+
+
 ROOT_INSTALL_HEADERS()
