@@ -30,7 +30,7 @@
 #endif
 
 /// \defgroup cocoa Cocoa backend
-/// \brief Interface for MacOS native graphics system.
+/// \brief Interface to MacOS native graphics system.
 /// \ingroup GraphicsBackends
 
 /** \class TGCocoa

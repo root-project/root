@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /// \defgroup x11 X11 backend
-/// \brief Interface X11 graphics.
+/// \brief Interface to X11 graphics.
 /// \ingroup GraphicsBackends
 
 /** \class TGX11

@@ -1,4 +1,7 @@
+\defgroup Graphics Graphics
+\brief The graphics related classes
 \defgroup Graphics2D 2D Graphics
+\ingroup Graphics
 \brief The 2D graphics related classes
 \defgroup gpad Graphics pad
 \ingroup Graphics2D

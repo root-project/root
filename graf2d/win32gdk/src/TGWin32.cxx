@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /// \defgroup win32 Win32 backend
-/// \brief Interface Windows graphics.
+/// \brief Interface to Windows graphics.
 /// \ingroup GraphicsBackends
 
 /** \class TGWin32
