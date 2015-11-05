@@ -1,4 +1,4 @@
-\defgroup g3d basic 3D classes.
+\defgroup g3d Basic 3D graphics.
 \ingroup Graphics3D
 \brief The basic 3D classes.
 
