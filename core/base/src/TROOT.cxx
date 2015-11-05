@@ -871,6 +871,9 @@ void TROOT::CloseFiles()
    if (fFiles && fFiles->First()) {
       R__ListSlowClose(static_cast<TList*>(fFiles));
    }
+   // and Close TROOT itself.
+   Close();
+   // Now sockets.
    if (fSockets && fSockets->First()) {
       if (0==fCleanups->FindObject(fSockets) ) {
          fCleanups->Add(fSockets);
