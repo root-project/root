@@ -18,7 +18,6 @@
 
 ClassImp(TBRIK)
 
-
 /** \class TBRIK
 \ingroup g3d
 A box with faces perpendicular to the axes.

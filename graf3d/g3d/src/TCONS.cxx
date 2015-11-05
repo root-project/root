@@ -12,33 +12,30 @@
 #include "TCONS.h"
 #include "TNode.h"
 
-
 ClassImp(TCONS)
 
+/** \class TCONS
+\ingroup g3d
+A segment of a conical tube.
 
+\image html g3d_cons.png
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/cons.gif"> </P> End_Html
-// CONS is a segment of a conical tube. It has 10 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - dz         half-length in z
-//     - rmin1      inside radius at -DZ in z
-//     - rmax1      outside radius at -DZ in z
-//     - rmin2      inside radius at +DZ in z
-//     - rmax2      outside radius at +DZ in z
-//     - phi1       starting angle of the segment
-//     - phi2       ending angle of the segment
-//
-//
-// NOTE: phi1 should be smaller than phi2. If this is not the case,
-//       the system adds 360 degrees to phi2.
+It has 10 parameters:
 
+  - name       name of the shape
+  - title      shape's title
+  - material  (see TMaterial)
+  - dz         half-length in z
+  - rmin1      inside radius at -DZ in z
+  - rmax1      outside radius at -DZ in z
+  - rmin2      inside radius at +DZ in z
+  - rmax2      outside radius at +DZ in z
+  - phi1       starting angle of the segment
+  - phi2       ending angle of the segment
 
-
-
+NOTE: phi1 should be smaller than phi2. If this is not the case,
+      the system adds 360 degrees to phi2.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// CONS shape default constructor
@@ -48,7 +45,6 @@ TCONS::TCONS()
    fRmin2 = 0.;
    fRmax2 = 0.;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// CONS shape normal constructor
@@ -60,7 +56,6 @@ TCONS::TCONS(const char *name, const char *title, const char *material, Float_t 
    fRmin2 = rmin2;
    fRmax2 = rmax2;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// CONS shape normal constructor
