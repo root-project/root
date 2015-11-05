@@ -19,17 +19,20 @@
 ClassImp(TBRIK)
 
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/brik.gif"> </P> End_Html
-// BRIK is a box with faces perpendicular to the axes. It has 6 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - dx         half-length of the box along the x-axis
-//     - dy         half-length of the box along the y-axis
-//     - dz         half-length of the box along the z-axis
+/** \class TBRIK
+\ingroup g3d
+A box with faces perpendicular to the axes.
 
+\image html g3d_brik.png
+It has 6 parameters:
+
+  - name       name of the shape
+  - title      shape's title
+  - material  (see TMaterial)
+  - dx         half-length of the box along the x-axis
+  - dy         half-length of the box along the y-axis
+  - dz         half-length of the box along the z-axis
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// BRIK shape default constructor
@@ -40,7 +43,6 @@ TBRIK::TBRIK()
    fDy = 0.;
    fDz = 0.;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// BRIK shape normal constructor
@@ -53,14 +55,12 @@ TBRIK::TBRIK(const char *name, const char *title, const char *material, Float_t 
    fDz = dz;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// BRIK shape default destructor
 
 TBRIK::~TBRIK()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a BRIK
@@ -73,7 +73,6 @@ Int_t TBRIK::DistancetoPrimitive(Int_t px, Int_t py)
    const Int_t numPoints = 8;
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create BRIK points
@@ -92,7 +91,6 @@ void TBRIK::SetPoints(Double_t *points) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return total X3D needed by TNode::ls (when called with option "x")
 
@@ -102,7 +100,6 @@ void TBRIK::Sizeof3D() const
    gSize3D.numSegs   += 12;
    gSize3D.numPolys  += 6;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get buffer 3D

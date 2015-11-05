@@ -14,19 +14,23 @@
 
 ClassImp(TCONE)
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/cone.gif"> </P> End_Html
-// CONE is a conical tube. It has 8 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - dz         half-length in z
-//     - rmin1      inside radius at -DZ in z
-//     - rmax1      outside radius at -DZ in z
-//     - rmin2      inside radius at +DZ in z
-//     - rmax2      outside radius at +DZ in z
+/** \class TCONE
+\ingroup g3d
 
+A conical tube.
+
+\image html g3d_cone.png
+It has 8 parameters:
+
+  - name       name of the shape
+  - title      shape's title
+  - material  (see TMaterial)
+  - dz         half-length in z
+  - rmin1      inside radius at -DZ in z
+  - rmax1      outside radius at -DZ in z
+  - rmin2      inside radius at +DZ in z
+  - rmax2      outside radius at +DZ in z
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// CONE shape default constructor
@@ -36,7 +40,6 @@ TCONE::TCONE()
    fRmin2 = 0.;
    fRmax2 = 0.;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// CONE shape normal constructor
@@ -50,7 +53,6 @@ TCONE::TCONE(const char *name, const char *title, const char *material, Float_t 
    fRmax2 = rmax2;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// CONE shape "simplified" constructor
 
@@ -60,6 +62,7 @@ TCONE::TCONE(const char *name, const char *title, const char *material, Float_t 
    fRmin2 = 0;
    fRmax2 = rmax2;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// CONE shape default destructor
 
