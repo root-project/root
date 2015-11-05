@@ -779,7 +779,6 @@ INPUT                  = . \
                          ../../graf2d/graf/ \
                          ../../graf2d/gviz/ \
                          ../../graf2d/postscript/ \
-                         ../../graf2d/qt/ \
                          ../../graf2d/quartz/ \
                          ../../graf2d/win32gdk/ \
                          ../../graf2d/x11/ \
@@ -839,6 +838,7 @@ INPUT                  = . \
 #                         ../../core/textinput/
 #                         ../../core/zip/
 #                         ../../graf2d/ios/
+#                         ../../graf2d/qt/ \
 #                         ../../graf2d/mathtext/
 #                         ../../graf3d/ftgl/
 #                         ../../graf3d/glew/
