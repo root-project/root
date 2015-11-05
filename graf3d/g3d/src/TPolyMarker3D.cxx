@@ -28,38 +28,45 @@ ClassImp(TPolyMarker3D);
 
 const Int_t kDimension = 3;
 
-//______________________________________________________________________________
-// PolyMarker3D is a 3D polymarker. It has three constructors.
-//
-//   First one, without any parameters TPolyMarker3D(), we call 'default
-// constructor' and it's used in a case that just an initialisation is
-// needed (i.e. pointer declaration).
-//
-//       Example:
-//                 TPolyMarker3D *pm = new TPolyMarker3D;
-//
-//
-//   Second one, takes, usually, two parameters, n (number of points) and
-// marker (marker style). Third parameter is optional.
-//
-//       Example:
-//                 TPolyMarker3D (150, 1);
-//
-//
-//   Third one takes, usually, three parameters, n (number of points), *p
-// (pointer to an array of 3D points), and marker (marker style). Fourth
-// parameter is optional.
-//
-//       Example:
-//                 Float_t *ptr = new Float_t [150*3];
-//                         ... ... ...
-//                         ... ... ...
-//                         ... ... ...
-//
-//                 TPolyMarker3D (150, ptr, 1);
-//
-//
+/** \class TPolyMarker3D
+\ingroup g3d
+A 3D polymarker.
 
+It has three constructors.
+
+First one, without any parameters TPolyMarker3D(), we call 'default
+constructor' and it's used in a case that just an initialisation is
+needed (i.e. pointer declaration).
+
+Example:
+
+~~~ {.cpp}
+   TPolyMarker3D *pm = new TPolyMarker3D;
+~~~
+
+Second one, takes, usually, two parameters, n (number of points) and
+marker (marker style). Third parameter is optional.
+
+Example:
+
+~~~ {.cpp}
+   TPolyMarker3D (150, 1);
+~~~
+
+Third one takes, usually, three parameters, n (number of points), *p
+(pointer to an array of 3D points), and marker (marker style). Fourth
+parameter is optional.
+
+Example:
+
+~~~ {.cpp}
+   Float_t *ptr = new Float_t [150*3];
+      ... ... ...
+      ... ... ...
+      ... ... ...
+   TPolyMarker3D (150, ptr, 1);
+~~~
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 3-D polymarker default constructor.
@@ -149,7 +156,7 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignement operator
+/// assignment operator
 
 TPolyMarker3D& TPolyMarker3D::operator=(const TPolyMarker3D& tp3)
 {
@@ -260,7 +267,7 @@ void TPolyMarker3D::Draw(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw this 3-D polymartker with new coordinates. Creates a new
+/// Draw this 3-D polymarker with new coordinates. Creates a new
 /// polymarker which will be adopted by the pad in which it is drawn.
 /// Does not change the original polymarker (should be static method).
 
