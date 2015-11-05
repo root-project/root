@@ -1,7 +1,6 @@
 // @(#)root/g3d:$Id$
 // Author: Rene Brun , Olivier Couet 31/10/97
 
-
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -28,21 +27,21 @@
 
 ClassImp(TMarker3DBox)
 
+/** \class TMarker3DBox
+\ingroup g3d
+A special 3-D marker designed for event display.
 
-//______________________________________________________________________________
-// Marker3DBox is a special 3-D marker designed for event display.
-// It has the following parameters:
-//    fX;               X coordinate of the center of the box
-//    fY;               Y coordinate of the center of the box
-//    fZ;               Z coordinate of the center of the box
-//    fDx;              half length in X
-//    fDy;              half length in Y
-//    fDz;              half length in Z
-//    fTheta;           Angle of box z axis with respect to main Z axis
-//    fPhi;             Angle of box x axis with respect to main Xaxis
-//    fRefObject;       A reference to an object
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/Marker3DBox.gif"> </P> End_Html
-
+It has the following parameters:
+  - fX;               X coordinate of the center of the box
+  - fY;               Y coordinate of the center of the box
+  - fZ;               Z coordinate of the center of the box
+  - fDx;              half length in X
+  - fDy;              half length in Y
+  - fDz;              half length in Z
+  - fTheta;           Angle of box z axis with respect to main Z axis
+  - fPhi;             Angle of box x axis with respect to main Xaxis
+  - fRefObject;       A reference to an object
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Marker3DBox  default constructor
@@ -60,7 +59,6 @@ TMarker3DBox::TMarker3DBox()
    fPhi       = 0;
    SetBit(kTemporary,kFALSE);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Marker3DBox normal constructor
@@ -83,7 +81,7 @@ TMarker3DBox::TMarker3DBox( Float_t x, Float_t y, Float_t z,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
+/// copy constructor
 
 TMarker3DBox::TMarker3DBox(const TMarker3DBox& m3d) :
  TObject(m3d),
@@ -103,7 +101,7 @@ TMarker3DBox::TMarker3DBox(const TMarker3DBox& m3d) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignement operator
+/// assignment operator
 
 TMarker3DBox& TMarker3DBox::operator=(const TMarker3DBox& m3d)
 {
@@ -175,7 +173,6 @@ Int_t TMarker3DBox::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event
 ///
@@ -187,7 +184,6 @@ void TMarker3DBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!gPad) return;
    if (gPad->GetView()) gPad->GetView()->ExecuteRotateView(event, px, py);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint marker 3D box.
@@ -290,7 +286,6 @@ void TMarker3DBox::Paint(Option_t * /* option */ )
    viewer3D->AddObject(buffer);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint 3-d histogram h with marker3dboxes
 
@@ -359,7 +354,6 @@ void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
@@ -386,7 +380,6 @@ void TMarker3DBox::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   marker3DBox->Draw();"<<std::endl;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set direction.
 
@@ -395,7 +388,6 @@ void TMarker3DBox::SetDirection(Float_t theta, Float_t phi)
    fTheta = theta;
    fPhi   = phi;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set size.
@@ -407,7 +399,6 @@ void TMarker3DBox::SetSize(Float_t dx, Float_t dy, Float_t dz)
    fDz = dz;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set position.
 
@@ -417,7 +408,6 @@ void TMarker3DBox::SetPosition(Float_t x, Float_t y, Float_t z)
    fY  = y;
    fZ  = z;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set points.
@@ -459,7 +449,6 @@ void TMarker3DBox::SetPoints(Double_t *points) const
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TMarker3DBox.

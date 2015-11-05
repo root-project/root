@@ -9,59 +9,63 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-// THelix has two different constructors.
-//
-//   If a particle with charge q passes through a point (x,y,z)
-//   with momentum (px,py,pz) with magnetic field B along an axis (nx,ny,nz),
-//   this helix can be constrcuted like
-//
-//      THelix p(x,y,z, px,py,pz, q*B, nx,ny,nz);
-//
-//     (nx,ny,nz) defaults to (0,0,1).
-//
-//   A helix in its own frame can be defined with a pivotal point
-//   (x0,y0,z0), the velocity at that point (vx0,vy0,vz0), and
-//   an angular frequency w.  Combining vx0 and vy0 to a transverse
-//   velocity vt0 one can parametrize the helix as
-//
-//    x(t) = x0 - vt0 / w * sin(-w * t + phi0)
-//    y(t) = y0 + vt0 / w * cos(-w * t + phi0)
-//    z(t) = z0 + vz0 * t
-//
-//
-//   The second constructor has 6 parameters,
-//
-//       Example:
-//                 THelix pl1(xyz, v, w, range, rtype, axis);
-//
-//         where:
-//             xyz  : array of initial position
-//             v    : array of initial velocity
-//             w    : angular frequency
-//             range: helix range
-//             rtype: kHelixZ specifies allowed drawing range in helix Z direction, i.e., along B field.
-//                    kLabZ specifies drawing range in lab frame.
-//                    kHelixX, kHelixY, kLabX, kLabY, kUnchanged ... etc can also be specified
-//             axis : helix axis
-//
-//
-//
-// Example constructing a helix with several default values and drawing it:
-//
-// BEGIN_MACRO(source)
-// {
-//   TCanvas* helix_example_c1 = new TCanvas("helix_example_c1");
-//   TView *view = TView::CreateView(1);
-//   view->SetRange(-1,-1,-1,1,1,1);
-//   THelix *helix = new THelix(0., 0., 0., 1., 0., 0.3, 10.);
-//   helix->Draw();
-// }
-// END_MACRO
-//
-// This initializes a helix with its axis in Z direction (rtype=kHelixZ).
-//
+/** \class THelix
+\ingroup g3d
+THelix has two different constructors.
 
+If a particle with charge q passes through a point (x,y,z)
+with momentum (px,py,pz) with magnetic field B along an axis (nx,ny,nz),
+this helix can be constructed like:
+
+~~~ {.cpp}
+      THelix p(x,y,z, px,py,pz, q*B, nx,ny,nz);
+      (nx,ny,nz) defaults to (0,0,1).
+~~~
+
+A helix in its own frame can be defined with a pivotal point
+(x0,y0,z0), the velocity at that point (vx0,vy0,vz0), and
+an angular frequency w.  Combining vx0 and vy0 to a transverse
+velocity vt0 one can parametrize the helix as:
+
+~~~ {.cpp}
+    x(t) = x0 - vt0 / w * sin(-w * t + phi0)
+    y(t) = y0 + vt0 / w * cos(-w * t + phi0)
+    z(t) = z0 + vz0 * t
+~~~
+
+The second constructor has 6 parameters,
+
+Example:
+
+~~~ {.cpp}
+      THelix pl1(xyz, v, w, range, rtype, axis);
+~~~
+
+where:
+
+  - xyz  : array of initial position
+  - v    : array of initial velocity
+  - w    : angular frequency
+  - range: helix range
+  - rtype: kHelixZ specifies allowed drawing range in helix Z direction, i.e., along B field.
+           kLabZ specifies drawing range in lab frame.
+           kHelixX, kHelixY, kLabX, kLabY, kUnchanged ... etc can also be specified
+  - axis : helix axis
+
+Example constructing a helix with several default values and drawing it:
+
+Begin_Macro(source)
+{
+   TCanvas* helix_example_c1 = new TCanvas("helix_example_c1");
+   TView *view = TView::CreateView(1);
+   view->SetRange(-1,-1,-1,1,1,1);
+   THelix *helix = new THelix(0., 0., 0., 1., 0., 0.3, 10.);
+   helix->Draw();
+}
+End_Macro
+
+This initializes a helix with its axis in Z direction (rtype=kHelixZ).
+*/
 
 #include "Riostream.h"
 #include "TROOT.h"
@@ -73,7 +77,6 @@
 Int_t THelix::fgMinNSeg=5;        // at least 5 line segments in TPolyLine3D
 
 ClassImp(THelix)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set all helix parameters.
@@ -113,7 +116,6 @@ void  THelix::SetHelix(Double_t *p,  Double_t *v,  Double_t w,
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Helix default constructor.
 
@@ -126,7 +128,6 @@ THelix::THelix()
    fRange[1] = 1.0;
    fRotMat   = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Helix normal constructor.
@@ -149,7 +150,6 @@ THelix::THelix(Double_t x,  Double_t y,  Double_t z,
    SetHelix(p, v, w, range, kHelixZ);
    fOption = "";
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Helix normal constructor.
@@ -199,7 +199,7 @@ THelix::THelix(const THelix &h) : TPolyLine3D()
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignement operator
+/// assignment operator
 
 THelix& THelix::operator=(const THelix& hx)
 {
