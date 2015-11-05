@@ -15,7 +15,7 @@ if(NOT ssl)
   set(ssllib)
 else()
   include_directories(${OPENSSL_INCLUDE_DIR})
-  set(ssllib ${OPENSSL_LIBRARIES})
+  set(ssllib ${OPENSSL_LIBRARIES} ${CMAKE_DL_LIBS})
   add_definitions(-DR__SSL)
 endif()
 
@@ -34,5 +34,9 @@ endif()
 ROOT_GENERATE_DICTIONARY(G__Net ${headers} LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(Net LINKDEF LinkDef.h DEPENDENCIES MathCore RIO )
 ROOT_LINKER_LIBRARY(Net ${sources} G__Net.cxx LIBRARIES ${ssllib} ${CRYPTLIBS} DEPENDENCIES MathCore RIO )
+
+if(builtin_openssl)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(Net OPENSSL)
+endif()
 
 ROOT_INSTALL_HEADERS()

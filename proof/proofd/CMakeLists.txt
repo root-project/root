@@ -14,7 +14,7 @@ if(WIN32)
   ROOT_LINKER_LIBRARY(XrdProofd XProofProtUtils.cxx LIBRARIES ${XROOTD_LIBRARIES})
 else()
   ROOT_EXECUTABLE(proofd proofd.cxx ${CMAKE_SOURCE_DIR}/core/clib/src/strlcat.c 
-                         LIBRARIES ${XROOTD_LIBRARIES} rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES} ${CRYPTLIBS} )
+                         LIBRARIES ${XROOTD_LIBRARIES} rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES} ${CMAKE_DL_LIBS} ${CRYPTLIBS} )
   if (NOT XROOTD_NOMAIN)
      ROOT_EXECUTABLE(xproofd X*.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
                          LIBRARIES ${XROOTD_LIBRARIES} ${SYSLIBS})
@@ -31,5 +31,10 @@ if(builtin_xrootd)
   endif ()
   add_dependencies(proofd XROOTD)
 endif()
+
+if(builtin_openssl)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(proofd OPENSSL)
+endif()
+
 
 ROOT_INSTALL_HEADERS()

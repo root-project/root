@@ -110,6 +110,7 @@ ROOT_BUILD_OPTION(builtin_afterimage ON "Built included libAfterImage, or use sy
 ROOT_BUILD_OPTION(builtin_ftgl ON "Built included libFTGL, or use system libftgl")
 ROOT_BUILD_OPTION(builtin_freetype OFF "Built included libfreetype, or use system libfreetype")
 ROOT_BUILD_OPTION(builtin_glew ON "Built included libGLEW, or use system libGLEW")
+ROOT_BUILD_OPTION(builtin_openssl OFF "Build OpenSSL internally, or use system OpenSSL")
 ROOT_BUILD_OPTION(builtin_pcre OFF "Built included libpcre, or use system libpcre")
 ROOT_BUILD_OPTION(builtin_zlib OFF "Built included libz, or use system libz")
 ROOT_BUILD_OPTION(builtin_lzma OFF "Built included liblzma, or use system liblzma")
