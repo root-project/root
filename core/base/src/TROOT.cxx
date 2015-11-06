@@ -390,7 +390,7 @@ namespace Internal {
       if (!tthreadInitialize) {
          const static auto loadSuccess = -1 != gSystem->Load("libThread");
          if (loadSuccess) {
-            if (auto sym = dlsym(RTLD_DEFAULT,"__TThread__Initialize")) {
+            if (auto sym = dlsym(RTLD_DEFAULT,"ROOT_TThread_Initialize")) {
                tthreadInitialize = (void(*)()) sym;
                tthreadInitialize();
             } else {
