@@ -52,7 +52,9 @@ ROOTAAS      := $(subst $(MODDIR),bin,$(ROOTAASS))
 bin/%.py: $(MODDIR)/%.py
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	cp $< $@
-# Need ROOTaaS copy also for Windows. TODO.
+bin/ROOTaaS/%: $(MODDIR)/ROOTaaS/%
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	cp -R $< $@
 else
 ROOTPY       := $(subst $(MODDIR),$(LPATH),$(ROOTPYS))
 ROOTAAS      := $(subst $(MODDIR),$(LPATH),$(ROOTAASS))
