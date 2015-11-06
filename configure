@@ -7254,6 +7254,9 @@ fi
 if test -d graf2d/freetype/src/freetype-2.3.5 ; then
    rm -rf graf2d/freetype/src/freetype-2.3.5
 fi
+if test -d graf2d/freetype/src/freetype-2.3.12 ; then
+   rm -rf graf2d/freetype/src/freetype-2.3.12
+fi
 if test -d pcre/src/pcre-6.4 ; then
    rm -rf pcre/src/pcre-6.4
 fi
