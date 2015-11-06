@@ -272,6 +272,7 @@ static void at_exit_of_TROOT() {
 
 // This local static object initializes the ROOT system
 namespace ROOT {
+namespace Internal {
    class TROOTAllocator {
       // Simple wrapper to separate, time-wise, the call to the
       // TROOT destructor and the actual free-ing of the memory.
@@ -307,8 +308,9 @@ namespace ROOT {
       char fHolder[sizeof(TROOT)];
    public:
       TROOTAllocator() {
-         new ( &(fHolder[0]) ) TROOT("root", "The ROOT of EVERYTHING");
+         new(&(fHolder[0])) TROOT("root", "The ROOT of EVERYTHING");
       }
+
       ~TROOTAllocator() {
          if (gROOTLocal) {
             gROOTLocal->~TROOT();
@@ -344,12 +346,14 @@ namespace ROOT {
    // code).
 
    extern TROOT *gROOTLocal;
+
    TROOT *GetROOT1() {
       if (gROOTLocal)
          return gROOTLocal;
       static TROOTAllocator alloc;
       return gROOTLocal;
    }
+
    TROOT *GetROOT2() {
       static Bool_t initInterpreter = kFALSE;
       if (!initInterpreter) {
@@ -361,10 +365,16 @@ namespace ROOT {
       return gROOTLocal;
    }
    typedef TROOT *(*GetROOTFun_t)();
+
    static GetROOTFun_t gGetROOT = &GetROOT1;
+
+} // end of Internal sub namespace
+// back to ROOT namespace
+
    TROOT *GetROOT() {
-      return (*gGetROOT)();
+      return (*Internal::gGetROOT)();
    }
+
    TString &GetMacroPath() {
       static TString macroPath;
       return macroPath;
@@ -393,7 +403,7 @@ namespace ROOT {
 
 }
 
-TROOT *ROOT::gROOTLocal = ROOT::GetROOT();
+TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
 
 // Global debug flag (set to > 0 to get debug output).
 // Can be set either via the interpreter (gDebug is exported to CINT),
@@ -453,14 +463,14 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
      fProofs(0),fClipboard(0),fDataSets(0),fUUIDs(0),fRootFolder(0),fBrowsables(0),
      fPluginManager(0)
 {
-   if (fgRootInit || ROOT::gROOTLocal) {
+   if (fgRootInit || ROOT::Internal::gROOTLocal) {
       //Warning("TROOT", "only one instance of TROOT allowed");
       return;
    }
 
    R__LOCKGUARD2(gROOTMutex);
 
-   ROOT::gROOTLocal = this;
+   ROOT::Internal::gROOTLocal = this;
    gDirectory = 0;
 
    // initialize gClassTable is not already done
@@ -640,7 +650,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    atexit(CleanUpROOTAtExit);
 
-   ROOT::gGetROOT = &ROOT::GetROOT2;
+   ROOT::Internal::gGetROOT = &ROOT::Internal::GetROOT2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -649,10 +659,12 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
 TROOT::~TROOT()
 {
-   if (ROOT::gROOTLocal == this) {
+   using namespace ROOT::Internal;
+
+   if (gROOTLocal == this) {
 
       // If the interpreter has not yet been initialized, don't bother
-      ROOT::gGetROOT = &ROOT::GetROOT1;
+      gGetROOT = &GetROOT1;
 
       // Mark the object as invalid, so that we can veto some actions
       // (like autoloading) while we are in the destructor.
@@ -761,7 +773,7 @@ TROOT::~TROOT()
       // Prints memory stats
       TStorage::PrintStatistics();
 
-      ROOT::gROOTLocal = 0;
+      gROOTLocal = 0;
       fgRootInit = kFALSE;
    }
 }
@@ -2159,7 +2171,9 @@ void TROOT::RefreshBrowsers()
 
 static void CallCloseFiles()
 {
-   if (TROOT::Initialized() && ROOT::gROOTLocal) gROOT->CloseFiles();
+   if (TROOT::Initialized() && ROOT::Internal::gROOTLocal) {
+      gROOT->CloseFiles();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

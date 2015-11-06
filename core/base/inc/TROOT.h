@@ -65,15 +65,22 @@ class TGlobalMappedFunction;
 R__EXTERN TVirtualMutex *gROOTMutex;
 
 namespace ROOT {
+namespace Internal {
    class TROOTAllocator;
+
    TROOT *GetROOT2();
+} } // End ROOT::Internal
+
+namespace ROOT {
+   // Enable support for multi-threading within the ROOT code,
+   // in particular, enables the global mutex to make ROOT thread safe/aware.
    void EnableMT();
 }
 
 class TROOT : public TDirectory {
 
 friend class TCling;
-friend TROOT *ROOT::GetROOT2();
+friend TROOT *ROOT::Internal::GetROOT2();
 
 private:
    Int_t           fLineIsProcessing;     //To synchronize multi-threads
@@ -156,7 +163,7 @@ protected:
    void          *operator new(size_t l) { return TObject::operator new(l); }
    void          *operator new(size_t l, void *ptr) { return TObject::operator new(l,ptr); }
 
-   friend class ::ROOT::TROOTAllocator;
+   friend class ::ROOT::Internal::TROOTAllocator;
 
    TListOfFunctions*GetGlobalFunctions();
 
@@ -326,7 +333,9 @@ public:
 
 namespace ROOT {
    TROOT *GetROOT();
-   R__EXTERN TROOT *gROOTLocal;
+   namespace Internal {
+      R__EXTERN TROOT *gROOTLocal;
+   }
 }
 #define gROOT (ROOT::GetROOT())
 

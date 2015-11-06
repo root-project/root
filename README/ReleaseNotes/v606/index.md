@@ -68,6 +68,12 @@ an argument was changed to set `gDirectory` to zero when being passed a null poi
 previously it was interpreting a null pointer as a request to *not* change the current
 directory - this behavior is now implement by the default constructor.
 
+### Cleanups.
+
+Several definition where moved from the global or ROOT namespace to the ROOT::Internal namespace as they are not intended to be used outside of ROOT, including: `gROOTLocal` and related functions, `TSchemaHelper`, `TSchemaMatch`, `TSchemaType`, `RStl`, `ROOT::TROOTAllocator`, `TSchemaRuleProcessor`, `TStdBitsetHelper`, `TInitBehavior`, `TDefaultInitBehavior`, `DefineBehavior`, `THnBaseBrowsable`, `THnBaseBinIter`, `GenericShowMembers`, `TOperatorNewHelper` and `BranchProxy` implementations classes.
+
+Several definition where moved from the global or ROOT namespace to the ROOT::Details namespace as they are intended to be used in 'expert' level code and have a lower level of backward compatibility requirement.  This includes `TCollectionProxyInfo`, `TSchemaRuleSet`.
+
 ## I/O Libraries
 
 ### hadd
