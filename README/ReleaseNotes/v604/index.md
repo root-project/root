@@ -959,3 +959,8 @@ Changes will be part of the future 6.04/08
 ### Core
 
 * Resolve issues on SL6, 32bits when during process tear down libCling.so is removed before all the dictionary have been tear down.
+
+### TNetXNGFileStager
+- Fixed ROOT-7703. This restores the behavior of Locate() to that found with
+TXNetFileStager: Rather than return only the xrootd server's reply, the endpoint
+hostname is looked up and Locate() returns the full url, including the path.

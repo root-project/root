@@ -23,6 +23,8 @@
 
 #include "TSystem.h"
 #include "TCollection.h"
+#include "TMutex.h"
+#include "THashList.h"
 #include <set>
 
 namespace XrdCl {
@@ -35,6 +37,8 @@ class TNetXNGSystem: public TSystem {
 
 private:
    std::set<void *>    fDirPtrs;
+   static THashList   fgAddrFQDN;  // Cache of addresses to FQDNs
+   static TMutex      fgAddrMutex; // Serialise access to the FQDN list
 #ifndef __CINT__
 private:
    XrdCl::URL        *fUrl;        // URL of this TSystem
