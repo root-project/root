@@ -403,14 +403,14 @@ if(ssl OR builtin_openssl)
       OPENSSL
       URL ${repository_tarfiles}/openssl-${openssl_version}.tar.gz
       CONFIGURE_COMMAND ${openssl_config_cmd} no-shared --prefix=<INSTALL_DIR>
-      BUILD_COMMAND make -j1 CC=${CMAKE_C_COMPILER}
+      BUILD_COMMAND make -j1 CC=${CMAKE_C_COMPILER}\ -fPIC
       INSTALL_COMMAND make install_sw
       BUILD_IN_SOURCE 1
       LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
     )
     ExternalProject_Get_Property(OPENSSL INSTALL_DIR)
     set(OPENSSL_INCLUDE_DIR ${INSTALL_DIR}/include)
-    set(OPENSSL_LIBRARIES ${INSTALL_DIR}/lib/libcrypto.a ${INSTALL_DIR}/lib/libssl.a)
+    set(OPENSSL_LIBRARIES ${INSTALL_DIR}/lib/libssl.a ${INSTALL_DIR}/lib/libcrypto.a ${CMAKE_DL_LIBS})
     set(OPENSSL_PREFIX ${INSTALL_DIR})
     set(ssl ON CACHE BOOL "" FORCE)
   else()
