@@ -516,7 +516,7 @@ void TMVA::MethodNN::Train()
         const std::vector<Float_t>& values  = event->GetValues  ();
         if (fAnalysisType == Types::kClassification)
         {
-            double outputValue = event->GetClass () == 1 ? 0.0 : 1.0;
+            double outputValue = event->GetClass () == 0 ? 0.9 : 0.1;
             trainPattern.push_back (Pattern (values.begin  (), values.end (), outputValue, event->GetWeight ()));
             trainPattern.back ().addInput (1.0); // bias node
         }
@@ -534,7 +534,7 @@ void TMVA::MethodNN::Train()
         const std::vector<Float_t>& values  = event->GetValues  ();
         if (fAnalysisType == Types::kClassification)
         {
-            double outputValue = event->GetClass () == 1 ? 0.0 : 1.0;
+            double outputValue = event->GetClass () == 0 ? 0.9 : 0.1;
             testPattern.push_back (Pattern (values.begin  (), values.end (), outputValue, event->GetWeight ()));
             testPattern.back ().addInput (1.0); // bias node
         }
@@ -771,13 +771,16 @@ void TMVA::MethodNN::AddWeightsXMLTo( void* parent ) const
        const TMVA::NN::Layer& layer = fNet.layers ().at (i);
        int numNodes = layer.numNodes ();
        char activationFunction = (char)(layer.activationFunctionType ());
-       char outputMode = (char)layer.modeOutputValues ();
+       int outputMode = (int)layer.modeOutputValues ();
+
+       TString outputModeStr;
+       outputModeStr.Form ("%d", outputMode);
 
        void* layerxml = gTools().xmlengine().NewChild(xmlLayout, 0, "Layer");
        gTools().xmlengine().NewAttr(layerxml, 0, "Connection",    TString("FULL") );
        gTools().xmlengine().NewAttr(layerxml, 0, "Nodes",    gTools().StringFromInt(numNodes) );
        gTools().xmlengine().NewAttr(layerxml, 0, "ActivationFunction",    TString (activationFunction) );
-       gTools().xmlengine().NewAttr(layerxml, 0, "OutputMode",    TString (outputMode) );
+       gTools().xmlengine().NewAttr(layerxml, 0, "OutputMode",    outputModeStr);
    }
 
 
@@ -833,7 +836,7 @@ void TMVA::MethodNN::ReadWeightsFromXML( void* wghtnode )
       gTools().ReadAttr (ch, "OutputMode", outputMode);
       ch = gTools().GetNextChild(ch);
 
-      fNet.addLayer (NN::Layer (numNodes, (TMVA::NN::EnumFunction)activationFunction (0), (NN::ModeOutputValues)outputMode (0))); 
+      fNet.addLayer (NN::Layer (numNodes, (TMVA::NN::EnumFunction)activationFunction (0), (NN::ModeOutputValues)outputMode.Atoi ()));
    }
 
 //   std::cout << "read weights XML" << std::endl;

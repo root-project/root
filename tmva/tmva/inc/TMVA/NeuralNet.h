@@ -157,7 +157,7 @@ enum class EnumRegularization
 };
 
 
-enum class ModeOutputValues
+enum class ModeOutputValues : int
 {
     DIRECT = 0x01,
     SIGMOID = 0x02,
@@ -178,10 +178,22 @@ inline ModeOutputValues operator|= (ModeOutputValues& lhs, ModeOutputValues rhs)
     return lhs;
 }
 
+inline ModeOutputValues operator& (ModeOutputValues lhs, ModeOutputValues rhs)
+{
+    return (ModeOutputValues)(static_cast<std::underlying_type_t<ModeOutputValues>>(lhs) & static_cast<std::underlying_type_t<ModeOutputValues>>(rhs));
+}
+
+inline ModeOutputValues operator&= (ModeOutputValues& lhs, ModeOutputValues rhs)
+{
+    lhs = (ModeOutputValues)(static_cast<std::underlying_type_t<ModeOutputValues>>(lhs) & static_cast<std::underlying_type_t<ModeOutputValues>>(rhs));
+    return lhs;
+}
+
+
 template <typename T>
     bool isFlagSet (T flag, T value)
 {
-    return (value & flag) != 0;
+    return (int)(value & flag) != 0;
 }
 
 

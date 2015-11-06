@@ -424,8 +424,9 @@ double crossEntropy (ItProbability itProbabilityBegin, ItProbability itProbabili
     {
         double probability = *itProbability;
         double truth = *itTruthBegin;
-        truth = truth < 0.1 ? 0.1 : truth;
-        truth = truth > 0.9 ? 0.9 : truth;
+        /* truth = truth < 0.1 ? 0.1 : truth; */
+        /* truth = truth > 0.9 ? 0.9 : truth; */
+        truth = truth < 0.5 ? 0.1 : 0.9;
         if (hasDeltas)
         {
             double delta = probability - truth;
@@ -1014,16 +1015,18 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 	    LayerData& currLayerData = layerData.at (idxLayer+1);
 		
 	    forward (prevLayerData, currLayerData);
+            applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.activationFunction ());
 	}
 
 	// ------------- fetch output ------------------
-	if (layerData.back ().outputMode () == ModeOutputValues::DIRECT)
+	if (TMVA::NN::isFlagSet (ModeOutputValues::DIRECT, layerData.back ().outputMode ()))
 	{
 	    std::vector<double> output;
 	    output.assign (layerData.back ().valuesBegin (), layerData.back ().valuesEnd ());
 	    return output;
 	}
-	return layerData.back ().probabilities ();
+        std::vector<double> output (layerData.back ().probabilities ());
+	return output;
     }
 
 
@@ -1234,16 +1237,28 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
             }
 
         }
-            
+
+
+
+
+        
         // ------------- fetch output ------------------
         if (fetchOutput)
         {
             for (LayerData& lastLayerData : layerPatternData.back ())
             {
-                if (lastLayerData.outputMode () == ModeOutputValues::DIRECT)
+                ModeOutputValues eModeOutput = lastLayerData.outputMode ();
+                if (TMVA::NN::isFlagSet (ModeOutputValues::DIRECT, eModeOutput))
+                {
                     outputContainer.insert (outputContainer.end (), lastLayerData.valuesBegin (), lastLayerData.valuesEnd ());
-                else
+                }
+                else if (TMVA::NN::isFlagSet (ModeOutputValues::SIGMOID, eModeOutput) ||
+                         TMVA::NN::isFlagSet (ModeOutputValues::SOFTMAX, eModeOutput))
+                {
                     outputContainer = lastLayerData.probabilities ();
+                }
+                else
+                    assert (false);
             }
         }
 
@@ -1457,7 +1472,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 	}
 	case ModeErrorFunction::CROSSENTROPY:
 	{
-	    assert (layerData.outputMode () != ModeOutputValues::DIRECT);
+	    assert (!TMVA::NN::isFlagSet (ModeOutputValues::DIRECT, layerData.outputMode ()));
 	    std::vector<double> probabilities = layerData.probabilities ();
 	    error = crossEntropy (begin (probabilities), end (probabilities), 
 				  begin (truth), end (truth), 
@@ -1468,7 +1483,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 	}
 	case ModeErrorFunction::CROSSENTROPY_MUTUALEXCLUSIVE:
 	{
-	    assert (layerData.outputMode () != ModeOutputValues::DIRECT);
+	    assert (!TMVA::NN::isFlagSet (ModeOutputValues::DIRECT, layerData.outputMode ()));
 	    std::vector<double> probabilities = layerData.probabilities ();
 	    error = softMaxCrossEntropy (begin (probabilities), end (probabilities), 
 					 begin (truth), end (truth), 
