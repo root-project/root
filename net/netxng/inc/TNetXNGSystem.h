@@ -37,12 +37,12 @@ class TNetXNGSystem: public TSystem {
 
 private:
    std::set<void *>    fDirPtrs;
+   static THashList   fgAddrFQDN;  // Cache of addresses to FQDNs
+   static TMutex      fgAddrMutex; // Serialise access to the FQDN list
 #ifndef __CINT__
 private:
    XrdCl::URL        *fUrl;        // URL of this TSystem
    XrdCl::FileSystem *fFileSystem; // Cached for convenience
-   static THashList   fgAddrFQDN;  // Cache of addresses to FQDNs
-   static TMutex      fgAddrMutex; // Serialise access to the FQDN list
 
 #endif
 
