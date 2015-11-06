@@ -70,16 +70,16 @@ Example:
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1");
+   TCanvas *c1 = new TCanvas("c1","c1",500,500);
    TView *view = TView::CreateView(1);
    view->SetRange(0,0,0,2,2,2);
-   const Int_t n = 100;
+   const Int_t n = 500;
+   r = new TRandom();
+   Double_t x, y, z;
    TPolyLine3D *l = new TPolyLine3D(n);
    for (Int_t i=0;i<n;i++) {
-      Double_t x = 2*gRandom->Rndm();
-      Double_t y = 2*gRandom->Rndm();
-      Double_t z = 2*gRandom->Rndm();
-      l->SetPoint(i,x,y,z);
+      r->Sphere(x, y, z, 1);
+      l->SetPoint(i,x+1,y+1,z+1);
    }
    l->Draw();
 }
