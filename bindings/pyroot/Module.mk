@@ -41,15 +41,32 @@ endif
 PYROOTMAP    := $(PYROOTLIB:.$(SOEXT)=.rootmap)
 
 ROOTPYS      := $(wildcard $(MODDIR)/*.py)
+ROOTAASS     := $(wildcard $(MODDIR)/ROOTaaS/* $(MODDIR)/ROOTaaS/*/* $(MODDIR)/ROOTaaS/*/*/*)
+# Above includes ROOTaaS/config which is a directory; filter those out.
+# Problem: $(dir $(ROOTAASS)) gives ROOTaaS/config/ thus patsubst %/, %
+ROOTAASS     := $(filter-out $(sort $(patsubst %/,%,$(dir $(ROOTAASS)))),$(ROOTAASS))
+
 ifeq ($(ARCH),win32)
 ROOTPY       := $(subst $(MODDIR),bin,$(ROOTPYS))
-bin/%.py: $(MODDIR)/%.py; cp $< $@
+ROOTAAS      := $(subst $(MODDIR),bin,$(ROOTAASS))
+bin/%.py: $(MODDIR)/%.py
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	cp $< $@
+# Need ROOTaaS copy also for Windows. TODO.
 else
 ROOTPY       := $(subst $(MODDIR),$(LPATH),$(ROOTPYS))
-$(LPATH)/%.py: $(MODDIR)/%.py; cp $< $@
+ROOTAAS      := $(subst $(MODDIR),$(LPATH),$(ROOTAASS))
+$(LPATH)/%.py: $(MODDIR)/%.py
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	cp $< $@
+$(LPATH)/ROOTaaS/%: $(MODDIR)/ROOTaaS/%
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	cp -R $< $@
 endif
 ROOTPYC      := $(ROOTPY:.py=.pyc)
 ROOTPYO      := $(ROOTPY:.py=.pyo)
+ROOTAASC     := $(ROOTAAS:.py=.pyc)
+ROOTAASO     := $(ROOTAAS:.py=.pyo)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
@@ -72,7 +89,9 @@ include/%.h:    $(PYROOTDIRI)/%.h
 %.pyo: %.py;    python -O -c 'import py_compile; py_compile.compile( "$<" )'
 
 $(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(ROOTPY) $(ROOTPYC) $(ROOTPYO) \
-                $(ROOTLIBSDEP) $(PYTHONLIBDEP)
+                $(ROOTLIBSDEP) $(PYTHONLIBDEP) \
+                $(ROOTAAS) $(ROOTAASC) $(ROOTAASO)
+
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		  "$(SOFLAGS)" libPyROOT.$(SOEXT) $@ \
 		  "$(PYROOTO) $(PYROOTDO)" \
@@ -119,6 +138,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(PYROOTDEP) $(PYROOTDS) $(PYROOTDH) $(PYROOTLIB) \
 		   $(ROOTPY) $(ROOTPYC) $(ROOTPYO) $(PYROOTMAP) \
 		   $(PYROOTPYD) $(PYTHON64DEP) $(PYTHON64)
+		@rm -rf $(LPATH)/ROOTaaS bin/ROOTaaS
 
 distclean::     distclean-$(MODNAME)
 
