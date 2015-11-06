@@ -23,10 +23,15 @@
 #include "Rtypes.h"
 #include "TList.h"
 #include "TUrl.h"
+#include "TVirtualMutex.h"
 #include <XrdCl/XrdClFileSystem.hh>
 #include <XrdCl/XrdClXRootDResponses.hh>
+#include <XrdSys/XrdSysDNS.hh>
 
 ClassImp(TNetXNGSystem);
+
+THashList TNetXNGSystem::fgAddrFQDN;
+TMutex TNetXNGSystem::fgAddrMutex;
 
 namespace
 {
@@ -324,9 +329,39 @@ Int_t TNetXNGSystem::Locate(const char *path, TString &endurl)
       return 1;
    }
 
-   // Return the first address
-   endurl = info->Begin()->GetAddress();
+   // Use the first endpoint address returned by the client
+   URL locUrl(info->Begin()->GetAddress());
+   TString loc = locUrl.GetHostName();
    delete info;
+   info = 0;
+
+   R__LOCKGUARD(&fgAddrMutex);
+
+   // The location returned by the client library is the numeric host address
+   // without path. Try to lookup a hostname and replace the path portion of
+   // the url before returning the result.
+   TNamed *hn = 0;
+   if (fgAddrFQDN.GetSize() <= 0 ||
+       !(hn = dynamic_cast<TNamed *>(fgAddrFQDN.FindObject(loc)))) {
+      char *addr[1] = {0}, *name[1] = {0};
+      int naddr = XrdSysDNS::getAddrName(loc.Data(), 1, addr, name);
+      if (naddr == 1) {
+         hn = new TNamed(loc.Data(), name[0]);
+      } else {
+         hn = new TNamed(loc, loc);
+      }
+      fgAddrFQDN.Add(hn);
+      free(addr[0]);
+      free(name[0]);
+      if (gDebug > 0)
+         Info("Locate","caching host name: %s", hn->GetTitle());
+   }
+
+   TUrl res(path);
+   res.SetHost(hn->GetTitle());
+   res.SetPort(locUrl.GetPort());
+   endurl = res.GetUrl();
+
    return 0;
 }
 
