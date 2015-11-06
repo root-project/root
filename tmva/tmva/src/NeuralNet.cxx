@@ -113,29 +113,24 @@ double studenttDouble (double distributionParameter)
     typename LayerData::container_type LayerData::computeProbabilities ()
     {
 	container_type probabilitiesContainer;
-	switch (m_eModeOutput)
-	{
-	case ModeOutputValues::SIGMOID:
+        if (TMVA::NN::isFlagSet (ModeOutputValues::SIGMOID, m_eModeOutput))
         {
 	    std::transform (begin (m_values), end (m_values), std::back_inserter (probabilitiesContainer), (*Sigmoid.get ()));
-	    break;
         }
-	case ModeOutputValues::SOFTMAX:
+	else if (TMVA::NN::isFlagSet (ModeOutputValues::SOFTMAX, m_eModeOutput))
         {
             double sum = 0;
             probabilitiesContainer = m_values;
             std::for_each (begin (probabilitiesContainer), end (probabilitiesContainer), [&sum](double& p){ p = std::exp (p); sum += p; });
             if (sum != 0)
                 std::for_each (begin (probabilitiesContainer), end (probabilitiesContainer), [sum ](double& p){ p /= sum; });
-	    break;
         }
-	case ModeOutputValues::DIRECT:
-	default:
+        else
+        {
 	    probabilitiesContainer.assign (begin (m_values), end (m_values));
-	}
-	return probabilitiesContainer;
+        }
+        return probabilitiesContainer;
     }
-
 
 
 
