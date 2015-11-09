@@ -21,10 +21,10 @@
 #include <TGColorSelect.h>
 #include <TGDoubleSlider.h>
 
-//______________________________________________________________________
-// TGLLightSetSubEditor
-//
-// Sub-editor for TGLLightSet.
+/** \class TGLLightSetSubEditor
+\ingroup opengl
+Sub-editor for TGLLightSet.
+*/
 
 ClassImp(TGLLightSetSubEditor)
 
