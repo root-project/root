@@ -40,6 +40,11 @@ The following people have contributed to this new version:
  Wouter Verkerke, NIKHEF/Atlas, RooFit, \
  Maciej Zimnoch
 
+## ROOT reference manual
+
+The ROOT reference manual has been moved into Doxygen. Still some work and
+polish has to be done but the reference guide in this new format is now online
+and can be seen from the [ROOT home page](https://root.cern.ch/doc/master/index.html).
 
 ## Core Libraries
 
