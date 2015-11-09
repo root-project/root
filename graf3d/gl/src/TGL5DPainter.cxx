@@ -24,11 +24,11 @@
 #include "TGLIncludes.h"
 #include "TGL5D.h"
 
-//
-//TGL5DPainter implements "gl5d" option for TTree::Draw.
-//Data (4D) is visualized as a set of
-//iso-surfaces. 5D - not implemented yet.
-//
+/** \class TGL5DPainter
+\ingroup opengl
+TGL5DPainter implements "gl5d" option for TTree::Draw.
+Data (4D) is visualized as a set of iso-surfaces. 5D.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Constructor.
@@ -246,7 +246,7 @@ void TGL5DPainter::AddOption(const TString &/*option*/)
 
 void TGL5DPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
-   //Change color sheme.
+   //Change color scheme.
    if (event == kKeyPress) {
       if (py == kKey_c || py == kKey_C) {
          if (fHighColor)
