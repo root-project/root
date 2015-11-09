@@ -86,10 +86,10 @@ of the canvas. It gives a short explanation about the canvas' menus.
 
 A canvas may be automatically divided into pads via `TPad::Divide`.
 
-At creation time, in interactive mode, the canvas size defines the size of the
-canvas window (including the window manager's decoration). To define precisely
-the graphics area size of a canvas, the following four lines of code should be
-used:
+At creation time, no matter if in interactive or batch mode, the canvas size
+defines the size of the canvas window (including the size of the window
+manager's decoration). To define precisely the graphics area size of a canvas in
+the interactive mode, the following four lines of code should be used:
 ~~~ {.cpp}
    {
       Double_t w = 600;
@@ -98,7 +98,7 @@ used:
       c->SetWindowSize(w + (w - c->GetWw()), h + (h - c->GetWh()));
    }
 ~~~
-in batch mode simply do:
+and in the batch mode simply do:
 ~~~ {.cpp}
       c->SetCanvasSize(w,h);
 ~~~
@@ -1828,11 +1828,12 @@ void TCanvas::SetBatch(Bool_t batch)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Width and Height of canvas to ww and wh respectively
-/// If ww and/or wh are greater than the current canvas window
-/// a scroll bar is automatically generated.
-/// Use this function to zoom in a canvas and navigate via
-/// the scroll bars.
+/// Set Width and Height of canvas to ww and wh respectively. If ww and/or wh
+/// are greater than the current canvas window a scroll bar is automatically
+/// generated. Use this function to zoom in a canvas and navigate via
+/// the scroll bars. The Width and Height in this method are different from those
+/// given in the TCanvas constructors where these two dimension include the size
+/// of the window decoration whereas they do not in this method.
 
 void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
 {
