@@ -73,15 +73,13 @@ public:
 }
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLClip                                                              //
-//                                                                      //
-// Abstract clipping shape - derives from TGLPhysicalShape              //
-// Adds clip mode (inside/outside) and pure virtual method to           //
-// approximate shape as set of planes. This plane set is used to perform//
-// interactive clipping using OpenGL clip planes.                       //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLClip
+\ingroup opengl
+Abstract clipping shape - derives from TGLPhysicalShape
+Adds clip mode (inside/outside) and pure virtual method to
+approximate shape as set of planes. This plane set is used to perform
+interactive clipping using OpenGL clip planes.
+*/
 
 ClassImp(TGLClip);
 
@@ -135,15 +133,12 @@ void TGLClip::Draw(TGLRnrCtx & rnrCtx) const
    glDepthMask(GL_TRUE);
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLClipPlane                                                         //
-//                                                                      //
-// Concrete clip plane object. This can be translated in all directions //
-// rotated about the Y/Z local axes (the in-plane axes). It cannot be   //
-// scaled.                                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLClipPlane
+\ingroup opengl
+Concrete clip plane object. This can be translated in all directions
+rotated about the Y/Z local axes (the in-plane axes). It cannot be
+scaled.
+*/
 
 ClassImp(TGLClipPlane);
 
@@ -158,7 +153,7 @@ const float TGLClipPlane::fgColor[4] = { 1.0, 0.6, 0.2, 0.5 };
 /// rotated round center in X/Y axes , the in-plane axes. It cannot
 /// be scaled
 ///
-/// Note theorectically a plane is of course infinite - however we
+/// Note theoretically a plane is of course infinite - however we
 /// want to draw the object in viewer - so we fake it with a single
 /// GL face (polygon) - extents defines the width/depth of this -
 /// should be several times scene extents - see Setup().
@@ -202,7 +197,9 @@ void TGLClipPlane::Setup(const TGLBoundingBox & bbox)
 ///
 /// This only makes sense if you disable auto-update of the
 /// clip-object:
-///   gl_viewer->SetClipAutoUpdate(kFALSE).
+///
+///     gl_viewer->SetClipAutoUpdate(kFALSE).
+///
 /// After calling this also call gl_viewer->RefreshPadEditor(gl_viewer)
 /// and gl_viewer->RequestDraw().
 
@@ -249,14 +246,11 @@ void TGLClipPlane::PlaneSet(TGLPlaneSet_t& set) const
    set[0].Negate();
 }
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TGLClipBox
-//
-// Concrete clip box object. Can be translated, rotated and scaled in
-// all (xyz) axes. By default inside of the box is clipped away.
-//
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLClipBox
+\ingroup opengl
+Concrete clip box object. Can be translated, rotated and scaled in
+all (xyz) axes. By default inside of the box is clipped away.
+*/
 
 ClassImp(TGLClipBox);
 
@@ -299,7 +293,9 @@ void TGLClipBox::Setup(const TGLBoundingBox& bbox)
 ///
 /// This only makes sense if you disable auto-update of the
 /// clip-object:
-///   gl_viewer->SetClipAutoUpdate(kFALSE).
+///
+///     gl_viewer->SetClipAutoUpdate(kFALSE).
+///
 /// After calling this also call gl_viewer->RefreshPadEditor(gl_viewer)
 /// and gl_viewer->RequestDraw().
 
@@ -327,14 +323,10 @@ void TGLClipBox::PlaneSet(TGLPlaneSet_t& set) const
 }
 
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TGLClipSet
-//
-// A collection of concrete TGLClip objects to be selected from.
-//
-//////////////////////////////////////////////////////////////////////////
-
+/** \class TGLClipSet
+\ingroup opengl
+A collection of concrete TGLClip objects to be selected from.
+*/
 
 ClassImp(TGLClipSet);
 
@@ -364,7 +356,7 @@ TGLClipSet::~TGLClipSet()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Mouse has enetered this element.
+/// Mouse has entered this element.
 /// Forward to ManipSet.
 
 Bool_t TGLClipSet::MouseEnter(TGLOvlSelectRecord& selRec)

@@ -20,10 +20,10 @@
 
 #include "TGLViewerEditor.h"
 
-//______________________________________________________________________________
-//
-// GUI sub-editor for TGLClipSet.
-
+/** \class TGLClipSetSubEditor
+\ingroup opengl
+GUI sub-editor for TGLClipSet.
+*/
 
 ClassImp(TGLClipSetSubEditor);
 
@@ -103,7 +103,6 @@ TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
    fResetButton->Connect("Pressed()", "TGLClipSetSubEditor", this, "ResetViewerClip()");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -156,7 +155,6 @@ void TGLClipSetSubEditor::SetModel(TGLClipSet* m)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Emit Changed signal.
 
@@ -165,7 +163,6 @@ void TGLClipSetSubEditor::Changed()
    Emit("Changed()");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// One of number entries was changed.
 
@@ -173,7 +170,6 @@ void TGLClipSetSubEditor::ClipValueChanged()
 {
    fApplyButton->SetState(kButtonUp);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clip type radio button changed - update viewer.
@@ -191,7 +187,6 @@ void TGLClipSetSubEditor::ClipTypeChanged(Int_t id)
    ((TGMainFrame*)GetMainFrame())->Layout();
    Changed();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change clipping volume.
@@ -236,9 +231,10 @@ void TGLClipSetSubEditor::ResetViewerClip()
 }
 
 
-//______________________________________________________________________________
-//
-// GUI editor for TGLClipSet.
+/** \class TGLClipSetEditor
+\ingroup opengl
+GUI editor for TGLClipSet.
+*/
 
 ClassImp(TGLClipSetEditor);
 

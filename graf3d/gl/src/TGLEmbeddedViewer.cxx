@@ -20,13 +20,10 @@
 #include "TGLEmbeddedViewer.h"
 #include "TGLEventHandler.h"
 
-//==============================================================================
-// TGLEmbeddedViewer
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Minimal GL-viewer that can be embedded in a standard ROOT frames.
+/** \class TGLEmbeddedViewer
+\ingroup opengl
+Minimal GL-viewer that can be embedded in a standard ROOT frames.
+*/
 
 ClassImp(TGLEmbeddedViewer);
 
