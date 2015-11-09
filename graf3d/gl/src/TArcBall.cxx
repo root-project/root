@@ -15,16 +15,18 @@
 
 const Double_t Epsilon = 1.0e-5;
 
-//______________________________________________________________________________
-//
-// Implements the arc-ball rotation manipulator.
-// Used by plot-painters.
+/** \class TArcBall
+\ingroup opengl
+Implements the arc-ball rotation manipulator. Used by plot-painters.
+
+Arcball sphere constants:
+  - Diameter is       2.0f
+  - Radius is         1.0f
+*/
 
 ClassImp(TArcBall)
 
-//Arcball sphere constants:
-//Diameter is       2.0f
-//Radius is         1.0f
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
