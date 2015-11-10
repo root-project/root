@@ -20,12 +20,10 @@
 #include <TGLCamera.h>
 #include <TGLViewerBase.h>
 
-//______________________________________________________________________________
-//
-//
-// GL-overaly button.
-//
-//
+/** \class TGLOverlayButton
+\ingroup opengl
+GL-overlay button.
+*/
 
 ClassImp(TGLOverlayButton);
 
@@ -50,11 +48,11 @@ TGLOverlayButton::TGLOverlayButton(TGLViewerBase *parent, const char *text,
       parent->AddOverlayElement(this);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Render the overlay elements.
+
 void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
 {
-   // Render the overlay elements.
-
    Float_t r, g, b;
    glMatrixMode(GL_PROJECTION);
    glPushMatrix();

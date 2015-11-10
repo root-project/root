@@ -29,31 +29,6 @@
 #include "TColor.h"
 #include "TMath.h"
 
-//______________________________________________________________________________
-//
-// A parametric surface is a surface defined by a parametric equation, involving
-// two parameters (u, v):
-//
-// S(u, v) = (x(u, v), y(u, v), z(u, v)).
-// For example, "limpet torus" surface can be defined as:
-//    x = cos(u) / (sqrt(2) + sin(v))
-//    y = sin(u) / (sqrt(2) + sin(v))
-//    z = 1 / (sqrt(2) + cos(v)),
-// where -pi <= u <= pi, -pi <= v <= pi.
-//
-//
-// TGLParametricEquation * eq =
-//    new TGLParametricEquation("Limpet_torus", "cos(u) / (sqrt(2.) + sin(v))",
-//                              "sin(u) / (sqrt(2.) + sin(v))",
-//                              "1 / (sqrt(2) + cos(v))");
-//
-// $ROOTSYS/tutorials/gl/glparametric.C contains more examples.
-//
-// Parametric equations can be specified:
-//    1. by string expressions, as with TF2, but with 'u' instead of 'x' and
-//       'v' instead of 'y'.
-//    2. by function - see ParametricEquation_t declaration.
-
 namespace
 {
 
@@ -103,6 +78,41 @@ namespace
 
 }
 
+/** \class TGLParametricEquation
+\ingroup opengl
+A parametric surface is a surface defined by a parametric equation, involving
+two parameters (u, v):
+
+~~~ {.cpp}
+S(u, v) = (x(u, v), y(u, v), z(u, v)).
+~~~
+
+For example, "limpet torus" surface can be defined as:
+
+~~~ {.cpp}
+    x = cos(u) / (sqrt(2) + sin(v))
+    y = sin(u) / (sqrt(2) + sin(v))
+    z = 1 / (sqrt(2) + cos(v)),
+~~~
+
+where -pi <= u <= pi, -pi <= v <= pi.
+
+~~~ {.cpp}
+ TGLParametricEquation * eq =
+    new TGLParametricEquation("Limpet_torus", "cos(u) / (sqrt(2.) + sin(v))",
+                              "sin(u) / (sqrt(2.) + sin(v))",
+                              "1 / (sqrt(2) + cos(v))");
+~~~
+
+ `$ROOTSYS/tutorials/gl/glparametric.C` contains more examples.
+
+ Parametric equations can be specified:
+  - 1. by string expressions, as with TF2, but with 'u' instead of 'x' and
+       'v' instead of 'y'.
+  - 2. by function - see ParametricEquation_t declaration.
+
+*/
+
 ClassImp(TGLParametricEquation)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +132,7 @@ TGLParametricEquation::TGLParametricEquation(const TString &name, const TString 
                     fModified(kFALSE)
 {
    if (!xFun.Length() || !yFun.Length() || !zFun.Length()) {
-      Error("TGLParametricEquation", "One of string expressions iz empty");
+      Error("TGLParametricEquation", "One of string expressions is empty");
       MakeZombie();
       return;
    }
@@ -275,6 +285,10 @@ void TGLParametricEquation::Paint(Option_t * /*option*/)
       fPainter.reset(new TGLHistPainter(this));
    fPainter->Paint("dummyoption");
 }
+
+/** \class TGLParametricPlot
+\ingroup opengl
+*/
 
 ClassImp(TGLParametricPlot)
 

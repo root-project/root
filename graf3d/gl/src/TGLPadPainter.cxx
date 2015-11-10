@@ -42,14 +42,16 @@ bool IsGradientFill(Color_t fillColorIndex)
 
 }
 
-//______________________________________________________________________________
-   //"Delegating" part of TGLPadPainter. Line/fill/etc. attributes can be
-   //set inside TPad, but not only there:
-   //many of them are set by base sub-objects of 2d primitives
-   //(2d primitives usually inherit TAttLine or TAttFill etc.).  And these sub-objects
-   //call gVirtualX->SetLineWidth ... etc. So, if I save some attributes in my painter,
-   //it will be mess - at any moment I do not know, where to take line attribute - from
-   //gVirtualX or from my own member. So! All attributed, _ALL_ go to/from gVirtualX.
+/** \class TGLPadPainter
+\ingroup opengl
+"Delegating" part of TGLPadPainter. Line/fill/etc. attributes can be
+set inside TPad, but not only there:
+many of them are set by base sub-objects of 2d primitives
+(2d primitives usually inherit TAttLine or TAttFill etc.).  And these sub-objects
+call gVirtualX->SetLineWidth ... etc. So, if I save some attributes in my painter,
+it will be mess - at any moment I do not know, where to take line attribute - from
+gVirtualX or from my own member. So! All attributed, _ALL_ go to/from gVirtualX.
+*/
 
 ClassImp(TGLPadPainter)
 
@@ -1159,7 +1161,7 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
    }
 
    //If gradient 'stops inside the polygon', we use
-   //the solid fill for the arae outside of radial gradient:
+   //the solid fill for the area outside of radial gradient:
    const Bool_t solidFillAfter = maxR > radius;
    //We emulate a radial gradient using triangles and linear gradient:
    //TODO: Can be something smarter? (btw even 100 seems to be enough)
@@ -1220,7 +1222,7 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
    //   with a solid fill).
    //2) quad strips for colors.
    //3) additional quad strip from the lastLocation to the radius
-   //4) additiona quad strip (if any) from the radius to maxR.
+   //4) additional quad strip (if any) from the radius to maxR.
 
    //RGBA values:
    const auto rgba = grad->GetColors();
