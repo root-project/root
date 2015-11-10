@@ -34,7 +34,7 @@ ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           ${winnt_objects}
                           LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
                                     ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
-                                    ${CMAKE_TINFO_LIBS} ${corelinklibs})
+                                    ${corelinklibs})
 
 add_dependencies(rootcling CLING LLVMRES)
 
@@ -83,7 +83,7 @@ ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx src/DictSelectionReader.cxx
                               $<TARGET_OBJECTS:Clib>
                               $<TARGET_OBJECTS:MetaUtils>
                               $<TARGET_OBJECTS:MetaUtilsLLVM>
-                              LIBRARIES ${CLING_LIBRARIES}  ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_TINFO_LIBS}
+                              LIBRARIES ${CLING_LIBRARIES}  ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                               NOINSTALL)
 add_dependencies(rootcling_tmp CLING LLVMRES)
 set_source_files_properties(src/LinkdefReader.cxx PROPERTIES COMPILE_FLAGS -fno-rtti)

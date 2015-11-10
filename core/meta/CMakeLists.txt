@@ -33,7 +33,7 @@ ROOT_LINKER_LIBRARY(Cling
                     ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
                     $<TARGET_OBJECTS:MetaLLVM>
                     $<TARGET_OBJECTS:MetaUtilsLLVM>
-                    LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_TINFO_LIBS}
+                    LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                     DEPENDENCIES Core RIO)
 
 ROOT_INSTALL_HEADERS()

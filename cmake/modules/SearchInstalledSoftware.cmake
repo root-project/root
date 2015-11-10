@@ -703,12 +703,6 @@ else()
 endif()
 
 #---Check for cling and llvm --------------------------------------------------------
-find_library(CMAKE_TINFO_LIBS NAMES tinfo ncurses)
-mark_as_advanced(CMAKE_TINFO_LIBS)
-if(NOT CMAKE_TINFO_LIBS)
-  set(CMAKE_TINFO_LIBS "")   #  Often if not found is still OK
-endif()
-
 if(cling)
   if(builtin_llvm)
     set(LLVM_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/include
