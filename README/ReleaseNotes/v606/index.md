@@ -40,6 +40,11 @@ The following people have contributed to this new version:
  Wouter Verkerke, NIKHEF/Atlas, RooFit, \
  Maciej Zimnoch
 
+## ROOT reference manual
+
+The ROOT reference manual has been moved into Doxygen. Still some work and
+polish has to be done but the reference guide in this new format is now online
+and can be seen from the [ROOT home page](https://root.cern.ch/doc/master/index.html).
 
 ## Core Libraries
 
@@ -67,6 +72,12 @@ The constructor for `TDirectory::TContext` that takes a single TDirectory pointe
 an argument was changed to set `gDirectory` to zero when being passed a null pointer;
 previously it was interpreting a null pointer as a request to *not* change the current
 directory - this behavior is now implement by the default constructor.
+
+### Cleanups.
+
+Several definition where moved from the global or ROOT namespace to the ROOT::Internal namespace as they are not intended to be used outside of ROOT, including: `gROOTLocal` and related functions, `TSchemaHelper`, `TSchemaMatch`, `TSchemaType`, `RStl`, `ROOT::TROOTAllocator`, `TSchemaRuleProcessor`, `TStdBitsetHelper`, `TInitBehavior`, `TDefaultInitBehavior`, `DefineBehavior`, `THnBaseBrowsable`, `THnBaseBinIter`, `GenericShowMembers`, `TOperatorNewHelper` and `BranchProxy` implementations classes.
+
+Several definition where moved from the global or ROOT namespace to the ROOT::Details namespace as they are intended to be used in 'expert' level code and have a lower level of backward compatibility requirement.  This includes `TCollectionProxyInfo`, `TSchemaRuleSet`.
 
 ## I/O Libraries
 
@@ -144,6 +155,11 @@ maximum was used which may hide some points like in the following example
 }
 ```
 The problem was reported [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20484).
+
+### TGraph
+
+`TGraph::GetHistogram()` was resetting the TimeDisplay attribute of axis.
+The problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-7766).
 
 ## Math Libraries
 
@@ -295,6 +311,11 @@ or in clear text specify IP address to which http socket should be bind:
     new THttpServer("http:127.0.0.1:8080")
 If host has several network interfaces, one could select one for binding:
     new THttpServer("http:192.168.1.17:8080")
+
+### TNetXNGFileStager
+Fixed ROOT-7703. This restores the behavior of Locate() to that found with
+TXNetFileStager: Rather than return only the xrootd server's reply, the endpoint
+hostname is looked up and Locate() returns the full url, including the path.
 
 
 ## GUI Libraries

@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TASPluginGS
+\ingroup asimage
+
 Allows to read PS/EPS/PDF files via GhostScript
 */
 

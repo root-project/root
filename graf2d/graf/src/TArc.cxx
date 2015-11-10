@@ -17,6 +17,8 @@
 ClassImp(TArc)
 
 /** \class TArc
+\ingroup BasicGraphics
+
 Create an Arc.
 
 An arc is specified with the position of its centre, its radius a minimum and

@@ -267,11 +267,13 @@ Bool_t TROOT::fgRootInit = kFALSE;
 Bool_t TROOT::fgMemCheck = kFALSE;
 
 static void at_exit_of_TROOT() {
-   gROOT->~TROOT();
+   if (ROOT::Internal::gROOTLocal)
+      ROOT::Internal::gROOTLocal->~TROOT();
 }
 
 // This local static object initializes the ROOT system
 namespace ROOT {
+namespace Internal {
    class TROOTAllocator {
       // Simple wrapper to separate, time-wise, the call to the
       // TROOT destructor and the actual free-ing of the memory.
@@ -307,8 +309,9 @@ namespace ROOT {
       char fHolder[sizeof(TROOT)];
    public:
       TROOTAllocator() {
-         new ( &(fHolder[0]) ) TROOT("root", "The ROOT of EVERYTHING");
+         new(&(fHolder[0])) TROOT("root", "The ROOT of EVERYTHING");
       }
+
       ~TROOTAllocator() {
          if (gROOTLocal) {
             gROOTLocal->~TROOT();
@@ -344,12 +347,14 @@ namespace ROOT {
    // code).
 
    extern TROOT *gROOTLocal;
+
    TROOT *GetROOT1() {
       if (gROOTLocal)
          return gROOTLocal;
       static TROOTAllocator alloc;
       return gROOTLocal;
    }
+
    TROOT *GetROOT2() {
       static Bool_t initInterpreter = kFALSE;
       if (!initInterpreter) {
@@ -361,17 +366,45 @@ namespace ROOT {
       return gROOTLocal;
    }
    typedef TROOT *(*GetROOTFun_t)();
+
    static GetROOTFun_t gGetROOT = &GetROOT1;
+
+} // end of Internal sub namespace
+// back to ROOT namespace
+
    TROOT *GetROOT() {
-      return (*gGetROOT)();
+      return (*Internal::gGetROOT)();
    }
+
    TString &GetMacroPath() {
       static TString macroPath;
       return macroPath;
    }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Enables the global mutex to make ROOT thread safe/aware.
+   void EnableMT()
+   {
+      static void (*tthreadInitialize)() = nullptr;
+
+      if (!tthreadInitialize) {
+         const static auto loadSuccess = -1 != gSystem->Load("libThread");
+         if (loadSuccess) {
+            if (auto sym = dlsym(RTLD_DEFAULT,"ROOT_TThread_Initialize")) {
+               tthreadInitialize = (void(*)()) sym;
+               tthreadInitialize();
+            } else {
+               Error("EnableMT","Cannot initialize multithreading support.");
+            }
+         } else {
+            Error("EnableMT","Cannot load Thread library.");
+         }
+      }
+   }
+
 }
 
-TROOT *ROOT::gROOTLocal = ROOT::GetROOT();
+TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
 
 // Global debug flag (set to > 0 to get debug output).
 // Can be set either via the interpreter (gDebug is exported to CINT),
@@ -431,14 +464,14 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
      fProofs(0),fClipboard(0),fDataSets(0),fUUIDs(0),fRootFolder(0),fBrowsables(0),
      fPluginManager(0)
 {
-   if (fgRootInit || ROOT::gROOTLocal) {
+   if (fgRootInit || ROOT::Internal::gROOTLocal) {
       //Warning("TROOT", "only one instance of TROOT allowed");
       return;
    }
 
    R__LOCKGUARD2(gROOTMutex);
 
-   ROOT::gROOTLocal = this;
+   ROOT::Internal::gROOTLocal = this;
    gDirectory = 0;
 
    // initialize gClassTable is not already done
@@ -523,6 +556,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fProofs      = new TList; fProofs->SetName("Proofs");
    fClipboard   = new TList; fClipboard->SetName("Clipboard");
    fDataSets    = new TList; fDataSets->SetName("DataSets");
+   fTypes       = new TListOfTypes;
 
    TProcessID::AddProcessID();
    fUUIDs = new TProcessUUID();
@@ -617,7 +651,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    atexit(CleanUpROOTAtExit);
 
-   ROOT::gGetROOT = &ROOT::GetROOT2;
+   ROOT::Internal::gGetROOT = &ROOT::Internal::GetROOT2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -626,10 +660,12 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
 TROOT::~TROOT()
 {
-   if (ROOT::gROOTLocal == this) {
+   using namespace ROOT::Internal;
+
+   if (gROOTLocal == this) {
 
       // If the interpreter has not yet been initialized, don't bother
-      ROOT::gGetROOT = &ROOT::GetROOT1;
+      gGetROOT = &GetROOT1;
 
       // Mark the object as invalid, so that we can veto some actions
       // (like autoloading) while we are in the destructor.
@@ -738,7 +774,7 @@ TROOT::~TROOT()
       // Prints memory stats
       TStorage::PrintStatistics();
 
-      ROOT::gROOTLocal = 0;
+      gROOTLocal = 0;
       fgRootInit = kFALSE;
    }
 }
@@ -836,6 +872,9 @@ void TROOT::CloseFiles()
    if (fFiles && fFiles->First()) {
       R__ListSlowClose(static_cast<TList*>(fFiles));
    }
+   // and Close TROOT itself.
+   Close();
+   // Now sockets.
    if (fSockets && fSockets->First()) {
       if (0==fCleanups->FindObject(fSockets) ) {
          fCleanups->Add(fSockets);
@@ -1493,12 +1532,6 @@ TCollection *TROOT::GetListOfTypes(Bool_t /* load */)
    if (!fInterpreter)
       Fatal("GetListOfTypes", "fInterpreter not initialized");
 
-   if (!fTypes) {
-      R__LOCKGUARD2(gROOTMutex);
-
-      if (!fTypes) fTypes = new TListOfTypes;
-   }
-
    return fTypes;
 }
 
@@ -1659,16 +1692,8 @@ void TROOT::InitSystem()
 
 void TROOT::InitThreads()
 {
-   if (gEnv->GetValue("Root.UseThreads", 0)) {
-      char *path;
-      if ((path = gSystem->DynamicPathName("libThread", kTRUE))) {
-         delete [] path;
-         TInterpreter::EErrorCode code = TInterpreter::kNoError;
-         fInterpreter->Calc("TThread::Initialize();", &code);
-         if (code != TInterpreter::kNoError) {
-            Error("InitThreads","Thread mechanism not initialization properly.");
-         }
-      }
+   if (gEnv->GetValue("Root.UseThreads", 0) || gEnv->GetValue("Root.EnableMT", 0)) {
+      ROOT::EnableMT();
    }
 }
 
@@ -2150,7 +2175,9 @@ void TROOT::RefreshBrowsers()
 
 static void CallCloseFiles()
 {
-   if (TROOT::Initialized() && ROOT::gROOTLocal) gROOT->CloseFiles();
+   if (TROOT::Initialized() && ROOT::Internal::gROOTLocal) {
+      gROOT->CloseFiles();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

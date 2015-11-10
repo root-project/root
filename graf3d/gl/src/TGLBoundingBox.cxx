@@ -16,16 +16,14 @@
 
 using namespace std;
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLBoundingBox                                                       //
-//                                                                      //
-// Concrete class describing an orientated (free) or axis aligned box   //
-// of 8 verticies. Supports methods for setting aligned or orientated   //
-// boxes, find volume, axes, extents, centers, face planes etc.         //
-// Also tests for overlap testing of planes and other bounding boxes,   //
-// with fast sphere approximation.                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLBoundingBox
+\ingroup opengl
+Concrete class describing an orientated (free) or axis aligned box
+of 8 vertices. Supports methods for setting aligned or orientated
+boxes, find volume, axes, extents, centers, face planes etc.
+Also tests for overlap testing of planes and other bounding boxes,
+with fast sphere approximation.
+*/
 
 ClassImp(TGLBoundingBox)
 
@@ -294,7 +292,7 @@ void TGLBoundingBox::Scale(Double_t factor)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Asymetrically scale box along it's LOCAL x,y,z axes, preserving center
+/// Asymmetrically scale box along it's LOCAL x,y,z axes, preserving center
 
 void TGLBoundingBox::Scale(Double_t xFactor, Double_t yFactor, Double_t zFactor)
 {
@@ -451,7 +449,7 @@ Rgl::EOverlap TGLBoundingBox::Overlap(const TGLPlane & plane) const
 {
    using namespace Rgl;
 
-   // First : cheap square approxiamtion test. If distance of our
+   // First : cheap square approximation test. If distance of our
    // center to plane > our half extent length we are outside plane
    if (plane.DistanceTo(Center()) + (Extents().Mag()/2.0) < 0.0) {
       return kOutside;
@@ -503,7 +501,7 @@ Rgl::EOverlap TGLBoundingBox::Overlap(const TGLBoundingBox & other) const
    if (aHL[2] < aSphereRadius) {
       aSphereRadius = aHL[2];
    }
-   // and the outer sphere for containee (box b) - radius = box diagonal
+   // and the outer sphere for container (box b) - radius = box diagonal
    Double_t bSphereRadius = bHL.Mag();
 
    // If b sphere radius + translation mag is smaller than b sphere radius
@@ -512,7 +510,7 @@ Rgl::EOverlap TGLBoundingBox::Overlap(const TGLBoundingBox & other) const
       return kInside;
    }
 
-   // Second: Perform more expensive 15 seperating axes test
+   // Second: Perform more expensive 15 separating axes test
 
    // Find translation in A's frame
    TGLVector3 aT(Dot(parentT, a.Axis(0)), Dot(parentT, a.Axis(1)), Dot(parentT, a.Axis(2)));

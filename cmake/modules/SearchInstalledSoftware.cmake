@@ -87,14 +87,16 @@ if(builtin_lzma)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
     ExternalProject_Add(
-     LZMA
-     URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz
-     #URL_MD5  65693dc257802b6778c28ed53ecca678
-     PREFIX LZMA
-     INSTALL_DIR ${CMAKE_BINARY_DIR}
+      LZMA
+      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz
+      #URL_MD5  65693dc257802b6778c28ed53ecca678
+      PREFIX LZMA
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND "" BUILD_COMMAND ""
-     INSTALL_COMMAND ${CMAKE_COMMAND} -E copy lib/liblzma.dll <INSTALL_DIR>/bin
-     BUILD_IN_SOURCE 1)
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy lib/liblzma.dll <INSTALL_DIR>/bin
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+      BUILD_IN_SOURCE 1
+    )
     install(FILES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.dll DESTINATION ${CMAKE_INSTALL_BINDIR})
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
@@ -113,7 +115,9 @@ if(builtin_lzma)
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --libdir <INSTALL_DIR>/lib
                         --with-pic --disable-shared --quiet
                         CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${LZMA_CFLAGS} LDFLAGS=${LZMA_LDFLAGS}
-      BUILD_IN_SOURCE 1)
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+      BUILD_IN_SOURCE 1
+)
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   endif()
@@ -229,6 +233,7 @@ if(mathmore OR builtin_gsl)
       URL ${repository_tarfiles}/gsl-${gsl_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no CFLAGS=${CMAKE_C_FLAGS}
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     )
     set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
     foreach(l gsl gslcblas)
@@ -390,15 +395,39 @@ if(xml)
 endif()
 
 #---Check for OpenSSL------------------------------------------------------------------
-if(ssl)
-  message(STATUS "Looking for OpenSSL")
-  find_package(OpenSSL)
-  if(NOT OPENSSL_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "OpenSSL libraries not found and they are required (ssl option enabled)")
+if(ssl OR builtin_openssl)
+  if(builtin_openssl)
+    set(openssl_version 1.0.2d)
+    message(STATUS "Downloading and building OpenSSL version ${openssl_version}")
+    if(APPLE)
+      set(openssl_config_cmd ./Configure darwin64-x86_64-cc)
     else()
-      message(STATUS "OpenSSL not found. Switching off ssl option")
-      set(ssl OFF CACHE BOOL "" FORCE)
+      set(openssl_config_cmd ./config)
+    endif()
+    ExternalProject_Add(
+      OPENSSL
+      URL ${repository_tarfiles}/openssl-${openssl_version}.tar.gz
+      CONFIGURE_COMMAND ${openssl_config_cmd} no-shared --prefix=<INSTALL_DIR>
+      BUILD_COMMAND make -j1 CC=${CMAKE_C_COMPILER}\ -fPIC
+      INSTALL_COMMAND make install_sw
+      BUILD_IN_SOURCE 1
+      LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
+    )
+    ExternalProject_Get_Property(OPENSSL INSTALL_DIR)
+    set(OPENSSL_INCLUDE_DIR ${INSTALL_DIR}/include)
+    set(OPENSSL_LIBRARIES ${INSTALL_DIR}/lib/libssl.a ${INSTALL_DIR}/lib/libcrypto.a)
+    set(OPENSSL_PREFIX ${INSTALL_DIR})
+    set(ssl ON CACHE BOOL "" FORCE)
+  else()
+    message(STATUS "Looking for OpenSSL")
+    find_package(OpenSSL)
+    if(NOT OPENSSL_FOUND)
+      if(fail-on-missing)
+        message(FATAL_ERROR "OpenSSL libraries not found and they are required (ssl option enabled)")
+      else()
+        message(STATUS "OpenSSL not found. Switching off ssl option")
+        set(ssl OFF CACHE BOOL "" FORCE)
+      endif()
     endif()
   endif()
 endif()
@@ -542,7 +571,9 @@ if(builtin_fftw3)
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
     BUILD_COMMAND make CFLAGS=-fPIC
-    BUILD_IN_SOURCE 1 )
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+    BUILD_IN_SOURCE 1
+  )
   set(FFTW_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)
   set(fftw3 ON CACHE BOOL "" FORCE)
@@ -560,6 +591,7 @@ if(fitsio OR builtin_cfitsio)
       URL ${repository_tarfiles}/cfitsio${cfitsio_version_no_dots}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_IN_SOURCE 1
     )
     set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
@@ -640,6 +672,7 @@ if(builtin_xrootd)
                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
                -DENABLE_PYTHON=OFF
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
   )
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
   set(_LIBDIR_DEFAULT "lib")
@@ -841,10 +874,9 @@ if(davix OR builtin_davix)
     ROOT_ADD_C_FLAG(__cflags -Wno-implicit-function-declaration)
     ExternalProject_Add(
       DAVIX
-      PREFIX DAVIX
       # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
       URL ${repository_tarfiles}/davix-embedded-${DAVIX_VERSION}.tar.gz
-      INSTALL_DIR ${CMAKE_BINARY_DIR}/DAVIX-install
+      CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                  -DBOOST_EXTERNAL=OFF
@@ -857,18 +889,23 @@ if(davix OR builtin_davix)
                  -DCMAKE_CXX_FLAGS=${__cxxflags}
                  -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                  -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+      LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
     )
+    ExternalProject_Get_Property(DAVIX INSTALL_DIR)
     if(${SYSCTL_OUTPUT} MATCHES x86_64)
       set(_LIBDIR "lib64")
     else()
       set(_LIBDIR "lib")
     endif()
-    set(DAVIX_INCLUDE_DIR ${CMAKE_BINARY_DIR}/DAVIX-install/include/davix)
-    set(DAVIX_LIBRARY ${CMAKE_BINARY_DIR}/DAVIX-install/${_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DAVIX_INCLUDE_DIR ${INSTALL_DIR}/include/davix)
+    set(DAVIX_LIBRARY ${INSTALL_DIR}/${_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIR})
     foreach(l davix neon boost_static_internal)
-      list(APPEND DAVIX_LIBRARIES ${CMAKE_BINARY_DIR}/DAVIX-install/${_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+      list(APPEND DAVIX_LIBRARIES ${INSTALL_DIR}/${_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
     endforeach()
+    if(builtin_openssl)
+      add_dependencies(DAVIX OPENSSL)  # Build first OpenSSL
+    endif()
   else()
     message(STATUS "Looking for DAVIX")
     find_package(Davix)
@@ -937,6 +974,7 @@ if(tbb)
                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
       INSTALL_COMMAND ""
       BUILD_IN_SOURCE 1
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     )
     set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})

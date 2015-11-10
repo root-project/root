@@ -18,20 +18,17 @@
 #include "TList.h"
 #include "TString.h"
 
-//==============================================================================
-// TGLObject
-//==============================================================================
-
-//______________________________________________________________________
-//
-// Base-class for direct OpenGL renderers.
-// This allows classes to circumvent passing of TBuffer3D and
-// use user-provided OpenGL code.
-// By convention, if you want class TFoo : public TObject to have direct rendering
-// you should also provide TFooGL : public TGLObject and implement
-// abstract functions SetModel() and SetBBox().
-// TAttBBox can be used to facilitate calculation of bounding-boxes.
-// See TPointSet3D and TPointSet3DGL.
+/** \class TGLObject
+\ingroup opengl
+Base-class for direct OpenGL renderers.
+This allows classes to circumvent passing of TBuffer3D and
+use user-provided OpenGL code.
+By convention, if you want class TFoo : public TObject to have direct rendering
+you should also provide TFooGL : public TGLObject and implement
+abstract functions SetModel() and SetBBox().
+TAttBBox can be used to facilitate calculation of bounding-boxes.
+See TPointSet3D and TPointSet3DGL.
+*/
 
 ClassImp(TGLObject);
 

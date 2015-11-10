@@ -17,19 +17,19 @@ FIRST_EVENT_HELP = "specify the first event to copy"
 LAST_EVENT_HELP = "specify the last event to copy"
 
 EPILOG="""Examples:
-- rooeventselector source.root:tree dest.root
+- rooteventselector source.root:tree dest.root
   Copy the tree 'tree' from 'source.root' to 'dest.root'.
 
-- rooeventselector -f 101 source.root:tree dest.root
+- rooteventselector -f 101 source.root:tree dest.root
   Copy a subset of the tree 'tree' from 'source.root' to 'dest.root'. The new tree contains events from the old tree except the first hundred.
 
-- rooeventselector -l 100 source.root:tree dest.root
+- rooteventselector -l 100 source.root:tree dest.root
   Copy a subset of the tree  'tree' from 'source.root' to 'dest.root'. The new tree contains the first hundred events from the old tree.
 
-- rooeventselector --recreate source.root:tree dest.root
+- rooteventselector --recreate source.root:tree dest.root
   Recreate the destination file 'dest.root' and copy the tree 'tree' from 'source.root' to 'dest.root'.
 
-- rooeventselector -c 1 source.root:tree dest.root
+- rooteventselector -c 1 source.root:tree dest.root
   Change the compression factor of the destination file 'dest.root' and  copy the tree 'tree' from 'source.root' to 'dest.root'. For more information about compression settings of ROOT file, please look at the reference guide available on the ROOT site.
 """
 

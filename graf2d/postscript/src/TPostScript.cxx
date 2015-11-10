@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TPostScript
+\ingroup PS
+
 Interface to PostScript.
 
 To generate a Postscript (or encapsulated ps) file corresponding to

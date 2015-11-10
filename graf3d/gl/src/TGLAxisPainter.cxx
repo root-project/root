@@ -25,13 +25,10 @@
 #include "TMath.h"
 #include "TPRegexp.h"
 
-//==============================================================================
-// TGLAxisPainterBox
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Utility class to paint axis in GL.
+/** \class TGLAxisPainterBox
+\ingroup opengl
+Utility class to paint axis in GL.
+*/
 
 ClassImp(TGLAxisPainter);
 
@@ -58,7 +55,6 @@ TGLAxisPainter::TGLAxisPainter():
 
    fAllZeroesRE = new TPMERegexp("[-+]?0\\.0*$", "o");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
@@ -196,16 +192,10 @@ void TGLAxisPainter::SetTextFormat(Double_t min, Double_t max, Double_t bw1)
       fDecimals = chtemp.Length() - chtemp.First('.') - 1;
 }
 
-/**************************************************************************/
-/**************************************************************************/
-/**************************************************************************/
-/**************************************************************************/
-
-//
 // Utility functions.
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Render text at the given position. Offset depends of text aligment.
+/// Render text at the given position. Offset depends of text alignment.
 
 void TGLAxisPainter::RnrText(const TString &txt, const TGLVector3 &p, TGLFont::ETextAlignH_e aH, TGLFont::ETextAlignV_e aV, const TGLFont &font) const
 {
@@ -290,7 +280,7 @@ void TGLAxisPainter::RnrTitle(const TString &txt, TGLVector3 &pos , TGLFont::ETe
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Render axis main line and tickmarks.
+/// Render axis main line and tick-marks.
 
 void TGLAxisPainter::RnrLines() const
 {
@@ -345,8 +335,8 @@ void TGLAxisPainter::PaintAxis(TGLRnrCtx &rnrCtx, TAxis* ax)
       return;
    }
 
-   //______________________________________________________________________________
-   // Fill lablels value-pos and tick-marks position-length.
+   //___________________________________________________________________________
+   // Fill labels value-pos and tick-marks position-length.
 
    Int_t n1a = TMath::FloorNint(fAttAxis->GetNdivisions() / 100);
    Int_t n2a = fAttAxis->GetNdivisions() - n1a * 100;
@@ -358,7 +348,7 @@ void TGLAxisPainter::PaintAxis(TGLRnrCtx &rnrCtx, TAxis* ax)
    THLimitsFinder::Optimize(min, max,       n1a, bl1, bh1, bn1, bw1);
    THLimitsFinder::Optimize(bl1, bl1 + bw1, n2a, bl2, bh2, bn2, bw2);
 
-   //______________________________________________________________________________
+   //___________________________________________________________________________
 
    // Get TM. First and last values are reserved for axis range
    //
@@ -392,7 +382,7 @@ void TGLAxisPainter::PaintAxis(TGLRnrCtx &rnrCtx, TAxis* ax)
 
    fTMVec.push_back(TM_t(max, -1));
 
-   //______________________________________________________________________________
+   //___________________________________________________________________________
    // Get labels. In this case trivial one-one mapping.
 
    Double_t p = bl1;
@@ -403,14 +393,14 @@ void TGLAxisPainter::PaintAxis(TGLRnrCtx &rnrCtx, TAxis* ax)
       p += bw1;
    }
 
-   //______________________________________________________________________________
+   //___________________________________________________________________________
    // Set font.
 
-   // First projected axis length needed if use realtive font size.
+   // First projected axis length needed if use relative font size.
    const char* labFontName   = TGLFontManager::GetFontNameFromId(fAttAxis->GetLabelFont());
    const char* titleFontName = TGLFontManager::GetFontNameFromId(fAttAxis->GetTitleFont());
 
-   // pixel font size is set externaly for pixmap and bitmap fonts
+   // pixel font size is set externally for pixmap and bitmap fonts
    // for texture and polygon fonts font size is set here, to get font resolution
    if (fFontMode == TGLFont::kPolygon || fFontMode == TGLFont::kTexture)
    {
@@ -434,7 +424,7 @@ void TGLAxisPainter::PaintAxis(TGLRnrCtx &rnrCtx, TAxis* ax)
    SetLabelFont(rnrCtx, labFontName,   fLabelPixelFontSize, (max - min)*fAttAxis->GetLabelSize());
    SetTitleFont(rnrCtx, titleFontName, fTitlePixelFontSize, (max - min)*fAttAxis->GetTitleSize());
 
-   //______________________________________________________________________________
+   //___________________________________________________________________________
    // Draw.
 
    if (!fUseAxisColors)
@@ -449,13 +439,10 @@ void TGLAxisPainter::PaintAxis(TGLRnrCtx &rnrCtx, TAxis* ax)
 }
 
 
-//==============================================================================
-// TGLAxisPainterBox
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Painter class for axes encompassing a 3D box.
+/** \class TGLAxisPainterBox
+\ingroup opengl
+Painter class for axes encompassing a 3D box.
+*/
 
 ClassImp(TGLAxisPainterBox);
 
@@ -584,7 +571,7 @@ void TGLAxisPainterBox::DrawAxis3D(TGLRnrCtx &rnrCtx)
 
    // Z axis
    //
-   // tickmark vector = 10 pixels left
+   // tick-mark vector = 10 pixels left
    fAxis[2]->SetTickLength(1.); // leave this relative factor neutral
    TGLVertex3 worldRef(fAxisTitlePos[2].X(), fAxisTitlePos[2].Y(), fAxisTitlePos[2].Z());
    RefTMOff(0) = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, -10, 0, &mm);
@@ -627,7 +614,6 @@ void TGLAxisPainterBox::DrawAxis3D(TGLRnrCtx &rnrCtx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
 
 void TGLAxisPainterBox::PlotStandard(      TGLRnrCtx      &rnrCtx,
                                      TH1                  *histo,

@@ -25,6 +25,8 @@ ClassImp(TInspectCanvas)
 
 
 /** \class TInspectorObject
+\ingroup gpad
+
 This class is designed to wrap a Foreign object in order to
 inject it into the Browse sub-system.
 */
@@ -50,6 +52,8 @@ private:
 
 
 /** \class TInspectCanvas
+\ingroup gpad
+
 A TInspectCanvas is a canvas specialized to inspect Root objects.
 */
 

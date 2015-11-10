@@ -72,12 +72,10 @@
 #include "TRandom.h"
 #include "TRegexp.h"
 #include "TROOT.h"
-#include "TSemaphore.h"
 #include "TSlave.h"
 #include "TSocket.h"
 #include "TSortedList.h"
 #include "TSystem.h"
-#include "TThread.h"
 #include "TTree.h"
 #include "TUrl.h"
 #include "TFileCollection.h"
@@ -88,7 +86,6 @@
 #include "TPRegexp.h"
 
 TProof *gProof = 0;
-TVirtualMutex *gProofMutex = 0;
 
 // Rotating indicator
 char TProofMergePrg::fgCr[4] = {'-', '\\', '|', '/'};
@@ -261,8 +258,6 @@ void TSlaveInfo::SetSysInfo(SysInfo_t si)
 }
 
 ClassImp(TProof)
-
-TSemaphore    *TProof::fgSemaphore = 0;
 
 //------------------------------------------------------------------------------
 
@@ -973,10 +968,6 @@ Int_t TProof::Init(const char *, const char *conffile,
          }
       }
    }
-
-   if (fgSemaphore)
-      SafeDelete(fgSemaphore);
-
    // we are now properly initialized
    fValid = kTRUE;
 

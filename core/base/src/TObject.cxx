@@ -142,7 +142,7 @@ TObject::~TObject()
    // if (!TestBit(kNotDeleted))
    //    Fatal("~TObject", "object deleted twice");
 
-   TROOT *root = ROOT::gROOTLocal;
+   TROOT *root = ROOT::Internal::gROOTLocal;
    if (root) {
       if (root->MustClean()) {
          if (root == this) return;

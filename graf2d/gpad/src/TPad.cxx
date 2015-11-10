@@ -66,7 +66,9 @@ Int_t TPad::fgMaxPickDistance = 5;
 ClassImpQ(TPad)
 
 /** \class TPad
-The TPad class is the most important graphics class in the ROOT system.
+\ingroup gpad
+
+The most important graphics class in the ROOT system.
 
 A Pad is contained in a Canvas.
 
@@ -218,15 +220,17 @@ TPad::TPad()
 ///  A pad has attributes. When a pad is created, the attributes
 ///  defined in the current style are copied to the pad attributes.
 ///
+/// \param[in] name        pad name
+/// \param[in] title       pad title
 /// \param[in] xlow [0,1]  is the position of the bottom left point of the pad
 ///             expressed  in the mother pad reference system
 /// \param[in] ylow [0,1]  is the Y position of this point.
 /// \param[in] xup  [0,1]  is the x position of the top right point of the pad
 ///                        expressed in the mother pad reference system
 /// \param[in] yup  [0,1]  is the Y position of this point.
-///
-/// \param[in] bordersize  Border size in pixels
-/// \param[in] bordermode  Border mode
+/// \param[in] color       pad color
+/// \param[in] bordersize  border size in pixels
+/// \param[in] bordermode  border mode
 ///                        - bordermode = -1 box looks as it is behind the screen
 ///                        - bordermode = 0  no special effects
 ///                        - bordermode = 1  box looks as it is in front of the screen
@@ -534,7 +538,7 @@ TVirtualPad *TPad::cd(Int_t subpadnumber)
 ///
 /// If the bit kClearAfterCR has been set for this pad, the Clear function
 /// will execute only after having pressed a CarriageReturn
-/// Set the bit with mypad->SetBit(TPad::kClearAfterCR)
+/// Set the bit with `mypad->SetBit(TPad::kClearAfterCR)`
 
 void TPad::Clear(Option_t *option)
 {
@@ -575,9 +579,9 @@ void TPad::Clear(Option_t *option)
 ///  - If Clip ==1 the segment has one point outside the boundary.
 ///  - If Clip ==0 the segment is inside the boundary.
 ///
-/// \param[in]  x[2],y[2]                     Segment coordinates
+/// \param[in]  x[],y[]                       Segment coordinates (2 points)
 /// \param[in]  xclipl,yclipb,xclipr,yclipt   Clipping boundary
-/// \param[out] x[2],y[2]                     New segment coordinates
+/// \param[out] x[],y[]                       New segment coordinates( 2 points)
 
 Int_t TPad::Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t xclipr, Float_t yclipt)
 {
@@ -646,9 +650,9 @@ Int_t TPad::Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t
 ///  - If Clip ==1 the segment has one point outside the boundary.
 ///  - If Clip ==0 the segment is inside the boundary.
 ///
-/// \param[in]  x[2],y[2]                     Segment coordinates
+/// \param[in]  x[],y[]                       Segment coordinates (2 points)
 /// \param[in]  xclipl,yclipb,xclipr,yclipt   Clipping boundary
-/// \param[out] x[2],y[2]                     New segment coordinates
+/// \param[out] x[],y[]                       New segment coordinates(2 points)
 
 Int_t TPad::Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt)
 {
@@ -1040,7 +1044,7 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 ///  - ymargin is the space along y between pads in percent of canvas.
 ///  - color is the color of the new pads. If 0, color is the canvas color.
 ///
-/// Pads are automatically named canvasname_n where n is the division number
+/// Pads are automatically named `canvasname_n` where `n` is the division number
 /// starting from top left pad.
 ///
 /// Example if canvasname=c1 , nx=2, ny=3:
@@ -2965,13 +2969,6 @@ void TPad::Paint(Option_t * /*option*/)
    if (began3DScene) {
       fViewer3D->EndScene();
    }
-
-///// Generate the PS output using gl2ps
-///if (GetGLDevice()!=-1 && gVirtualPS) {
-///   gPad = this;
-///   gGLManager->PrintViewer(GetViewer3D());
-///   gPad = padsav;
-///}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3395,7 +3392,7 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///   This function paints hatched fill area arcording to the FillStyle value
+/// This function paints hatched fill area according to the FillStyle value
 /// The convention for the Hatch is the following:
 ///
 ///     `FillStyle = 3ijk`
@@ -5310,9 +5307,9 @@ void TPad::SetLogx(Int_t value)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set Lin/Log scale for Y
-///   value = 0 Y scale will be linear
-///   value = 1 Y scale will be logarithmic (base 10)
-///   value > 1 reserved for possible support of base e or other
+///  - value = 0 Y scale will be linear
+///  - value = 1 Y scale will be logarithmic (base 10)
+///  - value > 1 reserved for possible support of base e or other
 
 void TPad::SetLogy(Int_t value)
 {
@@ -5508,11 +5505,10 @@ void TPad::DrawDist(Rectangle_t aBBox, Rectangle_t bBBox, char mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// struct used by ShowGuidelines to store the distance Field between objects
+/// in the canvas.
 
 struct dField {
-   // Used by ShowGuidelines to store the distance Field between
-   // objects in the canvas
-
    TAttBBox2D *fa;
    TAttBBox2D *fb;
    Int_t fdist;
@@ -6188,8 +6184,8 @@ void TPad::UseCurrentStyle()
 ///  - emode = "Pad","pave", "PaveLabel","PaveText", "PavesText",
 ///  - emode = "PolyLine", "CurlyLine", "CurlyArc", "Text", "Marker", "CutG"
 ///
-/// - if emode is specified and it is not valid, "PolyLine" is assumed.
-/// - if emode is not specified or ="", an attempt is to use pname[1...]
+/// If emode is specified and it is not valid, "PolyLine" is assumed. If emode
+/// is not specified or ="", an attempt is to use pname[1...]
 ///
 /// for example if pname="TArc", emode="Arc" will be assumed.
 /// When this function is called within a macro, the macro execution
@@ -6275,7 +6271,6 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
 TObject *TPad::CreateToolTip(const TBox *box, const char *text, Long_t delayms)
 {
    if (gPad->IsBatch()) return 0;
-   // return new TGToolTip(box, text, delayms);
    return (TObject*)gROOT->ProcessLineFast(Form("new TGToolTip((TBox*)0x%lx,\"%s\",%d)",
                                            (Long_t)box,text,(Int_t)delayms));
 }
@@ -6319,8 +6314,7 @@ void TPad::x3d(Option_t *type)
 {
    ::Info("TPad::x3d()", "Fn is depreciated - use TPad::GetViewer3D() instead");
 
-   // Default on GetViewer3D is pad - for x3d
-   // it was x3d...
+   // Default on GetViewer3D is pad - for x3d it was x3d...
    if (!type || !type[0]) {
       type = "x3d";
    }

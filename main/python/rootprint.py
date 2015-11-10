@@ -23,16 +23,16 @@ STYLE_HELP = "specify a C file name which define a style"
 VERBOSE_HELP = "print informations about the running"
 
 EPILOG = """Examples:
-- rooprint example.root:hist
+- rootprint example.root:hist
   Create a pdf file named 'hist.pdf' which contain the histogram 'hist'.
 
-- rooprint -d histograms example.root:hist
+- rootprint -d histograms example.root:hist
   Create a pdf file named 'hist.pdf' which contain the histogram 'hist' and put it in the directory 'histograms' (create it if not already exists).
 
-- rooprint -f png example.root:hist
+- rootprint -f png example.root:hist
   Create a png file named 'hist.png' which contain the histogram 'hist'.
 
-- rooprint -o histograms.pdf example.root:hist*
+- rootprint -o histograms.pdf example.root:hist*
   Create a pdf file named 'histograms.pdf' which contain all histograms whose name starts with 'hist'. It works also with postscript.
 """
 

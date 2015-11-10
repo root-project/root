@@ -10,11 +10,12 @@
  *************************************************************************/
 
 /**
-  \defgroup GraphicsBackends Graphics' Backends
-   Graphics' Backends interface classes.
-   Graphics classes interfacing ROOT graphics with the low level
-   native graphics backends(s) like X11, Cocoa, Win32 etc...
-   These classes are not meant to be used directly by ROOT users.
+\defgroup GraphicsBackends Graphics' Backends
+\ingroup Graphics
+Graphics' Backends interface classes.
+Graphics classes interfacing ROOT graphics with the low level
+native graphics backends(s) like X11, Cocoa, Win32 etc...
+These classes are not meant to be used directly by ROOT users.
 */
 
 /** \class TVirtualX

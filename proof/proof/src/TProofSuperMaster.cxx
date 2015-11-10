@@ -31,7 +31,6 @@
 #include "TProofServ.h"
 #include "TSocket.h"
 #include "TMonitor.h"
-#include "TSemaphore.h"
 #include "TDSet.h"
 #include "TPluginManager.h"
 #include "TVirtualProofPlayer.h"

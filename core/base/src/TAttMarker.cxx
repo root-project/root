@@ -42,11 +42,10 @@ be changed using the method `SetMarkerColor` and retrieved using the
 method `GetMarkerColor`.
 The following table shows the first 50 default colors.
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c","Marker colors",0,0,500,200);
    c->DrawColorTable();
-   return c;
 }
 End_Macro
 
@@ -105,12 +104,11 @@ accessed via a global name (third column).
        34                    full cross           kFullCross
 ~~~
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c","Marker types",0,0,500,200);
    TMarker marker;
    marker.DisplayMarkerTypes();
-   return c;
 }
 End_Macro
 
@@ -128,7 +126,7 @@ The marker size of any class inheriting from `TAttMarker` can
 be changed using the method `SetMarkerSize` and retrieved using the
 method `GetMarkerSize`.
 
-Begin_Macro(source)
+Begin_Macro
 {
    c = new TCanvas("c","Marker sizes",0,0,500,200);
    TMarker marker;
@@ -141,7 +139,6 @@ Begin_Macro(source)
       marker.SetMarkerSize(i*0.8); marker.DrawMarker(x,.495);
       marker.SetMarkerSize(i*1.0); marker.DrawMarker(x,.835);
    }
-   return c;
 }
 End_Macro
 

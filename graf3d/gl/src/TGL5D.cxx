@@ -20,6 +20,10 @@
 
 ClassImp(TGL5DDataSet)
 
+/** \class TGL5DDataSet
+\ingroup opengl
+*/
+
 namespace {
 
 void FindRange(Long64_t size, const Double_t *src, Rgl::Range_t &range);

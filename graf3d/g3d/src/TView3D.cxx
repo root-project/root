@@ -29,32 +29,31 @@ ClassImp(TView3D)
 
 //const Int_t kPerspective = BIT(14);
 
-const Int_t kCARTESIAN   = 1;
-const Int_t kPOLAR       = 2;
-const Double_t kRad = 3.14159265358979323846/180.0;
+const Int_t    kCARTESIAN = 1;
+const Int_t    kPOLAR     = 2;
+const Double_t kRad       = 3.14159265358979323846/180.0;
 
+/** \class TView3D
+\ingroup g3d
+The 3D view class.
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* Begin_Html
-<center><h2>The 3D view class</h2></center>
 This package was originally written by Evgueni Tcherniaev from IHEP/Protvino.
-<p>
+
 The original Fortran implementation was adapted to HIGZ/PAW by Olivier Couet and
 Evgueni Tcherniaev.
-<p>
+
 This View class is a subset of the original system. It has been converted to a
 C++ class  by Rene Brun.
-<p>
+
 TView3D creates a 3-D view in the current pad. In this 3D view Lego and Surface
 plots can be drawn and also 3D polyline and markers. Most of the time a TView3D
 is created automatically when a 3D object needs to be painted in a pad (for
 instance a Lego or a Surface plot).
-<p>
+
 In some case a TView3D should be explicitly. For instance to paint a 3D simple
 scene composed of simple objects like polylines and polymarkers.
 The following macro gives an example:
-End_Html
+
 Begin_Macro(source)
 {
    cV3D = new TCanvas("cV3D","PolyLine3D & PolyMarker3D Window",200,10,500,500);
@@ -64,27 +63,25 @@ Begin_Macro(source)
    view->SetRange(5,5,5,25,25,25);
 
    // Create a first PolyLine3D
-   TPolyLine3D *pl3d1 = new TPolyLine3D(5);
-   pl3d1->SetPoint(0, 10, 10, 10);
-   pl3d1->SetPoint(1, 15, 15, 10);
-   pl3d1->SetPoint(2, 20, 15, 15);
-   pl3d1->SetPoint(3, 20, 20, 20);
+   TPolyLine3D *pl3d1 = new TPolyLine3D(6);
+   pl3d1->SetPoint(0, 10, 20, 10);
+   pl3d1->SetPoint(1, 15, 15, 15);
+   pl3d1->SetPoint(2, 20, 20, 20);
+   pl3d1->SetPoint(3, 20, 10, 20);
    pl3d1->SetPoint(4, 10, 10, 20);
+   pl3d1->SetPoint(5, 10, 10, 10);
 
    // Create a first PolyMarker3D
-   TPolyMarker3D *pm3d1 = new TPolyMarker3D(12);
-   pm3d1->SetPoint(0, 10, 10, 10);
-   pm3d1->SetPoint(1, 11, 15, 11);
-   pm3d1->SetPoint(2, 12, 15, 9);
-   pm3d1->SetPoint(3, 13, 17, 20);
-   pm3d1->SetPoint(4, 14, 16, 15);
-   pm3d1->SetPoint(5, 15, 20, 15);
-   pm3d1->SetPoint(6, 16, 18, 10);
-   pm3d1->SetPoint(7, 17, 15, 10);
-   pm3d1->SetPoint(8, 18, 22, 15);
-   pm3d1->SetPoint(9, 19, 28, 25);
-   pm3d1->SetPoint(10, 20, 12, 15);
-   pm3d1->SetPoint(11, 21, 12, 15);
+   TPolyMarker3D *pm3d1 = new TPolyMarker3D(9);
+   pm3d1->SetPoint( 0, 10, 10, 10);
+   pm3d1->SetPoint( 1, 20, 20, 20);
+   pm3d1->SetPoint( 2, 10, 20, 20);
+   pm3d1->SetPoint( 3, 10, 10, 20);
+   pm3d1->SetPoint( 4, 20, 20, 10);
+   pm3d1->SetPoint( 5, 20, 10, 10);
+   pm3d1->SetPoint( 6, 20, 10, 20);
+   pm3d1->SetPoint( 7, 10, 20, 10);
+   pm3d1->SetPoint( 8, 15, 15, 15);
    pm3d1->SetMarkerSize(2);
    pm3d1->SetMarkerColor(4);
    pm3d1->SetMarkerStyle(2);
@@ -95,17 +92,15 @@ Begin_Macro(source)
 }
 End_Macro
 
-Begin_Html
-Several coordinate systems are available:
-<ul>
-<li> Cartesian
-<li> Polar
-<li> Cylindrical
-<li> Spherical
-<li> PseudoRapidity/Phi
-</ul>
-End_Html */
 
+Several coordinate systems are available:
+
+  - Cartesian
+  - Polar
+  - Cylindrical
+  - Spherical
+  - PseudoRapidity/Phi
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -137,7 +132,6 @@ TView3D::TView3D() :TView()
    ResetView(fLongitude, fLatitude, fPsi, irep);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TView3D constructor
 ///
@@ -149,11 +143,11 @@ TView3D::TView3D() :TView()
 ///  Note that a view is automatically created when drawing legos or surfaces.
 ///
 ///  The coordinate system is selected via system:
-///   system = 1  Cartesian
-///   system = 2  Polar
-///   system = 3  Cylindrical
-///   system = 4  Spherical
-///   system = 5  PseudoRapidity/Phi
+///  - system = 1  Cartesian
+///  - system = 2  Polar
+///  - system = 3  Cylindrical
+///  - system = 4  Spherical
+///  - system = 5  PseudoRapidity/Phi
 
 TView3D::TView3D(Int_t system, const Double_t *rmin, const Double_t *rmax) : TView()
 {
@@ -196,7 +190,6 @@ TView3D::TView3D(Int_t system, const Double_t *rmin, const Double_t *rmax) : TVi
    if (system == 11) SetPerspective();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
@@ -234,7 +227,6 @@ TView3D::TView3D(const TView3D& tv)
    for(Int_t i=0; i<4; i++)
       fUVcoord[i]=tv.fUVcoord[i];
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator.
@@ -277,7 +269,6 @@ TView3D& TView3D::operator=(const TView3D& tv)
    return *this;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TView3D default destructor.
 
@@ -288,35 +279,35 @@ TView3D::~TView3D()
    fOutline = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Define axis vertices.
 ///
-///    Input  ANG     - angle between X and Y axis
+/// Input:
+///  - ANG     - angle between X and Y axis
 ///
-///    Output: AV(3,8) - axis vertices
-///            IX1     - 1st point of X-axis
-///            IX2     - 2nd point of X-axis
-///            IY1     - 1st point of Y-axis
-///            IY2     - 2nd point of Y-axis
-///            IZ1     - 1st point of Z-axis
-///            IZ2     - 2nd point of Z-axis
+///    Output:
+///  - AV(3,8) - axis vertices
+///  - IX1     - 1st point of X-axis
+///  - IX2     - 2nd point of X-axis
+///  - IY1     - 1st point of Y-axis
+///  - IY2     - 2nd point of Y-axis
+///  - IZ1     - 1st point of Z-axis
+///  - IZ2     - 2nd point of Z-axis
 ///
+/// ~~~ {.cpp}
+///                     8                        6
+///                    / \                      /|\
+///                 5 /   \ 7                5 / | \ 7
+///                  |\   /|                  |  |  |
+///      THETA < 90  | \6/ |     THETA > 90   | /2\ |
+///      (Top view)  |  |  |   (Bottom view)  |/   \|
+///                 1 \ | /3                 1 \   /3
+///                    \|/                      \ /
+///                     2                        4
+/// ~~~
 
 void TView3D::AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t &iy1, Int_t &iy2, Int_t &iz1, Int_t &iz2)
 {
-   /*
-                     8                        6
-                    / \                      /|\
-                 5 /   \ 7                5 / | \ 7
-                  |\   /|                  |  |  |
-      THETA < 90  | \6/ |     THETA > 90   | /2\ |
-      (Top view)  |  |  |   (Bottom view)  |/   \|
-                 1 \ | /3                 1 \   /3
-                    \|/                      \ /
-                     2                        4
-   */
-
    // Local variables
    Double_t cosa, sina;
    Int_t i, k;
@@ -423,44 +414,48 @@ void TView3D::AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Define perspective view.
 ///
 /// Compute transformation matrix from world coordinates
-/// to normalised coordinates (-1 to +1)
-///   Input :
-///      theta, phi - spherical angles giving the direction of projection
-///      psi - screen rotation angle
-///      cov[3] - center of view
-///      dview - distance from COV to COP (center of projection)
-///      umin, umax, vmin, vmax - view window in projection plane
-///      dproj - distance from COP to projection plane
-///      bcut, fcut - backward/forward range w.r.t projection plane (fcut<=0)
-///   Output :
-///      nper[16] - normalizing transformation
+/// to normalized coordinates (-1 to +1)
+///
+/// Input :
+///  - theta, phi - spherical angles giving the direction of projection
+///  - psi - screen rotation angle
+///  - cov[3] - center of view
+///  - dview - distance from COV to COP (center of projection)
+///  - umin, umax, vmin, vmax - view window in projection plane
+///  - dproj - distance from COP to projection plane
+///  - bcut, fcut - backward/forward range w.r.t projection plane (fcut<=0)
+///
+/// Output :
+///  - nper[16] - normalizing transformation
+///
 /// compute tr+rot to get COV in origin, view vector parallel to -Z axis, up
 /// vector parallel to Y.
+///
+/// ~~~ {.cpp}
+///                         ^Yv   UP ^  proj. plane
+///                        |        |   /|
+///                       |        |  /  |
+///                      |   dproj  /  x--- center of window (COW)
+///                 COV |----------|--x--|------------> Zv
+///                              /           | VRP'z
+///                       /   --->      |  /
+///                /     VPN       |/
+///               Xv
+/// ~~~
+///
+///   1. translate COP to origin of MARS : Tper = T(-copx, -copy, -copz)
+///   2. rotate VPN : R = Rz(-psi)*Rx(-theta)*Rz(-phi) (inverse Euler)
+///   3. left-handed screen reference to right-handed one of MARS : Trl
+///
+///   T12 = Tper*R*Trl
+
 
 void TView3D::DefinePerspectiveView()
 {
-   /*
-                         ^Yv   UP ^  proj. plane
-                        |        |   /|
-                       |        |  /  |
-                      |   dproj  /  x--- center of window (COW)
-                 COV |----------|--x--|------------> Zv
-                              /           | VRP'z
-                       /   --->      |  /
-                /     VPN       |/
-               Xv
-   */
-   //   1 - translate COP to origin of MARS : Tper = T(-copx, -copy, -copz)
-   //   2 - rotate VPN : R = Rz(-psi)*Rx(-theta)*Rz(-phi) (inverse Euler)
-   //   3 - left-handed screen reference to right-handed one of MARS : Trl
-   //
-   //   T12 = Tper*R*Trl
-
    Double_t t12[16];
    Double_t cov[3];
    Int_t i;
@@ -557,21 +552,21 @@ void TView3D::DefinePerspectiveView()
    fTnorm[14] *= sz;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Define view direction (in spherical coordinates)
 ///
-///              Compute transformation matrix from world coordinates
-///              to normalised coordinates (-1 to +1)
+/// Compute transformation matrix from world coordinates
+/// to normalized coordinates (-1 to +1)
 ///
-///    Input: S(3)    - scale factors
-///           C(3)    - centre of scope
-///           COSPHI  - longitude COS
-///           SINPHI  - longitude SIN
-///           COSTHE  - latitude COS (angle between +Z and view direc.)
-///           SINTHE  - latitude SIN
-///           COSPSI  - screen plane rotation angle COS
-///           SINPSI  - screen plane rotation angle SIN
+/// Input:
+///  - S(3)    - scale factors
+///  - C(3)    - centre of scope
+///  - COSPHI  - longitude COS
+///  - SINPHI  - longitude SIN
+///  - COSTHE  - latitude COS (angle between +Z and view direc.)
+///  - SINTHE  - latitude SIN
+///  - COSPSI  - screen plane rotation angle COS
+///  - SINPSI  - screen plane rotation angle SIN
 
 void TView3D::DefineViewDirection(const Double_t *s, const Double_t *c,
                                 Double_t cosphi, Double_t sinphi,
@@ -676,7 +671,6 @@ void TView3D::DefineViewDirection(const Double_t *s, const Double_t *c,
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the outline of a cube while rotating a 3-d object in the pad.
 
@@ -684,7 +678,6 @@ void TView3D::DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax)
 {
    TPolyLine3D::DrawOutlineCube(outline,rmin,rmax);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
@@ -694,15 +687,14 @@ void TView3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    ExecuteRotateView(event,px,py);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
-///  This member function is called when a object is clicked with the locator
+/// This member function is called when a object is clicked with the locator
 ///
-///  If Left button clicked in the object area, while the button is kept down
-///  the cube representing the surrounding frame for the corresponding
-///  new latitude and longitude position is drawn.
+/// If Left button clicked in the object area, while the button is kept down
+/// the cube representing the surrounding frame for the corresponding
+/// new latitude and longitude position is drawn.
 
 void TView3D::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
 {
@@ -837,15 +829,16 @@ void TView3D::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
    gPad->AbsCoordinates(kFALSE);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find Z component of NORMAL in normalized coordinates.
 ///
-///    Input: X - X-component of NORMAL
-///           Y - Y-component of NORMAL
-///           Z - Z-component of NORMAL
+/// Input:
+///  - X - X-component of NORMAL
+///  - Y - Y-component of NORMAL
+///  - Z - Z-component of NORMAL
 ///
-///    Output: ZN - Z-component of NORMAL in normalized coordinates
+/// Output:
+///  - ZN - Z-component of NORMAL in normalized coordinates
 
 void TView3D::FindNormal(Double_t x, Double_t  y, Double_t z, Double_t &zn)
 {
@@ -853,17 +846,19 @@ void TView3D::FindNormal(Double_t x, Double_t  y, Double_t z, Double_t &zn)
            fTN[0] * fTN[6]) + z*(fTN[0] * fTN[5] - fTN[1] * fTN[4]);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find critical PHI sectors.
 ///
-///    Input: IOPT    - options: 1 - from BACK to FRONT 'BF'
-///                              2 - from FRONT to BACK 'FB'
-///           KPHI    - number of phi sectors
-///           APHI(*) - PHI separators (modified internally)
+/// Input:
+///  - IOPT    - options:
+///      1. from BACK to FRONT 'BF'
+///      2. from FRONT to BACK 'FB'
+///  - KPHI    - number of phi sectors
+///  - APHI(*) - PHI separators (modified internally)
 ///
-///    Output: IPHI1  - initial sector
-///            IPHI2  - final sector
+/// Output:
+///  - IPHI1  - initial sector
+///  - IPHI2  - final sector
 
 void TView3D::FindPhiSectors(Int_t iopt, Int_t &kphi, Double_t *aphi, Int_t &iphi1, Int_t &iphi2)
 {
@@ -916,18 +911,20 @@ void TView3D::FindPhiSectors(Int_t iopt, Int_t &kphi, Double_t *aphi, Int_t &iph
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find critical THETA sectors for given PHI sector.
 ///
-///    Input: IOPT        - options: 1 - from BACK to FRONT 'BF'
-///                                  2 - from FRONT to BACK 'FB'
-///           PHI         - PHI sector
-///           KTH         - number of THETA sectors
-///           ATH(*)      - THETA separators (modified internally)
+/// Input:
+///  - IOPT        - options:
+///      1. from BACK to FRONT 'BF'
+///      2. from FRONT to BACK 'FB'
+///  - PHI         - PHI sector
+///  - KTH         - number of THETA sectors
+///  - ATH(*)      - THETA separators (modified internally)
 ///
-///    Output: ITH1  - initial sector
-///            ITH2  - final sector
+/// Output:
+///  - ITH1  - initial sector
+///  - ITH2  - final sector
 
 void TView3D::FindThetaSectors(Int_t iopt, Double_t phi, Int_t &kth, Double_t *ath, Int_t &ith1, Int_t &ith2)
 {
@@ -982,13 +979,13 @@ void TView3D::FindThetaSectors(Int_t iopt, Double_t phi, Int_t &kth, Double_t *a
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find centre of a MIN-MAX scope and scale factors
 ///
-///    Output: SCALE(3)  - scale factors
-///            CENTER(3) - centre
-///            IREP      - reply (-1 if error in min-max)
+/// Output:
+///  - SCALE(3)  - scale factors
+///  - CENTER(3) - centre
+///  - IREP      - reply (-1 if error in min-max)
 
 void TView3D::FindScope(Double_t *scale, Double_t *center, Int_t &irep)
 {
@@ -1002,34 +999,34 @@ void TView3D::FindScope(Double_t *scale, Double_t *center, Int_t &irep)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return distance to axis from point px,py.
 ///
-///  Algorithm:
+/// Algorithm:
+///
+/// ~~~ {.cpp}
+///       A(x1,y1)         P                             B(x2,y2)
+///       ------------------------------------------------
+///                        I
+///                        I
+///                        I
+///                        I
+///                       M(x,y)
+///
+///  Let us call  a = distance AM     A=a**2
+///               b = distance BM     B=b**2
+///               c = distance AB     C=c**2
+///               d = distance PM     D=d**2
+///               u = distance AP     U=u**2
+///               v = distance BP     V=v**2     c = u + v
+///
+///  D = A - U
+///  D = B - V  = B -(c-u)**2
+///     ==> u = (A -B +C)/2c
+/// ~~~
 
 Int_t TView3D::GetDistancetoAxis(Int_t axis, Int_t px, Int_t py, Double_t &ratio)
 {
-   /*
-       A(x1,y1)         P                             B(x2,y2)
-       ------------------------------------------------
-                        I
-                        I
-                        I
-                        I
-                       M(x,y)
-   */
-   //  Let us call  a = distance AM     A=a**2
-   //               b = distance BM     B=b**2
-   //               c = distance AB     C=c**2
-   //               d = distance PM     D=d**2
-   //               u = distance AP     U=u**2
-   //               v = distance BP     V=v**2     c = u + v
-   //
-   //  D = A - U
-   //  D = B - V  = B -(c-u)**2
-   //     ==> u = (A -B +C)/2c
-
    Double_t x1,y1,x2,y2;
    Double_t x     = px;
    Double_t y     = py;
@@ -1071,7 +1068,6 @@ Int_t TView3D::GetDistancetoAxis(Int_t axis, Int_t px, Int_t py, Double_t &ratio
    return dist;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get maximum view extent.
 
@@ -1084,7 +1080,6 @@ Double_t TView3D::GetExtent() const
    return extent;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get Range function.
 
@@ -1093,7 +1088,6 @@ void TView3D::GetRange(Float_t *min, Float_t *max)
    for (Int_t i = 0; i < 3; max[i] = fRmax[i], min[i] = fRmin[i], i++) { }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get Range function.
 
@@ -1101,7 +1095,6 @@ void TView3D::GetRange(Double_t *min, Double_t *max)
 {
    for (Int_t i = 0; i < 3; max[i] = fRmax[i], min[i] = fRmin[i], i++) { }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get current window extent.
@@ -1114,7 +1107,6 @@ void TView3D::GetWindow(Double_t &u0, Double_t &v0, Double_t &du, Double_t &dv) 
    dv = fUVcoord[3];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if point is clipped in perspective view.
 
@@ -1125,12 +1117,12 @@ Bool_t TView3D::IsClippedNDC(Double_t *p) const
    return kFALSE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Transfer point from normalized to world coordinates.
 ///
-///    Input: PN(3) - point in world coordinate system
-///           PW(3) - point in normalized coordinate system
+/// Input:
+///  - PN(3) - point in world coordinate system
+///  - PW(3) - point in normalized coordinate system
 
 void TView3D::NDCtoWC(const Float_t* pn, Float_t* pw)
 {
@@ -1139,12 +1131,12 @@ void TView3D::NDCtoWC(const Float_t* pn, Float_t* pw)
    pw[2] = fTback[8]*pn[0] + fTback[9]*pn[1] + fTback[10]*pn[2] + fTback[11];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Transfer point from normalized to world coordinates.
 ///
-///    Input: PN(3) - point in world coordinate system
-///           PW(3) - point in normalized coordinate system
+/// Input:
+///  - PN(3) - point in world coordinate system
+///  - PW(3) - point in normalized coordinate system
 
 void TView3D::NDCtoWC(const Double_t* pn, Double_t* pw)
 {
@@ -1153,12 +1145,12 @@ void TView3D::NDCtoWC(const Double_t* pn, Double_t* pw)
    pw[2] = fTback[8]*pn[0] + fTback[9]*pn[1] + fTback[10]*pn[2] + fTback[11];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Transfer vector of NORMAL from word to normalized coordinates.
 ///
-///    Input: PW(3) - vector of NORMAL in word coordinate system
-///           PN(3) - vector of NORMAL in normalized coordinate system
+/// Input:
+///  - PW(3) - vector of NORMAL in word coordinate system
+///  - PN(3) - vector of NORMAL in normalized coordinate system
 
 void TView3D::NormalWCtoNDC(const Float_t *pw, Float_t *pn)
 {
@@ -1181,12 +1173,12 @@ void TView3D::NormalWCtoNDC(const Float_t *pw, Float_t *pn)
    pn[2] = x*(a2*b3 - a3*b2) + y*(a3*b1 - a1*b3) + z*(a1*b2 - a2*b1);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Transfer vector of NORMAL from word to normalized coordinates.
 ///
-///    Input: PW(3) - vector of NORMAL in word coordinate system
-///           PN(3) - vector of NORMAL in normalized coordinate system
+/// Input:
+///  - PW(3) - vector of NORMAL in word coordinate system
+///  - PN(3) - vector of NORMAL in normalized coordinate system
 
 void TView3D::NormalWCtoNDC(const Double_t *pw, Double_t *pn)
 {
@@ -1209,16 +1201,14 @@ void TView3D::NormalWCtoNDC(const Double_t *pw, Double_t *pn)
    pn[2] = x*(a2*b3 - a3*b2) + y*(a3*b1 - a1*b3) + z*(a1*b2 - a2*b1);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the correct window size for lego and surface plots.
 ///
 ///  Set the correct window size for lego and surface plots.
 ///  And draw the background if necessary.
 ///
-///    Input parameters:
-///
-///   RBACK : Background colour
+/// Input parameters:
+///  - RBACK : Background colour
 
 void TView3D::PadRange(Int_t rback)
 {
@@ -1296,7 +1286,6 @@ void TView3D::PadRange(Int_t rback)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Store axis coordinates in the NDC system.
 
@@ -1312,7 +1301,6 @@ void  TView3D::SetAxisNDC(const Double_t *x1, const Double_t *x2, const Double_t
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set default viewing window.
 
@@ -1325,7 +1313,7 @@ void TView3D::SetDefaultWindow()
    fDview = 3*extent;
    fDproj = 0.5*extent;
 
-   // widh in pixels
+   // width in pixels
    fUpix = gPad->GetWw()*gPad->GetAbsWNDC();
 
    // height in pixels
@@ -1335,38 +1323,35 @@ void TView3D::SetDefaultWindow()
    SetWindow(0, 0, du, dv);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This is a function which creates default outline.
 ///
+/// ~~~ {.cpp}
 ///      x = fRmin[0]        X = fRmax[0]
 ///      y = fRmin[1]        Y = fRmax[1]
 ///      z = fRmin[2]        Z = fRmax[2]
+///
+///               (x,Y,Z) +---------+ (X,Y,Z)
+///                      /         /|
+///                     /         / |
+///                    /         /  |
+///           (x,y,Z) +---------+   |
+///                   |         |   + (X,Y,z)
+///                   |         |  /
+///                   |         | /
+///                   |         |/
+///                   +---------+
+///                (x,y,z)   (X,y,z)
+/// ~~~
 
 void TView3D::SetOutlineToCube()
 {
-   /*
-
-               (x,Y,Z) +---------+ (X,Y,Z)
-                      /         /|
-                     /         / |
-                    /         /  |
-           (x,y,Z) +---------+   |
-                   |         |   + (X,Y,z)
-                   |         |  /
-                   |         | /
-                   |         |/
-                   +---------+
-                (x,y,z)   (X,y,z)
-   */
-
    if (!fOutline) {
       fDefaultOutline = kTRUE;
       fOutline = new TList();
    }
    DrawOutlineCube((TList*)fOutline,fRmin,fRmax);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the parallel option (default).
@@ -1379,7 +1364,6 @@ void TView3D::SetParallel()
    ResetView(fLongitude, fLatitude, fPsi, irep);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set perspective option.
 
@@ -1391,7 +1375,6 @@ void TView3D::SetPerspective()
    SetDefaultWindow();
    ResetView(fLongitude, fLatitude, fPsi, irep);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set Range function.
@@ -1407,17 +1390,17 @@ void TView3D::SetRange(const Double_t *min, const Double_t *max)
    if(fDefaultOutline) SetOutlineToCube();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set 3-D View range.
 ///
-/// Input:  x0, y0, z0 are minimum coordinates
-///         x1, y1, z1 are maximum coordinates
+/// Input:
+///  - x0, y0, z0 are minimum coordinates
+///  - x1, y1, z1 are maximum coordinates
 ///
-///         flag values are: 0 (set always) <- default
-///                          1 (shrink view)
-///                          2 (expand view)
-///
+///  - flag values are:
+///    - 0 (set always) <- default
+///    - 1 (shrink view)
+///    - 2 (expand view)
 
 void TView3D::SetRange(Double_t x0, Double_t y0, Double_t z0, Double_t x1, Double_t y1, Double_t z1, Int_t flag)
 {
@@ -1452,7 +1435,6 @@ void TView3D::SetRange(Double_t x0, Double_t y0, Double_t z0, Double_t x1, Doubl
    SetRange(rmin, rmax);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set viewing window.
 
@@ -1464,7 +1446,6 @@ void TView3D::SetWindow(Double_t u0, Double_t v0, Double_t du, Double_t dv)
    fUVcoord[3] = dv;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set view parameters.
 
@@ -1472,7 +1453,6 @@ void TView3D::SetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t
 {
    ResetView(longitude, latitude, psi, irep);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Recompute window for perspective view.
@@ -1483,7 +1463,7 @@ void TView3D::ResizePad()
    Double_t upix = fUpix;
    Double_t vpix = fVpix;
 
-   // widh in pixels
+   // width in pixels
    fUpix = gPad->GetWw()*gPad->GetAbsWNDC();
 
    // height in pixels
@@ -1496,17 +1476,18 @@ void TView3D::ResizePad()
    DefinePerspectiveView();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set view direction (in spherical coordinates).
 ///
-///    Input  PHI     - longitude
-///           THETA   - latitude (angle between +Z and view direction)
-///           PSI     - rotation in screen plane
+/// Input
+///  - PHI     - longitude
+///  - THETA   - latitude (angle between +Z and view direction)
+///  - PSI     - rotation in screen plane
 ///
-///    Output: IREP   - reply (-1 if error in min-max)
+/// Output:
+///  - IREP   - reply (-1 if error in min-max)
 ///
-///    Errors: error in min-max scope
+/// Errors: error in min-max scope
 
 void TView3D::ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep)
 {
@@ -1543,12 +1524,12 @@ void TView3D::ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int
    DefineViewDirection(scale, centre, c1, s1, c2, s2, c3, s3, fTN, fTB);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Transfer point from world to normalized coordinates.
 ///
-///    Input: PW(3) - point in world coordinate system
-///           PN(3) - point in normalized coordinate system
+/// Input:
+///  - PW(3) - point in world coordinate system
+///  - PN(3) - point in normalized coordinate system
 
 void TView3D::WCtoNDC(const Float_t *pw, Float_t *pn)
 {
@@ -1571,12 +1552,12 @@ void TView3D::WCtoNDC(const Float_t *pw, Float_t *pn)
    pn[2] = fTnorm[8]*pw[0] + fTnorm[9]*pw[1] + fTnorm[10]*pw[2] + fTnorm[11];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Transfer point from world to normalized coordinates.
 ///
-///    Input: PW(3) - point in world coordinate system
-///           PN(3) - point in normalized coordinate system
+/// Input:
+///  - PW(3) - point in world coordinate system
+///  - PN(3) - point in normalized coordinate system
 
 void TView3D::WCtoNDC(const Double_t *pw, Double_t *pn)
 {
@@ -1600,7 +1581,6 @@ void TView3D::WCtoNDC(const Double_t *pw, Double_t *pn)
    pn[2] = fTnorm[8]*pw[0] + fTnorm[9]*pw[1] + fTnorm[10]*pw[2] + fTnorm[11];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Force the current pad to be updated.
 
@@ -1616,7 +1596,6 @@ void TView3D::AdjustPad(TVirtualPad *pad)
       thisPad->Update();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// API to rotate view and adjust the pad provided it the current one.
@@ -1639,7 +1618,6 @@ void TView3D::RotateView(Double_t phi, Double_t theta, TVirtualPad *pad)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set to side view.
 
@@ -1647,7 +1625,6 @@ void TView3D::SideView(TVirtualPad *pad)
 {
    RotateView(0,90.0,pad);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set to front view.
@@ -1657,7 +1634,6 @@ void TView3D::FrontView(TVirtualPad *pad)
    RotateView(270.0,90.0,pad);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set to top view.
 
@@ -1665,7 +1641,6 @@ void TView3D::TopView(TVirtualPad *pad)
 {
    RotateView(270.0,0.0,pad);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Turn on /off 3D axis.
@@ -1675,7 +1650,6 @@ void TView3D::ToggleRulers(TVirtualPad *pad)
    TAxis3D::ToggleRulers(pad);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Turn on /off the interactive option to
 ///  Zoom / Move / Change attributes of 3D axis correspond this view.
@@ -1684,7 +1658,6 @@ void TView3D::ToggleZoom(TVirtualPad *pad)
 {
    TAxis3D::ToggleZoom(pad);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Adjust all sides of view in respect of the biggest one.
@@ -1704,7 +1677,6 @@ void TView3D::AdjustScales(TVirtualPad *pad)
    AdjustPad(pad);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Move view into the center of the scene.
 
@@ -1721,7 +1693,6 @@ void TView3D::Centered3DImages(TVirtualPad *pad)
    AdjustPad(pad);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// unZOOM this view.
 
@@ -1730,7 +1701,6 @@ void TView3D::UnzoomView(TVirtualPad *pad,Double_t unZoomFactor )
    if (TMath::Abs(unZoomFactor) < 0.001) return;
    ZoomView(pad,1./unZoomFactor);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ZOOM this view.
@@ -1753,7 +1723,6 @@ void TView3D::ZoomView(TVirtualPad *pad,Double_t zoomFactor)
    SetRange(min,max);
    AdjustPad(pad);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Move focus to a different box position and extent in nsteps. Perform
@@ -1811,10 +1780,9 @@ void TView3D::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, In
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// 'a' increase scale factor (clip cube borders)
-/// 's' decrease scale factor (clip cube borders)
+///  - 'a' increase scale factor (clip cube borders)
+///  - 's' decrease scale factor (clip cube borders)
 
 void TView3D::MoveViewCommand(Char_t option, Int_t count)
 {
@@ -1857,13 +1825,12 @@ void TView3D::MoveViewCommand(Char_t option, Int_t count)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Move view window :
-/// l,L - left
-/// h,H - right
-/// u,U - down
-/// i,I - up
+///  - l,L - left
+///  - h,H - right
+///  - u,U - down
+///  - i,I - up
 
 void TView3D::MoveWindow(Char_t option)
 {
@@ -1897,7 +1864,6 @@ void TView3D::MoveWindow(Char_t option)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Zoom in.
 
@@ -1918,7 +1884,6 @@ void TView3D::ZoomIn()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Zoom out.
 
@@ -1938,7 +1903,6 @@ void TView3D::ZoomOut()
       gPad->Update();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TView3D.

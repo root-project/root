@@ -779,7 +779,6 @@ INPUT                  = . \
                          ../../graf2d/graf/ \
                          ../../graf2d/gviz/ \
                          ../../graf2d/postscript/ \
-                         ../../graf2d/qt/ \
                          ../../graf2d/quartz/ \
                          ../../graf2d/win32gdk/ \
                          ../../graf2d/x11/ \
@@ -839,6 +838,7 @@ INPUT                  = . \
 #                         ../../core/textinput/
 #                         ../../core/zip/
 #                         ../../graf2d/ios/
+#                         ../../graf2d/qt/ \
 #                         ../../graf2d/mathtext/
 #                         ../../graf3d/ftgl/
 #                         ../../graf3d/glew/
@@ -1570,7 +1570,7 @@ FORMULA_TRANSPARENT    = YES
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-USE_MATHJAX            = NO
+USE_MATHJAX            = YES
 
 # When MathJax is enabled you can set the default output format to be used for
 # the MathJax output. See the MathJax site (see:
@@ -1593,7 +1593,7 @@ MATHJAX_FORMAT         = HTML-CSS
 # The default value is: http://cdn.mathjax.org/mathjax/latest.
 # This tag requires that the tag USE_MATHJAX is set to YES.
 
-MATHJAX_RELPATH        = http://cdn.mathjax.org/mathjax/latest
+MATHJAX_RELPATH        = ./mathjax
 
 # The MATHJAX_EXTENSIONS tag can be used to specify one or more MathJax
 # extension names that should be enabled during MathJax rendering. For example

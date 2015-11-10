@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TControlBar
+\ingroup gpad
+
 A Control Bar is a fully user configurable tool which provides fast
 access to frequently used operations. The user can choose between
 buttons and drawn buttons (let's say icons) and assign to them their
@@ -71,7 +73,7 @@ will return the name of the last clicked button.
    gROOT->SaveContext();
 }
 ~~~
-\image html gpad_control bar.png
+\image html gpad_controlbar.png
 */
 
 #include "TApplication.h"

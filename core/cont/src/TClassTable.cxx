@@ -324,7 +324,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
       }
       return;
-   } else if (ROOT::gROOTLocal && gCling) {
+   } else if (ROOT::Internal::gROOTLocal && gCling) {
       TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(cname);
       if (oldcl) { //  && oldcl->GetClassInfo()) {
          // As a work-around to ROOT-6012, we need to register the class even if
@@ -369,7 +369,7 @@ void TClassTable::Add(TProtoClass *proto)
    if (r->fName) {
       r->fProto = proto;
       return;
-   } else if (ROOT::gROOTLocal && gCling) {
+   } else if (ROOT::Internal::gROOTLocal && gCling) {
       TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(cname);
       if (oldcl) { //  && oldcl->GetClassInfo()) {
                    // As a work-around to ROOT-6012, we need to register the class even if

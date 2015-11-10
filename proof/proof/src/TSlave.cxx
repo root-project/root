@@ -34,7 +34,6 @@
 #include "TMessage.h"
 #include "TError.h"
 #include "TVirtualMutex.h"
-#include "TThread.h"
 #include "TSocket.h"
 #include "TObjString.h"
 
@@ -136,8 +135,6 @@ void TSlave::Init(const char *host, Int_t port, Int_t stype)
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(fSocket);
    }
-
-   R__LOCKGUARD2(gProofMutex);
 
    // Fill some useful info
    fUser              = fSocket->GetSecContext()->GetUser();

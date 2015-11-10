@@ -173,7 +173,8 @@ namespace Internal {
       delete fStreamer;
       if (!fClass) delete fIsA; // fIsA is adopted by the class if any.
       fIsA = 0;
-      if (!ROOT::gROOTLocal || !ROOT::gROOTLocal->Initialized() || !gROOT->GetListOfClasses()) return;
+      using ROOT::Internal::gROOTLocal;
+      if (!gROOTLocal || !gROOTLocal->Initialized() || !gROOTLocal->GetListOfClasses()) return;
       if (fAction) GetAction().Unregister(GetClassName());
    }
 

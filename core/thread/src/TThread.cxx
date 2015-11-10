@@ -57,6 +57,11 @@ static void ThreadInternalUnLock() { if (gMainInternalMutex) gMainInternalMutex-
 
 static Bool_t fgIsTearDown(kFALSE);
 
+extern "C" void ROOT_TThread_Initialize()
+{
+   TThread::Initialize();
+};
+
 //------------------------------------------------------------------------------
 
 // Set gGlobalMutex to 0 when Thread library gets unloaded

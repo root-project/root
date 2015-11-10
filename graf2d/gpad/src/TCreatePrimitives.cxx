@@ -9,6 +9,8 @@
  *************************************************************************/
 
 /** \class TCreatePrimitives
+\ingroup gpad
+
 Creates new primitives.
 
 The functions in this static class are called by TPad::ExecuteEvent

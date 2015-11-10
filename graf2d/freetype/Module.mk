@@ -164,7 +164,7 @@ else
 			FREEZLIB="--without-zlib"; \
 		fi; \
 		GNUMAKE=$(MAKE) ./configure $$FREE_HOST --with-pic \
-		--disable-shared --with-png=no --with-bzip2=no $$FREEZLIB \
+		--disable-shared --with-png=no --with-bzip2=no --with-harfbuzz=no $$FREEZLIB \
 		CC=\'$$FREECC\' CFLAGS=\'$$FREE_CFLAGS -O\'; \
 		$(MAKE))
 endif

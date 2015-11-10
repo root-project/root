@@ -9,59 +9,64 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// TFITS is an interface that lets you reading Flexible Image Transport System
-// (FITS) files, which are generally used in astronomy. This file format
-// was standardized 1981 and today is still widely used among professional
-// and amateur astronomers. FITS is not only an image file, but also
-// it can contain spectrums, data tables, histograms, and multidimensional
-// data. Furthermore, FITS data can be described itself by containing
-// human-readable information that let us to interpret the data within
-// the FITS file. For example, a FITS could contain a 3D data cube,
-// but an additional description would tell us that we must read it, for
-// example, as a 3-layer image.
-//
-// TFITS requires CFITSIO library to be installed on your system. It
-// is currently maintained by NASA/GSFC and can be downloaded from
-// http://fits.gsfc.nasa.gov, as well as documentation.
-//
-// Using this interface is easy and straightforward. There is only 1 class
-// called "TFITSHDU" which has several methods to extract data from a
-// FITS file, more specifically, from an HDU within the file. An HDU, or
-// Header Data Unit, is a chunk of data with a header containing several
-// "keyword = value" tokens. The header describes the structure of data
-// within the HDU. An HDU can be of two types: an "image HDU" or a "table
-// HDU". The former can be any kind of multidimensional array of real numbers,
-// by which the name "image" may be confusing: you can store an image, but
-// you can also store a N-dimensional data cube. On the other hand, table
-// HDUs are sets of several rows and columns (a.k.a fields) which contain
-// generic data, as strings, real or complex numbers and even arrays.
-//
-// Please have a look to the tutorials ($ROOTSYS/tutorials/fitsio/) to see
-// some examples. IMPORTANT: to run tutorials it is required that
-// you change the current working directory of ROOT (CINT) shell to the
-// tutorials directory. Example:
-//
-// root [1] gSystem->ChangeDirectory("tutorials/fitsio")
-// root [1] .x FITS_tutorial1.C
+/// \defgroup fitsio FITS file
+/// \brief Interface to FITS file.
+/// \ingroup Graphics2D
+///
+/// TFITS is an interface that lets you reading Flexible Image Transport System
+/// (FITS) files, which are generally used in astronomy. This file format
+/// was standardized 1981 and today is still widely used among professional
+/// and amateur astronomers. FITS is not only an image file, but also
+/// it can contain spectrums, data tables, histograms, and multidimensional
+/// data. Furthermore, FITS data can be described itself by containing
+/// human-readable information that let us to interpret the data within
+/// the FITS file. For example, a FITS could contain a 3D data cube,
+/// but an additional description would tell us that we must read it, for
+/// example, as a 3-layer image.
+///
+/// TFITS requires CFITSIO library to be installed on your system. It
+/// is currently maintained by NASA/GSFC and can be downloaded from
+/// http://fits.gsfc.nasa.gov, as well as documentation.
+///
+/// Using this interface is easy and straightforward. There is only 1 class
+/// called "TFITSHDU" which has several methods to extract data from a
+/// FITS file, more specifically, from an HDU within the file. An HDU, or
+/// Header Data Unit, is a chunk of data with a header containing several
+/// "keyword = value" tokens. The header describes the structure of data
+/// within the HDU. An HDU can be of two types: an "image HDU" or a "table
+/// HDU". The former can be any kind of multidimensional array of real numbers,
+/// by which the name "image" may be confusing: you can store an image, but
+/// you can also store a N-dimensional data cube. On the other hand, table
+/// HDUs are sets of several rows and columns (a.k.a fields) which contain
+/// generic data, as strings, real or complex numbers and even arrays.
+///
+/// Please have a look to the tutorials ($ROOTSYS/tutorials/fitsio/) to see
+/// some examples. IMPORTANT: to run tutorials it is required that
+/// you change the current working directory of ROOT (CINT) shell to the
+/// tutorials directory. Example:
+/// ~~~ {.cpp}
+/// root [1] gSystem->ChangeDirectory("tutorials/fitsio")
+/// root [1] .x FITS_tutorial1.C
+/// ~~~
+/// LIST OF TODO
+/// - Support for complex values within data tables
+/// - Support for reading arrays from table cells
+/// - Support for grouping
+///
+/// IMPLEMENTATION NOTES:
+///
+/// CFITSIO library uses standard C types ('int', 'long', ...). To avoid
+/// confusion, the same types are used internally by the access methods.
+/// However, class's fields are ROOT-defined types.
 
-// LIST OF TODO
-// - Support for complex values within data tables
-// - Support for reading arrays from table cells
-// - Support for grouping
+/** \class TFITSHDU
+\ingroup fitsio
 
+FITS file interface class
 
-// IMPLEMENTATION NOTES:
-// CFITSIO library uses standard C types ('int', 'long', ...). To avoid
-// confusion, the same types are used internally by the access methods.
-// However, class's fields are ROOT-defined types.
-
-////////////////////////////////////////////////////////////////////////////////
-
-/* Begin_Html
-<center><h2>FITS file interface class</h2></center>
-TFITS is a class that allows extracting images and data from FITS files and contains
+TFITSHDU is a class that allows extracting images and data from FITS files and contains
 several methods to manage them.
-End_Html */
+*/
 
 #include "TFITS.h"
 #include "TROOT.h"
@@ -80,12 +85,7 @@ End_Html */
 #include "fitsio.h"
 #include <stdlib.h>
 
-
 ClassImp(TFITSHDU)
-
-/**************************************************************************/
-// TFITSHDU
-/**************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clean path from possible filter and put the result in 'dst'.
@@ -105,13 +105,14 @@ void TFITSHDU::CleanFilePath(const char *filepath_with_filter, TString &dst)
 /// TFITSHDU constructor from file path with HDU selection filter.
 /// Please refer to CFITSIO manual for more information about
 /// HDU selection filters.
+///
 /// Examples:
-/// - TFITSHDU("/path/to/myfile.fits"): just open the PRIMARY HDU
-/// - TFITSHDU("/path/to/myfile.fits[1]"): open HDU #1
-/// - TFITSHDU("/path/to/myfile.fits[PICS]"): open HDU called 'PICS'
-/// - TFITSHDU("/path/to/myfile.fits[ACQ][EXPOSURE > 5]"): open the (table) HDU called 'ACQ' and
-///                                                        selects the rows that have column 'EXPOSURE'
-///                                                        greater than 5.
+///  - `TFITSHDU("/path/to/myfile.fits")`: just open the PRIMARY HDU
+///  - `TFITSHDU("/path/to/myfile.fits[1]")`: open HDU #1
+///  - `TFITSHDU("/path/to/myfile.fits[PICS]")`: open HDU called 'PICS'
+///  - `TFITSHDU("/path/to/myfile.fits[ACQ][EXPOSURE > 5]")`: open the (table) HDU called 'ACQ' and
+///                                                          selects the rows that have column 'EXPOSURE'
+///                                                          greater than 5.
 
 TFITSHDU::TFITSHDU(const char *filepath_with_filter)
 {
@@ -711,11 +712,12 @@ void TFITSHDU::PrintFullTable(const Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print metadata.
 /// Currently supported options:
-/// ""  :  print HDU record data
-/// "F" :  print FITS file's extension names, numbers and types
-/// "F+":  print FITS file's extension names and types and their record data
-/// "T" :  print column information when HDU is a table
-/// "T+" : print full table (columns header and rows)
+///
+///  - ""  :  print HDU record data
+///  - "F" :  print FITS file's extension names, numbers and types
+///  - "F+":  print FITS file's extension names and types and their record data
+///  - "T" :  print column information when HDU is a table
+///  - "T+" : print full table (columns header and rows)
 
 void TFITSHDU::Print(const Option_t *opt) const
 {
@@ -948,6 +950,7 @@ TMatrixD* TFITSHDU::ReadAsMatrix(Int_t layer, Option_t *opt)
 /// The returned object can be TH1D, TH2D or TH3D depending on data dimensionality.
 /// Please, check condition (returnedValue->IsA() == TH*D::Class()) to
 /// determine the object class.
+///
 /// NOTE: do not confuse with image histogram! This function interprets
 /// the array as a histogram. It does not compute the histogram of pixel
 /// values of an image! Here "pixels" are interpreted as number of entries.

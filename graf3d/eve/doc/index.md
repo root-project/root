@@ -1,4 +1,8 @@
+\defgroup Graphics3D 3D Graphics
+\ingroup Graphics
+\brief The 3D graphics related classes
 \defgroup TEve Event Display
+\ingroup Graphics3D
 \brief The Event Display classes
 
 Eve is a ROOT module based on experiment-independent part of the

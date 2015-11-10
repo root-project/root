@@ -15,38 +15,41 @@
 
 ClassImp(TTRAP)
 
+/** \class TTRAP
+\ingroup g3d
+A general trapezoid.
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/trap.gif"> </P> End_Html
-// TRAP is a general trapezoid. The faces perpendicular to z are trapezia and
-// their centres are not necessarily on a line parallel to the z axis.
-// This shape has 14 parameters.
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - dz         half-length along the z axis
-//     - theta      polar angle of the line joining the centre of the face
-//                  at -DZ to the centre of the one at +DZ
-//     - phi        azimuthal angle of the line joining the centre of the face
-//                  at -DZ to the centre of the one at +DZ
-//     - h1         half-length along y of the face at -DZ
-//     - bl1        half-length along x of the side at -H1 in y of the face
-//                  at -DZ in z
-//     - tl1        half-length along x of the side at +H1 in y of the face
-//                  at -DZ in z
-//     - alpha1     angle with respect to the y axis from the centre of the
-//                  side at -H1 in y to the centre of the side at +H1 in y
-//                  of the face at -DZ in z
-//     - h2         half-length along y of the face at +DZ
-//     - bl2        half-length along x of the side at -H2 in y of the
-//                  face at +DZ in z
-//     - tl2        half-length along x of the side at +H2 in y of the face
-//                  at +DZ in z
-//     - alpha2     angle with respect to the y axis from the centre of the side
-//                  at -H2 in y to the centre of the side at +H2 in y of the
-//                  face at +DZ in z
+\image html g3d_trap.png
 
+The faces perpendicular to z are trapezia and
+their centres are not necessarily on a line parallel to the z axis.
+This shape has 14 parameters.
+
+  - name:       name of the shape
+  - title:      shape's title
+  - material:   (see TMaterial)
+  - dz:         half-length along the z axis
+  - theta:      polar angle of the line joining the centre of the face
+                at -DZ to the centre of the one at +DZ
+  - phi:        azimuthal angle of the line joining the centre of the face
+                at -DZ to the centre of the one at +DZ
+  - h1:         half-length along y of the face at -DZ
+  - bl1:        half-length along x of the side at -H1 in y of the face
+                at -DZ in z
+  - tl1:        half-length along x of the side at +H1 in y of the face
+                at -DZ in z
+  - alpha1:     angle with respect to the y axis from the centre of the
+                side at -H1 in y to the centre of the side at +H1 in y
+                of the face at -DZ in z
+  - h2:         half-length along y of the face at +DZ
+  - bl2:        half-length along x of the side at -H2 in y of the
+               face at +DZ in z
+  - tl2:        half-length along x of the side at +H2 in y of the face
+                at +DZ in z
+  - alpha2:     angle with respect to the y axis from the centre of the side
+                at -H2 in y to the centre of the side at +H2 in y of the
+               face at +DZ in z
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TRAP shape default constructor
@@ -62,7 +65,6 @@ TTRAP::TTRAP()
    fTl2    = 0.;
    fAlpha2 = 0.;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TRAP shape normal constructor
@@ -80,7 +82,6 @@ TTRAP::TTRAP(const char *name, const char *title, const char *material, Float_t 
    fTl2    = tl2;
    fAlpha2 = alpha2;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TRAP shape default destructor

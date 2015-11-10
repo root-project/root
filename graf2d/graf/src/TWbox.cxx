@@ -21,7 +21,9 @@
 ClassImp(TWbox)
 
 /** \class TWbox
-A TWbox is a TBox with a bordersize and a bordermode.
+\ingroup BasicGraphics
+
+A TBox with a bordersize and a bordermode.
 Example:
 Begin_Macro(source)
 {

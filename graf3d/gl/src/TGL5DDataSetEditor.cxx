@@ -28,12 +28,13 @@
 #include "TGLUtil.h"
 #include "TGL5D.h"
 
-//______________________________________________________________________________
-//
-// GUI editor for OpenGL 5D Painter.
-// Exception safety and ROOT's GUI are two
-// mutually exclusive things. So,
-// only ROOT's GUI here.
+/** \class TGL5DDataSetEditor
+\ingroup opengl
+GUI editor for OpenGL 5D Painter.
+Exception safety and ROOT's GUI are two
+mutually exclusive things. So, only ROOT's GUI here.
+*/
+
 namespace {
 
 typedef TGL5DPainter::SurfIter_t    SurfIter_t;
@@ -173,7 +174,8 @@ void TGL5DDataSetEditor::ConnectSignals2Slots()
 namespace
 {
 
-//Auxilary functions.
+// Auxiliary functions.
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void make_slider_range_entries(TGCompositeFrame *parent, TGNumberEntryField *&minEntry,

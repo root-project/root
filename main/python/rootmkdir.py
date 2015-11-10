@@ -16,16 +16,16 @@ COMMAND_HELP = "Add directories in ROOT files"
 PARENT_HELP = "make parent directories as needed, no error if existing."
 
 EPILOG="""Examples:
-- roomkdir example.root:dir
+- rootmkdir example.root:dir
   Add the directory 'dir' to the ROOT file 'example.root'
 
-- roomkdir example.root:dir1/dir2
+- rootmkdir example.root:dir1/dir2
   Add the directory 'dir2' in 'dir1' which is into the ROOT file 'example.root'
 
-- roomkdir -p example.root:dir1/dir2/dir3
+- rootmkdir -p example.root:dir1/dir2/dir3
   Make parent directories of 'dir3' as needed, no error if existing
 
-- roomkdir example.root
+- rootmkdir example.root
   Create an empty ROOT file named 'example.root'
 """
 

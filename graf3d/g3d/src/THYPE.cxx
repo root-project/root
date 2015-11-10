@@ -13,19 +13,20 @@
 
 ClassImp(THYPE)
 
+/** \class THYPE
+\ingroup g3d
+An hyperboloid (not implemented)
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/hype.gif"> </P> End_Html
-// HYPE is an hyperboloid (not implemented. It has 4 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - rmin       inner radius of the tube
-//     - rmax       outer radius of the tube
-//     - dz         half-length of the box along the z-axis
-//     - phi        stereo angle
+It has 4 parameters:
 
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - rmin:       inner radius of the tube
+  - rmax:       outer radius of the tube
+  - dz:         half-length of the box along the z-axis
+  - phi:        stereo angle
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// HYPE shape default constructor
@@ -34,7 +35,6 @@ THYPE::THYPE()
 {
    fPhi = 0.;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// HYPE shape normal constructor
@@ -45,7 +45,6 @@ THYPE::THYPE(const char *name, const char *title, const char *material, Float_t 
 {
    fPhi = phi;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// HYPE shape default destructor

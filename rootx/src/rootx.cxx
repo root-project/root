@@ -471,13 +471,11 @@ int main(int argc, char **argv)
    }
 
    if (notebook) {
-      char *rootsys = getenv("ROOTSYS");
-
       // Build command
 #ifdef ROOTBINDIR
       snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTNBBINARY);
 #else
-      snprintf(arg0, sizeof(arg0), "%s/bin/%s", rootsys, ROOTNBBINARY);
+      snprintf(arg0, sizeof(arg0), "%s/bin/%s", getenv("ROOTSYS"), ROOTNBBINARY);
 #endif
 
       // Execute ROOT notebook binary
@@ -487,7 +485,7 @@ int main(int argc, char **argv)
 #ifndef ROOTBINDIR
       fprintf(stderr,
               "%s: can't start ROOT notebook -- this option is only available when building with CMake, please check that %s/bin/%s exists\n",
-              argv[0], rootsys, ROOTNBBINARY);
+              argv[0], getenv("ROOTSYS"), ROOTNBBINARY);
 #else
       fprintf(stderr, "%s: can't start ROOT notebook -- this option is only available when building with CMake, please check that %s/%s exists\n",
               argv[0], ROOTBINDIR, ROOTNBBINARY);

@@ -21,20 +21,21 @@
 #include "TTimer.h"
 #include "TStopwatch.h"
 
-//______________________________________________________________________________
-//
-// Automatically rotates GL camera.
-// 
-// W's are angular velocities.
-// ATheta -- Theta amplitude in units of Pi/2.
-// ADolly -- In/out amplitude in units of initial distance.
-//
-// Can also save images automatically.
+/** \class TGLAutoRotator
+\ingroup opengl
+Automatically rotates GL camera.
 
-// fGUIOutMode is used internally between TGLAutoRotator and TGLViewerEditor,
-// allowed values are:
-//   1 - animated gif
-//   2 - a series of png images
+W's are angular velocities.
+  - ATheta -- Theta amplitude in units of Pi/2.
+  - ADolly -- In/out amplitude in units of initial distance.
+
+Can also save images automatically.
+
+fGUIOutMode is used internally between TGLAutoRotator and TGLViewerEditor,
+allowed values are:
+  1. animated gif
+  2. a series of png images
+*/
 
 ClassImp(TGLAutoRotator);
 
@@ -66,8 +67,6 @@ TGLAutoRotator::~TGLAutoRotator()
    delete fTimer;
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set time between two redraws in seconds.
 /// Range: 0.001 -> 1.
@@ -83,7 +82,7 @@ void TGLAutoRotator::SetDt(Double_t dt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set relative amplitude of theta oscilation.
+/// Set relative amplitude of theta oscillation.
 /// Value range: 0.01 -> 1.
 
 void TGLAutoRotator::SetATheta(Double_t a)
@@ -97,7 +96,7 @@ void TGLAutoRotator::SetATheta(Double_t a)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set relative amplitude of forward/backward oscilation.
+/// Set relative amplitude of forward/backward oscillation.
 /// Value range: 0.01 -> 1.
 
 void TGLAutoRotator::SetADolly(Double_t a)
@@ -109,8 +108,6 @@ void TGLAutoRotator::SetADolly(Double_t a)
   }
   fADolly = a;
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Start the auto-rotator.
@@ -197,8 +194,6 @@ void TGLAutoRotator::Timeout()
       ++fImageCount;
    }
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Start saving into animated gif. The provided name will be used as it is,
@@ -292,7 +287,7 @@ void TGLAutoRotator::RotateScene()
 {
    TGLViewer::SceneInfoList_t & scenes = fViewer->fScenes;
    TGLViewer::SceneInfoList_i sceneIter = scenes.begin();
-   
+
    for (; sceneIter != scenes.end(); ++sceneIter) {
      TGLScene::TSceneInfo *sceneInfo = dynamic_cast<TGLScene::TSceneInfo *>(*sceneIter);
       if (sceneInfo) {
@@ -305,10 +300,10 @@ void TGLAutoRotator::RotateScene()
                break;
             }
          }
-         
+
          TGLVector3 axis;
          TGLVertex3 center;
-         
+
          if (!axisShape) {
             const TGLBoundingBox &bbox = sceneInfo->GetTransformedBBox();
             axis = bbox.Axis(2);
@@ -317,7 +312,7 @@ void TGLAutoRotator::RotateScene()
             axis = axisShape->BoundingBox().Axis(2);
             center = axisShape->BoundingBox().Center();
          }
-         
+
          shapeIter = sceneInfo->fShapesOfInterest.begin();
          for (; shapeIter != sceneInfo->fShapesOfInterest.end(); ++shapeIter) {
             if (TGLPhysicalShape * const shape = const_cast<TGLPhysicalShape *>(*shapeIter))

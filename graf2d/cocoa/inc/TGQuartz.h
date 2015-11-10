@@ -24,12 +24,12 @@
 #include "TTF.h"
 #endif
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// This is non-GUI part of TVirtualX interface, implemented for         //
-// MacOS X, using CoreGraphics (Quartz).                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGQuartz
+\ingroup cocoa
+
+This is non-GUI part of TVirtualX interface, implemented for
+MacOS X, using CoreGraphics (Quartz).
+*/
 
 class TGQuartz : public TGCocoa {
 private:

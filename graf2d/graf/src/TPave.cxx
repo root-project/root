@@ -20,7 +20,9 @@
 ClassImp(TPave)
 
 /** \class TPave
-a TPave is a TBox with a bordersize and a shadow option.
+\ingroup BasicGraphics
+
+A TBox with a bordersize and a shadow option.
 The corners of a TPave can be rounded (option "arc")
 More functional objects like TPavelabel, TPaveText derive from TPave.
 

@@ -9,13 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLEventHandler                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
 #include "TGLEventHandler.h"
 #include "TGEventHandler.h"
 #include "TGLViewer.h"
@@ -37,23 +30,25 @@
 #include "TMath.h"
 #include "RConfigure.h"
 
-//______________________________________________________________________________
-//
-// Base-class and default implementation of event-handler for TGLViewer.
-//
-// This allows for complete disentanglement of GL-viewer from GUI
-// event handling. Further, alternative event-handlers can easily be
-// designed and set at run-time.
-//
-// The signals about object being selected or hovered above are
-// emitted via the TGLViewer itself.
-//
-// The following rootrc settings influence the behaviour:
-// OpenGL.EventHandler.ViewerCentricControls:  1
-// OpenGL.EventHandler.ArrowKeyFactor:        -1.0
-// OpenGL.EventHandler.MouseDragFactor:       -1.0
-// OpenGL.EventHandler.MouseWheelFactor:      -1.0
+/** \class TGLEventHandler
+\ingroup opengl
+Base-class and default implementation of event-handler for TGLViewer.
 
+This allows for complete disentanglement of GL-viewer from GUI
+event handling. Further, alternative event-handlers can easily be
+designed and set at run-time.
+
+The signals about object being selected or hovered above are
+emitted via the TGLViewer itself.
+
+The following rootrc settings influence the behaviour:
+~~~ {.cpp}
+OpenGL.EventHandler.ViewerCentricControls:  1
+OpenGL.EventHandler.ArrowKeyFactor:        -1.0
+OpenGL.EventHandler.MouseDragFactor:       -1.0
+OpenGL.EventHandler.MouseWheelFactor:      -1.0
+~~~
+*/
 
 ClassImp(TGLEventHandler);
 
@@ -218,7 +213,7 @@ void TGLEventHandler::SelectForMouseOver()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process event of type 'event' - one of EEventType types,
-/// occuring at window location px, py
+/// occurring at window location px, py
 /// This is provided for use when embedding GL viewer into pad
 
 void TGLEventHandler::ExecuteEvent(Int_t event, Int_t px, Int_t py)

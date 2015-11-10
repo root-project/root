@@ -25,8 +25,9 @@ ClassImp(TGroupButton)
 
 
 /** \class TGroupButton
+\ingroup gpad
 
-A TGroupButton object is a specialized TButton used in a group of Buttons.
+A specialized TButton used in a group of Buttons.
 When a button from a group of TGroupButtons is selected, all other buttons
 from the group with the same name are disabled.
 

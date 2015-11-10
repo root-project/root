@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TCurlyLine
+\ingroup BasicGraphics
+
 Implements curly or wavy polylines used to draw Feynman diagrams.
 
 Amplitudes and wavelengths may be specified in the constructors,

@@ -26,10 +26,11 @@
 #include "TGLBoxPainter.h"
 #include "TGLIncludes.h"
 
-//______________________________________________________________________________
-//
-// Paints TH3 histograms by rendering variable-sized bozes matching the
-// bin contents.
+/** \class TGLBoxPainter
+\ingroup opengl
+Paints TH3 histograms by rendering variable-sized boxes matching the
+bin contents.
+*/
 
 ClassImp(TGLBoxPainter)
 
@@ -89,7 +90,6 @@ char *TGLBoxPainter::GetPlotInfo(Int_t, Int_t)
    return (Char_t *)fPlotInfo.Data();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///Set ranges, find min and max bin content.
 
@@ -145,7 +145,6 @@ Bool_t TGLBoxPainter::InitGeometry()
    return kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// User clicks right mouse button (in a pad).
 
@@ -156,7 +155,6 @@ void TGLBoxPainter::StartPan(Int_t px, Int_t py)
    fCamera->StartPan(px, py);
    fBoxCut.StartMovement(px, fCamera->GetHeight() - py);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// User's moving mouse cursor, with middle mouse button pressed (for pad).
@@ -201,7 +199,6 @@ void TGLBoxPainter::Pan(Int_t px, Int_t py)
    fMousePosition.fX = px, fMousePosition.fY = py;
    fUpdateSelection = kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Box1 == spheres.
@@ -566,7 +563,6 @@ void TGLBoxPainter::DrawSectionYOZ()const
    fYOZSlice.DrawSlice(fYOZSectionPos / fCoord->GetXScale());
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw XOY parallel section.
 
@@ -576,7 +572,6 @@ void TGLBoxPainter::DrawSectionXOY()const
       return;
    fXOYSlice.DrawSlice(fXOYSectionPos / fCoord->GetZScale());
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check, if any section exists.

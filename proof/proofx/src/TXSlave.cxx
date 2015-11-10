@@ -247,7 +247,6 @@ void TXSlave::Init(const char *host, Int_t stype)
                        "the connection at %s - exit", url.GetUrl(kTRUE));
       ParseBuffer(); // For the log path
       // Fill some useful info
-      R__LOCKGUARD2(gProofMutex);
       fUser = ((TXSocket *)fSocket)->fUser;
       PDB(kGlobal,3) Info("Init","%s: fUser is .... %s", iam.Data(), fUser.Data());
       SafeDelete(fSocket);
@@ -287,8 +286,6 @@ void TXSlave::Init(const char *host, Int_t stype)
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(fSocket);
    }
-
-   R__LOCKGUARD2(gProofMutex);
 
    // Fill some useful info
    fUser = ((TXSocket *)fSocket)->fUser;

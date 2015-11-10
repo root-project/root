@@ -18,16 +18,20 @@
 
 #include <stdexcept>
 
-//______________________________________________________________________________
-//
-// Frame-buffer object.
-//
-// Requires GL-1.5.
-//
-// Taken from Gled project, see:
-//   http://www.gled.org/cgi-bin/viewcvs.cgi/trunk/libsets/GledCore/Pupils/
-// See also:
-//   http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
+/** \class TGLFBO
+\ingroup opengl
+Frame-buffer object.
+
+Requires GL-1.5.
+
+Taken from Gled project, see:
+
+   http://www.gled.org/cgi-bin/viewcvs.cgi/trunk/libsets/GledCore/Pupils/
+
+See also:
+
+   http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
+*/
 
 ClassImp(TGLFBO);
 

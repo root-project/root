@@ -1,10 +1,16 @@
 // @@(#)root/g3d:$Id$
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "TXTRU.h"
 #include "TVirtualPad.h"
-
-///#include "GLConstants.h"
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
@@ -13,57 +19,56 @@
 
 #include "Riostream.h"
 
-
 ClassImp(TXTRU)
 
+/** \class TXTRU
+\ingroup g3d
+A poly-extrusion.
 
-//_____________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/xtru.gif"> </P> End_Html
-//
-// XTRU is an poly-extrusion with fixed outline shape in x-y,
-// a sequence of z extents (segments) and two end faces perpendicular
-// to the z axis.  The x-y outline is defined by an ordered list of
-// points; the overall scale of the outline scales linearly between
-// z points and the center can have an x-y offset specified
-// at each segment end.
-//
-// A TXTRU has the following parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - nxy        number of x-y vertex points constituting the outline --
-//                  this number should be at least 3
-//     - nz         number of planes perpendicular to the z axis where
-//                  the scaling dimension of the section is given --
-//                  this number should be at least 2
-//     - Xvtx       array [nxy] of X coordinates of vertices
-//     - Yvtx       array [nxy] of Y coordinates of vertices
-//     - z          array [nz] of z plane positions
-//     - scale      array [nz] of scale factors
-//     - x0         array [nz] of x offsets
-//     - y0         array [nz] of y offsets
-//
-// Author:  R. Hatcher 2000.04.21
-//
-// All XTRU shapes are correctly rendered in wire mode but can encounter
-// difficulty when rendered as a solid with hidden surfaces.  These
-// exceptions occur if the outline shape is not a convex polygon.
-// Both the X3D and OpenGL renderers expect polygons to be convex.
-// The OpenGL spec specifies that points defining a polygon using the
-// GL_POLYGON primitive may be rendered as the convex hull of that set.
-//
-// Solid rendering under X3D can also give unexpected artifacts if
-// the combination of x-y-z offsets and scales for the segments are
-// chosen in such a manner that they represent a concave shape when
-// sliced along a plane parallel to the z axis.
-//
-// Choosing sets of point that represent a malformed polygon is
-// not supported, but testing for such a condition is not implemented
-// and thus it is left to the user to avoid this mistake.
-//
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/polytype.gif"> </P> End_Html
+\image html g3d_xtru.png
 
+XTRU is a poly-extrusion with fixed outline shape in x-y,
+a sequence of z extents (segments) and two end faces perpendicular
+to the z axis.  The x-y outline is defined by an ordered list of
+points; the overall scale of the outline scales linearly between
+z points and the center can have an x-y offset specified
+at each segment end.
+
+A TXTRU has the following parameters:
+
+  - name:       name of the shape
+  - title:      shape's title
+  - material:   (see TMaterial)
+  - nxy:        number of x-y vertex points constituting the outline --
+                this number should be at least 3
+  - nz:         number of planes perpendicular to the z axis where
+                the scaling dimension of the section is given --
+                this number should be at least 2
+  - Xvtx:       array [nxy] of X coordinates of vertices
+  - Yvtx:       array [nxy] of Y coordinates of vertices
+  - z:          array [nz] of z plane positions
+  - scale:      array [nz] of scale factors
+  - x0:         array [nz] of x offsets
+  - y0:         array [nz] of y offsets
+
+All XTRU shapes are correctly rendered in wire mode but can encounter
+difficulty when rendered as a solid with hidden surfaces.  These
+exceptions occur if the outline shape is not a convex polygon.
+Both the X3D and OpenGL renderers expect polygons to be convex.
+The OpenGL spec specifies that points defining a polygon using the
+GL_POLYGON primitive may be rendered as the convex hull of that set.
+
+Solid rendering under X3D can also give unexpected artifacts if
+the combination of x-y-z offsets and scales for the segments are
+chosen in such a manner that they represent a concave shape when
+sliced along a plane parallel to the z axis.
+
+Choosing sets of point that represent a malformed polygon is
+not supported, but testing for such a condition is not implemented
+and thus it is left to the user to avoid this mistake.
+
+\image html g3d_polytype.png
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TXTRU shape - default constructor
@@ -76,7 +81,6 @@ TXTRU::TXTRU()
    fZOrdering     = kUncheckedZ;
    fSplitConcave  = kFALSE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TXTRU shape - normal constructor
@@ -143,7 +147,6 @@ TXTRU::TXTRU(const char *name, const char *title, const char *material,
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TXTRU copy constructor
 
@@ -153,7 +156,6 @@ TXTRU::TXTRU(const TXTRU &xtru) : TShape(xtru)
 
    ((TXTRU&)xtru).Copy(*this);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TXTRU destructor deallocates arrays
@@ -182,7 +184,6 @@ TXTRU::~TXTRU()
    fZOrdering     = kUncheckedZ;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Deep assignment operator
 
@@ -205,7 +206,6 @@ TXTRU& TXTRU::operator=(const TXTRU &rhs)
 
    return *this;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TXTRU Copy method
@@ -242,7 +242,6 @@ void TXTRU::Copy(TObject &obj) const
    ((TXTRU&)obj).fPolygonShape = fPolygonShape;
    ((TXTRU&)obj).fZOrdering    = fZOrdering;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set z section iz information
@@ -298,13 +297,11 @@ void TXTRU::DefineSection(Int_t iz, Float_t z, Float_t scale, Float_t x0, Float_
    fY0[iz]    = y0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Set vertex point ipt to (x,y)
+/// expand size of array if necessary
 
 void TXTRU::DefineVertex(Int_t ipt, Float_t x, Float_t y) {
-   // Set vertex point ipt to (x,y)
-   // expand size of array if necessary
-
    if (ipt < 0) return;
 
    // setting a new vertex makes things unverified
@@ -341,7 +338,6 @@ void TXTRU::DefineVertex(Int_t ipt, Float_t x, Float_t y) {
    fYvtx[ipt] = y;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the distance from point px,py to a TXTRU
 /// by calculating the closest approach to each corner
@@ -352,12 +348,10 @@ Int_t TXTRU::DistancetoPrimitive(Int_t px, Int_t py)
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Return x coordinate of a vertex point
 
 Float_t TXTRU::GetOutlinePointX(Int_t n) const {
-   // Return x coordinate of a vertex point
-
    if ((n < 0) || (n >= fNxy)) {
       Error(fName,"no such point %d [of %d]",n,fNxy);
       return 0.0;
@@ -365,12 +359,10 @@ Float_t TXTRU::GetOutlinePointX(Int_t n) const {
    return fXvtx[n];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Return y coordinate of a vertex point
 
 Float_t TXTRU::GetOutlinePointY(Int_t n) const {
-   // Return y coordinate of a vertex point
-
    if ((n < 0) || (n >= fNxy)) {
       Error(fName,"no such point %d [of %d]",n,fNxy);
       return 0.0;
@@ -378,12 +370,10 @@ Float_t TXTRU::GetOutlinePointY(Int_t n) const {
    return fYvtx[n];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Return x0 shift of a z section
 
 Float_t TXTRU::GetSectionX0(Int_t n) const {
-   // Return x0 shift of a z section
-
    if ((n < 0) || (n >= fNz)) {
       Error(fName,"no such section %d [of %d]",n,fNz);
       return 0.0;
@@ -391,12 +381,10 @@ Float_t TXTRU::GetSectionX0(Int_t n) const {
    return fX0[n];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Return y0 shift of a z section
 
 Float_t TXTRU::GetSectionY0(Int_t n) const {
-   // Return y0 shift of a z section
-
    if ((n < 0) || (n >= fNz)) {
       Error(fName,"no such section %d [of %d]",n,fNz);
       return 0.0;
@@ -404,12 +392,10 @@ Float_t TXTRU::GetSectionY0(Int_t n) const {
    return fY0[n];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Return scale factor for a z section
 
 Float_t TXTRU::GetSectionScale(Int_t n) const {
-   // Return scale factor for a z section
-
    if ((n < 0) || (n >= fNz)) {
       Error(fName,"no such section %d [of %d]",n,fNz);
       return 0.0;
@@ -417,12 +403,10 @@ Float_t TXTRU::GetSectionScale(Int_t n) const {
    return fScale[n];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Return z of a z section
 
 Float_t TXTRU::GetSectionZ(Int_t n) const {
-   // Return z of a z section
-
    if ((n < 0) || (n >= fNz)) {
       Error(fName,"no such section %d [of %d]",n,fNz);
       return 0.0;
@@ -430,12 +414,12 @@ Float_t TXTRU::GetSectionZ(Int_t n) const {
    return fZ[n];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump the info of this TXTRU shape
-/// Option: "xy" to get x-y information
-///         "z"  to get z information
-///         "alloc" to show full allocated arrays (not just used values)
+/// Option:
+///  - "xy" to get x-y information
+///  - "z"  to get z information
+///  - "alloc" to show full allocated arrays (not just used values)
 
 void TXTRU::Print(Option_t *option) const
 {
@@ -508,7 +492,6 @@ void TXTRU::Print(Option_t *option) const
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create TXTRU points in buffer
 /// order as expected by other methods (counterclockwise xy, increasing z)
@@ -546,7 +529,6 @@ void TXTRU::SetPoints(Double_t *points) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return total X3D needed by TNode::ls (when called with option "x")
 
@@ -557,12 +539,12 @@ void TXTRU::Sizeof3D() const
    gSize3D.numPolys  += (fNz-1)*fNxy+2;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// (Dis)Enable the splitting of concave polygon outlines into
 /// multiple convex polygons.  This would make for better rendering
 /// in solid mode, but introduces extra, potentially confusing, lines
 /// in wireframe mode.
+///
 /// *** Not yet implemented ***
 
 void TXTRU::SplitConcavePolygon(Bool_t split)
@@ -578,12 +560,10 @@ void TXTRU::SplitConcavePolygon(Bool_t split)
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Truncate the vertex list
 
 void TXTRU::TruncateNxy(Int_t npts) {
-   // Truncate the vertex list
-
    if ((npts < 0) || (npts > fNxy)) {
       Error(fName,"truncate to %d impossible on %d points",npts,fNxy);
       return;
@@ -592,12 +572,10 @@ void TXTRU::TruncateNxy(Int_t npts) {
    return;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Truncate the z section list
 
 void TXTRU::TruncateNz(Int_t nz) {
-   // Truncate the z section list
-
    if ((nz < 0) || (nz > fNz)) {
       Error(fName,"truncate to %d impossible on %d points",nz,fNz);
       return;
@@ -605,7 +583,6 @@ void TXTRU::TruncateNz(Int_t nz) {
    fNz = nz;
    return;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine ordering over which to process points, segments, surfaces
@@ -725,7 +702,6 @@ void TXTRU::CheckOrdering()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump the vertex points for visual inspection
 
@@ -743,7 +719,6 @@ void TXTRU::DumpPoints(int npoints, float *pointbuff) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump the segment info for visual inspection
 
@@ -760,7 +735,6 @@ void TXTRU::DumpSegments(int nsegments, int *segbuff) const
       printf(" [%4d] %3d (%4d,%4d)\n",iseg,icol,p1,p2);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump the derived polygon info for visual inspection
@@ -787,7 +761,6 @@ void TXTRU::DumpPolygons(int npolygons, int *polybuff, int buffsize) const
    }
    std::cout << " buffer size " << buffsize << " last used " << --ioff << std::endl;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get buffer 3d.

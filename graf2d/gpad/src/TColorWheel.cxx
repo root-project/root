@@ -23,7 +23,9 @@
 ClassImp(TColorWheel)
 
 /** \class TColorWheel
-TColorWheel : Draw the ROOT Color Wheel.
+\ingroup gpad
+
+Draw the ROOT Color Wheel.
 
 The wheel contains the recommended 216 colors to be used in web applications.
 The colors in the Color Wheel are created by TColor::CreateColorWheel.
@@ -47,11 +49,10 @@ in your code instead of hardcoded color numbers, e.g.:
    myLine.SetLineColor(kMagenta+2);
 ~~~
 
-Begin_Macro(source)
+Begin_Macro
 {
    TColorWheel *w = new TColorWheel();
    w->Draw();
-   return w->GetCanvas();
 }
 End_Macro
 */

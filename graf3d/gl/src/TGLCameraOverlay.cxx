@@ -22,9 +22,10 @@
 #include "TAxis.h"
 #include "THLimitsFinder.h"
 
-//______________________________________________________________________________
-// A GL overlay element which displays camera furstum.
-//
+/** \class TGLCameraOverlay
+\ingroup opengl
+A GL overlay element which displays camera furstum.
+*/
 
 ClassImp(TGLCameraOverlay);
 
@@ -209,7 +210,7 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx, Bool_t grid)
 
    // grid lines
    Char_t alpha = 80; //primary
-   Char_t alpha2 = 90; //seconndary
+   Char_t alpha2 = 90; //secondary
    Int_t secSteps = fAxis->GetNdivisions() % 100;
    GLushort stipple =  0x5555; // 33333 more rare
 
@@ -457,7 +458,7 @@ void TGLCameraOverlay::RenderBar(TGLRnrCtx&  rnrCtx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Display coodinates info of current frustum.
+/// Display coordinates info of current frustum.
 
 void TGLCameraOverlay::Render(TGLRnrCtx& rnrCtx)
 {

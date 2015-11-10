@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TPDF
+\ingroup PS
+
 Interface to PDF.
 
 Like PostScript, PDF is a vector graphics output format allowing a very high

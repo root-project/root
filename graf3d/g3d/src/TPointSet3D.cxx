@@ -9,30 +9,31 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #include "TPointSet3D.h"
 #include "TClass.h"
 
-//______________________________________________________________________
-//
-// TPolyMarker3D using TPointSet3DGL for direct OpenGL rendering.
-// Supports only elementary marker types:
-// 4, 20, 24 : round points, size in pixels;
-//   2, 3, 5 : crosses, size in scene units;
-//        28 : as above, line width 2 pixels;
-// all other : square points, size in pixels.
-//
-// Marker-size (from TAttMarker) is multiplied by 5!
-//
-// An identification of type TObject* can be assigned to each point
-// via SetPointId() method. Set the fOwnIds flag if the ids are owned
-// by the point-set and should be deleted when pointset is cleared or
-// destructed.
-//
-// Copy-constructor and assignment operator COPIES the ids if the are
-// not owned and CLONES them if they are owned.
-//
-// The ids are not streamed.
+/** \class TPointSet3D
+\ingroup g3d
+
+TPolyMarker3D using TPointSet3DGL for direct OpenGL rendering.
+Supports only elementary marker types:
+  - 4, 20, 24 : round points, size in pixels;
+  - 2, 3, 5 : crosses, size in scene units;
+  - 28 : as above, line width 2 pixels;
+  - all other : square points, size in pixels.
+
+Marker-size (from TAttMarker) is multiplied by 5!
+
+An identification of type TObject* can be assigned to each point
+via SetPointId() method. Set the fOwnIds flag if the ids are owned
+by the point-set and should be deleted when pointset is cleared or
+destructed.
+
+Copy-constructor and assignment operator COPIES the ids if the are
+not owned and CLONES them if they are owned.
+
+The ids are not streamed.
+*/
 
 ClassImp(TPointSet3D);
 
@@ -70,7 +71,7 @@ void TPointSet3D::CopyIds(const TPointSet3D& t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assignement operator.
+/// Assignment operator.
 
 TPointSet3D& TPointSet3D::operator=(const TPointSet3D& t)
 {
@@ -133,10 +134,12 @@ void TPointSet3D::ClearIds()
 ////////////////////////////////////////////////////////////////////////////////
 /// This virtual method is called from TPointSet3DGL when a point is
 /// selected.
+///
 /// At this point it just prints out n and id of the point (if it exists).
 /// To make something useful out of this do:
-///  a) subclass and re-implement this method;
-///  b) extend this class to include TExec or some other kind of callback.
+///
+///  1. subclass and re-implement this method;
+///  2. extend this class to include TExec or some other kind of callback.
 
 void TPointSet3D::PointSelected(Int_t n)
 {

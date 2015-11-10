@@ -18,16 +18,17 @@
 
 #include "TVirtualX.h"
 
-//______________________________________________________________________________
-//
-// Abstract base class for viewer manipulators, which allow direct in
-// viewer manipulation of a (TGlPhysicalShape) object - currently
-// translation, scaling and rotation along/round objects local axes.
-// See derived classes for these implementations.
-//
-// This class provides binding to the zero or one manipulated physical,
-// hit testing (selection) for manipulator sub component (widget), and
-// some common mouse action handling/tracking.
+/** \class TGLManip
+\ingroup opengl
+Abstract base class for viewer manipulators, which allow direct in
+viewer manipulation of a (TGlPhysicalShape) object - currently
+translation, scaling and rotation along/round objects local axes.
+See derived classes for these implementations.
+
+This class provides binding to the zero or one manipulated physical,
+hit testing (selection) for manipulator sub component (widget), and
+some common mouse action handling/tracking.
+*/
 
 ClassImp(TGLManip);
 
@@ -68,7 +69,7 @@ TGLManip::TGLManip(const TGLManip& gm) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assignement operator.
+/// Assignment operator.
 
 TGLManip& TGLManip::operator=(const TGLManip& gm)
 {
@@ -161,7 +162,7 @@ void TGLManip::CalcDrawScale(const TGLBoundingBox& box,
    base = box.Extents().Mag() / 100.0;
 
    // Clamp this base scale to a viewport pixel range
-   // Allow some variation so zooming is noticable
+   // Allow some variation so zooming is noticeable
    TGLVector3 pixelInWorld = camera.ViewportDeltaToWorld(box.Center(), 1, 1);
    Double_t pixelScale = pixelInWorld.Mag();
    if (base < pixelScale * 3.0) {

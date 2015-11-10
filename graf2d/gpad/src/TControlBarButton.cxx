@@ -10,7 +10,9 @@
  *************************************************************************/
 
 /** \class TControlBarButton
-TControlBarButton are created by the TControlBar. Not for general consumption.
+\ingroup gpad
+
+Created by the TControlBar. Not for general consumption.
 */
 
 #include "TControlBarButton.h"

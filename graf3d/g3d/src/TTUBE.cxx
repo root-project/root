@@ -20,18 +20,21 @@
 
 ClassImp(TTUBE)
 
+/** \class TTUBE
+\ingroup g3d
+A tube.
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/tube.gif"> </P> End_Html
-// TUBE is a tube. It has 6 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - rmin       inside radius
-//     - rmax       outside radius
-//     - dz         half length in z
+\image html g3d_tube.png
 
+It has 6 parameters:
+
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - rmin:       inside radius
+  - rmax:       outside radius
+  - dz:         half length in z
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TUBE shape default constructor
@@ -46,7 +49,6 @@ TTUBE::TTUBE()
    fRmin        = 0.;
    fRmax        = 0.;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TUBE shape normal constructor
@@ -67,7 +69,6 @@ TTUBE::TTUBE(const char *name, const char *title, const char *material, Float_t 
 
    MakeTableOfCoSin();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TUBE shape "simplified" constructor
@@ -105,7 +106,7 @@ TTUBE::TTUBE(const TTUBE& tu) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignement operator
+/// assignment operator
 
 TTUBE& TTUBE::operator=(const TTUBE& tu)
 {
@@ -157,7 +158,6 @@ void TTUBE::MakeTableOfCoSin() const // Internal cache - const so other const fn
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TUBE shape default destructor
 
@@ -166,7 +166,6 @@ TTUBE::~TTUBE()
    delete [] fCoTab;
    delete [] fSiTab;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a TUBE
@@ -181,7 +180,6 @@ Int_t TTUBE::DistancetoPrimitive(Int_t px, Int_t py)
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set number of divisions used to draw this tube
 
@@ -190,7 +188,6 @@ void TTUBE::SetNumberOfDivisions (Int_t ndiv)
    fNdiv = ndiv;
    MakeTableOfCoSin();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create TUBE points
@@ -224,7 +221,6 @@ void TTUBE::SetPoints(Double_t *points) const
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set segments and polygons.
@@ -305,7 +301,6 @@ void TTUBE::SetSegsAndPols(TBuffer3D & buffer) const
    buffer.fPols[indx+2] = (4+i)*n;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return total X3D needed by TNode::ls (when called with option "x")
 
@@ -317,7 +312,6 @@ void TTUBE::Sizeof3D() const
    gSize3D.numSegs   += n*8;
    gSize3D.numPolys  += n*4;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TTUBE.
@@ -344,7 +338,6 @@ void TTUBE::Streamer(TBuffer &R__b)
       R__b.WriteClassBuffer(TTUBE::Class(),this);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get buffer 3d.

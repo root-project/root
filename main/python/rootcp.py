@@ -14,16 +14,16 @@ import sys
 COMMAND_HELP = "Copy objects from ROOT files into an other"
 
 EPILOG = """Examples:
-- roocp source.root:hist* dest.root
+- rootcp source.root:hist* dest.root
   Copy all histograms whose named starts with 'hist' from 'source.root' to 'dest.root'.
 
-- roocp source1.root:hist1 source2.root:hist2 dest.root
+- rootcp source1.root:hist1 source2.root:hist2 dest.root
   Copy histograms 'hist1' from 'source1.root' and 'hist2' from 'source2.root' to 'dest.root'.
 
-- roocp --recreate source.root:hist dest.root
+- rootcp --recreate source.root:hist dest.root
   Recreate the destination file 'dest.root' and copy the histogram named 'hist' from 'source.root' into it.
 
-- roocp -c 1 source.root:hist dest.root
+- rootcp -c 1 source.root:hist dest.root
   Change the compression factor of the destination file 'dest.root' if not existing and copy the histogram named 'hist' from 'source.root' into it.
 """
 

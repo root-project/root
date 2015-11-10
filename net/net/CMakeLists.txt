@@ -10,7 +10,7 @@ if(NOT ssl)
   list(REMOVE_ITEM sources TSSLSocket.cxx)
   set(ssllib)
 else()
-  set(ssllib ${OPENSSL_LIBRARIES})
+  set(ssllib ${OPENSSL_LIBRARIES} ${CMAKE_DL_LIBS})
   add_definitions(-DR__SSL)
   include_directories(${OPENSSL_INCLUDE_DIR})
 endif()
@@ -30,5 +30,9 @@ endif()
 ROOT_GENERATE_DICTIONARY(G__Net ${headers} MODULE Net LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 ROOT_LINKER_LIBRARY(Net ${sources} G__Net.cxx LIBRARIES ${ssllib} ${CRYPTLIBS} DEPENDENCIES RIO)
+
+if(builtin_openssl)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(Net OPENSSL)
+endif()
 
 ROOT_INSTALL_HEADERS()

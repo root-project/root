@@ -18,10 +18,11 @@
 
 #include "TMath.h"
 
-//______________________________________________________________________________
-//
-// Draws arrows showing camera orientation in the overlay.
-// X, Y position is in range 0, 1.
+/** \class TGLCameraGuide
+\ingroup opengl
+Draws arrows showing camera orientation in the overlay.
+X, Y position is in range 0, 1.
+*/
 
 ClassImp(TGLCameraGuide);
 
@@ -43,7 +44,6 @@ Bool_t TGLCameraGuide::MouseEnter(TGLOvlSelectRecord& /*rec*/)
 {
    return kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle overlay event.

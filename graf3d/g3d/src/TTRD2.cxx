@@ -14,20 +14,22 @@
 
 ClassImp(TTRD2)
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/trd2.gif"> </P> End_Html
-// TRD2 is a trapezoid with both x and y dimensions varying along z.
-// It has 8 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - dx1        half-length along x at the z surface positioned at -DZ
-//     - dx2        half-length along x at the z surface positioned at +DZ
-//     - dy1        half-length along y at the z surface positioned at -DZ
-//     - dy2        half-length along y at the z surface positioned at +DZ
-//     - dz         half-length along the z-axis
+/** \class TTRD2
+\ingroup g3d
+A trapezoid with both x and y dimensions varying along z.
 
+\image html g3d_trd2.png
+It has 8 parameters:
+
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - dx1:        half-length along x at the z surface positioned at -DZ
+  - dx2:        half-length along x at the z surface positioned at +DZ
+  - dy1:        half-length along y at the z surface positioned at -DZ
+  - dy2:        half-length along y at the z surface positioned at +DZ
+  - dz:         half-length along the z-axis
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TRD2 shape default constructor
@@ -37,7 +39,6 @@ TTRD2::TTRD2()
    fDx2 = 0.;
    fDy2 = 0.;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TRD2 shape normal constructor
@@ -49,14 +50,12 @@ TTRD2::TTRD2(const char *name, const char *title, const char *material, Float_t 
    fDy2 = dy2;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TRD2 shape default destructor
 
 TTRD2::~TTRD2()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create TRD2 points

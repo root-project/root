@@ -15,24 +15,26 @@
 
 ClassImp(TPARA)
 
+/** \class TPARA
+\ingroup g3d
+A parallelepiped.
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/para.gif"> </P> End_Html
-// PARA is a parallelepiped. It has 9 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - dx         half-length in x
-//     - dy         half-length in y
-//     - dz         half-length in z
-//     - alpha      angle formed by the y axis and by the plane joining the
-//                  centre of the faces parallel to the z-x plane at -DY and +DY
-//     - theta      polar angle of the line joining the centres of the faces
-//                  at -DZ and +DZ in z
-//     - phi        azimuthal angle of the line joining the centres of the
-//                  faces at -DZ and +DZ in z
+\image html g3d_para.png
+It has 9 parameters:
 
+  - name:       name of the shape
+  - title:      shape's title
+  - material:   (see TMaterial)
+  - dx:         half-length in x
+  - dy:         half-length in y
+  - dz:         half-length in z
+  - alpha:      angle formed by the y axis and by the plane joining the
+                centre of the faces parallel to the z-x plane at -DY and +DY
+  - theta:      polar angle of the line joining the centres of the faces
+                at -DZ and +DZ in z
+  - phi:        azimuthal angle of the line joining the centres of the
+                faces at -DZ and +DZ in z
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PARA shape default constructor
@@ -43,7 +45,6 @@ TPARA::TPARA()
    fTheta = 0.;
    fPhi   = 0.;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PARA shape normal constructor
@@ -56,14 +57,12 @@ TPARA::TPARA(const char *name, const char *title, const char *material, Float_t 
    fPhi   = phi;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// PARA shape default destructor
 
 TPARA::~TPARA()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create PARA points

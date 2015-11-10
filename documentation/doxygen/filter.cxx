@@ -34,6 +34,7 @@ string gImageName;   // Current image name
 string gMacroName;   // Current macro name
 string gCwd;         // Current working directory
 string gOutDir;      // Output directory
+string gSourceDir;   // Source directory
 bool   gHeader;      // True if the input file is a header
 bool   gSource;      // True if the input file is a source file
 bool   gImageSource; // True the source of the current macro should be shown
@@ -70,6 +71,10 @@ int main(int argc, char *argv[])
    // Retrieve the output directory
    gOutDir = getenv("DOXYGEN_OUTPUT_DIRECTORY");
    ReplaceAll(gOutDir,"\"","");
+
+   // Retrieve the source directory
+   gSourceDir = getenv("DOXYGEN_SOURCE_DIRECTORY");
+   ReplaceAll(gSourceDir,"\"","");
 
    // Open the input file name.
    FILE *f = fopen(gFileName.c_str(),"r");
@@ -223,7 +228,7 @@ void ExecuteMacro()
 
    // Retrieve the macro to be executed.
    if (gLineString.find("../../..") != string::npos) {
-      ReplaceAll(gLineString,"../../..","../..");
+      ReplaceAll(gLineString,"../../..", gSourceDir.c_str());
    } else {
       gLineString.insert(0, StringFormat("%s/../doc/macros/",gCwd.c_str()));
    }

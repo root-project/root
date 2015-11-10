@@ -20,23 +20,24 @@
 
 ClassImp(TSPHE)
 
+/** \class TSPHE
+\ingroup g3d
+A Sphere.
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/sphe.gif"> </P> End_Html
-// SPHE is a Sphere. It has 9 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - rmin       minimum radius
-//     - rmax       maximum radius
-//     - themin     theta min
-//     - themax     theta max
-//     - phimin     phi min
-//     - phimax     phi max
+It has 9 parameters:
 
-// ROOT color indx = max(i-i0,j-j0);
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - rmin:       minimum radius
+  - rmax:       maximum radius
+  - themin:     theta min
+  - themax:     theta max
+  - phimin:     phi min
+  - phimax:     phi max
 
+ROOT color indx = max(i-i0,j-j0);
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SPHE shape default constructor
@@ -57,7 +58,6 @@ TSPHE::TSPHE()
    faX = faY = faZ = 1.0;      // Coeff along Ox
    fNz = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SPHE shape normal constructor
@@ -84,7 +84,6 @@ TSPHE::TSPHE(const char *name, const char *title, const char *material, Float_t 
    SetNumberOfDivisions (20);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// SPHE shape "simplified" constructor
 
@@ -109,7 +108,6 @@ TSPHE::TSPHE(const char *name, const char *title, const char *material, Float_t 
    SetNumberOfDivisions (20);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// SPHE shape default destructor
 
@@ -124,7 +122,6 @@ TSPHE::~TSPHE()
    fCoThetaTab=0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a PSPHE
 ///
@@ -138,7 +135,6 @@ Int_t TSPHE::DistancetoPrimitive(Int_t px, Int_t py)
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set ellipse.
 
@@ -148,7 +144,6 @@ void TSPHE::SetEllipse(const Float_t *factors)
    if (factors[1] > 0) faY = factors[1];
    if (factors[2] > 0) faZ = factors[2];
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set number of divisions.
@@ -160,7 +155,6 @@ void TSPHE::SetNumberOfDivisions (Int_t p)
    fNz = Int_t(fAspectRatio*fNdiv*(fThemax - fThemin )/(fPhimax - fPhimin )) + 1;
    MakeTableOfCoSin();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create SPHE points
@@ -195,7 +189,6 @@ void TSPHE::SetPoints(Double_t *points) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return total X3D needed by TNode::ls (when called with option "x")
 
@@ -214,7 +207,6 @@ void TSPHE::Sizeof3D() const
    gSize3D.numSegs   += 4*(nz*n-1+(specialCase == kTRUE));
    gSize3D.numPolys  += 2*(nz*n-1+(specialCase == kTRUE));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make table of sine and cosine.
@@ -274,7 +266,6 @@ void TSPHE::MakeTableOfCoSin() const
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream a class object
 
@@ -313,7 +304,6 @@ void TSPHE::Streamer(TBuffer &b)
       b.WriteClassBuffer(TSPHE::Class(),this);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get buffer 3d.

@@ -27,7 +27,7 @@ if(python)
       string(REPLACE ".py" "" utilName ${utilName})
     endif()
 
-    install(FILES ${rawUtilName} DESTINATION ${CMAKE_INSTALL_BINDIR}/${CMAKE_INSTALL_BINDIR} RENAME ${utilName})
+    install(FILES ${rawUtilName} DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME ${utilName} COMPONENT applications)
     execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
                     COMMAND ${CMAKE_COMMAND} -E copy ${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName})
   endforeach()

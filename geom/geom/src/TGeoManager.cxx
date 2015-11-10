@@ -962,8 +962,8 @@ void TGeoManager::SetMaxThreads(Int_t nthreads)
       return;
    }
    if (!fMultiThread) {
-      TThread::Initialize();
-      Long_t threadId = TThread::SelfId();
+      ROOT::EnableMT();
+      Long_t threadId =TThread::SelfId();
       NavigatorsMap_t::const_iterator it = fNavigators.find(0);
       if (it != fNavigators.end()) {
          TGeoNavigatorArray *array = it->second;
@@ -1541,7 +1541,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
       if (fParallelWorld) {
          if (fgVerboseLevel>0) Info("CloseGeometry","Recreating parallel world %s ...",fParallelWorld->GetName());
          fParallelWorld->CloseGeometry();
-      }   
+      }
 
       if (fgVerboseLevel>0) Info("CloseGeometry","%i nodes/ %i volume UID's in %s", fNNodes, fUniqueVolumes->GetEntriesFast()-1, GetTitle());
       if (fgVerboseLevel>0) Info("CloseGeometry","----------------modeler ready----------------");

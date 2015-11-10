@@ -18,6 +18,8 @@
 ClassImp(TCrown)
 
 /** \class TCrown
+\ingroup BasicGraphics
+
 To draw a Crown.
 
 A crown is specified with the position of its centre, its inner/outer radius

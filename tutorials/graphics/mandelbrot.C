@@ -69,6 +69,7 @@ void mygenerate(double factor, double cen_x, double cen_y)
             if(iter>max_iter) break;
          }
       }
+  last_histo->SetContour(99);
   last_histo->Draw("colz");
   gPad->Modified();
   gPad->Update();
@@ -115,12 +116,9 @@ void myexec()
 void mandelbrot()
 {
   // cosmetics...
-  gROOT->SetStyle("Plain");
-  gStyle->SetPalette(1,0);
   gStyle->SetPadGridX(kTRUE);
   gStyle->SetPadGridY(kTRUE);
   new TCanvas("canvas","View Mandelbrot set");
-  gPad->SetCrosshair();
   // this generates and draws the first view...
   mygenerate(-1,0,0);
 

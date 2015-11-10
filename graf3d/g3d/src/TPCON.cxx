@@ -20,25 +20,27 @@
 
 ClassImp(TPCON)
 
+/** \class TPCON
+\ingroup g3d
+A polycone
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/pcon.gif"> </P> End_Html
-// PCON is a polycone. It has the following parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - phi1       the azimuthal angle phi at which the volume begins (angles
-//                  are counted counterclockwise)
-//     - dphi       opening angle of the volume, which extends from
-//                  phi1 to phi1+dphi
-//     - nz         number of planes perpendicular to the z axis where
-//                  the dimension of the section is given -- this number
-//                  should be at least 2
-//     - rmin       array of dimension nz with minimum radius at a given plane
-//     - rmax       array of dimension nz with maximum radius at a given plane
-//     - z          array of dimension nz with z position of given plane
+\image html g3d_pcon.png
+It has the following parameters:
 
+  - name:       name of the shape
+  - title:      shape's title
+  - material:   (see TMaterial)
+  - phi1:       the azimuthal angle phi at which the volume begins (angles
+                are counted counterclockwise)
+  - dphi:       opening angle of the volume, which extends from
+                phi1 to phi1+dphi
+  - nz:         number of planes perpendicular to the z axis where
+                the dimension of the section is given -- this number
+                should be at least 2
+  - rmin:       array of dimension nz with minimum radius at a given plane
+  - rmax:       array of dimension nz with maximum radius at a given plane
+  - z:          array of dimension nz with z position of given plane
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PCON shape default constructor
@@ -55,7 +57,6 @@ TPCON::TPCON()
    fNz    = 0;
    fNdiv  = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PCON shape normal constructor
@@ -86,7 +87,7 @@ TPCON::TPCON(const char *name, const char *title, const char *material, Float_t 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
+/// copy constructor
 
 TPCON::TPCON(const TPCON& pc) :
   TShape(pc),
@@ -103,7 +104,7 @@ TPCON::TPCON(const TPCON& pc) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignement operator
+/// assignment operator
 
 TPCON& TPCON::operator=(const TPCON& pc)
 {
@@ -146,7 +147,6 @@ void TPCON::MakeTableOfCoSin() const
    FillTableOfCoSin(phi1,angstep,n);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// PCON shape default destructor
 
@@ -165,15 +165,12 @@ TPCON::~TPCON()
    fSiTab = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Defines section secNum of the polycone
 ///
-///     - rmin  radius of the inner circle in the cross-section
-///
-///     - rmax  radius of the outer circle in the cross-section
-///
-///     - z     z coordinate of the section
+///  - rmin  radius of the inner circle in the cross-section
+///  - rmax  radius of the outer circle in the cross-section
+///  - z     z coordinate of the section
 
 void TPCON::DefineSection(Int_t secNum, Float_t z, Float_t rmin, Float_t rmax)
 {
@@ -183,7 +180,6 @@ void TPCON::DefineSection(Int_t secNum, Float_t z, Float_t rmin, Float_t rmax)
    fRmax[secNum] = rmax;
    fDz[secNum]   = z;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a PCON
@@ -198,7 +194,6 @@ Int_t TPCON::DistancetoPrimitive(Int_t px, Int_t py)
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the table of cos and sin to prepare drawing
 
@@ -212,7 +207,6 @@ void  TPCON::FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set number of divisions.
 
@@ -222,7 +216,6 @@ void TPCON::SetNumberOfDivisions (Int_t p)
    fNdiv=p;
    MakeTableOfCoSin();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create PCON points
@@ -251,7 +244,6 @@ void TPCON::SetPoints(Double_t *points) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return total X3D needed by TNode::ls (when called with option "x")
 
@@ -265,7 +257,6 @@ void TPCON::Sizeof3D() const
    gSize3D.numSegs   += 4*(fNz*n-1+(fDphi1 == 360));
    gSize3D.numPolys  += 2*(fNz*n-1+(fDphi1 == 360));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream a class object
@@ -298,7 +289,6 @@ void TPCON::Streamer(TBuffer &b)
       b.WriteClassBuffer(TPCON::Class(),this);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get buffer 3d.
@@ -339,7 +329,6 @@ const TBuffer3D & TPCON::GetBuffer3D(Int_t reqSections) const
    }
    return buffer;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set segments and polygons.

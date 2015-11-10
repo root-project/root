@@ -54,7 +54,8 @@ if(NOT ROOT_minuit2_FOUND)
                    fit/minuit2FitBench2D.C fit/minuit2FitBench.C
                    fit/minuit2FitBench.C fit/minuit2GausFit.C
                    fit/minuit2GausFit.C fit/NumericalMinimization.C
-                   fit/combinedFit.C fit/TestBinomial.C)
+                   fit/combinedFit.C fit/TestBinomial.C
+                   fit/fitNormSum.C)
 endif()
 
 if(NOT ROOT_roofit_FOUND)
@@ -234,7 +235,7 @@ set(benchmarks-depends tutorial-hsimple
                        tutorial-io-hadd
                        tutorial-io-loopdir
                        tutorial-io-copyFiles)
-set(geom-na49view-depends tutorial-pyroot-geometry)
+set(geom-na49view-depends tutorial-geom-geometry)
 
 #--many roostats tutorials depending on having creating the file first with histfactory
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo

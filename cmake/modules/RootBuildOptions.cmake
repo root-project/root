@@ -111,6 +111,7 @@ ROOT_BUILD_OPTION(builtin_fftw3 OFF "Built the FFTW3 library internally (downloa
 ROOT_BUILD_OPTION(builtin_ftgl ON "Built included libFTGL, or use system libftgl")
 ROOT_BUILD_OPTION(builtin_freetype OFF "Built included libfreetype, or use system libfreetype")
 ROOT_BUILD_OPTION(builtin_glew ON "Built included libGLEW, or use system libGLEW")
+ROOT_BUILD_OPTION(builtin_openssl OFF "Build OpenSSL internally, or use system OpenSSL")
 ROOT_BUILD_OPTION(builtin_pcre OFF "Built included libpcre, or use system libpcre")
 ROOT_BUILD_OPTION(builtin_zlib OFF "Built included libz, or use system libz")
 ROOT_BUILD_OPTION(builtin_lzma OFF "Built included liblzma, or use system liblzma")
@@ -228,6 +229,10 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE) # point to directories outside the b
 # Check whether to add RPATH to the installation (the build tree always has the RPATH enabled)
 if(rpath OR gnuinstall)
   set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_FULL_LIBDIR}) # install LIBDIR
+  set(CMAKE_SKIP_INSTALL_RPATH FALSE)          # don't skip the full RPATH for the install tree
+elseif(APPLE)
+  set(CMAKE_INSTALL_NAME_DIR "@rpath")
+  set(CMAKE_INSTALL_RPATH "@loader_path/../lib")    # self relative LIBDIR
   set(CMAKE_SKIP_INSTALL_RPATH FALSE)          # don't skip the full RPATH for the install tree
 else()
   set(CMAKE_SKIP_INSTALL_RPATH TRUE)           # skip the full RPATH for the install tree

@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TCurlyArc
+\ingroup BasicGraphics
+
 Implements curly or wavy arcs used to draw Feynman diagrams.
 
 Amplitudes and wavelengths may be specified in the constructors,

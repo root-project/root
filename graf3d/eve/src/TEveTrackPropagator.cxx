@@ -336,7 +336,8 @@ void TEveTrackPropagator::InitTrack(const TEveVectorF& v, Int_t charge)
 
 void TEveTrackPropagator::ResetTrack()
 {
-   fPoints.clear();
+   fLastPoints.clear();
+   fPoints.swap(fLastPoints);
 
    // reset helix
    fH.fPhi = 0;

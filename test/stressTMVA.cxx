@@ -60,7 +60,6 @@ Regression_BDTG2 [4/4]...........................................OK
 *  CPUTIME   =  90.2   *  Root5.27/07   20100929/1318
 ******************************************************************
 */
-#include "TThread.h"
 // including file tmvaut/UnitTest.h
 #ifndef UNITTEST_H
 #define UNITTEST_H
@@ -3015,7 +3014,7 @@ int main(int argc, char **argv)
    addComplexClassificationTests(TMVA_test, full);
 
    // run all
-   TThread::Initialize();
+   ROOT::EnableMT();
    TMVA_test.run();
 
 #ifdef COUTDEBUG
