@@ -38,10 +38,11 @@
 #include "TGL5D.h"
 #include "gl2ps.h"
 
-//______________________________________________________________________________
-//
-// Base class for plot-painters that provide GL rendering of various
-// 2D and 3D histograms, functions and parametric surfaces.
+/** \class TGLPlotPainter
+\ingroup opengl
+Base class for plot-painters that provide GL rendering of various
+2D and 3D histograms, functions and parametric surfaces.
+*/
 
 ClassImp(TGLPlotPainter)
 
@@ -616,10 +617,11 @@ void TGLPlotPainter::RestoreProjectionMatrix()const
    glPopMatrix();
 }
 
-//______________________________________________________________________________
-//
-// Helper class for plot-painters holding information about axis
-// ranges, numbers of bins and flags if certain axis is logartihmic.
+/** \class TGLPlotCoordinates
+\ingroup opengl
+Helper class for plot-painters holding information about axis
+ranges, numbers of bins and flags if certain axis is logarithmic.
+*/
 
 ClassImp(TGLPlotCoordinates)
 
@@ -1260,7 +1262,7 @@ Double_t FindMinBinWidth(const TAxis *axis)
 ///[low edge of first ..... up edge of last]
 ///If log is true, at least up edge of last MUST be positive or function fails (1).
 ///If log is true and low edge is negative, try to find bin with positive low edge, bin number
-///must be less or equal to last (2). If no such bin, function failes.
+///must be less or equal to last (2). If no such bin, function fails.
 ///When looking for a such bin, I'm trying to find value which is 0.01 of
 ///MINIMUM bin width (3) (if bins are equidimensional, first's bin width is OK).
 ///But even such lookup can fail, so, it's a stupid idea to have negative ranges
@@ -1388,7 +1390,7 @@ Bool_t FindAxisRange(TH2Poly *hist, Bool_t logZ, Rgl::Range_t &zRange)
       zRange.first = 0.001 * zRange.second;
 
    if (logZ) {
-      if (zRange.second < 1e-20) {//OMG! Why is this code sooo bad and ugly? :)
+      if (zRange.second < 1e-20) {
          Error("FindAxisRange", "Failed to switch Z axis to logarithmic scale");
          return kFALSE;
       }
@@ -1417,10 +1419,10 @@ Bool_t FindAxisRange(TH2Poly *hist, Bool_t logZ, Rgl::Range_t &zRange)
 
 }
 
-//______________________________________________________________________________
-//
-// Used by plot-painters to determine the area of the plot that
-// is cut away.
+/** \class TGLBoxCut
+\ingroup opengl
+Used by plot-painters to determine the area of the plot that is cut away.
+*/
 
 ClassImp(TGLBoxCut)
 
@@ -1689,9 +1691,10 @@ Bool_t TGLBoxCut::IsInCut(Double_t xMin, Double_t xMax, Double_t yMin, Double_t 
 }
 
 
-//______________________________________________________________________________
-//
-// A slice of a TH3.
+/** \class TGLTH3Slice
+\ingroup opengl
+A slice of a TH3.
+*/
 
 ClassImp(TGLTH3Slice)
 

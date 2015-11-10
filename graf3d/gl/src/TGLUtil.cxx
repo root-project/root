@@ -35,19 +35,16 @@
 #include "TGLQuadric.h"
 #include "TGLUtil.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLVertex3                                                           //
-//                                                                      //
-// 3 component (x/y/z) vertex class                                     //
-//                                                                      //
-// This is part of collection of simple utility classes for GL only in  //
-// TGLUtil.h/cxx. These provide const and non-const accessors Arr() &   //
-// CArr() to a GL compatible internal field - so can be used directly   //
-// with OpenGL C API calls - which TVector3 etc cannot (easily).        //
-// They are not intended to be fully featured just provide minimum      //
-// required.                                                            //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLVertex3
+\ingroup opengl
+3 component (x/y/z) vertex class.
+
+This is part of collection of simple utility classes for GL only in
+TGLUtil.h/cxx. These provide const and non-const accessors Arr() &
+CArr() to a GL compatible internal field - so can be used directly
+with OpenGL C API calls - which TVector3 etc cannot (easily).
+They are not intended to be fully featured just provide minimum required.
+*/
 
 ClassImp(TGLVertex3);
 
@@ -136,18 +133,16 @@ void TGLVertex3::Dump() const
    std::cout << "(" << fVals[0] << "," << fVals[1] << "," << fVals[2] << ")" << std::endl;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLVector3                                                           //
-//                                                                      //
-// 3 component (x/y/z) vector class                                     //
-//                                                                      //
-// This is part of collection of utility classes for GL in TGLUtil.h/cxx//
-// These provide const and non-const accessors Arr() / CArr() to a GL   //
-// compatible internal field - so can be used directly with OpenGL C API//
-// calls. They are not intended to be fully featured just provide       //
-// minimum required.                                                    //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLVector3
+\ingroup opengl
+3 component (x/y/z) vector class.
+
+This is part of collection of utility classes for GL in TGLUtil.h/cxx
+These provide const and non-const accessors Arr() / CArr() to a GL
+compatible internal field - so can be used directly with OpenGL C API
+calls. They are not intended to be fully featured just provide
+minimum required.
+*/
 
 ClassImp(TGLVector3);
 
@@ -190,14 +185,11 @@ TGLVector3::~TGLVector3()
 {
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLLine3                                                             //
-//                                                                      //
-// 3D space, fixed length, line class, with direction / length 'vector',//
-// passing through point 'vertex'. Just wraps a TGLVector3 / TGLVertex3 //
-// pair.                                                                //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLLine3
+\ingroup opengl
+3D space, fixed length, line class, with direction / length 'vector',
+passing through point 'vertex'. Just wraps a TGLVector3 / TGLVertex3 pair.
+*/
 
 ClassImp(TGLLine3);
 
@@ -254,12 +246,10 @@ void TGLLine3::Draw() const
    glEnd();
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLRect                                                              //
-//                                                                      //
-// Viewport (pixel base) 2D rectangle class                             //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLRect
+\ingroup opengl
+Viewport (pixel base) 2D rectangle class.
+*/
 
 ClassImp(TGLRect);
 
@@ -356,19 +346,17 @@ Rgl::EOverlap TGLRect::Overlap(const TGLRect & other) const
    }
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLPlane                                                             //
-//                                                                      //
-// 3D plane class - of format Ax + By + Cz + D = 0                      //
-//                                                                      //
-// This is part of collection of simple utility classes for GL only in  //
-// TGLUtil.h/cxx. These provide const and non-const accessors Arr() &   //
-// CArr() to a GL compatible internal field - so can be used directly   //
-// with OpenGL C API calls - which TVector3 etc cannot (easily).        //
-// They are not intended to be fully featured just provide minimum      //
-// required.                                                            //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLPlane
+\ingroup opengl
+3D plane class - of format Ax + By + Cz + D = 0
+
+This is part of collection of simple utility classes for GL only in
+TGLUtil.h/cxx. These provide const and non-const accessors Arr() &
+CArr() to a GL compatible internal field - so can be used directly
+with OpenGL C API calls - which TVector3 etc cannot (easily).
+They are not intended to be fully featured just provide minimum
+required.
+*/
 
 ClassImp(TGLPlane);
 
@@ -588,13 +576,13 @@ std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & p1, const TGLPlane &
 ///
 /// The return a std::pair
 ///
-/// first (Bool_t)                   second (TGLVertex3)
-/// kTRUE - line/plane intersect     intersection vertex on plane
-/// kFALSE - no line/plane intersect undefined
+///  - first (Bool_t)                   second (TGLVertex3)
+///  - kTRUE - line/plane intersect     intersection vertex on plane
+///  - kFALSE - no line/plane intersect undefined
 ///
 /// If intersection is not found (first == kFALSE) & 'extend' was kTRUE (infinite line)
 /// this implies line and plane are parallel. If 'extend' was kFALSE, then
-/// either line parallel or insuffient length.
+/// either line parallel or insufficient length.
 
 std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & plane, const TGLLine3 & line, Bool_t extend)
 {
@@ -619,21 +607,19 @@ std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & plane, const TGLLine
    return std::make_pair(kTRUE, line.Start() + toPlane);
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLMatrix                                                            //
-//                                                                      //
-// 16 component (4x4) transform matrix - column MAJOR as per GL.        //
-// Provides limited support for adjusting the translation, scale and    //
-// rotation components.                                                 //
-//                                                                      //
-// This is part of collection of simple utility classes for GL only in  //
-// TGLUtil.h/cxx. These provide const and non-const accessors Arr() &   //
-// CArr() to a GL compatible internal field - so can be used directly   //
-// with OpenGL C API calls - which TVector3 etc cannot (easily).        //
-// They are not intended to be fully featured just provide minimum      //
-// required.                                                            //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLMatrix
+\ingroup opengl
+16 component (4x4) transform matrix - column MAJOR as per GL.
+Provides limited support for adjusting the translation, scale and
+rotation components.
+
+This is part of collection of simple utility classes for GL only in
+TGLUtil.h/cxx. These provide const and non-const accessors Arr() &
+CArr() to a GL compatible internal field - so can be used directly
+with OpenGL C API calls - which TVector3 etc cannot (easily).
+They are not intended to be fully featured just provide minimum
+required.
+*/
 
 ClassImp(TGLMatrix);
 
@@ -732,7 +718,7 @@ TGLMatrix::TGLMatrix(const TGLMatrix & other)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destroy matirx object
+/// Destroy matrix object
 
 TGLMatrix::~TGLMatrix()
 {
@@ -904,7 +890,7 @@ void TGLMatrix::Scale(const TGLVector3 & scale)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Update martix so resulting transform has been rotated about 'pivot'
+/// Update matrix so resulting transform has been rotated about 'pivot'
 /// (in parent frame), round vector 'axis', through 'angle' (radians)
 /// Equivalent to glRotate function, but with addition of translation
 /// and compounded on top of existing.
@@ -983,7 +969,7 @@ void TGLMatrix::TransformVertex(TGLVertex3 & vertex) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Transpose the top left 3x3 matrix component along major diagonal
-/// Supported as currently incompatability between TGeo and GL matrix
+/// Supported as currently incompatibility between TGeo and GL matrix
 /// layouts for this 3x3 only. To be resolved.
 
 void TGLMatrix::Transpose3x3()
@@ -1184,17 +1170,13 @@ void TGLMatrix::Dump() const
 }
 
 
-//==============================================================================
-// TGLColor
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Class encapsulating color information in preferred GL format - an
-// array of four unsigned bytes.
-// Color index is also cached for easier interfacing with the
-// traditional ROOT graphics.
-//
+/** \class TGLColor
+\ingroup opengl
+Class encapsulating color information in preferred GL format - an
+array of four unsigned bytes.
+Color index is also cached for easier interfacing with the
+traditional ROOT graphics.
+*/
 
 ClassImp(TGLColor);
 
@@ -1233,7 +1215,7 @@ TGLColor::TGLColor(Color_t color_index, Char_t transparency)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Dectructor.
+/// Destructor.
 
 TGLColor::~TGLColor()
 {
@@ -1263,7 +1245,7 @@ Color_t TGLColor::GetColorIndex() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns transparecy value.
+/// Returns transparency value.
 
 Char_t TGLColor::GetTransparency() const
 {
@@ -1365,14 +1347,10 @@ TString TGLColor::AsString() const
 }
 
 
-//==============================================================================
-// TGLColorSet
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Class encapsulating a set of colors used throughout standard rendering.
-//
+/** \class TGLColorSet
+\ingroup opengl
+Class encapsulating a set of colors used throughout standard rendering.
+*/
 
 ClassImp(TGLColorSet);
 
@@ -1440,15 +1418,10 @@ void TGLColorSet::StdLightBackground()
 }
 
 
-//==============================================================================
-// TGLUtil
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Wrapper class for various misc static functions - error checking,
-// draw helpers etc.
-//
+/** \class TGLUtil
+\ingroup opengl
+Wrapper class for various misc static functions - error checking, draw helpers etc.
+*/
 
 ClassImp(TGLUtil);
 
@@ -1628,7 +1601,7 @@ void TGLUtil::SetDefaultDrawQuality(UInt_t dq)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check current GL error state, outputing details via ROOT
+/// Check current GL error state, outputting details via ROOT
 /// Error method if one
 
 Int_t TGLUtil::CheckError(const char * loc)
@@ -1672,7 +1645,7 @@ UInt_t TGLUtil::UnlockColor()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns true if color lockcount is greater than 0.
+/// Returns true if color lock-count is greater than 0.
 
 Bool_t TGLUtil::IsColorLocked()
 {
@@ -2255,7 +2228,7 @@ void TGLUtil::RenderPolyLine(const TAttLine& aline, Char_t transp,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Setup drawing parrameters according to passed TAttLine.
+/// Setup drawing parameters according to passed TAttLine.
 
 void TGLUtil::BeginAttLine(const TAttLine& aline, Char_t transp,
                            Int_t pick_radius, Bool_t selection)
@@ -2408,7 +2381,7 @@ void TGLUtil::DrawLine(const TGLVertex3 & start, const TGLVector3 & vector,
       gluCylinder(quad.Get(), size, 0.0, headHeight, fgDrawQuality, 1);
    } else if (head == kLineHeadBox) {
       // Box
-      // TODO: Drawing box should be simplier - maybe make
+      // TODO: Drawing box should be simpler - maybe make
       // a static helper which BB + others use.
       // Single face tesselation - ugly lighting
       gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
@@ -2590,7 +2563,7 @@ void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
       TGLVector3 axis = maxPos - minPos;
       TGLVector3 axisViewport = camera.WorldDeltaToViewport(minPos, axis);
 
-      // Skip drawning if viewport projection of axis very small - labels will overlap
+      // Skip drawing if viewport projection of axis very small - labels will overlap
       // Occurs with orthographic cameras
       if (axisViewport.Mag() < 1) {
          continue;
@@ -2768,6 +2741,10 @@ TGLDisableGuard::~TGLDisableGuard()
 {
    glEnable(GLenum(fCap));
 }
+
+/** \class TGLSelectionBuffer
+\ingroup opengl
+*/
 
 ClassImp(TGLSelectionBuffer);
 
@@ -3777,7 +3754,7 @@ void DrawAxes(Int_t fp, const Int_t *vp, const TGLVertex3 *box, const TGLPlotCoo
    const Double_t rightMidLabel = points[fp][rightType];
    const Double_t rightLabel    = points[right][rightType];
 
-   if (xLeft - xMid || yLeft - yMid) {//To supress error messages from TGaxis
+   if (xLeft - xMid || yLeft - yMid) {//To suppress error messages from TGaxis
       TAxis *axis = leftType ? yAxis : xAxis;
       if (leftLabel < leftMidLabel)
          Draw2DAxis(axis, xLeft, yLeft, xMid, yMid, leftLabel, leftMidLabel,
@@ -3787,7 +3764,7 @@ void DrawAxes(Int_t fp, const Int_t *vp, const TGLVertex3 *box, const TGLPlotCoo
                      leftType ? coord->GetYLog() : coord->GetXLog());
    }
 
-   if (xRight - xMid || yRight - yMid) {//To supress error messages from TGaxis
+   if (xRight - xMid || yRight - yMid) {//To suppress error messages from TGaxis
       TAxis *axis = rightType ? yAxis : xAxis;
 
       if (rightMidLabel < rightLabel)

@@ -22,13 +22,10 @@
 #include "TError.h"
 #include "TROOT.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TX11GLManager                                                        //
-//                                                                      //
-// The TX11GLManager is X11 implementation of TGLManager.               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TX11GLManager
+\ingroup opengl
+The TX11GLManager is X11 implementation of TGLManager.
+*/
 
 struct TX11GLManager::TGLContext_t {
    //these are numbers returned by gVirtualX->AddWindow and gVirtualX->AddPixmap
@@ -145,9 +142,7 @@ private:
    TX11GLImpl &operator = (const TX11GLImpl &);
 };
 
-
 ClassImp(TX11GLManager)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -393,7 +388,7 @@ Bool_t TX11GLManager::AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Resize off screen devive.
+/// Resize off screen device.
 
 Bool_t TX11GLManager::ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {

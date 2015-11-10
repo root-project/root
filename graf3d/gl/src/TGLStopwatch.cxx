@@ -18,14 +18,12 @@
 #include <sys/time.h> // For gettimeofday()
 #endif
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLStopwatch                                                         //
-//                                                                      //
-// Stopwatch object for timing GL work. We do not use the TStopwatch as //
-// we need to perform GL flushing to get accurate times + we record     //
-// timing overheads here.                                               //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLStopwatch
+\ingroup opengl
+Stopwatch object for timing GL work. We do not use the TStopwatch as
+we need to perform GL flushing to get accurate times + we record
+timing overheads here.
+*/
 
 ClassImp(TGLStopwatch);
 

@@ -12,13 +12,11 @@
 #include "TGLSAFrame.h"
 #include "TGLSAViewer.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLSAFrame                                                           //
-//                                                                      //
-// Standalone GL Viewer GUI main frame. Is aggregated in TGLSAViewer -  //
-// top level standalone viewer object.                                  //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLSAFrame
+\ingroup opengl
+Standalone GL Viewer GUI main frame. Is aggregated in TGLSAViewer -
+top level standalone viewer object.
+*/
 
 ClassImp(TGLSAFrame)
 
@@ -48,7 +46,7 @@ TGLSAFrame::~TGLSAFrame()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Process GUI message - defered back up to TGLSAViewer::ProcessFrameMessage()
+/// Process GUI message - deferred back up to TGLSAViewer::ProcessFrameMessage()
 
 Bool_t TGLSAFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
@@ -61,7 +59,7 @@ Bool_t TGLSAFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 void TGLSAFrame::CloseWindow()
 {
    // Ask our owning viewer to close
-   // Has to be defered so that our GUI event thread can process this event
+   // Has to be deferred so that our GUI event thread can process this event
    // and emit signals - otherwise deleted object is called to emit events
    // Not very nice but seems to be only reliable way to close down
    TTimer::SingleShot(50, "TGLSAViewer", &fViewer, "Close()");

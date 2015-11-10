@@ -12,16 +12,17 @@
 #include "TGLPShapeRef.h"
 #include "TGLPhysicalShape.h"
 
-//______________________________________________________________________
-//
-// Base class for references to TGLPysicalShape that need to be notified
-// when the shape is destroyed.
-// Could also deliver 'change' notifications.
+/** \class TGLPShapeRef
+\ingroup opengl
+Base class for references to TGLPysicalShape that need to be notified
+when the shape is destroyed.
+Could also deliver 'change' notifications.
+*/
 
 ClassImp(TGLPShapeRef);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default contructor.
+/// Default constructor.
 
 TGLPShapeRef::TGLPShapeRef() :
    fNextPSRef (0),
@@ -51,7 +52,7 @@ TGLPShapeRef::~TGLPShapeRef()
 /// This is virtual so that sub-classes can perform other tasks
 /// on change. This function should be called first from there.
 ///
-/// This is also called from destructor of the refereced physical
+/// This is also called from destructor of the referenced physical
 /// shape with 0 argument.
 
 void TGLPShapeRef::SetPShape(TGLPhysicalShape * shape)

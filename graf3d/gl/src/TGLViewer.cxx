@@ -64,35 +64,31 @@
 #define GL_BGRA GL_BGRA_EXT
 #endif
 
-//==============================================================================
-// TGLViewer
-//==============================================================================
+/** \class TGLViewer
+\ingroup opengl
+Base GL viewer object - used by both standalone and embedded (in pad)
+GL. Contains core viewer objects :
 
-//______________________________________________________________________
-//
-// Base GL viewer object - used by both standalone and embedded (in pad)
-// GL. Contains core viewer objects :
-//
-// GL scene - collection of main drawn objects - see TGLStdScene
-// Cameras (fXyzzCamera) - ortho and perspective cameras - see TGLCamera
-// Clipping (fClipXyzz) - collection of clip objects - see TGLClip
-// Manipulators (fXyzzManip) - collection of manipulators - see TGLManip
-//
-// It maintains the current active draw styles, clipping object,
-// manipulator, camera etc.
-//
-// TGLViewer is 'GUI free' in that it does not derive from any ROOT GUI
-// TGFrame etc - see TGLSAViewer for this. However it contains GUI
-// GUI style methods HandleButton() etc to which GUI events can be
-// directed from standalone frame or embedding pad to perform
-// interaction.
-//
-// Also, the TGLWidget needs to be created externally. It is not owned
-// by the viewer.
-//
-// For embedded (pad) GL this viewer is created directly by plugin
-// manager. For standalone the derived TGLSAViewer is.
-//
+GL scene - collection of main drawn objects - see TGLStdScene
+Cameras (fXyzzCamera) - ortho and perspective cameras - see TGLCamera
+Clipping (fClipXyzz) - collection of clip objects - see TGLClip
+Manipulators (fXyzzManip) - collection of manipulators - see TGLManip
+
+It maintains the current active draw styles, clipping object,
+manipulator, camera etc.
+
+TGLViewer is 'GUI free' in that it does not derive from any ROOT GUI
+TGFrame etc - see TGLSAViewer for this. However it contains GUI
+GUI style methods HandleButton() etc to which GUI events can be
+directed from standalone frame or embedding pad to perform
+interaction.
+
+Also, the TGLWidget needs to be created externally. It is not owned
+by the viewer.
+
+For embedded (pad) GL this viewer is created directly by plugin
+manager. For standalone the derived TGLSAViewer is.
+*/
 
 ClassImp(TGLViewer);
 
@@ -440,7 +436,7 @@ void TGLViewer::InitGL()
 void TGLViewer::RequestDraw(Short_t LODInput)
 {
    fRedrawTimer->Stop();
-   // Ignore request if GL window or context not yet availible or shown.
+   // Ignore request if GL window or context not yet available or shown.
    if ((!fGLWidget && fGLDevice == -1) || (fGLWidget && !fGLWidget->IsMapped()))
    {
       return;
@@ -789,7 +785,7 @@ Bool_t TGLViewer::SavePicture()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save current image in various formats (gif, gif+, jpg, png, eps, pdf).
-/// 'gif+' will append image to an existng file (animated gif).
+/// 'gif+' will append image to an existing file (animated gif).
 /// 'eps' and 'pdf' do not fully support transparency and texturing.
 /// The viewer window most be fully contained within the desktop but
 /// can be covered by other windows.
@@ -827,7 +823,7 @@ Bool_t TGLViewer::SavePicture(const TString &fileName)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save current image in various formats (gif, gif+, jpg, png).
-/// 'gif+' will append image to an existng file (animated gif).
+/// 'gif+' will append image to an existing file (animated gif).
 /// Back-Buffer is used for capturing of the image.
 /// The viewer window most be fully contained within the desktop but
 /// can be covered by other windows.
@@ -879,7 +875,7 @@ Bool_t TGLViewer::SavePictureUsingBB(const TString &fileName)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save current image in various formats (gif, gif+, jpg, png).
-/// 'gif+' will append image to an existng file (animated gif).
+/// 'gif+' will append image to an existing file (animated gif).
 /// Frame-Buffer-Object is used for capturing of the image - OpenGL
 /// 1.5 is required.
 /// The viewer window does not have to be visible at all.
@@ -1104,7 +1100,7 @@ TImage* TGLViewer::GetPictureUsingFBO(Int_t w, Int_t h,Float_t pixel_object_scal
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save picture with given width (height scaled proportinally).
+/// Save picture with given width (height scaled proportionally).
 /// If pixel_object_scale is true (default), the corresponding
 /// scaling gets calculated from the current window size.
 
@@ -1118,7 +1114,7 @@ Bool_t TGLViewer::SavePictureWidth(const TString &fileName, Int_t width,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save picture with given height (width scaled proportinally).
+/// Save picture with given height (width scaled proportionally).
 /// If pixel_object_scale is true (default), the corresponding
 /// scaling gets calculated from the current window size.
 
@@ -1595,7 +1591,7 @@ void TGLFaderHelper::MakeFadeStep()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Animate fading from curernt value to fade over given time (sec)
+/// Animate fading from current value to fade over given time (sec)
 /// and number of steps.
 
 void TGLViewer::AutoFade(Float_t fade, Float_t time, Int_t steps)
@@ -1623,7 +1619,7 @@ void TGLViewer::UseLightColorSet()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Swtich between dark and light colorsets.
+/// Switch between dark and light colorsets.
 
 void TGLViewer::SwitchColorSet()
 {
@@ -1699,7 +1695,7 @@ Bool_t TGLViewer::IsUsingDefaultColorSetForNewViewers()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns true if curremt color set is dark.
+/// Returns true if current color set is dark.
 
 Bool_t TGLViewer::IsColorSetDark() const
 {
@@ -1734,7 +1730,7 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, Int_t width, Int_t height)
 
 void TGLViewer::SetViewport(const TGLRect& vp)
 {
-   // Set viewr viewport from TGLRect.
+   // Set viewer viewport from TGLRect.
 
    SetViewport(vp.X(), vp.Y(), vp.Width(), vp.Height());
 }
@@ -1835,7 +1831,7 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
 
    if (fCurrentCamera != prev)
    {
-      // Ensure any viewport has been propigated to the current camera
+      // Ensure any viewport has been propagated to the current camera
       fCurrentCamera->SetViewport(fViewport);
       RefreshPadEditor(this);
 
@@ -1865,7 +1861,7 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
 ///
 /// 'camera' defines the ortho camera - one of kCameraOrthoXOY / XOZ / ZOY
 /// 'left' / 'right' / 'top' / 'bottom' define the WORLD coordinates which
-/// corresepond with the left/right/top/bottom positions on the GL viewer viewport
+/// correspond with the left/right/top/bottom positions on the GL viewer viewport
 /// E.g. for kCameraOrthoXOY camera left/right are X world coords,
 /// top/bottom are Y world coords
 /// As this is an orthographic camera the other axis (in eye direction) is
@@ -1912,13 +1908,13 @@ void TGLViewer::SetOrthoCamera(ECameraType camera,
 /// does not need to be the current camera - though you will not see
 /// the effect if it is not.
 ///
-/// 'camera' defines the persp camera - one of kCameraPerspXOZ, kCameraPerspYOZ, kCameraPerspXOY
-/// 'fov' - field of view (lens angle) in degrees (clamped to 0.1 - 170.0)
-/// 'dolly' - distance from 'center'
-/// 'center' - world position from which dolly/hRotate/vRotate are measured
-///             camera rotates round this, always facing in (in center of viewport)
-/// 'hRotate' - horizontal rotation from initial configuration in degrees
-/// 'hRotate' - vertical rotation from initial configuration in degrees
+///  - 'camera' defines the persp camera - one of kCameraPerspXOZ, kCameraPerspYOZ, kCameraPerspXOY
+///  - 'fov' - field of view (lens angle) in degrees (clamped to 0.1 - 170.0)
+///  - 'dolly' - distance from 'center'
+///  - 'center' - world position from which dolly/hRotate/vRotate are measured
+///                camera rotates round this, always facing in (in center of viewport)
+///  - 'hRotate' - horizontal rotation from initial configuration in degrees
+///  - 'hRotate' - vertical rotation from initial configuration in degrees
 
 void TGLViewer::SetPerspectiveCamera(ECameraType camera,
                                      Double_t fov, Double_t dolly,
@@ -2184,7 +2180,7 @@ void TGLViewer::MouseIdle(TGLPhysicalShape *shape, UInt_t posx, UInt_t posy)
 /**************************************************************************/
 /**************************************************************************/
 ////////////////////////////////////////////////////////////////////////////////
-/// Calcaulate and return pixel distance to nearest viewer object from
+/// Calculate and return pixel distance to nearest viewer object from
 /// window location px, py
 /// This is provided for use when embedding GL viewer into pad
 
@@ -2198,7 +2194,7 @@ Int_t TGLViewer::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process event of type 'event' - one of EEventType types,
-/// occuring at window location px, py
+/// occurring at window location px, py
 /// This is provided for use when embedding GL viewer into pad
 
 void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)

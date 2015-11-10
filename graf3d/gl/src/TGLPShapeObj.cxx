@@ -11,10 +11,9 @@
 
 #include "TGLPShapeObj.h"
 
-//______________________________________________________________________
-// TGLPShapeObj
-//
-// Wrap TGLPysicalShape into TObject so that it can be edited using GED.
-//
+/** \class TGLPShapeObj
+\ingroup opengl
+Wrap TGLPysicalShape into TObject so that it can be edited using GED.
+*/
 
 ClassImp(TGLPShapeObj)

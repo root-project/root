@@ -14,16 +14,12 @@
 
 #include <string.h>
 
-//==============================================================================
-// TGLSelectRecordBase
-//==============================================================================
-
-//______________________________________________________________________
-//
-// Base class for select records.
-// Supports initialization from a raw GL record (UInt_t*) and
-// copies the name-data into internal array.
-//
+/** \class
+\ingroup opengl TGLSelectRecordBase
+Base class for select records.
+Supports initialization from a raw GL record (UInt_t*) and
+copies the name-data into internal array.
+*/
 
 ClassImp(TGLSelectRecordBase);
 
@@ -127,7 +123,7 @@ void TGLSelectRecordBase::Set(UInt_t* data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reinitalize all data to null values.
+/// Reinitialise all data to null values.
 
 void TGLSelectRecordBase::Reset()
 {
@@ -140,16 +136,12 @@ void TGLSelectRecordBase::Reset()
 }
 
 
-//==============================================================================
-// TGLSelectRecord
-//==============================================================================
-
-//______________________________________________________________________
-//
-// Standard selection record including information about containing
-// scene and details ob out selected object (TGLPhysicalShape*,
-// TObject* or simply a void* for foreign scenes).
-//
+/** \class TGLSelectRecord
+\ingroup opengl
+Standard selection record including information about containing
+scene and details ob out selected object (TGLPhysicalShape*,
+TObject* or simply a void* for foreign scenes).
+*/
 
 ClassImp(TGLSelectRecord);
 
@@ -251,7 +243,7 @@ void TGLSelectRecord::Set(UInt_t* data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reinitalize all data to null values.
+/// Reinitialise all data to null values.
 
 void TGLSelectRecord::Reset()
 {
@@ -293,14 +285,10 @@ Bool_t TGLSelectRecord::AreSameSelectionWise(const TGLSelectRecord& r1,
 }
 
 
-//==============================================================================
-// TGLOvlSelectRecord
-//==============================================================================
-
-//______________________________________________________________________
-//
-// Selection record for overlay objects.
-//
+/** \class TGLOvlSelectRecord
+\ingroup opengl
+Selection record for overlay objects.
+*/
 
 ClassImp(TGLOvlSelectRecord);
 
@@ -362,7 +350,7 @@ void TGLOvlSelectRecord::Set(UInt_t* data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reinitalize all data to null values.
+/// Reinitialise all data to null values.
 
 void TGLOvlSelectRecord::Reset()
 {

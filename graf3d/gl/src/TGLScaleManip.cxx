@@ -14,15 +14,12 @@
 #include "TGLCamera.h"
 #include "TGLIncludes.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLScaleManip                                                        //
-//                                                                      //
-// Scale manipulator - attaches to physical shape and draws local axes  //
-// widgets with box heads. User can mouse over (turns yellow) and L     //
-// click/drag to scale along this axis.                                 //
-// Widgets use standard 3D package axes colours: X red, Y green, Z blue.//
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLScaleManip
+\ingroup opengl
+Scale manipulator - attaches to physical shape and draws local axes
+widgets with box heads. User can mouse over (turns yellow) and L
+click/drag to scale along this axis.
+*/
 
 ClassImp(TGLScaleManip)
 
@@ -42,7 +39,7 @@ TGLScaleManip::TGLScaleManip(TGLPhysicalShape * shape) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destory the scale manipulator
+/// Destroy the scale manipulator
 
 TGLScaleManip::~TGLScaleManip()
 {

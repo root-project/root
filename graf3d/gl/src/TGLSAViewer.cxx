@@ -69,7 +69,7 @@ DIRECT SCENE INTERACTIONS\n\n\
    \tCtrl-Home  --- switch external/automatic camera center\n\
 \n\
    LEFT mouse button -- ROTATE (ORBIT) the scene by holding the mouse button and moving\n\
-   the mouse (perspective camera, needs to be enabled in menu for orthograpic cameras).\n\
+   the mouse (perspective camera, needs to be enabled in menu for orthographic cameras).\n\
    By default, the scene will be rotated about its center. To select arbitrary center\n\
    bring up the viewer-editor (e.g., shift-click into empty background) and use\n\
    'Camera center' controls in the 'Guides' tab.\n\
@@ -93,7 +93,7 @@ DIRECT SCENE INTERACTIONS\n\n\
    to viewer-centric, set in your .rootrc file:\n\
       OpenGL.EventHandler.ViewerCentricControls: 1\n\
 \n\
-   Double clik will show GUI editor of the viewer (if assigned).\n\
+   Double click will show GUI editor of the viewer (if assigned).\n\
 \n\
    RESET the camera via the button in viewer-editor or Home key.\n\
 \n\
@@ -176,14 +176,10 @@ MANIPULATORS\n\
    cannot be selected/dragged.\n";
 
 
-//==============================================================================
-// TGLSAViewer
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// The top level standalone GL-viewer - created via plugin manager.
-
+/** \class TGLSAViewer
+\ingroup opengl
+The top level standalone GL-viewer - created via plugin manager.
+*/
 
 ClassImp(TGLSAViewer);
 

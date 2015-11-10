@@ -14,15 +14,13 @@
 #include "TGLCamera.h"
 #include "TGLIncludes.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLTransManip                                                        //
-//                                                                      //
-// Translation manipulator - attaches to physical shape and draws local //
-// axes widgets with arrow heads. User can mouse over (turns yellow) and//
-// L click/drag to translate along this axis.                           //
-// Widgets use standard 3D package axes colours: X red, Y green, Z blue.//
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLTransManip
+\ingroup opengl
+Translation manipulator - attaches to physical shape and draws local
+axes widgets with arrow heads. User can mouse over (turns yellow) and
+L click/drag to translate along this axis.
+Widgets use standard 3D package axes colours: X red, Y green, Z blue.
+*/
 
 ClassImp(TGLTransManip)
 
@@ -43,7 +41,7 @@ TGLTransManip::TGLTransManip(TGLPhysicalShape * shape) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destory the translation manipulator
+/// Destroy the translation manipulator
 
 TGLTransManip::~TGLTransManip()
 {

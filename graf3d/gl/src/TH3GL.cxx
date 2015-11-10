@@ -27,9 +27,10 @@
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
-//______________________________________________________________________________
-// OpenGL renderer class for TH3.
-//
+/** \class TH3GL
+\ingroup opengl
+OpenGL renderer class for TH3.
+*/
 
 ClassImp(TH3GL);
 
@@ -57,8 +58,6 @@ TH3GL::TH3GL(TH3 *th3, TPolyMarker3D *pm) :
 TH3GL::~TH3GL()
 {
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
@@ -108,8 +107,6 @@ void TH3GL::SetBBox()
 {
    fBoundingBox.Set(fPlotPainter->RefBackBox().Get3DBox());
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Render with OpenGL.

@@ -123,7 +123,7 @@ void TGLScene::TSceneInfo::ClearAfterUpdate()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Quantize LODs for gice render-context.
+/// Quantize LODs for given render-context.
 
 void TGLScene::TSceneInfo::Lodify(TGLRnrCtx& ctx)
 {
@@ -244,35 +244,32 @@ void TGLScene::TSceneInfo::DumpDrawStats()
 }
 
 
-//==============================================================================
-// TGLScene
-//==============================================================================
+/** \class TGLScene
+\ingroup opengl
+TGLScene provides management and rendering of ROOT's default 3D
+/object representation as logical and physical shapes.
 
-//______________________________________________________________________________
-//
-// TGLScene provides managememnt and rendering of ROOT's default 3D
-// object representation as logical and physical shapes.
-//
-// A GL scene is the container for all the viewable objects (shapes)
-// loaded into the viewer. It consists of two main stl::maps containing
-// the TGLLogicalShape and TGLPhysicalShape collections, and interface
-// functions enabling viewers to manage objects in these. The physical
-// shapes defined the placement of copies of the logical shapes - see
-// TGLLogicalShape/TGLPhysicalShape for more information on relationship
-//
-// The scene can be drawn by owning viewer, passing camera, draw style
-// & quality (LOD), clipping etc - see Draw(). The scene can also be
-// drawn for selection in similar fashion - see Select(). The scene
-// keeps track of a single selected physical - which can be modified by
-// viewers.
-//
-// The scene maintains a lazy calculated bounding box for the total
-// scene extents, axis aligned round TGLPhysicalShape shapes.
-//
-// Currently a scene is owned exclusively by one viewer - however it is
-// intended that it could easily be shared by multiple viewers - for
-// efficiency and syncronisation reasons. Hence viewer variant objects
-// camera, clips etc being owned by viewer and passed at draw/select
+A GL scene is the container for all the viewable objects (shapes)
+loaded into the viewer. It consists of two main stl::maps containing
+the TGLLogicalShape and TGLPhysicalShape collections, and interface
+functions enabling viewers to manage objects in these. The physical
+shapes defined the placement of copies of the logical shapes - see
+TGLLogicalShape/TGLPhysicalShape for more information on relationship
+
+The scene can be drawn by owning viewer, passing camera, draw style
+& quality (LOD), clipping etc - see Draw(). The scene can also be
+drawn for selection in similar fashion - see Select(). The scene
+keeps track of a single selected physical - which can be modified by
+viewers.
+
+The scene maintains a lazy calculated bounding box for the total
+scene extents, axis aligned round TGLPhysicalShape shapes.
+
+Currently a scene is owned exclusively by one viewer - however it is
+intended that it could easily be shared by multiple viewers - for
+efficiency and synchronisation reasons. Hence viewer variant objects
+camera, clips etc being owned by viewer and passed at draw/select
+*/
 
 ClassImp(TGLScene);
 
@@ -375,9 +372,9 @@ inline Bool_t TGLScene::ComparePhysicalDiagonals(const TGLPhysicalShape* shape1,
 ///
 /// Sort the TGLPhysical draw list by shape bounding box diagonal, from
 /// large to small. This makes dropout of shapes with time limited
-/// Draw() calls must less noticable. As this does not use projected
+/// Draw() calls must less noticeable. As this does not use projected
 /// size it only needs to be done after a scene content change - not
-/// everytime scene drawn (potential camera/projection change).
+/// every time scene drawn (potential camera/projection change).
 
 void TGLScene::RebuildSceneInfo(TGLRnrCtx& rnrCtx)
 {
@@ -453,8 +450,8 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& rnrCtx)
       const TGLPhysicalShape * drawShape = *phys;
 
       // TODO: Do small skipping first? Probably cheaper than frustum check
-      // Profile relative costs? The frustum check could be done implictly
-      // from the LOD as we project all 8 verticies of the BB onto viewport
+      // Profile relative costs? The frustum check could be done implicitly
+      // from the LOD as we project all 8 vertices of the BB onto viewport
 
       // Work out if we need to draw this shape - assume we do first
       Bool_t drawNeeded = kTRUE;
@@ -701,7 +698,7 @@ void TGLScene::RenderHighlight(TGLRnrCtx&           rnrCtx,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Called after the rendering is finished.
-/// In debug mode draw statistcs is dumped.
+/// In debug mode draw statistics is dumped.
 /// Parent's PostDraw is called for GL cleanup.
 
 void TGLScene::PostDraw(TGLRnrCtx& rnrCtx)
@@ -1101,7 +1098,7 @@ Int_t TGLScene::DestroyLogicals()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find and return logical shape identified by unqiue logid.
+/// Find and return logical shape identified by unique logid.
 /// Returns 0 if not found.
 
 TGLLogicalShape * TGLScene::FindLogical(TObject* logid) const
@@ -1215,7 +1212,7 @@ Int_t TGLScene::DestroyPhysicals()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find and return physical shape identified by unqiue 'ID'.
+/// Find and return physical shape identified by unique 'ID'.
 /// Returns 0 if not found.
 
 TGLPhysicalShape* TGLScene::FindPhysical(UInt_t phid) const
@@ -1449,7 +1446,7 @@ void TGLScene::EndSmartRefresh()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find and return logical shape identified by unqiue 'ID' in refresh-cache.
+/// Find and return logical shape identified by unique 'ID' in refresh-cache.
 /// Returns 0 if not found.
 
 TGLLogicalShape * TGLScene::FindLogicalSmartRefresh(TObject* ID) const
@@ -1518,7 +1515,7 @@ UInt_t TGLScene::SizeOfScene() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Print sizes of logical nad physical-shape maps.
+/// Print sizes of logical and physical-shape maps.
 
 void TGLScene::DumpMapSizes() const
 {

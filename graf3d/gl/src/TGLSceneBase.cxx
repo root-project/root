@@ -22,28 +22,23 @@
 #include <string>
 #include <algorithm>
 
-//==============================================================================
-// TGLSceneBase
-//==============================================================================
+/** \class TGLSceneBase
+\ingroup opengl
+Scene base-class --  provides basic interface expected by the
+TGLViewer or its sub-classes:
+  - unique scene id
+  - scene locking
+  - overall bounding box
+  - list of viewers displaying the scene (for update propagation)
+  - virtual interface for draw/select/render (?)
 
-//______________________________________________________________________
-//
-// Scene base-class --  provides basic interface expected by the
-// TGLViewer or its sub-classes:
-// * unique scene id
-// * scene locking
-// * overall bounding box
-// * list of viewers displaying the scene (for update propagation)
-// * virtual interface for draw/select/render (?)
-//
-// The standard ROOT OpenGL scene is implemented in direct sub-class
-// TGLScene.
-//
-// Note that while each scene can be shared among several viewers, ALL
-// of them are obliged to share the same display-list space (this can
-// be achieved on GL-context creation time; Matevz believes that by
-// default all GL contexts must use shared display-lists etc).
+The standard ROOT OpenGL scene is implemented in direct sub-class TGLScene.
 
+Note that while each scene can be shared among several viewers, ALL
+of them are obliged to share the same display-list space (this can
+be achieved on GL-context creation time; Matevz believes that by
+default all GL contexts must use shared display-lists etc).
+*/
 
 ClassImp(TGLSceneBase);
 
@@ -171,7 +166,7 @@ void TGLSceneBase::RebuildSceneInfo(TGLRnrCtx& ctx)
 /// moderately significant part of render-context has changed.
 ///
 /// Here we update the basic state (clear last-LOD, mark the time,
-/// set global <-> scene transforamtion matrices) and potentially
+/// set global <-> scene transformation matrices) and potentially
 /// study and refine the clipping planes based on scene bounding box.
 
 void TGLSceneBase::UpdateSceneInfo(TGLRnrCtx& ctx)

@@ -16,13 +16,14 @@
 #include "TMath.h"
 #include "TError.h"
 
-//______________________________________________________________________________
-//
-// Rotate manipulator - attaches to physical shape and draws local axes
-// widgets - rings drawn from attached physical center, in plane defined
-// by axis. User can mouse over (turns yellow) and L click/drag to
-// rotate attached physical round the ring center.
-// Widgets use standard 3D package axes colours: X red, Y green, Z blue.
+/** \class TGLRotateManip
+\ingroup opengl
+Rotate manipulator - attaches to physical shape and draws local axes
+widgets - rings drawn from attached physical center, in plane defined
+by axis. User can mouse over (turns yellow) and L click/drag to
+rotate attached physical round the ring center.
+Widgets use standard 3D package axes colours: X red, Y green, Z blue.
+*/
 
 ClassImp(TGLRotateManip);
 
@@ -36,8 +37,8 @@ Double_t TGLRotateManip::Angle(const TGLVector3& v1, const TGLVector3& v2)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate signed angle between vectors v1 and v2, using ref to define right handed coord system
-/// If v1.v2 parallel to ref vector: +ive for clockwise, -ive for anticlockwise
-/// If v1.v2 antiparallel to ref vector: -ive for clockwise, +ive for anticlockwise
+///  - If v1.v2 parallel to ref vector: +ive for clockwise, -ive for anticlockwise
+///  - If v1.v2 antiparallel to ref vector: -ive for clockwise, +ive for anticlockwise
 
 Double_t TGLRotateManip::Angle(const TGLVector3& v1, const TGLVector3& v2,
                                const TGLVector3& ref)
@@ -76,7 +77,7 @@ TGLRotateManip::TGLRotateManip(TGLPhysicalShape* shape) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destory the rotation manipulator
+/// Destroy the rotation manipulator
 
 TGLRotateManip::~TGLRotateManip()
 {

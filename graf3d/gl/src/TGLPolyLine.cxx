@@ -23,12 +23,10 @@
 #include "TClass.h"
 #include "TError.h"
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* Begin_Html
-<center><h2>GL Polyline</h2></center>
+/** \class TGLPolyLine
+\ingroup opengl
 To draw a 3D polyline in a GL window.
-End_Html */
+*/
 
 ClassImp(TGLPolyLine)
 

@@ -20,7 +20,7 @@
 #include "TEnv.h"
 #include "TGLIncludes.h"
 
-// Direct inclussion of FTGL headers is deprecated in ftgl-2.1.3 while
+// Direct inclusion of FTGL headers is deprecated in ftgl-2.1.3 while
 // ftgl-2.1.2 shipped with ROOT requires manual inclusion.
 #ifndef BUILTIN_FTGL
 # include <FTGL/ftgl.h>
@@ -41,13 +41,13 @@
 #define FTGL_EXTRUDE 4
 #define FTGL_TEXTURE 5
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class TGLText
+\ingroup opengl
+GL Text.
 
-/* Begin_Html
-<center><h2>GL Text</h2></center>
 To draw a 3D text in a GL window. This class uses uses FTGL to render text.
 FTGL is a package making the interface between the Free Type fonts and GL.
-End_Html */
+*/
 
 ClassImp(TGLText)
 

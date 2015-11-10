@@ -31,20 +31,21 @@
 #include <algorithm>
 #include <stdexcept>
 
-//______________________________________________________________________
-//
-// Base class for GL viewers. Provides a basic scene management and a
-// small set of control variables (camera, LOD, style, clip) that are
-// used by the scene classes. Renering wrappers are available but
-// minimal.
-//
-// There is no concept of GL-context here ... we just draw
-// into whatever is set from outside.
-//
-// Development notes:
-//
-// Each viewer automatically creates a TGLRnrCtx and passes it down
-// all render functions.
+/** \class TGLViewerBase
+\ingroup opengl
+Base class for GL viewers. Provides a basic scene management and a
+small set of control variables (camera, LOD, style, clip) that are
+used by the scene classes. Renering wrappers are available but
+minimal.
+
+There is no concept of GL-context here ... we just draw
+into whatever is set from outside.
+
+Development notes:
+
+Each viewer automatically creates a TGLRnrCtx and passes it down
+all render functions.
+*/
 
 ClassImp(TGLViewerBase);
 
