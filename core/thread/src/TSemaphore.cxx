@@ -1,5 +1,5 @@
 // @(#)root/thread:$Id$
-// Author: Fons Rademakers   02/07/97
+// Author: Fons Rademakers   02/07/97 (Revised: G Ganis, Nov 2015)
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -20,102 +20,93 @@
 
 #include "TSemaphore.h"
 
-#include "TThread.h"
-
-ClassImp(TSemaphore)
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create counting semaphore.
 
-TSemaphore::TSemaphore(UInt_t initial) : fCond(&fMutex)
+TSemaphore::TSemaphore(Int_t initial) : fValue(initial), fWakeups(0)
 {
-   fValue = initial;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If semaphore value is > 0 then decrement it and carry on. If it's
-/// already 0 then block. If millisec > 0, apply a relative timeout
-/// of millisec milliseconds. Returns 0 in case of success, or mutex errno.
+/// If the semaphore value is > 0 then decrement it and carry on, else block,
+/// waiting on the condition until it is signaled.
+/// Returns always 0, for backward compatibility with the first implementation.
+
+Int_t TSemaphore::Wait()
+{
+   std::unique_lock<std::mutex> lk(fMutex);
+   fValue--;
+
+   if (fValue < 0) {
+      do {
+         fCond.wait(lk);
+      } while (fWakeups < 1);
+      // We have been waken-up: decrease the related counter
+      fWakeups--;
+   }
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// If the semaphore value is > 0 then decrement it and carry on, else block.
+/// If millisec > 0 then a relative timeout of millisec milliseconds is applied.
+/// For backward compatibility with the first implementation, millisec == 0 means
+/// no timeout.
+/// Returns 1 if timed-out, 0 otherwise.
 
 Int_t TSemaphore::Wait(Int_t millisec)
 {
-   Int_t rc = 0;
+   // For backward compatibility with the first implementation
+   if (millisec <= 0) return Wait();
 
-   if ((rc = fMutex.Lock())) {
-      Error("Wait","Lock returns %d [%ld]", rc, TThread::SelfId());
-      return rc;
-   }
-
-   while (fValue == 0) {
-
-      int crc = (millisec > 0) ? fCond.TimedWaitRelative(millisec)
-                               : fCond.Wait();
-
-      if (crc != 0) {
-         if (crc == 1 && gDebug > 0) {
-            Info("Wait", "TCondition::Wait() returns %d [%ld]",
-                  crc, TThread::SelfId());
-         } else if (crc != 1) {
-            Error("Wait", "TCondition::Wait() returns %d [%ld]",
-                  crc, TThread::SelfId());
-         }
-         if ((rc = fMutex.UnLock()))
-            Error("Wait", "UnLock on error returns %d [%ld]",
-                  rc, TThread::SelfId());
-         return crc;
-      }
-   }
-
+   Int_t rc= 0;
+   std::unique_lock<std::mutex> lk(fMutex);
    fValue--;
 
-   if ((rc = fMutex.UnLock())) {
-      Error("Wait", "UnLock returns %d [%ld]", rc, TThread::SelfId());
-      return rc;
+   if (fValue < 0) {
+      std::cv_status cvs;
+      do {
+         cvs = fCond.wait_for(lk,std::chrono::milliseconds(millisec));
+      } while (fWakeups < 1 && cvs != std::cv_status::timeout);
+      if (cvs == std::cv_status::timeout) {
+         rc = 1;
+      } else {
+         // We have been waken-up: decrease the related counter
+         fWakeups--;
+      }
    }
-
-   return 0;
+   return rc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If semaphore value is > 0 then decrement it and return 0. If it's
-/// already 0 then return 1 or mutex errno.
+/// If the semaphore value is > 0 then decrement it and return 0. If it's
+/// already 0 then return 1. This call never blocks.
 
 Int_t TSemaphore::TryWait()
 {
-   int r = fMutex.Lock();
-   if (r) { Error("TryWait","Lock returns %d [%ld]", r, TThread::SelfId()); return r; }
-
-   if (fValue == 0) {
-      r = fMutex.UnLock();
-      if (r) Error("TryWait","UnLock on fail returns %d [%ld]", r, TThread::SelfId());
+   std::unique_lock<std::mutex> lk(fMutex);
+   if (fValue > 0) {
+      fValue--;
+   } else {
       return 1;
    }
-
-   fValue--;
-
-   r = fMutex.UnLock();
-   if (r) { Error("TryWait","UnLock returns %d [%ld]", r, TThread::SelfId()); return r; }
-
    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If any threads are blocked in Wait(), wake one of them up and
-/// increment the value of the semaphore. Returns 0 in case of success, or
-/// mutex errno.
+/// Increment the value of the semaphore. If any threads are blocked in Wait(),
+/// wakeup one of them.
+/// Returns always 0, for backward compatibility with the first implementation.
 
 Int_t TSemaphore::Post()
 {
-   int r = fMutex.Lock();
-   if (r) { Error("Post","Lock returns %d [%ld]", r, TThread::SelfId()); return r; }
-
-   Bool_t doSignal = fValue == 0;
+   std::unique_lock<std::mutex> lk(fMutex);
    fValue++;
 
-   r = fMutex.UnLock();
-   if (r) { Error("Post","UnLock returns %d [%ld]", r, TThread::SelfId()); return r; }
-
-   if (doSignal) fCond.Signal();
-
+   if (fValue <= 0) {
+      // There were threads waiting: wake up one
+      fWakeups++;
+      fCond.notify_one();
+   }
    return 0;
 }
