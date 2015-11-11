@@ -104,3 +104,8 @@ configure_file(commands2.txt . COPYONLY)
 ROOTTEST_ADD_TEST(roottest-root-multicore-fork
                   EXEC fork
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
+ROOTTEST_ADD_TEST(roottest-root-multicore-semaphore
+                 MACRO  tSemaphore.C
+                 OUTCNVCMD grep -v -e  "tSemaphore"
+                 OUTREF tSemaphore.ref)
