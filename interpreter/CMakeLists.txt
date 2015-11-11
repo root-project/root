@@ -11,7 +11,7 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON)
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF)
 if(cxx14)
-  set(LLVM_ENABLE_CXX1Y ON)
+  set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "")
 endif()
 
 set(CMAKE_REQUIRED_QUIET 1)  # Make the configuration of LLVM quiet
