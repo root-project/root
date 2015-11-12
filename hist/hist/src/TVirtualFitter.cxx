@@ -26,16 +26,32 @@
 // Implement a thread local static member as a replacement
 // for TVirtualFitter::fgFitter
 namespace {
+   struct FitterGlobals {
+      FitterGlobals() : fFitter(nullptr),fMaxPar(0) {}
+
+      TVirtualFitter *fFitter;
+      Int_t           fMaxPar;
+      TString         fDefault;
+   };
+   static FitterGlobals &GetGlobals() {
+      TTHREAD_TLS_DECL(FitterGlobals,globals);
+      return globals;
+   }
    static TVirtualFitter *&GetGlobalFitter() {
-      TTHREAD_TLS(TVirtualFitter *) fgFitter = nullptr;
-      return fgFitter;
+      return GetGlobals().fFitter;
+   }
+   static Int_t &GetGlobalMaxPar() {
+      return GetGlobals().fMaxPar;
+   }
+   static TString &GetGlobalDefault() {
+      return GetGlobals().fDefault;
    }
 }
-Int_t           TVirtualFitter::fgMaxpar    = 0;
+//Int_t           TVirtualFitter::fgMaxpar    = 0;
 // Int_t           TVirtualFitter::fgMaxiter   = 5000;
 // Double_t        TVirtualFitter::fgPrecision = 1e-6;
 // Double_t        TVirtualFitter::fgErrorDef  = 1;
-TString         TVirtualFitter::fgDefault   = "";
+//TString         TVirtualFitter::fgDefault   = "";
 
 ClassImp(TVirtualFitter)
 
@@ -126,7 +142,7 @@ TVirtualFitter::~TVirtualFitter()
    delete [] fCache;
    if ( GetGlobalFitter() == this ) {
       GetGlobalFitter()    = 0;
-      fgMaxpar    = 0;
+      GetGlobalMaxPar()    = 0;
    }
    fMethodCall = 0;
    fFCN        = 0;
@@ -139,19 +155,19 @@ TVirtualFitter *TVirtualFitter::Fitter(TObject *obj, Int_t maxpar)
    // If the fitter does not exist, the default TFitter is created.
    // Don't delete the returned fitter object, it will be re-used.
 
-   if (GetGlobalFitter() && maxpar > fgMaxpar) {
+   if (GetGlobalFitter() && maxpar > GetGlobalMaxPar()) {
       delete GetGlobalFitter();
       GetGlobalFitter() = 0;
    }
 
    if (!GetGlobalFitter()) {
       TPluginHandler *h;
-      if (fgDefault.Length() == 0) fgDefault = gEnv->GetValue("Root.Fitter","Minuit");
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFitter",fgDefault))) {
+      if (GetGlobalDefault().Length() == 0) GetGlobalDefault() = gEnv->GetValue("Root.Fitter","Minuit");
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFitter",GetGlobalDefault()))) {
          if (h->LoadPlugin() == -1)
             return 0;
          GetGlobalFitter() = (TVirtualFitter*) h->ExecPlugin(1, maxpar);
-         fgMaxpar = maxpar;
+         GetGlobalMaxPar() = maxpar;
       }
    }
 
@@ -178,7 +194,7 @@ const char *TVirtualFitter::GetDefaultFitter()
 {
    // static: return the name of the default fitter
 
-   //return fgDefault.Data();
+   //return GetGlobalDefault().Data();
    return ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
 }
 
@@ -223,10 +239,10 @@ void TVirtualFitter::SetDefaultFitter(const char *name)
    // static: set name of default fitter
 
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer(name,"");
-   if (fgDefault == name) return;
+   if (GetGlobalDefault() == name) return;
    delete GetGlobalFitter();
    GetGlobalFitter() = 0;
-   fgDefault = name;
+   GetGlobalDefault() = name;
 }
 
 //______________________________________________________________________________
@@ -235,7 +251,7 @@ void TVirtualFitter::SetFitter(TVirtualFitter *fitter, Int_t maxpar)
    // Static function to set an alternative fitter
 
    GetGlobalFitter() = fitter;
-   fgMaxpar = maxpar;
+   GetGlobalMaxPar() = maxpar;
 }
 
 //______________________________________________________________________________
