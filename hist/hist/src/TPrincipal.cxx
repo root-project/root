@@ -1238,7 +1238,7 @@ void TPrincipal::Print(Option_t *opt) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PRIVATE METHOD:
-/// Begin_html
+/// Begin_Html
 
 void TPrincipal::SumOfSquareResiduals(const Double_t *x, Double_t *s)
 {
