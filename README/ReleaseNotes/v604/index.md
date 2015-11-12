@@ -960,6 +960,10 @@ Changes will be part of the future 6.04/08
 
 * Resolve issues on SL6, 32bits when during process tear down libCling.so is removed before all the dictionary have been tear down.
 
+### Hist
+
+* Improve thread safety of TH1::Fit by making static member of TVirtualFitter thread local.  This fixes [ROOT-7791].
+
 ### TNetXNGFileStager
 - Fixed ROOT-7703. This restores the behavior of Locate() to that found with
 TXNetFileStager: Rather than return only the xrootd server's reply, the endpoint
