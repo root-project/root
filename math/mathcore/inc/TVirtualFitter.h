@@ -49,12 +49,12 @@ protected:
    TMethodCall           *fMethodCall; //Pointer to MethodCall in case of interpreted function
    void                 (*fFCN)(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
-   static TVirtualFitter *fgFitter;    //Current fitter (default TFitter)
-   static Int_t           fgMaxpar;    //Maximum number of fit parameters for current fitter
+//   static TVirtualFitter *fgFitter;    //Current fitter (default TFitter)
+//   static Int_t           fgMaxpar;    //Maximum number of fit parameters for current fitter
 //   static Int_t           fgMaxiter;   //Maximum number of iterations
 //   static Double_t        fgErrorDef;  //Error definition (default=1)
 //   static Double_t        fgPrecision; //maximum precision
-   static TString         fgDefault;   //name of the default fitter ("Minuit","Fumili",etc)
+//   static TString         fgDefault;   //name of the default fitter ("Minuit","Fumili",etc)
 
    TVirtualFitter(const TVirtualFitter& tvf);
    TVirtualFitter& operator=(const TVirtualFitter& tvf);
