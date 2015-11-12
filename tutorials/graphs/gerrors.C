@@ -1,8 +1,14 @@
-void gerrors() {
-   //Draw a graph with error bars
-   // To see the output of this macro, click begin_html <a href="gif/gerrors.gif">here</a>. end_html
-   //Author: Rene Brun
+/// \file
+/// \ingroup graphs
+/// Draw a graph with error bars
+/// To see the output of this macro, click begin_html <a href="gif/gerrors.gif">here</a>. end_html
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+void gerrors() {
    TCanvas *c1 = new TCanvas("c1","A Simple Graph with error bars",200,10,700,500);
 
    c1->SetFillColor(42);

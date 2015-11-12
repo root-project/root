@@ -1,3 +1,12 @@
+/// \file
+/// \ingroup graphs
+/// Macro to test interpolation function Approx
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Christian Stratowa, Vienna, Austria.
+
 TCanvas *vC1;
 TGraph *grxy, *grin, *grout;
 
@@ -23,13 +32,6 @@ void DrawSmooth(Int_t pad, const char *title, const char *xt,
 
 void approx()
 {
-//**********************************************
-// Macro to test interpolation function Approx
-// Author: Christian Stratowa, Vienna, Austria.
-// Created: 26 Aug 2001
-//**********************************************
-
-
 // test data (square)
    Int_t n = 11;
    Double_t x[] = {1,2,3,4,5,6,6,6,8,9,10};
