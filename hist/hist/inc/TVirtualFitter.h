@@ -51,9 +51,9 @@ protected:
 
    static TVirtualFitter *fgFitter;    //Current fitter (default TFitter)
    static Int_t           fgMaxpar;    //Maximum number of fit parameters for current fitter
-   static Int_t           fgMaxiter;   //Maximum number of iterations
-   static Double_t        fgErrorDef;  //Error definition (default=1)
-   static Double_t        fgPrecision; //maximum precision
+//   static Int_t           fgMaxiter;   //Maximum number of iterations
+//   static Double_t        fgErrorDef;  //Error definition (default=1)
+//   static Double_t        fgPrecision; //maximum precision
    static TString         fgDefault;   //name of the default fitter ("Minuit","Fumili",etc)
 
    TVirtualFitter(const TVirtualFitter& tvf);
