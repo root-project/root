@@ -1,9 +1,9 @@
-//Display interpreted functions
-//Author: Rene Brun
+/// \file
+/// \ingroup graphics
+/// Display interpreted functions.
+/// \macro_image
+/// author Rene Brun
 void formula1() {
-   //
-   // To see the graphics output of this macro, click begin_html <a href="gif/formula1.gif">here</a>. end_html
-   //
    TCanvas *c1 = new TCanvas("c1","Example with Formula",200,10,700,500);
    //
    // We create a formula object and compute the value of this formula

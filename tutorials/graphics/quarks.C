@@ -1,5 +1,12 @@
-// example illustrating divided pads and Latex
-// Author: Rene Brun
+/// \file
+/// \ingroup graphics
+/// Example illustrating divided pads and Latex.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 void quarks () {
    TCanvas *c1 = new TCanvas("c1", "c1",10,10,630,760);
    c1->SetFillColor(kBlack);

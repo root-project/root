@@ -1,13 +1,20 @@
-TCanvas *earth(){
-  //this tutorial illustrate the special contour options
-  //    "AITOFF"     : Draw a contour via an AITOFF projection
-  //    "MERCATOR"   : Draw a contour via an Mercator projection
-  //    "SINUSOIDAL" : Draw a contour via an Sinusoidal projection
-  //    "PARABOLIC"  : Draw a contour via an Parabolic projection
-  //
-  //Author: Olivier Couet (from an original macro sent by Ernst-Jan Buis)
+/// \file
+/// \ingroup graphics
+/// This tutorial illustrates the special contour options.
+///
+///   - "AITOFF"     : Draw a contour via an AITOFF projection
+///   - "MERCATOR"   : Draw a contour via an Mercator projection
+///   - "SINUSOIDAL" : Draw a contour via an Sinusoidal projection
+///   - "PARABOLIC"  : Draw a contour via an Parabolic projection
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet (from an original macro sent by Ernst-Jan Buis)
 
-   gStyle->SetPalette(57);
+TCanvas *earth(){
+
+   gStyle->SetPalette(1);
    gStyle->SetOptTitle(1);
    gStyle->SetOptStat(0);
 

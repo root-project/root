@@ -1,10 +1,15 @@
-// This script illustrates the danger of using asymmetric symbols.
-// Non-symmetric symbols should be used carefully in plotting.
-// These two graphs show how misleading a careless use of symbols can be.
-// The two plots represent the same data sets but because of a bad symbol
-// choice, the two plots on the top appear further apart than for the bottom
-// example.
-//Author: Olivier Couet
+/// \file
+/// \ingroup graphics
+/// This script illustrates the danger of using asymmetric symbols.
+///
+/// \macro_image
+///
+/// Non-symmetric symbols should be used carefully in plotting.
+/// These two graphs show how misleading a careless use of symbols can be.
+/// The two plots represent the same data sets but because of a bad symbol
+/// choice, the two plots on the top appear further apart than for the bottom
+/// example.
+/// \author Olivier Couet
 
 void markerwarning()
 {

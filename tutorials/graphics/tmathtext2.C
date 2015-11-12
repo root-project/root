@@ -1,5 +1,8 @@
-// This macro draw all possible symbols provided by TMathtext
-//Author: Olivier Couet
+/// \file
+/// \ingroup graphics
+/// This macro draw all possible symbols provided by TMathtext.
+/// \macro_image
+/// \author Olivier Couet
 
 {
    TCanvas *c1 = new TCanvas("mathtext","TMathText symbol",1200,1400);

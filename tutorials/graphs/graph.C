@@ -1,8 +1,13 @@
-void graph() {
-   //Draw a simple graph
-   // To see the output of this macro, click begin_html <a href="gif/graph.gif">here</a>. end_html
-   //Author: Rene Brun
+/// \file
+/// \ingroup graphs
+/// Draw a simple graph.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+void graph() {
    TCanvas *c1 = new TCanvas("c1","A Simple Graph Example",200,10,700,500);
 
    c1->SetFillColor(42);

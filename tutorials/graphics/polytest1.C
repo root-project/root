@@ -1,15 +1,16 @@
-//Author: Timur Pocheptsov, 20.01.2014.
-//
-//This macro is testing new "compacting" algorithm in TPadPainter
-//(it reduces the number of polygon's vertices using actual pixel coordinates).
-//It's not really usefull, but just to test that the resulting polygon
-//is still reasonable. Initial number of points is 1000000, after "compression"
-//it's 523904 (with default canvas size, before you tried to resize it) - so almost half of
-//vertices were removed but you can still see the reasonable shape. If you resize
-//a canvas to a smaller size, the number of vertices after compression can be something like 5000 and even less.
-//It's easy to 'fool' this algorithm though in this particular case (ellipse is a kind of fringe case,
-//you can easily have a sequence of almost unique vertices (at a pixel level).
-//
+/// \file
+/// \ingroup graphics
+/// This macro is testing the "compacting" algorithm in TPadPainter.
+/// It reduces the number of polygon's vertices using actual pixel coordinates.
+/// \macro_image
+/// It's not really usefull, but just to test that the resulting polygon
+/// is still reasonable. Initial number of points is 1000000, after "compression"
+/// it's 523904 (with default canvas size, before you tried to resize it) - so almost half of
+/// vertices were removed but you can still see the reasonable shape. If you resize
+/// a canvas to a smaller size, the number of vertices after compression can be something like 5000 and even less.
+/// It's easy to 'fool' this algorithm though in this particular case (ellipse is a kind of fringe case,
+/// you can easily have a sequence of almost unique vertices (at a pixel level).
+/// \author Timur Pocheptsov
 
 //Includes for ACLiC.
 #include <cassert>

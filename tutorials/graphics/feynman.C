@@ -1,9 +1,14 @@
+/// \file
+/// \ingroup graphics
+/// Draw Feynman diagrams.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Otto Schaile
+
 void feynman()
 {
-   //Draw Feynman diagrams
-   // To see the output of this macro, click begin_html <a href="gif/feynman.gif">here</a>. end_html
-   //Author: Otto Schaile
-
    TCanvas *c1 = new TCanvas("c1", "A canvas", 10,10, 600, 300);
    c1->Range(0, 0, 140, 60);
    Int_t linsav = gStyle->GetLineWidth();

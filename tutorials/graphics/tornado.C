@@ -1,8 +1,13 @@
-void tornado() {
-//Show 3-d polymarkers
-// To see the output of this macro, click begin_html <a href="gif/tornado.gif" >here</a> end_html
-//Author: Rene Brun
+/// \file
+/// \ingroup graphics
+/// Show 3-d polymarker.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+void tornado() {
     gBenchmark->Start("tornado");
 
     double PI = 3.141592653;

@@ -1,11 +1,21 @@
-void triangles(Int_t ntriangles=50) {
-  //generate small triangles randomly in the canvas.
-  //Each triangle has a unique id and a random color in the color palette
-  //root > .x triangles.C
-  //then click on any triangle. A message showing the triangle number
-  //and its color will be printed.
-  //Author: Rene Brun
+/// \file
+/// \ingroup graphics
+/// Generate small triangles randomly in the canvas.
+/// Each triangle has a unique id and a random color in the color palette
+///
+/// ~~~ {.cpp}
+/// root > .x triangles.C
+/// ~~~
+///
+/// Then click on any triangle. A message showing the triangle number
+/// and its color will be printed.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+void triangles(Int_t ntriangles=50) {
   TCanvas *c1 = new TCanvas("c1","triangles",10,10,700,700);
   TRandom r;
   Double_t dx = 0.2; Double_t dy = 0.2;

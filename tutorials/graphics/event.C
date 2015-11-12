@@ -1,5 +1,12 @@
-//Illustrate some basic primitives
-//Author: Rene Brun
+/// \file
+/// \ingroup graphics
+/// Illustrate some basic primitives.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 void event(){
    TCanvas *c1 = new TCanvas("c1","ROOT Event description",700,500);
    c1->Range(0,0,14,15.5);

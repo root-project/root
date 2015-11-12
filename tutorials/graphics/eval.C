@@ -1,7 +1,13 @@
+/// \file
+/// \ingroup graphics
+/// This macro produces the flowchart of TFormula::Eval.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 void eval(){
-   //
-   // This macro produces the flowchart of TFormula::Eval
-   //Author: Rene Brun
 
    TCanvas *c1 = new TCanvas("c1");
    c1->Range(0,0,20,10);

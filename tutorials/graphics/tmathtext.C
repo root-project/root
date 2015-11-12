@@ -1,6 +1,12 @@
-// This macro draws various formula in a canvas and prints the canvas
-// as a Postscript file using TMathText.
-//Author: Yue Shi Lai
+/// \file
+/// \ingroup graphics
+/// This macro draws various formula in a canvas.
+/// It also prints the canvas as a Postscript file using TMathText.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Yue Shi Lai
 
 {
    TCanvas *c1 = new TCanvas("c1");

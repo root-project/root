@@ -1,5 +1,12 @@
-//Show how to shade an area between two graphs
-//Author: Rene Brun
+/// \file
+/// \ingroup graphics
+/// Show how to shade an area between two graphs
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 void graphShade() {
    TCanvas *c1 = new TCanvas("c1",
       "A Simple Graph Example",200,10,700,500);
