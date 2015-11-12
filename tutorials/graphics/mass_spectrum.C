@@ -1,13 +1,19 @@
-// This macro makes use of some basic graphics primitives such as line, arrow
-// and text. It as been written using the TCanvas ToolBar to produce a first
-// draft and was then modified for fine adjustments. Note also the use
-// of C funtions. They allow to simplify the macro reading and editing by
-// avoiding code repetition or defining some graphics attributes in one single
-// place. This technique to generate drawings may appear not very user friendly
-// compare to all the "wysiwyg" graphics editors available. In some cases it can
-// be more powerful than a GUI interface because it allows to generate very
-// precise drawing and using computation to generate them.
-//Author: Olivier Couet
+/// \file
+/// \ingroup graphics
+/// This macro makes use of some basic graphics primitives such as line, arrow
+/// and text. It as been written using the TCanvas ToolBar to produce a first
+/// draft and was then modified for fine adjustments. Note also the use
+/// of C functions. They allow to simplify the macro reading and editing by
+/// avoiding code repetition or defining some graphics attributes in one single
+/// place. This technique to generate drawings may appear not very user friendly
+/// compare to all the "wysiwyg" graphics editors available. In some cases it can
+/// be more powerful than a GUI interface because it allows to generate very
+/// precise drawing and using computation to generate them.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
 
 void hline (Double_t x, Double_t y)
 {

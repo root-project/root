@@ -1,5 +1,12 @@
-//Draw a pave text
-//Author: Olivier Couet
+/// \file
+/// \ingroup graphics
+/// Draw a pave text.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
+
 TCanvas *pavetext(){
    TCanvas *c = new TCanvas("c");
    TPaveText *pt = new TPaveText(.05,.1,.95,.8);

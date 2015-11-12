@@ -1,5 +1,10 @@
-//macro illustrating how to animate a picture using a Timer
-//Author: Rene Brun
+/// \file
+/// \ingroup graphics
+/// Macro illustrating how to animate a picture using a Timer.
+///
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TStyle.h"
 #include "TCanvas.h"

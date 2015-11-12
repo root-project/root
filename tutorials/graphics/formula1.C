@@ -1,8 +1,12 @@
 /// \file
 /// \ingroup graphics
 /// Display interpreted functions.
+///
 /// \macro_image
-/// author Rene Brun
+/// \macro_code
+///
+/// \author Rene Brun
+
 void formula1() {
    TCanvas *c1 = new TCanvas("c1","Example with Formula",200,10,700,500);
    //

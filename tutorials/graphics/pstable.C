@@ -1,9 +1,15 @@
+/// \file
+/// \ingroup graphics
+/// Display all possible types of ROOT/Postscript characters.
+///
+/// \macro_code
+///
+/// \author Olivier Couet
+
 void table(Float_t x1, Float_t x2, Float_t yrange, TText *t, const char **symbol, Bool_t octal);
 
 void pstable()
 {
-// Display all possible types of ROOT/Postscript characters
-
    const char *symbol1[] =
       {"A","B","C","D","E","F","G","H","I","J","K","L","M","N",
        "O","P","Q","R","S","T","U","V","W","X","Y","Z",

@@ -1,9 +1,14 @@
-void gaxis(){
-//Simple example illustrating how to draw TGaxis objects in various formats.
-//To see the output of this macro, click begin_html <a href="gif/gaxis.gif" >here</a> end_html
-//Author: Rene Brun
+/// \file
+/// \ingroup graphics
+/// Simple example illustrating how to draw TGaxis objects in various formats.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
-  TCanvas *c1 = new TCanvas("c1","Examples of Gaxis",10,10,700,500);
+void gaxis(){
+  TCanvas *c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,500);
 
   c1->Range(-10,-1,10,1);
 

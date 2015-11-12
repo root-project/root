@@ -1,6 +1,12 @@
-// Example of a graph of data moving in time
-// Use the canvas "File/Quit" to exit from this example
-//Author: Olivier Couet
+/// \file
+/// \ingroup graphics
+/// Example of a graph of data moving in time.
+/// Use the canvas "File/Quit" to exit from this example
+///
+/// \macro_code
+///
+/// \author  Olivier Couet
+
 void gtime() {
    TCanvas *c1 = new TCanvas("c1");
    const Int_t ng = 100;

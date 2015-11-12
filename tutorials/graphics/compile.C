@@ -1,8 +1,13 @@
-void compile(){
-   //
-   // This macro produces the flowchart of TFormula::Compile
-   //Author: Rene Brun
+/// \file
+/// \ingroup graphics
+/// This macro produces the flowchart of TFormula::Compile
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+void compile(){
    TCanvas *c1 = new TCanvas("c1");
    c1->Range(0,0,1,1);
    TPaveLabel *ptc = new TPaveLabel(0.02,0.42,0.2,0.58,"Compile");

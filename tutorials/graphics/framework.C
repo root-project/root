@@ -1,9 +1,13 @@
-void framework() {
-   // An example with basic graphics illustrating the Object Oriented
-   // User Interface of ROOT. The begin_html <a href="gif/framework.gif">picture</a> end_html
-   // produced is the one shown in begin_html<a href="../../Mission.html">Mission Statement.</a> end_html
-   //Author: Rene Brun
+/// \file
+/// \ingroup graphics
+/// An example with basic graphics illustrating the Object Oriented User Interface of ROOT.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+void framework() {
    TCanvas *c1 = new TCanvas("c1","The ROOT Framework",200,10,700,500);
    c1->Range(0,0,19,12);
    //

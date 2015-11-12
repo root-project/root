@@ -1,10 +1,18 @@
-//Author: Timur Pocheptsov, 20.01.2014.
-//
-//This macro is testing new "compacting" algorithm in TPadPainter
-//(it reduces the number of polygon's vertices using actual pixel coordinates).
-//In principle, this test case is what our histograms (fringe cases) are:
-//"saw-like" polygon (bins == teeth).
-//
+/// \file
+/// \ingroup graphics
+/// This macro is testing the "compacting" algorithm in TPadPainter.
+/// It reduces the number of polygon's vertices using actual pixel coordinates.
+///
+/// \macro_image
+///
+/// This macro is testing new "compacting" algorithm in TPadPainter
+/// (it reduces the number of polygon's vertices using actual pixel coordinates).
+/// In principle, this test case is what our histograms (fringe cases) are:
+/// "saw-like" polygon (bins == teeth).
+///
+/// \macro_code
+///
+/// \author Timur Pocheptsov
 
 //Includes for ACLiC.
 #include <cassert>

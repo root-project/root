@@ -1,5 +1,12 @@
-// This macro draws 4 Latex-style formula in a canvas and prints the canvas as a Postscript file.
-//Author: Rene Brun
+/// \file
+/// \ingroup graphics
+/// This macro draws 4 Latex-style formula in a canvas and prints the canvas as a Postscript file.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 void latex2(){
    TCanvas *c1 = new TCanvas("c1");
    TLatex l;

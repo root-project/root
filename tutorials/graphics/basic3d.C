@@ -1,8 +1,13 @@
-void basic3d(){
-   // Show 3-D polylines and markers
-   // To see the output of this macro, click begin_html <a href="gif/basic3d.gif">here</a> end_html
-   //
+/// \file
+/// \ingroup graphics
+/// Show 3-D polylines and markers.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+void basic3d(){
    TCanvas *c1 = new TCanvas("c1","PolyLine3D & PolyMarker3D Window",200,10,700,500);
 
    // create a pad

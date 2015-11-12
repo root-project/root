@@ -1,8 +1,14 @@
-void analyze() {
-   //
-   //This macro produces the flowchart of TFormula::Analyze
-   //Author: Rene Brun
+/// \file
+/// \ingroup graphics
+/// This macro produces the flowchart of TFormula::Analyze.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+
+void analyze() {
    TCanvas *c1 = new TCanvas("c1","Analyze.mac",620,790);
    c1->Range(-1,0,19,30);
    TPaveLabel *pl1 = new TPaveLabel(0,27,3.5,29,"Analyze");

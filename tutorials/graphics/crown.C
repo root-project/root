@@ -1,5 +1,12 @@
-//Draw crowns
-//Author: Olivier Couet
+/// \file
+/// \ingroup graphics
+/// Draw crowns.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
+
 TCanvas *crown(){
    TCanvas *c1 = new TCanvas("c1","c1",400,400);
    TCrown *cr1 = new TCrown(.5,.5,.3,.4);

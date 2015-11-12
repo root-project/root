@@ -1,16 +1,23 @@
+/// \file
+/// \ingroup graphics
+/// Example of canvas partitioning.
+/// Sometimes the Divide() method is not appropriate to divide a Canvas.
+/// Because of the left and right margins, all the pads do not have the
+/// same width and height. CanvasPartition does that properly. This
+/// example also ensure that the axis labels and titles have the same
+/// sizes and that the tick marks length is uniform.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
+
 void CanvasPartition(TCanvas *C,const Int_t Nx = 2,const Int_t Ny = 2,
                      Float_t lMargin = 0.15, Float_t rMargin = 0.05,
                      Float_t bMargin = 0.15, Float_t tMargin = 0.05);
 
 void canvas2()
 {
-//Example of canvas partitioning
-// Sometimes the Divide() method is not appropriate to divide a Canvas.
-// Because of the left and right margins, all the pads do not have the
-// same width and height. CanvasPartition does that properly. This
-// example also ensure that the axis labels and titles have the same
-// sizes and that the tick marks length is uniform.
-//Author:
 
    gStyle->SetOptStat(0);
 
@@ -46,7 +53,7 @@ void canvas2()
       for (Int_t j=0;j<Ny;j++) {
          C->cd(0);
 
-         // Get the pads previosly created.
+         // Get the pads previously created.
          char pname[16];
          sprintf(pname,"pad_%i_%i",i,j);
          pad[i][j] = (TPad*) gROOT->FindObject(pname);

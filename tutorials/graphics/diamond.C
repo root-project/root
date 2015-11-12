@@ -1,5 +1,12 @@
-//Draw a diamond
-//Author: Olivier Couet
+/// \file
+/// \ingroup graphics
+/// Draw a diamond.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
+
 TCanvas *diamond(){
    TCanvas *c = new TCanvas("c");
    TDiamond *d = new TDiamond(.05,.1,.95,.8);

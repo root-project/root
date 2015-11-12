@@ -1,28 +1,31 @@
+/// \file
+/// \ingroup graphics
+/// Using TExec to handle keyboard events and TComplex to draw the Mandelbrot set.
+///
+/// Pressing the keys 'z' and 'u' will zoom and unzoom the picture
+/// near the mouse location, 'r' will reset to the default view.
+///
+/// Try it (in compiled mode!) with:   `root mandelbrot.C+`
+///
+/// ### Details
+///
+///    when a mouse event occurs the myexec() function is called (by
+///    using AddExec). Depending on the pressed key, the mygenerate()
+///    function is called, with the proper arguments. Note the
+///    last_x and last_y variables that are used in myexec() to store
+///    the last pointer coordinates (px is not a pointer position in
+///    kKeyPress events).
+///
+/// \macro_code
+///
+/// \author Luigi Bardelli <bardelli@fi.infn.it>
+
 #include <TStyle.h>
 #include <TROOT.h>
 #include <TH2.h>
 #include <TComplex.h>
 #include <TVirtualPad.h>
 #include <TCanvas.h>
-
-//==================================================================
-//
-// Using TExec to handle keyboard events and TComplex to draw the Mandelbrot set.
-// Author : Luigi Bardelli [ bardelli@fi.infn.it ]
-//
-// Pressing the keys 'z' and 'u' will zoom and unzoom the picture
-// near the mouse location, 'r' will reset to the default view.
-//
-// Try it (in compiled mode!) with:   root mandelbrot.C+
-//
-// Details:
-//    when a mouse event occurs the myexec() function is called (by
-//    using AddExec). Depending on the pressed key, the mygenerate()
-//    function is called, with the proper arguments. Note the
-//    last_x and last_y variables that are used in myexec() to store
-//    the last pointer coordinates (px is not a pointer position in
-//    kKeyPress events).
-//==================================================================
 
 TH2F *last_histo=NULL;
 

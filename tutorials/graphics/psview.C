@@ -10,7 +10,7 @@
 ///     2. Double click on System
 ///     3, Open the "Advanced" tab
 ///     4. Click on the "Environment Variables" button
-///     5. Find "Path" in "System varibale list", click on it.
+///     5. Find "Path" in "System variable list", click on it.
 ///     6. Click on the "Edit" button.
 ///     7. In the "Variable value" field add the path of gswin32c
 ///        (after a ";") it should be something like:
