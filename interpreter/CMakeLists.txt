@@ -49,7 +49,7 @@ ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
 #---Do not build LLVM/Clang with modules until it gets fixed----------------------------------------
 if(cxxmodules)
   string(REPLACE "-fmodules -fcxx-modules" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-  string(REPLACE "-fmodules" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+  string(REPLACE "-fmodules " "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 endif(cxxmodules)
 
 #---Build type--------------------------------------------------------------------------------------
