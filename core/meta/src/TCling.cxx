@@ -2146,7 +2146,16 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       return;
    }
 
-   cling::Interpreter::PushTransactionRAII deserRAII(fInterpreter);
+   {
+      // Force possible deserializations first. We need to have no pending
+      // Transaction when passing control flow to the inspector below (ROOT-7779).
+      cling::Interpreter::PushTransactionRAII deserRAII(fInterpreter);
+
+      astContext.getASTRecordLayout(recordDecl);
+
+      for (clang::RecordDecl::field_iterator iField = recordDecl->field_begin(),
+              eField = recordDecl->field_end(); iField != eField; ++iField) {}
+   }
 
    const clang::ASTRecordLayout& recLayout
       = astContext.getASTRecordLayout(recordDecl);
