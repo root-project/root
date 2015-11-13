@@ -215,7 +215,7 @@ namespace ROOT {
          static ::ROOT::TGenericClassInfo
             R__instance(T::Class_Name(), T::Class_Version(),
                         T::DeclFileName(), T::DeclFileLine(),
-                        typeid(T), ROOT::DefineBehavior(ptr, ptr),
+                        typeid(T), ROOT::Internal::DefineBehavior(ptr, ptr),
                         &T::Dictionary, isa_proxy, 0, sizeof(T) );
          R__instance.SetNew(&New);
          R__instance.SetNewArray(&NewArray);
@@ -296,7 +296,7 @@ public: \
    _ClassDefInline_(name,id,,)                         \
    static int DeclFileLine() { return __LINE__; }
 
-#define _ClassDefInterp_(name,id) ClassDefInline(name,id)
+//#define _ClassDefInterp_(name,id) ClassDefInline(name,id)
 
 #define R__UseDummy(name) \
    class _NAME2_(name,_c) { public: _NAME2_(name,_c)() { if (name) { } } }
