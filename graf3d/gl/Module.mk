@@ -73,7 +73,7 @@ INCLUDEFILES += $(GLDEP)
 include/%.h:    $(GLDIRI)/%.h
 		cp $< $@
 
-$(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) \
+$(GLLIB):       GLLIBCXXMODULE $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) \
                 $(GLEWLIB)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
@@ -106,12 +106,12 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 ifeq ($(ARCH),win32)
-$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
+GLLIBCXXMODULE $(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
                             $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
 $(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
                              $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
 else
-$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%)
+GLLIBCXXMODULE $(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%)
 $(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%)
 endif
 
@@ -120,11 +120,21 @@ $(call stripsrc,$(GLDIRS)/TGLText.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINC) $(FT
 
 $(call stripsrc,$(GLDIRS)/TGLFontManager.o): $(FREETYPEDEP)
 $(call stripsrc,$(GLDIRS)/TGLFontManager.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
-$(GLO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
+GLLIBCXXMODULE $(GLO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
 
 # Optimize dictionary with stl containers.
-$(GLDO): NOOPT = $(OPT)
+GLLIBCXXMODULE $(GLDO): NOOPT = $(OPT)
 
 ifeq ($(MACOSX_GLU_DEPRECATED),yes)
-$(GLO) $(GLDO): CXXFLAGS += -Wno-deprecated-declarations
+GLLIBCXXMODULE $(GLO) $(GLDO): CXXFLAGS += -Wno-deprecated-declarations
+endif
+
+# glew.h is special (see $ROOTSYS/build/unix/module.modulemap for details.
+# We need to prebuild a pcm disabling the system module maps.
+# A pcm per set of options is necessary, this is why this is duplicated in eve and glew, too.
+GLLIBCXXMODULE:
+ifneq ($(CXXMODULES),)
+	@echo "Prebuilding pcm for glew.h"
+	@echo '#include "TGLIncludes.h"' | \
+	$(CXX) $(CXXFLAGS) -fno-implicit-module-maps -xc++ -c -
 endif

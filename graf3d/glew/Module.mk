@@ -41,7 +41,7 @@ include/GL/%.h: $(GLEWDIRI)/GL/%.h
 		fi)
 		cp $< $@
 
-$(GLEWLIB):     $(GLEWO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) $(GLEWLIBDEP)
+$(GLEWLIB):     GLEWCXXMODULE $(GLEWO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) $(GLEWLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGLEW.$(SOEXT) $@ \
 		   "$(GLEWO)" \
@@ -62,4 +62,14 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(GLEWO):     CFLAGS += $(OPENGLINCDIR:%=-I%)
+$(GLEWO): CFLAGS += $(OPENGLINCDIR:%=-I%)
+
+# glew.h is special (see $ROOTSYS/build/unix/module.modulemap for details.
+# We need to prebuild a pcm disabling the system module maps.
+# A pcm per set of options is necessary, this is why this is duplicated in eve and gl, too.
+GLEWCXXMODULE:
+ifneq ($(CXXMODULES),)
+	@echo "Prebuilding pcm for glew.h"
+	@echo '#include "TGLIncludes.h"' | \
+	$(CXX) $(CXXFLAGS) -fno-implicit-module-maps -xc++ -c -
+endif

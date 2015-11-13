@@ -35,3 +35,13 @@ ROOT_GENERATE_DICTIONARY(G__GL ${headers} MODULE RGL LINKDEF LinkDef.h OPTIONS "
 ROOT_LINKER_LIBRARY(RGL ${sources} G__GL.cxx  LIBRARIES ${gllibs} GLEW ${FTGL_LIBRARIES} DEPENDENCIES Hist Gui Ged)
 
 ROOT_INSTALL_HEADERS(${installoptions})
+
+if(cxxmodules)
+  # For some reason cmake decides to escape the spaces contained in CMAKE_CXX_FLAGS,
+  # which makes the compiler invocation invalid. Prevent that by making the list
+  # comma separated, which gets translated by cmake into spaces later on.
+  string(REPLACE " " ";" GLEW_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  add_custom_target(glewcxxmodule ALL
+    DEPENDS move_headers
+    COMMAND ${CMAKE_CXX_COMPILER} ${GLEW_CXX_FLAGS} -I${ROOT_INCLUDE_DIR} -fno-implicit-module-maps -xc++ -c ${ROOT_INCLUDE_DIR}/TGLIncludes.h)
+endif(cxxmodules)
