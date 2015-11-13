@@ -533,6 +533,18 @@ bool test31() {
 
 }
 
+bool test32() { 
+// test polynomial are linear and have right number
+   bool ok = true; 
+   TF1 f1("f1","pol2"); 
+   ok &= (f1.GetNumber() == 302); 
+   ok &= (f1.IsLinear() ); 
+
+   TF1 f2("f2","gaus(0)+pol1(3)"); 
+   ok &= (f2.GetNumber() == 0); 
+   ok &= (!f2.IsLinear()); 
+   return ok;
+}
 
    
 void PrintError(int itest)  { 
@@ -583,6 +595,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test29() ) { PrintError(itest); }
    IncrTest(itest); if (!test30() ) { PrintError(itest); }
    IncrTest(itest); if (!test31() ) { PrintError(itest); }
+   IncrTest(itest); if (!test32() ) { PrintError(itest); }
 
    std::cout << ".\n";
     

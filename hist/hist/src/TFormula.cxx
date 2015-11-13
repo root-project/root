@@ -695,7 +695,6 @@ void TFormula::HandlePolN(TString &formula)
    Int_t polPos = formula.Index("pol");
    while(polPos != kNPOS)
    {
-      SetBit(kLinear,1);
 
       Bool_t defaultVariable = false;
       TString variable;
@@ -726,7 +725,7 @@ void TFormula::HandlePolN(TString &formula)
          degree = TString(formula(polPos+3,temp - polPos - 3)).Atoi();
          counter = 0;
       }
-      fNumber = 300 + degree;
+
       TString replacement = TString::Format("[%d]",counter);
       if(polPos - 1 < 0 || !IsFunctionNameChar(formula[polPos-1]) || formula[polPos-1] == ':' )
       {
@@ -767,6 +766,11 @@ void TFormula::HandlePolN(TString &formula)
       if (!formula.Contains(pattern)) {
          Error("HandlePolN","Error handling polynomial function - expression is %s - trying to replace %s with %s ", formula.Data(), pattern.Data(), replacement.Data() );
          break;
+      }
+      if (formula == pattern) {
+         // case of single polynomial
+         SetBit(kLinear,1);
+         fNumber = 300 + degree;
       }
       formula.ReplaceAll(pattern,replacement);
       polPos = formula.Index("pol");
