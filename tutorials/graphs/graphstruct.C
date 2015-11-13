@@ -1,7 +1,14 @@
-// Draw a simple graph structure.
-// The graph layout is made using graphviz. This macro creates some
-// nodes and edges and change a few graphical attributes on some of them.
-// Author: Olivier Couet
+/// \file
+/// \ingroup graphs
+/// Draw a simple graph structure.
+/// The graph layout is made using graphviz. This macro creates some
+/// nodes and edges and change a few graphical attributes on some of them.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
+
 {
    TGraphStruct *gs = new TGraphStruct();
 

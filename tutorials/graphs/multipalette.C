@@ -1,12 +1,17 @@
-//Draw color plots using different color palettes.
-//Author:: Olivier Couet
+/// \file
+/// \ingroup graphs
+/// Draw color plots using different color palettes.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
 
 #include "TStyle.h"
 #include "TColor.h"
 #include "TF2.h"
 #include "TExec.h"
 #include "TCanvas.h"
-
 
 void Pal1()
 {

@@ -1,5 +1,12 @@
-// strip chart example
-// Author: Rene Brun
+/// \file
+/// \ingroup graphs
+/// Strip chart example.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TStopwatch.h"
 #include "TDatime.h"
 #include "TStyle.h"

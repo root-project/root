@@ -1,8 +1,12 @@
-void surfaces() {
-   //Draw 2-Dim functions
-   // To see the output of this macro, click begin_html <a href="gif/surfaces.gif">here</a> end_html
-   //Author: Rene Brun
+/// \file
+/// \ingroup graphs
+/// Draw 2-Dim functions.
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+void surfaces() {
    TCanvas *c1 = new TCanvas("c1","Surfaces Drawing Options",200,10,700,900);
    c1->SetFillColor(42);
    gStyle->SetFrameFillColor(42);

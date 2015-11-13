@@ -1,6 +1,12 @@
-// example of TGraphTime showing how the class could be used to visualize
-// a set of particles with their time stamp in a MonteCarlo program.
-//Author: Rene Brun 14/07/2009
+/// \file
+/// \ingroup graphs
+/// Example of TGraphTime showing how the class could be used to visualize
+/// a set of particles with their time stamp in a MonteCarlo program.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TRandom3.h"
 #include "TMath.h"

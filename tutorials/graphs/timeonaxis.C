@@ -1,23 +1,32 @@
+/// \file
+/// \ingroup graphs
+/// This macro illustrates the use of the time mode on the axis
+/// with different time intervals and time formats. It's result can
+/// be seen begin_html <a href="gif/timeonaxis.gif">here</a> end_html
+/// Through all this script, the time is expressed in UTC. some
+/// information about this format (and others like GPS) may be found at
+/// <a href="http://tycho.usno.navy.mil/systime.html">http://tycho.usno.navy.mil/systime.html</a>
+///  or
+/// <a href="http://www.topology.org/sci/time.html">http://www.topology.org/sci/time.html</a>
+///
+/// The start time is : almost NOW (the time at which the script is executed)
+/// actually, the nearest preceding hour beginning.
+/// The time is in general expressed in UTC time with the C time() function
+/// This will obviously most of the time not be the time displayed on your watch
+/// since it is universal time. See the C time functions for converting this time
+/// into more useful structures.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Damir Buskulic
+
 #include <time.h>
 
 TCanvas *timeonaxis()
 {
-// This macro illustrates the use of the time mode on the axis
-// with different time intervals and time formats. It's result can
-// be seen begin_html <a href="gif/timeonaxis.gif">here</a> end_html
-// Through all this script, the time is expressed in UTC. some
-// information about this format (and others like GPS) may be found at
-// begin_html <a href="http://tycho.usno.navy.mil/systime.html">http://tycho.usno.navy.mil/systime.html</a> end_html
-//  or
-// begin_html <a href="http://www.topology.org/sci/time.html">http://www.topology.org/sci/time.html</a> end_html
-//
-// The start time is : almost NOW (the time at which the script is executed)
-// actualy, the nearest preceding hour beginning.
-// The time is in general expressed in UTC time with the C time() function
-// This will obviously most of the time not be the time displayed on your watch
-// since it is universal time. See the C time functions for converting this time
-// into more useful structures.
-//Author: Damir Buskulic
+
+//Author:
 
    time_t script_time;
    script_time = time(0);
@@ -55,7 +64,7 @@ TCanvas *timeonaxis()
 // Sets time on the X axis
 // The time used is the one set as time offset added to the value
 // of the axis. This is converted into day/month/year hour:min:sec and
-// a reasonnable tick interval value is chosen.
+// a reasonable tick interval value is chosen.
    ht->GetXaxis()->SetTimeDisplay(1);
 
 //======= Build a simple graph beginning at a different time ======

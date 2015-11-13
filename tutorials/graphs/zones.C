@@ -1,9 +1,15 @@
-void zones() {
-// example of script showing how to divide a canvas
-// into adjacent subpads + axis labels on the top and right side
-// of the pads.
-//Author; Rene Brun
+/// \file
+/// \ingroup graphs
+/// Example of script showing how to divide a canvas
+/// into adjacent subpads + axis labels on the top and right side
+/// of the pads.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+void zones() {
    TCanvas *c1 = new TCanvas("c1","multipads",900,700);
    gStyle->SetOptStat(0);
    c1->Divide(2,2,0,0);

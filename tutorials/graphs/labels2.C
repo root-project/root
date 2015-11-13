@@ -1,5 +1,12 @@
-//Setting alphanumeric labels
-//Author: Rene Brun
+/// \file
+/// \ingroup graphs
+/// Setting alphanumeric labels.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 void labels2()
 {
    Int_t i;
@@ -32,7 +39,7 @@ void labels2()
    pt->SetTextAlign(12);
    pt->AddText("Use the axis Context Menu LabelsOption");
    pt->AddText(" \"a\"   to sort by alphabetic order");
-   pt->AddText(" \">\"   to sort by decreasing vakues");
-   pt->AddText(" \"<\"   to sort by increasing vakues");
+   pt->AddText(" \">\"   to sort by decreasing values");
+   pt->AddText(" \"<\"   to sort by increasing values");
    pt->Draw();
 }

@@ -1,8 +1,14 @@
-// This example compares what the system time function gmtime and localtime give
-// with what gives TGaxis. It can be used as referenced test to check if TGaxis
-// is working properly.
-// The original code was developped by Philippe Gras (CEA Saclay. IRFU/SEDI)
-//Author: Philippe Gras, Bertrand Bellenot, Olivier Couet
+/// \file
+/// \ingroup graphs
+/// This example compares what the system time function gmtime and localtime give
+/// with what gives TGaxis. It can be used as referenced test to check if TGaxis
+/// is working properly.
+/// The original code was developed by Philippe Gras (CEA Saclay. IRFU/SEDI)
+///
+/// \macro_image
+/// \macro_code
+///
+/// \authors Philippe Gras, Bertrand Bellenot, Olivier Couet
 
 #if defined(G__WIN32) && defined(__CINT__) && !defined(__MAKECINT__)
 {
@@ -84,7 +90,7 @@ TCanvas * timeonaxis3() {
          ga->SetLineColor(0);
          ga->Draw();
 
-         // Get offset string of axis time format: there is not acccessor
+         // Get offset string of axis time format: there is not accessor
          // to time format in TGaxis.
          // Assumes TAxis use the same format.
          TAxis a(10, 0, 1600000000);

@@ -1,5 +1,11 @@
-//Create and draw a polar graph with PI axis
-//Author: Olivier Couet
+/// \file
+/// \ingroup graphs
+/// Create and draw a polar graph with PI axis
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
 
 void graphpolar2()
 {

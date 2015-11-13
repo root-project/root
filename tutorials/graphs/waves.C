@@ -1,5 +1,12 @@
-//Hint: Spherical waves
-//Author; Otto Schaile
+/// \file
+/// \ingroup graphs
+///
+/// Hint: Spherical waves
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Otto Schaile
 
 #include "TROOT.h"
 #include "TCanvas.h"
@@ -14,7 +21,6 @@
 #include "Riostream.h"
 
 TF2 * finter;
-
 
 //______________________________________________________________
 Double_t interference( Double_t *x, Double_t *par)
