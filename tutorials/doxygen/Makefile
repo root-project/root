@@ -12,7 +12,7 @@ filter:
 doxygen: filter
 	if [ ! -d $(TUTORIALS_OUTPUT_DIRECTORY) ]; then mkdir $(TUTORIALS_OUTPUT_DIRECTORY); fi
 	doxygen
-	rm c1* *.ps *.png *.svg *.pdf *.gif filter stdout.dat
+	rm c1* *.ps *.png *.svg *.pdf *.gif filter stdout.dat *.root
 
 clean:
 	rm -r $(TUTORIALS_OUTPUT_DIRECTORY)
