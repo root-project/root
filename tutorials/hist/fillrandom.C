@@ -1,8 +1,13 @@
-void fillrandom() {
-   //Fill a 1-D histogram from a parametric function
-   // To see the output of this macro, click begin_html <a href="gif/fillrandom.gif">here</a>. end_html
-   //Author: Rene Brun
+/// \file
+/// \ingroup hist
+/// Fill a 1-D histogram from a parametric function.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+void fillrandom() {
    TCanvas *c1 = new TCanvas("c1","The FillRandom example",200,10,700,900);
    c1->SetFillColor(18);
 

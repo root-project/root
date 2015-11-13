@@ -1,13 +1,22 @@
-// Example of bar charts with 1-d histograms
-// Author: Rene Brun
+/// \file
+/// \ingroup hist
+/// Example of bar charts with 1-d histograms.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 TCanvas *hbars() {
    cout << gSystem->DirName(__FILE__) << endl;
-   // try to open first the file cernstaff.root in tutorials/tree directory
+
+   // Try to open first the file cernstaff.root in tutorials/tree directory
    TString filedir = gSystem->DirName(__FILE__);
    filedir += TString("/../tree/");
    TString filename = "cernstaff.root";
    bool fileNotFound = gSystem->AccessPathName(filename); // note opposite return code
-   // if file is not found try to generate it uing the macro tree/cernbuild.C
+
+   // If file is not found try to generate it uing the macro tree/cernbuild.C
    if (fileNotFound) {
       TString macroName = filedir + "cernbuild.C";
       if (!gInterpreter->IsLoaded(macroName)) gInterpreter->LoadMacro(macroName);
@@ -28,11 +37,11 @@ TCanvas *hbars() {
    c1->SetFillColor(42);
    c1->Divide(1,2);
 
-   //horizontal bar chart
+   // Horizontal bar chart
    c1->cd(1); gPad->SetGrid(); gPad->SetLogx(); gPad->SetFrameFillColor(33);
    T->Draw("Nation","","hbar2");
 
-   //vertical bar chart
+   // Vertical bar chart
    c1->cd(2); gPad->SetGrid(); gPad->SetFrameFillColor(33);
    T->Draw("Division>>hDiv","","goff");
    TH1F *hDiv   = (TH1F*)gDirectory->Get("hDiv");

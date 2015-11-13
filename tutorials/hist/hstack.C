@@ -1,8 +1,13 @@
-TCanvas *hstack() {
-// Example of stacked histograms: class THStack
-//
-//  Author: Rene Brun
+/// \file
+/// \ingroup hist
+/// Example of stacked histograms: class THStack.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+TCanvas *hstack() {
    THStack *hs = new THStack("hs","Stacked 1D histograms");
    //create three 1-d histograms
    TH1F *h1st = new TH1F("h1st","test hstack",100,-4,4);

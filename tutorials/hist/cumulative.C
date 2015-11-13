@@ -1,7 +1,12 @@
-// illustrate use of the TH1::GetCumulative method
-//
-// M. Schiller, 2014-11-04
-//
+/// \file
+/// \ingroup hist
+/// Illustrate use of the TH1::GetCumulative method.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author M. Schiller
+
 #include <cassert>
 #include <cmath>
 

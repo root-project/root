@@ -1,4 +1,15 @@
-// 1-D histogram drawing options
+/// \file
+/// \ingroup hist
+/// 1-D histogram drawing options.
+/// We attach (or generate) the ROOT file in `$ROOTSYS/tutorials/hsimple.root`
+/// or `$PWD/hsimple.root`
+/// We draw one histogram in different formats.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TInterpreter.h"
 #include "TCanvas.h"
 #include "TSystem.h"
@@ -13,11 +24,6 @@
 
 void h1draw()
 {
-   // We attach (or generate) the ROOT file in $ROOTSYS/tutorials/hsimple.root
-   // or $PWD/hsimple.root
-   // We draw one histogram in different formats
-   //Author: Rene Brun
-
    TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("h1draw.C","../hsimple.C");
    dir.ReplaceAll("/./","/");

@@ -1,16 +1,13 @@
+/// \file
+/// \ingroup hist
+/// Create grey scale of `200 x 200` boxes.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
+
 {
-   // Create grey scale of nxn boxes.
-   //Author: Olivier Couet
-
-   if (gVirtualX) {
-      Int_t n;
-      gVirtualX->GetPlanes(n);
-      if (n < 15) {
-         printf("Not enough color planes to run this script\n");
-         return;
-      }
-   }
-
    TCanvas *c = new TCanvas("grey", "Grey Scale", 500, 500);
    c->SetBorderMode(0);
 

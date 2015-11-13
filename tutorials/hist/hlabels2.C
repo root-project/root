@@ -1,5 +1,12 @@
-// 2-D histograms with alphanumeric labels
-// author; Rene Brun
+/// \file
+/// \ingroup hist
+/// 2-D histograms with alphanumeric labels.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 TCanvas *hlabels2()
 {
    const Int_t nx = 12;

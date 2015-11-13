@@ -1,19 +1,28 @@
-// echo object at mouse position and show a graphics line
+/// \file
+/// \ingroup hist
+/// Echo object at mouse position and show a graphics line.
+/// Example of macro called when a mouse event occurs in a pad.
+///
+/// Example:
+/// ~~~ {.cpp}
+/// Root > TFile f("hsimple.root");
+/// Root > hpxpy.Draw();
+/// Root > c1.AddExec("ex2",".x exec2.C");
+/// ~~~
+/// When moving the mouse in the canvas, a second canvas shows the
+/// projection along X of the bin corresponding to the Y position
+/// of the mouse. The resulting histogram is fitted with a gaussian.
+/// A "dynamic" line shows the current bin position in Y.
+/// This more elaborated example can be used as a starting point
+/// to develop more powerful interactive applications exploiting CINT
+/// as a development engine.
+///
+/// \macro_code
+///
+/// \author Rene Brun
+
 void exec2()
 {
-   //example of macro called when a mouse event occurs in a pad.
-   // Example:
-   // Root > TFile f("hsimple.root");
-   // Root > hpxpy.Draw();
-   // Root > c1.AddExec("ex2",".x exec2.C");
-   // When moving the mouse in the canvas, a second canvas shows the
-   // projection along X of the bin corresponding to the Y position
-   // of the mouse. The resulting histogram is fitted with a gaussian.
-   // A "dynamic" line shows the current bin position in Y.
-   // This more elaborated example can be used as a starting point
-   // to develop more powerful interactive applications exploiting CINT
-   // as a development engine.
-   //Author: Rene Brun
 
    if (!gPad) {
       Error("exec2", "gPad is null, you are not supposed to run this macro");

@@ -1,4 +1,13 @@
-// Show the slice of a TH2 following the mouse position
+/// \file
+/// \ingroup hist
+/// Show the slice of a TH2 following the mouse position.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
+
 void DynamicSlice()
 {
    // Create a new canvas.
@@ -28,10 +37,8 @@ void DynamicExec()
    // of the mouse. The resulting histogram is fitted with a gaussian.
    // A "dynamic" line shows the current bin position in Y.
    // This more elaborated example can be used as a starting point
-   // to develop more powerful interactive applications exploiting CINT
+   // to develop more powerful interactive applications exploiting Cling
    // as a development engine.
-   //
-   // Author:  Rene Brun
 
    TObject *select = gPad->GetSelected();
    if(!select) return;

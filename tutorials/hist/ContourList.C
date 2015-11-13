@@ -1,10 +1,11 @@
-// Getting Contours From TH2D
-// Author: Josh de Bever
-//         CSI Medical Physics Group
-//         The University of Western Ontario
-//         London, Ontario, Canada
-//   Date: Oct. 22, 2004
-//   Modified by O.Couet (Nov. 26, 2004)
+/// \file
+/// \ingroup hist
+/// Getting Contours From TH2D.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \authors Josh de Bever (CSI Medical Physics Group, The University of Western Ontario, London, Ontario, Canada), Olivier Couet
 
 Double_t SawTooth(Double_t x, Double_t WaveLen);
 

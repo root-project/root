@@ -1,8 +1,13 @@
-{
-   // display the various 2-d drawing options
-   //Author: Rene Brun
+/// \file
+/// \ingroup hist
+/// Display the various 2-d drawing options
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
-   gROOT->Reset();
+{
    gStyle->SetOptStat(0);
    gStyle->SetPalette(1);
    gStyle->SetCanvasColor(33);

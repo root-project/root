@@ -1,12 +1,17 @@
-// make a contour plot and get the first contour in a TPolyMarker
+/// \file
+/// \ingroup hist
+/// Make a contour plot and get the first contour in a TPolyMarker.
+/// This macro generates a color contour plot by selecting entries
+/// from an ntuple file.
+/// The TGraph object corresponding to the first contour line is
+/// accessed and displayed into a separate canvas.
+///
+/// \macro_code
+///
+/// \author Rene Brun
+
 void FirstContour()
 {
-   //this macro generates a color contour plot by selecting entries
-   //from an ntuple file.
-   //The TGraph object corresponding to the first contour line is
-   //accessed and displayed into a separate canvas.
-   //Author: Rene Brun
-
    TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("FirstContour.C","../hsimple.C");
    dir.ReplaceAll("/./","/");
@@ -56,4 +61,3 @@ void FirstContour()
    }
    pm->Draw();
 }
-//--------------end of script contours.C
