@@ -18,7 +18,6 @@ The following people have contributed to this new version:
  Philippe Canal, FNAL,\
  Cristina Cristescu, CERN/SFT,\
  Olivier Couet, CERN/SFT,\
- Kyle Cranmer, NYU, RooStats,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/Alice,\
  Lukasz Janyst, CERN/IT,\
@@ -35,11 +34,9 @@ The following people have contributed to this new version:
  Liza Sakellari, CERN/SFT,\
  Manuel Tobias Schiller,\
  David Smith, CERN/IT,\
- Matevz Tadel, UCSD/CMS, Eve, \
- Vassil Vassilev, CERN/SFT \
- Wouter Verkerke, NIKHEF/Atlas, RooFit, \
- Yue Shi Lai, MIT,\
- Maciej Zimnoch
+ Matevz Tadel, UCSD/CMS, Eve,\
+ Vassil Vassilev, Fermilab/CMS,\
+ Wouter Verkerke, NIKHEF/Atlas, RooFit
 
 
 ## Core Libraries
