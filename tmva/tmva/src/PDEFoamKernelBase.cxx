@@ -38,9 +38,11 @@
 // specific kernel behaviour.
 // _____________________________________________________________________
 
-#ifndef ROOT_TMVA_PDEFoamKernelBase
 #include "TMVA/PDEFoamKernelBase.h"
-#endif
+
+#include "TMVA/MsgLogger.h"
+
+#include "Rtypes.h"
 
 ClassImp(TMVA::PDEFoamKernelBase)
 

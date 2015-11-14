@@ -38,12 +38,14 @@
 //
 //  TParticlePDG*  fParticlePDG;          //! reference to the particle record in PDG database
 
+#include "TParticle.h"
+
+#include "TBuffer.h"
 #include "TView.h"
 #include "TVirtualPad.h"
 #include "TPolyLine3D.h"
 #include "TParticlePDG.h"
 #include "TDatabasePDG.h"
-#include "TParticle.h"
 #include "TClass.h"
 #include "X3DBuffer.h"
 

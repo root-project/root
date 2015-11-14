@@ -17,6 +17,7 @@ method (linear probing).
 */
 
 #include "TExMap.h"
+#include "TBuffer.h"
 #include "TError.h"
 #include "TMathBase.h"
 #include <string.h>

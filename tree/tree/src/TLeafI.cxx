@@ -15,6 +15,7 @@ A TLeaf for an Integer data type.
 
 #include "TLeafI.h"
 #include "TBranch.h"
+#include "TBuffer.h"
 #include "TClonesArray.h"
 #include "Riostream.h"
 

@@ -68,6 +68,10 @@ END_HTML
 
 #include <map>
 
+namespace RooStats {
+   class ProposalFunction;
+}
+
 ClassImp(RooStats::ProposalHelper);
 
 using namespace RooFit;

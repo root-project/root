@@ -25,6 +25,8 @@
 #include "TObject.h"
 #endif
 
+#include <vector>
+
 class TVirtualStreamerInfo;
 class TStreamerElement;
 class TClass;

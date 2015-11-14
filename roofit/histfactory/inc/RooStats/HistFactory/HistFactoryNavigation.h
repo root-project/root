@@ -10,10 +10,9 @@
 #include "RooRealVar.h"
 #include "RooProduct.h"
 #include "RooStats/HistFactory/Measurement.h"
-#include "RooStats/ModelConfig.h"
-
 
 namespace RooStats {
+  class ModelConfig;
   namespace HistFactory { 
 
     class HistFactoryNavigation {

@@ -29,6 +29,8 @@ Boston, MA 02111-1307, USA.
 
 #include "mmprivate.h"
 
+#include <stddef.h>
+
 /* Prototypes for local functions */
 
 static int initialize PARAMS ((struct mdesc *));

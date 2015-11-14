@@ -28,12 +28,16 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+#include "TMVA/PDEFoamCell.h"
+
+#include "TMVA/PDEFoamVect.h"
+
 #include <iostream>
 #include <ostream>
 
-#ifndef ROOT_TMVA_PDEFoamCell
-#include "TMVA/PDEFoamCell.h"
-#endif
+#include "Rtypes.h"
+#include "TObject.h"
+#include "TRef.h"
 
 using namespace std;
 

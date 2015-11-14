@@ -42,7 +42,9 @@
 #include "TMVA/BinaryTree.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Event.h"
+#include "TMVA/Node.h"
 #include "TMVA/Tools.h"
+#include "TMVA/Types.h"
 
 ClassImp(TMVA::BinaryTree)
 

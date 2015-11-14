@@ -9,18 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// This include must be outside of the code guard because
-// Rtypes.h includes TGenericClassInfo.h which includes
-// TSchemaHelper.h (this header file) and really need the
-// definition of ROOT::Internal::TSchemaHelper.   So in this case,
-// we need the indirect #include to really do the declaration
-// and the direct #include to be a noop.
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif
-
 #ifndef ROOT_TSchemaHelper
 #define ROOT_TSchemaHelper
+
+#include "RtypesCore.h"
 
 #include <string>
 
@@ -30,7 +22,7 @@ namespace Internal {
    {
       TSchemaHelper(): fTarget(), fSourceClass(),
        fSource(), fCode(), fVersion(), fChecksum(),
-       fInclude(), fEmbed(kTRUE), fFunctionPtr( 0 ),
+       fInclude(), fEmbed(true), fFunctionPtr( 0 ),
        fAttributes() {}
       std::string fTarget;
       std::string fSourceClass;

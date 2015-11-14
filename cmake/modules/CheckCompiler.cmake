@@ -105,6 +105,32 @@ if(libcxx)
 endif()
 
 
+#---Check for cxxmodules option------------------------------------------------------------
+if(cxxmodules)
+  # Copy-pasted from HandleLLVMOptions.cmake, please keep up to date.
+  set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -fmodules -fcxx-modules")
+  # Check that we can build code with modules enabled, and that repeatedly
+  # including <cassert> still manages to respect NDEBUG properly.
+  CHECK_CXX_SOURCE_COMPILES("#undef NDEBUG
+                             #include <cassert>
+                             #define NDEBUG
+                             #include <cassert>
+                             int main() { assert(this code is not compiled); }"
+                             CXX_SUPPORTS_MODULES)
+  set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
+  if (CXX_SUPPORTS_MODULES)
+    file(COPY ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap DESTINATION ${ROOT_INCLUDE_DIR})
+
+    #append_if(CXX_SUPPORTS_MODULES "-fmodules" CMAKE_C_FLAGS)
+    #append_if(CXX_SUPPORTS_MODULES "-fmodules -fcxx-modules" CMAKE_CXX_FLAGS)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmodules -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmodules -fcxx-modules -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
+  else()
+    message(FATAL_ERROR "cxxmodules is not supported by this compiler")
+  endif()
+endif(cxxmodules)
+
 #---Need to locate thead libraries and options to set properly some compilation flags----------------
 find_package(Threads)
 if(CMAKE_USE_PTHREADS_INIT)

@@ -64,6 +64,7 @@ HISTFACTORYDO   := $(HISTFACTORYDS:.cxx=.o)
 HISTFACTORYDH   := $(HISTFACTORYDS:.cxx=.h)
 
 HISTFACTORYH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/RooStats/HistFactory/*.h))
+HISTFACTORYINCH := $(patsubst $(MODDIRI)/RooStats/HistFactory/%.h,include/RooStats/HistFactory/%.h,$(HISTFACTORYH))
 HISTFACTORYS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HISTFACTORYO    := $(call stripsrc,$(HISTFACTORYS:.cxx=.o))
 #location of header files for rootcint (cannot use absolute path for win32)
@@ -80,7 +81,7 @@ HISTFACTORYLIB  := $(LPATH)/libHistFactory.$(SOEXT)
 HISTFACTORYMAP  := $(HISTFACTORYLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/RooStats/HistFactory/%.h,include/RooStats/HistFactory/%.h,$(HISTFACTORYH))
+ALLHDRS      += $(HISTFACTORYINCH)
 ALLLIBS      += $(HISTFACTORYLIB)
 ALLMAPS      += $(HISTFACTORYMAP)
 
@@ -108,15 +109,15 @@ $(HISTFACTORYLIB): $(HISTFACTORYO) $(HISTFACTORYDO) $(ORDER_) $(MAINLIBS) \
 $(call pcmrule,HISTFACTORY)
 	$(noop)
 
-$(HISTFACTORYDS): $(HISTFACTORYH) $(HISTFACTORYL) $(ROOTCLINGEXE) $(call pcmdep,HISTFACTORY)
+$(HISTFACTORYDS): $(HISTFACTORYINCH) $(HISTFACTORYL) $(ROOTCLINGEXE) $(call pcmdep,HISTFACTORY)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HISTFACTORY) -c -writeEmptyRootPCM -I$(HISTFACTORYDICTI) $(HISTFACTORYH) $(HISTFACTORYL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HISTFACTORY) -c -writeEmptyRootPCM -I$(HISTFACTORYDICTI) $(HISTFACTORYINCH) $(HISTFACTORYL)
 
-$(HISTFACTORYMAP): $(HISTFACTORYH) $(HISTFACTORYL) $(ROOTCLINGEXE) $(call pcmdep,HISTFACTORY)
+$(HISTFACTORYMAP): $(HISTFACTORYINCH) $(HISTFACTORYL) $(ROOTCLINGEXE) $(call pcmdep,HISTFACTORY)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(HISTFACTORYDS) $(call dictModule,HISTFACTORY) -c -I$(HISTFACTORYDICTI) $(HISTFACTORYH) $(HISTFACTORYL)
+		$(ROOTCLINGSTAGE2) -r $(HISTFACTORYDS) $(call dictModule,HISTFACTORY) -c -I$(HISTFACTORYDICTI) $(HISTFACTORYINCH) $(HISTFACTORYL)
 
 $(HF_MAKEWORKSPACEEXE): $(HF_MAKEWORKSPACEEXEO) $(ROOTLIBSDEP) $(RINTLIB) \
                 $(HISTFACTORYLIBDEPM) $(HF_PREPAREHISTFACTORY) $(HISTFACTORYLIB)

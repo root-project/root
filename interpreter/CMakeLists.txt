@@ -46,6 +46,12 @@ string(REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
 
+#---Do not build LLVM/Clang with modules until it gets fixed----------------------------------------
+if(cxxmodules)
+  string(REPLACE "-fmodules -fcxx-modules" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  string(REPLACE "-fmodules " "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+endif(cxxmodules)
+
 #---Build type--------------------------------------------------------------------------------------
 if(NOT DEFINED LLVM_BUILD_TYPE)
   set(LLVM_BUILD_TYPE Release CACHE STRING "Build type for LLVM (used to set CMAKE_BUILD_TYPE)")

@@ -164,8 +164,10 @@ item's own key).
 ~~~
 */
 
-#include <stdlib.h>
 #include "TBtree.h"
+#include "TBuffer.h"
+
+#include <stdlib.h>
 
 
 ClassImp(TBtree)

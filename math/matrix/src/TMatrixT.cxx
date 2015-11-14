@@ -21,6 +21,7 @@
 #include <typeinfo>
 
 #include "TMatrixT.h"
+#include "TBuffer.h"
 #include "TMatrixTSym.h"
 #include "TMatrixTLazy.h"
 #include "TMatrixTCramerInv.h"

@@ -15,6 +15,7 @@ A TLeaf for a 32 bit floating point data type.
 
 #include "TLeafF.h"
 #include "TBranch.h"
+#include "TBuffer.h"
 #include "TClonesArray.h"
 #include "Riostream.h"
 

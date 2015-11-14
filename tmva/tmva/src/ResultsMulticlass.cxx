@@ -27,15 +27,20 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include <vector>
-#include <limits>
-
 #include "TMVA/ResultsMulticlass.h"
-#include "TMVA/MsgLogger.h"
+
 #include "TMVA/DataSet.h"
-#include "TMVA/Tools.h"
+#include "TMVA/DataSetInfo.h"
 #include "TMVA/GeneticAlgorithm.h"
 #include "TMVA/GeneticFitter.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+
+#include "TH1F.h"
+
+#include <limits>
+#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

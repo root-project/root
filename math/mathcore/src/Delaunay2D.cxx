@@ -12,6 +12,7 @@
 // Implementation file for class Delaunay2D
 
 #include "Math/Delaunay2D.h"
+#include "Rtypes.h"
 
 //#include <thread>
 
@@ -22,6 +23,7 @@
 #endif
 
 #include <algorithm>
+#include <stdlib.h>
 
 namespace ROOT {
    

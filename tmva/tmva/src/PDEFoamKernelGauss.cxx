@@ -33,13 +33,17 @@
 // weighting all cell values with a gauss function.
 // _____________________________________________________________________
 
+#include "TMVA/PDEFoamKernelGauss.h"
+
+#include "TMVA/MsgLogger.h"
+#include "TMVA/PDEFoam.h"
+#include "TMVA/Types.h"
+
 #ifndef ROOT_TMath
 #include "TMath.h"
 #endif
 
-#ifndef ROOT_TMVA_PDEFoamKernelGauss
-#include "TMVA/PDEFoamKernelGauss.h"
-#endif
+#include "Rtypes.h"
 
 ClassImp(TMVA::PDEFoamKernelGauss)
 

@@ -50,21 +50,29 @@
 // integration package TFoam included in the analysis package ROOT.
 // _______________________________________________________________________
 
+#include "TMVA/MethodPDEFoam.h"
+
 #include "TMath.h"
+#include "TH1F.h"
 #include "TFile.h"
 
-#include "TMVA/MethodPDEFoam.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Ranking.h"
-#include "TMVA/Types.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
-#include "TMVA/SeparationBase.h"
+#include "TMVA/CrossEntropy.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/Event.h"
 #include "TMVA/GiniIndex.h"
 #include "TMVA/GiniIndexWithLaplace.h"
 #include "TMVA/MisClassificationError.h"
-#include "TMVA/CrossEntropy.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Ranking.h"
 #include "TMVA/SdivSqrtSplusB.h"
+#include "TMVA/SeparationBase.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableInfo.h"
 
 REGISTER_METHOD(PDEFoam)
 

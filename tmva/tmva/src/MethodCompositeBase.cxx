@@ -36,6 +36,8 @@
 // and the evaluation is done here.                                     //
 //_______________________________________________________________________
 
+#include "TMVA/MethodCompositeBase.h"
+
 #include <algorithm>
 #include <iomanip>
 #include <vector>
@@ -45,13 +47,14 @@
 #include "TMath.h"
 #include "TObjString.h"
 
-#include "TMVA/MethodCompositeBase.h"
-#include "TMVA/MethodBoost.h"
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/Factory.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
+#include "TMVA/MethodBoost.h"
+#include "TMVA/MsgLogger.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
-#include "TMVA/Factory.h"
-#include "TMVA/ClassifierFactory.h"
 
 using std::vector;
 

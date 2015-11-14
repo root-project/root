@@ -30,8 +30,15 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include <iomanip>
-#include <cstdlib>
+#include "TMVA/PDF.h"
+
+#include "TMVA/KDEKernel.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+#include "TMVA/Tools.h"
+#include "TMVA/TSpline1.h"
+#include "TMVA/TSpline2.h"
+#include "TMVA/Version.h"
 
 #include "TMath.h"
 #include "TF1.h"
@@ -39,11 +46,8 @@
 #include "TVectorD.h"
 #include "Riostream.h"
 
-#include "TMVA/Tools.h"
-#include "TMVA/PDF.h"
-#include "TMVA/TSpline1.h"
-#include "TMVA/TSpline2.h"
-#include "TMVA/Version.h"
+#include <iomanip>
+#include <cstdlib>
 
 // static configuration settings
 const Int_t    TMVA::PDF::fgNbin_PdfHist      = 10000;

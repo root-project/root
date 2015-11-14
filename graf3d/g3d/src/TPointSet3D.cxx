@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TPointSet3D.h"
+#include "TBuffer.h"
 #include "TClass.h"
 
 /** \class TPointSet3D

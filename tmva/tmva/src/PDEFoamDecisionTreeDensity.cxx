@@ -46,6 +46,15 @@
 #include "TMVA/PDEFoamDecisionTreeDensity.h"
 #endif
 
+#include "TMVA/BinarySearchTree.h"
+#include "TMVA/MethodPDERS.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+#include "TMVA/Volume.h"
+
+#include "RtypesCore.h"
+#include "TH1D.h"
+
 ClassImp(TMVA::PDEFoamDecisionTreeDensity)
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TCTUB.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TMath.h"
 

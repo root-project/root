@@ -104,6 +104,8 @@
 //
 //_______________________________________________________________________
 
+#include "TMVA/MethodBDT.h"
+
 #include <algorithm>
 
 #include <math.h>
@@ -115,24 +117,28 @@
 #include "TObjString.h"
 #include "TGraph.h"
 
-#include "TMVA/ClassifierFactory.h"
-#include "TMVA/MethodBDT.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Timer.h"
-#include "TMVA/Ranking.h"
-#include "TMVA/SdivSqrtSplusB.h"
+#include "TMVA/BDTEventWrapper.h"
 #include "TMVA/BinarySearchTree.h"
-#include "TMVA/SeparationBase.h"
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/CrossEntropy.h"
+#include "TMVA/DecisionTree.h"
+#include "TMVA/DataSet.h"
 #include "TMVA/GiniIndex.h"
 #include "TMVA/GiniIndexWithLaplace.h"
-#include "TMVA/CrossEntropy.h"
-#include "TMVA/MisClassificationError.h"
-#include "TMVA/Results.h"
-#include "TMVA/ResultsMulticlass.h"
 #include "TMVA/Interval.h"
 #include "TMVA/LogInterval.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MisClassificationError.h"
+#include "TMVA/MsgLogger.h"
 #include "TMVA/PDF.h"
-#include "TMVA/BDTEventWrapper.h"
+#include "TMVA/Ranking.h"
+#include "TMVA/Results.h"
+#include "TMVA/ResultsMulticlass.h"
+#include "TMVA/SdivSqrtSplusB.h"
+#include "TMVA/SeparationBase.h"
+#include "TMVA/Timer.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
 
 #include "TMatrixTSym.h"
 

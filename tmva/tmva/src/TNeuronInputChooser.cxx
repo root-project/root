@@ -20,7 +20,9 @@
  * modification, are permitted according to the terms listed in LICENSE           * 
  * (http://tmva.sourceforge.net/LICENSE)                                          * 
  **********************************************************************************/ 
-  
-#include "TMVA/TNeuronInputChooser.h" 
- 
-ClassImp(TMVA::TNeuronInputChooser) 
+
+#include "TMVA/TNeuronInputChooser.h"
+
+#include "Rtypes.h"
+
+ClassImp(TMVA::TNeuronInputChooser)

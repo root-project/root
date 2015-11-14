@@ -26,7 +26,10 @@
  **********************************************************************************/
 
 #include "TMVA/SVEvent.h"
+
 #include "TMVA/Event.h"
+
+#include "Rtypes.h"
 
 #include <iostream>
 

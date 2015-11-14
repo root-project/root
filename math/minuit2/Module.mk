@@ -43,6 +43,7 @@ MINUIT2DH    := $(MINUIT2DS:.cxx=.h)
 MINUIT2AH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 MINUIT2BH    := $(filter-out $(MODDIRI)/Minuit2/LinkDef%,$(wildcard $(MODDIRI)/Minuit2/*.h))
 MINUIT2H     := $(MINUIT2AH) $(MINUIT2BH)
+MINUIT2INCH  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(MINUIT2H))
 MINUIT2S     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MINUIT2O     := $(call stripsrc,$(MINUIT2S:.cxx=.o))
 
@@ -57,7 +58,7 @@ MINUIT2MAP   := $(MINUIT2LIB:.$(SOEXT)=.rootmap)
 #CXXFLAGS += -DMN_USE_STACK_ALLOC
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MINUIT2H))
+ALLHDRS      += $(MINUIT2INCH)
 ALLLIBS      += $(MINUIT2LIB)
 ALLMAPS      += $(MINUIT2MAP)
 
@@ -86,15 +87,18 @@ $(MINUIT2LIB):  $(MINUIT2O) $(MINUIT2DO) $(ORDER_) $(MAINLIBS) $(MINUIT2LIBDEP)
 $(call pcmrule,MINUIT2)
 	$(noop)
 
-$(MINUIT2DS):   $(MINUIT2H) $(MINUIT2L) $(ROOTCLINGEXE) $(call pcmdep,MINUIT2)
+print-%  : ; @echo $* = $($*)
+
+$(MINUIT2DS):   $(MINUIT2INCH) $(MINUIT2L) $(ROOTCLINGEXE) $(call pcmdep,MINUIT2)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MINUIT2) -c -writeEmptyRootPCM $(MINUIT2H) $(MINUIT2L)
+		@echo subst = $(patsubst include/%,%,$(MINUIT2INCH))
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MINUIT2) -c -writeEmptyRootPCM $(patsubst include/%,%,$(MINUIT2INCH)) $(MINUIT2L)
 
-$(MINUIT2MAP):  $(MINUIT2H) $(MINUIT2L) $(ROOTCLINGEXE) $(call pcmdep,MINUIT2)
+$(MINUIT2MAP):  $(MINUIT2INCH) $(MINUIT2L) $(ROOTCLINGEXE) $(call pcmdep,MINUIT2)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(MINUIT2DS) $(call dictModule,MINUIT2) -c $(MINUIT2H) $(MINUIT2L)
+		$(ROOTCLINGSTAGE2) -r $(MINUIT2DS) $(call dictModule,MINUIT2) -c $(patsubst include/%,%,$(MINUIT2INCH)) $(MINUIT2L)
 
 all-$(MODNAME): $(MINUIT2LIB)
 

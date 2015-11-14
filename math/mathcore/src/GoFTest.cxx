@@ -19,8 +19,11 @@
 
 #include "Math/Error.h"
 #include "Math/Math.h"
+#include "Math/IFunction.h"
+#include "Math/IFunctionfwd.h"
 #include "Math/Integrator.h"
 #include "Math/ProbFuncMathCore.h"
+#include "Math/WrappedFunction.h"
 
 #include "Math/GoFTest.h"
 

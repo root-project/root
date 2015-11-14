@@ -15,6 +15,7 @@ A TLeaf for a bool data type.
 
 #include "TLeafO.h"
 #include "TBranch.h"
+#include "TBuffer.h"
 #include "TClonesArray.h"
 #include "Riostream.h"
 

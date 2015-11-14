@@ -3,6 +3,7 @@
 
 #include "THttpServer.h"
 
+#include "TThread.h"
 #include "TTimer.h"
 #include "TSystem.h"
 #include "TImage.h"

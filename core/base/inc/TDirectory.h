@@ -21,6 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TBuffer
+#include "TBuffer.h"
+#endif
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif

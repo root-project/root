@@ -28,8 +28,24 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include <vector>
-#include <iomanip>
+#include "TMVA/TransformationHandler.h"
+
+#include "TMVA/Config.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/Event.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Ranking.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableDecorrTransform.h"
+#include "TMVA/VariableGaussTransform.h"
+#include "TMVA/VariableInfo.h"
+#include "TMVA/VariableIdentityTransform.h"
+#include "TMVA/VariableNormalizeTransform.h"
+#include "TMVA/VariablePCATransform.h"
+#include "TMVA/VariableRearrangeTransform.h"
+#include "TMVA/VariableTransformBase.h"
 
 #include "TMath.h"
 #include "TH1.h"
@@ -37,36 +53,8 @@
 #include "TAxis.h"
 #include "TProfile.h"
 
-#ifndef ROOT_TMVA_Config
-#include "TMVA/Config.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
-#include "TMVA/DataSet.h"
-#endif
-#ifndef ROOT_TMVA_Event
-#include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMVA_Ranking
-#include "TMVA/Ranking.h"
-#endif
-#ifndef ROOT_TMVA_Tools
-#include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_TransformationHandler
-#include "TMVA/TransformationHandler.h"
-#endif
-#ifndef ROOT_TMVA_VariableTransformBase
-#include "TMVA/VariableTransformBase.h"
-#endif
-#include "TMVA/VariableIdentityTransform.h"
-#include "TMVA/VariableDecorrTransform.h"
-#include "TMVA/VariablePCATransform.h"
-#include "TMVA/VariableGaussTransform.h"
-#include "TMVA/VariableNormalizeTransform.h"
-#include "TMVA/VariableRearrangeTransform.h"
+#include <vector>
+#include <iomanip>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

@@ -30,6 +30,7 @@ list.
 */
 
 #include "TEntryListFromFile.h"
+#include "TBuffer.h"
 #include "TObjArray.h"
 #include "TFile.h"
 #include "TKey.h"

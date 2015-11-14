@@ -33,9 +33,15 @@
 // weighting with cell values of the nearest neighbor cells.
 // _____________________________________________________________________
 
-#ifndef ROOT_TMVA_PDEFoamKernelLinN
 #include "TMVA/PDEFoamKernelLinN.h"
-#endif
+
+#include "TMVA/PDEFoam.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+
+#include "Rtypes.h"
+
+#include <vector>
 
 ClassImp(TMVA::PDEFoamKernelLinN)
 

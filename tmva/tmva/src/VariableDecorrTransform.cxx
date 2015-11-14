@@ -26,27 +26,23 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include <iostream>
-#include <iomanip>
-#include <algorithm>
+#include "TMVA/VariableDecorrTransform.h"
+
+#include "TMVA/DataSet.h"
+#include "TMVA/Event.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableInfo.h"
 
 #include "TVectorF.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
 #include "TMatrixDBase.h"
 
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMVA_VariableDecorrTransform
-#include "TMVA/VariableDecorrTransform.h"
-#endif
-#ifndef ROOT_TMVA_Tools
-#include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
-#include "TMVA/DataSet.h"
-#endif
+#include <iostream>
+#include <iomanip>
+#include <algorithm>
 
 ClassImp(TMVA::VariableDecorrTransform)
 

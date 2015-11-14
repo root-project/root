@@ -20,6 +20,7 @@
 
 
 #include "RooStats/HypoTestResult.h"
+#include "RooStats/SamplingDistribution.h"
 #include "RooAbsReal.h"
 
 #ifndef RooStats_RooStatsUtils

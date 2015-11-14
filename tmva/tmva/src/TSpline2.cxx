@@ -30,9 +30,10 @@
 // Quadratic interpolation of TGraph
 //_______________________________________________________________________
 
-#include "TMath.h"
-
 #include "TMVA/TSpline2.h"
+
+#include "TGraph.h"
+#include "TMath.h"
 
 ClassImp(TMVA::TSpline2)
 

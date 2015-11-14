@@ -17,10 +17,15 @@
 #include "Fit/LogLikelihoodFCN.h"
 #include "Math/Minimizer.h"
 #include "Math/MinimizerOptions.h"
+#include "Math/FitMethodFunction.h"
+#include "Fit/BasicFCN.h"
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Fit/FcnAdapter.h"
+#include "Fit/FitConfig.h"
+#include "Fit/FitResult.h"
 #include "Math/Error.h"
+#include "TF1.h"
 
 #include <memory>
 

@@ -85,7 +85,7 @@ but they have different copyright holders, as listed below:
     Copyright (C) 2006, Rene Brun and Fons Rademakers.                    *
     Copyright (C) 1998-1999, ALICE Experiment at CERN.
 
-  gl/inc/gl2ps.h
+  gl/src/gl2ps.h
     Copyright (C) 1999-2005 Christophe Geuzaine <geuz@geuz.org>
 
   gl/src/CsgOps.cxx

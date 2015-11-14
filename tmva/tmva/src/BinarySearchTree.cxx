@@ -71,6 +71,9 @@
 #include "TMVA/BinarySearchTree.h"
 #endif
 
+#include "TMVA/Types.h"
+#include "TMVA/Node.h"
+
 ClassImp(TMVA::BinarySearchTree)
 
 ////////////////////////////////////////////////////////////////////////////////

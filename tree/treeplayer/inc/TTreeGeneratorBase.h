@@ -33,6 +33,7 @@ class TBranchElement;
 class TClass;
 class TStreamerElement;
 class TTree;
+class TVirtualStreamerInfo;
 
 namespace ROOT {
 namespace Internal {

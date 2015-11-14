@@ -88,25 +88,31 @@
 //*
 //_______________________________________________________________________
 
+#include "TMVA/MethodDT.h"
+
 #include <algorithm>
 #include "Riostream.h"
 #include "TRandom3.h"
 #include "TMath.h"
 #include "TObjString.h"
 
+#include "TMVA/BinarySearchTree.h"
+#include "TMVA/CCPruner.h"
 #include "TMVA/ClassifierFactory.h"
-#include "TMVA/MethodDT.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Timer.h"
+#include "TMVA/CrossEntropy.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DecisionTree.h"
+#include "TMVA/GiniIndex.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MethodBoost.h"
+#include "TMVA/MisClassificationError.h"
+#include "TMVA/MsgLogger.h"
 #include "TMVA/Ranking.h"
 #include "TMVA/SdivSqrtSplusB.h"
-#include "TMVA/BinarySearchTree.h"
 #include "TMVA/SeparationBase.h"
-#include "TMVA/GiniIndex.h"
-#include "TMVA/CrossEntropy.h"
-#include "TMVA/MisClassificationError.h"
-#include "TMVA/MethodBoost.h"
-#include "TMVA/CCPruner.h"
+#include "TMVA/Timer.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
 
 using std::vector;
 

@@ -42,6 +42,12 @@
 #include "TMVA/IFitterTarget.h"
 #endif
 
+#include "TMVA/Configurable.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+
+#include "Rtypes.h"
+
 ClassImp(TMVA::FitterBase)
 
 #ifdef _WIN32

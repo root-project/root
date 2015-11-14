@@ -88,6 +88,8 @@
 End_Html */
 //
 
+#include "TMVA/MethodCuts.h"
+
 #include <iostream>
 #include <cstdlib>
 
@@ -100,20 +102,28 @@ End_Html */
 #include "TSpline.h"
 #include "TRandom3.h"
 
+#include "TMVA/BinarySearchTree.h"
 #include "TMVA/ClassifierFactory.h"
-#include "TMVA/MethodCuts.h"
-#include "TMVA/GeneticFitter.h"
-#include "TMVA/MinuitFitter.h"
-#include "TMVA/MCFitter.h"
-#include "TMVA/SimulatedAnnealingFitter.h"
-#include "TMVA/PDF.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Timer.h"
-#include "TMVA/Interval.h"
-#include "TMVA/TSpline1.h"
 #include "TMVA/Config.h"
-#include "TMVA/VariableTransformBase.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/GeneticFitter.h"
+#include "TMVA/Event.h"
+#include "TMVA/Interval.h"
+#include "TMVA/FitterBase.h"
+#include "TMVA/MCFitter.h"
+#include "TMVA/MethodFDA.h"
+#include "TMVA/MinuitFitter.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/PDF.h"
 #include "TMVA/Results.h"
+#include "TMVA/SimulatedAnnealingFitter.h"
+#include "TMVA/Timer.h"
+#include "TMVA/Tools.h"
+#include "TMVA/TransformationHandler.h"
+#include "TMVA/Types.h"
+#include "TMVA/TSpline1.h"
+#include "TMVA/VariableTransformBase.h"
 
 using std::atof;
 

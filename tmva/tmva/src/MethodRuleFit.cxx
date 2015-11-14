@@ -28,6 +28,8 @@
 // J Friedman's RuleFit method
 //_______________________________________________________________________
 
+#include "TMVA/MethodRuleFit.h"
+
 #include <algorithm>
 #include <list>
 
@@ -38,18 +40,20 @@
 #include "TDirectory.h"
 
 #include "TMVA/ClassifierFactory.h"
-#include "TMVA/GiniIndex.h"
+#include "TMVA/Config.h"
 #include "TMVA/CrossEntropy.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DecisionTree.h"
+#include "TMVA/GiniIndex.h"
+#include "TMVA/MisClassificationError.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Ranking.h"
+#include "TMVA/RuleFitAPI.h"
 #include "TMVA/SdivSqrtSplusB.h"
 #include "TMVA/SeparationBase.h"
-#include "TMVA/MisClassificationError.h"
-#include "TMVA/MethodRuleFit.h"
-#include "TMVA/RuleFitAPI.h"
-#include "TMVA/Tools.h"
 #include "TMVA/Timer.h"
-#include "TMVA/Ranking.h"
-#include "TMVA/Config.h"
-#include "TMVA/MsgLogger.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
 
 using std::min;
 

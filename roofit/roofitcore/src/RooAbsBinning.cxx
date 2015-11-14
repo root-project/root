@@ -23,10 +23,11 @@
 //
 //
 
-#include "RooFit.h"
-
 #include "RooAbsBinning.h"
+
 #include "RooAbsReal.h"
+#include "RooFit.h"
+#include "TBuffer.h"
 #include "TClass.h"
 
 #include "Riostream.h"

@@ -42,11 +42,18 @@
 //    D = #events with given class / total number of events
 // _____________________________________________________________________
 
-#include <cmath>
-
-#ifndef ROOT_TMVA_PDEFoamDiscriminantDensity
 #include "TMVA/PDEFoamDiscriminantDensity.h"
-#endif
+
+#include "TMVA/BinarySearchTree.h"
+#include "TMVA/BinarySearchTreeNode.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+#include "TMVA/Volume.h"
+
+#include "Rtypes.h"
+
+#include <cmath>
+#include <vector>
 
 ClassImp(TMVA::PDEFoamDiscriminantDensity)
 

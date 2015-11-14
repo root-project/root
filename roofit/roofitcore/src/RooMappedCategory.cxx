@@ -23,15 +23,18 @@
 // output state label.
 
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include "TString.h"
 #include "RooMappedCategory.h"
+
+#include "RooFit.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
+
+#include "Riostream.h"
+#include "TBuffer.h"
+#include "TString.h"
+
+#include <stdlib.h>
+#include <stdio.h>
 
 using namespace std ;
 

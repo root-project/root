@@ -11,6 +11,10 @@
 #ifndef ROOT_TGenCollectionProxy
 #define ROOT_TGenCollectionProxy
 
+#ifndef ROOT_TBuffer
+#include "TBuffer.h"
+#endif
+
 #ifndef ROOT_TVirtualCollectionProxy
 #include "TVirtualCollectionProxy.h"
 #endif

@@ -42,18 +42,12 @@
 #if defined(MAC_OS_X_VERSION_10_5)
 #   define HAVE_UTMPX_H
 #   define UTMP_NO_ADDR
-#   ifndef ut_user
-#      define ut_user ut_name
-#   endif
 #endif
 
 #if defined(R__FBSD)
 #   include <sys/param.h>
 #   if __FreeBSD_version >= 900007
 #      define HAVE_UTMPX_H
-#      ifndef ut_user
-#        define ut_user ut_name
-#      endif
 #   endif
 #endif
 
@@ -188,13 +182,37 @@ static int ReadUtmp()
    return 0;
 }
 
+namespace {
+   // Depending on the platform the struct utmp (or utmpx) has either ut_name or ut_user
+   // which are semantically equivalent. Instead of using preprocessor magic,
+   // which is bothersome for cxx modules use SFINAE.
+   template<typename T, typename = void>
+   struct ut_name : std::false_type { };
+   template<typename T>
+   struct ut_name<T, decltype(std::declval<T>().ut_name, void())> : std::true_type {
+      static char getValue(T* ue) {
+         return ue->ut_name[0];
+      }
+   };
+   template<typename T>
+   struct ut_name<T, decltype(std::declval<T>().ut_user, void())> : std::true_type {
+      static char getValue(T* ue) {
+         return ue->ut_user[0];
+      }
+   };
+
+   static char get_ut_name (STRUCT_UTMP *ue) {
+      return ut_name<STRUCT_UTMP>::getValue(ue);
+   }
+}
+
 static STRUCT_UTMP *SearchEntry(int n, const char *tty)
 {
    STRUCT_UTMP *ue = gUtmpContents;
 
    while (n--) {
-      if (ue->ut_name[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
-         return ue;
+      if (get_ut_name(ue) && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
+        return ue;
       ue++;
    }
    return 0;

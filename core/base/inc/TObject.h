@@ -234,8 +234,4 @@ namespace cling {
    std::string printValue(TObject *val);
 }
 
-#ifndef ROOT_TBuffer
-#include "TBuffer.h"
-#endif
-
 #endif

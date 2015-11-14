@@ -102,19 +102,25 @@
   End_Html */
 //_______________________________________________________________________
 
+#include "TMVA/MethodFisher.h"
+
 #include <iomanip>
 #include <cassert>
 
 #include "TMath.h"
+#include "TMatrix.h"
 #include "Riostream.h"
 
-#include "TMVA/VariableTransformBase.h"
-#include "TMVA/MethodFisher.h"
-#include "TMVA/Tools.h"
-#include "TMatrix.h"
-#include "TMVA/Ranking.h"
-#include "TMVA/Types.h"
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/Event.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Ranking.h"
+#include "TMVA/Tools.h"
+#include "TMVA/TransformationHandler.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableTransformBase.h"
 
 REGISTER_METHOD(Fisher)
 

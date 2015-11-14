@@ -53,9 +53,6 @@
 #ifndef ROOT_TQpDataBase
 #include "TQpDataBase.h"
 #endif
-#ifndef ROOT_TQpLinSolverBase
-#include "TQpLinSolverBase.h"
-#endif
 #ifndef ROOT_TQpResidual
 #include "TQpResidual.h"
 #endif

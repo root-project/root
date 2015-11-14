@@ -50,9 +50,6 @@
 #ifndef ROOT_TQpVars
 #include "TQpVar.h"
 #endif
-#ifndef ROOT_TQpLinSolverDens
-#include "TQpLinSolverDens.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -61,6 +58,8 @@
 // dense matrix problem formulation                                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+class TQpLinSolverBase;
 
 class TQpProbDens : public TQpProbBase
 {

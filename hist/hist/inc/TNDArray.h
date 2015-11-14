@@ -191,8 +191,20 @@ public:
 protected:
    int fNumData; // number of bins, product of fSizes
    T*  fData; //[fNumData] data
-   ClassDef(TNDArray, 1); // N-dimensional array
+   ClassDef(TNDArrayT, 1); // N-dimensional array
 };
+
+#ifndef __CINT__
+// When building with -fmodules, it instantiates all pending instantiations,
+// instead of delaying them until the end of the translation unit.
+// We 'got away with' probably because the use and the definition of the
+// explicit specialization do not occur in the same TU.
+//
+// In case we are building with -fmodules, we need to forward declare the
+// specialization in order to compile the dictionary G__Hist.cxx.
+template<> void TNDArrayT<double>::Streamer(TBuffer &R__b);
+template<> TClass *TNDArrayT<double>::Class();
+#endif // __CINT__
 
 
 #endif // ROOT_TNDArray

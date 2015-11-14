@@ -44,13 +44,17 @@
 // intelligent fitting. See the RuleEnsemble class for more info.
 //________________________________________________________________________________
 
-#include "TMVA/Event.h"
-#include "TMVA/RuleCut.h"
 #include "TMVA/Rule.h"
+
+#include "TMVA/Event.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MethodRuleFit.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/RuleCut.h"
 #include "TMVA/RuleFit.h"
 #include "TMVA/RuleEnsemble.h"
-#include "TMVA/MethodRuleFit.h"
 #include "TMVA/Tools.h"
+#include "TMVA/Types.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// the main constructor for a Rule

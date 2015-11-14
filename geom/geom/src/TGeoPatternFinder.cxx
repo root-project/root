@@ -26,6 +26,7 @@
 #include "TGeoPatternFinder.h"
 
 #include "Riostream.h"
+#include "TBuffer.h"
 #include "TObject.h"
 #include "TThread.h"
 #include "TGeoMatrix.h"

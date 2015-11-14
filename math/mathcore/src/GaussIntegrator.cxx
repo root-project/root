@@ -9,7 +9,10 @@
  **********************************************************************/
 
 #include "Math/GaussIntegrator.h"
+#include "Math/Error.h"
 #include "Math/IntegratorOptions.h"
+#include "Math/IFunction.h"
+#include "Math/IFunctionfwd.h"
 #include <cmath>
 
 namespace ROOT {

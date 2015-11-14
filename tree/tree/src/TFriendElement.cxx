@@ -22,8 +22,9 @@ To add a TFriendElement to an existing TTree T, do:
 See TTree::AddFriend for more information.
 */
 
-#include "TTree.h"
 #include "TFriendElement.h"
+#include "TBuffer.h"
+#include "TTree.h"
 #include "TFile.h"
 #include "TROOT.h"
 
