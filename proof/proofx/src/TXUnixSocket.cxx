@@ -22,6 +22,7 @@
 
 #include "TXUnixSocket.h"
 #include "TEnv.h"
+#include "TSystem.h"
 #include "XrdProofPhyConn.h"
 
 ClassImp(TXUnixSocket)
