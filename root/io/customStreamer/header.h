@@ -1,3 +1,4 @@
+#include "TBuffer.h"
 #include "TClass.h"
 class Hard2Stream {
 private:
