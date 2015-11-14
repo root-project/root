@@ -38,9 +38,25 @@ The following people have contributed to this new version:
  Vassil Vassilev, Fermilab/CMS,\
  Wouter Verkerke, NIKHEF/Atlas, RooFit
 
-
+<a name="core-libs"></a>
 ## Core Libraries
-TObject.h doesn't include TBuffer.h anymore. Third party headers replying on the definition of TBufer will need to include TBuffer.h.
+
+ROOT prepares for [cxx modules](http://clang.llvm.org/docs/Modules.html). One of
+the first requirements is its header files to be self-contained (section "Missing
+Includes"). ROOT header files were cleaned up from extra includes and the missing
+includes were added.
+
+This could be considered as backward incompatibility (for good however). User
+code may need to add extra includes, which were previously resolved indirectly
+by including a ROOT header. For example:
+
+  * TBuffer.h - TObject.h doesn't include TBuffer.h anymore. Third party code,
+    replying on the definition of TBufer will need to include TBuffer.h, along
+    with TObject.h.
+  * TSystem.h - for some uses of gSystem.
+  * GeneticMinimizer.h
+  * ...
+
 
 ## Histogram Libraries
 
@@ -64,7 +80,9 @@ TObject.h doesn't include TBuffer.h anymore. Third party headers replying on the
 
 
 ## I/O Libraries
-Custom streamers need to #include TBuffer.h explicitly.
+Custom streamers need to #include TBuffer.h explicitly (see 
+[section Core Libraries](#core-libs)
+
 
 ## Database Libraries
 
