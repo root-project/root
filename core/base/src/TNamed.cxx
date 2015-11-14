@@ -90,10 +90,10 @@ void TNamed::Copy(TObject &obj) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Encode TNamed into output buffer.
 
-void TNamed::FillBuffer(char *&buffer)
+void TNamed::FillBuffer(char *&buffer, Bool_t buffBigEndian = kTRUE)
 {
-   fName.FillBuffer(buffer);
-   fTitle.FillBuffer(buffer);
+   fName.FillBuffer(buffer, buffBigEndian);
+   fTitle.FillBuffer(buffer, buffBigEndian);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

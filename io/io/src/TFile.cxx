@@ -641,8 +641,8 @@ void TFile::Init(Bool_t create)
       fNbytesFree  = 0;
       WriteHeader();
       char *buffer = key->GetBuffer();
-      TNamed::FillBuffer(buffer);
-      TDirectoryFile::FillBuffer(buffer);
+      TNamed::FillBuffer(buffer, key->IsBigEndian());
+      TDirectoryFile::FillBuffer(buffer, key->IsBigEndian());
       key->WriteFile();
       delete key;
    } else {
@@ -667,7 +667,7 @@ void TFile::Init(Bool_t create)
       }
 
       char *buffer = header + 4;    // skip the "root" file identifier
-      frombuf(buffer, &fVersion);
+      frombuf(buffer, &fVersio);
       Int_t headerLength;
       frombuf(buffer, &headerLength);
       fBEGIN = (Long64_t)headerLength;
@@ -678,7 +678,7 @@ void TFile::Init(Bool_t create)
          frombuf(buffer, &fNbytesFree);
          frombuf(buffer, &nfree);
          frombuf(buffer, &fNbytesName);
-         frombuf(buffer, &fUnits );
+         frombuf(buffer, &fUnits);
          frombuf(buffer, &fCompress);
          frombuf(buffer, &sinfo);        fSeekInfo = (Long64_t)sinfo;
          frombuf(buffer, &fNbytesInfo);
@@ -688,7 +688,7 @@ void TFile::Init(Bool_t create)
          frombuf(buffer, &fNbytesFree);
          frombuf(buffer, &nfree);
          frombuf(buffer, &fNbytesName);
-         frombuf(buffer, &fUnits );
+         frombuf(buffer, &fUnits);
          frombuf(buffer, &fCompress);
          frombuf(buffer, &fSeekInfo);
          frombuf(buffer, &fNbytesInfo);
@@ -742,7 +742,7 @@ void TFile::Init(Bool_t create)
       frombuf(buffer,&version); versiondir = version%1000;
       fDatimeC.ReadBuffer(buffer);
       fDatimeM.ReadBuffer(buffer);
-      frombuf(buffer, &fNbytesKeys);
+      frombuf(buffer, &fNbytesKeys;
       frombuf(buffer, &fNbytesName);
       if (version > 1000) {
          frombuf(buffer, &fSeekDir);
@@ -1105,10 +1105,10 @@ Bool_t TFile::FlushWriteCache()
 ///
 /// The file output buffer contains only the FREE data record.
 
-void TFile::FillBuffer(char *&buffer)
+void TFile::FillBuffer(char *&buffer, Bool_t buffBigEndian=kTRUE)
 {
    Version_t version = TFile::Class_Version();
-   tobuf(buffer, version);
+   tobuf(buffer, version, buffBigEndian);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2376,7 +2376,7 @@ void TFile::WriteFree()
 
    next.Reset();
    while ((afree = (TFree*) next())) {
-      afree->FillBuffer(buffer);
+      afree->FillBuffer(buffer, key->IsBigEndian());
    }
    if ( (buffer-start)!=nbytes ) {
       // Most likely one of the 'free' segment was used to store this

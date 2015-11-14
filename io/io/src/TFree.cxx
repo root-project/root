@@ -104,20 +104,20 @@ TFree::~TFree()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Encode fre structure into output buffer.
+/// Encode free structure into output buffer.
 
-void TFree::FillBuffer(char *&buffer)
+void TFree::FillBuffer(char *&buffer, Bool_t buffBigEndian=kTRUE)
 {
    Version_t version = TFree::Class_Version();
    if (fLast > TFile::kStartBigFile) version += 1000;
-   tobuf(buffer, version);
+   tobuf(buffer, version, buffBigEndian);
 //printf("TFree::fillBuffer, fFirst=%lld, fLast=%lld, version=%d\n",fFirst,fLast,version);
    if (version > 1000) {
-      tobuf(buffer, fFirst);
-      tobuf(buffer, fLast);
+      tobuf(buffer, fFirst, buffBigEndian);
+      tobuf(buffer, fLast, buffBigEndian);
    } else {
-      tobuf(buffer, (Int_t)fFirst);
-      tobuf(buffer, (Int_t)fLast);
+      tobuf(buffer, (Int_t)fFirst, buffBigEndian);
+      tobuf(buffer, (Int_t)fLast, buffBigEndian);
    }
 }
 

@@ -44,13 +44,13 @@ class TBuffer : public TObject {
 protected:
    typedef std::vector<TVirtualArray*> CacheList_t;
 
+   Bool_t           fBufEndian;     //Big endian is default (0)
    Bool_t           fMode;          //Read or write mode
    Int_t            fVersion;       //Buffer format version
    Int_t            fBufSize;       //Size of buffer
    char            *fBuffer;        //Buffer used to store objects
    char            *fBufCur;        //Current position in buffer
    char            *fBufMax;        //End of buffer
-   Bool_t           fBufEndian;     //Big endian is default (0)
    TObject         *fParent;        //Pointer to parent object owning this buffer
    ReAllocCharFun_t fReAllocFunc;   //! Realloc function to be used when extending the buffer.
    CacheList_t      fCacheStack;    //Stack of pointers to the cache where to temporarily store the value of 'missing' data members
@@ -86,6 +86,10 @@ public:
    Bool_t   IsWriting() const { return (fMode & kWrite) != 0; }
    void     SetReadMode();
    void     SetWriteMode();
+   Bool_t   IsBigEndian() const { return fBufEndian == 0; }
+   Bool_t   IsLittleEndian() const { return fBufEndian == 1; }
+   void     SetBigEndian() { fBufEndian = 0; }
+   void     SetLittleEndian() { fBufEndian = 1; }
    void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
    ReAllocCharFun_t GetReAllocFunc() const;
    void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = 0);

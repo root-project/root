@@ -123,6 +123,7 @@ protected:
    Bool_t          fInterrupt;            //True if macro should be interrupted
    Bool_t          fEscape;               //True if ESC has been pressed
    Bool_t          fExecutingMacro;       //True while executing a TMacro
+   Bool_t          fBigEndian;            //True if user define the data format as Big Endian
    Int_t           fEditorMode;           //Current Editor mode
    const TObject   *fPrimitive;           //Currently selected primitive
    TVirtualPad     *fSelectPad;           //Currently selected pad
@@ -264,6 +265,7 @@ public:
    void              Idle(UInt_t idleTimeInSec, const char *command = 0);
    Int_t             IgnoreInclude(const char *fname, const char *expandedfname);
    Bool_t            IsBatch() const { return fBatch; }
+   Bool_t            IsBigEndian() const { return fBigEndian; }
    Bool_t            IsExecutingMacro() const { return fExecutingMacro; }
    Bool_t            IsFolder() const { return kTRUE; }
    Bool_t            IsInterrupted() const { return fInterrupt; }
@@ -297,6 +299,7 @@ public:
    void              SaveContext();
    void              SetApplication(TApplication *app) { fApplication = app; }
    void              SetBatch(Bool_t batch = kTRUE) { fBatch = batch; }
+   void              SetBigEndian(Bool_t bigendian = kTRUE) { fBigEndian = bigendian; }
    void              SetCutClassName(const char *name = "TCutG");
    void              SetDefCanvasName(const char *name = "c1") { fDefCanvasName = name; }
    void              SetEditHistograms(Bool_t flag = kTRUE) { fEditHistograms = flag; }

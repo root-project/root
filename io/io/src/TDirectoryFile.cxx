@@ -702,7 +702,7 @@ void TDirectoryFile::Delete(const char *namecycle)
 ////////////////////////////////////////////////////////////////////////////////
 /// Encode directory header into output buffer
 
-void TDirectoryFile::FillBuffer(char *&buffer)
+void TDirectoryFile::FillBuffer(char *&buffer, Bool_t buffBigEndian = kTRUE)
 {
    Version_t version = TDirectoryFile::Class_Version();
    if (fSeekDir > TFile::kStartBigFile ||
@@ -715,23 +715,23 @@ void TDirectoryFile::FillBuffer(char *&buffer)
       // some object are 'removed' from the file and the holes are reused.
       version += 1000;
    }
-   tobuf(buffer, version);
-   fDatimeC.FillBuffer(buffer);
-   fDatimeM.FillBuffer(buffer);
-   tobuf(buffer, fNbytesKeys);
-   tobuf(buffer, fNbytesName);
+   tobuf(buffer, version, buffBigEndian);
+   fDatimeC.FillBuffer(buffer, buffBigEndian);
+   fDatimeM.FillBuffer(buffer, buffBigEndian);
+   tobuf(buffer, fNbytesKeys, buffBigEndian);
+   tobuf(buffer, fNbytesName, buffBigEndian);
    if (version > 1000) {
-      tobuf(buffer, fSeekDir);
-      tobuf(buffer, fSeekParent);
-      tobuf(buffer, fSeekKeys);
+      tobuf(buffer, fSeekDir, buffBigEndian);
+      tobuf(buffer, fSeekParent, buffBigEndian);
+      tobuf(buffer, fSeekKeys, buffBigEndian);
    } else {
-      tobuf(buffer, (Int_t)fSeekDir);
-      tobuf(buffer, (Int_t)fSeekParent);
-      tobuf(buffer, (Int_t)fSeekKeys);
+      tobuf(buffer, (Int_t)fSeekDir, buffBigEndian);
+      tobuf(buffer, (Int_t)fSeekParent, buffBigEndian);
+      tobuf(buffer, (Int_t)fSeekKeys, buffBigEndian);
    }
-   fUUID.FillBuffer(buffer);
+   fUUID.FillBuffer(buffer, buffBigEndian);
    if (fFile && fFile->GetVersion() < 40000) return;
-   if (version <=1000) for (Int_t i=0;i<3;i++) tobuf(buffer,Int_t(0));
+   if (version <=1000) for (Int_t i=0;i<3;i++) tobuf(buffer,Int_t(0), buffBigEndian);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -37,7 +37,7 @@ public:
    TFree(TList *lfree, Long64_t first, Long64_t last);
    virtual ~TFree();
            TFree    *AddFree(TList *lfree, Long64_t first, Long64_t last);
-   virtual void      FillBuffer(char *&buffer);
+   virtual void      FillBuffer(char *&buffer, Bool_t buffBigEndian=kTRUE);
            TFree    *GetBestFree(TList *lfree, Int_t nbytes);
            Long64_t  GetFirst() const {return fFirst;}
            Long64_t  GetLast() const {return fLast;}

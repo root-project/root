@@ -241,9 +241,9 @@ void TBufferFile::ReadLong(Long_t &l)
 {
    TFile *file = (TFile*)fParent;
    if (file && file->GetVersion() < 30006) {
-      frombufOld(fBufCur, &l);
+      frombufOld(fBufCur, &l, IsBigEndian());
    } else {
-      frombuf(fBufCur, &l);
+      frombuf(fBufCur, &l, IsBigEndian());
    }
 }
 
@@ -357,14 +357,24 @@ void TBufferFile::SetByteCount(UInt_t cntpos, Bool_t packInVersion)
       } v;
       v.cnt = cnt;
 #ifdef R__BYTESWAP
-      tobuf(buf, Version_t(v.vers[1] | kByteCountVMask));
-      tobuf(buf, v.vers[0]);
+      if(IsBigEndian()) {
+         tobuf(buf, Version_t(v.vers[1] | kByteCountVMask));
+         tobuf(buf, v.vers[0]);
+      } else {
+         tobuf(buf, v.vers[0], 0);
+         tobuf(buf, Version_t(v.vers[1] | kByteCountVMask), 0);
+      }
 #else
-      tobuf(buf, Version_t(v.vers[0] | kByteCountVMask));
-      tobuf(buf, v.vers[1]);
+      if(IsBigEndian()) {
+         tobuf(buf, Version_t(v.vers[0] | kByteCountVMask));
+         tobuf(buf, v.vers[1]);
+      } else {
+         tobuf(buf, v.vers[1], 0);
+         tobuf(buf, Version_t(v.vers[0] | kByteCountVMask), 0);
+      }
 #endif
    } else
-      tobuf(buf, cnt | kByteCountMask);
+      tobuf(buf, cnt | kByteCountMask, IsBigEndian());
 
    if (cnt >= kMaxMapCount) {
       Error("WriteByteCount", "bytecount too large (more than %d)", kMaxMapCount);
@@ -1761,16 +1771,31 @@ void TBufferFile::WriteArray(const Short_t *h, Int_t n)
    if (fBufCur + l > fBufMax) AutoExpand(fBufSize+l);
 
 #ifdef R__BYTESWAP
+   if(IsBigEndian()) {
 # ifdef USE_BSWAPCPY
-   bswapcpy16(fBufCur, h, n);
-   fBufCur += l;
+      bswapcpy16(fBufCur, h, n);
+      fBufCur += l;
 # else
-   for (int i = 0; i < n; i++)
-      tobuf(fBufCur, h[i]);
+      for (int i = 0; i < n; i++)
+         tobuf(fBufCur, h[i]);
 # endif
+   } else {
+      memcpy(fBufCur, h, l);
+      fBufCur += l;
+   }
 #else
-   memcpy(fBufCur, h, l);
-   fBufCur += l;
+   if(IsBigEndian()) {
+      memcpy(fBufCur, h, l);
+      fBufCur += l;
+   } else {
+# ifdef USE_BSWAPCPY
+      bswapcpy16(fBufCur, h, n);
+      fBufCur += l;
+# else
+      for (int i = 0; i < n; i++)
+         tobuf(fBufCur, h[i], 0);
+# endif
+   }  
 #endif
 }
 
@@ -1791,16 +1816,30 @@ void TBufferFile::WriteArray(const Int_t *ii, Int_t n)
    if (fBufCur + l > fBufMax) AutoExpand(fBufSize+l);
 
 #ifdef R__BYTESWAP
+   if(IsBigEndian()) {
 # ifdef USE_BSWAPCPY
-   bswapcpy32(fBufCur, ii, n);
-   fBufCur += l;
+      bswapcpy32(fBufCur, ii, n);
+      fBufCur += l;
 # else
-   for (int i = 0; i < n; i++)
-      tobuf(fBufCur, ii[i]);
+      for (int i = 0; i < n; i++)
+         tobuf(fBufCur, ii[i]);
 # endif
+   } else {
+      memcpy(fBufCur, ii, l);
+   }
+   if(IsBigEndian()) {
 #else
-   memcpy(fBufCur, ii, l);
-   fBufCur += l;
+      memcpy(fBufCur, ii, l);
+      fBufCur += l;
+   } else {
+# ifdef USE_BSWAPCPY
+      bswapcpy32(fBufCur, ii, n);
+      fBufCur += l;
+# else
+      for (int i = 0; i < n; i++)
+         tobuf(fBufCur, ii[i]);
+# endif
+   }
 #endif
 }
 
@@ -1859,11 +1898,21 @@ void TBufferFile::WriteArray(const Long64_t *ll, Int_t n)
    if (fBufCur + l > fBufMax) AutoExpand(fBufSize+l);
 
 #ifdef R__BYTESWAP
-   for (int i = 0; i < n; i++)
-      tobuf(fBufCur, ll[i]);
+   if(IsBigEndian()) {
+      for (int i = 0; i < n; i++)
+         tobuf(fBufCur, ll[i]);
+   } else {
+      memcpy(fBufCur, ll, l);
+      fBufCur += l;
+   }
 #else
-   memcpy(fBufCur, ll, l);
-   fBufCur += l;
+   if(IsBigEndian()) {
+      memcpy(fBufCur, ll, l);
+      fBufCur += l;
+   } else {
+      for (int i = 0; i < n; i++)
+         tobuf(fBufCur, ll[i]);
+   }
 #endif
 }
 
@@ -1884,16 +1933,31 @@ void TBufferFile::WriteArray(const Float_t *f, Int_t n)
    if (fBufCur + l > fBufMax) AutoExpand(fBufSize+l);
 
 #ifdef R__BYTESWAP
+   if(IsBigEndian()) {
 # ifdef USE_BSWAPCPY
-   bswapcpy32(fBufCur, f, n);
-   fBufCur += l;
+      bswapcpy32(fBufCur, f, n);
+      fBufCur += l;
 # else
-   for (int i = 0; i < n; i++)
-      tobuf(fBufCur, f[i]);
+      for (int i = 0; i < n; i++)
+         tobuf(fBufCur, f[i]);
 # endif
+   } else {
+      memcpy(fBufCur, f, l);
+      fBufCur += l;
+   }
 #else
-   memcpy(fBufCur, f, l);
-   fBufCur += l;
+   if(IsBigEndian()) {
+      memcpy(fBufCur, f, l);
+      fBufCur += l;
+   } else {
+# ifdef USE_BSWAPCPY
+      bswapcpy32(fBufCur, f, n);
+      fBufCur += l;
+# else
+      for (int i = 0; i < n; i++)
+         tobuf(fBufCur, f[i], 0);
+# endif
+   }
 #endif
 }
 
@@ -1914,11 +1978,21 @@ void TBufferFile::WriteArray(const Double_t *d, Int_t n)
    if (fBufCur + l > fBufMax) AutoExpand(fBufSize+l);
 
 #ifdef R__BYTESWAP
-   for (int i = 0; i < n; i++)
-      tobuf(fBufCur, d[i]);
+   if(IsBigEndian()) {
+      for (int i = 0; i < n; i++)
+         tobuf(fBufCur, d[i]);
+   } else {
+      memcpy(fBufCur, d, l);
+      fBufCur += l;
+   }
 #else
-   memcpy(fBufCur, d, l);
-   fBufCur += l;
+   if(IsBigEndian()) {
+      memcpy(fBufCur, d, l);
+      fBufCur += l;
+   } else {
+      for (int i = 0; i < n; i++)
+         tobuf(fBufCur, d[i], 0);
+   }
 #endif
 }
 

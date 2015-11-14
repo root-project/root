@@ -350,70 +350,70 @@ inline void TBufferFile::WriteUChar(UChar_t c)
 inline void TBufferFile::WriteShort(Short_t h)
 {
    if (fBufCur + sizeof(Short_t) > fBufMax) AutoExpand(fBufSize+sizeof(Short_t));
-   tobuf(fBufCur, h);
+   tobuf(fBufCur, h, IsBigEndian());
 }
 
 //______________________________________________________________________________
 inline void TBufferFile::WriteUShort(UShort_t h)
 {
    if (fBufCur + sizeof(UShort_t) > fBufMax) AutoExpand(fBufSize+sizeof(UShort_t));
-   tobuf(fBufCur, (Short_t)h);
+   tobuf(fBufCur, (Short_t)h, IsBigEndian());
 }
 
 //______________________________________________________________________________
 inline void TBufferFile::WriteInt(Int_t i)
 {
    if (fBufCur + sizeof(Int_t) > fBufMax) AutoExpand(fBufSize+sizeof(Int_t));
-   tobuf(fBufCur, i);
+   tobuf(fBufCur, i, IsBigEndian());
 }
 
 //______________________________________________________________________________
 inline void TBufferFile::WriteUInt(UInt_t i)
 {
    if (fBufCur + sizeof(UInt_t) > fBufMax) AutoExpand(fBufSize+sizeof(UInt_t));
-   tobuf(fBufCur, (Int_t)i);
+   tobuf(fBufCur, (Int_t)i, IsBigEndian());
 }
 
 //______________________________________________________________________________
 inline void TBufferFile::WriteLong(Long_t l)
 {
    if (fBufCur + sizeof(Long_t) > fBufMax) AutoExpand(fBufSize+sizeof(Long_t));
-   tobuf(fBufCur, l);
+   tobuf(fBufCur, l, IsBigEndian());
 }
 
 //______________________________________________________________________________
 inline void TBufferFile::WriteULong(ULong_t l)
 {
    if (fBufCur + sizeof(ULong_t) > fBufMax) AutoExpand(fBufSize+sizeof(ULong_t));
-   tobuf(fBufCur, (Long_t)l);
+   tobuf(fBufCur, (Long_t)l, IsBigEndian());
 }
 
 //______________________________________________________________________________
 inline void TBufferFile::WriteLong64(Long64_t ll)
 {
    if (fBufCur + sizeof(Long64_t) > fBufMax) AutoExpand(fBufSize+sizeof(Long64_t));
-   tobuf(fBufCur, ll);
+   tobuf(fBufCur, ll, IsBigEndian());
 }
 
 //______________________________________________________________________________
 inline void TBufferFile::WriteULong64(ULong64_t ll)
 {
    if (fBufCur + sizeof(ULong64_t) > fBufMax) AutoExpand(fBufSize+sizeof(ULong64_t));
-   tobuf(fBufCur, (Long64_t)ll);
+   tobuf(fBufCur, (Long64_t)ll, IsBigEndian());
 }
 
 //______________________________________________________________________________
 inline void TBufferFile::WriteFloat(Float_t f)
 {
    if (fBufCur + sizeof(Float_t) > fBufMax) AutoExpand(fBufSize+sizeof(Float_t));
-   tobuf(fBufCur, f);
+   tobuf(fBufCur, f, IsBigEndian());
 }
 
 //______________________________________________________________________________
 inline void TBufferFile::WriteDouble(Double_t d)
 {
    if (fBufCur + sizeof(Double_t) > fBufMax) AutoExpand(fBufSize+sizeof(Double_t));
-   tobuf(fBufCur, d);
+   tobuf(fBufCur, d, IsBigEndian());
 }
 
 //______________________________________________________________________________
@@ -443,7 +443,7 @@ inline void TBufferFile::ReadUChar(UChar_t &c)
 //______________________________________________________________________________
 inline void TBufferFile::ReadShort(Short_t &h)
 {
-   frombuf(fBufCur, &h);
+   frombuf(fBufCur, &h, IsBigEndian());
 }
 
 //______________________________________________________________________________
@@ -455,7 +455,7 @@ inline void TBufferFile::ReadUShort(UShort_t &h)
 //______________________________________________________________________________
 inline void TBufferFile::ReadInt(Int_t &i)
 {
-   frombuf(fBufCur, &i);
+   frombuf(fBufCur, &i, IsBigEndian());
 }
 
 //______________________________________________________________________________
@@ -482,7 +482,7 @@ inline void TBufferFile::ReadULong(ULong_t &ll)
 //______________________________________________________________________________
 inline void TBufferFile::ReadLong64(Long64_t &ll)
 {
-   frombuf(fBufCur, &ll);
+   frombuf(fBufCur, &ll, IsBigEndian());
 }
 
 //______________________________________________________________________________
@@ -494,13 +494,13 @@ inline void TBufferFile::ReadULong64(ULong64_t &ll)
 //______________________________________________________________________________
 inline void TBufferFile::ReadFloat(Float_t &f)
 {
-   frombuf(fBufCur, &f);
+   frombuf(fBufCur, &f, IsBigEndian());
 }
 
 //______________________________________________________________________________
 inline void TBufferFile::ReadDouble(Double_t &d)
 {
-   frombuf(fBufCur, &d);
+   frombuf(fBufCur, &d, IsBigEndian());
 }
 
 //______________________________________________________________________________
