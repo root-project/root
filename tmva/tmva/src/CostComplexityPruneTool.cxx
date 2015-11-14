@@ -30,7 +30,7 @@
 #include "TMVA/SeparationBase.h"
 #include "TMVA/DecisionTree.h"
 
-#include "RTypesCore.h"
+#include "RtypesCore.h"
 
 #include <fstream>
 #include <limits>
