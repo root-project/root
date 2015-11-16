@@ -336,7 +336,7 @@ hostname is looked up and Locate() returns the full url, including the path.
 ### Notebooks
 We provided integration of ROOT with Jupyter notebooks. For what concerns Python notebooks, tab completion, output and graphics capturing have been enabled. It is possible to switch from Python to C++ and have a C++ notebook at disposal.
 New tutorials and code examples have been provided here: https://root.cern.ch/code-examples#notebooks
-We made it easier to use ROOT notebooks locally, by providing a 'root --notebook' command option to start a local notebook server customised with all the ROOT features. This command option is only present when building with CMake.
+We made it easier to use ROOT notebooks locally, by providing a 'root --notebook' command option to start a local notebook server customised with all the ROOT features.
 
 ## JavaScript ROOT
 
