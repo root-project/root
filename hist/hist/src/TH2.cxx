@@ -36,7 +36,7 @@ ClassImp(TH2)
 \class TH2F \brief tomato 2-D histogram with a float per channel (see TH1 documentation)}
 \class TH2D \brief tomato 2-D histogram with a double per channel (see TH1 documentation)}
 @}
-*/ 
+*/
 
 /** \class TH2
  Service class for 2-Dim histogram classes
@@ -163,11 +163,11 @@ TH2::~TH2()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram with all entries in the buffer.
-/// action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
-/// action =  0 histogram is filled from the buffer
-/// action =  1 histogram is filled and buffer is deleted
-///             The buffer is automatically deleted when the number of entries
-///             in the buffer is greater than the number of entries in the histogram
+///  - action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
+///  - action =  0 histogram is filled from the buffer
+///  - action =  1 histogram is filled and buffer is deleted
+///                The buffer is automatically deleted when the number of entries
+///                in the buffer is greater than the number of entries in the histogram
 
 Int_t TH2::BufferEmpty(Int_t action)
 {
@@ -236,10 +236,12 @@ Int_t TH2::BufferEmpty(Int_t action)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// accumulate arguments in buffer. When buffer is full, empty the buffer
+/// ~~~ {.cpp}
 /// fBuffer[0] = number of entries in buffer
 /// fBuffer[1] = w of first entry
 /// fBuffer[2] = x of first entry
 /// fBuffer[3] = y of first entry
+/// ~~~
 
 Int_t TH2::BufferFill(Double_t x, Double_t y, Double_t w)
 {
@@ -292,14 +294,14 @@ Int_t TH2::Fill(Double_t )
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment cell defined by x,y by 1.
 ///
-/// if x or/and y is less than the low-edge of the corresponding axis first bin,
-///   the Underflow cell is incremented.
-/// if x or/and y is greater than the upper edge of corresponding axis last bin,
-///   the Overflow cell is incremented.
+///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
+///    the Underflow cell is incremented.
+///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///    the Overflow cell is incremented.
 ///
-/// If the storage of the sum of squares of weights has been triggered,
-/// via the function Sumw2, then the sum of the squares of weights is incremented
-/// by 1 in the cell corresponding to x,y.
+/// -  If the storage of the sum of squares of weights has been triggered,
+///    via the function Sumw2, then the sum of the squares of weights is incremented
+///    by 1 in the cell corresponding to x,y.
 ///
 /// The function returns the corresponding global bin number which has its content
 /// incremented by 1
@@ -336,14 +338,14 @@ Int_t TH2::Fill(Double_t x,Double_t y)
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment cell defined by x,y by a weight w.
 ///
-/// if x or/and y is less than the low-edge of the corresponding axis first bin,
-///   the Underflow cell is incremented.
-/// if x or/and y is greater than the upper edge of corresponding axis last bin,
-///   the Overflow cell is incremented.
+///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
+///    the Underflow cell is incremented.
+///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///    the Overflow cell is incremented.
 ///
-///  If the weight is not equal to 1, the storage of the sum of squares of
-///   weights is automatically triggered and the sum of the squares of weights is incremented
-///   by w^2 in the bin corresponding to x,y
+///   - If the weight is not equal to 1, the storage of the sum of squares of
+///     weights is automatically triggered and the sum of the squares of weights is incremented
+///     by w^2 in the bin corresponding to x,y
 ///
 /// The function returns the corresponding global bin number which has its content
 /// incremented by w
@@ -382,14 +384,14 @@ Int_t TH2::Fill(Double_t x, Double_t y, Double_t w)
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment cell defined by namex,namey by a weight w
 ///
-/// if x or/and y is less than the low-edge of the corresponding axis first bin,
-///   the Underflow cell is incremented.
-/// if x or/and y is greater than the upper edge of corresponding axis last bin,
-///   the Overflow cell is incremented.
+///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
+///    the Underflow cell is incremented.
+///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///    the Overflow cell is incremented.
 ///
-/// If the weight is not equal to 1, the storage of the sum of squares of
-///  weights is automatically triggered and the sum of the squares of weights is incremented
-///  by w^2 in the bin corresponding to namex,namey
+///   - If the weight is not equal to 1, the storage of the sum of squares of
+///     weights is automatically triggered and the sum of the squares of weights is incremented
+///     by w^2 in the bin corresponding to namex,namey
 ///
 /// The function returns the corresponding global bin number which has its content
 /// incremented by w
@@ -424,14 +426,14 @@ Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment cell defined by namex,y by a weight w
 ///
-/// if x or/and y is less than the low-edge of the corresponding axis first bin,
-///   the Underflow cell is incremented.
-/// if x or/and y is greater than the upper edge of corresponding axis last bin,
-///   the Overflow cell is incremented.
+///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
+///    the Underflow cell is incremented.
+///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///    the Overflow cell is incremented.
 ///
-/// If the weight is not equal to 1, the storage of the sum of squares of
-///  weights is automatically triggered and the sum of the squares of weights is incremented
-///  by w^2 in the bin corresponding to namex,y
+///  - If the weight is not equal to 1, the storage of the sum of squares of
+///    weights is automatically triggered and the sum of the squares of weights is incremented
+///    by w^2 in the bin corresponding to namex,y
 ///
 /// The function returns the corresponding global bin number which has its content
 /// incremented by w
@@ -467,14 +469,14 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment cell defined by x,namey by a weight w
 ///
-/// if x or/and y is less than the low-edge of the corresponding axis first bin,
-///   the Underflow cell is incremented.
-/// if x or/and y is greater than the upper edge of corresponding axis last bin,
-///   the Overflow cell is incremented.
+///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
+///    the Underflow cell is incremented.
+///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///    the Overflow cell is incremented.
 ///
-/// If the weight is not equal to 1, the storage of the sum of squares of
-///  weights is automatically triggered and the sum of the squares of weights is incremented
-///  by w^2 in the bin corresponding to x,y.
+///  - If the weight is not equal to 1, the storage of the sum of squares of
+///    weights is automatically triggered and the sum of the squares of weights is incremented
+///    by w^2 in the bin corresponding to x,y.
 ///
 /// The function returns the corresponding global bin number which has its content
 /// incremented by w
@@ -510,16 +512,16 @@ Int_t TH2::Fill(Double_t x, const char *namey, Double_t w)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill a 2-D histogram with an array of values and weights.
 ///
-/// ntimes:  number of entries in arrays x and w (array size must be ntimes*stride)
-/// x:       array of x values to be histogrammed
-/// y:       array of y values to be histogrammed
-/// w:       array of weights
-/// stride:  step size through arrays x, y and w
+///  - ntimes:  number of entries in arrays x and w (array size must be ntimes*stride)
+///  - x:       array of x values to be histogrammed
+///  - y:       array of y values to be histogrammed
+///  - w:       array of weights
+///  - stride:  step size through arrays x, y and w
 ///
-///  If the weight is not equal to 1, the storage of the sum of squares of
-///   weights is automatically triggered and the sum of the squares of weights is incremented
-///   by w[i]^2 in the bin corresponding to x[i],y[i].
-///  If w is NULL each entry is assumed a weight=1
+///   - If the weight is not equal to 1, the storage of the sum of squares of
+///     weights is automatically triggered and the sum of the squares of weights is incremented
+///     by w[i]^2 in the bin corresponding to x[i],y[i].
+///   - If w is NULL each entry is assumed a weight=1
 ///
 /// NB: function only valid for a TH2x object
 
@@ -841,21 +843,23 @@ void TH2::DoFitSlices(bool onX,
 /// Before invoking this function, one can set a subrange to be fitted along X
 /// via f1->SetRange(xmin,xmax)
 /// The argument option (default="QNR") can be used to change the fit options.
-///     "Q"  means Quiet mode
-///     "N"  means do not show the result of the fit
-///     "R"  means fit the function in the specified function range
-///     "G2" merge 2 consecutive bins along X
-///     "G3" merge 3 consecutive bins along X
-///     "G4" merge 4 consecutive bins along X
-///     "G5" merge 5 consecutive bins along X
-///     "S"  sliding merge: merge n consecutive bins along X accordingly to what Gn is given.
-///          It makes sense when used together with a Gn option
+///    - "Q"  means Quiet mode
+///    - "N"  means do not show the result of the fit
+///    - "R"  means fit the function in the specified function range
+///    - "G2" merge 2 consecutive bins along X
+///    - "G3" merge 3 consecutive bins along X
+///    - "G4" merge 4 consecutive bins along X
+///    - "G5" merge 5 consecutive bins along X
+///    - "S"  sliding merge: merge n consecutive bins along X accordingly to what Gn is given.
+///           It makes sense when used together with a Gn option
 ///
 /// The generated histograms are returned by adding them to arr, if arr is not NULL.
 /// arr's SetOwner() is called, to signal that it is the user's respponsability to
 /// delete the histograms, possibly by deleting the arrary.
+/// ~~~ {.cpp}
 ///    TObjArray aSlices;
 ///    h2->FitSlicesX(func, 0, -1, 0, "QNR", &aSlices);
+/// ~~~
 /// will already delete the histograms once aSlice goes out of scope. aSlices will
 /// contain the histogram for the i-th parameter of the fit function at aSlices[i];
 /// aSlices[n] (n being the number of parameters) contains the chi2 distribution of
@@ -866,6 +870,7 @@ void TH2::DoFitSlices(bool onX,
 /// these histograms.
 ///
 ///  Example: Assume a 2-d histogram h2
+/// ~~~ {.cpp}
 ///   Root > h2->FitSlicesX(); produces 4 TH1D histograms
 ///          with h2_0 containing parameter 0(Constant) for a Gaus fit
 ///                    of each bin in Y projected along X
@@ -877,9 +882,11 @@ void TH2::DoFitSlices(bool onX,
 ///          same as above, but only for bins 15 to 22 along Y
 ///          and only for bins in Y for which the corresponding projection
 ///          along X has more than cut bins filled.
-///
+/// ~~~
 ///  NOTE: To access the generated histograms in the current directory, do eg:
+/// ~~~ {.cpp}
 ///     TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
+/// ~~~
 
 void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option_t *option, TObjArray* arr)
 {
@@ -898,21 +905,23 @@ void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option
 /// Before invoking this function, one can set a subrange to be fitted along Y
 /// via f1->SetRange(ymin,ymax)
 /// The argument option (default="QNR") can be used to change the fit options.
-///     "Q"  means Quiet mode
-///     "N"  means do not show the result of the fit
-///     "R"  means fit the function in the specified function range
-///     "G2" merge 2 consecutive bins along Y
-///     "G3" merge 3 consecutive bins along Y
-///     "G4" merge 4 consecutive bins along Y
-///     "G5" merge 5 consecutive bins along Y
-///     "S"  sliding merge: merge n consecutive bins along Y accordingly to what Gn is given.
-///          It makes sense when used together with a Gn option
+///    - "Q"  means Quiet mode
+///    - "N"  means do not show the result of the fit
+///    - "R"  means fit the function in the specified function range
+///    - "G2" merge 2 consecutive bins along Y
+///    - "G3" merge 3 consecutive bins along Y
+///    - "G4" merge 4 consecutive bins along Y
+///    - "G5" merge 5 consecutive bins along Y
+///    - "S"  sliding merge: merge n consecutive bins along Y accordingly to what Gn is given.
+///           It makes sense when used together with a Gn option
 ///
 /// The generated histograms are returned by adding them to arr, if arr is not NULL.
 /// arr's SetOwner() is called, to signal that it is the user's respponsability to
 /// delete the histograms, possibly by deleting the arrary.
+/// ~~~ {.cpp}
 ///    TObjArray aSlices;
 ///    h2->FitSlicesY(func, 0, -1, 0, "QNR", &aSlices);
+/// ~~~
 /// will already delete the histograms once aSlice goes out of scope. aSlices will
 /// contain the histogram for the i-th parameter of the fit function at aSlices[i];
 /// aSlices[n] (n being the number of parameters) contains the chi2 distribution of
@@ -923,6 +932,7 @@ void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option
 /// these histograms.
 ///
 ///  Example: Assume a 2-d histogram h2
+/// ~~~ {.cpp}
 ///   Root > h2->FitSlicesY(); produces 4 TH1D histograms
 ///          with h2_0 containing parameter 0(Constant) for a Gaus fit
 ///                    of each bin in X projected along Y
@@ -934,23 +944,18 @@ void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option
 ///          same as above, but only for bins 15 to 22 along X
 ///          and only for bins in X for which the corresponding projection
 ///          along Y has more than cut bins filled.
+/// ~~~
 ///
 ///  NOTE: To access the generated histograms in the current directory, do eg:
+/// ~~~ {.cpp}
 ///     TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
+/// ~~~
 ///
-/// A complete example of this function is given in begin_html <a href="examples/fitslicesy.C.html">tutorial:fitslicesy.C</a> end_html
-/// with the following output:
-///Begin_Html
+/// A complete example of this function is given in tutorial:fitslicesy.C.
 
 void TH2::FitSlicesY(TF1 *f1, Int_t firstxbin, Int_t lastxbin, Int_t cut, Option_t *option, TObjArray* arr)
 {
-   /*
-   <img src="gif/fitslicesy.gif">
-   */
-   //End_Html
-
    DoFitSlices(false, f1, firstxbin, lastxbin, cut, option, arr);
-
 }
 
 Int_t TH2::GetBin(Int_t binx, Int_t biny, Int_t) const
@@ -981,6 +986,7 @@ Int_t TH2::GetBin(Int_t binx, Int_t biny, Int_t) const
 ///        if (lastybin < firstybin then lastybin is set to the number of bins in Y
 ///          ie if firstybin=1 and lastybin=0 (default) the search is on all bins in Y except
 ///          for Y's under- and overflow bins.
+///
 /// NOTE2: if maxdiff=0 (default), the first cell with content=c is returned.
 
 Double_t TH2::GetBinWithContent2(Double_t c, Int_t &binx, Int_t &biny, Int_t firstxbin, Int_t lastxbin,
@@ -1092,6 +1098,7 @@ void TH2::GetRandom2(Double_t &x, Double_t &y)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the array stats from the contents of this histogram
 /// The array stats must be correctly dimensionned in the calling program.
+/// ~~~ {.cpp}
 /// stats[0] = sumw
 /// stats[1] = sumw2
 /// stats[2] = sumwx
@@ -1099,6 +1106,7 @@ void TH2::GetRandom2(Double_t &x, Double_t &y)
 /// stats[4] = sumwy
 /// stats[5] = sumwy2
 /// stats[6] = sumwxy
+/// ~~~
 ///
 /// If no axis-subranges are specified (via TAxis::SetRange), the array stats
 /// is simply a copy of the statistics quantities computed at filling time.
@@ -1310,11 +1318,11 @@ Double_t TH2::Interpolate(Double_t, Double_t, Double_t)
 ///     Default: Ignore under- and overflow bins in comparison
 ///
 ///     option is a character string to specify options
-///         "U" include Underflows in test
-///         "O" include Overflows
-///         "N" include comparison of normalizations
-///         "D" Put out a line of "Debug" printout
-///         "M" Return the Maximum Kolmogorov distance instead of prob
+///        - "U" include Underflows in test
+///        - "O" include Overflows
+///        - "N" include comparison of normalizations
+///        - "D" Put out a line of "Debug" printout
+///        - "M" Return the Maximum Kolmogorov distance instead of prob
 ///
 ///   The returned function value is the probability of test
 ///       (much less than one means NOT compatible)
@@ -1772,11 +1780,13 @@ TH2 *TH2::RebinY(Int_t ngroup, const char *newname)
 ///   histograms has new errors correctly calculated.
 ///
 ///   examples: if hpxpy is an existing TH2 histogram with 40 x 40 bins
+/// ~~~ {.cpp}
 ///     hpxpy->Rebin2D();  // merges two bins along the xaxis and yaxis in one in hpxpy
 ///                        // Carefull: previous contents of hpxpy are lost
 ///     hpxpy->RebinX(5);  //merges five bins along the xaxis in one in hpxpy
 ///     TH2 *hnew = hpxpy->RebinY(5,"hnew"); // creates a new histogram hnew
 ///                                          // merging 5 bins of h1 along the yaxis in one bin
+/// ~~~
 ///
 ///   NOTE : If nxgroup/nygroup is not an exact divider of the number of bins,
 ///          along the xaxis/yaxis the top limit(s) of the rebinned histogram
@@ -2081,7 +2091,7 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    bool useWeights = (GetSumw2N() > 0);
    if (useWeights) h1->Sumw2();
    // we need to set this bit because we fill the profile using a single Fill for many entries
-   // This is needed for the changes applied to make automaticall y hthe histogram weighted in ROOT 6 versions
+   // This is needed for the changes applied to make automatically the histogram weighted in ROOT 6 versions
    else h1->SetBit(TH1::kIsNotW);
 
    // Fill the profile histogram
@@ -2440,7 +2450,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
       h1->PutStats(stats);
    }
    else {
-      // the statistics is automatically recalulated since it is reset by the call to SetBinContent
+      // the statistics is automatically recalculated since it is reset by the call to SetBinContent
       // we just need to set the entries since they have not been correctly calculated during the projection
       // we can only set them to the effective entries
       h1->SetEntries( h1->GetEffectiveEntries() );
