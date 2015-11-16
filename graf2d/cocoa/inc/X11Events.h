@@ -18,7 +18,7 @@
 #include "GuiTypes.h"
 #endif
 
-#include "CocoaUtils.h"
+#include <Foundation/Foundation.h>
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
