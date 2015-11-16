@@ -53,7 +53,9 @@ and can be seen from the [ROOT home page](https://root.cern.ch/doc/master/index.
 Fixed the dictionary generation in the case of class inside a namespace
 marked inlined.
 
-### Thread safety
+Added mechanisms to stop the dictionary generation while parsing the XML and while selecting in presence of duplicates.
+
+### Thread safety and thread awareness
 
 We added the function `TMethodCall::GetCallFunc` to allow direct access to the function wrapper.
 
@@ -61,7 +63,7 @@ We reduced thread serialization in `TClass::GetCheckSum`, `TClass::GetBaseClassO
 
 `TObjArray::Delete` was updated to allow its caller to explicitly avoid costly checks (extra RecursiveRemove and lock)
 
-We removed the need to create a TThread object per thread in a multi-threaded application.
+We removed the need to create a TThread object per thread in a multi-threaded application. Now ROOT can be used with any threading model (e.g. OpenMP, STL threads, TBB) transparently: all the internal synchronisation mechanisms of ROOT are activated by a single call: `ROOT::EnableMT()`. This call must take place if ROOT needs to be used in a thread safe manner.
 
 ### TDirectory::TContext
 
@@ -334,9 +336,12 @@ hostname is looked up and Locate() returns the full url, including the path.
 ## Language Bindings
 
 ### Notebooks
-We provided integration of ROOT with Jupyter notebooks. For what concerns Python notebooks, tab completion, output and graphics capturing have been enabled. It is possible to switch from Python to C++ and have a C++ notebook at disposal.
-New tutorials and code examples have been provided here: https://root.cern.ch/code-examples#notebooks
+We provided integration of ROOT with the Jupyter technology, integrating ROOT with Python Notebooks and providing a ROOT Kernel like functionality - de facto an enhanced C++ web based shell. Tab completion, output and graphics inlining have been added. These functionalities are automatically available upon import of the ROOT module in a Notebook or at startup of a ROOT prompt kernel.
 We made it easier to use ROOT notebooks locally, by providing a 'root --notebook' command option to start a local notebook server customised with all the ROOT features. This command option is only present when building with CMake.
+
+New tutorials and code examples have been provided here: https://root.cern.ch/code-examples#notebooks
+
+Support for capturing large outputs (stderr/stdout) coming from C++ libraries has been added.
 
 ## JavaScript ROOT
 
