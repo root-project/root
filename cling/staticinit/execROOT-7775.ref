@@ -1,0 +1,10 @@
+
+Processing execROOT-7775.C...
+Creating Marker from first.1 part
+Creating Marker from first.2 part
+Creating Marker from first.3 part
+BaseInfo<T>::instance_holder::instance_holder()
+BaseInfo<T>::instance_holder::instance_holder()
+Destroying Marker from first.3 part
+Destroying Marker from first.2 part
+Destroying Marker from first.1 part
