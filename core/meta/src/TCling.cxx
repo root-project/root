@@ -98,6 +98,7 @@ clang/LLVM technology.
 #include "cling/Interpreter/Transaction.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
+#include "cling/Interpreter/RuntimeException.h"
 
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/Module.h"
@@ -1853,6 +1854,28 @@ void TCling::UnRegisterTClassUpdate(const TClass *oldcl)
 /// (float and double return values will be truncated).
 ///
 
+// Method for handling the interpreter exceptions.
+// the MetaProcessor is passing in as argument to teh function, because
+// cling::Interpreter::CompilationResult is a nested class and it cannot be
+// forward declared, thus this method cannot be a static member function
+// of TCling.
+
+static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
+                                 const char* input_line,
+                                 cling::Interpreter::CompilationResult& compRes,
+                                 cling::Value* result)
+{
+   try {
+      return metaProcessor->process(input_line, compRes, result);
+   }
+   catch (cling::runtime::NullDerefException& ex)
+   {
+      Info("Handle", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
+      ex.diagnose();
+   }
+   return 0;
+}
+
 Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
 {
    // Copy the passed line, it comes from a static buffer in TApplication
@@ -1952,7 +1975,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
                const char *function = gSystem->BaseName(fname);
                mod_line = function + arguments + io;
                cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-               indent = fMetaProcessor->process(mod_line, compRes, &result);
+               indent = HandleInterpreterException(fMetaProcessor, mod_line, compRes, &result);
             }
          }
       } else {
@@ -1982,7 +2005,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          } else {
             // No DynLookup for .x, .L of named macros.
             fInterpreter->enableDynamicLookup(false);
-            indent = fMetaProcessor->process(mod_line, compRes, &result);
+            indent = HandleInterpreterException(fMetaProcessor, mod_line, compRes, &result);
          }
          fCurExecutingMacros.pop_back();
       }
@@ -1997,9 +2020,9 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          bool isInclusionDirective = sLine.Contains("\n#include");
          if (isInclusionDirective) {
             SuspendAutoParsing autoParseRaii(this);
-            indent = fMetaProcessor->process(sLine, compRes, &result);
+            indent = HandleInterpreterException(fMetaProcessor, sLine, compRes, &result);
          } else {
-            indent = fMetaProcessor->process(sLine, compRes, &result);
+            indent = HandleInterpreterException(fMetaProcessor, sLine, compRes, &result);
          }
       }
    }
@@ -2764,7 +2787,7 @@ Int_t TCling::Load(const char* filename, Bool_t system)
          // FIXME: Here we lose the information about kLoadLibAlreadyLoaded case.
          cling::Interpreter::CompilationResult compRes;
          cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-         fMetaProcessor->process(Form(".L %s", canonLib.c_str()), compRes, /*cling::Value*/0);
+         HandleInterpreterException(fMetaProcessor, Form(".L %s", canonLib.c_str()), compRes, /*cling::Value*/0);
          if (compRes == cling::Interpreter::kSuccess)
             res = cling::DynamicLibraryManager::kLoadLibSuccess;
       }
@@ -6144,7 +6167,7 @@ int TCling::LoadFile(const char* path) const
 {
    cling::Interpreter::CompilationResult compRes;
    cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-   fMetaProcessor->process(TString::Format(".L %s", path), compRes, /*cling::Value*/0);
+   HandleInterpreterException(fMetaProcessor, TString::Format(".L %s", path), compRes, /*cling::Value*/0);
    return compRes == cling::Interpreter::kFailure;
 }
 
@@ -6284,7 +6307,7 @@ int TCling::UnloadFile(const char* path) const
    // Unload a shared library or a source file.
    cling::Interpreter::CompilationResult compRes;
    cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-   fMetaProcessor->process(Form(".U %s", canonical.c_str()), compRes, /*cling::Value*/0);
+   HandleInterpreterException(fMetaProcessor, Form(".U %s", canonical.c_str()), compRes, /*cling::Value*/0);
    return compRes == cling::Interpreter::kFailure;
 }
 
