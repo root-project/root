@@ -589,18 +589,37 @@ Bool_t TRint::HandleTermInput()
 
       if (gROOT->Timer()) timer.Start();
 
+#ifdef R__EH
+      Bool_t added = kFALSE;
+#endif
+
       // This is needed when working with remote sessions
       SetBit(kProcessRemotely);
 
-      TRY {
-         if (!sline.IsNull())
-            LineProcessed(sline);
-         ProcessLineNr("ROOT_prompt_", sline);
-      } CATCH(excode) {
-         // enable again input handler
-         fInputHandler->Activate();
-         Throw(excode);
-      } ENDTRY;
+#ifdef R__EH
+      try {
+#endif
+         TRY {
+            if (!sline.IsNull())
+               LineProcessed(sline);
+            ProcessLineNr("ROOT_prompt_", sline);
+         } CATCH(excode) {
+            // enable again input handler
+            fInputHandler->Activate();
+#ifdef R__EH
+            added = kTRUE;
+#endif
+            Throw(excode);
+         } ENDTRY;
+#ifdef R__EH
+      }
+      // handle every exception
+      catch (...) {
+         // enable again intput handler
+         if (!added) fInputHandler->Activate();
+         throw;
+      }
+#endif
 
       if (gROOT->Timer()) timer.Print("u");
 
