@@ -778,6 +778,7 @@ INPUT                  = ../cocoa \
                          ../mc \
                          ../memstat \
                          ../mlp \
+                         ../multicore \
                          ../net \
                          ../physics \
                          ../proof \
