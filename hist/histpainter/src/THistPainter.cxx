@@ -4408,9 +4408,6 @@ void THistPainter::PaintBoxes(Option_t *)
 
 void THistPainter::PaintCandlePlot(Option_t *)
 {
-   /* Begin_html
-   End_html */
-
    Double_t x,y,w;
    Double_t m1 = 0.055, m2 = 0.25;
    Double_t xpm[1], ypm[1];
@@ -4566,13 +4563,10 @@ void THistPainter::PaintCandlePlot(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// [Control function to draw a 2D histogram as a violin plot](#HP141)
 
 void THistPainter::PaintViolinPlot(Option_t *)
 {
-    /* Begin_html
-       [Control function to draw a 2D histogram as a violin plot](#HP141)
-       End_html */
-
    Double_t x,y,w;
    Double_t bw, bcen, bcon;
    Double_t xpm[1], ypm[1];
@@ -4681,13 +4675,10 @@ void THistPainter::PaintViolinPlot(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// [Control function to draw a 2D histogram as a color plot.](#HP14)
 
 void THistPainter::PaintColorLevels(Option_t *)
 {
-   /* Begin_html
-   [Control function to draw a 2D histogram as a color plot.](#HP14)
-   End_html */
-
    Double_t z, zc, xk, xstep, yk, ystep, xlow, xup, ylow, yup;
 
    Double_t zmin = fH->GetMinimum();
