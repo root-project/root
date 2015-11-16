@@ -1,5 +1,12 @@
-// Example displaying two histograms and their ratio.
-// Author: Olivier Couet
+/// \file
+/// \ingroup hist
+/// Example displaying two histograms and their ratio.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
+
 void ratioplot() {
    // Define two gaussian histograms. Note the X and Y title are defined
    // at booking time using the convention "Hist_title ; X_title ; Y_title"

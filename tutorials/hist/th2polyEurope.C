@@ -1,18 +1,24 @@
-//This tutorial illustrates how to create an histogram with polygonal
-//bins (TH2Poly), fill it and draw it. The initial data are stored
-//in TMultiGraphs. They represent the european countries.
-//The histogram filling is done according to a Mercator projection,
-//therefore the bin contains should be proportional to the real surface
-//of the countries.
-//
-//The initial data have been downloaded from: http://www.maproom.psu.edu/dcw/
-//This database was developed in 1991/1992 and national boundaries reflect
-//political reality as of that time.
-//
-//The script is shooting npoints (script argument) randomly over the Europe area.
-//The number of points inside the countries should be proportional to the country surface
-//The estimated surface is compared to the surfaces taken from wikipedia.
-//Author: Olivier Couet
+/// \file
+/// \ingroup hist
+/// This tutorial illustrates how to create an histogram with polygonal
+/// bins (TH2Poly), fill it and draw it. The initial data are stored
+/// in TMultiGraphs. They represent the european countries.
+/// The histogram filling is done according to a Mercator projection,
+/// therefore the bin contains should be proportional to the real surface
+/// of the countries.
+///
+/// The initial data have been downloaded from: http://www.maproom.psu.edu/dcw/
+/// This database was developed in 1991/1992 and national boundaries reflect
+/// political reality as of that time.
+///
+/// The script is shooting npoints (script argument) randomly over the Europe area.
+/// The number of points inside the countries should be proportional to the country surface
+/// The estimated surface is compared to the surfaces taken from wikipedia.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
 
 void th2polyEurope(Int_t npoints=500000)
 {

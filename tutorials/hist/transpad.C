@@ -1,6 +1,12 @@
-// Example of a canvas showing two histograms with different scales.
-// The second histogram is drawn in a transparent pad
-//Author: Rene Brun
+/// \file
+/// \ingroup hist
+/// Example of a canvas showing two histograms with different scales.
+/// The second histogram is drawn in a transparent pad
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
 void transpad() {
    TCanvas *c1 = new TCanvas("c1","transparent pad",200,10,700,500);

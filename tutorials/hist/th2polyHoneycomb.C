@@ -1,7 +1,11 @@
-//This tutorial illustrates how to create an histogram with hexagonal
-//bins (TH2Poly), fill it and draw it using GL.
-//
-//Author: Olivier Couet
+/// \file
+/// \ingroup hist
+/// This tutorial illustrates how to create an histogram with hexagonal
+/// bins (TH2Poly), fill it and draw it using GL.
+///
+/// \macro_code
+///
+/// \author  Olivier Couet
 
 void th2polyHoneycomb(){
    gStyle->SetCanvasPreferGL(true);

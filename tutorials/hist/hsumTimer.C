@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup hist
-/// Demo of Timers
+/// Demo of Timers.
 ///
 /// Simple example illustrating how to use the C++ interpreter
 /// to fill histograms in a loop and show the graphics results

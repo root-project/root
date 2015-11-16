@@ -1,5 +1,11 @@
-// Example showing an histogram with reverse axis.
-//Author: Olivier Couet
+/// \file
+/// \ingroup hist
+/// Example showing an histogram with reverse axis.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
 
 void ReverseXAxis (TH1 *h);
 void ReverseYAxis (TH1 *h);

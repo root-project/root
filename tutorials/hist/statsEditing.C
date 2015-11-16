@@ -1,10 +1,17 @@
-TCanvas *statsEditing() {
-// This example shows:
-//    - how to remove a stat element from the stat box
-//    - how to add a new one
-//
-//  Author: Olivier Couet
+/// \file
+/// \ingroup hist
+/// Edit statistics box.
+///
+/// This example shows:
+///  - how to remove a stat element from the stat box
+///  - how to add a new one
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author  Olivier Couet
 
+TCanvas *statsEditing() {
    // Create and plot a test histogram with stats
    TCanvas *se = new TCanvas;
    TH1F *h = new TH1F("h","test",100,-3,3);

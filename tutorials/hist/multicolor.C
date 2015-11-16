@@ -1,8 +1,14 @@
-// Use a THStack to show a 2-D hist with cells with different colors
-// run this example with the two options
-//  root > .x multicolor.C
-//  root > .x multicolor.C(1)
-//Author: Rene Brun
+/// \file
+/// \ingroup hist
+/// Use a THStack to show a 2-D hist with cells with different colors.
+/// ~~~ {.cpp}
+///  root > .x multicolor.C
+///  root > .x multicolor.C(1)
+/// ~~~
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TCanvas.h"
 #include "TH2.h"

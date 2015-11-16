@@ -1,4 +1,13 @@
-//example of macro illustrating how to superimpose two histograms
+/// \file
+/// \ingroup hist
+/// Example of macro illustrating how to superimpose two histograms
+/// with different scales in the "same" pad.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TH1.h"
@@ -7,11 +16,6 @@
 
 void twoscales()
 {
-   //example of macro illustrating how to superimpose two histograms
-   //with different scales in the "same" pad.
-   // To see the output of this macro, click begin_html <a href="gif/twoscales.gif" >here</a> end_html
-   //Author: Rene Brun
-
    TCanvas *c1 = new TCanvas("c1","hists with different scales",600,400);
 
    //create/fill draw h1

@@ -1,8 +1,16 @@
-//this tutorial illustrates how to:
-//  -create a variable binwidth histogram with a binning such
-//   that the population per bin is about the same.
-//  -rebin a variable binwidth histogram into another one.
-//Author: Rene Brun
+/// \file
+/// \ingroup hist
+/// Rebin a variable bin-width histogram.
+///
+/// This tutorial illustrates how to:
+///   - create a variable bin-width histogram with a binning such
+///     that the population per bin is about the same.
+///   - rebin a variable bin-width histogram into another one.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TH1.h"
 #include "TCanvas.h"
@@ -25,7 +33,7 @@ void rebin() {
       }
    }
    xbins[k] = axis->GetXmax();
-   //create a variable binwidth histogram out of fix bin histogram
+   //create a variable bin-width histogram out of fix bin histogram
    //new rebinned histogram should have about 10 entries per bin
    TH1F *hnew = new TH1F("hnew","rebinned",k,xbins);
    hnew->FillRandom("gaus",10*nentries);

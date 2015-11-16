@@ -1,7 +1,12 @@
-//This tutorial illustrates how to create an histogram with polygonal
-//bins (TH2Poly). The bins are boxes.
-//
-//Author: Olivier Couet
+/// \file
+/// \ingroup hist
+/// This tutorial illustrates how to create an histogram with polygonal
+/// bins (TH2Poly). The bins are boxes.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
 
 {
    TCanvas *ch2p2 = new TCanvas("ch2p2","ch2p2",600,400);
