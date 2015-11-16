@@ -1,7 +1,6 @@
 /// \file
 /// \ingroup graphs
 /// Draw a graph with error bars
-/// To see the output of this macro, click begin_html <a href="gif/gerrors.gif">here</a>. end_html
 ///
 /// \macro_image
 /// \macro_code

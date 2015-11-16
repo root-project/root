@@ -2,7 +2,7 @@
 /// \ingroup graphs
 /// This macro is an example of graphs in log scales with annotations.
 ///
-/// The  begin_html presented results are predictions of invariant cross-section
+/// The presented results are predictions of invariant cross-section
 /// of Direct Photons produced at RHIC energies, based on the universality of
 /// scaling function H(z).
 ///

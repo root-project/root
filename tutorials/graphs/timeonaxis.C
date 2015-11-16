@@ -1,8 +1,7 @@
 /// \file
 /// \ingroup graphs
 /// This macro illustrates the use of the time mode on the axis
-/// with different time intervals and time formats. It's result can
-/// be seen begin_html <a href="gif/timeonaxis.gif">here</a> end_html
+/// with different time intervals and time formats.
 /// Through all this script, the time is expressed in UTC. some
 /// information about this format (and others like GPS) may be found at
 /// <a href="http://tycho.usno.navy.mil/systime.html">http://tycho.usno.navy.mil/systime.html</a>
