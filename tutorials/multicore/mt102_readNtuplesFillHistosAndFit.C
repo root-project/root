@@ -15,7 +15,9 @@ class TimerRAII {
    TStopwatch fTimer;
    std::string fMeta;
 public:
-   TimerRAII(const char* meta):fMeta(meta){fTimer.Start();}
+   TimerRAII(const char *meta): fMeta(meta) {
+      fTimer.Start();
+   }
    ~TimerRAII() {
       fTimer.Stop();
       std::cout << fMeta << " - real time elapsed " << fTimer.RealTime() << "s" << std::endl;
@@ -29,7 +31,8 @@ Int_t mt102_readNtuplesFillHistosAndFit()
    gROOT->SetBatch();
 
    // Perform the operation sequentially ---------------------------------------
-   TChain inputChain("multiCore"); inputChain.Add("mc101_multiCore_*.root");
+   TChain inputChain("multiCore");
+   inputChain.Add("mc101_multiCore_*.root");
    TH1F outHisto("outHisto", "Random Numbers", 128, -4, 4);
    {
       TimerRAII t("Sequential read and fit");
@@ -46,27 +49,28 @@ Int_t mt102_readNtuplesFillHistosAndFit()
    // We adapt our parallelisation to the number of input files
    const auto nFiles = inputChain.GetListOfFiles()->GetEntries();
    std::forward_list<UInt_t> workerIDs(nFiles);
-   std::iota(std::begin(workerIDs),std::end(workerIDs),0);
+   std::iota(std::begin(workerIDs), std::end(workerIDs), 0);
 
 
    // We define the histograms we'll fill
-   std::vector<TH1F> histograms; histograms.reserve(nFiles);
-   std::for_each(std::begin(workerIDs),std::end(workerIDs),
-                 [&histograms](UInt_t workerID){
-                    histograms.emplace_back(TH1F(Form("outHisto_%u",workerID), "Random Numbers", 128, -4, 4));
+   std::vector<TH1F> histograms;
+   histograms.reserve(nFiles);
+   std::for_each(std::begin(workerIDs), std::end(workerIDs),
+                 [&histograms](UInt_t workerID) {
+                    histograms.emplace_back(TH1F(Form("outHisto_%u", workerID), "Random Numbers", 128, -4, 4));
                  });
 
    // We define our work item
-   auto workItem = [&histograms](UInt_t workerID){
-                      TFile f(Form("mc101_multiCore_%u.root",workerID));
-                      TNtuple* ntuple = nullptr;
-                      f.GetObject("multiCore",ntuple);
-                      auto& histo = histograms.at(workerID);
-                      for (UInt_t index=0;index<ntuple->GetEntriesFast();++index){
-                         ntuple->GetEntry(index);
-                         histo.Fill(ntuple->GetArgs()[0]);
-                      }
-                   };
+   auto workItem = [&histograms](UInt_t workerID) {
+      TFile f(Form("mc101_multiCore_%u.root", workerID));
+      TNtuple *ntuple = nullptr;
+      f.GetObject("multiCore", ntuple);
+      auto &histo = histograms.at(workerID);
+      for (UInt_t index = 0; index < ntuple->GetEntriesFast(); ++index) {
+         ntuple->GetEntry(index);
+         histo.Fill(ntuple->GetArgs()[0]);
+      }
+   };
 
    TH1F sumHistogram("SumHisto", "Random Numbers", 128, -4, 4);
 
@@ -77,15 +81,22 @@ Int_t mt102_readNtuplesFillHistosAndFit()
    {
       TimerRAII t("Parallel execution");
 
-      std::for_each(std::begin(workerIDs),std::end(workerIDs),
-                    [&workers, &workItem](UInt_t workerID){workers.emplace_back(workItem, workerID);});
+      std::for_each(std::begin(workerIDs), std::end(workerIDs),
+                    [&workers, &workItem](UInt_t workerID) {
+                       workers.emplace_back(workItem, workerID);
+                    });
 
       // Now join them
-      std::for_each(std::begin(workers), std::end(workers), [](std::thread& worker){worker.join();});
+      std::for_each(std::begin(workers), std::end(workers),
+                    [](std::thread & worker) {
+                       worker.join();
+                    });
 
       // And reduce
       std::for_each(std::begin(histograms), std::end(histograms),
-                    [&sumHistogram](const TH1F& h){sumHistogram.Add(&h);});
+                    [&sumHistogram](const TH1F & h) {
+                       sumHistogram.Add(&h);
+                    });
 
       sumHistogram.Fit("gaus");
    }

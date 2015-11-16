@@ -18,12 +18,12 @@ Int_t mt001_fillHistos(UInt_t nWorkers = 4)
    ROOT::EnableMT();
 
    // We define our work item
-   auto workItem = [nNumbers](UInt_t workerID){
+   auto workItem = [nNumbers](UInt_t workerID) {
       // One generator, file and ntuple per worker
       TRandom3 workerRndm(workerID); // Change the seed
-      TFile f(Form("myFile_%u.root",workerID),"RECREATE");
-      TH1F h(Form("myHisto_%u",workerID), "The Histogram", 64, -4, 4);
-      for (UInt_t i=0;i<nNumbers;++i){
+      TFile f(Form("myFile_%u.root", workerID), "RECREATE");
+      TH1F h(Form("myHisto_%u", workerID), "The Histogram", 64, -4, 4);
+      for (UInt_t i = 0; i < nNumbers; ++i) {
          h.Fill(workerRndm.Gaus());
       }
       h.Write();
@@ -33,12 +33,12 @@ Int_t mt001_fillHistos(UInt_t nWorkers = 4)
    std::vector<std::thread> workers;
 
    // Fill the "pool" with workers
-   for (UInt_t workerID=0;workerID<nWorkers;++workerID){
+   for (UInt_t workerID = 0; workerID < nWorkers; ++workerID) {
       workers.emplace_back(workItem, workerID);
    }
 
    // Now join them
-   for (auto&& worker : workers) worker.join();
+   for (auto && worker : workers) worker.join();
 
    return 0;
 
