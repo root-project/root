@@ -6,9 +6,12 @@ convCmdTmpl = "ipython nbconvert  --to notebook --ExecutePreprocessor.enabled=Tr
 
 # Replace the criterion according to which a line shall be skipped
 def customLineJunkFilter(line):
-	# Skip the banner and empty lines
-	isJunk = "Welcome to ROOTaaS 6." in line
-	return not isJunk
+    # Skip the banner and empty lines
+    junkLines =["Info in <TUnixSystem::ACLiC",
+                "Welcome to ROOTaaS 6."]
+    for junkLine in junkLines:
+        if junkLine in line: return False
+    return True
 
 def getFilteredLines(fileName):
     filteredLines =  filter(customLineJunkFilter, open(fileName).readlines())
@@ -36,14 +39,14 @@ def canReproduceNotebook(inNBName):
 
 def isInputNotebookFileName(filename):
     if not filename.endswith(".ipynb"):
-    	print "Notebook files shall have the %s extension" %nbExtension
-    	return False
+        print "Notebook files shall have the %s extension" %nbExtension
+        return False
     return True
 
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 2:
-    	print "Usage: nbdiff.py myNotebook.ipynb"
+        print "Usage: nbdiff.py myNotebook.ipynb"
         sys.exit(1)
     nbFileName = sys.argv[1]
     if not isInputNotebookFileName(nbFileName):
