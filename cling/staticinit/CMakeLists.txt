@@ -1,11 +1,5 @@
-#ROOTTEST_GENERATE_REFLEX_DICTIONARY(AliaODPid AliAODPid.h SELECTION AliAODPid_selection.xml)
-#
-#ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-ROOT-5594-execdummy
-#                  MACRO execdummy.C
-#                  OUTREF execdummy.ref
-#                  DEPENDS ${GENERATE_REFLEX_TEST})
+ROOTTEST_ADD_AUTOMACROS(DEPENDS ROOT-7775/BaseInfo.h ROOT-7775/CLASS_DEF.h ROOT-7775/incident.h ROOT-7775/part3.h \
+          ROOT-7775/BaseInfo.i.h ROOT-7775/CLIDRegistry.h ROOT-7775/part1.h ROOT-7775/prelude.h \
+          ROOT-7775/BaseInfoEmpty.icc ROOT-7775/CaloCell_ID.h ROOT-7775/part2.h)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-rootcling-ROOT-7695
-                  COMMAND ${ROOT_rootcling_CMD} -f AliEveITSDigitsInfo_cling.cxx
-                          ${CMAKE_CURRENT_SOURCE_DIR}/AliEveITSDigitsInfo.h
-                          ${CMAKE_CURRENT_SOURCE_DIR}/AliEveITSDigitsInfo_linkdef.h)
+
