@@ -1,5 +1,14 @@
 ROOTTEST_ADD_TESTDIRS()
 
+#ROOT-7760
+# This test runs only on apple platforms as it probes a platform specific feature.
+if(APPLE)
+  ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-checkOSXLibraryExtension
+                    COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/checkOSXLibraryExtension.h
+                            -l libMylib.dylib --rootmap checkOSXLibraryExtension.rootmap --rootmap-lib libMylib.dylib
+                    OUTREF checkOSXLibraryExtension.ref)
+endif()
+
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-conflictingSelections
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/conflictingNameRule.h
                           --select=${CMAKE_CURRENT_SOURCE_DIR}/conflictingNameRule_selection.xml
@@ -21,8 +30,8 @@ ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-twoTypedefsOneClass
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-privateClassXMLSelection
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/privateClassSelection.h
                           --select=${CMAKE_CURRENT_SOURCE_DIR}/privateClassSelection_selection.xml
-                  ERRREF privateClassXMLSelection.eref)              
-                  
+                  ERRREF privateClassXMLSelection.eref)
+
 # ROOT-7450
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-privateClassFileSelection
                   COPY_TO_BUILDDIR privateClassSelection.h privateClassSelection_LinkDef.h
