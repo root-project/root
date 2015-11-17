@@ -5259,6 +5259,19 @@ void RiseWarningIfPresent(std::vector<ROOT::option::Option> &options,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool IsGoodLibraryName(const std::string &name)
+{
+
+
+   auto isGood = ROOT::TMetaUtils::EndsWith(name, gLibraryExtension);
+#ifdef __APPLE__
+   isGood |= ROOT::TMetaUtils::EndsWith(name, ".dylib");
+#endif
+   return isGood;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Translate the aruments of genreflex into rootcling ones and forward them
 /// to the RootCling function.
 /// These are two typical genreflex and rootcling commandlines
@@ -5717,7 +5730,7 @@ int GenReflex(int argc, char **argv)
    std::string targetLibName;
    if (options[TARGETLIB]) {
       targetLibName = options[TARGETLIB].arg;
-      if (!ROOT::TMetaUtils::EndsWith(targetLibName, gLibraryExtension)) {
+      if (!IsGoodLibraryName(targetLibName)) {
          ROOT::TMetaUtils::Error("",
                                  "Invalid target library extension: filename is %s and extension %s is expected!\n",
                                  targetLibName.c_str(),
@@ -5761,7 +5774,7 @@ int GenReflex(int argc, char **argv)
    }
 
    // Add the .so extension to the rootmap lib if not there
-   if (!rootmapLibName.empty() && !ROOT::TMetaUtils::EndsWith(rootmapLibName, gLibraryExtension)) {
+   if (!rootmapLibName.empty() && !IsGoodLibraryName(rootmapLibName)) {
       rootmapLibName += gLibraryExtension;
    }
 
