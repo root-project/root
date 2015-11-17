@@ -55,10 +55,9 @@ Int_t mt102_readNtuplesFillHistosAndFit()
    // We define the histograms we'll fill
    std::vector<TH1F> histograms;
    histograms.reserve(nFiles);
-   std::for_each(std::begin(workerIDs), std::end(workerIDs),
-                 [&histograms](UInt_t workerID) {
-                    histograms.emplace_back(TH1F(Form("outHisto_%u", workerID), "Random Numbers", 128, -4, 4));
-                 });
+   for (auto workerID : workerIDs){
+      histograms.emplace_back(TH1F(Form("outHisto_%u", workerID), "Random Numbers", 128, -4, 4));
+   }
 
    // We define our work item
    auto workItem = [&histograms](UInt_t workerID) {
@@ -81,16 +80,14 @@ Int_t mt102_readNtuplesFillHistosAndFit()
    {
       TimerRAII t("Parallel execution");
 
-      std::for_each(std::begin(workerIDs), std::end(workerIDs),
-                    [&workers, &workItem](UInt_t workerID) {
-                       workers.emplace_back(workItem, workerID);
-                    });
+      // Spawn workers
+      // Fill the "pool" with workers
+      for (auto workerID : workerIDs) {
+         workers.emplace_back(workItem, workerID);
+      }
 
       // Now join them
-      std::for_each(std::begin(workers), std::end(workers),
-                    [](std::thread & worker) {
-                       worker.join();
-                    });
+      for (auto&& worker : workers) worker.join();
 
       // And reduce
       std::for_each(std::begin(histograms), std::end(histograms),
@@ -98,7 +95,7 @@ Int_t mt102_readNtuplesFillHistosAndFit()
                        sumHistogram.Add(&h);
                     });
 
-      sumHistogram.Fit("gaus");
+      sumHistogram.Fit("gaus",0);
    }
 
    return 0;
