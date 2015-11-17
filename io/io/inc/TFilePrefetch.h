@@ -21,9 +21,6 @@
 #ifndef ROOT_TFPBlock
 #include "TFPBlock.h"
 #endif
-#ifndef ROOT_TCondition
-#include "TCondition.h"
-#endif
 #ifndef ROOT_TSemaphore
 #include "TSemaphore.h"
 #endif
@@ -39,15 +36,15 @@
 #ifndef ROOT_TObjString
 #include "TObjString.h"
 #endif
-#ifndef ROOT_TMutex
-#include "TMutex.h"
-#endif
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
 #endif
 #ifndef ROOT_TStopwatch
 #include "TStopwatch.h"
 #endif
+
+#include <condition_variable>
+#include <mutex>
 
 
 class TFilePrefetch : public TObject {
@@ -57,10 +54,10 @@ private:
    TList      *fPendingBlocks;     // list of pending blocks to be read
    TList      *fReadBlocks;        // list of blocks read
    TThread    *fConsumer;          // consumer thread
-   TMutex     *fMutexPendingList;  // mutex for the pending list
-   TMutex     *fMutexReadList;     // mutex for the list of read blocks
-   TCondition *fNewBlockAdded;     // signal the addition of a new pending block
-   TCondition *fReadBlockAdded;    // signal the addition of a new red block
+   std::mutex fMutexPendingList;   // mutex for the pending list
+   std::mutex fMutexReadList;      // mutex for the list of read blocks
+   std::condition_variable fNewBlockAdded;  // signal the addition of a new pending block
+   std::condition_variable fReadBlockAdded; // signal the addition of a new red block
    TSemaphore *fSemMasterWorker;   // semaphore used to kill the consumer thread
    TSemaphore *fSemWorkerMaster;   // semaphore used to notify the master that worker is killed
    TSemaphore *fSemChangeFile;     // semaphore used when changin a file in TChain
@@ -98,7 +95,7 @@ public:
    Long64_t  GetWaitTime();
 
    void      SetFile(TFile*);
-   TCondition* GetCondNewBlock() const { return fNewBlockAdded; };
+   std::condition_variable &GetCondNewBlock() { return fNewBlockAdded; };
    void      WaitFinishPrefetch();
 
    ClassDef(TFilePrefetch, 0);  // File block prefetcher

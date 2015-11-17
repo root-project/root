@@ -59,10 +59,6 @@ TFilePrefetch::TFilePrefetch(TFile* file) :
    fPendingBlocks->SetOwner();
    fReadBlocks->SetOwner();
 
-   fMutexReadList    = new TMutex();
-   fMutexPendingList = new TMutex();
-   fNewBlockAdded    = new TCondition(0);
-   fReadBlockAdded   = new TCondition(0);
    fSemMasterWorker  = new TSemaphore(0);
    fSemWorkerMaster  = new TSemaphore(0);
    fSemChangeFile    = new TSemaphore(0);
@@ -80,10 +76,6 @@ TFilePrefetch::~TFilePrefetch()
    SafeDelete(fConsumer);
    SafeDelete(fPendingBlocks);
    SafeDelete(fReadBlocks);
-   SafeDelete(fMutexReadList);
-   SafeDelete(fMutexPendingList);
-   SafeDelete(fNewBlockAdded);
-   SafeDelete(fReadBlockAdded);
    SafeDelete(fSemMasterWorker);
    SafeDelete(fSemWorkerMaster);
    SafeDelete(fSemChangeFile);
@@ -97,11 +89,8 @@ void TFilePrefetch::WaitFinishPrefetch()
 {
    fSemMasterWorker->Post();
 
-   TMutex *mutexCond = fNewBlockAdded->GetMutex();
    while ( fSemWorkerMaster->Wait(10) != 0 ) {
-      mutexCond->Lock();
-      fNewBlockAdded->Signal();
-      mutexCond->UnLock();
+      fNewBlockAdded.notify_one();
    }
 
    fConsumer->Join();
@@ -188,11 +177,10 @@ Bool_t TFilePrefetch::ReadBuffer(char* buf, Long64_t offset, Int_t len)
 {
    Bool_t found = false;
    TFPBlock* blockObj = 0;
-   TMutex *mutexBlocks = fMutexReadList;
    Int_t index = -1;
 
+   std::unique_lock<std::mutex> lk(fMutexReadList);
    while (1){
-      mutexBlocks->Lock();
       TIter iter(fReadBlocks);
       while ((blockObj = (TFPBlock*) iter.Next())){
          index = -1;
@@ -204,10 +192,8 @@ Bool_t TFilePrefetch::ReadBuffer(char* buf, Long64_t offset, Int_t len)
       if (found)
          break;
       else{
-         mutexBlocks->UnLock();
-
          fWaitTime.Start(kFALSE);
-         fReadBlockAdded->Wait(); //wait for a new block to be added
+         fReadBlockAdded.wait(lk); //wait for a new block to be added
          fWaitTime.Stop();
       }
    }
@@ -217,7 +203,6 @@ Bool_t TFilePrefetch::ReadBuffer(char* buf, Long64_t offset, Int_t len)
       pBuff += (offset - blockObj->GetPos(index));
       memcpy(buf, pBuff, len);
    }
-   mutexBlocks->UnLock();
    return found;
 }
 
@@ -235,16 +220,11 @@ void TFilePrefetch::ReadBlock(Long64_t* offset, Int_t* len, Int_t nblock)
 
 void TFilePrefetch::AddPendingBlock(TFPBlock* block)
 {
-   TMutex *mutexBlocks = fMutexPendingList;
-   TMutex *mutexCond = fNewBlockAdded->GetMutex();
-
-   mutexBlocks->Lock();
+   fMutexPendingList.lock();
    fPendingBlocks->Add(block);
-   mutexBlocks->UnLock();
+   fMutexPendingList.unlock();
 
-   mutexCond->Lock();
-   fNewBlockAdded->Signal();
-   mutexCond->UnLock();
+   fNewBlockAdded.notify_one();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -253,14 +233,20 @@ void TFilePrefetch::AddPendingBlock(TFPBlock* block)
 TFPBlock* TFilePrefetch::GetPendingBlock()
 {
    TFPBlock* block = 0;
-   TMutex *mutex = fMutexPendingList;
-   mutex->Lock();
 
+   // Use the semaphore to deal with the case when the file pointer
+   // is changed on the fly by TChain
+   fSemChangeFile->Post();
+   std::unique_lock<std::mutex> lk(fMutexPendingList);
+   fNewBlockAdded.wait(lk);
+   lk.unlock();
+   fSemChangeFile->Wait();
+
+   lk.lock();
    if (fPendingBlocks->GetSize()){
       block = (TFPBlock*)fPendingBlocks->First();
       block = (TFPBlock*)fPendingBlocks->Remove(block);
    }
-   mutex->UnLock();
    return block;
 }
 
@@ -269,9 +255,7 @@ TFPBlock* TFilePrefetch::GetPendingBlock()
 
 void TFilePrefetch::AddReadBlock(TFPBlock* block)
 {
-   TMutex *mutexCond = fReadBlockAdded->GetMutex();
-   TMutex *mutex = fMutexReadList;
-   mutex->Lock();
+   fMutexReadList.lock();
 
    if (fReadBlocks->GetSize() >= kMAX_READ_SIZE){
       TFPBlock* movedBlock = (TFPBlock*) fReadBlocks->First();
@@ -281,12 +265,10 @@ void TFilePrefetch::AddReadBlock(TFPBlock* block)
    }
 
    fReadBlocks->Add(block);
-   mutex->UnLock();
+   fMutexReadList.unlock();
 
    //signal the addition of a new block
-   mutexCond->Lock();
-   fReadBlockAdded->Signal();
-   mutexCond->UnLock();
+   fReadBlockAdded.notify_one();
 }
 
 
@@ -296,18 +278,17 @@ void TFilePrefetch::AddReadBlock(TFPBlock* block)
 TFPBlock* TFilePrefetch::CreateBlockObj(Long64_t* offset, Int_t* len, Int_t noblock)
 {
    TFPBlock* blockObj = 0;
-   TMutex *mutex = fMutexReadList;
 
-   mutex->Lock();
+   fMutexReadList.lock();
 
    if (fReadBlocks->GetSize() >= kMAX_READ_SIZE){
       blockObj = static_cast<TFPBlock*>(fReadBlocks->First());
       fReadBlocks->Remove(blockObj);
-      mutex->UnLock();
+      fMutexReadList.unlock();
       blockObj->ReallocBlock(offset, len, noblock);
    }
    else{
-      mutex->UnLock();
+      fMutexReadList.unlock();
       blockObj = new TFPBlock(offset, len, noblock);
    }
    return blockObj;
@@ -338,13 +319,13 @@ void TFilePrefetch::SetFile(TFile *file)
 
    if (fFile) {
      // Remove all pending and read blocks
-     fMutexPendingList->Lock();
+     fMutexPendingList.lock();
      fPendingBlocks->Clear();
-     fMutexPendingList->UnLock();
+     fMutexPendingList.unlock();
 
-     fMutexReadList->Lock();
+     fMutexReadList.lock();
      fReadBlocks->Clear();
-     fMutexReadList->UnLock();
+     fMutexReadList.unlock();
    }
 
    fFile = file;
@@ -376,19 +357,9 @@ Int_t TFilePrefetch::ThreadStart()
 TThread::VoidRtnFunc_t TFilePrefetch::ThreadProc(void* arg)
 {
    TFilePrefetch* pClass = (TFilePrefetch*) arg;
-   TSemaphore* semChangeFile = pClass->fSemChangeFile;
-   semChangeFile->Post();
-   pClass->fNewBlockAdded->Wait();
-   semChangeFile->Wait();
 
    while( pClass->fSemMasterWorker->TryWait() != 0 ) {
       pClass->ReadListOfBlocks();
-
-      // Use the semaphore to deal with the case when the file pointer
-      // is changed on the fly by TChain
-      semChangeFile->Post();
-      pClass->fNewBlockAdded->Wait();
-      semChangeFile->Wait();
    }
 
    pClass->fSemWorkerMaster->Post();
