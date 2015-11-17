@@ -818,6 +818,7 @@ INPUT_ENCODING         = UTF-8
 # *.qsf, *.as and *.js.
 
 FILE_PATTERNS          = *.C \
+                         *.h \
                          *.md
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
