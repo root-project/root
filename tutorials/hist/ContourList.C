@@ -2,9 +2,14 @@
 /// \ingroup hist
 /// Getting Contours From TH2D.
 ///
+/// #### Image produced by `.x ContourList.C`
+/// The contours values are drawn next to each contour.
 /// \macro_image
-/// \macro_code
+///
+/// #### Output produced by `.x ContourList.C`
+/// It shows that 6 contours and 12 graphs were found.
 /// \macro_output
+/// \macro_code
 ///
 /// \authors Josh de Bever (CSI Medical Physics Group, The University of Western Ontario, London, Ontario, Canada), Olivier Couet
 
