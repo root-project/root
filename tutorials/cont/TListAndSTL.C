@@ -1,7 +1,9 @@
-// @(#)root/test:$Id$
-// Author: Anar Manafov   02/04/2008
-
-// This is an exmpale of using TList with STL algoritms in CINT.
+/// \file
+/// \ingroup cont
+/// This is an example of using TList with STL algoritms in CINT.
+/// \macro_code
+///
+// \author: Anar Manafov
 
 // STD
 #include <algorithm>
