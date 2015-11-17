@@ -213,6 +213,6 @@ void TGLText::SetGLTextFont(Font_t fontnumber)
    fGLTextFont = new FTGLPolygonFont(ttfont);
 
    if (!fGLTextFont->FaceSize(1))
-      Error("SetGLTextFont","Cannot set FTGL::FaceSize"),
+      Error("SetGLTextFont","Cannot set FTGL::FaceSize");
    delete [] ttfont;
 }
