@@ -31,8 +31,6 @@ string gOutputName;  // File containing std::out
 string gCwd;         // Current working directory
 string gOutDir;      // Output directory
 int    gShowSource;  // True if the source code should be shown
-int    gShowOutput;  // True if the output should be shown
-int    gShowImage;   // True if the image should be shown
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Filter ROOT tutorials for Doxygen.
@@ -43,8 +41,6 @@ int main(int argc, char *argv[])
 
    gFileName   = argv[1];
    gShowSource = 0;
-   gShowOutput = 0;
-   gShowImage  = 0;
 
    // Retrieve the output directory
    gOutDir = getenv("TUTORIALS_OUTPUT_DIRECTORY");
@@ -73,7 +69,6 @@ int main(int argc, char *argv[])
                                         gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
          ReplaceAll(gLineString, "\\macro_image",
                                  StringFormat("\\image html %s",gImageName.c_str()));
-         gShowImage = 1;
          remove(gOutputName.c_str());
       }
 
@@ -82,7 +77,7 @@ int main(int argc, char *argv[])
          gShowSource = 1;
          m = fopen(StringFormat("%s/html/%s",gOutDir.c_str(),gMacroName.c_str()).c_str(), "w");
          ReplaceAll(gLineString, "\\macro_code",
-                                 StringFormat("\\include %s",gOutputName.c_str()));
+                                 StringFormat("\\include %s",gMacroName.c_str()));
       }
 
       // \macro_output found
@@ -90,8 +85,7 @@ int main(int argc, char *argv[])
          ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()).c_str());
          rename(gOutputName.c_str(), StringFormat("%s/html/%s",gOutDir.c_str(), gOutputName.c_str()).c_str());
          ReplaceAll(gLineString, "\\macro_output",
-                                 StringFormat("\\include %s",gMacroName.c_str()));
-                                 gShowOutput = 1;
+                                 StringFormat("\\include %s",gOutputName.c_str()));
       }
 
       // \author is the last comment line.
