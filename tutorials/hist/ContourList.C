@@ -4,6 +4,7 @@
 ///
 /// \macro_image
 /// \macro_code
+/// \macro_output
 ///
 /// \authors Josh de Bever (CSI Medical Physics Group, The University of Western Ontario, London, Ontario, Canada), Olivier Couet
 

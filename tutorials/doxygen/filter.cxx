@@ -27,9 +27,12 @@ string gFileName;    // Input file name
 string gLineString;  // Current line (as a string) in the current input file
 string gImageName;   // Current image name
 string gMacroName;   // Current macro name
+string gOutputName;  // File containing std::out
 string gCwd;         // Current working directory
 string gOutDir;      // Output directory
 int    gShowSource;  // True if the source code should be shown
+int    gShowOutput;  // True if the output should be shown
+int    gShowImage;   // True if the image should be shown
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Filter ROOT tutorials for Doxygen.
@@ -40,6 +43,8 @@ int main(int argc, char *argv[])
 
    gFileName   = argv[1];
    gShowSource = 0;
+   gShowOutput = 0;
+   gShowImage  = 0;
 
    // Retrieve the output directory
    gOutDir = getenv("TUTORIALS_OUTPUT_DIRECTORY");
@@ -52,9 +57,11 @@ int main(int argc, char *argv[])
    FILE *m = 0;
 
    // Extract the macro name
-   int i1     = gFileName.rfind('/')+1;
-   int i2     = gFileName.rfind('C');
-   gMacroName = gFileName.substr(i1,i2-i1+1);
+   int i1      = gFileName.rfind('/')+1;
+   int i2      = gFileName.rfind('C');
+   gMacroName  = gFileName.substr(i1,i2-i1+1);
+   gImageName  = StringFormat("%s.png", gMacroName.c_str()); // Image name
+   gOutputName = StringFormat("%s.out", gMacroName.c_str()); // output name
 
    // Parse the source and generate the image if needed
    while (fgets(gLine,255,f)) {
@@ -62,12 +69,12 @@ int main(int argc, char *argv[])
 
       // \macro_image found
       if (gLineString.find("\\macro_image") != string::npos) {
-         gImageName = StringFormat("%s.png", gMacroName.c_str()); // Image name
          ExecuteCommand(StringFormat("root -l -b -q \"makeimage.cxx(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\")\"",
                                         gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
          ReplaceAll(gLineString, "\\macro_image",
                                  StringFormat("\\image html %s",gImageName.c_str()));
-
+         gShowImage = 1;
+         remove(gOutputName.c_str());
       }
 
       // \macro_code found
@@ -75,7 +82,16 @@ int main(int argc, char *argv[])
          gShowSource = 1;
          m = fopen(StringFormat("%s/html/%s",gOutDir.c_str(),gMacroName.c_str()).c_str(), "w");
          ReplaceAll(gLineString, "\\macro_code",
+                                 StringFormat("\\include %s",gOutputName.c_str()));
+      }
+
+      // \macro_output found
+      if (gLineString.find("\\macro_output") != string::npos) {
+         ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()).c_str());
+         rename(gOutputName.c_str(), StringFormat("%s/html/%s",gOutDir.c_str(), gOutputName.c_str()).c_str());
+         ReplaceAll(gLineString, "\\macro_output",
                                  StringFormat("\\include %s",gMacroName.c_str()));
+                                 gShowOutput = 1;
       }
 
       // \author is the last comment line.
@@ -87,6 +103,7 @@ int main(int argc, char *argv[])
          if (m && gShowSource == 2) fprintf(m,"%s",gLineString.c_str());
       }
    }
+
    if (m) fclose(m);
    fclose(f);
    return 0;
@@ -99,7 +116,7 @@ int main(int argc, char *argv[])
 void ExecuteCommand(string command)
 {
    int o = dup(fileno(stdout));
-   freopen("stdout.dat","a",stdout);
+   freopen(gOutputName.c_str(),"a",stdout);
    system(command.c_str());
    dup2(o,fileno(stdout));
    close(o);
