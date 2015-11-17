@@ -1,9 +1,14 @@
 /// \file
 /// \ingroup cont
 /// This is an example of using TList with STL algoritms in CINT.
+///
+/// #### Output produced by `.x TListAndSTL.C`
+/// \macro_output
+///
+/// #### `TListAndSTL.C` code
 /// \macro_code
 ///
-// \author: Anar Manafov
+/// \author Anar Manafov
 
 // STD
 #include <algorithm>
