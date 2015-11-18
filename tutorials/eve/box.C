@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstrates usage of TEveBox class.
 ///
+/// \image html eve_box.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

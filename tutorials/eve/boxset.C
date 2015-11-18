@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstrates usage of TEveBoxSet class.
 ///
+/// \image html eve_boxset.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

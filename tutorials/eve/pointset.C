@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstrates usage of class TEvePointSet.
 ///
+/// \image html eve_pointset.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

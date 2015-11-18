@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstrates usage of "Default" geometry alias.
 ///
+/// \image html eve_geom_default.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

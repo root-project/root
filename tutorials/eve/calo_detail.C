@@ -1,8 +1,9 @@
 /// \file
 /// \ingroup eve
 /// Calorimeter detailed view by using TEveCaloDataVec as data-source.
-// Demonstrantes how to plot calorimiter data with irregular bins.
+/// Demonstrates how to plot calorimeter data with irregular bins.
 ///
+/// \image html eve_calo_detail.png
 /// \macro_code
 ///
 /// \author Alja Mrak-Tadel

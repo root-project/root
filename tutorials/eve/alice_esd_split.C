@@ -67,6 +67,7 @@
 ///   3. instruct the container to extrapolate the tracks and set their
 ///      visual attributes.
 ///
+/// \image html eve_alice_esd_split.png
 /// \macro_code
 ///
 /// \author Bertrand Bellenot

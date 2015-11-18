@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstrates usage of TEveJetCone class.
 ///
+/// \image html eve_jetcone.png
 /// \macro_code
 ///
 /// \author Jochen Thaeder

@@ -5,6 +5,7 @@
 ///   `gEve->GetBrowser()->MapWindow()`
 /// to bring it up for object interaction, debugging, etc.
 ///
+/// \image html eve_arrow_standalone.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

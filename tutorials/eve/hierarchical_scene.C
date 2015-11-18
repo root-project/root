@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup eve
 ///
+/// \image html eve_hierarchical_scene.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

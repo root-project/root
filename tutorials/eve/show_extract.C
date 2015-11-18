@@ -3,6 +3,7 @@
 /// Helper script for showing of extracted / simplified geometries.
 /// By default shows a simplified ALICE geometry.
 ///
+/// \image html eve_show_extract.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Shows geometry of ALICE ITS.
 ///
+/// \image html eve_geom_alice_its.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

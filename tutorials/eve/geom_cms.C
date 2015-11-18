@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Shows CMS geometry.
 ///
+/// \image html eve_geom_cms.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

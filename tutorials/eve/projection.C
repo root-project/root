@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstates usage of automatic 2D projections - class TEveProjectionManager.
 ///
+/// \image html eve_projection.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

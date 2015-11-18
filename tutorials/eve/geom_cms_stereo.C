@@ -4,6 +4,7 @@
 /// This requires quad-buffer support in the OpenGL hardware / driver,
 /// otheriwse a fatal error occurs.
 ///
+/// \image html eve_geom_cms_stereo.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

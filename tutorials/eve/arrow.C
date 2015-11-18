@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstrates usage of TEveArrow class.
 ///
+/// \image html eve_arrow.png
 /// \macro_code
 ///
 /// \author Alja Mrak-Tadel

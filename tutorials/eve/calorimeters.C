@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstrates usage of EVE calorimetry classes.
 ///
+/// \image html eve_calorimeters.png
 /// \macro_code
 ///
 /// \author Alja Mrak-Tadel

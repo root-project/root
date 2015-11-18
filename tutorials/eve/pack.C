@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstrates usage of class TGPack.
 ///
+/// \image html eve_pack.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

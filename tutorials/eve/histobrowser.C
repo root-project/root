@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstates how to use EVE as a histogram browser.
 ///
+/// \image html eve_histobrowser.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

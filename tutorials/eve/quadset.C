@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstates usage of 2D digit class TEveQuadSet.
 ///
+/// \image html eve_quadset.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

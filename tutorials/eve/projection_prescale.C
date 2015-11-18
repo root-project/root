@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstates usage pre-scaling for automatic 2D projections.
 ///
+/// \image html eve_projection_prescale.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

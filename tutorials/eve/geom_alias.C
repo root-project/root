@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstates usage of geometry aliases - merge ALICE ITS with ATLAS MUON.
 ///
+/// \image html eve_geom_alias.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

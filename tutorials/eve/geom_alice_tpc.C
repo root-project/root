@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Shows geometry of ALICE TPC.
 ///
+/// \image html eve_geom_alice_tpc.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

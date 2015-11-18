@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstrates usage of EVE window-manager.
 ///
+/// \image html eve_window_manager.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

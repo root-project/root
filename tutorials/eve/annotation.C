@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstrates usage of TGLAnnotation class.
 ///
+/// \image html eve_annotation.png
 /// \macro_code
 ///
 /// \author Alja Mrak-Tadel

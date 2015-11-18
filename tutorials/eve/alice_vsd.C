@@ -14,6 +14,7 @@
 ///
 ///  All files are access from the web by using the "CACHEREAD" option.
 ///
+/// \image html eve_alice_vsd.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

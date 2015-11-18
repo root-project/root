@@ -8,6 +8,7 @@
 /// 2. Display the assebly as:
 ///    `root show_extract.C("csg.root")`
 ///
+/// \image html eve_csgdemo.png
 /// \macro_code
 ///
 /// \author Andrei Gheata

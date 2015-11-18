@@ -9,6 +9,7 @@
 /// 2. Display the assebly as:
 ///    `root show_extract.C("assembly.root")`
 ///
+/// \image html eve_assembly.png
 /// \macro_code
 ///
 /// \author Andrei Gheata

@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstrates usage of class TEveStraightLineSet.
 ///
+/// \image html eve_lineset.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

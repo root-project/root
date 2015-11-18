@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstrates usage of EVE compound objects - class TEveCompound.
 ///
+/// \image html eve_compound.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstrates usage of class TEveTriangleSet.
 ///
+/// \image html eve_triangleset.png
 /// \macro_code
 ///
 /// \author Matevz Tadel

@@ -2,6 +2,7 @@
 /// \ingroup eve
 /// Demonstrates usage of 'cone' mode in TEveBoxSet class.
 ///
+/// \image html eve_boxset_cones.png
 /// \macro_code
 ///
 /// \author Alja Mrak-Tadel

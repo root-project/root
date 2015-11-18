@@ -18,6 +18,7 @@
 ///  5. CMS magnetic field - track with different path-marks.
 ///  6. Concpetual ILC detector, problematic track
 ///
+/// \image html eve_track.png
 /// \macro_code
 ///
 /// \author Alja Mrak-Tadel
