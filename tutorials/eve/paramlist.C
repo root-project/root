@@ -1,7 +1,10 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstrates usage of simple configuration via TEveParamList class.
+/// \file
+/// \ingroup eve
+/// Demonstrates usage of simple configuration via TEveParamList class.
+///
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 #include "TEveManager.h"
 #include "TEveParamList.h"

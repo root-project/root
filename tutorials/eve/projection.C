@@ -1,7 +1,10 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstates usage of automatic 2D projections - class TEveProjectionManager.
+/// \file
+/// \ingroup eve
+/// Demonstates usage of automatic 2D projections - class TEveProjectionManager.
+///
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 const char* esd_geom_file_name =
    "http://root.cern.ch/files/alice_ESDgeometry.root";

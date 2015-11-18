@@ -1,5 +1,10 @@
-// Multi-view (3d, rphi, rhoz) service class using EVE Window Manager.
-// Author: Matevz Tadel 2009
+/// \file
+/// \ingroup eve
+/// Multi-view (3d, rphi, rhoz) service class using EVE Window Manager.
+///
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 #include <TEveManager.h>
 

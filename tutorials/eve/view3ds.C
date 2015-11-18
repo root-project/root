@@ -1,7 +1,10 @@
-// @(#)root/eve:$Id$
-// Author: Bertrand Bellenot
-
-// Loading and display of basic 3DS models.
+/// \file
+/// \ingroup eve
+/// Loading and display of basic 3DS models.
+///
+/// \macro_code
+///
+/// \author Bertrand Bellenot
 
 #include "TCanvas.h"
 #include "TStyle.h"

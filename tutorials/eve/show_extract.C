@@ -1,5 +1,11 @@
-// Helper script for showing of extracted / simplified geometries.
-// By default shows a simplified ALICE geometry.
+/// \file
+/// \ingroup eve
+/// Helper script for showing of extracted / simplified geometries.
+/// By default shows a simplified ALICE geometry.
+///
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 void show_extract(const char* file="http://root.cern.ch/files/alice_ESDgeometry.root")
 {

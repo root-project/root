@@ -1,7 +1,10 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Test signals from TEveSelection class.
+/// \file
+/// \ingroup eve
+/// Test signals from TEveSelection class.
+///
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 #include "TEveSelection.h" // To enforce auto-loading of libEve.
 

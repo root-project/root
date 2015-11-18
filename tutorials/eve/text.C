@@ -1,8 +1,10 @@
-// @(#)root/eve:$Id$
-// Author: Alja Mrak-Tadel
-
-// Demonstrates usage of class TEveText - 2D & 3D text in GL.
-
+/// \file
+/// \ingroup eve
+/// Demonstrates usage of class TEveText - 2D & 3D text in GL.
+///
+/// \macro_code
+///
+/// \author Alja Mrak-Tadel
 
 TEveText* text()
 {

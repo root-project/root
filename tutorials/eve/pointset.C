@@ -1,7 +1,10 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstrates usage of class TEvePointSet.
+/// \file
+/// \ingroup eve
+/// Demonstrates usage of class TEvePointSet.
+///
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 #ifndef __CINT__
 

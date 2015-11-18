@@ -1,7 +1,10 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstrates usage of EVE window-manager.
+/// \file
+/// \ingroup eve
+/// Demonstrates usage of EVE window-manager.
+///
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 #include "TEveWindow.h"
 #include "TEveViewer.h"

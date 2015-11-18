@@ -1,7 +1,10 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstrates usage of class TGPack.
+/// \file
+/// \ingroup eve
+/// Demonstrates usage of class TGPack.
+///
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 TGPack *hp = 0;
 TGPack *vp = 0;
