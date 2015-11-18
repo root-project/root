@@ -228,7 +228,7 @@ template <class T>
 template <typename T>
    class ClassDefGenerateInitInstanceLocalInjector {
       static atomic_TClass_ptr fgIsA;
-      static std::atomic<std::string> fgName;
+      static std::string fgName;
       static std::mutex fgMutex;
    public:
       static void *New(void *p) { return p ? new(p) T : new T; };
@@ -238,13 +238,13 @@ template <typename T>
       static void DeleteArray(void *p) { delete[] ((T*)p); }
       static void Destruct(void *p) { ((T*)p)->~T();  }
       static ::ROOT::TGenericClassInfo *GenerateInitInstanceLocal() {
-         T *ptr = 0;
          static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy<T>(0);
          static ::ROOT::TGenericClassInfo
             R__instance(T::Class_Name(), T::Class_Version(),
                         T::DeclFileName(), T::DeclFileLine(),
-                        typeid(T), ROOT::Internal::DefineBehavior(ptr, ptr),
+                        typeid(T), ROOT::Internal::DefineBehavior((T*)0, (T*)0),
                         &T::Dictionary, isa_proxy, 0, sizeof(T) );
+         std::lock_guard<std::mutex> guard(fgMutex);
          R__instance.SetNew(&New);
          R__instance.SetNewArray(&NewArray);
          R__instance.SetDelete(&Delete);
@@ -256,7 +256,7 @@ template <typename T>
       static TClass *Class() { if (!fgIsA) Dictionary(); return fgIsA; }
       static const char* Name() {
          if (fgName.empty()) {
-            std::lock_guard guard(fgMutex);
+            std::lock_guard<std::mutex> guard(fgMutex);
             if (fgName.empty()) {
                TClassEdit::GetNormalizedName(fgName,
                                              TypeNameExtraction<T>::get());
@@ -267,9 +267,9 @@ template <typename T>
    };
 
    template<typename T>
-   atomic_TClass_ptr ClassDefGenerateInitInstanceLocalInjector<T>::fgIsA = 0;
+   atomic_TClass_ptr ClassDefGenerateInitInstanceLocalInjector<T>::fgIsA{};
    template<typename T>
-   std::atomic<std::string> ClassDefGenerateInitInstanceLocalInjector<T>::fgName{};
+   std::string ClassDefGenerateInitInstanceLocalInjector<T>::fgName{};
 
 }} // namespace ROOT::Internal
 #endif // R__NO_INLINE_CLASSDEF
