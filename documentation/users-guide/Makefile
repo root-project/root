@@ -12,7 +12,7 @@ PDFFILES=$(MDFILES:.md=.pdf)
 LATEXA4PREFIX=ROOTUsersGuideA4
 LATEXLETTERPREFIX=ROOTUsersGuideLetter
 
-OPTIONS=-s -S -f markdown --toc --chapters --number-sections
+OPTIONS=-s -S -f markdown --toc --toc-depth=2 --chapters --number-sections
 OPTIONSHTML=-H css/github.css --mathjax
 OPTIONSEPUB=--mathml
 OPTIONSLATEXA4=--template=./template.tex --variable=geometry:a4paper -V geometry:margin=1.5cm
