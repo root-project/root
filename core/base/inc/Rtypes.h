@@ -228,7 +228,8 @@ template <class T>
 template <typename T>
    class ClassDefGenerateInitInstanceLocalInjector {
       static atomic_TClass_ptr fgIsA;
-      static std::string fName;
+      static std::atomic<std::string> fgName;
+      static std::mutex fgMutex;
    public:
       static void *New(void *p) { return p ? new(p) T : new T; };
       static void *NewArray(Long_t nElements, void *p) {
@@ -254,15 +255,21 @@ template <typename T>
       static void Dictionary() { fgIsA = GenerateInitInstanceLocal()->GetClass(); }
       static TClass *Class() { if (!fgIsA) Dictionary(); return fgIsA; }
       static const char* Name() {
-         if (fName.empty()) {
-            TClassEdit::GetNormalizedName(fName, TypeNameExtraction<T>::get());
+         if (fgName.empty()) {
+            std::lock_guard guard(fgMutex);
+            if (fgName.empty()) {
+               TClassEdit::GetNormalizedName(fgName,
+                                             TypeNameExtraction<T>::get());
+            }
          }
-         return fName.c_str();
+         return fgName.c_str();
       }
    };
 
    template<typename T>
    atomic_TClass_ptr ClassDefGenerateInitInstanceLocalInjector<T>::fgIsA = 0;
+   template<typename T>
+   std::atomic<std::string> ClassDefGenerateInitInstanceLocalInjector<T>::fgName{};
 
 }} // namespace ROOT::Internal
 #endif // R__NO_INLINE_CLASSDEF
