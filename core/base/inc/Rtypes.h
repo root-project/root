@@ -194,6 +194,8 @@ namespace ROOT {
 #endif
 
 
+typedef std::atomic<TClass*> atomic_TClass_ptr;
+
 // Parts or ROOT are compiled with no-rtti and cannot use or even see typeid().
 // Hide the following declaration (that is only needed by ClassDefInline) for
 // these cases by #defining R__NO_INLINE_CLASSDEF:
@@ -225,7 +227,7 @@ template <class T>
 
 template <typename T>
    class ClassDefGenerateInitInstanceLocalInjector {
-      static TClass* fgIsA;
+      static atomic_TClass_ptr fgIsA;
       static std::string fName;
    public:
       static void *New(void *p) { return p ? new(p) T : new T; };
@@ -260,13 +262,11 @@ template <typename T>
    };
 
    template<typename T>
-   TClass* ClassDefGenerateInitInstanceLocalInjector<T>::fgIsA = 0;
+   atomic_TClass_ptr ClassDefGenerateInitInstanceLocalInjector<T>::fgIsA = 0;
 
 }} // namespace ROOT::Internal
 #endif // R__NO_INLINE_CLASSDEF
 
-
-typedef std::atomic<TClass*> atomic_TClass_ptr;
 
 // Common part of ClassDef definition.
 // DeclFileLine() is not part of it since CINT uses that as trigger for
