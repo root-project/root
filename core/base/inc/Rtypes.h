@@ -204,6 +204,9 @@ namespace TClassEdit {
 }
 
 namespace ROOT { namespace Internal {
+/// \class TypeNameExtraction
+/// Extracts the fully qualified type name by checking for the name of a
+/// member function as determined by the __PRETTY_FUNCTION__ macro.
 template <class T>
    struct TypeNameExtraction {
       static std::string get() {
@@ -215,7 +218,7 @@ template <class T>
          const char* end = strstr(funcname, ">::get(");
          if (!start || !end)
             return "";
-         start += 19;
+         start += 19; // len of "TypeNameExtraction<"
          return std::string(start, end - start);
       }
    };
@@ -250,9 +253,9 @@ template <typename T>
       static TClass *Class() { if (!fgIsA) Dictionary(); return fgIsA; }
       static const char* Name() {
          if (fName.empty()) {
-            std::string unnomalized = TypeNameExtraction<T>::get();
-            TClassEdit::GetNormalizedName(fName, unnomalized);
+            TClassEdit::GetNormalizedName(fName, TypeNameExtraction<T>::get());
          }
+         return fName.c_str();
       }
    };
 
