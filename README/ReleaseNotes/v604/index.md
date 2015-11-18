@@ -1,10 +1,9 @@
-% ROOT Version 6.04/02 Release Notes
-% 14 July 2015
+% ROOT Version 6.04 Series Release Notes
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.04/02 was released on 14 July, 2015.
+ROOT version 6.04/10 was released on 18 November, 2015.
 Changes with respect to 6.04/00 are listed [at the end of the document](#patchreleases).
 
 For more information, see:
@@ -735,6 +734,7 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 \
 \
 
+<a name="patchreleases"></a>
 # Patch Releases
 
 ## Release 6.04/02
@@ -953,6 +953,7 @@ directory - this behavior is now implement by the default constructor.
 
 -------------------------------------------------------------------------------------------------------------------------
 ## Patches Release 6.04/10
+ROOT version 6.04/10 was released on 18 November, 2015.
 
 ### Core
 
