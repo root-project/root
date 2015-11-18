@@ -929,7 +929,7 @@ directory - this behavior is now implement by the default constructor.
 ### Minuit
 - Make function pointer held by TMinuitMinimize thread local
 
-Release Notes - ROOT - Version 6.04/08
+## Patches Release 6.04/08
 
 ### Bugs
 
@@ -952,9 +952,7 @@ Release Notes - ROOT - Version 6.04/08
 *   [[ROOT-7773](https://sft.its.cern.ch/jira/browse/ROOT-7773)] - find_package(ROOT) should include a set of default libraries
 
 -------------------------------------------------------------------------------------------------------------------------
-## HEAD of the v6-04-00-patches branch
-
-Changes will be part of the future 6.04/08
+## Patches Release 6.04/10
 
 ### Core
 
@@ -973,3 +971,9 @@ Changes will be part of the future 6.04/08
 - Fixed ROOT-7703. This restores the behavior of Locate() to that found with
 TXNetFileStager: Rather than return only the xrootd server's reply, the endpoint
 hostname is looked up and Locate() returns the full url, including the path.
+
+-------------------------------------------------------------------------------------------------------------------------
+## HEAD of the v6-04-00-patches branch
+
+Changes will be part of the future 6.04/12
+
