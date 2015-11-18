@@ -198,10 +198,32 @@ namespace ROOT {
 // Hide the following declaration (that is only needed by ClassDefInline) for
 // these cases by #defining R__NO_INLINE_CLASSDEF:
 #ifndef R__NO_INLINE_CLASSDEF
-namespace ROOT {
-   template <typename T>
+#include "RStringView.h"
+namespace TClassEdit {
+   void GetNormalizedName(std::string &norm_name,std::string_view name);
+}
+
+namespace ROOT { namespace Internal {
+template <class T>
+   struct TypeNameExtraction {
+      static std::string get() {
+#ifdef _MSC_VER // Visual Studio
+# define  __PRETTY_FUNCTION__ __FUNCTION__
+#endif
+         constexpr static const char* funcname = __PRETTY_FUNCTION__;
+         const char* start = strstr(funcname, "TypeNameExtraction<");
+         const char* end = strstr(funcname, ">::get(");
+         if (!start || !end)
+            return "";
+         start += 19;
+         return std::string(start, end - start);
+      }
+   };
+
+template <typename T>
    class ClassDefGenerateInitInstanceLocalInjector {
       static TClass* fgIsA;
+      static std::string fName;
    public:
       static void *New(void *p) { return p ? new(p) T : new T; };
       static void *NewArray(Long_t nElements, void *p) {
@@ -226,11 +248,18 @@ namespace ROOT {
       }
       static void Dictionary() { fgIsA = GenerateInitInstanceLocal()->GetClass(); }
       static TClass *Class() { if (!fgIsA) Dictionary(); return fgIsA; }
+      static const char* Name() {
+         if (fName.empty()) {
+            std::string unnomalized = TypeNameExtraction<T>::get();
+            TClassEdit::GetNormalizedName(fName, unnomalized);
+         }
+      }
    };
 
    template<typename T>
    TClass* ClassDefGenerateInitInstanceLocalInjector<T>::fgIsA = 0;
-} // namespace ROOT
+
+}} // namespace ROOT::Internal
 #endif // R__NO_INLINE_CLASSDEF
 
 
@@ -265,7 +294,7 @@ public: \
 public: \
    static int ImplFileLine() { return -1; }     \
    static const char *ImplFileName() { return 0; }      \
-   static const char *Class_Name() { return #name; } \
+   static const char *Class_Name() { return ROOT::ClassDefGenerateInitInstanceLocalInjector< name >::Name(); } \
    static void Dictionary() { ROOT::ClassDefGenerateInitInstanceLocalInjector< name >::Dictionary(); } \
    static TClass *Class() { return ROOT::ClassDefGenerateInitInstanceLocalInjector< name >::Class(); } \
    virtual_keyword void Streamer(TBuffer& R__b) overrd {                \
