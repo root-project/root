@@ -959,6 +959,7 @@ Changes will be part of the future 6.04/08
 ### Core
 
 * Resolve issues on SL6, 32bits when during process tear down libCling.so is removed before all the dictionary have been tear down.
+* Activate interpreter in inspector calls by ShowMembers [ROOT-7779)].
 
 ### Interpreter
 
