@@ -1,8 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Alja Mrak-Tadel
-
-// Calorimeter detailed view by using TEveCaloDataVec as data-source.
+/// \file
+/// \ingroup eve
+/// Calorimeter detailed view by using TEveCaloDataVec as data-source.
 // Demonstrantes how to plot calorimiter data with irregular bins.
+///
+/// \macro_code
+///
+/// \author Alja Mrak-Tadel
 
 #include "calorimeters.C"
 

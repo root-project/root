@@ -1,5 +1,11 @@
-// Preliminary demo for showing Timur's GL plots in EVE.
-// Author: Matevz Tadel, July 2009
+/// \file
+/// \ingroup eve
+/// Preliminary demo for showing Timur's GL plots in EVE.
+/// Author: Matevz Tadel, July 2009
+///
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 void glplot()
 {

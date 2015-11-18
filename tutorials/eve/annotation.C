@@ -1,7 +1,10 @@
-// @(#)root/eve:$Id$
-// Author: Alja Mrak-Tadel
-
-// Demonstrates usage of TGLAnnotation class.
+/// \file
+/// \ingroup eve
+/// Demonstrates usage of TGLAnnotation class.
+///
+/// \macro_code
+///
+/// \author Alja Mrak-Tadel
 
 #include <TEveManager.h>
 #include <TGLViewer.h>

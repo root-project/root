@@ -1,7 +1,10 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstates how to use EVE as a histogram browser.
+/// \file
+/// \ingroup eve
+/// Demonstates how to use EVE as a histogram browser.
+///
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 TGFileBrowser *g_hlt_browser = 0;
 TCanvas       *g_hlt_canvas  = 0;

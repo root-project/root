@@ -1,11 +1,16 @@
-// Combinatorial Solid Geometry example
-// Author: Andrei Gheata
-//
-// Stripped down to demonstrate EVE shape-extracts.
-// 1. Run root csgdemo.C
-//    This will produce csg.root containing the extract.
-// 2. Display the assebly as:
-//    root show_extract.C("csg.root")
+/// \file
+/// \ingroup eve
+/// Combinatorial Solid Geometry example
+///
+/// Stripped down to demonstrate EVE shape-extracts.
+/// 1. `Run root csgdemo.C`
+///    This will produce csg.root containing the extract.
+/// 2. Display the assebly as:
+///    `root show_extract.C("csg.root")`
+///
+/// \macro_code
+///
+/// \author Andrei Gheata
 
 #include "TGeoManager.h"
 

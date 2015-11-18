@@ -1,3 +1,10 @@
+/// \file
+/// \ingroup eve
+///
+/// \macro_code
+///
+/// \author Matevz Tadel
+
 void camera_restore(const char* fname, int mode = 0)
 {
   TEveManager::Create();

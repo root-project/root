@@ -1,7 +1,10 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Shows CMS geometry.
+/// \file
+/// \ingroup eve
+/// Shows CMS geometry.
+///
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 void geom_cms()
 {
