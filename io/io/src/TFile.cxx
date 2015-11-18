@@ -1105,10 +1105,10 @@ Bool_t TFile::FlushWriteCache()
 ///
 /// The file output buffer contains only the FREE data record.
 
-void TFile::FillBuffer(char *&buffer, Bool_t buffBigEndian=kTRUE)
+void TFile::FillBuffer(char *&buffer)
 {
    Version_t version = TFile::Class_Version();
-   tobuf(buffer, version, buffBigEndian);
+   tobuf(buffer, version);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

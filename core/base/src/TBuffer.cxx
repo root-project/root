@@ -41,6 +41,7 @@ TBuffer::TBuffer(EMode mode)
    fMode         = mode;
    fVersion      = 0;
    fParent       = 0;
+   fBufBigEndian = gROOT->IsBigEndian();
 
    SetBit(kIsOwner);
 
@@ -59,10 +60,11 @@ TBuffer::TBuffer(EMode mode)
 TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 {
    if (bufsiz < kMinimalSize) bufsiz = kMinimalSize;
-   fBufSize  = bufsiz;
-   fMode     = mode;
-   fVersion  = 0;
-   fParent   = 0;
+   fBufSize      = bufsiz;
+   fMode         = mode;
+   fVersion      = 0;
+   fParent       = 0;
+   fBufBigEndian = gROOT->IsBigEndian();
 
    SetBit(kIsOwner);
 
@@ -87,10 +89,11 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 
 TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
-   fBufSize  = bufsiz;
-   fMode     = mode;
-   fVersion  = 0;
-   fParent   = 0;
+   fBufSize      = bufsiz;
+   fMode         = mode;
+   fVersion      = 0;
+   fParent       = 0;
+   fBufBigEndian = gROOT->IsBigEndian();
 
    SetBit(kIsOwner);
 
