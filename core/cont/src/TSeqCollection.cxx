@@ -215,6 +215,8 @@ Long64_t TSeqCollection::Merge(TCollection *list)
       if (mergeable) {
          // Current object mergeable - get corresponding objects in input lists
          templist = (TSeqCollection*)IsA()->New();
+         // Make sure original objects are not deleted; some containers, e.g. TSelectorList, maybe owners
+         templist->SetOwner(kFALSE);
       } else {
          templist = 0;
       }
