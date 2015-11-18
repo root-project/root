@@ -1,7 +1,44 @@
-//
-// This macro attaches to a PROOF session, possibly at the indicated URL.
-// If no existing PROOF session is found and no URL is given, the macro
-// tries to start a local PROOF session.
+/// \file
+/// \ingroup proof
+///
+/// Attaches to a PROOF session, possibly at the indicated URL.
+/// If no existing PROOF session is found and no URL is given,
+/// try to start a local PROOF session.
+///
+/// Arguments:
+///     'url'      URL of the master where to start/attach the PROOF session;
+///                this is also the place where to force creation of a new session,
+///                if needed (use option 'N', e.g. "proof://mymaster:myport/?N")
+///
+/// The following arguments apply to xrootd responding at 'refloc' only:
+///     'nwrks'    Number of workers to be started. []
+///     'dir'      Directory to be used for the files and working areas []. When starting a new
+///                instance of the daemon this directory is cleaned with 'rm -fr'. If 'dir'
+///                is null, the default is used: '/tmp/<user>/.getproof'
+///     'opt'      Defines what to do if an existing xrootd uses the same ports; possible
+///                options are: "ask", ask the user; "force", kill the xrootd and start
+///                a new one; if any other string is specified the existing xrootd will be
+///                used ["ask"].
+///                NB: for a change in 'nwrks' to be effective you need to specify opt = "force"
+///     'dyn'      This flag can be used to switch on dynamic, per-job worker setup scheduling
+///                [kFALSE].
+///     'tutords'  This flag can be used to force a dataset dir under the tutorial dir [kFALSE]
+///
+/// It is possible to trigger the automatic valgrind setup by defining the env GETPROOF_VALGRIND.
+/// E.g. to run the master in valgrind do
+///
+///     $ export GETPROOF_VALGRIND="valgrind=master"
+///
+/// (or
+///     $ export GETPROOF_VALGRIND="valgrind=master valgrind_opts:--leak-check=full"
+///
+/// to set some options) before running getProof. Note that 'getProof' is also called by 'stressProof',
+/// so this holds for 'stressProof' runs too.
+///
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis
 
 #include "Bytes.h"
 #include "Getline.h"
@@ -41,35 +78,6 @@ const char *refloc = "proof://localhost:40000";
 TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, const char *dir = 0,
                  const char *opt = "ask", Bool_t dyn = kFALSE, Bool_t tutords = kFALSE)
 {
-   // Arguments:
-   //     'url'      URL of the master where to start/attach the PROOF session;
-   //                this is also the place where to force creation of a new session,
-   //                if needed (use option 'N', e.g. "proof://mymaster:myport/?N")
-   //
-   // The following arguments apply to xrootd responding at 'refloc' only:
-   //     'nwrks'    Number of workers to be started. []
-   //     'dir'      Directory to be used for the files and working areas []. When starting a new
-   //                instance of the daemon this directory is cleaned with 'rm -fr'. If 'dir'
-   //                is null, the default is used: '/tmp/<user>/.getproof'
-   //     'opt'      Defines what to do if an existing xrootd uses the same ports; possible
-   //                options are: "ask", ask the user; "force", kill the xrootd and start
-   //                a new one; if any other string is specified the existing xrootd will be
-   //                used ["ask"].
-   //                NB: for a change in 'nwrks' to be effective you need to specify opt = "force"
-   //     'dyn'      This flag can be used to switch on dynamic, per-job worker setup scheduling
-   //                [kFALSE].
-   //     'tutords'  This flag can be used to force a dataset dir under the tutorial dir [kFALSE]
-   //
-   // It is possible to trigger the automatic valgrind setup by defining the env GETPROOF_VALGRIND.
-   // E.g. to run the master in valgrind do
-   //
-   //     $ export GETPROOF_VALGRIND="valgrind=master"
-   //
-   // (or
-   //     $ export GETPROOF_VALGRIND="valgrind=master valgrind_opts:--leak-check=full"
-   //
-   // to set some options) before running getProof. Note that 'getProof' is also called by 'stressProof',
-   // so this holds for 'stressProof' runs too.
 
 #ifdef __CINT__
    Printf("getProof: this script can only be executed via ACliC:");

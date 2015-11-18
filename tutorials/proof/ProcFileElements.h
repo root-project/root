@@ -1,25 +1,16 @@
-// @(#)root/tutorials/proof:$Id$
-// Author: G. Ganis, Nov 2011
+/// \file
+/// \ingroup ProcFileElements
+///
+/// Class to hold information about the processed elements of a file
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
-/*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
 
 #ifndef ROOT_ProcFileElements
 #define ROOT_ProcFileElements
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// ProcFileElements                                                     //
-//                                                                      //
-// This class holds information about the processed elements of a file. //
-// Used for testing.                                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TObject
 #include "TObject.h"

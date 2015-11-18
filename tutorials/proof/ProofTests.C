@@ -1,10 +1,13 @@
-#define ProofTests_cxx
+/// \file
+/// \ingroup ProofTests
+///
+/// Auxilliary selector used to test PROOF functionality
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
-//////////////////////////////////////////////////////////
-//
-// Auxilliary TSelector used to test PROOF functionality
-//
-//////////////////////////////////////////////////////////
+#define ProofTests_cxx
 
 #include "ProofTests.h"
 #include <TEnv.h>

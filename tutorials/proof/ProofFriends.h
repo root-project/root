@@ -1,9 +1,11 @@
-//////////////////////////////////////////////////////////
-// This class has been automatically generated on
-// Thu May 27 19:04:42 2010 by ROOT version 5.27/03
-// from TTree Tmain/Main tree for tutorial friends
-// found on file: /tmp/user/master-trunk/ganis/data/0.1/pcphsft64-1274979719-4411/tree_0.1.root
-//////////////////////////////////////////////////////////
+/// \file
+/// \ingroup ProofFriends
+///
+/// Selector to process tree friends
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
 #ifndef ProofFriends_h
 #define ProofFriends_h

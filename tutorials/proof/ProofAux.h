@@ -1,8 +1,11 @@
-//////////////////////////////////////////////////////////////
-//
-// Selector used for auxiliary actions in the PROOF tutorials
-//
-//////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup ProofAux
+///
+/// Selector used for auxiliary actions in the PROOF tutorials
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
 #ifndef ProofAux_h
 #define ProofAux_h

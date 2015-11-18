@@ -1,11 +1,11 @@
-//////////////////////////////////////////////////////////
-//
-// Example of TSelector implementation to do generic
-// processing (filling a simple ntuple, in this case).
-// See tutorials/proof/runProof.C, option "ntuple", for an
-// example of how to run this selector.
-//
-//////////////////////////////////////////////////////////
+/// \file
+/// \ingroup proofntuple
+///
+/// Selector to fill a simple ntuple
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
 #ifndef ProofNtuple_h
 #define ProofNtuple_h

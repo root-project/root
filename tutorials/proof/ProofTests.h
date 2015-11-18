@@ -1,8 +1,11 @@
-//////////////////////////////////////////////////////////
-//
-// Auxilliary TSelector used to test PROOF functionality
-//
-//////////////////////////////////////////////////////////
+/// \file
+/// \ingroup ProofTests
+///
+/// Auxilliary selector used to test PROOF functionality
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
 #ifndef ProofTests_h
 #define ProofTests_h

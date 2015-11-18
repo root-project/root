@@ -1,22 +1,28 @@
-//
-// Macro to finalize queries run with the macro tutorials/runProof .
-// This macro uses an existing PROOF session or starts one at the indicated URL.
-// In the case non existing PROOF session is found and no URL is given, the macro
-// tries to start a local PROOF session.
-//
-// To run the macro:
-//
-//   root[] .L proof/finalizeProof.C+
-//   root[] finalizeProof("<analysis>")
-//
-//   See runProof.C for the analysis currently available.
-//
-//   The macro looks for the last completed queries for the chosen analysis and
-//   asks which one to finalize. If there is only available, it finalizes it
-//   without asking.
-//   All queries are considered for this, both those run synchronously and those
-//   run asynchronously, e.g. runProof("h1(asyn)").
-//
+/// \file
+/// \ingroup proof
+///
+/// Macro to finalize queries run with the macro tutorials/runProof .
+/// This macro uses an existing PROOF session or starts one at the indicated URL.
+/// In the case non existing PROOF session is found and no URL is given, the macro
+/// tries to start a local PROOF session.
+///
+/// To run the macro:
+///
+///   root[] .L proof/finalizeProof.C+
+///   root[] finalizeProof("<analysis>")
+///
+///   See runProof.C for the analysis currently available.
+///
+///   The macro looks for the last completed queries for the chosen analysis and
+///   asks which one to finalize. If there is only available, it finalizes it
+///   without asking.
+///   All queries are considered for this, both those run synchronously and those
+///   run asynchronously, e.g. runProof("h1(asyn)").
+///
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis
 
 #include "Getline.h"
 #include "TChain.h"

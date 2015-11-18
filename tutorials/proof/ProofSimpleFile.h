@@ -1,12 +1,11 @@
-//////////////////////////////////////////////////////////
-//
-// Example of TSelector implementation to do generic processing
-// (filling a set of histograms in this case) and merging via
-// a file, with part of the objects saved in a sub-directory.
-// See tutorials/proof/runProof.C, option "simplefile", for an
-// example of how to run this selector.
-//
-//////////////////////////////////////////////////////////
+/// \file
+/// \ingroup ProofSimpleFile
+///
+/// Selector to fill a set of histograms and merging via file
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
 #ifndef ProofSimpleFile_h
 #define ProofSimpleFile_h

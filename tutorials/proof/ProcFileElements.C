@@ -1,11 +1,11 @@
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// ProcFileElements                                                     //
-//                                                                      //
-// This class holds information about the processed elements of a file. //
-// Used for testing.                                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup ProcFileElements
+///
+/// Class to hold information about the processed elements of a file
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
 #include "ProcFileElements.h"
 #include "TCollection.h"

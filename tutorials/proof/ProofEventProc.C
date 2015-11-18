@@ -1,14 +1,13 @@
-#define ProofEventProc_cxx
+/// \file
+/// \ingroup ProofEventProc
+///
+/// Selector to process trees containing Event structures
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
-//////////////////////////////////////////////////////////
-//
-// Example of TSelector implementation to process trees
-// containing 'Event' structures, e.g. the files under
-// http://root.cern.ch/files/data .
-// See tutorials/proof/runProof.C, option "eventproc", for
-// an example of how to run this selector.
-//
-//////////////////////////////////////////////////////////
+#define ProofEventProc_cxx
 
 #include "ProofEventProc.h"
 #include <TStyle.h>

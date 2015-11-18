@@ -1,13 +1,13 @@
-#define ProofPythia_cxx
+/// \file
+/// \ingroup proofpythia
+///
+/// Selector to generate Monte Carlo events with Pythia8
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
-//////////////////////////////////////////////////////////
-//
-// Example of TSelector implementation to do a Monte Carlo
-// generation using Pythia8.
-// See tutorials/proof/runProof.C, option "pythia8", for an
-// example of how to run this selector.
-//
-//////////////////////////////////////////////////////////
+#define ProofPythia_cxx
 
 #include <TCanvas.h>
 #include <TFrame.h>

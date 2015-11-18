@@ -1,11 +1,11 @@
-//////////////////////////////////////////////////////////
-//
-// Example of TSelector implementation to do generic
-// processing with stdlib collections.
-// See tutorials/proof/runProof.C, option "stdlib", for an
-// example of how to run this selector.
-//
-//////////////////////////////////////////////////////////
+/// \file
+/// \ingroup ProofStdVec
+///
+/// Selector for generic processing with stdlib collections
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
 #ifndef ProofStdVect_h
 #define ProofStdVect_h

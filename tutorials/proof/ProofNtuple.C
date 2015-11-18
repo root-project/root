@@ -1,13 +1,13 @@
-#define ProofNtuple_cxx
+/// \file
+/// \ingroup proofntuple
+///
+/// Selector to fill a simple ntuple
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
-//////////////////////////////////////////////////////////
-//
-// Example of TSelector implementation to do generic
-// processing (filling a simple ntuple, in this case).
-// See tutorials/proof/runProof.C, option "ntuple", for an
-// example of how to run this selector.
-//
-//////////////////////////////////////////////////////////
+#define ProofNtuple_cxx
 
 #include "ProofNtuple.h"
 #include <TCanvas.h>

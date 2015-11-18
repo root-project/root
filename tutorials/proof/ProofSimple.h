@@ -1,11 +1,11 @@
-//////////////////////////////////////////////////////////
-//
-// Example of TSelector implementation to do generic
-// processing (filling a set of histograms in this case).
-// See tutorials/proof/runProof.C, option "simple", for an
-// example of how to run this selector.
-//
-//////////////////////////////////////////////////////////
+/// \file
+/// \ingroup ProofSimple
+///
+/// Selector to fill a set of histograms
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
 #ifndef ProofSimple_h
 #define ProofSimple_h

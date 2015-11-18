@@ -1,13 +1,13 @@
-#define ProofEvent_cxx
+/// \file
+/// \ingroup ProofEvent
+///
+/// Selector for generic processing with Event
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
-//////////////////////////////////////////////////////////
-//
-// Example of TSelector implementation to do generic
-// processing with the test 'Event' structure.
-// See tutorials/proof/runProof.C, option "event", for an
-// example of how to run this selector.
-//
-//////////////////////////////////////////////////////////
+#define ProofEvent_cxx
 
 #include "ProofEvent.h"
 #include "Event.h"
