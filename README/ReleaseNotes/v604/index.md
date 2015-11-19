@@ -744,7 +744,7 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 
 ### Build System
  - Define ROOT_XXX_FLAGS in ROOTConfig.cmake for use by client packages [ROOT-7401]
- - Enabled c++14 in CLING when compiling ROOT with c++14 enabled (CMake: -Dcxx14=ON, classic: --enable-cxx14) 
+ - Enabled c++14 in CLING when compiling ROOT with c++14 enabled (CMake: -Dcxx14=ON, classic: --enable-cxx14)
 
 #### Dictionary Generation
  - Uniform style of warnings, use standard ROOT logging facilities rather than cout/cerr.
@@ -809,7 +809,8 @@ directory - this behavior is now implement by the default constructor.
  - Make sure the line width used to draw `#sqrt` is always >=1.
 
 
-----------------------------------------------------------------------------------------------------------------------
+***
+
 
 ## Release 6.04/04
 
@@ -878,7 +879,9 @@ directory - this behavior is now implement by the default constructor.
 
 *   [[ROOT-7583](https://sft.its.cern.ch/jira/browse/ROOT-7583)] - Let thisroot add ROOT to CMAKE_PREFIX_PATH
 
----------------------------------------------------------------------------------------------------------------------
+
+***
+
 
 ## Release 6.04/06
 
@@ -898,7 +901,9 @@ directory - this behavior is now implement by the default constructor.
 *   [[ROOT-7709](https://sft.its.cern.ch/jira/browse/ROOT-7709)] - PyROOT not functional with system-default Python version on MacOS X 10.11
 *   [[ROOT-7715](https://sft.its.cern.ch/jira/browse/ROOT-7715)] - Building ROOT with CMake not in my PATH fails
 
--------------------------------------------------------------------------------------------------------------------------
+
+***
+
 
 ## Release 6.04/08
 
@@ -951,8 +956,11 @@ directory - this behavior is now implement by the default constructor.
 
 *   [[ROOT-7773](https://sft.its.cern.ch/jira/browse/ROOT-7773)] - find_package(ROOT) should include a set of default libraries
 
--------------------------------------------------------------------------------------------------------------------------
-## Patches Release 6.04/10
+
+***
+
+
+##  Release 6.04/10
 ROOT version 6.04/10 was released on 18 November, 2015.
 
 ### Core
@@ -973,7 +981,10 @@ ROOT version 6.04/10 was released on 18 November, 2015.
 TXNetFileStager: Rather than return only the xrootd server's reply, the endpoint
 hostname is looked up and Locate() returns the full url, including the path.
 
--------------------------------------------------------------------------------------------------------------------------
+
+***
+
+
 ## HEAD of the v6-04-00-patches branch
 
 Changes will be part of the future 6.04/12
