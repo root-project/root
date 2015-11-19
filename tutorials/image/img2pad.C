@@ -1,9 +1,15 @@
+/// \file
+/// \ingroup image
+/// Display image in canvas and pad.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Valeriy Onuchin
+
 void img2pad()
 {
-   // Display image in canvas and pad.
-   //Author: valeriy Onuchin
-
-   TImage *img = TImage::Open("rose512.jpg");
+   TImage *img = TImage::Open("$ROOTSYS/tutorials/image/rose512.jpg");
    if (!img) {
       printf("Could not create an image... exit\n");
       return;
@@ -19,16 +25,16 @@ void img2pad()
    //img->Draw("T100,100,#556655");
    //img->Draw("T100,100");
 
-   TImage *i1 = TImage::Open("rose512.jpg");
+   TImage *i1 = TImage::Open("$ROOTSYS/tutorials/image/rose512.jpg");
    i1->SetConstRatio(kFALSE);
    i1->Flip(90);
-   TImage *i2 = TImage::Open("rose512.jpg");
+   TImage *i2 = TImage::Open("$ROOTSYS/tutorials/image/rose512.jpg");
    i2->SetConstRatio(kFALSE);
    i2->Flip(180);
-   TImage *i3 = TImage::Open("rose512.jpg");
+   TImage *i3 = TImage::Open("$ROOTSYS/tutorials/image/rose512.jpg");
    i3->SetConstRatio(kFALSE);
    i3->Flip(270);
-   TImage *i4 = TImage::Open("rose512.jpg");
+   TImage *i4 = TImage::Open("$ROOTSYS/tutorials/image/rose512.jpg");
    i4->SetConstRatio(kFALSE);
    i4->Mirror(kTRUE);
 
