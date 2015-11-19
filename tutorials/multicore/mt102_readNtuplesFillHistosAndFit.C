@@ -32,7 +32,7 @@ Int_t mt102_readNtuplesFillHistosAndFit()
 
    // Perform the operation sequentially ---------------------------------------
    TChain inputChain("multiCore");
-   inputChain.Add("mc101_multiCore_*.root");
+   inputChain.Add("mt101_multiCore_*.root");
    TH1F outHisto("outHisto", "Random Numbers", 128, -4, 4);
    {
       TimerRAII t("Sequential read and fit");
@@ -61,7 +61,7 @@ Int_t mt102_readNtuplesFillHistosAndFit()
 
    // We define our work item
    auto workItem = [&histograms](UInt_t workerID) {
-      TFile f(Form("mc101_multiCore_%u.root", workerID));
+      TFile f(Form("mt101_multiCore_%u.root", workerID));
       TNtuple *ntuple = nullptr;
       f.GetObject("multiCore", ntuple);
       auto &histo = histograms.at(workerID);

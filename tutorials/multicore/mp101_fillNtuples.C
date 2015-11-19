@@ -2,11 +2,9 @@
 /// \ingroup multicore
 /// Fill n-tuples in distinct workers.
 /// This tutorial illustrates the basics of how it's possible with ROOT to
-/// offload heavy operations on multiple threads and how it's possible to write
+/// offload heavy operations on multiple processes and how it's possible to write
 /// simultaneously multiple files. The operation performed in this case is the
 /// creation of random gaussian numbers.
-/// NOTE: this code can be executed in a macro, ACLiC'ed or not, but not yet at
-/// the command line prompt.
 ///
 /// \macro_code
 ///
@@ -26,7 +24,7 @@ public:
    }
 };
 
-Int_t mt101_fillNtuples(UInt_t nWorkers = 4)
+Int_t mp101_fillNtuples(UInt_t nWorkers = 4)
 {
 
    // No nuisance for batch execution
@@ -45,7 +43,7 @@ Int_t mt101_fillNtuples(UInt_t nWorkers = 4)
 
    // Create a random generator and and Ntuple to hold the numbers
    TRandom3 rndm(1);
-   TFile ofile("mt101_singleCore.root", "RECREATE");
+   TFile ofile("mp101_singleCore.root", "RECREATE");
    TNtuple randomNumbers("singleCore", "Random Numbers", "r");
 
    // Now let's measure how much time we need to fill it up
@@ -56,24 +54,21 @@ Int_t mt101_fillNtuples(UInt_t nWorkers = 4)
    }
 
 
-   // We now go MT! ------------------------------------------------------------
-
-   // The first, fundamental operation to be performed in order to make ROOT
-   // thread-aware.
-   ROOT::EnableMT();
+   // We now go MP! ------------------------------------------------------------
 
    // We define our work item
    auto workItem = [&fillRandom](UInt_t workerID, UInt_t workSize) {
       // One generator, file and ntuple per worker
       TRandom3 workerRndm(workerID); // Change the seed
-      TFile ofile(Form("mt101_multiCore_%u.root", workerID), "RECREATE");
+      TFile ofile(Form("mp101_multiCore_%u.root", workerID), "RECREATE");
       TNtuple workerRandomNumbers("multiCore", "Random Numbers", "r");
       fillRandom(workerRandomNumbers, workerRndm, workSize);
       workerRandomNumbers.Write();
+      return 0;
    };
 
-   // Create the collection which will hold the threads, our "pool"
-   std::vector<std::thread> workers;
+   // Create the pool of workers
+   TProcPool workers(nWorkers);
 
    // We measure time here as well
    {
@@ -82,13 +77,15 @@ Int_t mt101_fillNtuples(UInt_t nWorkers = 4)
       // We split the work in equal parts
       const auto workSize = nNumbers / nWorkers;
 
-      // Fill the "pool" with workers
-      for (UInt_t workerID = 0; workerID < nWorkers; ++workerID) {
-         workers.emplace_back(workItem, workerID, workSize);
-      }
+      // The work item requires two arguments, the map infrastructure offer
+      // an interface to use only one. A standard solution is to use std::bind
+      using namespace std::placeholders;
+      auto workItemOneArg = std::bind(workItem, _1, workSize);
 
-      // Now join them
-      for (auto && worker : workers) worker.join();
+      // Fill the pool with work
+      std::forward_list<UInt_t> workerIDs(nWorkers);
+      std::iota(std::begin(workerIDs), std::end(workerIDs), 0);
+      workers.Map(workItemOneArg, workerIDs);
    }
 
    return 0;
