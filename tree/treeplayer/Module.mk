@@ -19,6 +19,7 @@ TREEPLAYERDO := $(TREEPLAYERDS:.cxx=.o)
 TREEPLAYERDH := $(TREEPLAYERDS:.cxx=.h)
 
 TREEPLAYERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+TREEPLAYERH  := $(filter-out $(MODDIRI)/TBranchProxyTemplate.h,$(TREEPLAYERH))
 TREEPLAYERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TREEPLAYERO  := $(call stripsrc,$(TREEPLAYERS:.cxx=.o))
 

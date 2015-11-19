@@ -5,7 +5,13 @@
 
 set(libname TreePlayer)
 
-ROOT_GENERATE_DICTIONARY(G__${libname} *.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+# TBranchProxyTemplate.h is only used by selectors, to verify that the selector
+# source matches the ROOT interface. It should not end up in the dictionary nor
+# in the PCH.
+ROOT_GLOB_HEADERS(dictHeaders inc/*.h)
+list(REMOVE_ITEM dictHeaders ${CMAKE_SOURCE_DIR}/tree/treeplayer/inc/TBranchProxyTemplate.h)
+
+ROOT_GENERATE_DICTIONARY(G__${libname} ${dictHeaders} MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 
 ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore)
