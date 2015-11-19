@@ -15,7 +15,7 @@ doxygen: filter
 	if [ ! -d $(TUTORIALS_IMAGE_PATH) ]; then mkdir $(TUTORIALS_IMAGE_PATH); fi
 	cp images/* $(TUTORIALS_IMAGE_PATH)
 	doxygen
-	rm -rf files c1* *.ps *.png *.svg *.pdf *.gif *.root
+	rm -rf files c1* *.ps *.png *.svg *.pdf *.gif *.root *.xpm
 
 clean:
 	rm -r $(TUTORIALS_OUTPUT_DIRECTORY)

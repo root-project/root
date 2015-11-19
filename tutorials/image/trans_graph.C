@@ -1,8 +1,15 @@
-//  Demonstrates how to access and manipulate ARGB pixel values of an image +...
-//  - how to make a part of an image to be transparent.
-//  - how to merge/alphablend an image with transparent colors
-//    with some background image.
-//Author: Valeriy Onuchin
+/// \file
+/// \ingroup image
+/// Demonstrates how to access and manipulate ARGB pixel values of an image +...
+///  - how to make a part of an image to be transparent.
+///  - how to merge/alphablend an image with transparent colors
+///    with some background image.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Valeriy Onuchin
 
 #include "TColor.h"
 #include "TImage.h"

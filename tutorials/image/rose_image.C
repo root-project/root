@@ -1,3 +1,12 @@
+/// \file
+/// \ingroup image
+/// Display image in a new canvas and pad.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Valeriy Onuchin
+
 #include "TImage.h"
 #include "TCanvas.h"
 #include "TArrayD.h"
@@ -10,10 +19,7 @@ TCanvas *c1;
 
 void rose_image()
 {
-   // Display image in a new canvas and pad.
-   //Author: Valeriy Onuchin
-
-   TImage *img = TImage::Open("rose512.jpg");
+   TImage *img = TImage::Open("$ROOTSYS/tutorials/image/rose512.jpg");
 
    if (!img) {
       printf("Could not create an image... exit\n");

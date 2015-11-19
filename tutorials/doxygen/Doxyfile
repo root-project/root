@@ -756,7 +756,6 @@ WARN_LOGFILE           =
 
 INPUT                  = ../cocoa \
                          ../cont \
-                         ../doxygen \
                          ../eve \
                          ../fft \
                          ../fit \
