@@ -55,6 +55,8 @@ marked inlined.
 
 Added mechanisms to stop the dictionary generation while parsing the XML and while selecting in presence of duplicates.
 
+Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
+
 ### Thread safety and thread awareness
 
 We added the function `TMethodCall::GetCallFunc` to allow direct access to the function wrapper.
