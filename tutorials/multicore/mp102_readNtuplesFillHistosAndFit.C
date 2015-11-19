@@ -48,10 +48,10 @@ Int_t mp102_readNtuplesFillHistosAndFit()
 
 
    // This is the function invoked during the processing of the trees.
-   auto workItem =[](TTreeReader& reader) {
-      TTreeReaderValue<Float_t> randomRV(reader,"r");
+   auto workItem = [](TTreeReader & reader) {
+      TTreeReaderValue<Float_t> randomRV(reader, "r");
       auto partialHisto = new TH1F("outHistoMP", "Random Numbers", 128, -4, 4);
-      while(reader.Next()) {
+      while (reader.Next()) {
          partialHisto->Fill(*randomRV);
       }
       return partialHisto;
@@ -63,8 +63,8 @@ Int_t mp102_readNtuplesFillHistosAndFit()
    // Process the TChain
    {
       TimerRAII t("Parallel execution");
-      TH1F* sumHistogram = workers.ProcTree(inputChain, workItem, "multiCore");
-      sumHistogram->Fit("gaus",0);
+      TH1F *sumHistogram = workers.ProcTree(inputChain, workItem, "multiCore");
+      sumHistogram->Fit("gaus", 0);
    }
 
    return 0;
