@@ -1,9 +1,14 @@
-void hsumanim() {
-//
-// This script is a slightly modified version of hsum.C.
-// When run in batch mode, it produces an animated gif file.
-//Authors: Rene Brun, Valeriy Onuchin
+/// \file
+/// \ingroup image
+/// This script is a slightly modified version of hsum.C.
+/// When run in batch mode, it produces an animated gif file.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \authors Rene Brun, Valeriy Onuchin
 
+void hsumanim() {
   c1 = new TCanvas("c1","The HSUM example",200,10,600,400);
   c1->SetGrid();
 
