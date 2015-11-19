@@ -121,7 +121,6 @@ THttpServer::THttpServer(const char *engine) :
    fDefaultPageCont(),
    fDrawPage(),
    fDrawPageCont(),
-   fMutex(),
    fCallArgs()
 {
    // As argument, one specifies engine kind which should be
@@ -466,12 +465,10 @@ Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
    }
 
    // add call arg to the list
-   fMutex.Lock();
+   std::unique_lock<std::mutex> lk(fMutex);
    fCallArgs.Add(arg);
-   fMutex.UnLock();
-
    // and now wait until request is processed
-   arg->fCond.Wait();
+   arg->fCond.wait(lk);
 
    return kTRUE;
 }
@@ -491,15 +488,16 @@ void THttpServer::ProcessRequests()
       return;
    }
 
+   std::unique_lock<std::mutex> lk(fMutex, std::defer_lock);
    while (true) {
       THttpCallArg *arg = 0;
 
-      fMutex.Lock();
+      lk.lock();
       if (fCallArgs.GetSize() > 0) {
          arg = (THttpCallArg *) fCallArgs.First();
          fCallArgs.RemoveFirst();
       }
-      fMutex.UnLock();
+      lk.unlock();
 
       if (arg == 0) break;
 
@@ -512,7 +510,7 @@ void THttpServer::ProcessRequests()
          fSniffer->SetCurrentCallArg(0);
       }
 
-      arg->fCond.Signal();
+      arg->fCond.notify_one();
    }
 
    // regularly call Process() method of engine to let perform actions in ROOT context

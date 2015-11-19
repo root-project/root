@@ -12,9 +12,7 @@
 #include "TString.h"
 #endif
 
-#ifndef ROOT_TCondition
-#include "TCondition.h"
-#endif
+#include <condition_variable>
 
 
 class THttpServer;
@@ -34,7 +32,7 @@ protected:
    void *fPostData;              //! binary data received with post request
    Long_t fPostDataLength;       //! length of binary data
 
-   TCondition fCond;            //! condition used to wait for processing
+   std::condition_variable fCond; //! condition used to wait for processing
 
    TString fContentType;        //! type of content
    TString fRequestHeader;      //! complete header, provided with request
