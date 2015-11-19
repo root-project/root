@@ -57,6 +57,9 @@ by including a ROOT header. For example:
   * GeneticMinimizer.h
   * ...
 
+### Dictionaries
+
+Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
 
 ## Histogram Libraries
 
@@ -80,7 +83,7 @@ by including a ROOT header. For example:
 
 
 ## I/O Libraries
-Custom streamers need to #include TBuffer.h explicitly (see 
+Custom streamers need to #include TBuffer.h explicitly (see
 [section Core Libraries](#core-libs)
 
 
