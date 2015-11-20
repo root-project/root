@@ -702,7 +702,7 @@ void TDirectoryFile::Delete(const char *namecycle)
 ////////////////////////////////////////////////////////////////////////////////
 /// Encode directory header into output buffer
 
-void TDirectoryFile::FillBuffer(char *&buffer, Bool_t buffBigEndian = kTRUE)
+void TDirectoryFile::FillBuffer(char *&buffer)
 {
    Version_t version = TDirectoryFile::Class_Version();
    if (fSeekDir > TFile::kStartBigFile ||
@@ -721,17 +721,17 @@ void TDirectoryFile::FillBuffer(char *&buffer, Bool_t buffBigEndian = kTRUE)
    tobuf(buffer, fNbytesKeys, buffBigEndian);
    tobuf(buffer, fNbytesName, buffBigEndian);
    if (version > 1000) {
-      tobuf(buffer, fSeekDir, buffBigEndian);
-      tobuf(buffer, fSeekParent, buffBigEndian);
-      tobuf(buffer, fSeekKeys, buffBigEndian);
+      tobuf(buffer, fSeekDir);
+      tobuf(buffer, fSeekParent);
+      tobuf(buffer, fSeekKeys);
    } else {
-      tobuf(buffer, (Int_t)fSeekDir, buffBigEndian);
-      tobuf(buffer, (Int_t)fSeekParent, buffBigEndian);
-      tobuf(buffer, (Int_t)fSeekKeys, buffBigEndian);
+      tobuf(buffer, (Int_t)fSeekDir);
+      tobuf(buffer, (Int_t)fSeekParent);
+      tobuf(buffer, (Int_t)fSeekKeys);
    }
-   fUUID.FillBuffer(buffer, buffBigEndian);
+   fUUID.FillBuffer(buffer);
    if (fFile && fFile->GetVersion() < 40000) return;
-   if (version <=1000) for (Int_t i=0;i<3;i++) tobuf(buffer,Int_t(0), buffBigEndian);
+   if (version <=1000) for (Int_t i=0;i<3;i++) tobuf(buffer,Int_t(0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

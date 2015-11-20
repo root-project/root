@@ -16,6 +16,7 @@ Buffer base class used for serializing objects.
 #include "TBuffer.h"
 #include "TClass.h"
 #include "TProcessID.h"
+#include "TROOT.h"
 
 const Int_t  kExtraSpace        = 8;   // extra space at end of buffer (used for free block count)
 
@@ -41,7 +42,7 @@ TBuffer::TBuffer(EMode mode)
    fMode         = mode;
    fVersion      = 0;
    fParent       = 0;
-   fBufBigEndian = gROOT->IsBigEndian();
+   fBufBigEndian = gROOT->IsBufBigEndian();
 
    SetBit(kIsOwner);
 
@@ -64,7 +65,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
    fMode         = mode;
    fVersion      = 0;
    fParent       = 0;
-   fBufBigEndian = gROOT->IsBigEndian();
+   fBufBigEndian = gROOT->IsBufBigEndian();
 
    SetBit(kIsOwner);
 
@@ -93,7 +94,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharF
    fMode         = mode;
    fVersion      = 0;
    fParent       = 0;
-   fBufBigEndian = gROOT->IsBigEndian();
+   fBufBigEndian = gROOT->IsBufBigEndian();
 
    SetBit(kIsOwner);
 

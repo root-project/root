@@ -582,18 +582,18 @@ Short_t TKey::GetKeep() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Encode key header into output buffer.
 
-void TKey::FillBuffer(char *&buffer, Bool_t buffBigEndian = kTRUE)
+void TKey::FillBuffer(char *&buffer)
 {
-   tobuf(buffer, fNbytes, buffBigEndian);
+   tobuf(buffer, fNbytes);
    Version_t version = fVersion;
-   tobuf(buffer, version, buffBigEndian);
+   tobuf(buffer, version);
 
-   tobuf(buffer, fObjlen, buffBigEndian);
-   fDatime.FillBuffer(buffer, buffBigEndian);
-   tobuf(buffer, fKeylen, buffBigEndian);
-   tobuf(buffer, fCycle, buffBigEndian);
+   tobuf(buffer, fObjlen);
+   fDatime.FillBuffer(buffer);
+   tobuf(buffer, fKeylen);
+   tobuf(buffer, fCycle);
    if (fVersion > 1000) {
-      tobuf(buffer, fSeekKey, buffBigEndian);
+      tobuf(buffer, fSeekKey);
 
       // We currently store in the 16 highest bit of fSeekPdir the value of
       // fPidOffset.  This offset is used when a key (or basket) is transfered from one
@@ -603,19 +603,19 @@ void TKey::FillBuffer(char *&buffer, Bool_t buffBigEndian = kTRUE)
       // TProcessID.  This fPidOffset needs to be increment if the key/basket is copied
       // and need to be zero for new key/basket.
       Long64_t pdir = (((Long64_t)fPidOffset)<<kPidOffsetShift) | (kPidOffsetMask & fSeekPdir);
-      tobuf(buffer, pdir, buffBigEndian);
+      tobuf(buffer, pdir);
    } else {
-      tobuf(buffer, (Int_t)fSeekKey, buffBigEndian);
-      tobuf(buffer, (Int_t)fSeekPdir, buffBigEndian);
+      tobuf(buffer, (Int_t)fSeekKey);
+      tobuf(buffer, (Int_t)fSeekPdir);
    }
    if (TestBit(kIsDirectoryFile)) {
       // We want to record "TDirectory" instead of TDirectoryFile so that the file can be read by ancient version of ROOT.
-      gTDirectoryString().FillBuffer(buffer, buffBigEndian);
+      gTDirectoryString().FillBuffer(buffer);
    } else {
-      fClassName.FillBuffer(buffer, buffBigEndian);
+      fClassName.FillBuffer(buffer);
    }
-   fName.FillBuffer(buffer, buffBigEndian);
-   fTitle.FillBuffer(buffer, buffBigEndian);
+   fName.FillBuffer(buffer);
+   fTitle.FillBuffer(buffer);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1446,7 +1446,7 @@ Int_t TKey::WriteFile(Int_t cycle, TFile* f)
    char *buffer = fBuffer;
    if (cycle) {
       fCycle = cycle;
-      FillBuffer(buffer, IsBigEndian());
+      FillBuffer(buffer);
       buffer = fBuffer;
    }
 

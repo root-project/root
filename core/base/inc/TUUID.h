@@ -82,8 +82,8 @@ public:
    void         SetUUIDNumber(UInt_t index) { fUUIDIndex = index; }
 
    void         StreamerV1(TBuffer &b);
-   void         FillBuffer(char *&buffer, Bool_t buffBigEndian=kTRUE);
-   void         ReadBuffer(char *&buffer, Bool_t buffBigEndian=kTRUE);
+   void         FillBuffer(char *&buffer);
+   void         ReadBuffer(char *&buffer);
    Int_t        Sizeof() const { return 18; }
 
    ClassDef(TUUID,1)  // Universally Unique IDentifier

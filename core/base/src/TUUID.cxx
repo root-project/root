@@ -262,33 +262,33 @@ TUUID::TUUID(const char *uuid)
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream UUID into output buffer.
 
-void TUUID::FillBuffer(char *&buffer, Bool_t buffBigEndian = kTRUE)
+void TUUID::FillBuffer(char *&buffer)
 {
    Version_t version = TUUID::Class_Version();
-   tobuf(buffer, version, buffBigEndian);
-   tobuf(buffer, fTimeLow, buffBigEndian);
-   tobuf(buffer, fTimeMid, buffBigEndian);
-   tobuf(buffer, fTimeHiAndVersion, buffBigEndian);
-   tobuf(buffer, fClockSeqHiAndReserved, buffBigEndian);
-   tobuf(buffer, fClockSeqLow, buffBigEndian);
+   tobuf(buffer, version);
+   tobuf(buffer, fTimeLow);
+   tobuf(buffer, fTimeMid);
+   tobuf(buffer, fTimeHiAndVersion);
+   tobuf(buffer, fClockSeqHiAndReserved);
+   tobuf(buffer, fClockSeqLow);
    for (Int_t i = 0; i < 6; i++)
-      tobuf(buffer, fNode[i], buffBigEndian);
+      tobuf(buffer, fNode[i]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream UUID from input buffer.
 
-void TUUID::ReadBuffer(char *&buffer, Bool_t buffBigEndian = kTRUE)
+void TUUID::ReadBuffer(char *&buffer)
 {
    Version_t version;
-   frombuf(buffer, &version, buffBigEndian);
-   frombuf(buffer, &fTimeLow, buffBigEndian);
-   frombuf(buffer, &fTimeMid, buffBigEndian);
-   frombuf(buffer, &fTimeHiAndVersion, buffBigEndian);
-   frombuf(buffer, &fClockSeqHiAndReserved, buffBigEndian);
-   frombuf(buffer, &fClockSeqLow, buffBigEndian);
+   frombuf(buffer, &version);
+   frombuf(buffer, &fTimeLow);
+   frombuf(buffer, &fTimeMid);
+   frombuf(buffer, &fTimeHiAndVersion);
+   frombuf(buffer, &fClockSeqHiAndReserved);
+   frombuf(buffer, &fClockSeqLow);
    for (Int_t i = 0; i < 6; i++)
-      frombuf(buffer, &fNode[i], buffBigEndian);
+      frombuf(buffer, &fNode[i]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

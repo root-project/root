@@ -175,7 +175,7 @@ public:
    virtual void        Delete(const char *namecycle="");
    virtual void        Draw(Option_t *option="");
    virtual void        DrawMap(const char *keys="*",Option_t *option=""); // *MENU*
-   virtual void        FillBuffer(char *&buffer, Bool_t buffBigEndian=kTRUE);
+   virtual void        FillBuffer(char *&buffer);
    virtual void        Flush();
    TArchiveFile       *GetArchive() const { return fArchive; }
    Long64_t            GetArchiveOffset() const { return fArchiveOffset; }

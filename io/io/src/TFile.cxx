@@ -641,8 +641,8 @@ void TFile::Init(Bool_t create)
       fNbytesFree  = 0;
       WriteHeader();
       char *buffer = key->GetBuffer();
-      TNamed::FillBuffer(buffer, key->IsBigEndian());
-      TDirectoryFile::FillBuffer(buffer, key->IsBigEndian());
+      TNamed::FillBuffer(buffer);
+      TDirectoryFile::FillBuffer(buffer);
       key->WriteFile();
       delete key;
    } else {
@@ -667,7 +667,7 @@ void TFile::Init(Bool_t create)
       }
 
       char *buffer = header + 4;    // skip the "root" file identifier
-      frombuf(buffer, &fVersio);
+      frombuf(buffer, &fVersion);
       Int_t headerLength;
       frombuf(buffer, &headerLength);
       fBEGIN = (Long64_t)headerLength;
@@ -742,7 +742,7 @@ void TFile::Init(Bool_t create)
       frombuf(buffer,&version); versiondir = version%1000;
       fDatimeC.ReadBuffer(buffer);
       fDatimeM.ReadBuffer(buffer);
-      frombuf(buffer, &fNbytesKeys;
+      frombuf(buffer, &fNbytesKeys);
       frombuf(buffer, &fNbytesName);
       if (version > 1000) {
          frombuf(buffer, &fSeekDir);
@@ -2376,7 +2376,7 @@ void TFile::WriteFree()
 
    next.Reset();
    while ((afree = (TFree*) next())) {
-      afree->FillBuffer(buffer, key->IsBigEndian());
+      afree->FillBuffer(buffer);
    }
    if ( (buffer-start)!=nbytes ) {
       // Most likely one of the 'free' segment was used to store this
