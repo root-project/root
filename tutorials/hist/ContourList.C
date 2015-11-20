@@ -9,6 +9,8 @@
 /// #### Output produced by `.x ContourList.C`
 /// It shows that 6 contours and 12 graphs were found.
 /// \macro_output
+///
+/// #### `ContourList.C`
 /// \macro_code
 ///
 /// \authors Josh de Bever (CSI Medical Physics Group, The University of Western Ontario, London, Ontario, Canada), Olivier Couet
