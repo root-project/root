@@ -74,7 +74,7 @@ namespace Internal {
 namespace ROOT {
    // Enable support for multi-threading within the ROOT code,
    // in particular, enables the global mutex to make ROOT thread safe/aware.
-   void EnableMT();
+   void EnableThreadSafety();
 }
 
 class TROOT : public TDirectory {

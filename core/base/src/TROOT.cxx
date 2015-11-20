@@ -383,7 +383,7 @@ namespace Internal {
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Enables the global mutex to make ROOT thread safe/aware.
-   void EnableMT()
+   void EnableThreadSafety()
    {
       static void (*tthreadInitialize)() = nullptr;
 
@@ -394,10 +394,10 @@ namespace Internal {
                tthreadInitialize = (void(*)()) sym;
                tthreadInitialize();
             } else {
-               Error("EnableMT","Cannot initialize multithreading support.");
+               Error("EnableThreadSafety","Cannot initialize multithreading support.");
             }
          } else {
-            Error("EnableMT","Cannot load Thread library.");
+            Error("EnableThreadSafety","Cannot load Thread library.");
          }
       }
    }
@@ -1692,8 +1692,8 @@ void TROOT::InitSystem()
 
 void TROOT::InitThreads()
 {
-   if (gEnv->GetValue("Root.UseThreads", 0) || gEnv->GetValue("Root.EnableMT", 0)) {
-      ROOT::EnableMT();
+   if (gEnv->GetValue("Root.UseThreads", 0) || gEnv->GetValue("Root.EnableThreadSafety", 0)) {
+      ROOT::EnableThreadSafety();
    }
 }
 

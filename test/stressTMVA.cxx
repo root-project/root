@@ -3014,7 +3014,7 @@ int main(int argc, char **argv)
    addComplexClassificationTests(TMVA_test, full);
 
    // run all
-   ROOT::EnableMT();
+   ROOT::EnableThreadSafety();
    TMVA_test.run();
 
 #ifdef COUTDEBUG
