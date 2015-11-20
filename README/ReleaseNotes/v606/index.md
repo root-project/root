@@ -20,7 +20,8 @@ The following people have contributed to this new version:
  Olivier Couet, CERN/SFT,\
  Kyle Cranmer, NYU, RooStats,\
  Gerri Ganis, CERN/SFT,\
- Andrei Gheata, CERN/Alice,\
+ Andrei Gheata, CERN/SFT,\
+ Enrico Guiraud, CERN/SFT, \
  Lukasz Janyst, CERN/IT,\
  Christopher Jones, Fermilab, CMS,\
  Wim Lavrijsen, LBNL, PyRoot,\
@@ -30,7 +31,7 @@ The following people have contributed to this new version:
  Axel Naumann, CERN/SFT,\
  Danilo Piparo, CERN/SFT,\
  Timur Pocheptsov, CERN/SFT,\
- Fons Rademakers, CERN/SFT,\
+ Fons Rademakers, CERN/IT/Openlab,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Liza Sakellari, CERN/SFT,\
  Manuel Tobias Schiller,\
@@ -332,7 +333,10 @@ hostname is looked up and Locate() returns the full url, including the path.
 ## Montecarlo Libraries
 
 
-## PROOF Libraries
+## Multi-processing
+
+With this version we introduce a new module, core/multiproc, for multi-processing on multi-core machines. This module is based on fork technology and offers an interface inspired from Python multiprocessor module. The new interface, implemented in the class TProcPool, provides the possibility to perform in parallel a very generic set of tasks, described by macros, functions or lambdas.
+Tutorials illustrating the usage of the new class TProcPool are available under tutorials/multicore.
 
 
 ## Language Bindings
