@@ -903,17 +903,9 @@ void TProofDrawHist::Terminate(void)
 
 ClassImp(TProofDrawEventList)
 
-//______________________________________________________________________________
-TProofDrawEventList::~TProofDrawEventList()
-{
-   // Destructor.
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Init().
 
-   SafeDelete(fElist);
-   SafeDelete(fEventLists);
-}
-
-
-//______________________________________________________________________________
 void TProofDrawEventList::Init(TTree *tree)
 {
    // See TProofDraw::Init().
@@ -980,8 +972,6 @@ void TProofDrawEventList::SlaveTerminate(void)
 
    PDB(kDraw,1) Info("SlaveTerminate","Enter");
    fEventLists->Add(fElist);
-   fEventLists = 0;
-   fElist = 0;
 }
 
 
@@ -1015,14 +1005,9 @@ void TProofDrawEventList::Terminate(void)
 
 ClassImp(TProofDrawEntryList)
 
-//______________________________________________________________________________
-TProofDrawEntryList::~TProofDrawEntryList()
-{
-   //class destructor
-   SafeDelete(fElist);
-}
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Init().
 
-//______________________________________________________________________________
 void TProofDrawEntryList::Init(TTree *tree)
 {
    // See TProofDraw::Init().
@@ -1079,7 +1064,6 @@ void TProofDrawEntryList::SlaveTerminate(void)
 
    PDB(kDraw,1) Info("SlaveTerminate","Enter");
    fElist->OptimizeStorage();
-   fElist = 0;
 }
 
 //______________________________________________________________________________
