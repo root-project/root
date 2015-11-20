@@ -50,9 +50,9 @@ namespace TMVA {
    class DataInputHandler;
    class DataSetFactory; // DSMTEST
    class MsgLogger;
-
+   class Factory;
    class DataSetManager {
-      
+      friend class Factory;
    public:
 
 
