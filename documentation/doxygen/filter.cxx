@@ -2,7 +2,7 @@
 // Author: O.Couet
 
 //
-//    filters doc files.
+// filters doc files.
 //
 
 #include <unistd.h>
@@ -17,6 +17,8 @@
 using namespace std;
 
 // Auxiliary functions
+void   FilterClass();
+void   FilterTutorial();
 void   GetClassName();
 void   ExecuteMacro();
 void   ExecuteCommand(string);
@@ -26,23 +28,25 @@ bool   EndsWith(string const &, string const &);
 bool   BeginsWith(const string&, const string&);
 
 // Global variables.
-char   gLine[255];   // Current line in the current input file
-string gFileName;    // Input file name
-string gLineString;  // Current line (as a string) in the current input file
-string gClassName;   // Current class name
-string gImageName;   // Current image name
-string gMacroName;   // Current macro name
-string gCwd;         // Current working directory
-string gOutDir;      // Output directory
-string gSourceDir;   // Source directory
-bool   gHeader;      // True if the input file is a header
-bool   gSource;      // True if the input file is a source file
-bool   gImageSource; // True the source of the current macro should be shown
-bool   gInClassDef;
-bool   gClass;
-int    gInMacro;
-int    gImageID;
-int    gMacroID;
+FILE  *f;              // Pointer to the file being parsed.
+char   gLine[255];     // Current line in the current input file
+string gFileName;      // Input file name
+string gLineString;    // Current line (as a string) in the current input file
+string gClassName;     // Current class name
+string gImageName;     // Current image name
+string gMacroName;     // Current macro name
+string gCwd;           // Current working directory
+string gOutDir;        // Output directory
+string gSourceDir;     // Source directory
+string gOutputName;    // File containing a macro std::out
+bool   gHeader;        // True if the input file is a header
+bool   gSource;        // True if the input file is a source file
+bool   gImageSource;   // True the source of the current macro should be shown
+int    gInMacro;       // >0 if parsing a macro in a class documentation.
+int    gImageID;       // Image Identifier.
+int    gMacroID;       // Macro identifier in class documentation.
+int    gShowTutSource; // >0 if the tutorial source code should be shown
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Filter ROOT files for Doxygen.
@@ -50,16 +54,15 @@ int    gMacroID;
 int main(int argc, char *argv[])
 {
    // Initialisation
-
-   gFileName    = argv[1];
-   gHeader      = false;
-   gSource      = false;
-   gInClassDef  = false;
-   gClass       = false;
-   gImageSource = false;
-   gInMacro     = 0;
-   gImageID     = 0;
-   gMacroID     = 0;
+   gFileName      = argv[1];
+   gHeader        = false;
+   gSource        = false;
+   gImageSource   = false;
+   gInMacro       = 0;
+   gImageID       = 0;
+   gMacroID       = 0;
+   gOutputName    = "stdout.dat";
+   gShowTutSource = 0;
    if (EndsWith(gFileName,".cxx")) gSource = true;
    if (EndsWith(gFileName,".h"))   gHeader = true;
    GetClassName();
@@ -77,8 +80,17 @@ int main(int argc, char *argv[])
    ReplaceAll(gSourceDir,"\"","");
 
    // Open the input file name.
-   FILE *f = fopen(gFileName.c_str(),"r");
+   f = fopen(gFileName.c_str(),"r");
 
+   if (gFileName.find("tutorials") != string::npos) FilterTutorial();
+   else                                             FilterClass();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Filter ROOT class for Doxygen.
+
+void FilterClass()
+{
    // File for inline macros.
    FILE *m = 0;
 
@@ -86,25 +98,16 @@ int main(int argc, char *argv[])
    if (gHeader) {
       while (fgets(gLine,255,f)) {
          gLineString = gLine;
-
-         if (BeginsWith(gLineString,"class"))              gInClassDef = true;
-         if (gLineString.find("ClassDef") != string::npos) gInClassDef = false;
-
          printf("%s",gLineString.c_str());
       }
       fclose(f);
-      return 0;
+      return;
    }
 
    // Source file.
    if (gSource) {
       while (fgets(gLine,255,f)) {
          gLineString = gLine;
-
-         if (gLineString.find("/*! \\class")  != string::npos ||
-             gLineString.find("/// \\class")  != string::npos ||
-             gLineString.find("/** \\class")  != string::npos ||
-             gLineString.find("///! \\class") != string::npos) gClass = true;
 
          if (gLineString.find("End_Macro") != string::npos) {
             ReplaceAll(gLineString,"End_Macro","");
@@ -113,7 +116,7 @@ int main(int argc, char *argv[])
             if (m) {
                fclose(m);
                m = 0;
-               ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\")\""
+               ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true)\""
                                               , StringFormat("%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str()
                                               , StringFormat("%s_%3.3d.png", gClassName.c_str(), gImageID).c_str()
                                               , gOutDir.c_str()));
@@ -163,7 +166,7 @@ int main(int argc, char *argv[])
          printf("%s",gLineString.c_str());
       }
       fclose(f);
-      return 0;
+      return;
    }
 
    // Output anything not header nor source
@@ -172,7 +175,60 @@ int main(int argc, char *argv[])
       printf("%s",gLineString.c_str());
    }
    fclose(f);
-   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Filter ROOT tutorials for Doxygen.
+
+void FilterTutorial()
+{
+   // File for inline macros.
+   FILE *m = 0;
+
+   // Extract the macro name
+   int i1      = gFileName.rfind('/')+1;
+   int i2      = gFileName.rfind('C');
+   gMacroName  = gFileName.substr(i1,i2-i1+1);
+   gImageName  = StringFormat("%s.png", gMacroName.c_str()); // Image name
+   gOutputName = StringFormat("%s.out", gMacroName.c_str()); // output name
+
+   // Parse the source and generate the image if needed
+   while (fgets(gLine,255,f)) {
+      gLineString = gLine;
+
+      // \macro_image found
+      if (gLineString.find("\\macro_image") != string::npos) {
+         ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false)\"",
+                                        gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+         ReplaceAll(gLineString, "\\macro_image", StringFormat("\\image html %s",gImageName.c_str()));
+         remove(gOutputName.c_str());
+      }
+
+      // \macro_code found
+      if (gLineString.find("\\macro_code") != string::npos) {
+         gShowTutSource = 1;
+         m = fopen(StringFormat("%s/macros/%s",gOutDir.c_str(),gMacroName.c_str()).c_str(), "w");
+         ReplaceAll(gLineString, "\\macro_code", StringFormat("\\include %s",gMacroName.c_str()));
+      }
+
+      // \macro_output found
+      if (gLineString.find("\\macro_output") != string::npos) {
+         ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()).c_str());
+         rename(gOutputName.c_str(), StringFormat("%s/macros/%s",gOutDir.c_str(), gOutputName.c_str()).c_str());
+         ReplaceAll(gLineString, "\\macro_output", StringFormat("\\include %s",gOutputName.c_str()));
+      }
+
+      // \author is the last comment line.
+      if (gLineString.find("\\author")  != string::npos) {
+         printf("%s",StringFormat("%s \n/// \\cond \n",gLineString.c_str()).c_str());
+         if (gShowTutSource == 1) gShowTutSource = 2;
+      } else {
+         printf("%s",gLineString.c_str());
+         if (m && gShowTutSource == 2) fprintf(m,"%s",gLineString.c_str());
+      }
+   }
+
+   if (m) fclose(m);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -214,8 +270,6 @@ void GetClassName()
    }
 
    fclose(f);
-
-   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -239,7 +293,7 @@ void ExecuteMacro()
    // Build the ROOT command to be executed.
    gLineString.insert(0, StringFormat("root -l -b -q \"makeimage.C(\\\""));
    int l = gLineString.length();
-   gLineString.replace(l-2,1,StringFormat("C\\\",\\\"%s\\\",\\\"%s\\\")\"", gImageName.c_str(), gOutDir.c_str()));
+   gLineString.replace(l-2,1,StringFormat("C\\\",\\\"%s\\\",\\\"%s\\\",true)\"", gImageName.c_str(), gOutDir.c_str()));
 
    ExecuteCommand(gLineString);
 
@@ -256,14 +310,14 @@ void ExecuteMacro()
 void ExecuteCommand(string command)
 {
    int o = dup(fileno(stdout));
-   freopen("stdout.dat","a",stdout);
+   freopen(gOutputName.c_str(),"a",stdout);
    system(command.c_str());
    dup2(o,fileno(stdout));
    close(o);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace all instances of of a string with another string.
+/// Replace all instances of a string with another string.
 
 void ReplaceAll(string& str, const string& from, const string& to) {
    if (from.empty()) return;

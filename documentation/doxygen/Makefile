@@ -10,8 +10,6 @@ export DOXYGEN_IMAGE_PATH := $(DOXYGEN_OUTPUT_DIRECTORY)/html
 export DOXYGEN_STRIP_PATH := $(shell cd $(PWD)/../..; pwd)
 export DOXYGEN_INCLUDE_PATH := $(shell find $(DOXYGEN_STRIP_PATH) -type d -name dictpch -prune -o -type d -name inc)
 
-
-
 all: filter doxygen
 
 filter:
@@ -26,14 +24,8 @@ doxygen:
 	cp images/* $(DOXYGEN_IMAGE_PATH)
 	tar xfz mathjax.tar.gz -C $(DOXYGEN_OUTPUT_DIRECTORY)/html
 	doxygen
-	rm c1* *.root
-	rm stdout.dat
-	rm htmlfooter.html
+	rm -rf files filter c1* *.ps *.png *.svg *.pdf *.root *.xpm stdout.dat htmlfooter.html
 
 clean:
 	rm -r $(DOXYGEN_OUTPUT_DIRECTORY)
-	rm filter
-	rm stdout.dat
-	rm htmlfooter.html
-	rm c1* *.root
 

@@ -1,9 +1,9 @@
 // Generates the ImageName output of the macro MacroName
 
-void makeimage(const char *MacroName, const char *ImageName, const char *OutDir)
+void makeimage(const char *MacroName, const char *ImageName, const char *OutDir, bool cp)
 {
    gROOT->ProcessLine(Form(".x %s",MacroName));
-   gSystem->Exec(TString::Format("cp %s %s/macros", MacroName, OutDir));
+   if (cp) gSystem->Exec(TString::Format("cp %s %s/macros", MacroName, OutDir));
 
    TIter iCanvas(gROOT->GetListOfCanvases());
    TVirtualPad* pad = 0;

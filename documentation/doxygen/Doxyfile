@@ -831,7 +831,8 @@ INPUT                  = . \
                          ../../tmva/ \
                          ../../roofit/ \
                          ../../tree/ \
-                         ../../sql/
+                         ../../sql/ \
+                         ../../tutorials/
 #                         ../../core/clib/
 #                         ../../core/lzma/
 #                         ../../core/newdelete/
@@ -936,7 +937,7 @@ EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       =  */G__* \
                           */src/unuran-* \
                           */libAfterImage/* \
-                          */doc/v6* */doc/v5* \
+                          */doc/v6* */doc/v5* v7 \
                           */win32gdk/gdk/* \
                           makeimage.C filter.cxx
 
