@@ -335,6 +335,10 @@ N: Mary-Louise Gill
 E: m.l.gill+cern@gmail.com
 D: editline terminal interface
 
+N: Enrico Guiraud
+E: enrico.guiraud@gmail.com
+D: author of the multiproc module 
+
 N: Thorsten Glebe
 E: T.Glebe@mpi-hd.mpg.de
 D: Original author of the Smatrix package
@@ -685,6 +689,7 @@ D: author of Carrot (http://carrot.cern.ch)
 N: Katerina Opocenska
 E: opocenska@gmail.com
 D: author of the Event Recorder
+D: author of the sub-merging technology in PROOF
 
 N: Juan Palacios
 E: Juan.Palacios@cern.ch
