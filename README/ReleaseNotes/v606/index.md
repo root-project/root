@@ -66,7 +66,7 @@ We reduced thread serialization in `TClass::GetCheckSum`, `TClass::GetBaseClassO
 
 `TObjArray::Delete` was updated to allow its caller to explicitly avoid costly checks (extra RecursiveRemove and lock)
 
-We removed the need to create a TThread object per thread in a multi-threaded application. Now ROOT can be used with any threading model (e.g. OpenMP, STL threads, TBB) transparently: all the internal synchronisation mechanisms of ROOT are activated by a single call: `ROOT::EnableThreadSafety()`. This call must take place if ROOT needs to be used in a thread safe manner.
+We removed the need to create a TThread object per thread in a multi-threaded application. Now ROOT can be used with any threading model (e.g. OpenMP, STL threads, TBB) transparently.  All the internal synchronisation mechanisms of ROOT are activated by a single call: `ROOT::EnableThreadSafety()` which is the successor of the existing `TThread::Initialize`.  This call must take place if ROOT needs to be used in a thread safe manner.
 
 ### TDirectory::TContext
 
