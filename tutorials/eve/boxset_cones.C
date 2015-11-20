@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstrates usage of 'cone' mode in TEveBoxSet class.
 ///
 /// \image html eve_boxset_cones.png

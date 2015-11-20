@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Multi-view (3d, rphi, rhoz) service class using EVE Window Manager.
 ///
 /// \macro_code

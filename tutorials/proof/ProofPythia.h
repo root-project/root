@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup proofpythia
+/// \ingroup tutorial_proofpythia
 ///
 /// Selector to generate Monte Carlo events with Pythia8
 ///

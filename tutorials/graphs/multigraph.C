@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphs
+/// \ingroup tutorial_graphs
 /// Create and Draw a TMultiGraph.
 ///
 /// \macro_image

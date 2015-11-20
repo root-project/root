@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// Show 3-D polylines and markers.
 ///
 /// \macro_image

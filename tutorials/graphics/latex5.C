@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// This draws the Mathematical Symbols letters as a table and save the result
 /// as GIF, PS, PDF and SVG files.
 ///

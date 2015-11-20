@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphs
+/// \ingroup tutorial_graphs
 /// This macro is an example of graphs in log scales with annotations.
 ///
 /// The presented results are predictions of invariant cross-section

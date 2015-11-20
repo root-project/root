@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Illustrates the advantages of a TH1K histogram
 ///
 /// \macro_image

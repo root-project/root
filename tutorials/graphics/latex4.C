@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// Draw the Greek letters as a table and save the result as GIF, PS, PDF
 /// and SVG files.
 /// Lowercase Greek letters are obtained by adding a # to the name of the letter.

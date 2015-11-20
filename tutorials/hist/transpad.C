@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Example of a canvas showing two histograms with different scales.
 /// The second histogram is drawn in a transparent pad
 ///

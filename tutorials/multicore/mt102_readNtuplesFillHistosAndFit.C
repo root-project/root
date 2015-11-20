@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup multicore
+/// \ingroup tutorial_multicore
 /// Read n-tuples in distinct workers, fill histograms, merge them and fit.
 /// Knowing that other facilities like TProcPool might be more adequate for
 /// this operation, this tutorial complements mc101, reading and merging.

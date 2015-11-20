@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup image
+/// \ingroup tutorial_image
 /// Display image in a new canvas and pad.
 ///
 /// \macro_image

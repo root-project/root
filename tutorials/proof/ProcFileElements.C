@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup ProcFileElements
+/// \ingroup tutorial_ProcFileElements
 ///
 /// Class to hold information about the processed elements of a file
 ///

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphs
+/// \ingroup tutorial_graphs
 /// Show how to shade an area between two graphs
 ///
 /// \macro_image

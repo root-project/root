@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// This tutorial illustrates how to create an histogram with polygonal
 /// bins (TH2Poly), fill it and draw it. The initial data are stored
 /// in TMultiGraphs. They represent the european countries.

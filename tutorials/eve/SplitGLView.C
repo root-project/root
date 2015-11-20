@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Helper classes for the alice_esd_split.C demo.
 ///
 /// \macro_code

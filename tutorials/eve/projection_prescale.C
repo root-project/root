@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstates usage pre-scaling for automatic 2D projections.
 ///
 /// \image html eve_projection_prescale.png

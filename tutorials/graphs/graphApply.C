@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphs
+/// \ingroup tutorial_graphs
 /// A macro to demonstrate the functionality of TGraph::Apply() method.
 /// TGraph::Apply applies a function `f` to all the data TGraph points.
 /// `f` may be a 1-D function TF1 or 2-d function TF2.

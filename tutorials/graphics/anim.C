@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// Macro illustrating how to animate a picture using a Timer.
 ///
 /// \macro_code

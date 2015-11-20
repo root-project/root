@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphs
+/// \ingroup tutorial_graphs
 /// Macro to test interpolation function Approx
 ///
 /// \macro_image

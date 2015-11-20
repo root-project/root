@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// This macro draws 5 Latex-style formula in a canvas and prints the canvas as a Postscript file.
 ///
 /// \macro_image

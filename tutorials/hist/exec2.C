@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Echo object at mouse position and show a graphics line.
 /// Example of macro called when a mouse event occurs in a pad.
 ///

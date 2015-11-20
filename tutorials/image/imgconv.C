@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup image
+/// \ingroup tutorial_image
 /// Open rose512.jpg and save it in the following formats:
 ///  .png, .gif, .xpm and tiff.
 ///

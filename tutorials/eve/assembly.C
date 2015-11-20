@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Geometry detector assembly example
 /// Author: Andrei Gheata
 ///

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Display the various 2-d drawing options
 ///
 /// \macro_code

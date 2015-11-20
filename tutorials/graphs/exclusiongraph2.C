@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphs
+/// \ingroup tutorial_graphs
 /// Draw several graphs with an exclusion zones.
 ///
 /// \macro_image

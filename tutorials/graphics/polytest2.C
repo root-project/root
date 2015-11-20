@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// This macro is testing the "compacting" algorithm in TPadPainter.
 /// It reduces the number of polygon's vertices using actual pixel coordinates.
 ///

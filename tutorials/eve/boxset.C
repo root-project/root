@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstrates usage of TEveBoxSet class.
 ///
 /// \image html eve_boxset.png

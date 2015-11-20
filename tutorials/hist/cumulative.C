@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Illustrate use of the TH1::GetCumulative method.
 ///
 /// \macro_image

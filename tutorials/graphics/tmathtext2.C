@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// This macro draw all possible symbols provided by TMathtext.
 /// \macro_image
 /// \author Olivier Couet

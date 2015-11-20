@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Demo of Timers.
 ///
 /// Simple example illustrating how to use the C++ interpreter

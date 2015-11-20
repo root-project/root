@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Rebin a variable bin-width histogram.
 ///
 /// This tutorial illustrates how to:

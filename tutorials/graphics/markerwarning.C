@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// This script illustrates the danger of using asymmetric symbols.
 ///
 /// \macro_image

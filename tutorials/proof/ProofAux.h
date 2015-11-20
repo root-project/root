@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup ProofAux
+/// \ingroup tutorial_ProofAux
 ///
 /// Selector used for auxiliary actions in the PROOF tutorials
 ///

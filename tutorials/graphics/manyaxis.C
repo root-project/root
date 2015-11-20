@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// Show several TGaxis formats.
 ///
 /// \macro_image

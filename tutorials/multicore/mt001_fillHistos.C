@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup multicore
+/// \ingroup tutorial_multicore
 /// Fill histograms in parallel and write them on file.
 /// The simplest meaningful possible example which shows ROOT thread awareness.
 ///

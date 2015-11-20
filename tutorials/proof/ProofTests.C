@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup ProofTests
+/// \ingroup tutorial_ProofTests
 ///
 /// Auxilliary selector used to test PROOF functionality
 ///

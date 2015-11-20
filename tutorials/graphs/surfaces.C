@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphs
+/// \ingroup tutorial_graphs
 /// Draw 2-Dim functions.
 /// \macro_image
 /// \macro_code

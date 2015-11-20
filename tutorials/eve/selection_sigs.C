@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Test signals from TEveSelection class.
 ///
 /// \macro_code

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstrates usage of EVE compound objects - class TEveCompound.
 ///
 /// \image html eve_compound.png

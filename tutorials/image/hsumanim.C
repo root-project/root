@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup image
+/// \ingroup tutorial_image
 /// This script is a slightly modified version of hsum.C.
 /// When run in batch mode, it produces an animated gif file.
 ///

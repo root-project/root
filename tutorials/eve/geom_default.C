@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstrates usage of "Default" geometry alias.
 ///
 /// \image html eve_geom_default.png

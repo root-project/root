@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup ProofSimple
+/// \ingroup tutorial_ProofSimple
 ///
 /// Selector to fill a set of histograms
 ///

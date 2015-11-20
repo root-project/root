@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstrates usage of class TEveStraightLineSet.
 ///
 /// \image html eve_lineset.png

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstrates usage of TEveTrackPRopagator with different magnetic
 /// field configurations.
 /// Needs to be run in compiled mode.

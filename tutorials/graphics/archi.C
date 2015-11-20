@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// This macro displays the ROOT architecture.
 ///
 /// \macro_image

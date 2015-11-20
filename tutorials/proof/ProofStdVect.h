@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup ProofStdVec
+/// \ingroup tutorial_ProofStdVec
 ///
 /// Selector for generic processing with stdlib collections
 ///

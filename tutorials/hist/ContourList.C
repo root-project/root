@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Getting Contours From TH2D.
 ///
 /// #### Image produced by `.x ContourList.C`

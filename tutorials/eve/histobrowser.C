@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstates how to use EVE as a histogram browser.
 ///
 /// \image html eve_histobrowser.png

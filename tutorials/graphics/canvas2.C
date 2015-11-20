@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// Example of canvas partitioning.
 /// Sometimes the Divide() method is not appropriate to divide a Canvas.
 /// Because of the left and right margins, all the pads do not have the

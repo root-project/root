@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Example of stacked histograms: class THStack.
 ///
 /// \macro_image

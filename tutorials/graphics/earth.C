@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// This tutorial illustrates the special contour options.
 ///
 ///   - "AITOFF"     : Draw a contour via an AITOFF projection
