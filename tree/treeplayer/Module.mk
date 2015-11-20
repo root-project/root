@@ -29,7 +29,7 @@ TREEPLAYERLIB := $(LPATH)/libTreePlayer.$(SOEXT)
 TREEPLAYERMAP := $(TREEPLAYERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(TREEPLAYERH))
+ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(TREEPLAYERH) $(MODDIRI)/TBranchProxyTemplate.h)
 ALLLIBS       += $(TREEPLAYERLIB)
 ALLMAPS       += $(TREEPLAYERMAP)
 
