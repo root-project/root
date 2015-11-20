@@ -88,7 +88,7 @@ ClassImp(ParamHistFunc);
 
 ParamHistFunc::ParamHistFunc() : _numBins(0)
 {
-  ;
+  _dataSet.removeSelfFromDir(); // files must not delete _dataSet.
 }
 
 
@@ -118,6 +118,8 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   
   //  _dataSet = RooDataSet("
 
+  _dataSet.removeSelfFromDir(); // files must not delete _dataSet.
+
   // Set the binning
   // //_binning = var.getBinning().clone() ;
   
@@ -130,8 +132,6 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   // Add the parameters (with checking)
   addVarSet( vars );
   addParamSet( paramSet );
-
-  
 }
 
 
@@ -147,6 +147,8 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _numBins(0),
   _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars, Hist)
 {
+
+  _dataSet.removeSelfFromDir(); // files must not delete _dataSet.
 
   // Create a function which returns binewise-values
   // This class contains N RooRealVar's, one for each
@@ -209,7 +211,8 @@ ParamHistFunc::ParamHistFunc(const ParamHistFunc& other, const char* name) :
   _binMap( other._binMap ),
   _dataSet( other._dataSet )
 {
-  ;
+  _dataSet.removeSelfFromDir(); // files must not delete _dataSet.
+
   // Copy constructor
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
 }
