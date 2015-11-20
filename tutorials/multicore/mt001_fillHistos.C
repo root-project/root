@@ -15,7 +15,7 @@ Int_t mt001_fillHistos(UInt_t nWorkers = 4)
 
    // The first, fundamental operation to be performed in order to make ROOT
    // thread-aware.
-   ROOT::EnableMT();
+   ROOT::EnableThreadSafety();
 
    // We define our work item
    auto workItem = [nNumbers](UInt_t workerID) {

@@ -60,7 +60,7 @@ Int_t mt101_fillNtuples(UInt_t nWorkers = 4)
 
    // The first, fundamental operation to be performed in order to make ROOT
    // thread-aware.
-   ROOT::EnableMT();
+   ROOT::EnableThreadSafety();
 
    // We define our work item
    auto workItem = [&fillRandom](UInt_t workerID, UInt_t workSize) {

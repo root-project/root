@@ -44,7 +44,7 @@ Int_t mt102_readNtuplesFillHistosAndFit()
 
    // The first, fundamental operation to be performed in order to make ROOT
    // thread-aware.
-   ROOT::EnableMT();
+   ROOT::EnableThreadSafety();
 
    // We adapt our parallelisation to the number of input files
    const auto nFiles = inputChain.GetListOfFiles()->GetEntries();
