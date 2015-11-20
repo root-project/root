@@ -17,7 +17,7 @@ int main()
   TH1::AddDirectory(kFALSE);
 
   //Tell Root we want to be multi-threaded
-  ROOT::EnableMT();
+  ROOT::EnableThreadSafety();
   //When threading, also have to keep ROOT from logging all TObjects into a list
   TObject::SetObjectStat(false);
 

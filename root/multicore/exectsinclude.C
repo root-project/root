@@ -35,7 +35,7 @@ void exectsinclude(){
 
    tsStringlist inclusions;
    gInterpreter->SetClassAutoloading(false);
-   ROOT::EnableMT();
+   ROOT::EnableThreadSafety();
 
    std::atomic<bool> fire(false);
    vector<thread> threads;

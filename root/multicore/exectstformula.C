@@ -1,6 +1,6 @@
 void exectstformula(){
 
-   ROOT::EnableMT();
+   ROOT::EnableThreadSafety();
 
    vector<const char*> formulae {"1./(1.+(4.61587e+06*(((1./(0.5*TMath::Max(1.e-6,x+1.)))-1.)/1.16042e+07)))",
                                  "1./(1.+(3.41484e+06*(((1./(0.5*TMath::Max(1.e-6,x+1.)))-1.)/1.2025e+07)))",

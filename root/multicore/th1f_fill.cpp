@@ -27,7 +27,7 @@ void fillHisto(const char* filename, TH1F& histo){
 int main() {
 
   // Initialize ROOT threading support
-   ROOT::EnableMT();
+   ROOT::EnableThreadSafety();
 
   // Don't link histos to a particular TDirectory
   TH1::AddDirectory(false);
