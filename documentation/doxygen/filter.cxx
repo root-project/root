@@ -1,9 +1,59 @@
 // @(#)root/test:$name:  $:$id: filter.cxx,v 1.0 exp $
 // Author: O.Couet
 
-//
-// filters doc files.
-//
+/// The ROOT doxygen filter implements ROOT's specific directives used to generate
+/// the ROOT reference guide.
+///
+/// ## In the ROOT classes
+///
+/// ### `Begin_Macro` and `End_Macro`
+/// The two tags where used the THtml version to generate images from ROOT code.
+/// The genererated picture is inlined exactly at the place where the macro is
+/// defined. The Macro can be defined in two way:
+///  - by direct in-lining of the the C++ code
+///  - by a reference to a C++ file
+/// The tag `Begin_Macro` can have the parameter `(source)`. The directive becomes:
+/// `Begin_Macro(source)`. This parameter allows to show the macro's code in addition.
+///
+/// ## In the ROOT tutorials
+///
+/// ROOT tutorials are also included in the ROOT documentation. The tutorials'
+/// macros headers should look like:
+///
+/// ~~~ {.cpp}
+/// \file
+/// \ingroup tutorial_hist
+/// Getting Contours From TH2D.
+///
+/// #### Image produced by `.x ContourList.C`
+/// The contours values are drawn next to each contour.
+/// \macro_image
+///
+/// #### Output produced by `.x ContourList.C`
+/// It shows that 6 contours and 12 graphs were found.
+/// \macro_output
+///
+/// #### `ContourList.C`
+/// \macro_code
+///
+/// \authors  Josh de Bever, Olivier Couet
+/// ~~~
+///
+/// This example shows that three new directives have been implemented:
+///
+///  1. `\macro_image`
+///  The image produced by this macro is shown. A caption can be added to document
+///  the picture: `\macro_image This is a picture`
+///
+///  2. `\macro_code`
+///  The macro code is shown.  A caption can be added: `\macro_code This is code`
+///
+///  3. `\macro_output`
+///  The output produced by this macro is shown. A caption can be added:
+///  `\macro_image This the macro output`
+///
+/// Note that the doxygen directive `\authors` or `\author` must be the last one
+/// of the macro header.
 
 #include <unistd.h>
 #include <stdio.h>
