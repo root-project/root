@@ -4,7 +4,7 @@
   <navindex>
     <tab type="user" url="http://root.cern.ch" title="ROOT Home Page"/>
     <tab type="mainpage" visible="yes" title=""/>
-    <tab type="user" visible="yes" title="Tutorials" url="https://root.cern.ch/doc/master/group__Tutorials.html"/>
+    <tab type="user" visible="yes" title="Tutorials" url="group__Tutorials.html"/>
     <tab type="modules" visible="yes" title="User's Classes" intro=""/>
     <tab type="namespaces" visible="yes" title="">
       <tab type="namespacelist" visible="yes" title="" intro=""/>
