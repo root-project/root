@@ -1180,6 +1180,12 @@ void RooPlot::Streamer(TBuffer &R__b)
 
     TH1::AddDirectory(kFALSE) ;
 
+    // The default c'tor might have registered this with a TDirectory.
+    // Streaming the TNamed will make this not retrievable anymore, so
+    // unregister first.
+    if (_dir)
+      _dir->Remove(this);
+
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
     if (R__v > 1) {
@@ -1206,7 +1212,8 @@ void RooPlot::Streamer(TBuffer &R__b)
     }
 
     TH1::AddDirectory(kTRUE) ;
-
+    if (_dir)
+      _dir->Append(this);
 
   } else {
     R__b.WriteClassBuffer(RooPlot::Class(),this);
