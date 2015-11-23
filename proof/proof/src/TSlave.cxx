@@ -9,16 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSlave                                                               //
-//                                                                      //
-// This class describes a PROOF slave server.                           //
-// It contains information like the slaves host name, ordinal number,   //
-// performance index, socket, etc. Objects of this class can only be    //
-// created via TProof member functions.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSlave
+\ingroup proof
+
+Class describing a PROOF worker server. It contains information like the
+workers host name, ordinal number, performance index, socket, etc.
+Objects of this class can only be created via TProof member functions. 
+
+*/
 
 #include <stdlib.h>
 

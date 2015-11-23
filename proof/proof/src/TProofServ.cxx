@@ -9,16 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofServ                                                           //
-//                                                                      //
-// TProofServ is the PROOF server. It can act either as the master      //
-// server or as a slave server, depending on its startup arguments. It  //
-// receives and handles message coming from the client or from the      //
-// master server.                                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofServ
+\ingroup proof
+
+Class providing the PROOF server. It can act either as the master
+server or as a slave server, depending on its startup arguments. It
+receives and handles message coming from the client or from the
+master server.
+
+*/
 
 #include "RConfigure.h"
 #include "RConfig.h"

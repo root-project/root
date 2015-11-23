@@ -8,17 +8,23 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+/**
+  \defgroup proof PROOF Libraries
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProof                                                               //
-//                                                                      //
-// This class controls a Parallel ROOT Facility, PROOF, cluster.        //
-// It fires the worker servers, it keeps track of how many workers are  //
-// running, it keeps track of the workers running status, it broadcasts //
-// messages to all workers, it collects results, etc.                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+  The PROOF libraries (libProof, libProofPlayer, libProofx) contain the classes defining
+  the PROOF facility, a ROOT-based framework for parallel analysis of ROOT TTrees. 
+
+*/
+
+/** \class TProof
+\ingroup proof
+
+This class controls a Parallel ROOT Facility, PROOF, cluster.
+It fires the worker servers, it keeps track of how many workers are
+running, it keeps track of the workers running status, it broadcasts
+messages to all workers, it collects results, etc.
+
+*/
 
 #include <stdlib.h>
 #include <fcntl.h>

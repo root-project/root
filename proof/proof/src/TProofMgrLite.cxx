@@ -9,6 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class TProofMgrLite
+\ingroup proof
+
+Basic TProofMgr functionality implementation in the case of Lite sessions.
+
+*/
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TProofMgrLite                                                        //

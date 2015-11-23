@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofLog                                                            //
-//                                                                      //
-// Implementation of the PROOF session log handler                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofLog
+\ingroup proof
+
+Implementation of the PROOF session log handler.
+
+*/
 
 #include "TFile.h"
 #include "TMacro.h"

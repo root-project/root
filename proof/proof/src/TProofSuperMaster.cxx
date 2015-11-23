@@ -9,16 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofSuperMaster                                                    //
-//                                                                      //
-// This class controls a Parallel ROOT Facility, PROOF, cluster.        //
-// It fires the slave servers, it keeps track of how many slaves are    //
-// running, it keeps track of the slaves running status, it broadcasts  //
-// messages to all slaves, it collects results, etc.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofSuperMaster
+\ingroup proof
+
+Implementation of TProof controlling PROOF federated clusters.
+
+*/
 
 #include "TProofSuperMaster.h"
 #include "TString.h"
