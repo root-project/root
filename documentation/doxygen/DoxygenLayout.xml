@@ -26,6 +26,7 @@
   <!-- Layout definition for a class page -->
   <class>
     <briefdescription visible="no"/>
+    <allmemberslink visible="yes"/>
     <detaileddescription title=" "/>
     <memberdecl>
       <nestedclasses visible="yes" title=""/>
@@ -63,7 +64,6 @@
     </memberdecl>
     <includes visible="$SHOW_INCLUDE_FILES"/>
     <inheritancegraph visible="$CLASS_GRAPH"/>
-    <collaborationgraph visible="$COLLABORATION_GRAPH"/>
     <memberdef>
       <inlineclasses title=""/>
       <typedefs title=""/>
@@ -77,8 +77,8 @@
       <properties title=""/>
       <events title=""/>
     </memberdef>
-
     <allmemberslink visible="yes"/>
+    <collaborationgraph visible="$COLLABORATION_GRAPH"/>
     <usedfiles visible="$SHOW_USED_FILES"/>
     <authorsection visible="yes"/>
   </class>
@@ -139,7 +139,8 @@
 
   <!-- Layout definition for a group page -->
   <group>
-    <briefdescription visible="yes"/>
+    <briefdescription visible="no"/>
+    <detaileddescription title=" "/>
     <groupgraph visible="$GROUP_GRAPHS"/>
     <memberdecl>
       <nestedgroups visible="yes" title=""/>
@@ -162,7 +163,6 @@
       <friends title=""/>
       <membergroups visible="yes"/>
     </memberdecl>
-    <detaileddescription title=""/>
     <memberdef>
       <pagedocs/>
       <inlineclasses title=""/>
