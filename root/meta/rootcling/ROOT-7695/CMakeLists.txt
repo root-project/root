@@ -1,7 +1,4 @@
-#-------------------------------------------------------------------------------
-#
-# Placeholder file to translate the tests to the new CTest system. Meanwhile we
-# define a CTest test that calls 'make' in ${CMAKE_CURRENT_SOURCE_DIR}
-#
-#-------------------------------------------------------------------------------
-ROOTTEST_ADD_OLDTEST()
+ROOTTEST_ADD_TEST(roottest-root-meta-rootcling-ROOT-7695
+                  COMMAND ${ROOT_rootcling_CMD} -f AliEveITSDigitsInfo_cling.cxx
+                          ${CMAKE_CURRENT_SOURCE_DIR}/AliEveITSDigitsInfo.h
+                          ${CMAKE_CURRENT_SOURCE_DIR}/AliEveITSDigitsInfo_linkdef.h)

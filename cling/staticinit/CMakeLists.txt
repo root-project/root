@@ -1,11 +1,14 @@
-#ROOTTEST_GENERATE_REFLEX_DICTIONARY(AliaODPid AliAODPid.h SELECTION AliAODPid_selection.xml)
-#
-#ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-ROOT-5594-execdummy
-#                  MACRO execdummy.C
-#                  OUTREF execdummy.ref
-#                  DEPENDS ${GENERATE_REFLEX_TEST})
+#ROOTTEST_ADD_TEST(roottest-cling-staticinit-ROOT-7775
+#                  COMMAND ${ROOT_rootcling_CMD} -f ROOT-7775.cxx -I${CMAKE_CURRENT_SOURCE_DIR}
+#                  ${CMAKE_CURRENT_SOURCE_DIR}/ROOT-7775/BaseInfo.h
+#                  ${CMAKE_CURRENT_SOURCE_DIR}/ROOT-7775/CLASS_DEF.h
+#                  ${CMAKE_CURRENT_SOURCE_DIR}/ROOT-7775/incident.h
+#                  ${CMAKE_CURRENT_SOURCE_DIR}/ROOT-7775/part3.h
+#                  ${CMAKE_CURRENT_SOURCE_DIR}/ROOT-7775/BaseInfo.i.h
+#                  ${CMAKE_CURRENT_SOURCE_DIR}/ROOT-7775/CLIDRegistry.h
+#                  ${CMAKE_CURRENT_SOURCE_DIR}/ROOT-7775/part1.h
+#                  ${CMAKE_CURRENT_SOURCE_DIR}/ROOT-7775/prelude.h
+#                  ${CMAKE_CURRENT_SOURCE_DIR}/ROOT-7775/BaseInfoEmpty.icc
+#                  ${CMAKE_CURRENT_SOURCE_DIR}/ROOT-7775/CaloCell_ID.h
+#                  ${CMAKE_CURRENT_SOURCE_DIR}/ROOT-7775/part2.h)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-rootcling-ROOT-7695
-                  COMMAND ${ROOT_rootcling_CMD} -f AliEveITSDigitsInfo_cling.cxx
-                          ${CMAKE_CURRENT_SOURCE_DIR}/AliEveITSDigitsInfo.h
-                          ${CMAKE_CURRENT_SOURCE_DIR}/AliEveITSDigitsInfo_linkdef.h)
