@@ -415,7 +415,6 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
 RooMCStudy::~RooMCStudy() 
 {  
   _genDataList.Delete() ;
-  _fitResList.Delete() ;
   _fitOptList.Delete() ;
   delete _ngenVar ;
   delete _fitParData ;
@@ -654,7 +653,7 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
 Bool_t RooMCStudy::generateAndFit(Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData, const char* asciiFilePat) 
 {
   // Clear any previous data in memory
-  _fitResList.Delete() ;
+  _fitResList.Delete() ; // even though the fit results are owned by gROOT, we still want to scratch them here.
   _genDataList.Delete() ;
   _fitParData->reset() ;
   
@@ -693,7 +692,7 @@ Bool_t RooMCStudy::generate(Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenD
 Bool_t RooMCStudy::fit(Int_t nSamples, const char* asciiFilePat) 
 {
   // Clear any previous data in memory
-  _fitResList.Delete() ;
+  _fitResList.Delete() ; // even though the fit results are owned by gROOT, we still want to scratch them here.
   _fitParData->reset() ;
   
   return run(kFALSE,kTRUE,nSamples,0,kFALSE,asciiFilePat) ;
@@ -708,7 +707,7 @@ Bool_t RooMCStudy::fit(Int_t nSamples, const char* asciiFilePat)
 Bool_t RooMCStudy::fit(Int_t nSamples, TList& dataSetList) 
 {
   // Clear any previous data in memory
-  _fitResList.Delete() ;
+  _fitResList.Delete() ; // even though the fit results are owned by gROOT, we still want to scratch them here.
   _genDataList.Delete() ;
   _fitParData->reset() ;
   
