@@ -84,8 +84,10 @@ TWebSocket::~TWebSocket()
 
 void TWebSocket::ReOpen()
 {
-   if (fWebFile->fSocket)
+   if (fWebFile->fSocket) {
       delete fWebFile->fSocket;
+      fWebFile->fSocket = 0;
+   }
 
    TUrl connurl;
    if (fWebFile->fProxy.IsValid())
