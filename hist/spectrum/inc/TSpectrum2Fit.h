@@ -11,122 +11,110 @@
 #ifndef ROOT_TSpectrum2Fit
 #define ROOT_TSpectrum2Fit
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSpectrum2Fit                                                        //
-//                                                                      //
-// Class for fitting 2D spectra using AWMI (algorithm without matrix    //
-// inversion) and conjugate gradient algorithms for symmetrical         //
-// matrices (Stiefel-Hestens method). AWMI method allows to fit         //
-// simulaneously 100s up to 1000s peaks. Stiefel method is very stable, //
-// it converges faster, but is more time consuming                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
 
 class TSpectrum2Fit : public TNamed {
 protected:
-   Int_t     fNPeaks;                        //number of peaks present in fit, input parameter, it should be > 0
-   Int_t     fNumberIterations;              //number of iterations in fitting procedure, input parameter, it should be > 0
-   Int_t     fXmin;                          //first fitted channel in x direction
-   Int_t     fXmax;                          //last fitted channel in x direction
-   Int_t     fYmin;                          //first fitted channel in y direction
-   Int_t     fYmax;                          //last fitted channel in y direction
-   Int_t     fStatisticType;                 //type of statistics, possible values kFitOptimChiCounts (chi square statistics with counts as weighting coefficients), kFitOptimChiFuncValues (chi square statistics with function values as weighting coefficients),kFitOptimMaxLikelihood
-   Int_t     fAlphaOptim;                    //optimization of convergence algorithm, possible values kFitAlphaHalving, kFitAlphaOptimal
-   Int_t     fPower;                         //possible values kFitPower2,4,6,8,10,12, for details see references. It applies only for Awmi fitting function.
-   Int_t     fFitTaylor;                     //order of Taylor expansion, possible values kFitTaylorOrderFirst, kFitTaylorOrderSecond. It applies only for Awmi fitting function.
-   Double_t  fAlpha;                         //convergence coefficient, input parameter, it should be positive number and <=1, for details see references
-   Double_t  fChi;                           //here the fitting functions return resulting chi square
-   Double_t *fPositionInitX;                 //[fNPeaks] array of initial values of x positions of 2D peaks, input parameters
-   Double_t *fPositionCalcX;                 //[fNPeaks] array of calculated values of x positions of 2D peaks, output parameters
-   Double_t *fPositionErrX;                  //[fNPeaks] array of error values of x positions of 2D peaks, output parameters
-   Double_t *fPositionInitY;                 //[fNPeaks] array of initial values of y positions of 2D peaks, input parameters
-   Double_t *fPositionCalcY;                 //[fNPeaks] array of calculated values of y positions of 2D peaks, output parameters
-   Double_t *fPositionErrY;                  //[fNPeaks] array of error values of y positions of 2D peaks, output parameters
-   Double_t *fPositionInitX1;                //[fNPeaks] array of initial x positions of 1D ridges, input parameters
-   Double_t *fPositionCalcX1;                //[fNPeaks] array of calculated x positions of 1D ridges, output parameters
-   Double_t *fPositionErrX1;                 //[fNPeaks] array of x positions errors of 1D ridges, output parameters
-   Double_t *fPositionInitY1;                //[fNPeaks] array of initial y positions of 1D ridges, input parameters
-   Double_t *fPositionCalcY1;                //[fNPeaks] array of calculated y positions of 1D ridges, output parameters
-   Double_t *fPositionErrY1;                 //[fNPeaks] array of y positions errors of 1D ridges, output parameters
-   Double_t *fAmpInit;                       //[fNPeaks] array of initial values of amplitudes of 2D peaks, input parameters
-   Double_t *fAmpCalc;                       //[fNPeaks] array of calculated values of amplitudes of 2D peaks, output parameters
-   Double_t *fAmpErr;                        //[fNPeaks] array of amplitudes errors of 2D peaks, output parameters
-   Double_t *fAmpInitX1;                     //[fNPeaks] array of initial values of amplitudes of 1D ridges in x direction, input parameters
-   Double_t *fAmpCalcX1;                     //[fNPeaks] array of calculated values of amplitudes of 1D ridges in x direction, output parameters
-   Double_t *fAmpErrX1;                      //[fNPeaks] array of amplitudes errors of 1D ridges in x direction, output parameters
-   Double_t *fAmpInitY1;                     //[fNPeaks] array of initial values of amplitudes of 1D ridges in y direction, input parameters
-   Double_t *fAmpCalcY1;                     //[fNPeaks] array of calculated values of amplitudes of 1D ridges in y direction, output parameters
-   Double_t *fAmpErrY1;                      //[fNPeaks] array of amplitudes errors of 1D ridges in y direction, output parameters
-   Double_t *fVolume;                        //[fNPeaks] array of calculated volumes of 2D peaks, output parameters
-   Double_t *fVolumeErr;                     //[fNPeaks] array of volumes errors of 2D peaks, output parameters
-   Double_t  fSigmaInitX;                    //initial value of sigma x parameter
-   Double_t  fSigmaCalcX;                    //calculated value of sigma x parameter
-   Double_t  fSigmaErrX;                     //error value of sigma x parameter
-   Double_t  fSigmaInitY;                    //initial value of sigma y parameter
-   Double_t  fSigmaCalcY;                    //calculated value of sigma y parameter
-   Double_t  fSigmaErrY;                     //error value of sigma y parameter
-   Double_t  fRoInit;                        //initial value of correlation coefficient
-   Double_t  fRoCalc;                        //calculated value of correlation coefficient
-   Double_t  fRoErr;                         //error value of correlation coefficient
-   Double_t  fTxyInit;                       //initial value of t parameter for 2D peaks (relative amplitude of tail), for details see html manual and references
-   Double_t  fTxyCalc;                       //calculated value of t parameter for 2D peaks
-   Double_t  fTxyErr;                        //error value of t parameter for 2D peaks
-   Double_t  fSxyInit;                       //initial value of s parameter for 2D peaks (relative amplitude of step), for details see html manual and references
-   Double_t  fSxyCalc;                       //calculated value of s parameter for 2D peaks
-   Double_t  fSxyErr;                        //error value of s parameter for 2D peaks
-   Double_t  fTxInit;                        //initial value of t parameter for 1D ridges in x direction (relative amplitude of tail), for details see html manual and references
-   Double_t  fTxCalc;                        //calculated value of t parameter for 1D ridges in x direction
-   Double_t  fTxErr;                         //error value of t parameter for 1D ridges in x direction
-   Double_t  fTyInit;                        //initial value of t parameter for 1D ridges in y direction (relative amplitude of tail), for details see html manual and references
-   Double_t  fTyCalc;                        //calculated value of t parameter for 1D ridges in y direction
-   Double_t  fTyErr;                         //error value of t parameter for 1D ridges in y direction
-   Double_t  fSxInit;                        //initial value of s parameter for 1D ridges in x direction (relative amplitude of step), for details see html manual and references
-   Double_t  fSxCalc;                        //calculated value of s parameter for 1D ridges in x direction
-   Double_t  fSxErr;                         //error value of s parameter for 1D ridges in x direction
-   Double_t  fSyInit;                        //initial value of s parameter for 1D ridges in y direction (relative amplitude of step), for details see html manual and references
-   Double_t  fSyCalc;                        //calculated value of s parameter for 1D ridges in y direction
-   Double_t  fSyErr;                         //error value of s parameter for 1D ridges in y direction
-   Double_t  fBxInit;                        //initial value of b parameter for 1D ridges in x direction (slope), for details see html manual and references
-   Double_t  fBxCalc;                        //calculated value of b parameter for 1D ridges in x direction
-   Double_t  fBxErr;                         //error value of b parameter for 1D ridges in x direction
-   Double_t  fByInit;                        //initial value of b parameter for 1D ridges in y direction (slope), for details see html manual and references
-   Double_t  fByCalc;                        //calculated value of b parameter for 1D ridges in y direction
-   Double_t  fByErr;                         //error value of b parameter for 1D ridges in y direction
-   Double_t  fA0Init;                        //initial value of background a0 parameter(backgroud is estimated as a0+ax*x+ay*y)
-   Double_t  fA0Calc;                        //calculated value of background a0 parameter
-   Double_t  fA0Err;                         //error value of background a0 parameter
-   Double_t  fAxInit;                        //initial value of background ax parameter(backgroud is estimated as a0+ax*x+ay*y)
-   Double_t  fAxCalc;                        //calculated value of background ax parameter
-   Double_t  fAxErr;                         //error value of background ax parameter
-   Double_t  fAyInit;                        //initial value of background ay parameter(backgroud is estimated as a0+ax*x+ay*y)
-   Double_t  fAyCalc;                        //calculated value of background ay parameter
-   Double_t  fAyErr;                         //error value of background ay parameter
-   Bool_t   *fFixPositionX;                  //[fNPeaks] array of logical values which allow to fix appropriate x positions of 2D peaks (not fit). However they are present in the estimated functional
-   Bool_t   *fFixPositionY;                  //[fNPeaks] array of logical values which allow to fix appropriate y positions of 2D peaks (not fit). However they are present in the estimated functional
-   Bool_t   *fFixPositionX1;                 //[fNPeaks] array of logical values which allow to fix appropriate x positions of 1D ridges (not fit). However they are present in the estimated functional
-   Bool_t   *fFixPositionY1;                 //[fNPeaks] array of logical values which allow to fix appropriate y positions of 1D ridges (not fit). However they are present in the estimated functional
-   Bool_t   *fFixAmp;                        //[fNPeaks] array of logical values which allow to fix appropriate amplitudes of 2D peaks (not fit). However they are present in the estimated functional
-   Bool_t   *fFixAmpX1;                      //[fNPeaks] array of logical values which allow to fix appropriate amplitudes of 1D ridges in x direction (not fit). However they are present in the estimated functional
-   Bool_t   *fFixAmpY1;                      //[fNPeaks] array of logical values which allow to fix appropriate amplitudes of 1D ridges in y direction (not fit). However they are present in the estimated functional
-   Bool_t    fFixSigmaX;                     //logical value of sigma x parameter, which allows to fix the parameter (not to fit).
-   Bool_t    fFixSigmaY;                     //logical value of sigma y parameter, which allows to fix the parameter (not to fit).
-   Bool_t    fFixRo;                         //logical value of correlation coefficient, which allows to fix the parameter (not to fit).
-   Bool_t    fFixTxy;                        //logical value of t parameter for 2D peaks, which allows to fix the parameter (not to fit).
-   Bool_t    fFixSxy;                        //logical value of s parameter for 2D peaks, which allows to fix the parameter (not to fit).
-   Bool_t    fFixTx;                         //logical value of t parameter for 1D ridges in x direction, which allows to fix the parameter (not to fit).
-   Bool_t    fFixTy;                         //logical value of t parameter for 1D ridges in y direction, which allows to fix the parameter (not to fit).
-   Bool_t    fFixSx;                         //logical value of s parameter for 1D ridges in x direction, which allows to fix the parameter (not to fit).
-   Bool_t    fFixSy;                         //logical value of s parameter for 1D ridges in y direction, which allows to fix the parameter (not to fit).
-   Bool_t    fFixBx;                         //logical value of b parameter for 1D ridges in x direction, which allows to fix the parameter (not to fit).
-   Bool_t    fFixBy;                         //logical value of b parameter for 1D ridges in y direction, which allows to fix the parameter (not to fit).
-   Bool_t    fFixA0;                         //logical value of a0 parameter, which allows to fix the parameter (not to fit).
-   Bool_t    fFixAx;                         //logical value of ax parameter, which allows to fix the parameter (not to fit).
-   Bool_t    fFixAy;                         //logical value of ay parameter, which allows to fix the parameter (not to fit).
+   Int_t     fNPeaks;                        ///< number of peaks present in fit, input parameter, it should be > 0
+   Int_t     fNumberIterations;              ///< number of iterations in fitting procedure, input parameter, it should be > 0
+   Int_t     fXmin;                          ///< first fitted channel in x direction
+   Int_t     fXmax;                          ///< last fitted channel in x direction
+   Int_t     fYmin;                          ///< first fitted channel in y direction
+   Int_t     fYmax;                          ///< last fitted channel in y direction
+   Int_t     fStatisticType;                 ///< type of statistics, possible values kFitOptimChiCounts (chi square statistics with counts as weighting coefficients), kFitOptimChiFuncValues (chi square statistics with function values as weighting coefficients),kFitOptimMaxLikelihood
+   Int_t     fAlphaOptim;                    ///< optimization of convergence algorithm, possible values kFitAlphaHalving, kFitAlphaOptimal
+   Int_t     fPower;                         ///< possible values kFitPower2,4,6,8,10,12, for details see references. It applies only for Awmi fitting function.
+   Int_t     fFitTaylor;                     ///< order of Taylor expansion, possible values kFitTaylorOrderFirst, kFitTaylorOrderSecond. It applies only for Awmi fitting function.
+   Double_t  fAlpha;                         ///< convergence coefficient, input parameter, it should be positive number and <=1, for details see references
+   Double_t  fChi;                           ///< here the fitting functions return resulting chi square
+   Double_t *fPositionInitX;                 ///< [fNPeaks] array of initial values of x positions of 2D peaks, input parameters
+   Double_t *fPositionCalcX;                 ///< [fNPeaks] array of calculated values of x positions of 2D peaks, output parameters
+   Double_t *fPositionErrX;                  ///< [fNPeaks] array of error values of x positions of 2D peaks, output parameters
+   Double_t *fPositionInitY;                 ///< [fNPeaks] array of initial values of y positions of 2D peaks, input parameters
+   Double_t *fPositionCalcY;                 ///< [fNPeaks] array of calculated values of y positions of 2D peaks, output parameters
+   Double_t *fPositionErrY;                  ///< [fNPeaks] array of error values of y positions of 2D peaks, output parameters
+   Double_t *fPositionInitX1;                ///< [fNPeaks] array of initial x positions of 1D ridges, input parameters
+   Double_t *fPositionCalcX1;                ///< [fNPeaks] array of calculated x positions of 1D ridges, output parameters
+   Double_t *fPositionErrX1;                 ///< [fNPeaks] array of x positions errors of 1D ridges, output parameters
+   Double_t *fPositionInitY1;                ///< [fNPeaks] array of initial y positions of 1D ridges, input parameters
+   Double_t *fPositionCalcY1;                ///< [fNPeaks] array of calculated y positions of 1D ridges, output parameters
+   Double_t *fPositionErrY1;                 ///< [fNPeaks] array of y positions errors of 1D ridges, output parameters
+   Double_t *fAmpInit;                       ///< [fNPeaks] array of initial values of amplitudes of 2D peaks, input parameters
+   Double_t *fAmpCalc;                       ///< [fNPeaks] array of calculated values of amplitudes of 2D peaks, output parameters
+   Double_t *fAmpErr;                        ///< [fNPeaks] array of amplitudes errors of 2D peaks, output parameters
+   Double_t *fAmpInitX1;                     ///< [fNPeaks] array of initial values of amplitudes of 1D ridges in x direction, input parameters
+   Double_t *fAmpCalcX1;                     ///< [fNPeaks] array of calculated values of amplitudes of 1D ridges in x direction, output parameters
+   Double_t *fAmpErrX1;                      ///< [fNPeaks] array of amplitudes errors of 1D ridges in x direction, output parameters
+   Double_t *fAmpInitY1;                     ///< [fNPeaks] array of initial values of amplitudes of 1D ridges in y direction, input parameters
+   Double_t *fAmpCalcY1;                     ///< [fNPeaks] array of calculated values of amplitudes of 1D ridges in y direction, output parameters
+   Double_t *fAmpErrY1;                      ///< [fNPeaks] array of amplitudes errors of 1D ridges in y direction, output parameters
+   Double_t *fVolume;                        ///< [fNPeaks] array of calculated volumes of 2D peaks, output parameters
+   Double_t *fVolumeErr;                     ///< [fNPeaks] array of volumes errors of 2D peaks, output parameters
+   Double_t  fSigmaInitX;                    ///< initial value of sigma x parameter
+   Double_t  fSigmaCalcX;                    ///< calculated value of sigma x parameter
+   Double_t  fSigmaErrX;                     ///< error value of sigma x parameter
+   Double_t  fSigmaInitY;                    ///< initial value of sigma y parameter
+   Double_t  fSigmaCalcY;                    ///< calculated value of sigma y parameter
+   Double_t  fSigmaErrY;                     ///< error value of sigma y parameter
+   Double_t  fRoInit;                        ///< initial value of correlation coefficient
+   Double_t  fRoCalc;                        ///< calculated value of correlation coefficient
+   Double_t  fRoErr;                         ///< error value of correlation coefficient
+   Double_t  fTxyInit;                       ///< initial value of t parameter for 2D peaks (relative amplitude of tail), for details see html manual and references
+   Double_t  fTxyCalc;                       ///< calculated value of t parameter for 2D peaks
+   Double_t  fTxyErr;                        ///< error value of t parameter for 2D peaks
+   Double_t  fSxyInit;                       ///< initial value of s parameter for 2D peaks (relative amplitude of step), for details see html manual and references
+   Double_t  fSxyCalc;                       ///< calculated value of s parameter for 2D peaks
+   Double_t  fSxyErr;                        ///< error value of s parameter for 2D peaks
+   Double_t  fTxInit;                        ///< initial value of t parameter for 1D ridges in x direction (relative amplitude of tail), for details see html manual and references
+   Double_t  fTxCalc;                        ///< calculated value of t parameter for 1D ridges in x direction
+   Double_t  fTxErr;                         ///< error value of t parameter for 1D ridges in x direction
+   Double_t  fTyInit;                        ///< initial value of t parameter for 1D ridges in y direction (relative amplitude of tail), for details see html manual and references
+   Double_t  fTyCalc;                        ///< calculated value of t parameter for 1D ridges in y direction
+   Double_t  fTyErr;                         ///< error value of t parameter for 1D ridges in y direction
+   Double_t  fSxInit;                        ///< initial value of s parameter for 1D ridges in x direction (relative amplitude of step), for details see html manual and references
+   Double_t  fSxCalc;                        ///< calculated value of s parameter for 1D ridges in x direction
+   Double_t  fSxErr;                         ///< error value of s parameter for 1D ridges in x direction
+   Double_t  fSyInit;                        ///< initial value of s parameter for 1D ridges in y direction (relative amplitude of step), for details see html manual and references
+   Double_t  fSyCalc;                        ///< calculated value of s parameter for 1D ridges in y direction
+   Double_t  fSyErr;                         ///< error value of s parameter for 1D ridges in y direction
+   Double_t  fBxInit;                        ///< initial value of b parameter for 1D ridges in x direction (slope), for details see html manual and references
+   Double_t  fBxCalc;                        ///< calculated value of b parameter for 1D ridges in x direction
+   Double_t  fBxErr;                         ///< error value of b parameter for 1D ridges in x direction
+   Double_t  fByInit;                        ///< initial value of b parameter for 1D ridges in y direction (slope), for details see html manual and references
+   Double_t  fByCalc;                        ///< calculated value of b parameter for 1D ridges in y direction
+   Double_t  fByErr;                         ///< error value of b parameter for 1D ridges in y direction
+   Double_t  fA0Init;                        ///< initial value of background a0 parameter(backgroud is estimated as a0+ax*x+ay*y)
+   Double_t  fA0Calc;                        ///< calculated value of background a0 parameter
+   Double_t  fA0Err;                         ///< error value of background a0 parameter
+   Double_t  fAxInit;                        ///< initial value of background ax parameter(backgroud is estimated as a0+ax*x+ay*y)
+   Double_t  fAxCalc;                        ///< calculated value of background ax parameter
+   Double_t  fAxErr;                         ///< error value of background ax parameter
+   Double_t  fAyInit;                        ///< initial value of background ay parameter(backgroud is estimated as a0+ax*x+ay*y)
+   Double_t  fAyCalc;                        ///< calculated value of background ay parameter
+   Double_t  fAyErr;                         ///< error value of background ay parameter
+   Bool_t   *fFixPositionX;                  ///< [fNPeaks] array of logical values which allow to fix appropriate x positions of 2D peaks (not fit). However they are present in the estimated functional
+   Bool_t   *fFixPositionY;                  ///< [fNPeaks] array of logical values which allow to fix appropriate y positions of 2D peaks (not fit). However they are present in the estimated functional
+   Bool_t   *fFixPositionX1;                 ///< [fNPeaks] array of logical values which allow to fix appropriate x positions of 1D ridges (not fit). However they are present in the estimated functional
+   Bool_t   *fFixPositionY1;                 ///< [fNPeaks] array of logical values which allow to fix appropriate y positions of 1D ridges (not fit). However they are present in the estimated functional
+   Bool_t   *fFixAmp;                        ///< [fNPeaks] array of logical values which allow to fix appropriate amplitudes of 2D peaks (not fit). However they are present in the estimated functional
+   Bool_t   *fFixAmpX1;                      ///< [fNPeaks] array of logical values which allow to fix appropriate amplitudes of 1D ridges in x direction (not fit). However they are present in the estimated functional
+   Bool_t   *fFixAmpY1;                      ///< [fNPeaks] array of logical values which allow to fix appropriate amplitudes of 1D ridges in y direction (not fit). However they are present in the estimated functional
+   Bool_t    fFixSigmaX;                     ///< logical value of sigma x parameter, which allows to fix the parameter (not to fit).
+   Bool_t    fFixSigmaY;                     ///< logical value of sigma y parameter, which allows to fix the parameter (not to fit).
+   Bool_t    fFixRo;                         ///< logical value of correlation coefficient, which allows to fix the parameter (not to fit).
+   Bool_t    fFixTxy;                        ///< logical value of t parameter for 2D peaks, which allows to fix the parameter (not to fit).
+   Bool_t    fFixSxy;                        ///< logical value of s parameter for 2D peaks, which allows to fix the parameter (not to fit).
+   Bool_t    fFixTx;                         ///< logical value of t parameter for 1D ridges in x direction, which allows to fix the parameter (not to fit).
+   Bool_t    fFixTy;                         ///< logical value of t parameter for 1D ridges in y direction, which allows to fix the parameter (not to fit).
+   Bool_t    fFixSx;                         ///< logical value of s parameter for 1D ridges in x direction, which allows to fix the parameter (not to fit).
+   Bool_t    fFixSy;                         ///< logical value of s parameter for 1D ridges in y direction, which allows to fix the parameter (not to fit).
+   Bool_t    fFixBx;                         ///< logical value of b parameter for 1D ridges in x direction, which allows to fix the parameter (not to fit).
+   Bool_t    fFixBy;                         ///< logical value of b parameter for 1D ridges in y direction, which allows to fix the parameter (not to fit).
+   Bool_t    fFixA0;                         ///< logical value of a0 parameter, which allows to fix the parameter (not to fit).
+   Bool_t    fFixAx;                         ///< logical value of ax parameter, which allows to fix the parameter (not to fit).
+   Bool_t    fFixAy;                         ///< logical value of ay parameter, which allows to fix the parameter (not to fit).
 public:
    enum {
        kFitOptimChiCounts =0,
