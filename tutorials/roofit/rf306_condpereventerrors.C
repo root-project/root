@@ -1,14 +1,14 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #306
-// 
-// Complete example with use of conditional p.d.f. with per-event errors
-//
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #306
+///
+///  Complete example with use of conditional p.d.f. with per-event errors
+///
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

@@ -1,16 +1,16 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #211
-// 
-// Working a with a p.d.f. with a convolution operator in terms
-// of a parameter
-//
-// (require ROOT to be compiled with --enable-fftw3)
-// 
-//
-// 04/2009 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #211
+///
+///  Working a with a p.d.f. with a convolution operator in terms
+///  of a parameter
+///
+///  (require ROOT to be compiled with --enable-fftw3)
+///
+///
+/// \macro_code
+/// \author 04/2009 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

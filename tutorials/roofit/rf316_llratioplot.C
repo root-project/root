@@ -1,15 +1,15 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #316
-// 
-// Using the likelihood ratio techique to construct a signal enhanced
-// one-dimensional projection of a multi-dimensional p.d.f.
-//
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #316
+///
+///  Using the likelihood ratio techique to construct a signal enhanced
+///  one-dimensional projection of a multi-dimensional p.d.f.
+///
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

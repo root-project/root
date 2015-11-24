@@ -1,13 +1,13 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #513
-// 
-//  Illustration use of RooCustomizer and RooSimWSTool interface
-//  in factory workspace tool in a complex standalone B physics example
-//
-// 04/2009 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #513
+///
+///   Illustration use of RooCustomizer and RooSimWSTool interface
+///   in factory workspace tool in a complex standalone B physics example
+///
+/// \macro_code
+/// \author 04/2009 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

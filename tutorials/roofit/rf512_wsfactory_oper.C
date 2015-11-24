@@ -1,13 +1,13 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #512
-// 
-//  Illustration of operator expressions and expression-based
-//  basic p.d.f.s in the workspace factory syntax
-//
-// 04/2009 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #512
+///
+///   Illustration of operator expressions and expression-based
+///   basic p.d.f.s in the workspace factory syntax
+///
+/// \macro_code
+/// \author 04/2009 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

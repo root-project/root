@@ -1,15 +1,15 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #304
-// 
-// Simple uncorrelated multi-dimensional p.d.f.s
-//
-// pdf = gauss(x,mx,sx) * gauss(y,my,sy) 
-//
-//
-// 07/2008 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #304
+///
+///  Simple uncorrelated multi-dimensional p.d.f.s
+///
+///  pdf = gauss(x,mx,sx) * gauss(y,my,sy)
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

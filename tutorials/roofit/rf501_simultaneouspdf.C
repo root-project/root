@@ -1,15 +1,15 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #501
-// 
-// Using simultaneous p.d.f.s to describe simultaneous fits to multiple
-// datasets
-//
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #501
+///
+///  Using simultaneous p.d.f.s to describe simultaneous fits to multiple
+///  datasets
+///
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

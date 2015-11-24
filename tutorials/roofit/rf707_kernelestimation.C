@@ -1,14 +1,14 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'SPECIAL PDFS' RooFit tutorial macro #707
-// 
-// Using non-parametric (multi-dimensional) kernel estimation p.d.f.s
-//
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'SPECIAL PDFS' RooFit tutorial macro #707
+///
+///  Using non-parametric (multi-dimensional) kernel estimation p.d.f.s
+///
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

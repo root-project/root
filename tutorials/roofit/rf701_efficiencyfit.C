@@ -1,14 +1,14 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'SPECIAL PDFS' RooFit tutorial macro #701
-// 
-// Unbinned maximum likelihood fit of an efficiency eff(x) function to 
-// a dataset D(x,cut), where cut is a category encoding a selection, of which
-// the efficiency as function of x should be described by eff(x)
-//
-// 07/2008 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'SPECIAL PDFS' RooFit tutorial macro #701
+///
+///  Unbinned maximum likelihood fit of an efficiency eff(x) function to
+///  a dataset D(x,cut), where cut is a category encoding a selection, of which
+///  the efficiency as function of x should be described by eff(x)
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

@@ -1,15 +1,15 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #303
-// 
-// Use of tailored p.d.f as conditional p.d.fs.s
-// 
-// pdf = gauss(x,f(y),sx | y ) with f(y) = a0 + a1*y
-// 
-//
-// 07/2008 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #303
+///
+///  Use of tailored p.d.f as conditional p.d.fs.s
+///
+///  pdf = gauss(x,f(y),sx | y ) with f(y) = a0 + a1*y
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

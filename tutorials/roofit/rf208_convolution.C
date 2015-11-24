@@ -1,16 +1,16 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #208
-// 
-// One-dimensional numeric convolution
-// (require ROOT to be compiled with --enable-fftw3)
-// 
-// pdf = landau(t) (x) gauss(t)
-// 
-//
-// 07/2008 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #208
+///
+///  One-dimensional numeric convolution
+///  (require ROOT to be compiled with --enable-fftw3)
+///
+///  pdf = landau(t) (x) gauss(t)
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

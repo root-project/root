@@ -1,14 +1,14 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'DATA AND CATEGORIES' RooFit tutorial macro #405
-// 
-// Demonstration of real-->discrete mapping functions
-//
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'DATA AND CATEGORIES' RooFit tutorial macro #405
+///
+///  Demonstration of real-->discrete mapping functions
+///
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

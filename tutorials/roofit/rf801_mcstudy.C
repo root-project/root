@@ -1,12 +1,12 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'VALIDATION AND MC STUDIES' RooFit tutorial macro #801
-// 
-// A Toy Monte Carlo study that perform cycles of
-// event generation and fittting
-//
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'VALIDATION AND MC STUDIES' RooFit tutorial macro #801
+///
+///  A Toy Monte Carlo study that perform cycles of
+///
+/// \macro_code
+/// \author //
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

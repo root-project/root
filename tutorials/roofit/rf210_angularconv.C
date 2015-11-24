@@ -1,21 +1,21 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #210
-// 
-// Convolution in cyclical angular observables theta, and 
-// construction of p.d.f in terms of trasnformed angular
-// coordinates, e.g. cos(theta), where the convolution
-// is performed in theta rather than cos(theta)
-//
-// (require ROOT to be compiled with --enable-fftw3)
-// 
-// pdf(theta)    = T(theta)          (x) gauss(theta)
-// pdf(cosTheta) = T(acos(cosTheta)) (x) gauss(acos(cosTheta))
-// 
-//
-// 04/2009 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #210
+///
+///  Convolution in cyclical angular observables theta, and
+///  construction of p.d.f in terms of trasnformed angular
+///  coordinates, e.g. cos(theta), where the convolution
+///  is performed in theta rather than cos(theta)
+///
+///  (require ROOT to be compiled with --enable-fftw3)
+///
+///  pdf(theta)    = T(theta)          (x) gauss(theta)
+///  pdf(cosTheta) = T(acos(cosTheta)) (x) gauss(acos(cosTheta))
+///
+///
+/// \macro_code
+/// \author 04/2009 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

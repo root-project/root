@@ -1,14 +1,14 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #504
-// 
-// Using RooSimWSTool to construct a simultaneous p.d.f that is built
-// of variations of an input p.d.f
-//
-//
-// 07/2008 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #504
+///
+///  Using RooSimWSTool to construct a simultaneous p.d.f that is built
+///  of variations of an input p.d.f
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"
