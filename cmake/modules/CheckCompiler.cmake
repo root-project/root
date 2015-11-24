@@ -3,7 +3,7 @@
 #---------------------------------------------------------------------------------------------------
 
 #---Enable FORTRAN (unfortunatelly is not not possible in all cases)-------------------------------
-if(fortran AND NOT WIN32 AND NOT CMAKE_GENERATOR STREQUAL Xcode AND NOT CMAKE_GENERATOR STREQUAL Ninja)
+if(fortran)
   #--Work-around for CMake issue 0009220
   if(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
     set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
