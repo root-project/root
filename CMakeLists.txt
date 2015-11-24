@@ -98,12 +98,18 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ROOTTEST_DIR}/cmake/modules")
 # Find python.
 if(ROOT_python_FOUND)
   find_package(PythonInterp)
+  if(PYTHONINTERP_FOUND)
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.prefix)"
+                    OUTPUT_VARIABLE PYTHON_PREFIX)
+    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PYTHON_PREFIX})
+  endif()
   find_package(PythonLibs)
 endif()
 
 # Setup standard includes / links.
 include_directories(${ROOT_INCLUDE_DIRS} ${ROOT_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 link_directories(${ROOT_LIBRARY_DIR})
+set(CMAKE_MACOSX_RPATH TRUE)              # use RPATH for MacOSX
 
 # Enable and setup CTest.
 include(RoottestCTest)
