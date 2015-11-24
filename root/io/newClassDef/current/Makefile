@@ -1,3 +1,9 @@
+PACKAGES = namespace template InheritMulti
+
+SHARED_LIBS = $(PACKAGES:%=%.$(DllSuf))
+DICTS = $(PACKAGES:%=%dict.C)
+DICTS_H = $(PACKAGES:%=%dict.h)
+
 TEST_TARGETS += currentTest
 CLEAN_TARGETS += $(ALL_LIBRARIES) \
 	ti_files $(DICTS) $(DICTS_H) ii_files \
@@ -17,12 +23,6 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 local_all: main
 .PHONY: main
-
-PACKAGES = namespace template InheritMulti
-
-SHARED_LIBS = $(PACKAGES:%=%.$(DllSuf)) 
-DICTS = $(PACKAGES:%=%dict.C)
-DICTS_H = $(PACKAGES:%=%dict.h)
 
 main: $(SHARED_LIBS) array_cxx.$(DllSuf)
 
