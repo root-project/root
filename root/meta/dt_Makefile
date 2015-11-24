@@ -16,7 +16,10 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 # the name should be changed accordingly in this list.
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   ifeq ($(strip $(ROOTTEST_HOME)),)
+      export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
+   endif
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
