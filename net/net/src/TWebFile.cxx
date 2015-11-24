@@ -138,7 +138,7 @@ ClassImp(TWebFile)
 /// to see if the file is accessible. The preferred interface to this
 /// constructor is via TFile::Open().
 
-TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB")
+TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB"), fSocket(0)
 {
    TString option = opt;
    fNoProxy = kFALSE;
@@ -171,7 +171,7 @@ TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB")
 /// the kZombie bit will be set in the TWebFile object. Use IsZombie()
 /// to see if the file is accessible.
 
-TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB")
+TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB"), fSocket(0)
 {
    TString option = opt;
    fNoProxy = kFALSE;
