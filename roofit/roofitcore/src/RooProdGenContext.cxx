@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooProdGenContext is an efficient implementation of the generator context
-// specific for RooProdPdf PDFs. The sim-context owns a list of
-// component generator contexts that are used to generate the dependents
-// for each component PDF sequentially. 
-// END_HTML
-//
+/**
+\file RooProdGenContext.cxx
+\class RooProdGenContext
+\ingroup RooFitCore
+
+RooProdGenContext is an efficient implementation of the generator context
+specific for RooProdPdf PDFs. The sim-context owns a list of
+component generator contexts that are used to generate the dependents
+for each component PDF sequentially. 
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

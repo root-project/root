@@ -9,23 +9,23 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
   *****************************************************************************/ 
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsSelfCachedReal is an abstract base class for functions whose
-// output is cached in terms of a histogram in all observables between
-// getVal() and evaluate(). For certain p.d.f.s that are very
-// expensive to calculate it may be beneficial to implement them as a
-// RooAbsSelfCachedReal rather than a RooAbsReal. Class
-// RooAbsSelfCachedReal is designed to have its interface identical to
-// that of RooAbsReal, so any p.d.f can make use of its caching
-// functionality by merely switching its base class.  Existing
-// RooAbsReal objects can also be cached a posteriori with the
-// RooCachedReal wrapper function that takes any RooAbsReal object as
-// input.
-// END_HTML
-//
-//
+/**
+\file RooAbsSelfCachedReal.cxx
+\class RooAbsSelfCachedReal
+\ingroup RooFitCore
+
+RooAbsSelfCachedReal is an abstract base class for functions whose
+output is cached in terms of a histogram in all observables between
+getVal() and evaluate(). For certain p.d.f.s that are very
+expensive to calculate it may be beneficial to implement them as a
+RooAbsSelfCachedReal rather than a RooAbsReal. Class
+RooAbsSelfCachedReal is designed to have its interface identical to
+that of RooAbsReal, so any p.d.f can make use of its caching
+functionality by merely switching its base class.  Existing
+RooAbsReal objects can also be cached a posteriori with the
+RooCachedReal wrapper function that takes any RooAbsReal object as
+input.
+**/
 
 #include "Riostream.h" 
 

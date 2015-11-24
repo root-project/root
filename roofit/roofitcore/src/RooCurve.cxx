@@ -14,16 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// A RooCurve is a one-dimensional graphical representation of a real-valued function.
-// A curve is approximated by straight line segments with endpoints chosen to give
-// a "good" approximation to the true curve. The goodness of the approximation is
-// controlled by a precision and a resolution parameter. To view the points where
-// a function y(x) is actually evaluated to approximate a smooth curve, use:
-// END_HTML
-//
+/**
+\file RooCurve.cxx
+\class RooCurve
+\ingroup RooFitCore
+
+A RooCurve is a one-dimensional graphical representation of a real-valued function.
+A curve is approximated by straight line segments with endpoints chosen to give
+a "good" approximation to the true curve. The goodness of the approximation is
+controlled by a precision and a resolution parameter. To view the points where
+a function y(x) is actually evaluated to approximate a smooth curve, use:
+**/
 //  RooPlot *p= y.plotOn(x.frame());
 //  p->getAttMarker("curve_y")->SetMarkerStyle(20);
 //  p->setDrawOptions("curve_y","PL");

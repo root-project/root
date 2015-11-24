@@ -23,20 +23,21 @@
 #include <iostream>
 using namespace std ;
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooArgProxy is the abstact interface for RooAbsArg proxy classes.
-// A RooArgProxy is the general mechanism to store references
-// to other RooAbsArgs inside a RooAbsArg
-//
-// Creating a RooArgProxy adds the proxied object to the proxy owners
-// server list (thus receiving value/shape dirty flags from it) and
-// registers itself with the owning class. The latter allows the
-// owning class to change the proxied pointer when the server it
-// points to gets redirected (e.g. in a copy or clone operation)
-// END_HTML
-//
+/**
+\file RooArgProxy.cxx
+\class RooArgProxy
+\ingroup RooFitCore
+
+RooArgProxy is the abstact interface for RooAbsArg proxy classes.
+A RooArgProxy is the general mechanism to store references
+to other RooAbsArgs inside a RooAbsArg
+
+Creating a RooArgProxy adds the proxied object to the proxy owners
+server list (thus receiving value/shape dirty flags from it) and
+registers itself with the owning class. The latter allows the
+owning class to change the proxied pointer when the server it
+points to gets redirected (e.g. in a copy or clone operation)
+**/
 
 
 ClassImp(RooArgProxy)

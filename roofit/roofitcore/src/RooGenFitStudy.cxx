@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooGenFitStudy is an abstract base class for RooStudyManager modules
-//
-// END_HTML
-//
+/**
+\file RooGenFitStudy.cxx
+\class RooGenFitStudy
+\ingroup RooFitCore
+
+RooGenFitStudy is an abstract base class for RooStudyManager modules
+
+**/
 
 
 

@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// This class provides a static interface for generating random numbers.
-// By default a private copy of TRandom3 is used to generate all random numbers.
-// END_HTML
-//
+/**
+\file RooRandom.cxx
+\class RooRandom
+\ingroup RooFitCore
+
+This class provides a static interface for generating random numbers.
+By default a private copy of TRandom3 is used to generate all random numbers.
+**/
 #include <cassert>
 
 #include "RooFit.h"

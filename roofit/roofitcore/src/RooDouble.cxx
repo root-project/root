@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooDouble is a minimal implementation of a TObject holding a Double_t
-// value.
-// END_HTML
-//
+/**
+\file RooDouble.cxx
+\class RooDouble
+\ingroup RooFitCore
+
+RooDouble is a minimal implementation of a TObject holding a Double_t
+value.
+**/
 
 #include "RooFit.h"
 #include "RooDouble.h"

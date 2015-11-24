@@ -14,19 +14,20 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooEfficiency is a PDF helper class to fit efficiencies parameterized
-// by a supplied function F.
-// 
-// Given a dataset with a category C that determines if a given
-// event is accepted or rejected for the efficiency to be measured,
-// this class evaluates as F if C is 'accept' and as (1-F) if
-// C is 'reject'. Values of F below 0 and above 1 are clipped.
-// F may have an arbitrary number of dependents and parameters
-// END_HTML
-//
+/**
+\file RooEfficiency.cxx
+\class RooEfficiency
+\ingroup RooFitCore
+
+RooEfficiency is a PDF helper class to fit efficiencies parameterized
+by a supplied function F.
+
+Given a dataset with a category C that determines if a given
+event is accepted or rejected for the efficiency to be measured,
+this class evaluates as F if C is 'accept' and as (1-F) if
+C is 'reject'. Values of F below 0 and above 1 are clipped.
+F may have an arbitrary number of dependents and parameters
+**/
 
 #include "RooFit.h"
 

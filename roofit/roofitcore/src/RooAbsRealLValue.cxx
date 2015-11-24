@@ -14,23 +14,23 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsRealLValue is the common abstract base class for objects that represent a
-// real value that may appear on the left hand side of an equation ('lvalue')
-// Each implementation must provide a setVal() member to allow direct modification 
-// of the value. RooAbsRealLValue may be derived, but its functional relation
-// to other RooAbsArg must be invertible
-//
-// This class has methods that export the defined range of the lvalue,
-// but doesn't hold its values because these limits may be derived
-// from limits of client object.  The range serve as integration
-// range when interpreted as a observable and a boundaries when
-// interpreted as a parameter.
-// END_HTML
-//
-//
+/**
+\file RooAbsRealLValue.cxx
+\class RooAbsRealLValue
+\ingroup RooFitCore
+
+RooAbsRealLValue is the common abstract base class for objects that represent a
+real value that may appear on the left hand side of an equation ('lvalue')
+Each implementation must provide a setVal() member to allow direct modification 
+of the value. RooAbsRealLValue may be derived, but its functional relation
+to other RooAbsArg must be invertible
+
+This class has methods that export the defined range of the lvalue,
+but doesn't hold its values because these limits may be derived
+from limits of client object.  The range serve as integration
+range when interpreted as a observable and a boundaries when
+interpreted as a parameter.
+**/
 
 #include "RooFit.h"
 

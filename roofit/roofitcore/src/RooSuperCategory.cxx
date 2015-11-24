@@ -14,21 +14,21 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooSuperCategory consolidates several RooAbsCategoryLValue objects into
-// a single category. The states of the super category consist of all the permutations
-// of the input categories. The super category is an lvalue and requires that
-// all input categories are lvalues as well as modification
-// of its state will back propagate into a modification of its input categories.
-// To define a consolidated category of multiple non-lvalye categories
-// use class RooMultiCategory
-// <p>
-// RooSuperCategory state are automatically defined and updated whenever an input
-// category modifies its list of states
-// END_HTML
-//
+/**
+\file RooSuperCategory.cxx
+\class RooSuperCategory
+\ingroup RooFitCore
+
+RooSuperCategory consolidates several RooAbsCategoryLValue objects into
+a single category. The states of the super category consist of all the permutations
+of the input categories. The super category is an lvalue and requires that
+all input categories are lvalues as well as modification
+of its state will back propagate into a modification of its input categories.
+To define a consolidated category of multiple non-lvalye categories
+use class RooMultiCategory
+RooSuperCategory state are automatically defined and updated whenever an input
+category modifies its list of states
+**/
 
 #include "RooFit.h"
 

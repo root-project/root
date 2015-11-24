@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooDataHistSliceIter iterates over all bins in a RooDataHist that
-// occur in a slice defined by the bin coordinates of the input
-// sliceSet.
-// END_HTML
-//
+/**
+\file RooDataHistSliceIter.cxx
+\class RooDataHistSliceIter
+\ingroup RooFitCore
+
+RooDataHistSliceIter iterates over all bins in a RooDataHist that
+occur in a slice defined by the bin coordinates of the input
+sliceSet.
+**/
 
 #include "RooFit.h"
 

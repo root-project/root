@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooTable is the abstract interface for table objects.
-// Table objects are the category equivalent of RooPlot objects
-// (which are used for real-valued objects)
-// END_HTML
-//
+/**
+\file RooTable.cxx
+\class RooTable
+\ingroup RooFitCore
+
+RooTable is the abstract interface for table objects.
+Table objects are the category equivalent of RooPlot objects
+(which are used for real-valued objects)
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

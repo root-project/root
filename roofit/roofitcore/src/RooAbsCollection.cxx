@@ -14,19 +14,19 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsCollection is an abstract container object that can hold
-// multiple RooAbsArg objects.  Collections are ordered and can
-// contain multiple objects of the same name, (but a derived
-// implementation can enforce unique names). The storage of objects in
-// implement through class RooLinkedList, a doubly linked list with an
-// an optional hash-table lookup mechanism for fast indexing of large
-// collections. 
-// END_HTML
-//
-//
+/**
+\file RooAbsCollection.cxx
+\class RooAbsCollection
+\ingroup RooFitCore
+
+RooAbsCollection is an abstract container object that can hold
+multiple RooAbsArg objects.  Collections are ordered and can
+contain multiple objects of the same name, (but a derived
+implementation can enforce unique names). The storage of objects in
+implement through class RooLinkedList, a doubly linked list with an
+an optional hash-table lookup mechanism for fast indexing of large
+collections. 
+**/
 
 #include <iomanip>
 #include <fstream>

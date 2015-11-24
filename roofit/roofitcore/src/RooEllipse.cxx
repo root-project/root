@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// A RooEllipse is a two-dimensional ellipse that can be used to represent
-// an error contour.
-// END_HTML
-//
+/**
+\file RooEllipse.cxx
+\class RooEllipse
+\ingroup RooFitCore
+
+A RooEllipse is a two-dimensional ellipse that can be used to represent
+an error contour.
+**/
 
 
 #include "RooFit.h"

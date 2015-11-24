@@ -14,19 +14,20 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML Class RooDataProjBinding is a lightweight interface
-// adaptor that projects a real function via summation of states
-// provided in a dataset. The real function must be attached to the
-// dataset before creating this binding object.
-//
-// If the dataset only contains category variables, the summation is optimized
-// performing a weighted sum over the states of a RooSuperCategory that is
-// constructed from all the categories in the dataset
-//
-// END_HTML
-//
+/**
+\file RooDataProjBinding.cxx
+\class RooDataProjBinding
+\ingroup RooFitCore
+
+adaptor that projects a real function via summation of states
+provided in a dataset. The real function must be attached to the
+dataset before creating this binding object.
+
+If the dataset only contains category variables, the summation is optimized
+performing a weighted sum over the states of a RooSuperCategory that is
+constructed from all the categories in the dataset
+
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

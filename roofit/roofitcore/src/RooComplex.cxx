@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// Class RooComplex is a simple container class for complex values
-// END_HTML
-//
+/**
+\file RooComplex.cxx
+\class RooComplex
+\ingroup RooFitCore
+
+Class RooComplex is a simple container class for complex values
+**/
 
 #include "RooFit.h"
 

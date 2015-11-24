@@ -14,17 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooMultiCategory consolidates several RooAbsCategory objects into
-// a single category. The states of the multi-category consist of all the permutations
-// of the input categories. 
-// <p>
-// RooMultiCategory state are automatically defined and updated whenever an input
-// category modifies its list of states
-// END_HTML
-//
+/**
+\file RooMultiCategory.cxx
+\class RooMultiCategory
+\ingroup RooFitCore
+
+RooMultiCategory consolidates several RooAbsCategory objects into
+a single category. The states of the multi-category consist of all the permutations
+of the input categories. 
+RooMultiCategory state are automatically defined and updated whenever an input
+category modifies its list of states
+**/
 
 #include "RooFit.h"
 

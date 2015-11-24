@@ -14,18 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsGenContext is the abstract base class for generator contexts of 
-// RooAbsPdf objects. A generator context is an object that controls
-// the generation of events from a given p.d.f in one or more sessions.
-// This class defines the common interface for all such contexts and organizes
-// storage of common components, such as the observables definition, the 
-// prototype data etc..
-// END_HTML
-//
-//
+/**
+\file RooAbsGenContext.cxx
+\class RooAbsGenContext
+\ingroup RooFitCore
+
+RooAbsGenContext is the abstract base class for generator contexts of 
+RooAbsPdf objects. A generator context is an object that controls
+the generation of events from a given p.d.f in one or more sessions.
+This class defines the common interface for all such contexts and organizes
+storage of common components, such as the observables definition, the 
+prototype data etc..
+**/
 
 #include "RooFit.h"
 

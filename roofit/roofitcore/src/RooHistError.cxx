@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooHistError is a singleton class used to calculate the error bars
-// for each bin of a RooHist object. Errors are calculated by integrating
-// a specified area of a Poisson or Binomail error distribution.
-// END_HTML
-//
+/**
+\file RooHistError.cxx
+\class RooHistError
+\ingroup RooFitCore
+
+RooHistError is a singleton class used to calculate the error bars
+for each bin of a RooHist object. Errors are calculated by integrating
+a specified area of a Poisson or Binomail error distribution.
+**/
 
 #include "RooFit.h"
 

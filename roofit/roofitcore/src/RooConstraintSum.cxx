@@ -14,16 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooConstraintSum calculates the sum of the -(log) likelihoods of
-// a set of RooAbsPfs that represent constraint functions. This class
-// is used to calculate the composite -log(L) of constraints to be
-// added the regular -log(L) in RooAbsPdf::fitTo() with Constrain(..)
-// arguments
-// END_HTML
-//
+/**
+\file RooConstraintSum.cxx
+\class RooConstraintSum
+\ingroup RooFitCore
+
+RooConstraintSum calculates the sum of the -(log) likelihoods of
+a set of RooAbsPfs that represent constraint functions. This class
+is used to calculate the composite -log(L) of constraints to be
+added the regular -log(L) in RooAbsPdf::fitTo() with Constrain(..)
+arguments
+**/
 
 
 #include "RooFit.h"

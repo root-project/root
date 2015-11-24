@@ -14,17 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsCacheElement is the abstract base class for objects to be stored
-// in RooAbsCache cache manager objects. Each storage element has an 
-// interface to pass on calls for server redirection, operation mode
-// change calls and constant term optimization management calls
-// END_HTML
-//
-//
-//
+/**
+\file RooAbsCacheElement.cxx
+\class RooAbsCacheElement
+\ingroup RooFitCore
+
+RooAbsCacheElement is the abstract base class for objects to be stored
+in RooAbsCache cache manager objects. Each storage element has an 
+interface to pass on calls for server redirection, operation mode
+change calls and constant term optimization management calls
+**/
 
 
 #include "RooFit.h"

@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// A RooRefCountList is a RooLinkedList that keeps a reference counter
-// with each added node. Multiple Add()s of the same object will increase
-// the counter instead of adding multiple copies. Remove() decrements the 
-// reference count until zero, when the object is actually removed.
-// END_HTML
-//
+/**
+\file RooRefCountList.cxx
+\class RooRefCountList
+\ingroup RooFitCore
+
+A RooRefCountList is a RooLinkedList that keeps a reference counter
+with each added node. Multiple Add()s of the same object will increase
+the counter instead of adding multiple copies. Remove() decrements the 
+reference count until zero, when the object is actually removed.
+**/
 
 #include "RooFit.h"
 

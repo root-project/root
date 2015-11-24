@@ -14,16 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooFactoryWSTool is a clase like TTree::MakeClass() that generates
-// skeleton code for RooAbsPdf and RooAbsReal functions given
-// a list of input parameter names. The factory can also compile
-// the generated code on the fly, and on request also immediate
-// instantiate objects.
-// END_HTML
-//
+/**
+\file RooFactoryWSTool.cxx
+\class RooFactoryWSTool
+\ingroup RooFitCore
+
+RooFactoryWSTool is a clase like TTree::MakeClass() that generates
+skeleton code for RooAbsPdf and RooAbsReal functions given
+a list of input parameter names. The factory can also compile
+the generated code on the fly, and on request also immediate
+instantiate objects.
+**/
 
 #include "RooFit.h"
 

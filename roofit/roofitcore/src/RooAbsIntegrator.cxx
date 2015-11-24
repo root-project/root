@@ -14,14 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsIntegrator is the abstract interface for integrators of real-valued
-// functions that implement the RooAbsFunc interface.
-// END_HTML
-//
-//
+/**
+\file RooAbsIntegrator.cxx
+\class RooAbsIntegrator
+\ingroup RooFitCore
+
+RooAbsIntegrator is the abstract interface for integrators of real-valued
+functions that implement the RooAbsFunc interface.
+**/
 
 #include "RooFit.h"
 

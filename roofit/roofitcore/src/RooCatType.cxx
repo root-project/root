@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooCatType is an auxilary class for RooAbsCategory and defines a 
-// a single category state. The class holds a string label and an integer 
-// index value which define the state
-// END_HTML
-//
+/**
+\file RooCatType.cxx
+\class RooCatType
+\ingroup RooFitCore
+
+RooCatType is an auxilary class for RooAbsCategory and defines a 
+a single category state. The class holds a string label and an integer 
+index value which define the state
+**/
 
 #include "RooFit.h"
 

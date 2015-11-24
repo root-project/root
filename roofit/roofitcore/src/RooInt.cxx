@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooInt is a minimal implementation of a TObject holding a Int_t
-// value.
-// END_HTML
-//
+/**
+\file RooInt.cxx
+\class RooInt
+\ingroup RooFitCore
+
+RooInt is a minimal implementation of a TObject holding a Int_t
+value.
+**/
 
 #include "RooFit.h"
 

@@ -9,17 +9,18 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
   *****************************************************************************/ 
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooProfileLL implements the profile likelihood estimator for
-// a given likelihood and set of parameters of interest. The value return by 
-// RooProfileLL is the input likelihood nll minimized w.r.t all nuisance parameters
-// (which are all parameters except for those listed in the constructor) minus
-// the -log(L) of the best fit. Note that this function is slow to evaluate
-// as a MIGRAD minimization step is executed for each function evaluation
-// END_HTML
-//
+/**
+\file RooProfileLL.cxx
+\class RooProfileLL
+\ingroup RooFitCore
+
+Class RooProfileLL implements the profile likelihood estimator for
+a given likelihood and set of parameters of interest. The value return by 
+RooProfileLL is the input likelihood nll minimized w.r.t all nuisance parameters
+(which are all parameters except for those listed in the constructor) minus
+the -log(L) of the best fit. Note that this function is slow to evaluate
+as a MIGRAD minimization step is executed for each function evaluation
+**/
 
 #include "Riostream.h" 
 

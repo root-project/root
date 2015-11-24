@@ -9,13 +9,14 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
   *****************************************************************************/ 
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooCachedPdf is an implementation of RooAbsCachedPdf that can cache
-// any external RooAbsPdf input function provided in the constructor. 
-// END_HTML
-//
+/**
+\file RooCachedPdf.cxx
+\class RooCachedPdf
+\ingroup RooFitCore
+
+RooCachedPdf is an implementation of RooAbsCachedPdf that can cache
+any external RooAbsPdf input function provided in the constructor. 
+**/
 
 #include "Riostream.h" 
 

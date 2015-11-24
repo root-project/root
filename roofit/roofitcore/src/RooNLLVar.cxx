@@ -14,17 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooNLLVar implements a a -log(likelihood) calculation from a dataset
-// and a PDF. The NLL is calculated as 
-// <pre>
-//  Sum[data] -log( pdf(x_data) )
-// </pre>
-// In extended mode, a (Nexpect - Nobserved*log(NExpected) term is added
-// END_HTML
-//
+/**
+\file RooNLLVar.cxx
+\class RooNLLVar
+\ingroup RooFitCore
+
+Class RooNLLVar implements a a -log(likelihood) calculation from a dataset
+and a PDF. The NLL is calculated as 
+<pre>
+ Sum[data] -log( pdf(x_data) )
+</pre>
+In extended mode, a (Nexpect - Nobserved*log(NExpected) term is added
+**/
 
 #include <algorithm>
 

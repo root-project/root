@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooDirItem is a utility base class for RooFit objects that are to be attached
-// to ROOT directories. Concrete classes inherit the appendToDir and removeToDir
-// methods that can be used to safely attach and detach one self from a TDirectory
-// END_HTML
-//
+/**
+\file RooDirItem.cxx
+\class RooDirItem
+\ingroup RooFitCore
+
+RooDirItem is a utility base class for RooFit objects that are to be attached
+to ROOT directories. Concrete classes inherit the appendToDir and removeToDir
+methods that can be used to safely attach and detach one self from a TDirectory
+**/
 
 #include "RooFit.h"
 

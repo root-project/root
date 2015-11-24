@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooRangeBinning is binning/range definition that only defines a range
-// but no binning. It it used to store named ranges created by
-// the RooRealVar::setRange() method
-// END_HTML
-//
+/**
+\file RooRangeBinning.cxx
+\class RooRangeBinning
+\ingroup RooFitCore
+
+RooRangeBinning is binning/range definition that only defines a range
+but no binning. It it used to store named ranges created by
+the RooRealVar::setRange() method
+**/
 
 #include "RooFit.h"
 

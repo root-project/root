@@ -14,19 +14,19 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooRealIntegral performs hybrid numerical/analytical integrals of RooAbsReal objects
-// The class performs none of the actual integration, but only manages the logic
-// of what variables can be integrated analytically, accounts for eventual jacobian
-// terms and defines what numerical integrations needs to be done to complement the
-// analytical integral.
-// <p>
-// The actual analytical integrations (if any) are done in the PDF themselves, the numerical
-// integration is performed in the various implemenations of the RooAbsIntegrator base class.
-// END_HTML
-//
+/**
+\file RooRealIntegral.cxx
+\class RooRealIntegral
+\ingroup RooFitCore
+
+RooRealIntegral performs hybrid numerical/analytical integrals of RooAbsReal objects
+The class performs none of the actual integration, but only manages the logic
+of what variables can be integrated analytically, accounts for eventual jacobian
+terms and defines what numerical integrations needs to be done to complement the
+analytical integral.
+The actual analytical integrations (if any) are done in the PDF themselves, the numerical
+integration is performed in the various implemenations of the RooAbsIntegrator base class.
+**/
 
 #include "RooFit.h"
 

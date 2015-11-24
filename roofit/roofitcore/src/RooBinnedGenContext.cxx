@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML 
-// RooBinnedGenContext is an efficient implementation of the
-// generator context specific for binned pdfs
-// END_HTML
-//
+/**
+\file RooBinnedGenContext.cxx
+\class RooBinnedGenContext
+\ingroup RooFitCore
+
+RooBinnedGenContext is an efficient implementation of the
+generator context specific for binned pdfs
+**/
 
 
 #include "RooFit.h"

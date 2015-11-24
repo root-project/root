@@ -14,20 +14,21 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooRealConstant provides static functions to create and keep track
-// of RooRealVar constants. Instead of creating such constants by
-// hand (e.g. RooRealVar one("one","one",1)), simply use
-// <pre>
-//  RooRealConstant::value(1.0)
-// </pre>
-// whenever a reference to RooRealVar with constant value 1.0 is needed.
-// RooRealConstant keeps an internal database of previously created
-// RooRealVar objects and will recycle them as appropriate.
-// END_HTML
-//
+/**
+\file RooRealConstant.cxx
+\class RooRealConstant
+\ingroup RooFitCore
+
+RooRealConstant provides static functions to create and keep track
+of RooRealVar constants. Instead of creating such constants by
+hand (e.g. RooRealVar one("one","one",1)), simply use
+<pre>
+ RooRealConstant::value(1.0)
+</pre>
+whenever a reference to RooRealVar with constant value 1.0 is needed.
+RooRealConstant keeps an internal database of previously created
+RooRealVar objects and will recycle them as appropriate.
+**/
 
 #include "RooFit.h"
 

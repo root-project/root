@@ -9,13 +9,14 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
   *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooCachedReal is an implementation of RooAbsCachedReal that can cache
-// any external RooAbsReal input function provided in the constructor.
-// END_HTML
-//
+/**
+\file RooCachedReal.cxx
+\class RooCachedReal
+\ingroup RooFitCore
+
+RooCachedReal is an implementation of RooAbsCachedReal that can cache
+any external RooAbsReal input function provided in the constructor.
+**/
 
 #include "Riostream.h"
 

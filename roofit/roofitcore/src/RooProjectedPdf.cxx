@@ -9,24 +9,23 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
   *****************************************************************************/ 
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooProjectedPdf is a RooAbsPdf implementation that represent a projection 
-// of a given input p.d.f and the object returned by RooAbsPdf::createProjection.
-// <p>
-// The actual projection integral for it value and normalization are
-// calculated on the fly in getVal() once the normalization observables are known.
-// Class RooProjectedPdf can cache projected p.d.f.s for multiple normalization
-// observables simultaneously.
-// <p>
-// The createProjection() method of RooProjectedPdf is overloaded and will
-// return a new RooProjectedPdf that performs the projection of itself
-// and the requested additional projections in one integration step
-// The performance of <pre>f->createProjection(x)->createProjection(y)</pre>
-// is therefore identical to that of <pre>f->createProjection(RooArgSet(x,y))</pre>
-// END_HTML
-//
+/**
+\file RooProjectedPdf.cxx
+\class RooProjectedPdf
+\ingroup RooFitCore
+
+Class RooProjectedPdf is a RooAbsPdf implementation that represent a projection 
+of a given input p.d.f and the object returned by RooAbsPdf::createProjection.
+The actual projection integral for it value and normalization are
+calculated on the fly in getVal() once the normalization observables are known.
+Class RooProjectedPdf can cache projected p.d.f.s for multiple normalization
+observables simultaneously.
+The createProjection() method of RooProjectedPdf is overloaded and will
+return a new RooProjectedPdf that performs the projection of itself
+and the requested additional projections in one integration step
+The performance of <pre>f->createProjection(x)->createProjection(y)</pre>
+is therefore identical to that of <pre>f->createProjection(RooArgSet(x,y))</pre>
+**/
 
 #include "Riostream.h" 
 

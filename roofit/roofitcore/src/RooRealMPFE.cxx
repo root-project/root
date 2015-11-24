@@ -14,32 +14,33 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooRealMPFE is the multi-processor front-end for parallel calculation
-// of RooAbsReal objects. Each RooRealMPFE forks a process that calculates
-// the value of the proxies RooAbsReal object. The (re)calculation of
-// the proxied object is started asynchronously with the calculate() option.
-// A subsequent call to getVal() will return the calculated value when available
-// If the calculation is still in progress when getVal() is called it blocks
-// the calling process until the calculation is done. The forked calculation process 
-// is terminated when the front-end object is deleted
-// Simple use demonstration
-//
-// <pre>
-// RooAbsReal* slowFunc ;
-//
-// Double_t val = slowFunc->getVal() // Evaluate slowFunc in current process
-//
-// RooRealMPFE mpfe("mpfe","frontend to slowFunc",*slowFunc) ;
-// mpfe.calculate() ;           // Start calculation of slow-func in remote process
-//                              // .. do other stuff here ..
-// Double_t val = mpfe.getVal() // Wait for remote calculation to finish and retrieve value
-// </pre>
-//
-// END_HTML
-//
+/**
+\file RooRealMPFE.cxx
+\class RooRealMPFE
+\ingroup RooFitCore
+
+RooRealMPFE is the multi-processor front-end for parallel calculation
+of RooAbsReal objects. Each RooRealMPFE forks a process that calculates
+the value of the proxies RooAbsReal object. The (re)calculation of
+the proxied object is started asynchronously with the calculate() option.
+A subsequent call to getVal() will return the calculated value when available
+If the calculation is still in progress when getVal() is called it blocks
+the calling process until the calculation is done. The forked calculation process 
+is terminated when the front-end object is deleted
+Simple use demonstration
+
+<pre>
+RooAbsReal* slowFunc ;
+
+Double_t val = slowFunc->getVal() // Evaluate slowFunc in current process
+
+RooRealMPFE mpfe("mpfe","frontend to slowFunc",*slowFunc) ;
+mpfe.calculate() ;           // Start calculation of slow-func in remote process
+                             // .. do other stuff here ..
+Double_t val = mpfe.getVal() // Wait for remote calculation to finish and retrieve value
+</pre>
+
+**/
 
 #include "Riostream.h"
 #include "RooFit.h"

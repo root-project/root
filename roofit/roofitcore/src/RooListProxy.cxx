@@ -14,18 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooListProxy is the concrete proxy for RooArgList objects.
-// A RooListProxy is the only safe mechanism to store a RooArgList
-// with RooAbsArg contents in another RooAbsArg.
-// <p>
-// The list proxy has the semantic of a RooArgList but also 
-// takes care of all bookkeeping required when composite objects
-// are clone and client-server links need to be redirected.
-// END_HTML
-//
+/**
+\file RooListProxy.cxx
+\class RooListProxy
+\ingroup RooFitCore
+
+RooListProxy is the concrete proxy for RooArgList objects.
+A RooListProxy is the only safe mechanism to store a RooArgList
+with RooAbsArg contents in another RooAbsArg.
+The list proxy has the semantic of a RooArgList but also 
+takes care of all bookkeeping required when composite objects
+are clone and client-server links need to be redirected.
+**/
 
 
 #include "RooFit.h"

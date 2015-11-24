@@ -14,17 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooGenContext implement a universal generator context for all
-// RooAbsPdf classes that do not have or need a specialized generator
-// context. This generator context queries the input p.d.f which observables
-// it can generate internally and delegates generation of those observables
-// to the p.d.f if it deems that safe. The other observables are generated
-// use a RooAcceptReject sampling technique.
-// END_HTML
-//
+/**
+\file RooGenContext.cxx
+\class RooGenContext
+\ingroup RooFitCore
+
+Class RooGenContext implement a universal generator context for all
+RooAbsPdf classes that do not have or need a specialized generator
+context. This generator context queries the input p.d.f which observables
+it can generate internally and delegates generation of those observables
+to the p.d.f if it deems that safe. The other observables are generated
+use a RooAcceptReject sampling technique.
+**/
 
 
 #include "RooFit.h"

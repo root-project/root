@@ -14,17 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsCache is the abstract base class for data members of RooAbsArgs
-// that cache other (composite) RooAbsArg expressions. The RooAbsCache
-// interface defines the interaction between the owning RooAbsArg object
-// and the cache data member to communicate server redirects, operation
-// mode changes and constant term optimization management calls.
-// END_HTML
-//
-//
+/**
+\file RooAbsCache.cxx
+\class RooAbsCache
+\ingroup RooFitCore
+
+RooAbsCache is the abstract base class for data members of RooAbsArgs
+that cache other (composite) RooAbsArg expressions. The RooAbsCache
+interface defines the interaction between the owning RooAbsArg object
+and the cache data member to communicate server redirects, operation
+mode changes and constant term optimization management calls.
+**/
 
 
 #include "RooFit.h"

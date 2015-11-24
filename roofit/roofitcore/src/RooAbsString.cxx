@@ -14,16 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsString is the common abstract base class for objects that represent a
-// string value
-// 
-// Implementation of RooAbsString may be derived, there no interface
-// is provided to modify the contents
-// END_HTML
-//
+/**
+\file RooAbsString.cxx
+\class RooAbsString
+\ingroup RooFitCore
+
+RooAbsString is the common abstract base class for objects that represent a
+string value
+
+Implementation of RooAbsString may be derived, there no interface
+is provided to modify the contents
+**/
 // 
 
 #include "RooFit.h"

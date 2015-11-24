@@ -14,18 +14,19 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooNumGenFactory is a factory to instantiate numeric integrators
-// from a given function binding and a given configuration. The factory
-// searches for a numeric integrator registered with the factory that
-// has the ability to perform the numeric integration. The choice of
-// method may depend on the number of dimensions integrated,
-// the nature of the integration limits (closed or open ended) and
-// the preference of the caller as encoded in the configuration object.
-// END_HTML
-//
+/**
+\file RooNumGenFactory.cxx
+\class RooNumGenFactory
+\ingroup RooFitCore
+
+RooNumGenFactory is a factory to instantiate numeric integrators
+from a given function binding and a given configuration. The factory
+searches for a numeric integrator registered with the factory that
+has the ability to perform the numeric integration. The choice of
+method may depend on the number of dimensions integrated,
+the nature of the integration limits (closed or open ended) and
+the preference of the caller as encoded in the configuration object.
+**/
 
 #include "TClass.h"
 #include "Riostream.h"

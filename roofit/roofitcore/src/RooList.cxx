@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// A RooList is a TList with extra support for working with options
-// that are associated with each node. This is a utility class for RooPlot
-// END_HTML
-//
+/**
+\file RooList.cxx
+\class RooList
+\ingroup RooFitCore
+
+A RooList is a TList with extra support for working with options
+that are associated with each node. This is a utility class for RooPlot
+**/
 
 #include "RooFit.h"
 

@@ -14,32 +14,32 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// A RooPlot is a plot frame and a container for graphics objects
-// within that frame. As a frame, it provides the TH1-style public interface
-// for settting plot ranges, configuring axes, etc. As a container, it
-// holds an arbitrary set of objects that might be histograms of data,
-// curves representing a fit model, or text labels. Use the Draw()
-// method to draw a frame and the objects it contains. Use the various
-// add...() methods to add objects to be drawn.  In general, the
-// add...() methods create a private copy of the object you pass them
-// and return a pointer to this copy. The caller owns the input object
-// and this class owns the returned object.
-// <p>
-// All RooAbsReal and RooAbsData derived classes implement plotOn()
-// functions that facilitate to plot themselves on a given RooPlot, e.g.
-// <pre>
-// RooPlot *frame = x.frame() ;
-// data.plotOn(frame) ;
-// pdf.plotOn(frame) ;
-// </pre>
-// These high level functions also take care of any projections
-// or other mappings that need to be made to plot a multi-dimensional
-// object onto a one-dimensional plot.
-// END_HTML
-//
+/**
+\file RooPlot.cxx
+\class RooPlot
+\ingroup RooFitCore
+
+A RooPlot is a plot frame and a container for graphics objects
+within that frame. As a frame, it provides the TH1-style public interface
+for settting plot ranges, configuring axes, etc. As a container, it
+holds an arbitrary set of objects that might be histograms of data,
+curves representing a fit model, or text labels. Use the Draw()
+method to draw a frame and the objects it contains. Use the various
+add...() methods to add objects to be drawn.  In general, the
+add...() methods create a private copy of the object you pass them
+and return a pointer to this copy. The caller owns the input object
+and this class owns the returned object.
+All RooAbsReal and RooAbsData derived classes implement plotOn()
+functions that facilitate to plot themselves on a given RooPlot, e.g.
+<pre>
+RooPlot *frame = x.frame() ;
+data.plotOn(frame) ;
+pdf.plotOn(frame) ;
+</pre>
+These high level functions also take care of any projections
+or other mappings that need to be made to plot a multi-dimensional
+object onto a one-dimensional plot.
+**/
 
 
 #include "RooFit.h"

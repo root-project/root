@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooAdaptiveIntegratorND implements an adaptive one-dimensional 
-// numerical integration algorithm.
-// END_HTML
-//
+/**
+\file RooAdaptiveIntegratorND.cxx
+\class RooAdaptiveIntegratorND
+\ingroup RooFitCore
+
+RooAdaptiveIntegratorND implements an adaptive one-dimensional 
+numerical integration algorithm.
+**/
 
 
 #include "RooFit.h"

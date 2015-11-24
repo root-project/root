@@ -14,20 +14,21 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML 
-// RooChangeTracker is a meta object that tracks value
-// changes in a given set of RooAbsArgs by registering itself as value
-// client of these objects. The change tracker can perform an
-// additional validation step where it also compares the numeric
-// values of the tracked arguments with reference values to ensure
-// that values have actually changed. This may be useful in case some
-// of the tracked observables are in binned datasets where each
-// observable propates a valueDirty flag when an event is loaded even
-// though usually only one observable actually changes.
-// END_HTML
-//
+/**
+\file RooChangeTracker.cxx
+\class RooChangeTracker
+\ingroup RooFitCore
+
+RooChangeTracker is a meta object that tracks value
+changes in a given set of RooAbsArgs by registering itself as value
+client of these objects. The change tracker can perform an
+additional validation step where it also compares the numeric
+values of the tracked arguments with reference values to ensure
+that values have actually changed. This may be useful in case some
+of the tracked observables are in binned datasets where each
+observable propates a valueDirty flag when an event is loaded even
+though usually only one observable actually changes.
+**/
 
 
 #include "RooFit.h"

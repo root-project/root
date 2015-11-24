@@ -9,22 +9,23 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
   *****************************************************************************/ 
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooNumRunningInt is an implementation of RooAbsCachedReal that represents a running integral
-// <pre>
-// RI(f(x)) = Int[x_lo,x] f(x') dx'
-// </pre>
-// that is calculated internally with a numeric technique: The input function
-// is first sampled into a histogram, which is then numerically integrated.
-// The output function is an interpolated version of the integrated histogram.
-// The sampling density is controlled by the binning named "cache" in the observable x.
-// The shape of the p.d.f is always calculated for the entire domain in x and
-// cached in a histogram. The cache histogram is automatically recalculated
-// when any of the parameters of the input p.d.f. has changed.
-// END_HTML
-//
+/**
+\file RooNumRunningInt.cxx
+\class RooNumRunningInt
+\ingroup RooFitCore
+
+Class RooNumRunningInt is an implementation of RooAbsCachedReal that represents a running integral
+<pre>
+RI(f(x)) = Int[x_lo,x] f(x') dx'
+</pre>
+that is calculated internally with a numeric technique: The input function
+is first sampled into a histogram, which is then numerically integrated.
+The output function is an interpolated version of the integrated histogram.
+The sampling density is controlled by the binning named "cache" in the observable x.
+The shape of the p.d.f is always calculated for the entire domain in x and
+cached in a histogram. The cache histogram is automatically recalculated
+when any of the parameters of the input p.d.f. has changed.
+**/
 
 #include "Riostream.h" 
 

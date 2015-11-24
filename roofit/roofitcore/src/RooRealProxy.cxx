@@ -14,17 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooRealProxy is the concrete proxy for RooAbsReal objects
-// A RooRealProxy is the general mechanism to store references
-// to RooAbsReals inside a RooAbsArg
-//
-// RooRealProxy provides a cast operator to Double_t, allowing
-// the proxy to functions a Double_t on the right hand side of expressions.
-// END_HTML
-//
+/**
+\file RooRealProxy.cxx
+\class RooRealProxy
+\ingroup RooFitCore
+
+RooRealProxy is the concrete proxy for RooAbsReal objects
+A RooRealProxy is the general mechanism to store references
+to RooAbsReals inside a RooAbsArg
+
+RooRealProxy provides a cast operator to Double_t, allowing
+the proxy to functions a Double_t on the right hand side of expressions.
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

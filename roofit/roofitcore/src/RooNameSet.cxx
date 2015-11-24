@@ -14,16 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooNameSet is a utility class that stores the names the objects
-// in a RooArget. This allows to preserve the contents of a RooArgSet
-// in a specific use contents beyond the lifespan of the object in
-// the RooArgSet. A new RooArgSet can be created from a RooNameSet
-// by offering it a list of new RooAbsArg objects. 
-// END_HTML
-//
+/**
+\file RooNameSet.cxx
+\class RooNameSet
+\ingroup RooFitCore
+
+RooNameSet is a utility class that stores the names the objects
+in a RooArget. This allows to preserve the contents of a RooArgSet
+in a specific use contents beyond the lifespan of the object in
+the RooArgSet. A new RooArgSet can be created from a RooNameSet
+by offering it a list of new RooAbsArg objects. 
+**/
 
 #include <cstring>
 #include <algorithm>

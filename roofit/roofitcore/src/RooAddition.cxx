@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAddition calculates the sum of a set of RooAbsReal terms, or
-// when constructed with two sets, it sums the product of the terms
-// in the two sets. This class does not (yet) do any smart handling of integrals, 
-// i.e. all integrals of the product are handled numerically
-// END_HTML
-//
+/**
+\file RooAddition.cxx
+\class RooAddition
+\ingroup RooFitCore
+
+RooAddition calculates the sum of a set of RooAbsReal terms, or
+when constructed with two sets, it sums the product of the terms
+in the two sets. This class does not (yet) do any smart handling of integrals, 
+i.e. all integrals of the product are handled numerically
+**/
 
 
 #include "RooFit.h"

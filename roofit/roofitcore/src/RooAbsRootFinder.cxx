@@ -14,14 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsRootFinder is the abstract interface for finding roots of real-valued
-// 1-dimensional function that implements the RooAbsFunc interface.
-// END_HTML
-//
-//
+/**
+\file RooAbsRootFinder.cxx
+\class RooAbsRootFinder
+\ingroup RooFitCore
+
+RooAbsRootFinder is the abstract interface for finding roots of real-valued
+1-dimensional function that implements the RooAbsFunc interface.
+**/
 
 #include "RooFit.h"
 

@@ -13,28 +13,28 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooUnit test is an abstract base class for unit regression tests for
-// RooFit and RooStats tests performed in stressRooFit and stressRooStats
-//
-// Implementations of this class must implement abstract method testCode()
-// which defines the regression test to be performed. Inside testCode()
-// the regression test can define objects on which the regression is performed.
-// These are
-//    RooPlot      - regPlot() ;
-//    RooFitResult - regFitResult() ;
-//    Double_t     - regValue() ;
-//    RooTable     - regTable() ;
-//    TH1/2/3      - regTH 
-//
-//    RooWorkspace - regWS() ;
-// 
-//
-// END_HTML
-//
-//
+/**
+\file RooUnitTest.cxx
+\class RooUnitTest
+\ingroup RooFitCore
+
+RooUnit test is an abstract base class for unit regression tests for
+RooFit and RooStats tests performed in stressRooFit and stressRooStats
+
+Implementations of this class must implement abstract method testCode()
+which defines the regression test to be performed. Inside testCode()
+the regression test can define objects on which the regression is performed.
+These are
+   RooPlot      - regPlot() ;
+   RooFitResult - regFitResult() ;
+   Double_t     - regValue() ;
+   RooTable     - regTable() ;
+   TH1/2/3      - regTH 
+
+   RooWorkspace - regWS() ;
+
+
+**/
 
 #include "RooFit.h"
 #include "RooUnitTest.h"

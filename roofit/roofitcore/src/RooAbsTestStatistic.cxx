@@ -14,24 +14,25 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooAbsTestStatistic is the abstract base class for all test
-// statistics. Test statistics that evaluate the PDF at each data
-// point should inherit from the RooAbsOptTestStatistic class which
-// implements several generic optimizations that can be done for such
-// quantities.
-//
-// This test statistic base class organizes calculation of test
-// statistic values for RooSimultaneous PDF as a combination of test
-// statistic values for the PDF components of the simultaneous PDF and
-// organizes multi-processor parallel calculation of test statistic
-// values. For the latter, the test statistic value is calculated in
-// partitions in parallel executing processes and a posteriori
-// combined in the main thread.
-// END_HTML
-//
+/**
+\file RooAbsTestStatistic.cxx
+\class RooAbsTestStatistic
+\ingroup RooFitCore
+
+RooAbsTestStatistic is the abstract base class for all test
+statistics. Test statistics that evaluate the PDF at each data
+point should inherit from the RooAbsOptTestStatistic class which
+implements several generic optimizations that can be done for such
+quantities.
+
+This test statistic base class organizes calculation of test
+statistic values for RooSimultaneous PDF as a combination of test
+statistic values for the PDF components of the simultaneous PDF and
+organizes multi-processor parallel calculation of test statistic
+values. For the latter, the test statistic value is calculated in
+partitions in parallel executing processes and a posteriori
+combined in the main thread.
+**/
 
 
 #include "RooFit.h"

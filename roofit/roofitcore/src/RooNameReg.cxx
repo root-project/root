@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooNameReg is a registry for 'const char*' name. For each unique
-// name (which is not necessarily a unique pointer in the C++ standard),
-// a unique pointer to a TNamed object is return that can be used for
-// fast searches and comparisons.
-// END_HTML
-//
+/**
+\file RooNameReg.cxx
+\class RooNameReg
+\ingroup RooFitCore
+
+RooNameReg is a registry for 'const char*' name. For each unique
+name (which is not necessarily a unique pointer in the C++ standard),
+a unique pointer to a TNamed object is return that can be used for
+fast searches and comparisons.
+**/
 
 #include "RooFit.h"
 #include "RooSentinel.h"

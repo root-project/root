@@ -14,16 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooConvGenContext is an efficient implementation of the generator context
-// specific for RooAbsAnaConvPdf objects. The physics model is generated
-// with a truth resolution model and the requested resolution model is generated
-// separately as a PDF. The convolution variable of the physics model is 
-// subsequently explicitly smeared with the resolution model distribution.
-// END_HTML
-//
+/**
+\file RooConvGenContext.cxx
+\class RooConvGenContext
+\ingroup RooFitCore
+
+RooConvGenContext is an efficient implementation of the generator context
+specific for RooAbsAnaConvPdf objects. The physics model is generated
+with a truth resolution model and the requested resolution model is generated
+separately as a PDF. The convolution variable of the physics model is 
+subsequently explicitly smeared with the resolution model distribution.
+**/
 
 #include "RooMsgService.h"
 #include "RooErrorHandler.h"

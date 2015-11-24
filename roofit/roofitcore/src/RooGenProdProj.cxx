@@ -14,21 +14,22 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-//
-// RooGenProdProj is an auxiliary class for RooProdPdf that calculates
-// a general normalized projection of a product of non-factorizing PDFs, e.g.
-//
-//            Int ( P1 * P2 * ....) dx
-//  P_x_xy = -------------------------------
-//            Int (P1 * P2 * ... ) dx dy
-//
-// Partial integrals that factorize that can be calculated are calculated
-// analytically. Remaining non-factorizing observables are integrated numerically.
-// END_HTML
-//
+/**
+\file RooGenProdProj.cxx
+\class RooGenProdProj
+\ingroup RooFitCore
+
+
+RooGenProdProj is an auxiliary class for RooProdPdf that calculates
+a general normalized projection of a product of non-factorizing PDFs, e.g.
+
+           Int ( P1 * P2 * ....) dx
+ P_x_xy = -------------------------------
+           Int (P1 * P2 * ... ) dx dy
+
+Partial integrals that factorize that can be calculated are calculated
+analytically. Remaining non-factorizing observables are integrated numerically.
+**/
 
 
 #include "RooFit.h"

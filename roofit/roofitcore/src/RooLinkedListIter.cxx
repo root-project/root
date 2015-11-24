@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooLinkedListIter is the TIterator implementation for RooLinkedList
-// END_HTML
-//
+/**
+\file RooLinkedListIter.cxx
+\class RooLinkedListIter
+\ingroup RooFitCore
+
+RooLinkedListIter is the TIterator implementation for RooLinkedList
+**/
 
 #include "RooFit.h"
 

@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooRecursiveFraction is a RooAbsReal implementation that
-// calculates the plain fraction of sum of RooAddPdf components
-// from a set of recursive fractions: for a given set of input fractions
-// a_i it returns a_0 * Prod_i (1 - a_i). 
-// END_HTML
-//
+/**
+\file RooRecursiveFraction.cxx
+\class RooRecursiveFraction
+\ingroup RooFitCore
+
+Class RooRecursiveFraction is a RooAbsReal implementation that
+calculates the plain fraction of sum of RooAddPdf components
+from a set of recursive fractions: for a given set of input fractions
+a_i it returns a_0 * Prod_i (1 - a_i). 
+**/
 
 
 #include "RooFit.h"

@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooCompositeDataStore is the abstract base class for data collection that
-// use a TTree as internal storage mechanism
-// END_HTML
-//
+/**
+\file RooCompositeDataStore.cxx
+\class RooCompositeDataStore
+\ingroup RooFitCore
+
+RooCompositeDataStore is the abstract base class for data collection that
+use a TTree as internal storage mechanism
+**/
 
 #include "RooFit.h"
 #include "RooMsgService.h"

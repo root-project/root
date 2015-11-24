@@ -15,12 +15,13 @@
  *****************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Lightweight interface adaptor that exports a RooAbsPdf as a functor
-// END_HTML
-//
+/**
+\file RooFunctor.cxx
+\class RooFunctor
+\ingroup RooFitCore
+
+Lightweight interface adaptor that exports a RooAbsPdf as a functor
+**/
 
 
 #include "RooFit.h"

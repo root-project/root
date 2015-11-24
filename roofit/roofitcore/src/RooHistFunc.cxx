@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooHistFunc implements a real-valued function sampled from a 
-// multidimensional histogram. The histogram can have an arbitrary number of real or 
-// discrete dimensions and may have negative values
-// END_HTML
-//
+/**
+\file RooHistFunc.cxx
+\class RooHistFunc
+\ingroup RooFitCore
+
+RooHistFunc implements a real-valued function sampled from a 
+multidimensional histogram. The histogram can have an arbitrary number of real or 
+discrete dimensions and may have negative values
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

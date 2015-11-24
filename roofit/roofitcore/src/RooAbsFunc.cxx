@@ -14,17 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// Abstract interface for evaluating a real-valued function of one real variable
-// and performing numerical algorithms on it. The purpose of this interface is
-// to decouple RooAbsArg-specific implementations from numerical algorithms that
-// only need a simple function evaluation interface. The domain of the function
-// is assumed to be an n-dimensional box with edge coordinates specified by the
-// the getMinLimit() and getMaxLimit() methods.
-// END_HTML
-//
+/**
+\file RooAbsFunc.cxx
+\class RooAbsFunc
+\ingroup RooFitCore
+
+Abstract interface for evaluating a real-valued function of one real variable
+and performing numerical algorithms on it. The purpose of this interface is
+to decouple RooAbsArg-specific implementations from numerical algorithms that
+only need a simple function evaluation interface. The domain of the function
+is assumed to be an n-dimensional box with edge coordinates specified by the
+the getMinLimit() and getMaxLimit() methods.
+**/
 
 
 #include "RooFit.h"

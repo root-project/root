@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooUniformBinning is an implementation of RooAbsBinning that provides
-// a uniform binning in 'n' bins between the range end points. A RooUniformBinning
-// is 'elastic': if the range changes the binning will change accordingly, unlike
-// e.g. the binning of class RooBinning.
-// END_HTML
-//
+/**
+\file RooUniformBinning.cxx
+\class RooUniformBinning
+\ingroup RooFitCore
+
+RooUniformBinning is an implementation of RooAbsBinning that provides
+a uniform binning in 'n' bins between the range end points. A RooUniformBinning
+is 'elastic': if the range changes the binning will change accordingly, unlike
+e.g. the binning of class RooBinning.
+**/
 
 #include "RooFit.h"
 

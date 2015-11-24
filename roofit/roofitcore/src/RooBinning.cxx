@@ -14,16 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooBinning is an implements RooAbsBinning in terms
-// of an array of boundary values, posing no constraints on the choice
-// of binning, thus allowing variable bin sizes. Various methods allow
-// the user to add single bin boundaries, mirrored pairs, or sets of
-// uniformly spaced boundaries.
-// END_HTML
-//
+/**
+\file RooBinning.cxx
+\class RooBinning
+\ingroup RooFitCore
+
+Class RooBinning is an implements RooAbsBinning in terms
+of an array of boundary values, posing no constraints on the choice
+of binning, thus allowing variable bin sizes. Various methods allow
+the user to add single bin boundaries, mirrored pairs, or sets of
+uniformly spaced boundaries.
+**/
 
 #include <cmath>
 #include <algorithm>

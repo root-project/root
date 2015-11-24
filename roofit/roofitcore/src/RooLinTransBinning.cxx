@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooLinTransBinning is a special binning implementation for RooLinearVar
-// that transforms the binning of the RooLinearVar input variable in the same
-// way that RooLinearVar does
-// END_HTML
-//
+/**
+\file RooLinTransBinning.cxx
+\class RooLinTransBinning
+\ingroup RooFitCore
+
+RooLinTransBinning is a special binning implementation for RooLinearVar
+that transforms the binning of the RooLinearVar input variable in the same
+way that RooLinearVar does
+**/
 
 
 #include "RooFit.h"

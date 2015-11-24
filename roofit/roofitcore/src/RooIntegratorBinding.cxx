@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Function binding representing the output of a RooAbsIntegrator
-// END_HTML
-//
+/**
+\file RooIntegratorBinding.cxx
+\class RooIntegratorBinding
+\ingroup RooFitCore
+
+Function binding representing the output of a RooAbsIntegrator
+**/
 
 
 #include "RooFit.h"

@@ -14,22 +14,23 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooPlotable is a 'mix-in' base class that define the standard RooFit plotting and
-// printing methods. Each RooPlotable implementation must define methods that
-// print the objects name, class name, title, value, arguments and extras
-// to a provided stream. The definition of value is class dependent. The definition
-// of arguments is also class dependent, but should always be interpreted as
-// the names (and properties) of any (RooAbsArg) external inputs of a given object.
-// The extras method can be used to print any properties that does not fit in any
-// of the other classes. Each object an also override the definitions made
-// in defaultPrintStyle and defaultPrintContents to determine what is printed
-// (in terms of contents) and how it is printed (inline,single-line or multiline)
-// given a Print() option string. 
-// END_HTML
-//
+/**
+\file RooPrintable.cxx
+\class RooPrintable
+\ingroup RooFitCore
+
+RooPlotable is a 'mix-in' base class that define the standard RooFit plotting and
+printing methods. Each RooPlotable implementation must define methods that
+print the objects name, class name, title, value, arguments and extras
+to a provided stream. The definition of value is class dependent. The definition
+of arguments is also class dependent, but should always be interpreted as
+the names (and properties) of any (RooAbsArg) external inputs of a given object.
+The extras method can be used to print any properties that does not fit in any
+of the other classes. Each object an also override the definitions made
+in defaultPrintStyle and defaultPrintContents to determine what is printed
+(in terms of contents) and how it is printed (inline,single-line or multiline)
+given a Print() option string. 
+**/
 
 #include "RooFit.h"
 

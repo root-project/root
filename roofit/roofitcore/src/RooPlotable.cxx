@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooPotable is a base class for objects that can be inserted into RooPlots and take
-// advantage of its internal normalization and axis range adjustment features. The
-// most useful implementation of RooPlotable are RooHist and RooCurve.
-// END_HTML
-//
+/**
+\file RooPlotable.cxx
+\class RooPlotable
+\ingroup RooFitCore
+
+Class RooPotable is a base class for objects that can be inserted into RooPlots and take
+advantage of its internal normalization and axis range adjustment features. The
+most useful implementation of RooPlotable are RooHist and RooCurve.
+**/
 
 #include "RooFit.h"
 

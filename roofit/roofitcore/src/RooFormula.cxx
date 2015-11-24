@@ -14,18 +14,19 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooFormula an implementation of ROOT::v5::TFormula that interfaces it to RooAbsArg
-// value objects. It allows to use the value of a given list of RooAbsArg objects in the formula
-// expression. Reference is done either by the RooAbsArgs name
-// or by list ordinal postion ('@0,@1,...'). State information
-// of RooAbsCategories can be accessed used the '::' operator,
-// e.g. 'tagCat::Kaon' will resolve to the numerical value of
-// the 'Kaon' state of the RooAbsCategory object named tagCat.
-// END_HTML
-//
+/**
+\file RooFormula.cxx
+\class RooFormula
+\ingroup RooFitCore
+
+RooFormula an implementation of ROOT::v5::TFormula that interfaces it to RooAbsArg
+value objects. It allows to use the value of a given list of RooAbsArg objects in the formula
+expression. Reference is done either by the RooAbsArgs name
+or by list ordinal postion ('@0,@1,...'). State information
+of RooAbsCategories can be accessed used the '::' operator,
+e.g. 'tagCat::Kaon' will resolve to the numerical value of
+the 'Kaon' state of the RooAbsCategory object named tagCat.
+**/
 
 #include "RooFit.h"
 

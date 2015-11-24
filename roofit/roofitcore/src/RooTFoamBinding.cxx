@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Lightweight interface adaptor that binds a RooAbsPdf to TFOAM
-// END_HTML
-//
+/**
+\file RooTFoamBinding.cxx
+\class RooTFoamBinding
+\ingroup RooFitCore
+
+Lightweight interface adaptor that binds a RooAbsPdf to TFOAM
+**/
 
 
 #include "RooFit.h"

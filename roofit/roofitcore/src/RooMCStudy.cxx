@@ -14,30 +14,28 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooMCStudy is a help class to facilitate Monte Carlo studies
-// such as 'goodness-of-fit' studies, that involve fitting a PDF 
-// to multiple toy Monte Carlo sets generated from the same PDF 
-// or another PDF.
-// <p>
-// Given a fit PDF and a generator PDF, RooMCStudy can produce
-// large numbers of toyMC samples and/or fit these samples
-// and acculumate the final parameters of each fit in a dataset.
-// <p>
-// Additional plotting routines simplify the task of plotting
-// the distribution of the minimized likelihood, each parameters fitted value, 
-// fitted error and pull distribution.
-// <p>
-// Class RooMCStudy provides the option to insert add-in modules
-// that modify the generate and fit cycle and allow to perform
-// extra steps in the cycle. Output of these modules can be stored
-// alongside the fit results in the aggregate results dataset.
-// These study modules should derive from classs RooAbsMCStudyModel
-//
-// END_HTML
-//
+/**
+\file RooMCStudy.cxx
+\class RooMCStudy
+\ingroup RooFitCore
+
+RooMCStudy is a help class to facilitate Monte Carlo studies
+such as 'goodness-of-fit' studies, that involve fitting a PDF 
+to multiple toy Monte Carlo sets generated from the same PDF 
+or another PDF.
+Given a fit PDF and a generator PDF, RooMCStudy can produce
+large numbers of toyMC samples and/or fit these samples
+and acculumate the final parameters of each fit in a dataset.
+Additional plotting routines simplify the task of plotting
+the distribution of the minimized likelihood, each parameters fitted value, 
+fitted error and pull distribution.
+Class RooMCStudy provides the option to insert add-in modules
+that modify the generate and fit cycle and allow to perform
+extra steps in the cycle. Output of these modules can be stored
+alongside the fit results in the aggregate results dataset.
+These study modules should derive from classs RooAbsMCStudyModel
+
+**/
 
 
 

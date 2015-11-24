@@ -14,25 +14,26 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooGenericPdf is a concrete implementation of a probability density function,
-// which takes a RooArgList of servers and a C++ expression string defining how
-// its value should be calculated from the given list of servers.
-// A fully numerical integration is automatically performed to normalize the given
-// expression. RooGenericPdf uses a RooFormula object to perform the expression evaluation
-//
-// The string expression can be any valid TFormula expression referring to the
-// listed servers either by name or by their ordinal list position:
-//
-//   RooGenericPdf("gen","x*y",RooArgList(x,y))  or
-//   RooGenericPdf("gen","@0*@1",RooArgList(x,y)) 
-//
-// The latter form, while slightly less readable, is more versatile because it
-// doesn't hardcode any of the variable names it expects
-// END_HTML
-//
+/**
+\file RooGenericPdf.cxx
+\class RooGenericPdf
+\ingroup RooFitCore
+
+RooGenericPdf is a concrete implementation of a probability density function,
+which takes a RooArgList of servers and a C++ expression string defining how
+its value should be calculated from the given list of servers.
+A fully numerical integration is automatically performed to normalize the given
+expression. RooGenericPdf uses a RooFormula object to perform the expression evaluation
+
+The string expression can be any valid TFormula expression referring to the
+listed servers either by name or by their ordinal list position:
+
+  RooGenericPdf("gen","x*y",RooArgList(x,y))  or
+  RooGenericPdf("gen","@0*@1",RooArgList(x,y)) 
+
+The latter form, while slightly less readable, is more versatile because it
+doesn't hardcode any of the variable names it expects
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

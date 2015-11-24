@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooThreshEntry is a utility class for RooThresholdCategory
-// END_HTML
-//
+/**
+\file RooThreshEntry.cxx
+\class RooThreshEntry
+\ingroup RooFitCore
+
+Class RooThreshEntry is a utility class for RooThresholdCategory
+**/
 
 #include "RooFit.h"
 

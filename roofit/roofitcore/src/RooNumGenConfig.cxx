@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooNumGenConfig holds the configuration parameters of the various
-// numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
-// use this class in the (normalization) integral configuration interface
-// END_HTML
-//
+/**
+\file RooNumGenConfig.cxx
+\class RooNumGenConfig
+\ingroup RooFitCore
+
+RooNumGenConfig holds the configuration parameters of the various
+numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
+use this class in the (normalization) integral configuration interface
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

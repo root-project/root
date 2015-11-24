@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooBinningCategory provides a real-to-category mapping defined
-// by a series of thresholds.
-// END_HTML
-//
+/**
+\file RooBinningCategory.cxx
+\class RooBinningCategory
+\ingroup RooFitCore
+
+Class RooBinningCategory provides a real-to-category mapping defined
+by a series of thresholds.
+**/
 
 
 #include "RooFit.h"

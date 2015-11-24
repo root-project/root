@@ -14,16 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// Class RooAcceptReject is a generic toy monte carlo generator implement
-// the accept/reject sampling technique on any positively valued function.
-// The RooAcceptReject generator is used by the various generator context
-// classes to take care of generation of observables for which p.d.fs
-// do not define internal methods
-// END_HTML
-//
+/**
+\file RooAcceptReject.cxx
+\class RooAcceptReject
+\ingroup RooFitCore
+
+Class RooAcceptReject is a generic toy monte carlo generator implement
+the accept/reject sampling technique on any positively valued function.
+The RooAcceptReject generator is used by the various generator context
+classes to take care of generation of observables for which p.d.fs
+do not define internal methods
+**/
 
 
 #include "RooFit.h"

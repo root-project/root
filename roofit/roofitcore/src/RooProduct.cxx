@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-//
-// RooProduct a RooAbsReal implementation that represent the product
-// of a given set of other RooAbsReal objects
-//
-// END_HTML
-//
+/**
+\file RooProduct.cxx
+\class RooProduct
+\ingroup RooFitCore
+
+
+RooProduct a RooAbsReal implementation that represent the product
+of a given set of other RooAbsReal objects
+
+**/
 
 
 #include <cmath>

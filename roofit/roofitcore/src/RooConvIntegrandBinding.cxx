@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// Implementation of RooAbsFunc that represent the the integrand
-// of a generic (numeric) convolution A (x) B so that it can be
-// passed to a numeric integrator. This is a utility class for
-// RooNumConvPdf
-// END_HTML
-//
+/**
+\file RooConvIntegrandBinding.cxx
+\class RooConvIntegrandBinding
+\ingroup RooFitCore
+
+Implementation of RooAbsFunc that represent the the integrand
+of a generic (numeric) convolution A (x) B so that it can be
+passed to a numeric integrator. This is a utility class for
+RooNumConvPdf
+**/
 
 #include "RooFit.h"
 

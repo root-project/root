@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooSimSplitGenContext is an efficient implementation of the generator context
-// specific for RooSimultaneous PDFs when generating more than one of the
-// component pdfs.
-// END_HTML
-//
+/**
+\file RooSimSplitGenContext.cxx
+\class RooSimSplitGenContext
+\ingroup RooFitCore
+
+RooSimSplitGenContext is an efficient implementation of the generator context
+specific for RooSimultaneous PDFs when generating more than one of the
+component pdfs.
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

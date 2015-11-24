@@ -13,26 +13,26 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// The RooWorkspace is a persistable container for RooFit projects. A workspace
-// can contain and own variables, p.d.f.s, functions and datasets. All objects
-// that live in the workspace are owned by the workspace. The import() method
-// enforces consistency of objects upon insertion into the workspace (e.g. no
-// duplicate object with the same name are allowed) and makes sure all objects
-// in the workspace are connected to each other. Easy accessor methods like
-// pdf(), var() and data() allow to refer to the contents of the workspace by
-// object name. The entire RooWorkspace can be saved into a ROOT TFile and organises
-// the consistent streaming of its contents without duplication.
-// <p>
-// If a RooWorkspace contains custom classes, i.e. classes not in the 
-// ROOT distribution, portability of workspaces can be enhanced by
-// storing the source code of those classes in the workspace as well.
-// This process is also organized by the workspace through the
-// importClassCode() method.
-// END_HTML
-//
+/**
+\file RooWorkspace.cxx
+\class RooWorkspace
+\ingroup RooFitCore
+
+The RooWorkspace is a persistable container for RooFit projects. A workspace
+can contain and own variables, p.d.f.s, functions and datasets. All objects
+that live in the workspace are owned by the workspace. The import() method
+enforces consistency of objects upon insertion into the workspace (e.g. no
+duplicate object with the same name are allowed) and makes sure all objects
+in the workspace are connected to each other. Easy accessor methods like
+pdf(), var() and data() allow to refer to the contents of the workspace by
+object name. The entire RooWorkspace can be saved into a ROOT TFile and organises
+the consistent streaming of its contents without duplication.
+If a RooWorkspace contains custom classes, i.e. classes not in the 
+ROOT distribution, portability of workspaces can be enhanced by
+storing the source code of those classes in the workspace as well.
+This process is also organized by the workspace through the
+importClassCode() method.
+**/
 
 #include "RooFit.h"
 #include "RooWorkspace.h"

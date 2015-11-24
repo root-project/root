@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooRealVar represents a fundamental (non-derived) real valued object
-// 
-// This class also holds an (asymmetic) error, a default range and
-// a optionally series of alternate named ranges.
-// END_HTML
-//
+/**
+\file RooRealVar.cxx
+\class RooRealVar
+\ingroup RooFitCore
+
+RooRealVar represents a fundamental (non-derived) real valued object
+
+This class also holds an (asymmetic) error, a default range and
+a optionally series of alternate named ranges.
+**/
 
 
 #include "RooFit.h"

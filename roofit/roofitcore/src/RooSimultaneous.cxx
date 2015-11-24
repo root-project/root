@@ -14,23 +14,22 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooSimultaneous facilitates simultaneous fitting of multiple PDFs
-// to subsets of a given dataset.
-// <p>
-// The class takes an index category, which is interpreted as
-// the data subset indicator, and a list of PDFs, each associated
-// with a state of the index category. RooSimultaneous always returns
-// the value of the PDF that is associated with the current value
-// of the index category
-// <p>
-// Extended likelihood fitting is supported if all components support
-// extended likelihood mode. The expected number of events by a RooSimultaneous
-// is that of the component p.d.f. selected by the index category
-// END_HTML
-//
+/**
+\file RooSimultaneous.cxx
+\class RooSimultaneous
+\ingroup RooFitCore
+
+RooSimultaneous facilitates simultaneous fitting of multiple PDFs
+to subsets of a given dataset.
+The class takes an index category, which is interpreted as
+the data subset indicator, and a list of PDFs, each associated
+with a state of the index category. RooSimultaneous always returns
+the value of the PDF that is associated with the current value
+of the index category
+Extended likelihood fitting is supported if all components support
+extended likelihood mode. The expected number of events by a RooSimultaneous
+is that of the component p.d.f. selected by the index category
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

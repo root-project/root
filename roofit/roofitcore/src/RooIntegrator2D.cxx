@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooIntegrator2D implements a numeric two-dimensiona integrator
-// in terms of a recursive application of RooIntegrator1D
-// END_HTML
-//
+/**
+\file RooIntegrator2D.cxx
+\class RooIntegrator2D
+\ingroup RooFitCore
+
+RooIntegrator2D implements a numeric two-dimensiona integrator
+in terms of a recursive application of RooIntegrator1D
+**/
 
 
 #include "RooFit.h"

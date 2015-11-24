@@ -29,15 +29,16 @@ using namespace std;
 ClassImp(RooHashTable)
 ;
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooHashTable implements a hash table for TObjects. The hashing can be
-// done on the object addresses, object names, or using the objects
-// internal hash method. This is a utility class for RooLinkedList
-// that uses RooHashTable to speed up direct access to large collections.
-// END_HTML
-//
+/**
+\file RooHashTable.cxx
+\class RooHashTable
+\ingroup RooFitCore
+
+RooHashTable implements a hash table for TObjects. The hashing can be
+done on the object addresses, object names, or using the objects
+internal hash method. This is a utility class for RooLinkedList
+that uses RooHashTable to speed up direct access to large collections.
+**/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a hash table with given capacity and hash method

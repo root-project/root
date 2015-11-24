@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooMCIntegrator implements an adaptive multi-dimensional Monte Carlo
-// numerical integration, following the VEGAS algorithm originally described
-// in G. P. Lepage, J. Comp. Phys. 27, 192(1978). This implementation is
-// based on a C version from the 0.9 beta release of the GNU scientific library.
-// END_HTML
-//
+/**
+\file RooMCIntegrator.cxx
+\class RooMCIntegrator
+\ingroup RooFitCore
+
+RooMCIntegrator implements an adaptive multi-dimensional Monte Carlo
+numerical integration, following the VEGAS algorithm originally described
+in G. P. Lepage, J. Comp. Phys. 27, 192(1978). This implementation is
+based on a C version from the 0.9 beta release of the GNU scientific library.
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooMPSentinel is a singleton class that keeps track of all
-// parellel execution processes for goodness-of-fit calculations.
-// The primary task of RooMPSentinel is to terminate all server processes
-// when the main ROOT process is exiting.
-// END_HTML
-//
+/**
+\file RooMPSentinel.cxx
+\class RooMPSentinel
+\ingroup RooFitCore
+
+RooMPSentinel is a singleton class that keeps track of all
+parellel execution processes for goodness-of-fit calculations.
+The primary task of RooMPSentinel is to terminate all server processes
+when the main ROOT process is exiting.
+**/
 
 
 #include "RooFit.h"

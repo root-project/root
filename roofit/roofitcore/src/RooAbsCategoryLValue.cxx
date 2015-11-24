@@ -14,18 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsCategoryLValue is the common abstract base class for objects that represent a
-// discrete value that may appear on the left hand side of an equation ('lvalue')
-//
-// Each implementation must provide setIndex()/setLabel() members to allow direct modification 
-// of the value. RooAbsCategoryLValue may be derived, but its functional relation
-// to other RooAbsArgs must be invertible
-// END_HTML
-//
-//
+/**
+\file RooAbsCategoryLValue.cxx
+\class RooAbsCategoryLValue
+\ingroup RooFitCore
+
+RooAbsCategoryLValue is the common abstract base class for objects that represent a
+discrete value that may appear on the left hand side of an equation ('lvalue')
+
+Each implementation must provide setIndex()/setLabel() members to allow direct modification 
+of the value. RooAbsCategoryLValue may be derived, but its functional relation
+to other RooAbsArgs must be invertible
+**/
 
 #include "RooFit.h"
 

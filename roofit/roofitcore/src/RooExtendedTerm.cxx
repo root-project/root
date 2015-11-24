@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooExtendedTerm is a p.d.f with no observables that only introduces
-// an extended ML term for a given number of expected events term when an extended ML 
-// is constructed.
-// END_HTML
-//
+/**
+\file RooExtendedTerm.cxx
+\class RooExtendedTerm
+\ingroup RooFitCore
+
+RooExtendedTerm is a p.d.f with no observables that only introduces
+an extended ML term for a given number of expected events term when an extended ML 
+is constructed.
+**/
 
 #include "RooFit.h"
 #include "RooExtendedTerm.h"

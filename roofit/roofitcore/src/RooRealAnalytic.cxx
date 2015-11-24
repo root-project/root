@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Lightweight RooAbsFunc interface adaptor that binds an analytic integral of a
-// RooAbsReal object (specified by a code) to a set of dependent variables.
-// END_HTML
-//
+/**
+\file RooRealAnalytic.cxx
+\class RooRealAnalytic
+\ingroup RooFitCore
+
+Lightweight RooAbsFunc interface adaptor that binds an analytic integral of a
+RooAbsReal object (specified by a code) to a set of dependent variables.
+**/
 
 
 #include "RooFit.h"

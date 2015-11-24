@@ -9,23 +9,23 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
   *****************************************************************************/ 
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsSelfCachedPdf is an abstract base class for probability
-// density functions whose output is cached in terms of a histogram in
-// all observables between getVal() and evaluate(). For certain
-// p.d.f.s that are very expensive to calculate it may be beneficial
-// to implement them as a RooAbsSelfCachedPdf rather than a
-// RooAbsPdf. Class RooAbsSelfCachedPdf is designed to have its
-// interface identical to that of RooAbsPdf, so any p.d.f can make use
-// of its caching functionality by merely switching its base class.
-// Existing RooAbsPdf objects can also be cached a posteriori with the
-// RooCachedPdf wrapper p.d.f. that takes any RooAbsPdf object as
-// input.
-// END_HTML
-//
-//
+/**
+\file RooAbsSelfCachedPdf.cxx
+\class RooAbsSelfCachedPdf
+\ingroup RooFitCore
+
+RooAbsSelfCachedPdf is an abstract base class for probability
+density functions whose output is cached in terms of a histogram in
+all observables between getVal() and evaluate(). For certain
+p.d.f.s that are very expensive to calculate it may be beneficial
+to implement them as a RooAbsSelfCachedPdf rather than a
+RooAbsPdf. Class RooAbsSelfCachedPdf is designed to have its
+interface identical to that of RooAbsPdf, so any p.d.f can make use
+of its caching functionality by merely switching its base class.
+Existing RooAbsPdf objects can also be cached a posteriori with the
+RooCachedPdf wrapper p.d.f. that takes any RooAbsPdf object as
+input.
+**/
 
 #include "Riostream.h" 
 

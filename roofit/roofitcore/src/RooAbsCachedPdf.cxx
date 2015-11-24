@@ -9,26 +9,24 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
   *****************************************************************************/ 
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsCachedPdf is the abstract base class for p.d.f.s that need or
-// want to cache their evaluate() output in a RooHistPdf defined in
-// terms of the used observables. This base class manages the creation
-// and storage of all RooHistPdf cache p.d.fs and the RooDataHists
-// that define their shape. Implementations of RooAbsCachedPdf must
-// define member function fillCacheObject() which serves to fill an
-// already created RooDataHist with the p.d.fs function values. In
-// addition the member functions actualObservables() and
-// actualParameters() must be define which report what the actual
-// observables to be cached are for a given set of observables passed
-// by the user to getVal() and on which parameters need to be tracked
-// for changes to trigger a refilling of the cache histogram.
-// END_HTML
-//
-//
-//
-//
+/**
+\file RooAbsCachedPdf.cxx
+\class RooAbsCachedPdf
+\ingroup RooFitCore
+
+RooAbsCachedPdf is the abstract base class for p.d.f.s that need or
+want to cache their evaluate() output in a RooHistPdf defined in
+terms of the used observables. This base class manages the creation
+and storage of all RooHistPdf cache p.d.fs and the RooDataHists
+that define their shape. Implementations of RooAbsCachedPdf must
+define member function fillCacheObject() which serves to fill an
+already created RooDataHist with the p.d.fs function values. In
+addition the member functions actualObservables() and
+actualParameters() must be define which report what the actual
+observables to be cached are for a given set of observables passed
+by the user to getVal() and on which parameters need to be tracked
+for changes to trigger a refilling of the cache histogram.
+**/
 
 #include "Riostream.h" 
 using namespace std ;

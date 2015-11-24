@@ -14,17 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooExpensiveObjectCache is a singleton class that serves as repository
-// for objects that are expensive to calculate. Owners of such objects
-// can registers these here with associated parameter values for which
-// the object is valid, so that other instances can, at a later moment
-// retrieve these precalculated objects
+/**
+\file RooExpensiveObjectCache.cxx
+\class RooExpensiveObjectCache
+\ingroup RooFitCore
 
-// END_HTML
-//
+RooExpensiveObjectCache is a singleton class that serves as repository
+for objects that are expensive to calculate. Owners of such objects
+can registers these here with associated parameter values for which
+the object is valid, so that other instances can, at a later moment
+retrieve these precalculated objects
+**/
 
 
 #include "TClass.h"

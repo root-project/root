@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooInt is a minimal implementation of a TNamed holding a TObject
-// END_HTML
-//
+/**
+\file RooTObjWrap.cxx
+\class RooTObjWrap
+\ingroup RooFitCore
+
+RooInt is a minimal implementation of a TNamed holding a TObject
+**/
 
 #include "RooFit.h"
 

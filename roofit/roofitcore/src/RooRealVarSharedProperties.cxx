@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooRealVarSharedProperties is an implementation of RooSharedProperties
-// that stores the properties of a RooRealVar that are shared among clones.
-// For RooRealVars these are the definitions of the named ranges.
-// END_HTML
-//
+/**
+\file RooRealVarSharedProperties.cxx
+\class RooRealVarSharedProperties
+\ingroup RooFitCore
+
+Class RooRealVarSharedProperties is an implementation of RooSharedProperties
+that stores the properties of a RooRealVar that are shared among clones.
+For RooRealVars these are the definitions of the named ranges.
+**/
 
 #include "RooFit.h"
 #include "RooRealVarSharedProperties.h"

@@ -14,18 +14,19 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// This class generates the quasi-random (aka "low discrepancy")
-// sequence for dimensions up to 12 using the Niederreiter base 2
-// algorithm described in Bratley, Fox, Niederreiter, ACM Trans.
-// Model. Comp. Sim. 2, 195 (1992). This implementation was adapted
-// from the 0.9 beta release of the GNU scientific library.
-// Quasi-random number sequences are useful for improving the
-// convergence of a Monte Carlo integration.
-// END_HTML
-//
+/**
+\file RooQuasiRandomGenerator.cxx
+\class RooQuasiRandomGenerator
+\ingroup RooFitCore
+
+This class generates the quasi-random (aka "low discrepancy")
+sequence for dimensions up to 12 using the Niederreiter base 2
+algorithm described in Bratley, Fox, Niederreiter, ACM Trans.
+Model. Comp. Sim. 2, 195 (1992). This implementation was adapted
+from the 0.9 beta release of the GNU scientific library.
+Quasi-random number sequences are useful for improving the
+convergence of a Monte Carlo integration.
+**/
 
 #include "RooFit.h"
 

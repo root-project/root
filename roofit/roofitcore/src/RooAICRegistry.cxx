@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML 
-// RooAICRegistry is a utility class for operator p.d.f
-// classes that keeps track of analytical integration codes and
-// associated normalization and integration sets.  
-// END_HTML
-//
+/**
+\file RooAICRegistry.cxx
+\class RooAICRegistry
+\ingroup RooFitCore
+
+RooAICRegistry is a utility class for operator p.d.f
+classes that keeps track of analytical integration codes and
+associated normalization and integration sets.  
+**/
 
 #include "RooFit.h"
 

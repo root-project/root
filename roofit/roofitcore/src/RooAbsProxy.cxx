@@ -22,16 +22,17 @@
 #include "RooArgSet.h"
 #include "RooAbsArg.h"
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsProxy is the abstact interface for proxy classes.
-// Proxy classes hold pointers to other Roofit objects 
-// and process serverRedirect changes so that the proxied
-// pointers are updated accordingly on a clone or copy of
-// of the owning class
-// END_HTML
-//
+/**
+\file RooAbsProxy.cxx
+\class RooAbsProxy
+\ingroup RooFitCore
+
+RooAbsProxy is the abstact interface for proxy classes.
+Proxy classes hold pointers to other Roofit objects 
+and process serverRedirect changes so that the proxied
+pointers are updated accordingly on a clone or copy of
+of the owning class
+**/
 
 
 using namespace std;

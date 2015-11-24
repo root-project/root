@@ -14,16 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooPullVar represents the pull of measurement w.r.t to true value
-// using the measurement value and its error. Both the true value and
-// the measured value (with error) are taken from two user supplied
-// RooRealVars. If an asymmetric error is defined on a given measurement the proper 
-// side of that asymmetric error will be used
-// END_HTML
-//
+/**
+\file RooPullVar.cxx
+\class RooPullVar
+\ingroup RooFitCore
+
+Class RooPullVar represents the pull of measurement w.r.t to true value
+using the measurement value and its error. Both the true value and
+the measured value (with error) are taken from two user supplied
+RooRealVars. If an asymmetric error is defined on a given measurement the proper 
+side of that asymmetric error will be used
+**/
 
 #include "RooFit.h"
 

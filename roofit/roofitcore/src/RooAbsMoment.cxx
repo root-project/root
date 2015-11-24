@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooAbsMoment represents the first, second, or third order derivative
-// of any RooAbsReal as calculated (numerically) by the MathCore Richardson
-// derivator class.
-// END_HTML
-//
+/**
+\file RooAbsMoment.cxx
+\class RooAbsMoment
+\ingroup RooFitCore
+
+RooAbsMoment represents the first, second, or third order derivative
+of any RooAbsReal as calculated (numerically) by the MathCore Richardson
+derivator class.
+**/
 
 
 #include "RooFit.h"

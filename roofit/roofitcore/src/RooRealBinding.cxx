@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Lightweight interface adaptor that binds a RooAbsReal object to a subset
-// of its servers and present it as a simple array oriented interface.
-// END_HTML
-//
+/**
+\file RooRealBinding.cxx
+\class RooRealBinding
+\ingroup RooFitCore
+
+Lightweight interface adaptor that binds a RooAbsReal object to a subset
+of its servers and present it as a simple array oriented interface.
+**/
 
 
 #include "RooFit.h"

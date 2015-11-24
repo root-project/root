@@ -14,14 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsBinning is the abstract base class for RooRealVar binning definitions
-// This class defines the interface to retrieve bin boundaries, ranges etc.
-// END_HTML
-//
-//
+/**
+\file RooAbsBinning.cxx
+\class RooAbsBinning
+\ingroup RooFitCore
+
+RooAbsBinning is the abstract base class for RooRealVar binning definitions
+This class defines the interface to retrieve bin boundaries, ranges etc.
+**/
 
 #include "RooAbsBinning.h"
 

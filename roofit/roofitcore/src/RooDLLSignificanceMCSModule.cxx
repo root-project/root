@@ -14,21 +14,21 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooDLLSignificanceMCSModule is an add-on modules to RooMCStudy that
-// calculates the significance of a signal by comparing the likelihood of
-// a fit fit with a given parameter floating with a fit with that given
-// parameter fixed to a nominal value (usually zero). The difference in
-// the -log(L) of those two fits can be interpreted as the probability
-// that a statistical background fluctation may result in a signal as large
-// or larger than the signal observed. This interpretation is contingent
-// on underlying normal sampling distributions and a MC study is a good way
-// to test that assumption.
-// END_HTML
-//
-//
+/**
+\file RooDLLSignificanceMCSModule.cxx
+\class RooDLLSignificanceMCSModule
+\ingroup RooFitCore
+
+RooDLLSignificanceMCSModule is an add-on modules to RooMCStudy that
+calculates the significance of a signal by comparing the likelihood of
+a fit fit with a given parameter floating with a fit with that given
+parameter fixed to a nominal value (usually zero). The difference in
+the -log(L) of those two fits can be interpreted as the probability
+that a statistical background fluctation may result in a signal as large
+or larger than the signal observed. This interpretation is contingent
+on underlying normal sampling distributions and a MC study is a good way
+to test that assumption.
+**/
 
 #include "Riostream.h"
 

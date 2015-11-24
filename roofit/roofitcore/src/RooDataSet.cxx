@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooDataSet is a container class to hold unbinned data. Each data point
-// in N-dimensional space is represented by a RooArgSet of RooRealVar, RooCategory 
-// or RooStringVar objects 
-// END_HTML
-//
+/**
+\file RooDataSet.cxx
+\class RooDataSet
+\ingroup RooFitCore
+
+RooDataSet is a container class to hold unbinned data. Each data point
+in N-dimensional space is represented by a RooArgSet of RooRealVar, RooCategory 
+or RooStringVar objects 
+**/
 
 #include "RooFit.h"
 

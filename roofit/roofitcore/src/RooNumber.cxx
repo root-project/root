@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooNumber implements numeric constants used by RooFit
-// END_HTML
-//
+/**
+\file RooNumber.cxx
+\class RooNumber
+\ingroup RooFitCore
+
+Class RooNumber implements numeric constants used by RooFit
+**/
 
 #include "RooFit.h"
 #include "RooNumber.h"

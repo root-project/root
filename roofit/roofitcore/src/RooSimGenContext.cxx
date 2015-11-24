@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooSimGenContext is an efficient implementation of the generator context
-// specific for RooSimultaneous PDFs when generating more than one of the
-// component pdfs.
-// END_HTML
-//
+/**
+\file RooSimGenContext.cxx
+\class RooSimGenContext
+\ingroup RooFitCore
+
+RooSimGenContext is an efficient implementation of the generator context
+specific for RooSimultaneous PDFs when generating more than one of the
+component pdfs.
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

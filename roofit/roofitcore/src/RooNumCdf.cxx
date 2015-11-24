@@ -9,19 +9,20 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
   *****************************************************************************/ 
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooNumCdf is an implementation of RooNumRunningInt specialized
-// to calculate cumulative distribution functions from p.d.f.s. The main
-// difference between RooNumCdf and RooNumRunningInt is that this class
-// imposes special end-point conditions on the interpolated histogram
-// that represents the output so that the value at the lower bound is
-// guaranteed to converge to exactly zero and that the value at the
-// upper bound is guaranteed to converge to exactly one, at all interpolation
-// orders.
-// END_HTML
-//
+/**
+\file RooNumCdf.cxx
+\class RooNumCdf
+\ingroup RooFitCore
+
+Class RooNumCdf is an implementation of RooNumRunningInt specialized
+to calculate cumulative distribution functions from p.d.f.s. The main
+difference between RooNumCdf and RooNumRunningInt is that this class
+imposes special end-point conditions on the interpolated histogram
+that represents the output so that the value at the lower bound is
+guaranteed to converge to exactly zero and that the value at the
+upper bound is guaranteed to converge to exactly one, at all interpolation
+orders.
+**/
 
 #include "Riostream.h" 
 

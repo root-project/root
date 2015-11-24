@@ -14,17 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsHiddenReal is a base class for objects that want to hide
-// their return value from interactive use, e.g. for implementations
-// of parameter unblinding functions. This class overrides all
-// printing methods with versions that do not reveal the objects value
-// and it has a protected version of getVal()
-// END_HTML
-//
-//
+/**
+\file RooAbsHiddenReal.cxx
+\class RooAbsHiddenReal
+\ingroup RooFitCore
+
+RooAbsHiddenReal is a base class for objects that want to hide
+their return value from interactive use, e.g. for implementations
+of parameter unblinding functions. This class overrides all
+printing methods with versions that do not reveal the objects value
+and it has a protected version of getVal()
+**/
 
 #include "RooFit.h"
 

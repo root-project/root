@@ -14,17 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooErrorVar is an auxilary class that represents the error
-// of a RooRealVar as a seperate object. The main reason of
-// existence of this class is to facilitate the reuse of existing
-// techniques to perform calculations that involve a RooRealVars
-// error, such as calculating the pull value.
-// END_HTML
-//
-//
+/**
+\file RooErrorVar.cxx
+\class RooErrorVar
+\ingroup RooFitCore
+
+RooErrorVar is an auxilary class that represents the error
+of a RooRealVar as a seperate object. The main reason of
+existence of this class is to facilitate the reuse of existing
+techniques to perform calculations that involve a RooRealVars
+error, such as calculating the pull value.
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

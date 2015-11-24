@@ -14,18 +14,19 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooObjCacheManager is an implementation of class RooCacheManager<RooAbsCacheElement>
-// and specializes in the storage of cache elements that contain RooAbsArg objects.
-// Caches with RooAbsArg derived payload require special care as server redirects
-// cache operation mode changes and constant term optimization calls may need to be
-// forwarded to such cache payload. This cache manager takes are of all these operations
-// by forwarding these calls to the RooAbsCacheElement interface functions, which
-// have a sensible default implementation. 
-// END_HTML
-//
+/**
+\file RooObjCacheManager.cxx
+\class RooObjCacheManager
+\ingroup RooFitCore
+
+Class RooObjCacheManager is an implementation of class RooCacheManager<RooAbsCacheElement>
+and specializes in the storage of cache elements that contain RooAbsArg objects.
+Caches with RooAbsArg derived payload require special care as server redirects
+cache operation mode changes and constant term optimization calls may need to be
+forwarded to such cache payload. This cache manager takes are of all these operations
+by forwarding these calls to the RooAbsCacheElement interface functions, which
+have a sensible default implementation. 
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

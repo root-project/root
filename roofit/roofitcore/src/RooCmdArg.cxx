@@ -15,17 +15,18 @@
  *****************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooCmdArg is a named container for two doubles, two integers
-// two object points and three string pointers that can be passed
-// as generic named arguments to a variety of RooFit end user
-// methods. To achieved the named syntax, RooCmdArg objects are
-// created using global helper functions defined in RooGlobalFunc.h
-// that create and fill these generic containers
-// END_HTML
-//
+/**
+\file RooCmdArg.cxx
+\class RooCmdArg
+\ingroup RooFitCore
+
+RooCmdArg is a named container for two doubles, two integers
+two object points and three string pointers that can be passed
+as generic named arguments to a variety of RooFit end user
+methods. To achieved the named syntax, RooCmdArg objects are
+created using global helper functions defined in RooGlobalFunc.h
+that create and fill these generic containers
+**/
 
 #include "RooFit.h"
 

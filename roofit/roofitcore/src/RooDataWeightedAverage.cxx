@@ -14,20 +14,21 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML 
-// Class RooDataWeightedAverage calculate a weighted
-// average of a function or p.d.f given a dataset with observable
-// values, i.e. DWA(f(x),D(x)) = sum_i f(x_i) where x_i is draw from
-// D(i). This class is an implementation of RooAbsOptTestStatistics 
-// can make use of the optimization and parallization infrastructure
-// of that base class. The main use of RooDataWeightedAverage is
-// to calculate curves in RooPlots that are added with ProjWData()
-// plot option.
-//
-// END_HTML
-//
+/**
+\file RooDataWeightedAverage.cxx
+\class RooDataWeightedAverage
+\ingroup RooFitCore
+
+Class RooDataWeightedAverage calculate a weighted
+average of a function or p.d.f given a dataset with observable
+values, i.e. DWA(f(x),D(x)) = sum_i f(x_i) where x_i is draw from
+D(i). This class is an implementation of RooAbsOptTestStatistics 
+can make use of the optimization and parallization infrastructure
+of that base class. The main use of RooDataWeightedAverage is
+to calculate curves in RooPlots that are added with ProjWData()
+plot option.
+
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

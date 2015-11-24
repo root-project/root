@@ -14,30 +14,28 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooMinuit is a wrapper class around TFitter/TMinuit that
-// provides a seamless interface between the MINUIT functionality
-// and the native RooFit interface.
-// <p>
-// RooMinuit can minimize any RooAbsReal function with respect to
-// its parameters. Usual choices for minimization are RooNLLVar
-// and RooChi2Var
-// <p>
-// RooMinuit has methods corresponding to MINUIT functions like
-// hesse(), migrad(), minos() etc. In each of these function calls
-// the state of the MINUIT engine is synchronized with the state
-// of the RooFit variables: any change in variables, change
-// in the constant status etc is forwarded to MINUIT prior to
-// execution of the MINUIT call. Afterwards the RooFit objects
-// are resynchronized with the output state of MINUIT: changes
-// parameter values, errors are propagated.
-// <p>
-// Various methods are available to control verbosity, profiling,
-// automatic PDF optimization.
-// END_HTML
-//
+/**
+\file RooMinuit.cxx
+\class RooMinuit
+\ingroup RooFitCore
+
+RooMinuit is a wrapper class around TFitter/TMinuit that
+provides a seamless interface between the MINUIT functionality
+and the native RooFit interface.
+RooMinuit can minimize any RooAbsReal function with respect to
+its parameters. Usual choices for minimization are RooNLLVar
+and RooChi2Var
+RooMinuit has methods corresponding to MINUIT functions like
+hesse(), migrad(), minos() etc. In each of these function calls
+the state of the MINUIT engine is synchronized with the state
+of the RooFit variables: any change in variables, change
+in the constant status etc is forwarded to MINUIT prior to
+execution of the MINUIT call. Afterwards the RooFit objects
+are resynchronized with the output state of MINUIT: changes
+parameter values, errors are propagated.
+Various methods are available to control verbosity, profiling,
+automatic PDF optimization.
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooHistPdf implements a probablity density function sampled from a 
-// multidimensional histogram. The histogram distribution is explicitly
-// normalized by RooHistPdf and can have an arbitrary number of real or 
-// discrete dimensions.
-// END_HTML
-//
+/**
+\file RooHistPdf.cxx
+\class RooHistPdf
+\ingroup RooFitCore
+
+RooHistPdf implements a probablity density function sampled from a 
+multidimensional histogram. The histogram distribution is explicitly
+normalized by RooHistPdf and can have an arbitrary number of real or 
+discrete dimensions.
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

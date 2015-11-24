@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Multivariate Gaussian p.d.f. with correlations
-// END_HTML
-//
+/**
+\file RooMultiVarGaussian.cxx
+\class RooMultiVarGaussian
+\ingroup RooFitCore
+
+Multivariate Gaussian p.d.f. with correlations
+**/
 
 #include "RooFit.h"
 

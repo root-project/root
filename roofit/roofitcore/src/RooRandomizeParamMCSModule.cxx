@@ -14,24 +14,24 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooRandomizeParamMCSModule is an add-on modules to RooMCStudy that
-// allows you to randomize input generation parameters. Randomized generation
-// parameters can be sampled from a uniform or Gaussian distribution.
-// For every randomized parameter, an extra variable is added to 
-// RooMCStudy::fitParDataSet() named <tt><parname>_gen</tt> that indicates the actual
-// value used for generation for each trial. 
-// <p>
-// You can also choose to randomize the sum of N parameters, rather
-// than a single parameter. In that case common multiplicative scale
-// factor is applied to each component to bring the sum to the desired
-// target value taken from either uniform or Gaussian sampling. This
-// latter option is for example useful if you want to change the total
-// number of expected events of an extended p.d.f
-// END_HTML
-//
+/**
+\file RooRandomizeParamMCSModule.cxx
+\class RooRandomizeParamMCSModule
+\ingroup RooFitCore
+
+RooRandomizeParamMCSModule is an add-on modules to RooMCStudy that
+allows you to randomize input generation parameters. Randomized generation
+parameters can be sampled from a uniform or Gaussian distribution.
+For every randomized parameter, an extra variable is added to 
+RooMCStudy::fitParDataSet() named <tt><parname>_gen</tt> that indicates the actual
+value used for generation for each trial. 
+You can also choose to randomize the sum of N parameters, rather
+than a single parameter. In that case common multiplicative scale
+factor is applied to each component to bring the sum to the desired
+target value taken from either uniform or Gaussian sampling. This
+latter option is for example useful if you want to change the total
+number of expected events of an extended p.d.f
+**/
 
 
 #include "Riostream.h"

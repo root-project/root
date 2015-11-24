@@ -9,23 +9,24 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
   *****************************************************************************/ 
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsCachedReal is the abstract base class for functions that need or
-// want to cache their evaluate() output in a RooHistFunc defined in
-// terms of the used observables. This base class manages the creation
-// and storage of all RooHistFunc cache p.d.fs and the RooDataHists
-// that define their shape. Implementations of RooAbsCachedReal must
-// define member function fillCacheObject() which serves to fill an
-// already created RooDataHist with the functions function values. In
-// addition the member functions actualObservables() and
-// actualParameters() must be define which report what the actual
-// observables to be cached are for a given set of observables passed
-// by the user to getVal() and on which parameters need to be tracked
-// for changes to trigger a refilling of the cache histogram.
-// END_HTML
-//
+/**
+\file RooAbsCachedReal.cxx
+\class RooAbsCachedReal
+\ingroup RooFitCore
+
+RooAbsCachedReal is the abstract base class for functions that need or
+want to cache their evaluate() output in a RooHistFunc defined in
+terms of the used observables. This base class manages the creation
+and storage of all RooHistFunc cache p.d.fs and the RooDataHists
+that define their shape. Implementations of RooAbsCachedReal must
+define member function fillCacheObject() which serves to fill an
+already created RooDataHist with the functions function values. In
+addition the member functions actualObservables() and
+actualParameters() must be define which report what the actual
+observables to be cached are for a given set of observables passed
+by the user to getVal() and on which parameters need to be tracked
+for changes to trigger a refilling of the cache histogram.
+**/
 
 #include "Riostream.h" 
 using namespace std ;

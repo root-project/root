@@ -14,16 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// Class RooFoamGenerator is a generic toy monte carlo generator that implement
-// the TFOAM sampling technique on any positively valued function.
-// The RooFoamGenerator generator is used by the various generator context
-// classes to take care of generation of observables for which p.d.fs
-// do not define internal methods
-// END_HTML
-//
+/**
+\file RooFoamGenerator.cxx
+\class RooFoamGenerator
+\ingroup RooFitCore
+
+Class RooFoamGenerator is a generic toy monte carlo generator that implement
+the TFOAM sampling technique on any positively valued function.
+The RooFoamGenerator generator is used by the various generator context
+classes to take care of generation of observables for which p.d.fs
+do not define internal methods
+**/
 
 
 #include "RooFit.h"

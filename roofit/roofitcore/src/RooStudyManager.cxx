@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooStudyManager is a utility class to manage studies that consist of
-// repeated applications of generate-and-fit operations on a workspace
-//
-// END_HTML
-//
+/**
+\file RooStudyManager.cxx
+\class RooStudyManager
+\ingroup RooFitCore
+
+RooStudyManager is a utility class to manage studies that consist of
+repeated applications of generate-and-fit operations on a workspace
+
+**/
 
 
 

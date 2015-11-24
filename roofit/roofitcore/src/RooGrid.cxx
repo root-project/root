@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML 
-// RooGrid is a utility class for RooMCIntegrator which
-// implements an adaptive multi-dimensional Monte Carlo numerical
-// integration, following the VEGAS algorithm.  
-// END_HTML
-//
+/**
+\file RooGrid.cxx
+\class RooGrid
+\ingroup RooFitCore
+
+RooGrid is a utility class for RooMCIntegrator which
+implements an adaptive multi-dimensional Monte Carlo numerical
+integration, following the VEGAS algorithm.  
+**/
 
 #include "RooFit.h"
 

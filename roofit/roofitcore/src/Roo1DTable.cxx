@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// Roo1DTable implements a one-dimensional table. A table is the category
-// equivalent of a plot. To create a table use the RooDataSet::table method.
-// END_HTML
-//
+/**
+\file Roo1DTable.cxx
+\class Roo1DTable
+\ingroup RooFitCore
+
+Roo1DTable implements a one-dimensional table. A table is the category
+equivalent of a plot. To create a table use the RooDataSet::table method.
+**/
 
 #include "RooFit.h"
 

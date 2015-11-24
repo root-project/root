@@ -14,16 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooConvCoefVar is an auxilary class that represents the coefficient
-// of a RooAbsAnaConvPdf implementation as a separate RooAbsReal object
-// to be able to interface these coefficient terms with the generic
-// RooRealIntegral integration mechanism
-// END_HTML
-//
-//
+/**
+\file RooConvCoefVar.cxx
+\class RooConvCoefVar
+\ingroup RooFitCore
+
+RooConvCoefVar is an auxilary class that represents the coefficient
+of a RooAbsAnaConvPdf implementation as a separate RooAbsReal object
+to be able to interface these coefficient terms with the generic
+RooRealIntegral integration mechanism
+**/
 
 #include "RooFit.h"
 

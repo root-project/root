@@ -14,18 +14,19 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooPolyVar is a RooAbsReal implementing a polynomial in terms
-// of a list of RooAbsReal coefficients
-// <pre>
-// f(x) = sum_i a_i * x
-// </pre>
-// Class RooPolyvar implements analytical integrals of all polynomials
-// it can define.
-// END_HTML
-//
+/**
+\file RooPolyVar.cxx
+\class RooPolyVar
+\ingroup RooFitCore
+
+Class RooPolyVar is a RooAbsReal implementing a polynomial in terms
+of a list of RooAbsReal coefficients
+<pre>
+f(x) = sum_i a_i * x
+</pre>
+Class RooPolyvar implements analytical integrals of all polynomials
+it can define.
+**/
 
 #include <cmath>
 

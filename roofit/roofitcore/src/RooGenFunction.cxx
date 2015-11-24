@@ -15,12 +15,13 @@
  *****************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Lightweight interface adaptor that exports a RooAbsReal as a ROOT::Math::IGenFunction
-// END_HTML
-//
+/**
+\file RooGenFunction.cxx
+\class RooGenFunction
+\ingroup RooFitCore
+
+Lightweight interface adaptor that exports a RooAbsReal as a ROOT::Math::IGenFunction
+**/
 
 
 #include "RooFit.h"

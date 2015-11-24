@@ -14,17 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML 
-// RooAddGenContext is an efficient implementation of the
-// generator context specific for RooAddPdf PDFs. The strategy
-// of RooAddGenContext is to defer generation of each component
-// to a dedicated generator context for that component and to
-// randomly choose one of those context to generate an event,
-// with a probability proportional to its associated coefficient
-// END_HTML
-//
+/**
+\file RooAddGenContext.cxx
+\class RooAddGenContext
+\ingroup RooFitCore
+
+RooAddGenContext is an efficient implementation of the
+generator context specific for RooAddPdf PDFs. The strategy
+of RooAddGenContext is to defer generation of each component
+to a dedicated generator context for that component and to
+randomly choose one of those context to generate an event,
+with a probability proportional to its associated coefficient
+**/
 
 
 #include "RooFit.h"

@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooStringVar implements a string values RooAbsArg
-// END_HTML
-//
+/**
+\file RooStringVar.cxx
+\class RooStringVar
+\ingroup RooFitCore
+
+RooStringVar implements a string values RooAbsArg
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

@@ -4,12 +4,13 @@
 #include "Riostream.h"
 #include "TEnv.h"
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// Print banner message when RooFit library is loaded
-// END_HTML
-//
+/**
+\file RooBanner.cxx
+\class RooBanner
+\ingroup RooFitCore
+
+Print banner message when RooFit library is loaded
+**/
 
 using namespace std;
 

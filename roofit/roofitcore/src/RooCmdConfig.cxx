@@ -15,17 +15,18 @@
  *****************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// Class RooCmdConfig is a configurable parser for RooCmdArg named
-// arguments. It maps the contents of named arguments named to integers,
-// doubles, strings and TObjects that can be retrieved after processing
-// a set of RooCmdArgs. The parser also has options to enforce syntax
-// rules such as (conditionally) required arguments, mutually exclusive
-// arguments and dependencies between arguments
-// END_HTML
-//
+/**
+\file RooCmdConfig.cxx
+\class RooCmdConfig
+\ingroup RooFitCore
+
+Class RooCmdConfig is a configurable parser for RooCmdArg named
+arguments. It maps the contents of named arguments named to integers,
+doubles, strings and TObjects that can be retrieved after processing
+a set of RooCmdArgs. The parser also has options to enforce syntax
+rules such as (conditionally) required arguments, mutually exclusive
+arguments and dependencies between arguments
+**/
 
 #include "RooFit.h"
 

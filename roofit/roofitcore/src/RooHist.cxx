@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// A RooHist is a graphical representation of binned data based on the
-// TGraphAsymmErrors class. Error bars are calculated using either Poisson
-// or Binomial statistics. A RooHist is used to represent histograms in
-// a RooPlot.
-// END_HTML
-//
+/**
+\file RooHist.cxx
+\class RooHist
+\ingroup RooFitCore
+
+A RooHist is a graphical representation of binned data based on the
+TGraphAsymmErrors class. Error bars are calculated using either Poisson
+or Binomial statistics. A RooHist is used to represent histograms in
+a RooPlot.
+**/
 
 #include "RooFit.h"
 

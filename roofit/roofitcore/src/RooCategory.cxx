@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooCategory represents a fundamental (non-derived) discrete value object. The class
-// has a public interface to define the possible value states.
-// END_HTML
-//
+/**
+\file RooCategory.cxx
+\class RooCategory
+\ingroup RooFitCore
+
+RooCategory represents a fundamental (non-derived) discrete value object. The class
+has a public interface to define the possible value states.
+**/
 
 
 #include "RooFit.h"

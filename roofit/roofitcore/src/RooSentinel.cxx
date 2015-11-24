@@ -14,18 +14,19 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooSentinel is a special purposes singleton class that terminates
-// all other RooFit singleton services when the process exists. 
-//
-// All function RooFit singleton services are created on the heap with
-// a static wrapper function to avoid the 'static initialization order fiasco'
-// but are not automatically destroyed at the end of the session. This class
-// installs an atexit() function that takes care of this
-// END_HTML
-//
+/**
+\file RooSentinel.cxx
+\class RooSentinel
+\ingroup RooFitCore
+
+RooSentinel is a special purposes singleton class that terminates
+all other RooFit singleton services when the process exists. 
+
+All function RooFit singleton services are created on the heap with
+a static wrapper function to avoid the 'static initialization order fiasco'
+but are not automatically destroyed at the end of the session. This class
+installs an atexit() function that takes care of this
+**/
 
 #include "RooFit.h"
 

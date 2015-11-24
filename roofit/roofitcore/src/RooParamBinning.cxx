@@ -14,17 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooParamBinning is an implementation of RooAbsBinning that constructs
-// a binning with a range definition that depends on external RooAbsReal objects.
-// The external RooAbsReal definitions are explicitly allowed to depend on other
-// observables and parameters, and make it possible to define non-rectangular
-// range definitions in RooFit. Objects of class RooParamBinning are made
-// by the RooRealVar::setRange() that takes RooAbsReal references as arguments
-// END_HTML
-//
+/**
+\file RooParamBinning.cxx
+\class RooParamBinning
+\ingroup RooFitCore
+
+Class RooParamBinning is an implementation of RooAbsBinning that constructs
+a binning with a range definition that depends on external RooAbsReal objects.
+The external RooAbsReal definitions are explicitly allowed to depend on other
+observables and parameters, and make it possible to define non-rectangular
+range definitions in RooFit. Objects of class RooParamBinning are made
+by the RooRealVar::setRange() that takes RooAbsReal references as arguments
+**/
 
 #include "RooFit.h"
 

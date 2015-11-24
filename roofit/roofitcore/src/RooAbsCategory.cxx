@@ -14,19 +14,19 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsCategory is the common abstract base class for objects that
-// represent a discrete value with a finite number of states. Each
-// state consist of a label/index pair, which is stored in a
-// RooCatType object.
-// 
-// Implementation of RooAbsCategory may be derived, there no interface
-// is provided to modify the contents, nor a public interface to define states.
-// END_HTML
-//
-//
+/**
+\file RooAbsCategory.cxx
+\class RooAbsCategory
+\ingroup RooFitCore
+
+RooAbsCategory is the common abstract base class for objects that
+represent a discrete value with a finite number of states. Each
+state consist of a label/index pair, which is stored in a
+RooCatType object.
+
+Implementation of RooAbsCategory may be derived, there no interface
+is provided to modify the contents, nor a public interface to define states.
+**/
 
 #include "RooFit.h"
 

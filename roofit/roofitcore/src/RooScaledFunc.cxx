@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Lightweight RooAbsFunction implementation that applies a constant scale 
-// factor to another RooAbsFunc.
-// END_HTML
-//
+/**
+\file RooScaledFunc.cxx
+\class RooScaledFunc
+\ingroup RooFitCore
+
+Lightweight RooAbsFunction implementation that applies a constant scale 
+factor to another RooAbsFunc.
+**/
 
 
 #include "RooFit.h"

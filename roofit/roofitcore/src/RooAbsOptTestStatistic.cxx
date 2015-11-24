@@ -14,26 +14,26 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsOptTestStatistic is the abstract base class for test
-// statistics objects that evaluate a function or PDF at each point of a given
-// dataset.  This class provides generic optimizations, such as
-// caching and precalculation of constant terms that can be made for
-// all such quantities
-//
-// Implementations should define evaluatePartition(), which calculates the
-// value of a (sub)range of the dataset and optionally combinedValue(),
-// which combines the values calculated for each partition. If combinedValue()
-// is not overloaded, the default implementation will add the partition results
-// to obtain the combined result
-//
-// Support for calculation in partitions is needed to allow multi-core
-// parallelized calculation of test statistics
-// END_HTML
-//
-//
+/**
+\file RooAbsOptTestStatistic.cxx
+\class RooAbsOptTestStatistic
+\ingroup RooFitCore
+
+RooAbsOptTestStatistic is the abstract base class for test
+statistics objects that evaluate a function or PDF at each point of a given
+dataset.  This class provides generic optimizations, such as
+caching and precalculation of constant terms that can be made for
+all such quantities
+
+Implementations should define evaluatePartition(), which calculates the
+value of a (sub)range of the dataset and optionally combinedValue(),
+which combines the values calculated for each partition. If combinedValue()
+is not overloaded, the default implementation will add the partition results
+to obtain the combined result
+
+Support for calculation in partitions is needed to allow multi-core
+parallelized calculation of test statistics
+**/
 
 #include "RooFit.h"
 

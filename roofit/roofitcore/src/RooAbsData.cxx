@@ -14,16 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsData is the common abstract base class for binned and unbinned
-// datasets. The abstract interface defines plotting and tabulating entry
-// points for its contents and provides an iterator over its elements
-// (bins for binned data sets, data points for unbinned datasets).
-// END_HTML
-//
-//
+/**
+\file RooAbsData.cxx
+\class RooAbsData
+\ingroup RooFitCore
+
+RooAbsData is the common abstract base class for binned and unbinned
+datasets. The abstract interface defines plotting and tabulating entry
+points for its contents and provides an iterator over its elements
+(bins for binned data sets, data points for unbinned datasets).
+**/
 
 #include "RooAbsData.h"
 

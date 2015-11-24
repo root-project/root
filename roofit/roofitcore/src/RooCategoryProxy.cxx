@@ -14,17 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooCategoryProxy is the proxy implementation for RooAbsCategory objects
-// A RooCategoryProxy is the general mechanism to store references
-// to RooAbsCategoriess inside a RooAbsArg
-//
-// RooCategoryProxy provides a cast operator to Int_t and 'const char*', allowing
-// the proxy to functions a Int_t/'const char*' on the right hand side of expressions.
-// END_HTML
-//
+/**
+\file RooCategoryProxy.cxx
+\class RooCategoryProxy
+\ingroup RooFitCore
+
+RooCategoryProxy is the proxy implementation for RooAbsCategory objects
+A RooCategoryProxy is the general mechanism to store references
+to RooAbsCategoriess inside a RooAbsArg
+
+RooCategoryProxy provides a cast operator to Int_t and 'const char*', allowing
+the proxy to functions a Int_t/'const char*' on the right hand side of expressions.
+**/
 
 
 #include "RooFit.h"

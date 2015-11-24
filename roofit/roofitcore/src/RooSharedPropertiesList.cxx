@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooSharedPropertiesList maintains the properties of RooRealVars
-// and RooCategories that are clones of each other.
-// END_HTML
-//
+/**
+\file RooSharedPropertiesList.cxx
+\class RooSharedPropertiesList
+\ingroup RooFitCore
+
+Class RooSharedPropertiesList maintains the properties of RooRealVars
+and RooCategories that are clones of each other.
+**/
 
 #include "RooFit.h"
 #include "RooSharedPropertiesList.h"

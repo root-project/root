@@ -14,20 +14,21 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooSetProxy is the concrete proxy for RooArgSet objects.
-// A RooSetProxy is the general mechanism to store a RooArgSet
-// with RooAbsArgs in a RooAbsArg.
-//
-// Creating a RooSetProxy adds all members of the proxied RooArgSet to the proxy owners
-// server list (thus receiving value/shape dirty flags from it) and
-// registers itself with the owning class. The latter allows the
-// owning class to update the pointers of RooArgSet contents to reflect
-// the serverRedirect changes.
-// END_HTML
-//
+/**
+\file RooSetProxy.cxx
+\class RooSetProxy
+\ingroup RooFitCore
+
+RooSetProxy is the concrete proxy for RooArgSet objects.
+A RooSetProxy is the general mechanism to store a RooArgSet
+with RooAbsArgs in a RooAbsArg.
+
+Creating a RooSetProxy adds all members of the proxied RooArgSet to the proxy owners
+server list (thus receiving value/shape dirty flags from it) and
+registers itself with the owning class. The latter allows the
+owning class to update the pointers of RooArgSet contents to reflect
+the serverRedirect changes.
+**/
 
 
 #include "RooFit.h"

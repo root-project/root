@@ -14,32 +14,33 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooProdPdf is an efficient implementation of a product of PDFs of the form
-//
-//  PDF_1 * PDF_2 * ... * PDF_N
-//
-// PDFs may share observables. If that is the case any irreducable subset
-// of PDFS that share observables will be normalized with explicit numeric
-// integration as any built-in normalization will no longer be valid.
-//
-// Alternatively, products using conditional PDFs can be defined, e.g.
-//
-//    F(x|y) * G(y)
-//
-// meaning a pdf F(x) _given_ y and a PDF G(y). In this contruction F is only
-// normalized w.r.t x and G is normalized w.r.t y. The product in this construction
-// is properly normalized.
-//
-// If exactly one of the component PDFs supports extended likelihood fits, the
-// product will also be usable in extended mode, returning the number of expected
-// events from the extendable component PDF. The extendable component does not
-// have to appear in any specific place in the list.
-//
-// END_HTML
-//
+/**
+\file RooProdPdf.cxx
+\class RooProdPdf
+\ingroup RooFitCore
+
+RooProdPdf is an efficient implementation of a product of PDFs of the form
+
+ PDF_1 * PDF_2 * ... * PDF_N
+
+PDFs may share observables. If that is the case any irreducable subset
+of PDFS that share observables will be normalized with explicit numeric
+integration as any built-in normalization will no longer be valid.
+
+Alternatively, products using conditional PDFs can be defined, e.g.
+
+   F(x|y) * G(y)
+
+meaning a pdf F(x) _given_ y and a PDF G(y). In this contruction F is only
+normalized w.r.t x and G is normalized w.r.t y. The product in this construction
+is properly normalized.
+
+If exactly one of the component PDFs supports extended likelihood fits, the
+product will also be usable in extended mode, returning the number of expected
+events from the extendable component PDF. The extendable component does not
+have to appear in any specific place in the list.
+
+**/
 
 #include "RooProdPdf.h"
 #include "RooRealProxy.h"

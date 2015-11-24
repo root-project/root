@@ -14,17 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooLinkedList is an collection class for internal use, storing
-// a collection of RooAbsArg pointers in a doubly linked list.
-// It can optionally add a hash table to speed up random access
-// in large collections
-// Use RooAbsCollection derived objects for public use
-// (e.g. RooArgSet or RooArgList) 
-// END_HTML
-//
+/**
+\file RooLinkedList.cxx
+\class RooLinkedList
+\ingroup RooFitCore
+
+RooLinkedList is an collection class for internal use, storing
+a collection of RooAbsArg pointers in a doubly linked list.
+It can optionally add a hash table to speed up random access
+in large collections
+Use RooAbsCollection derived objects for public use
+(e.g. RooArgSet or RooArgList) 
+**/
 
 #include "RooLinkedList.h"
 

@@ -14,22 +14,23 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooNormSet cache manage the bookkeeping of multiple instances
-// of sets of integration and normalization observables that effectively
-// have the same definition. In complex function expression many
-// RooArgSets with the same contents may be passed to an object that
-// caches intermediate results dependent on the normalization/integration set
-// To avoid unnecessary cache faulting, This class tracks all instances
-// with the same contents and reports to the owner if the present nset/iset
-// is truely different from the current reference. Class RooNormSet only
-// evaluates each RooArgSet pointer once, it therefore assumes that
-// RooArgSets with normalization and/or integration sets are not changes
-// during their lifetime. 
-// END_HTML
-//
+/**
+\file RooNormSetCache.cxx
+\class RooNormSetCache
+\ingroup RooFitCore
+
+Class RooNormSet cache manage the bookkeeping of multiple instances
+of sets of integration and normalization observables that effectively
+have the same definition. In complex function expression many
+RooArgSets with the same contents may be passed to an object that
+caches intermediate results dependent on the normalization/integration set
+To avoid unnecessary cache faulting, This class tracks all instances
+with the same contents and reports to the owner if the present nset/iset
+is truely different from the current reference. Class RooNormSet only
+evaluates each RooArgSet pointer once, it therefore assumes that
+RooArgSets with normalization and/or integration sets are not changes
+during their lifetime. 
+**/
 #include "RooFit.h"
 
 #include "RooNormSetCache.h"

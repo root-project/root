@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// Implement the abstract 1-dimensional root finding interface using
-// the Brent-Decker method. This implementation is based on the one
-// in the GNU scientific library (v0.99).
-// END_HTML
-//
+/**
+\file RooBrentRootFinder.cxx
+\class RooBrentRootFinder
+\ingroup RooFitCore
+
+Implement the abstract 1-dimensional root finding interface using
+the Brent-Decker method. This implementation is based on the one
+in the GNU scientific library (v0.99).
+**/
 
 #include "RooFit.h"
 

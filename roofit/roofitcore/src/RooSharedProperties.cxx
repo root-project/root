@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooSharedProperties is the base class for shared properties
-// that can be stored in RooSharedPropertiesList.
-// END_HTML
-//
+/**
+\file RooSharedProperties.cxx
+\class RooSharedProperties
+\ingroup RooFitCore
+
+Class RooSharedProperties is the base class for shared properties
+that can be stored in RooSharedPropertiesList.
+**/
 
 #include "RooFit.h"
 #include "RooSharedProperties.h"
