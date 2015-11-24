@@ -31,11 +31,11 @@ and return a pointer to this copy. The caller owns the input object
 and this class owns the returned object.
 All RooAbsReal and RooAbsData derived classes implement plotOn()
 functions that facilitate to plot themselves on a given RooPlot, e.g.
-<pre>
+~~~ {.cpp}
 RooPlot *frame = x.frame() ;
 data.plotOn(frame) ;
 pdf.plotOn(frame) ;
-</pre>
+~~~
 These high level functions also take care of any projections
 or other mappings that need to be made to plot a multi-dimensional
 object onto a one-dimensional plot.
@@ -109,7 +109,7 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
   _hist->Sumw2(kFALSE) ;
   _hist->GetSumw2()->Set(0) ;
 
-  
+
   TH1::AddDirectory(histAddDirStatus) ;
 
 
@@ -538,8 +538,8 @@ void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label)
   if(GetMaximum() < ymax) {
     _defYmax = ymax ;
     SetMaximum(ymax);
-    // if we don't do this - Unzoom on y-axis will reset upper bound to 1 
-    _hist->SetBinContent(1,ymax) ; 
+    // if we don't do this - Unzoom on y-axis will reset upper bound to 1
+    _hist->SetBinContent(1,ymax) ;
   }
   if(GetMinimum() > ymin) {
     _defYmin = ymin ;
@@ -561,8 +561,8 @@ void RooPlot::Draw(Option_t *option)
   TString optArg = option ;
   optArg.ToLower() ;
 
-  // This draw options prevents the histogram with one dummy entry 
-  // to be drawn 
+  // This draw options prevents the histogram with one dummy entry
+  // to be drawn
   if (optArg.Contains("same")) {
     _hist->Draw("FUNCSAME");
   } else {
@@ -575,8 +575,8 @@ void RooPlot::Draw(Option_t *option)
     DrawOpt opt(_iterator->GetOption()) ;
     if (!opt.invisible) {
        //LM:  in case of a TGraph derived object, do not use default "" option
-       // which is "ALP" from 5.34.10 (and will then redrawn the axis) but  use "LP" 
-       if (!strlen(opt.drawOptions) && obj->IsA()->InheritsFrom(TGraph::Class()) ) strlcpy(opt.drawOptions,"LP",3); 
+       // which is "ALP" from 5.34.10 (and will then redrawn the axis) but  use "LP"
+       if (!strlen(opt.drawOptions) && obj->IsA()->InheritsFrom(TGraph::Class()) ) strlcpy(opt.drawOptions,"LP",3);
        obj->Draw(opt.drawOptions);
     }
   }

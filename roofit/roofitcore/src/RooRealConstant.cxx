@@ -22,9 +22,9 @@
 RooRealConstant provides static functions to create and keep track
 of RooRealVar constants. Instead of creating such constants by
 hand (e.g. RooRealVar one("one","one",1)), simply use
-<pre>
+~~~{.cpp}
  RooRealConstant::value(1.0)
-</pre>
+~~~
 whenever a reference to RooRealVar with constant value 1.0 is needed.
 RooRealConstant keeps an internal database of previously created
 RooRealVar objects and will recycle them as appropriate.
@@ -54,7 +54,7 @@ TIterator* RooRealConstant::_constDBIter = 0;
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup function register with RooSentinel for cleanup in atexit()
 
-void RooRealConstant::cleanup() 
+void RooRealConstant::cleanup()
 {
   if (_constDB) {
     delete _constDB ;
@@ -70,7 +70,7 @@ void RooRealConstant::cleanup()
 /// Return previously created object if available,
 /// otherwise create a new one on the fly.
 
-RooConstVar& RooRealConstant::value(Double_t value) 
+RooConstVar& RooRealConstant::value(Double_t value)
 {
   // Lookup existing constant
   init() ;
@@ -81,7 +81,7 @@ RooConstVar& RooRealConstant::value(Double_t value)
 
   // Create new constant
   std::ostringstream s ;
-  s << value ;  
+  s << value ;
 
   var = new RooConstVar(s.str().c_str(),s.str().c_str(),value) ;
   var->setAttribute("RooRealConstant_Factory_Object",kTRUE) ;
@@ -94,7 +94,7 @@ RooConstVar& RooRealConstant::value(Double_t value)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a dummy node used in node-removal operations
 
-RooConstVar& RooRealConstant::removalDummy() 
+RooConstVar& RooRealConstant::removalDummy()
 {
   RooConstVar* var = new RooConstVar("REMOVAL_DUMMY","REMOVAL_DUMMY",1) ;
   var->setAttribute("RooRealConstant_Factory_Object",kTRUE) ;
@@ -109,7 +109,7 @@ RooConstVar& RooRealConstant::removalDummy()
 ////////////////////////////////////////////////////////////////////////////////
 /// One-time initialization of constants database
 
-void RooRealConstant::init() 
+void RooRealConstant::init()
 {
   if (!_constDB) {
     _constDB = new RooArgList("RooRealVar Constants Database") ;
