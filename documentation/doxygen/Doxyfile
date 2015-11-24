@@ -754,85 +754,7 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = . \
-                         ../../bindings/pyroot/ \
-                         ../../bindings/r/ \
-                         ../../bindings/ruby/ \
-                         ../../core/base/ \
-                         ../../core/cont/ \
-                         ../../core/macosx/ \
-                         ../../core/meta/ \
-                         ../../core/metautils/ \
-                         ../../core/multiproc/ \
-                         ../../core/rint/ \
-                         ../../core/thread/ \
-                         ../../core/unix/ \
-                         ../../core/winnt/ \
-                         ../../geom/gdml/ \
-                         ../../geom/geocad/ \
-                         ../../geom/geom \
-                         ../../geom/geombuilder/ \
-                         ../../geom/geompainter/ \
-                         ../../graf2d/asimage/ \
-                         ../../graf2d/cocoa/ \
-                         ../../graf2d/fitsio/ \
-                         ../../graf2d/gpad/ \
-                         ../../graf2d/graf/ \
-                         ../../graf2d/gviz/ \
-                         ../../graf2d/postscript/ \
-                         ../../graf2d/quartz/ \
-                         ../../graf2d/win32gdk/ \
-                         ../../graf2d/x11/ \
-                         ../../graf2d/x11ttf/ \
-                         ../../graf3d/eve/ \
-                         ../../graf3d/g3d/ \
-                         ../../graf3d/gl/ \
-                         ../../graf3d/gviz3d/ \
-                         ../../gui/fitpanel/ \
-                         ../../gui/ged/ \
-                         ../../gui/gui/ \
-                         ../../gui/guibuilder/ \
-                         ../../gui/guihtml/ \
-                         ../../gui/qtgsi/ \
-                         ../../gui/qtroot/ \
-                         ../../gui/recorder/ \
-                         ../../gui/sessionviewer/ \
-                         ../../hist/ \
-                         ../../html/ \
-                         ../../io/castor/ \
-                         ../../io/chirp/ \
-                         ../../io/dcache/ \
-                         ../../io/gfal/ \
-                         ../../io/hdfs/ \
-                         ../../io/io/ \
-                         ../../io/rfio/ \
-                         ../../io/sql/ \
-                         ../../io/xml/ \
-                         ../../io/xmlparser/ \
-                         ../../math/ \
-                         ../../misc/memstat/ \
-                         ../../misc/table/ \
-                         ../../montecarlo/eg/ \
-                         ../../montecarlo/pythia8/ \
-                         ../../montecarlo/pythia6/ \
-                         ../../montecarlo/vmc/ \
-                         ../../net/alien/ \
-                         ../../net/auth/ \
-                         ../../net/bonjour/ \
-                         ../../net/davix/ \
-                         ../../net/glite/ \
-                         ../../net/http/ \
-                         ../../net/krb5auth/ \
-                         ../../net/ldap/ \
-                         ../../net/monalisa/ \
-                         ../../net/net/ \
-                         ../../net/netx/ \
-                         ../../net/netxng/ \
-                         ../../proof/ \
-                         ../../tmva/ \
-                         ../../roofit/ \
-                         ../../tree/ \
-                         ../../sql/ \
-                         ../../tutorials/
+                         ../../roofit/roofitcore
 #                         ../../core/clib/
 #                         ../../core/lzma/
 #                         ../../core/newdelete/
@@ -1288,7 +1210,7 @@ HTML_TIMESTAMP         = YES
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_DYNAMIC_SECTIONS  = YES
+HTML_DYNAMIC_SECTIONS  = NO
 
 # With HTML_INDEX_NUM_ENTRIES one can control the preferred number of entries
 # shown in the various tree structured indices initially; the user can expand
