@@ -13,18 +13,19 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooVoigtian is an efficient implementation of the convolution of a 
-// Breit-Wigner with a Gaussian, making use of the complex error function.
-// RooFitCore provides two algorithms for the evaluation of the complex error 
-// function (the default CERNlib C335 algorithm, and a faster, look-up-table 
-// based method). By default, RooVoigtian employs the default (CERNlib) 
-// algorithm. Select the faster algorithm either in the constructor, or with
-// the selectFastAlgorithm() method.
-// END_HTML
-//
+/**
+\file RooVoigtian.cxx
+\class RooVoigtian
+\ingroup RooFitCore
+
+RooVoigtian is an efficient implementation of the convolution of a 
+Breit-Wigner with a Gaussian, making use of the complex error function.
+RooFitCore provides two algorithms for the evaluation of the complex error 
+function (the default CERNlib C335 algorithm, and a faster, look-up-table 
+based method). By default, RooVoigtian employs the default (CERNlib) 
+algorithm. Select the faster algorithm either in the constructor, or with
+the selectFastAlgorithm() method.
+**/
 
 #include <cmath>
 #include <complex>

@@ -13,12 +13,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooBukinPdf implements the NovosibirskA function 
-// END_HTML
-//
+/**
+\file RooBukinPdf.cxx
+\class RooBukinPdf
+\ingroup RooFitCore
+
+RooBukinPdf implements the NovosibirskA function 
+**/
 
 // Original Fortran Header below
 /*****************************************************************************

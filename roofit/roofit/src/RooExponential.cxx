@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Exponential p.d.f
-// END_HTML
-//
+/**
+\file RooExponential.cxx
+\class RooExponential
+\ingroup RooFitCore
+
+Exponential p.d.f
+**/
 
 #include "RooFit.h"
 

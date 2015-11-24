@@ -7,19 +7,20 @@
  *                                                                           *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Bernstein basis polynomials are positive-definite in the range [0,1].
-// In this implementation, we extend [0,1] to be the range of the parameter.
-// There are n+1 Bernstein basis polynomials of degree n.
-// Thus, by providing N coefficients that are positive-definite, there 
-// is a natural way to have well bahaved polynomail PDFs.
-// For any n, the n+1 basis polynomials 'form a partition of unity', eg.
-//  they sum to one for all values of x. See
-// http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
-// END_HTML
-//
+/**
+\file RooBernstein.cxx
+\class RooBernstein
+\ingroup RooFitCore
+
+Bernstein basis polynomials are positive-definite in the range [0,1].
+In this implementation, we extend [0,1] to be the range of the parameter.
+There are n+1 Bernstein basis polynomials of degree n.
+Thus, by providing N coefficients that are positive-definite, there 
+is a natural way to have well bahaved polynomail PDFs.
+For any n, the n+1 basis polynomials 'form a partition of unity', eg.
+ they sum to one for all values of x. See
+http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
+**/
 
 #include "RooFit.h"
 

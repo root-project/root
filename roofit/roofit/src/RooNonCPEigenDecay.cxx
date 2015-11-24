@@ -24,25 +24,26 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Time-dependent RooAbsAnaConvPdf for CP violating decays 
-// to Non-CP eigenstates (eg, B0 -> rho+- pi-+).
-// For a description of the physics model see the 
-// BaBar Physics Book, section 6.5.2.3 .
-// The set of CP parameters used in this class is equivalent to
-// the one used in the Physics Book, but it is not exactly the
-// same. Starting from the set in the BaBar Book, in order to 
-// get the parameters used here you have to change the sign of both
-// a_c^+ and a_c^-, and then substitute:
-// <pre>
-//    a_s^Q = S + Q* deltaS
-//    a_c^Q = C + Q*deltaC
-// </pre>
-// where Q denotes the charge of the rho.
-// END_HTML
-//
+/**
+\file RooNonCPEigenDecay.cxx
+\class RooNonCPEigenDecay
+\ingroup RooFitCore
+
+Time-dependent RooAbsAnaConvPdf for CP violating decays 
+to Non-CP eigenstates (eg, B0 -> rho+- pi-+).
+For a description of the physics model see the 
+BaBar Physics Book, section 6.5.2.3 .
+The set of CP parameters used in this class is equivalent to
+the one used in the Physics Book, but it is not exactly the
+same. Starting from the set in the BaBar Book, in order to 
+get the parameters used here you have to change the sign of both
+a_c^+ and a_c^-, and then substitute:
+<pre>
+   a_s^Q = S + Q* deltaS
+   a_c^Q = C + Q*deltaC
+</pre>
+where Q denotes the charge of the rho.
+**/
 
 #include "RooFit.h"
 

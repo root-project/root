@@ -10,18 +10,19 @@
  *                                                                           *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooCFunction2Binding is a templated implementation of class RooAbsReal that binds 
-// generic C(++) functions to a RooAbsReal argument thus allowing generic C++
-// functions to be used as RooFit functions. Instances of function binding
-// classes are fully functional RooFit function objects with one exception:
-// if the bound function is _not_ a standard TMath or MathMore function the
-// class cannot be persisted in a RooWorkspace without registering the function
-// pointer first using RooCFunction2Binding<T1,T2,T3>::register().
-// END_HTML
-//
+/**
+\file RooCFunction2Binding.cxx
+\class RooCFunction2Binding
+\ingroup RooFitCore
+
+RooCFunction2Binding is a templated implementation of class RooAbsReal that binds 
+generic C(++) functions to a RooAbsReal argument thus allowing generic C++
+functions to be used as RooFit functions. Instances of function binding
+classes are fully functional RooFit function objects with one exception:
+if the bound function is _not_ a standard TMath or MathMore function the
+class cannot be persisted in a RooWorkspace without registering the function
+pointer first using RooCFunction2Binding<T1,T2,T3>::register().
+**/
 
 #include "Riostream.h" 
 #include "RooCFunction2Binding.h" 

@@ -13,12 +13,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Chebychev polynomial p.d.f. of the first kind
-// END_HTML
-//
+/**
+\file RooChebychev.cxx
+\class RooChebychev
+\ingroup RooFitCore
+
+Chebychev polynomial p.d.f. of the first kind
+**/
 
 #include <cmath>
 #include <iostream>

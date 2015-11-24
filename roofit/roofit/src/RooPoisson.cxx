@@ -6,12 +6,13 @@
   *                                                                           * 
   *****************************************************************************/ 
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Poisson pdf
-// END_HTML
-//
+/**
+\file RooPoisson.cxx
+\class RooPoisson
+\ingroup RooFitCore
+
+Poisson pdf
+**/
 
 #include <iostream> 
 

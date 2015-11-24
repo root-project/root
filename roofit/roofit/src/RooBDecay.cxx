@@ -16,14 +16,15 @@
  *****************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Most general description of B decay time distribution with effects
-// of CP violation, mixing and life time differences. This function can 
-// be analytically convolved with any RooResolutionModel implementation
-// END_HTML
-//
+/**
+\file RooBDecay.cxx
+\class RooBDecay
+\ingroup RooFitCore
+
+Most general description of B decay time distribution with effects
+of CP violation, mixing and life time differences. This function can 
+be analytically convolved with any RooResolutionModel implementation
+**/
 
 
 #include "RooFit.h"

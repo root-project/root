@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooGExpModel is a RooResolutionModel implementation that models
-// a resolution function that is the convolution of a Gaussian with
-// a one-sided exponential. Object of class RooGExpModel can be used
-// for analytical convolutions with classes inheriting from RooAbsAnaConvPdf
-// END_HTML
-//
+/**
+\file RooGExpModel.cxx
+\class RooGExpModel
+\ingroup RooFitCore
+
+Class RooGExpModel is a RooResolutionModel implementation that models
+a resolution function that is the convolution of a Gaussian with
+a one-sided exponential. Object of class RooGExpModel can be used
+for analytical convolutions with classes inheriting from RooAbsAnaConvPdf
+**/
 
 #include "RooFit.h"
 

@@ -7,34 +7,35 @@
  *                                                                           *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// The PDF of the Non-Central Chi Square distribution for n degrees of freedom.  
-// It is the asymptotic distribution of the profile likeihood ratio test q_mu 
-// when a different mu' is true.  It is Wald's generalization of Wilks' Theorem.
-//
-// See:
-//  Asymptotic formulae for likelihood-based tests of new physics
-//     By Glen Cowan, Kyle Cranmer, Eilam Gross, Ofer Vitells
-//     http://arXiv.org/abs/arXiv:1007.1727
-//
-//  Wikipedia:
-//    http://en.wikipedia.org/wiki/Noncentral_chi-square_distribution#Approximation
-//
-// It requires MathMore to evaluate for non-integer degrees of freedom, k.
-//
-// When the Mathmore library is available we can use the MathMore libraries impelmented using GSL. 
-// It makes use of the modified Bessel function of the first kind (for k > 2). For k < 2 it uses 
-// the hypergeometric function 0F1. 
-// When is not available we use explicit summation of normal chi-squared distributions
-// The usage of the sum can be forced by calling SetForceSum(true);
-//
-// This implementation could be improved.  BOOST has a nice implementation:
-// http://live.boost.org/doc/libs/1_42_0/libs/math/doc/sf_and_dist/html/math_toolkit/dist/dist_ref/dists/nc_chi_squared_dist.html
-// http://wesnoth.repositoryhosting.com/trac/wesnoth_wesnoth/browser/trunk/include/boost/math/distributions/non_central_chi_squared.hpp?rev=6
-// END_HTML
-//
+/**
+\file RooNonCentralChiSquare.cxx
+\class RooNonCentralChiSquare
+\ingroup RooFitCore
+
+The PDF of the Non-Central Chi Square distribution for n degrees of freedom.  
+It is the asymptotic distribution of the profile likeihood ratio test q_mu 
+when a different mu' is true.  It is Wald's generalization of Wilks' Theorem.
+
+See:
+ Asymptotic formulae for likelihood-based tests of new physics
+    By Glen Cowan, Kyle Cranmer, Eilam Gross, Ofer Vitells
+    http://arXiv.org/abs/arXiv:1007.1727
+
+ Wikipedia:
+   http://en.wikipedia.org/wiki/Noncentral_chi-square_distribution#Approximation
+
+It requires MathMore to evaluate for non-integer degrees of freedom, k.
+
+When the Mathmore library is available we can use the MathMore libraries impelmented using GSL. 
+It makes use of the modified Bessel function of the first kind (for k > 2). For k < 2 it uses 
+the hypergeometric function 0F1. 
+When is not available we use explicit summation of normal chi-squared distributions
+The usage of the sum can be forced by calling SetForceSum(true);
+
+This implementation could be improved.  BOOST has a nice implementation:
+http://live.boost.org/doc/libs/1_42_0/libs/math/doc/sf_and_dist/html/math_toolkit/dist/dist_ref/dists/nc_chi_squared_dist.html
+http://wesnoth.repositoryhosting.com/trac/wesnoth_wesnoth/browser/trunk/include/boost/math/distributions/non_central_chi_squared.hpp?rev=6
+**/
 
 #include "Riostream.h" 
 

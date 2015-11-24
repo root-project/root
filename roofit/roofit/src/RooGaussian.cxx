@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Plain Gaussian p.d.f
-// END_HTML
-//
+/**
+\file RooGaussian.cxx
+\class RooGaussian
+\ingroup RooFitCore
+
+Plain Gaussian p.d.f
+**/
 
 #include "RooFit.h"
 

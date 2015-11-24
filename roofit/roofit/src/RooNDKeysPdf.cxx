@@ -23,26 +23,24 @@
 #include "RooHist.h"
 #include "RooMsgService.h"
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Generic N-dimensional implementation of a kernel estimation p.d.f. This p.d.f. models the distribution
-// of an arbitrary input dataset as a superposition of Gaussian kernels, one for each data point,
-// each contributing 1/N to the total integral of the p.d.f.
-// <p>
-// If the 'adaptive mode' is enabled, the width of the Gaussian is adaptively calculated from the
-// local density of events, i.e. narrow for regions with high event density to preserve details and
-// wide for regions with log event density to promote smoothness. The details of the general algorithm
-// are described in the following paper: 
-// <p>
-// Cranmer KS, Kernel Estimation in High-Energy Physics.  
-//             Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep ex/0011057
-// <p>
-// For multi-dimensional datasets, the kernels are modeled by multidimensional Gaussians. The kernels are 
-// constructed such that they reflect the correlation coefficients between the observables
-// in the input dataset.
-// END_HTML
-//
+/**
+\file RooNDKeysPdf.cxx
+\class RooNDKeysPdf
+\ingroup RooFitCore
+
+Generic N-dimensional implementation of a kernel estimation p.d.f. This p.d.f. models the distribution
+of an arbitrary input dataset as a superposition of Gaussian kernels, one for each data point,
+each contributing 1/N to the total integral of the p.d.f.
+If the 'adaptive mode' is enabled, the width of the Gaussian is adaptively calculated from the
+local density of events, i.e. narrow for regions with high event density to preserve details and
+wide for regions with log event density to promote smoothness. The details of the general algorithm
+are described in the following paper: 
+Cranmer KS, Kernel Estimation in High-Energy Physics.  
+            Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep ex/0011057
+For multi-dimensional datasets, the kernels are modeled by multidimensional Gaussians. The kernels are 
+constructed such that they reflect the correlation coefficients between the observables
+in the input dataset.
+**/
 
 #include "TError.h"
 

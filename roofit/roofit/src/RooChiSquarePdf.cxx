@@ -7,14 +7,15 @@
  *                                                                           *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// The PDF of the Chi Square distribution for n degrees of freedom.  
-// Oddly, this is hard to find in ROOT (except via relation to GammaDist).
-// Here we also implement the analytic integral.
-// END_HTML
-//
+/**
+\file RooChiSquarePdf.cxx
+\class RooChiSquarePdf
+\ingroup RooFitCore
+
+The PDF of the Chi Square distribution for n degrees of freedom.  
+Oddly, this is hard to find in ROOT (except via relation to GammaDist).
+Here we also implement the analytic integral.
+**/
 
 #include "RooFit.h"
 

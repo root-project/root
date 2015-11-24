@@ -12,36 +12,37 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-//   Implementation of the so-called real spherical harmonics, using the orthonormal normalization,
-// which are related to spherical harmonics as:
-//
-//  Y_{l0} = Y_l^0   (m=0)
-//  Y_{lm} = \frac{1}{\sqrt{2}}  \left( Y_l^m     + (-1)^m     Y_l^{-m}   \right) (m>0)
-//  Y_{lm} = \frac{1}{i\sqrt{2}} \left( Y_l^{|m|} - (-1)^{|m|} Y_l^{-|m|} \right) (m<0)
-//
-// which implies:
-//
-// Y_{l0}(\cos\theta,\phi) =          N_{l0}   P_l^0    (\cos\theta)              (m=0)
-// Y_{lm}(\cos\theta,\phi) = \sqrt{2} N_{lm}   P_l^m    (\cos\theta) cos(|m|\phi) (m>0)
-// Y_{lm}(\cos\theta,\phi) = \sqrt{2} N_{l|m|} P_l^{|m|}(\cos\theta) sin(|m|\phi) (m<0)
-//
-// where
-//  N_{lm} = \sqrt{ \frac{2l+1}{4\pi} \frac{ (l-m)! }{ (l+m)! } } 
-//
-// Note that the normalization corresponds to the orthonormal case,
-// and thus we have Int d\cos\theta d\phi Y_{lm} Y_{l'm'} = \delta_{ll'} \delta{mm'}
-//
-// Note that in addition, this code can also represent the product of two
-// (real) spherical harmonics -- it actually uses the fact that Y_{00} = \sqrt{\frac{1}{4\pi}}
-// in order to represent a single spherical harmonics by multiplying it
-// by \sqrt{4\pi} Y_00, as this makes it trivial to compute the analytical
-// integrals, using the orthogonality properties of Y_l^m...
-//
-// END_HTML
-//
+/**
+\file RooSpHarmonic.cxx
+\class RooSpHarmonic
+\ingroup RooFitCore
+
+  Implementation of the so-called real spherical harmonics, using the orthonormal normalization,
+which are related to spherical harmonics as:
+
+ Y_{l0} = Y_l^0   (m=0)
+ Y_{lm} = \frac{1}{\sqrt{2}}  \left( Y_l^m     + (-1)^m     Y_l^{-m}   \right) (m>0)
+ Y_{lm} = \frac{1}{i\sqrt{2}} \left( Y_l^{|m|} - (-1)^{|m|} Y_l^{-|m|} \right) (m<0)
+
+which implies:
+
+Y_{l0}(\cos\theta,\phi) =          N_{l0}   P_l^0    (\cos\theta)              (m=0)
+Y_{lm}(\cos\theta,\phi) = \sqrt{2} N_{lm}   P_l^m    (\cos\theta) cos(|m|\phi) (m>0)
+Y_{lm}(\cos\theta,\phi) = \sqrt{2} N_{l|m|} P_l^{|m|}(\cos\theta) sin(|m|\phi) (m<0)
+
+where
+ N_{lm} = \sqrt{ \frac{2l+1}{4\pi} \frac{ (l-m)! }{ (l+m)! } } 
+
+Note that the normalization corresponds to the orthonormal case,
+and thus we have Int d\cos\theta d\phi Y_{lm} Y_{l'm'} = \delta_{ll'} \delta{mm'}
+
+Note that in addition, this code can also represent the product of two
+(real) spherical harmonics -- it actually uses the fact that Y_{00} = \sqrt{\frac{1}{4\pi}}
+in order to represent a single spherical harmonics by multiplying it
+by \sqrt{4\pi} Y_00, as this makes it trivial to compute the analytical
+integrals, using the orthogonality properties of Y_l^m...
+
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

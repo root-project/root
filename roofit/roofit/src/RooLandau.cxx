@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Landau Distribution p.d.f
-// END_HTML
-//
+/**
+\file RooLandau.cxx
+\class RooLandau
+\ingroup RooFitCore
+
+Landau Distribution p.d.f
+**/
 
 #include "TMath.h"
 #include "RooFit.h"

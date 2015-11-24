@@ -15,13 +15,14 @@
  *****************************************************************************/
 #include "RooFit.h"
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Bifurcated Gaussian p.d.f with different widths on left and right
-// side of maximum value
-// END_HTML
-//
+/**
+\file RooBifurGauss.cxx
+\class RooBifurGauss
+\ingroup RooFitCore
+
+Bifurcated Gaussian p.d.f with different widths on left and right
+side of maximum value
+**/
 
 
 #include "Riostream.h"

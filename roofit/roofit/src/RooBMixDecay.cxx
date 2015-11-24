@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooBMixDecay is a RooAbsAnaConvPdf implementation that describes
-// the decay of B mesons with the effects of B0/B0bar mixing. 
-// This function can be analytically convolved with any RooResolutionModel implementation
-// END_HTML
-//
+/**
+\file RooBMixDecay.cxx
+\class RooBMixDecay
+\ingroup RooFitCore
+
+Class RooBMixDecay is a RooAbsAnaConvPdf implementation that describes
+the decay of B mesons with the effects of B0/B0bar mixing. 
+This function can be analytically convolved with any RooResolutionModel implementation
+**/
 
 #include "RooFit.h"
 

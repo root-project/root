@@ -36,23 +36,21 @@ using namespace std;
 ClassImp(RooKeysPdf)
 
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooKeysPdf implements a one-dimensional kernel estimation p.d.f which model the distribution
-// of an arbitrary input dataset as a superposition of Gaussian kernels, one for each data point,
-// each contributing 1/N to the total integral of the p.d.f.
-// <p>
-// If the 'adaptive mode' is enabled, the width of the Gaussian is adaptively calculated from the
-// local density of events, i.e. narrow for regions with high event density to preserve details and
-// wide for regions with log event density to promote smoothness. The details of the general algorithm
-// are described in the following paper: 
-// <p>
-// Cranmer KS, Kernel Estimation in High-Energy Physics.  
-//             Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep ex/0011057
-// <p>
-// END_HTML
-//
+/**
+\file RooKeysPdf.cxx
+\class RooKeysPdf
+\ingroup RooFitCore
+
+Class RooKeysPdf implements a one-dimensional kernel estimation p.d.f which model the distribution
+of an arbitrary input dataset as a superposition of Gaussian kernels, one for each data point,
+each contributing 1/N to the total integral of the p.d.f.
+If the 'adaptive mode' is enabled, the width of the Gaussian is adaptively calculated from the
+local density of events, i.e. narrow for regions with high event density to preserve details and
+wide for regions with log event density to promote smoothness. The details of the general algorithm
+are described in the following paper: 
+Cranmer KS, Kernel Estimation in High-Energy Physics.  
+            Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep ex/0011057
+**/
 
 const Double_t RooKeysPdf::_nSigma = std::sqrt(-2. *
     std::log(std::numeric_limits<Double_t>::epsilon()));

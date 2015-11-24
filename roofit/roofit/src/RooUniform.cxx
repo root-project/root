@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Flat p.d.f. in N dimensions
-// END_HTML
-//
+/**
+\file RooUniform.cxx
+\class RooUniform
+\ingroup RooFitCore
+
+Flat p.d.f. in N dimensions
+**/
 
 #include "RooFit.h"
 

@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// P.d.f implementing the Crystall Ball line shape
-// END_HTML
-//
+/**
+\file RooCBShape.cxx
+\class RooCBShape
+\ingroup RooFitCore
+
+P.d.f implementing the Crystall Ball line shape
+**/
 
 #include "RooFit.h"
 

@@ -17,13 +17,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Implement standard CP physics model with S and C (no mention of lambda)
-// Suitably stolen and modified from RooBCPEffDecay
-// END_HTML
-//
+/**
+\file RooBCPGenDecay.cxx
+\class RooBCPGenDecay
+\ingroup RooFitCore
+
+Implement standard CP physics model with S and C (no mention of lambda)
+Suitably stolen and modified from RooBCPEffDecay
+**/
 
 #include "RooRealVar.h"
 #include "RooRandom.h"

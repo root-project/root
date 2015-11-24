@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooGaussModel implements a RooResolutionModel that models a Gaussian
-// distribution. Object of class RooGaussModel can be used
-// for analytical convolutions with classes inheriting from RooAbsAnaConvPdf
-// END_HTML
-//
+/**
+\file RooGaussModel.cxx
+\class RooGaussModel
+\ingroup RooFitCore
+
+Class RooGaussModel implements a RooResolutionModel that models a Gaussian
+distribution. Object of class RooGaussModel can be used
+for analytical convolutions with classes inheriting from RooAbsAnaConvPdf
+**/
 
 #include "RooFit.h"
 

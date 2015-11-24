@@ -14,21 +14,22 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Implementation of BlindTools' CP asymmetry blinding method
-// A RooUnblindCPAsymVar object is a real valued function
-// object, constructed from a blind value holder and a 
-// set of unblinding parameters. When supplied to a PDF
-// in lieu of a regular parameter, the blind value holder
-// supplied to the unblinder objects will in a fit be minimized 
-// to blind value corresponding to the actual minimum of the
-// parameter. The transformation is chosen such that the
-// the error on the blind parameters is indentical to that
-// of the unblind parameter
-// END_HTML
-//
+/**
+\file RooUnblindCPAsymVar.cxx
+\class RooUnblindCPAsymVar
+\ingroup RooFitCore
+
+Implementation of BlindTools' CP asymmetry blinding method
+A RooUnblindCPAsymVar object is a real valued function
+object, constructed from a blind value holder and a 
+set of unblinding parameters. When supplied to a PDF
+in lieu of a regular parameter, the blind value holder
+supplied to the unblinder objects will in a fit be minimized 
+to blind value corresponding to the actual minimum of the
+parameter. The transformation is chosen such that the
+the error on the blind parameters is indentical to that
+of the unblind parameter
+**/
 
 #include "RooFit.h"
 

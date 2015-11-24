@@ -14,18 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooPolynomial implements a polynomial p.d.f of the form
-// <pre>
-// f(x) = sum_i a_i * x^i
-//</pre>
-// By default coefficient a_0 is chosen to be 1, as polynomial
-// probability density functions have one degree of freedome
-// less than polynomial functions due to the normalization condition
-// END_HTML
-//
+/**
+\file RooPolynomial.cxx
+\class RooPolynomial
+\ingroup RooFitCore
+
+RooPolynomial implements a polynomial p.d.f of the form
+<pre>
+f(x) = sum_i a_i * x^i
+By default coefficient a_0 is chosen to be 1, as polynomial
+probability density functions have one degree of freedome
+less than polynomial functions due to the normalization condition
+**/
 
 #include <cmath>
 #include <cassert>

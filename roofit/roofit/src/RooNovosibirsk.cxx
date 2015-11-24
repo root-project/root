@@ -17,16 +17,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-//
-// RooNovosibirsk implements the Novosibirsk function 
-//
-// Function taken from H. Ikeda et al. NIM A441 (2000), p. 401 (Belle Collaboration)
-// 
-// END_HTML
-//
+/**
+\file RooNovosibirsk.cxx
+\class RooNovosibirsk
+\ingroup RooFitCore
+
+
+RooNovosibirsk implements the Novosibirsk function 
+
+Function taken from H. Ikeda et al. NIM A441 (2000), p. 401 (Belle Collaboration)
+
+**/
 
 
 #include "RooFit.h"

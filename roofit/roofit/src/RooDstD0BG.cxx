@@ -16,13 +16,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Special p.d.f shape that can be used to model the background of
-// D*-D0 mass difference distributions
-// END_HTML
-//
+/**
+\file RooDstD0BG.cxx
+\class RooDstD0BG
+\ingroup RooFitCore
+
+Special p.d.f shape that can be used to model the background of
+D*-D0 mass difference distributions
+**/
 
 #include "RooFit.h"
 

@@ -15,13 +15,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooBreitWigner is a RooAbsPdf implementation 
-// that models a non-relativistic Breit-Wigner shape
-// END_HTML
-//
+/**
+\file RooBreitWigner.cxx
+\class RooBreitWigner
+\ingroup RooFitCore
+
+Class RooBreitWigner is a RooAbsPdf implementation 
+that models a non-relativistic Breit-Wigner shape
+**/
 
 
 #include "RooFit.h"

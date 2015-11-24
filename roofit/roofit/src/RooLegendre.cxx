@@ -12,11 +12,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// END_HTML
-//
+/**
+\file RooLegendre.cxx
+\class RooLegendre
+\ingroup RooFitCore
+
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"

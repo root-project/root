@@ -11,22 +11,23 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooMultiBinomial is an efficiency function which makes all combinations of 
-// efficiencies given as input different effiency functions for different categories.
-// 
-// Given a dataset with a category C that determines if a given
-// event is accepted (1) or rejected (0) for the efficiency to be measured,
-// this class evaluates as F if C is 'accept' and as (1-F) if
-// C is 'reject'. Values of F below 0 and above 1 are clipped.
-// F may have an arbitrary number of dependents and parameters
-//
-// The combination only 'reject' can be chosen to be visible or not visible
-// (and hence this efficiency is then equal to zero).
-// END_HTML
-//
+/**
+\file RooMultiBinomial.cxx
+\class RooMultiBinomial
+\ingroup RooFitCore
+
+RooMultiBinomial is an efficiency function which makes all combinations of 
+efficiencies given as input different effiency functions for different categories.
+
+Given a dataset with a category C that determines if a given
+event is accepted (1) or rejected (0) for the efficiency to be measured,
+this class evaluates as F if C is 'accept' and as (1-F) if
+C is 'reject'. Values of F below 0 and above 1 are clipped.
+F may have an arbitrary number of dependents and parameters
+
+The combination only 'reject' can be chosen to be visible or not visible
+(and hence this efficiency is then equal to zero).
+**/
 
 #include "RooFit.h"
 

@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Single or double sided decay function that can be analytically convolved
-// with any RooResolutionModel implementation
-// END_HTML
-//
+/**
+\file RooDecay.cxx
+\class RooDecay
+\ingroup RooFitCore
+
+Single or double sided decay function that can be analytically convolved
+with any RooResolutionModel implementation
+**/
 
 #include "RooFit.h"
 
