@@ -31,7 +31,7 @@ else()
 
   set(AFTER_CC ${CMAKE_C_COMPILER})
   set(AFTER_CFLAGS "-O")
-  if(CMAKE_C_COMPILER MATCHES icc)
+  if(CMAKE_C_COMPILER_ID MATCHES Intel)
     set(AFTER_CFLAGS "${AFTER_CFLAGS} -wd188 -wd869 -wd2259 -wd1418 -wd1419 -wd593 -wd981 -wd1599 -wd181 -wd177 -wd1572")
   endif()
   if(ROOT_ARCHITECTURE MATCHES linuxx8664icc)
