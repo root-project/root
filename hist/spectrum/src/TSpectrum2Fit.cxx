@@ -145,11 +145,7 @@ TSpectrum2Fit::TSpectrum2Fit() :TNamed("Spectrum2Fit", "Miroslav Morhac peak fit
 /// peaks contains the two-dimensional symmetrical Gaussian two one-dimensional
 /// symmetrical Gaussian ridges as well as non-symmetrical terms and background.
 ///
-/*
-
-<sub><img
-width=600 height=401 src="gif/spectrum2fit_constructor_image001.gif"></sub>
- */
+/// \image html spectrum2fit_constructor_image001.gif
 
 TSpectrum2Fit::TSpectrum2Fit(Int_t numberPeaks) :TNamed("Spectrum2Fit", "Miroslav Morhac peak fitter")
 {
