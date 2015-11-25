@@ -26,8 +26,7 @@
  -   One-dimensional deconvolution
  -   One-dimensional peak search
 
- Author:
-
+ \author
  Miroslav Morhac
  Institute of Physics
  Slovak Academy of Sciences
@@ -46,11 +45,8 @@
  These NIM papers are also available as doc or ps files from:
 
  - [Spectrum.doc](ftp://root.cern.ch/root/Spectrum.doc)
-
  - [SpectrumDec.ps.gz](ftp://root.cern.ch/root/SpectrumDec.ps.gz)
-
  - [SpectrumSrc.ps.gz](ftp://root.cern.ch/root/SpectrumSrc.ps.gz)
-
  - [SpectrumBck.ps.gz](ftp://root.cern.ch/root/SpectrumBck.ps.gz)
 */
 
@@ -468,7 +464,7 @@ error it returns pointer to the string describing error.
 quantitative analysis of PIXE spectra in geoscience applications. NIM, B34
 (1988), 396-402.
 
-<li> M. Morhá&#269;, J. Kliman, V. Matoušek, M. Veselský, I. Turzo:
+<li> M. Morhac;, J. Kliman, V. Matouoek, M. Veselsky, I. Turzo:
 Background elimination methods for multidimensional gamma-ray spectra. NIM,
 A401 (1997) 113-132.
 
@@ -499,7 +495,7 @@ void Background_incr() {
    Double_t * source = new Double_t[nbins];
    TH1F *back = new TH1F("back","",nbins,xmin,xmax);
    TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-   TFile *f = new TFile("spectra\\TSpectrum.root");
+   TFile *f = new TFile("spectra/TSpectrum.root");
    back=(TH1F*) f->Get("back1;1");
    TCanvas *Background = gROOT->GetListOfCanvases()->FindObject("Background");
    if (!Background) Background =
@@ -547,7 +543,7 @@ void Background_decr() {
    Double_t * source = new Double_t[nbins];
    TH1F *back = new TH1F("back","",nbins,xmin,xmax);
    TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-   TFile *f = new TFile("spectra\\TSpectrum.root");
+   TFile *f = new TFile("spectra/TSpectrum.root");
    back=(TH1F*) f->Get("back1;1");
    TCanvas *Background = gROOT->GetListOfCanvases()->FindObject("Background");
    if (!Background) Background =
@@ -600,7 +596,7 @@ void Background_width() {
    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
    TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);
-   TFile *f = new TFile("spectra\\TSpectrum.root");
+   TFile *f = new TFile("spectra/TSpectrum.root");
    h=(TH1F*) f->Get("back1;1");
    TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
    if (!background) background = new TCanvas("background",
@@ -660,7 +656,7 @@ void Background_width2() {
    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
    TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);
    TH1F *d4 = new TH1F("d4","",nbins,xmin,xmax);
-   TFile *f = new TFile("spectra\\TSpectrum.root");
+   TFile *f = new TFile("spectra/TSpectrum.root");
    h=(TH1F*) f->Get("back2;1");
    TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
    if (!background) background = new TCanvas("background",
@@ -729,7 +725,7 @@ void Background_order() {
    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
    TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);
    TH1F *d4 = new TH1F("d4","",nbins,xmin,xmax);
-   TFile *f = new TFile("spectra\\TSpectrum.root");
+   TFile *f = new TFile("spectra/TSpectrum.root");
    h=(TH1F*) f->Get("back2;1");
    TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
    if (!background) background = new TCanvas("background",
@@ -804,7 +800,7 @@ void Background_smooth() {
    TH1F *h = new TH1F("h","",nbins,xmin,xmax);
    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
-   TFile *f = new TFile("spectra\\TSpectrum.root");
+   TFile *f = new TFile("spectra/TSpectrum.root");
    h=(TH1F*) f->Get("back4;1");
    TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
    if (!background) background = new TCanvas("background",
@@ -859,7 +855,7 @@ void Background_compton() {
    Double_t * source = new Double_t[nbins];
    TH1F *h = new TH1F("h","",nbins,xmin,xmax);
    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
-   TFile *f = new TFile("spectra\\TSpectrum.root");
+   TFile *f = new TFile("spectra/TSpectrum.root");
    h=(TH1F*) f->Get("back3;1");
    TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
    if (!background) background = new TCanvas("background",
@@ -1579,7 +1575,7 @@ const char* TSpectrum::SmoothMarkov(Double_t *source, int ssize, int averWindow)
       Double_t xmax  = nbins;
       Double_t * source = new Double_t[nbins];
       TH1F *h = new TH1F("h","Smoothed spectrum for m=3",nbins,xmin,xmax);
-      TFile *f = new TFile("spectra\\TSpectrum.root");
+      TFile *f = new TFile("spectra/TSpectrum.root");
       h=(TH1F*) f->Get("smooth1;1");
       for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
       TCanvas *Smooth1 = gROOT->GetListOfCanvases()->FindObject("Smooth1");
@@ -1737,10 +1733,10 @@ const char *TSpectrum::Deconvolution(Double_t *source, const Double_t *response,
    <li> Gold R., ANL-6984, Argonne National Laboratories, Argonne Ill, 1964.
    <li> Coote G.E., Iterative smoothing and deconvolution of one- and two-dimensional
         elemental distribution data, NIM B 130 (1997) 118.
-   <li> M. Morhá&#269;, J. Kliman, V.  Matoušek, M. Veselský,
+   <li> M. Morhac;, J. Kliman, V.  Matouoek, M. Veselsky,
         I. Turzo: Efficient one- and two-dimensional Gold deconvolution and
         its application to gamma-ray spectra decomposition. NIM, A401 (1997) 385-408.
-   <li> Morhá&#269; M., Matoušek V., Kliman J., Efficient algorithm of multidimensional
+   <li> Morhac; M., Matouoek V., Kliman J., Efficient algorithm of multidimensional
         deconvolution and its application to nuclear data processing, Digital Signal
         Processing 13 (2003) 144.
    </ol>
@@ -1782,9 +1778,9 @@ const char *TSpectrum::Deconvolution(Double_t *source, const Double_t *response,
       Double_t * response = new Double_t[nbins];
       TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
       TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-      TFile *f = new TFile("spectra\\TSpectrum.root");
+      TFile *f = new TFile("spectra/TSpectrum.root");
       h=(TH1F*) f->Get("decon1;1");
-      TFile *fr = new TFile("spectra\\TSpectrum.root");
+      TFile *fr = new TFile("spectra/TSpectrum.root");
       d=(TH1F*) fr->Get("decon_response;1");
       for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
       for (i = 0; i < nbins; i++) response[i]=d->GetBinContent(i + 1);
@@ -1892,9 +1888,9 @@ const char *TSpectrum::Deconvolution(Double_t *source, const Double_t *response,
       Double_t * response = new Double_t[nbins];
       TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
       TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-      TFile *f = new TFile("spectra\\TSpectrum.root");
+      TFile *f = new TFile("spectra/TSpectrum.root");
       h=(TH1F*) f->Get("decon3;1");
-      TFile *fr = new TFile("spectra\\TSpectrum.root");
+      TFile *fr = new TFile("spectra/TSpectrum.root");
       d=(TH1F*) fr->Get("decon_response_wide;1");
       for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
       for (i = 0; i < nbins; i++) response[i]=d->GetBinContent(i + 1);
@@ -1960,9 +1956,9 @@ const char *TSpectrum::Deconvolution(Double_t *source, const Double_t *response,
       Double_t * response = new Double_t[nbins];
       TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
       TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-      TFile *f = new TFile("spectra\\TSpectrum.root");
+      TFile *f = new TFile("spectra/TSpectrum.root");
       h=(TH1F*) f->Get("decon3;1");
-      TFile *fr = new TFile("spectra\\TSpectrum.root");
+      TFile *fr = new TFile("spectra/TSpectrum.root");
       d=(TH1F*) fr->Get("decon_response_wide;1");
       for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
       for (i = 0; i < nbins; i++) response[i]=d->GetBinContent(i + 1);
@@ -2189,9 +2185,9 @@ const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *respons
       Double_t * response = new Double_t[nbins];
       TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
       TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-      TFile *f = new TFile("spectra\\TSpectrum.root");
+      TFile *f = new TFile("spectra/TSpectrum.root");
       h=(TH1F*) f->Get("decon3;1");
-      TFile *fr = new TFile("spectra\\TSpectrum.root");
+      TFile *fr = new TFile("spectra/TSpectrum.root");
       d=(TH1F*) fr->Get("decon_response_wide;1");
       for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
       for (i = 0; i < nbins; i++) response[i]=d->GetBinContent(i + 1);
@@ -2249,9 +2245,9 @@ const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *respons
       Double_t * response = new Double_t[nbins];
       TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
       TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-      TFile *f = new TFile("spectra\\TSpectrum.root");
+      TFile *f = new TFile("spectra/TSpectrum.root");
       h=(TH1F*) f->Get("decon3;1");
-      TFile *fr = new TFile("spectra\\TSpectrum.root");
+      TFile *fr = new TFile("spectra/TSpectrum.root");
       d=(TH1F*) fr->Get("decon_response_wide;1");
       for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
       for (i = 0; i < nbins; i++) response[i]=d->GetBinContent(i + 1);
@@ -2421,7 +2417,7 @@ const char *TSpectrum::Unfolding(Double_t *source,
    <p>
    <b>References:</b>
    <ol>
-   <li> Jandel M., Morhá&#269; M., Kliman J., Krupa L., Matoušek
+   <li> Jandel M., Morhac; M., Kliman J., Krupa L., Matouoek
    V., Hamilton J. H., Ramaya A. V.:
    Decomposition of continuum gamma-ray spectra using synthetized response matrix.
    NIM A 516 (2004), 172-183.
@@ -2467,9 +2463,9 @@ const char *TSpectrum::Unfolding(Double_t *source,
       TH1F *h = new TH1F("h","",nbinsx,xmin,xmax);
       TH1F *d = new TH1F("d","Decomposition - unfolding",nbinsx,xmin,xmax);
       TH2F *decon_unf_resp = new TH2F("decon_unf_resp","Root File",nbinsy,ymin,ymax,nbinsx,xmin,xmax);
-      TFile *f = new TFile("spectra\\TSpectrum.root");
+      TFile *f = new TFile("spectra/TSpectrum.root");
       h=(TH1F*) f->Get("decon_unf_in;1");
-      TFile *fr = new TFile("spectra\\TSpectrum.root");
+      TFile *fr = new TFile("spectra/TSpectrum.root");
       decon_unf_resp = (TH2F*) fr->Get("decon_unf_resp;1");
       for (i = 0; i < nbinsx; i++) source[i] = h->GetBinContent(i + 1);
       for (i = 0; i < nbinsy; i++){
@@ -2700,7 +2696,7 @@ Int_t TSpectrum::SearchHighRes(Double_t *source,Double_t *destVector, int ssize,
    <li> M.A. Mariscotti: A method for identification of peaks in the presence of
    background and its application to spectrum analysis. NIM 50 (1967),
    309-320.
-   <li> M. Morhá&#269;, J. Kliman, V.  Matoušek, M. Veselský,
+   <li> M. Morhac;, J. Kliman, V.  Matouoek, M. Veselsky,
    I. Turzo.:Identification of peaks in
    multidimensional coincidence gamma-ray spectra. NIM, A443 (2000) 108-125.
    <li> Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM
@@ -2743,7 +2739,7 @@ Int_t TSpectrum::SearchHighRes(Double_t *source,Double_t *destVector, int ssize,
       Double_t * dest = new Double_t[nbins];
       TH1F *h = new TH1F("h","High resolution peak searching, number of iterations = 3",nbins,xmin,xmax);
       TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-      TFile *f = new TFile("spectra\\TSpectrum.root");
+      TFile *f = new TFile("spectra/TSpectrum.root");
       h=(TH1F*) f->Get("search2;1");
       for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
       TCanvas *Search = gROOT->GetListOfCanvases()->FindObject("Search");
@@ -2834,7 +2830,7 @@ Int_t TSpectrum::SearchHighRes(Double_t *source,Double_t *destVector, int ssize,
       TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
       TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);
       TH1F *d4 = new TH1F("d4","",nbins,xmin,xmax);
-      TFile *f = new TFile("spectra\\TSpectrum.root");
+      TFile *f = new TFile("spectra/TSpectrum.root");
       h=(TH1F*) f->Get("search3;1");
       for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
       TCanvas *Search = gROOT->GetListOfCanvases()->FindObject("Search");
