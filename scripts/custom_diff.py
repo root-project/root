@@ -23,7 +23,7 @@ def filter(lines):
     #---Compilation error--------------------------------------------------------
     elif re.search(r': error:', line):
       nline = re.sub(r'\S+/', '', line)
-      nline = re.sub(r':[0-9][0-9]:', ':--:', nline)
+      nline = re.sub(r'(:|_)[0-9][0-9]:', ':--:', nline)
     #---Wrapper input line-------------------------------------------------------
     elif re.match(r'^In file included from input_line', line):
       continue
