@@ -8,23 +8,14 @@
       define( ['d3', 'JSRootPainter'], factory );
    } else {
 
-      if (typeof d3 != 'object') {
-         var e1 = new Error('This extension requires d3.v3.js');
-         e1.source = 'JSRootPainter.jquery.js';
-         throw e1;
-      }
+      if (typeof d3 != 'object')
+         throw new Error('This extension requires d3.v3.js', 'JSRootPainter.more.js');
 
-      if (typeof JSROOT == 'undefined') {
-         var e1 = new Error('JSROOT is not defined');
-         e1.source = 'JSRootPainter.jquery.js';
-         throw e1;
-      }
+      if (typeof JSROOT == 'undefined')
+         throw new Error('JSROOT is not defined', 'JSRootPainter.more.js');
 
-      if (typeof JSROOT.Painter != 'object') {
-         var e1 = new Error('JSROOT.Painter not defined');
-         e1.source = 'JSRootPainter.jquery.js';
-         throw e1;
-      }
+      if (typeof JSROOT.Painter != 'object')
+         throw new Error('JSROOT.Painter not defined', 'JSRootPainter.more.js');
 
       // Browser globals
       factory(d3, JSROOT);

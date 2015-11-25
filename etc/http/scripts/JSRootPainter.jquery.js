@@ -7,35 +7,20 @@
       define( ['jquery', 'jquery-ui', 'd3', 'JSRootPainter'], factory );
    } else {
 
-      if (typeof jQuery == 'undefined') {
-         var e1 = new Error('jQuery not defined ');
-         e1.source = 'JSRootPainter.jquery.js';
-         throw e1;
-      }
+      if (typeof jQuery == 'undefined')
+         throw new Error('jQuery not defined', 'JSRootPainter.jquery.js');
 
-      if (typeof jQuery.ui == 'undefined') {
-         var e1 = new Error('jQuery-ui not defined ');
-         e1.source = 'JSRootPainter.jquery.js';
-         throw e1;
-      }
+      if (typeof jQuery.ui == 'undefined')
+         throw new Error('jQuery-ui not defined','JSRootPainter.jquery.js');
 
-      if (typeof d3 != 'object') {
-         var e1 = new Error('This extension requires d3.v3.js');
-         e1.source = 'JSRootPainter.jquery.js';
-         throw e1;
-      }
+      if (typeof d3 != 'object')
+         throw new Error('This extension requires d3.v3.js', 'JSRootPainter.jquery.js');
 
-      if (typeof JSROOT == 'undefined') {
-         var e1 = new Error('JSROOT is not defined');
-         e1.source = 'JSRootPainter.jquery.js';
-         throw e1;
-      }
+      if (typeof JSROOT == 'undefined')
+         throw new Error('JSROOT is not defined', 'JSRootPainter.jquery.js');
 
-      if (typeof JSROOT.Painter != 'object') {
-         var e1 = new Error('JSROOT.Painter not defined');
-         e1.source = 'JSRootPainter.jquery.js';
-         throw e1;
-      }
+      if (typeof JSROOT.Painter != 'object')
+         throw new Error('JSROOT.Painter not defined', 'JSRootPainter.jquery.js');
 
       // Browser globals
       factory(jQuery, jQuery.ui, d3, JSROOT);
@@ -51,8 +36,10 @@
       var menu = { divid: menuname, code:"", cnt: 1, funcs : {} };
 
       menu.add = function(name, arg, func) {
+         if (name == "separator") { this.code += "<li>-</li>"; return; }
+
          if (name.indexOf("header:")==0) {
-            this.code += "<li class='ui-widget-header'>"+name.substr(7)+"</li>";
+            this.code += "<li class='ui-widget-header' style='padding-left:5px'>"+name.substr(7)+"</li>";
             return;
          }
 
@@ -62,7 +49,10 @@
 
          if (typeof arg == 'function') { func = arg; arg = name; }
 
-         if ((arg==null) || (typeof arg != 'string')) arg = name;
+         // if ((arg==null) || (typeof arg != 'string')) arg = name;
+
+         if (name.indexOf("chk:")==0) { name = "<span class='ui-icon ui-icon-check'></span>" + name.substr(4); } else
+         if (name.indexOf("unk:")==0) { name = "<span class='ui-icon ui-icon-blank'></span>" + name.substr(4); }
 
          // special handling of first versions with menu support
          if (($.ui.version.indexOf("1.10")==0) || ($.ui.version.indexOf("1.9")==0))
@@ -72,6 +62,10 @@
          if (typeof func == 'function') this.funcs[this.cnt] = func; // keep call-back function
 
          this.cnt++;
+      }
+
+      menu.addchk = function(flag, name, arg, func) {
+         return this.add((flag ? "chk:" : "unk:") + name, arg, func);
       }
 
       menu.size = function() { return this.cnt-1; }
@@ -105,6 +99,7 @@
             .css('top', event.clientY + window.pageYOffset)
             .attr('class', 'ctxmenu')
             .css('font-size', '80%')
+            .css('position', 'absolute') // this overrides ui-menu-items class property
             .menu({
                items: "> :not(.ui-widget-header)",
                select: function( event, ui ) {
@@ -112,7 +107,12 @@
                   var cnt = ui.item.attr('cnt');
                   var func = cnt ? menu.funcs[cnt] : null;
                   menu.remove();
-                  if (typeof func == 'function') func(arg);
+                  if (typeof func == 'function') {
+                     if ('painter' in menu)
+                        func.bind(menu['painter'])(arg); // if 'painter' field set, returned as this to callback
+                     else
+                        func(arg);
+                  }
               }
          });
 
@@ -495,15 +495,17 @@
          if (fileprop != null) {
             var opts = JSROOT.getDrawOptions(hitem._kind, 'nosame');
 
-            menu.addDrawMenu("Draw", opts, function(arg) { painter.display(itemname, arg); });
+            if (opts!=null)
+               menu.addDrawMenu("Draw", opts, function(arg) { painter.display(itemname, arg); });
 
             var filepath = qualifyURL(fileprop.fileurl);
             if (filepath.indexOf(JSROOT.source_dir) == 0)
                filepath = filepath.slice(JSROOT.source_dir.length);
 
-            menu.addDrawMenu("Draw in new window", opts, function(arg) {
-               window.open(JSROOT.source_dir + "index.htm?nobrowser&file=" + filepath + "&item=" + fileprop.itemname+"&opt="+arg);
-            });
+            if (opts!=null)
+               menu.addDrawMenu("Draw in new window", opts, function(arg) {
+                  window.open(JSROOT.source_dir + "index.htm?nobrowser&file=" + filepath + "&item=" + fileprop.itemname+"&opt="+arg);
+               });
          }
 
          if (menu.size()>0) {
