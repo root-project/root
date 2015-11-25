@@ -61,6 +61,17 @@ by including a ROOT header. For example:
 
 Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
 
+### Interpreter Library
+
+
+## I/O Libraries
+Custom streamers need to #include TBuffer.h explicitly (see
+[section Core Libraries](#core-libs)
+
+
+## TTree Libraries
+
+
 ## Histogram Libraries
 
 
@@ -70,9 +81,6 @@ Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
 ## RooFit Libraries
 
 
-## TTree Libraries
-
-
 ## 2D Graphics Libraries
 
 
@@ -80,11 +88,6 @@ Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
 
 
 ## Geometry Libraries
-
-
-## I/O Libraries
-Custom streamers need to #include TBuffer.h explicitly (see
-[section Core Libraries](#core-libs)
 
 
 ## Database Libraries
