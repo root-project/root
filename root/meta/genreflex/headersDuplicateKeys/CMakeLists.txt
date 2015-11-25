@@ -8,7 +8,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(a3 a3.h SELECTION a3_selection.xml)
 set(dependency "${dependency};${GENERATE_REFLEX_TEST}")
 
 
-ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-headersDuplicateKeys
+ROOTTEST_ADD_TEST(headersDuplicateKeys
                   MACRO execduplicateHeaders.C
                   OUTREF execduplicateHeaders.ref
                   DEPENDS ${dependency})

@@ -12,7 +12,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(FullheaderParsingOnDemand
                                     LIBNAME libFullheaderParsingOnDemand_dictrflx
                                     NO_ROOTMAP)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-autoloading-headerParsingOnDemand-runFullheaderParsingOnDemand
+ROOTTEST_ADD_TEST(runFullheaderParsingOnDemand
                   COPY_TO_BUILDDIR headerParsingOnDemand.rootmap
                   MACRO runFullheaderParsingOnDemand.C
                   OUTREF headerParsingOnDemand.ref
@@ -25,13 +25,13 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(complexTypedefs
                                     LIBNAME libcomplexTypedefs_dictrflx
                                     NO_ROOTMAP)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-autoloading-headerParsingOnDemand-execCheckComplexTypedefs
+ROOTTEST_ADD_TEST(execCheckComplexTypedefs
                   COPY_TO_BUILDDIR complexTypedefs.rootmap
                   MACRO execCheckComplexTypedefs.C
                   OUTREF execCheckComplexTypedefs.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
-ROOTTEST_ADD_TEST(roottest-root-meta-autoloading-headerParsingOnDemand-execLDAPAttribute
+ROOTTEST_ADD_TEST(execLDAPAttribute
                   MACRO execLDAPAttribute.C
                   OUTREF execLDAPAttribute.ref)
 
@@ -40,7 +40,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(scopedEnums
                                     SELECTION scopedEnums_selection.xml
                                     LIBNAME libscopedEnums_dictrflx)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-autoloading-headerParsingOnDemand-runscopedEnums
+ROOTTEST_ADD_TEST(runscopedEnums
                   MACRO runscopedEnums.C
                   OUTREF scopedEnums.ref
                   OUTCNV scopedEnums_convert.sh

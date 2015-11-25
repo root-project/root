@@ -1,11 +1,11 @@
-ROOTTEST_ADD_TEST(roottest-root-math-smatrix-testInversion
+ROOTTEST_ADD_TEST(testInversion
                   MACRO ${ROOT_SOURCE_DIR}/math/smatrix/test/testInversion.cxx+)
 
-ROOTTEST_ADD_TEST(roottest-root-math-smatrix-testKalman
+ROOTTEST_ADD_TEST(testKalman
                   MACRO ${ROOT_SOURCE_DIR}/math/smatrix/test/testKalman.cxx+)
 
-ROOTTEST_ADD_TEST(roottest-root-math-smatrix-testOperations
+ROOTTEST_ADD_TEST(testOperations
                   MACRO ${ROOT_SOURCE_DIR}/math/smatrix/test/testOperations.cxx+)
 
-ROOTTEST_ADD_TEST(roottest-root-math-smatrix-testSMatrix
+ROOTTEST_ADD_TEST(testSMatrix
                   MACRO ${ROOT_SOURCE_DIR}/math/smatrix/test/testSMatrix.cxx+)

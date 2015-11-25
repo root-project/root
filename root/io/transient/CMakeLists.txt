@@ -1,21 +1,21 @@
-ROOTTEST_ADD_TEST(roottest-root-io-transient-execAtomTransient
+ROOTTEST_ADD_TEST(execAtomTransient
                   MACRO execAtomTransient.cxx+
                   OUTREF execAtomTransient.ref)
 
-ROOTTEST_ADD_TEST(roottest-root-io-transient-execDoxygenTransient
+ROOTTEST_ADD_TEST(execDoxygenTransient
                   MACRO execDoxygenTransient.cxx+
                   OUTREF execDoxygenTransient.ref)
 
-ROOTTEST_ADD_TEST(roottest-root-io-transient-execDoxygenTransientInterp
+ROOTTEST_ADD_TEST(execDoxygenTransientInterp
                   MACRO execDoxygenTransientInterp.C
                   OUTREF execDoxygenTransientInterp.ref)
 
 
-ROOTTEST_ADD_TEST(roottest-root-io-transient-execOld
+ROOTTEST_ADD_TEST(execOld
                   MACRO execOld.cxx+
                   OUTREF execOld.ref)
 
-ROOTTEST_ADD_TEST(roottest-root-io-transient-execNew
+ROOTTEST_ADD_TEST(execNew
                   MACRO execNew.cxx+
                   OUTREF execNew.ref
                   DEPENDS roottest-root-io-transient-execOld)
@@ -24,7 +24,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY( transientNoctor transientNoctor.h
                                      SELECTION transientNoctor_selection.xml
                                      NO_ROOTMAP)
 
-ROOTTEST_ADD_TEST(roottest-root-io-transient-execTransientNoctor
+ROOTTEST_ADD_TEST(execTransientNoctor
                   MACRO execTransientNoctor.C
                   OUTREF execTransientNoctor.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})

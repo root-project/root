@@ -1,4 +1,4 @@
-ROOTTEST_ADD_TEST(roottest-root-selector-simple-runtestLoadingSelector
+ROOTTEST_ADD_TEST(runtestLoadingSelector
                   MACRO runtestLoadingSelector.C
                   OUTREF testLoadingSelector.ref
                   OUTCNV LoadingSelector_convert.sh

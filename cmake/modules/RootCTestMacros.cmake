@@ -119,10 +119,17 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 #
 #-------------------------------------------------------------------------------
 
-function(ROOTTEST_ADD_TEST test)
+function(ROOTTEST_ADD_TEST testname)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL"
                             "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT"
                             "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS" ${ARGN})
+  # Test name
+  ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
+  if(testname MATCHES "^${testprefix}-.*")
+    set(fulltestname ${testname})
+  else()
+    set(fulltestname ${testprefix}-${testname})
+  endif()
 
   # Setup macro test.
   if(ARG_MACRO)
@@ -284,9 +291,9 @@ function(ROOTTEST_ADD_TEST test)
     get_filename_component(test_working_dir ${CMAKE_CURRENT_BINARY_DIR} ABSOLUTE)
   endif()
 
-  get_filename_component(logfile "${CMAKE_CURRENT_BINARY_DIR}/${test}.log" ABSOLUTE)
+  get_filename_component(logfile "${CMAKE_CURRENT_BINARY_DIR}/${testname}.log" ABSOLUTE)
   if(ARG_ERRREF)
-    get_filename_component(errfile "${CMAKE_CURRENT_BINARY_DIR}/${test}.err" ABSOLUTE)
+    get_filename_component(errfile "${CMAKE_CURRENT_BINARY_DIR}/${testname}.err" ABSOLUTE)
     set(errfile ERROR ${errfile})
   endif()
 
@@ -295,7 +302,7 @@ function(ROOTTEST_ADD_TEST test)
     set(infile INPUT ${infile_path})
   endif()
 
-  ROOT_ADD_TEST(${test} COMMAND ${command}
+  ROOT_ADD_TEST(${fulltestname} COMMAND ${command}
                         OUTPUT ${logfile}
                         ${infile}
                         ${errfile}

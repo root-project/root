@@ -138,7 +138,7 @@ Examples:
 
     1. Simply add a ROOT macro test.
 
-        ROOTTEST_ADD_TEST(roottest-root-hist-assertSparseToTHn
+        ROOTTEST_ADD_TEST(assertSparseToTHn
                           MACRO assertSparseToTHn.C)
 
 
@@ -146,7 +146,7 @@ Examples:
        stderr output to the given reference files. Associate the test to the
        labels roottest, regression and cling.
 
-        ROOTTEST_ADD_TEST(roottest-cling-offset-vbase-compiled
+        ROOTTEST_ADD_TEST(compiled
                           MACRO runvbase.C+
                           OUTREF vbase-c.out.ref
                           ERRREF vbase-c.err.ref
@@ -169,7 +169,7 @@ used to manage dependencies on dictionaries:
 
     1. ROOTTEST_GENERATE_DICTIONARY(TTestClass_h LINKDEF TTestClass.h)
 
-    2. ROOTTEST_ADD_TEST(roottest-cling-parsing-runTTestClass
+    2. ROOTTEST_ADD_TEST(runTTestClass
                          MACRO runTTestClass.C
                          OUTREF TTestClass.ref
                          DEPENDS ${GENERATE_DICTIONARY_TEST}

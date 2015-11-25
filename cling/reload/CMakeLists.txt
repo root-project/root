@@ -2,7 +2,7 @@
 #  set(_willfail WILLFAIL)
 #endif()
 
-ROOTTEST_ADD_TEST(roottest-cling-reload-reloadvector
+ROOTTEST_ADD_TEST(reloadvector
                   MACRO runreloadvector.C
                   OUTREF reloadvector.ref
                   ${_willfail}

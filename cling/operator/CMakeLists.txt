@@ -1,11 +1,11 @@
-ROOTTEST_ADD_TEST(roottest-cling-operator-runEqualTest
+ROOTTEST_ADD_TEST(runEqualTest
                   MACRO runEqualTest.C
                   OUTREF_CINTSPECIFIC EqualTest.ref
                   OUTCNV EqualTest_convert.sh
                   DEPENDS equal.C
                   LABELS roottest regression cling)
 
-ROOTTEST_ADD_TEST(roottest-cling-operator-ParanTest
+ROOTTEST_ADD_TEST(ParanTest
                   MACRO t01.C
                   OUTREF t01.ref
                   LABELS roottest regression cling)
@@ -16,7 +16,7 @@ else()
   set(testcint "")
 endif()
 
-ROOTTEST_ADD_TEST(roottest-cling-operator-ConversionOp
+ROOTTEST_ADD_TEST(ConversionOp
                   MACRO runConversionOp.C
                   ${testcint}
                   OUTCNV ConversionOp_convert.sh

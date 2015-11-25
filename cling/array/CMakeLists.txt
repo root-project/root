@@ -1,4 +1,4 @@
-ROOTTEST_ADD_TEST(roottest-cling-array-runarray1
+ROOTTEST_ADD_TEST(runarray1
                   COPY_TO_BUILDDIR array1.C
                   MACRO runarray1test.C
                   OUTREF array1test.ref

@@ -2,7 +2,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(fclassVal
                                     fclassVal.h
                                     SELECTION fclassVal_selection.xml)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-enums-fclassVal
+ROOTTEST_ADD_TEST(fclassVal
                   MACRO execfclassVal.C
                   OUTREF execfclassVal.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
@@ -11,7 +11,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(qualifiedNames
                                     qualifiedNames.h
                                     SELECTION qualifiedNames_selection.xml)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-enums-qualifiedNames
+ROOTTEST_ADD_TEST(qualifiedNames
                   MACRO execQualifiedNames.C
                   OUTREF execQualifiedNames.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
@@ -21,7 +21,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(enumsTestClasses
                                     SELECTION enumsTestClasses_selection.xml
                                     NO_ROOTMAP)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-enums-execEnumsTest
+ROOTTEST_ADD_TEST(execEnumsTest
                   MACRO execEnumsTest.C
                   OUTREF execEnumsTest.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
@@ -31,7 +31,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(tEnumGetEnumClasses
                                     SELECTION tEnumGetEnumClasses_selection.xml
                                     NO_ROOTMAP)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-enums-execTEnumGetEnum
+ROOTTEST_ADD_TEST(execTEnumGetEnum
                   MACRO execTEnumGetEnum.C
                   OUTREF execTEnumGetEnum.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
@@ -42,7 +42,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(enumsInNamespaces
                   SELECTION enumsInNamespaces_selection.xml
                   NO_ROOTMAP)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-enums-enumsInNamespaces
+ROOTTEST_ADD_TEST(enumsInNamespaces
                   MACRO execenumsInNamespaces.C
                   OUTREF execenumsInNamespaces.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
@@ -52,7 +52,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(enumsInNamespaces2
                   SELECTION enumsInNamespaces2_selection.xml
                   NO_ROOTMAP)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-enums-enumsInNamespaces2
+ROOTTEST_ADD_TEST(enumsInNamespaces2
                   MACRO execenumsInNamespaces2.C
                   OUTREF execenumsInNamespaces2.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
@@ -62,7 +62,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(duplicateEnums
                   SELECTION duplicateEnums_selection.xml
                   NO_ROOTMAP)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-enums-duplicateEnums
+ROOTTEST_ADD_TEST(duplicateEnums
                   MACRO execduplicateEnums.C
                   OUTREF execduplicateEnums.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})

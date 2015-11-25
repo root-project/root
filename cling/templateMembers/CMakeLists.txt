@@ -1,10 +1,10 @@
-ROOTTEST_ADD_TEST(roottest-cling-templateMembers-runduplicate
+ROOTTEST_ADD_TEST(runduplicate
                   MACRO runduplicate.C
                   OUTREF duplicate.ref
                   DEPENDS duplicate.C
                   LABELS roottest regression cling)
 
-ROOTTEST_ADD_TEST(roottest-cling-templateMembers-runoperatorEqual
+ROOTTEST_ADD_TEST(runoperatorEqual
                   MACRO runoperatorEqual.C
                   OUTREF_CINTSPECIFIC operatorEqual.ref
                   OUTCNVCMD grep -v FILE
@@ -12,7 +12,7 @@ ROOTTEST_ADD_TEST(roottest-cling-templateMembers-runoperatorEqual
                   DEPENDS operatorEqual.C
                   LABELS roottest regression cling)
 
-ROOTTEST_ADD_TEST(roottest-cling-templateMembers-runConstructor
+ROOTTEST_ADD_TEST(runConstructor
                   MACRO runConstructor.C
                   OUTREF templateConstructorTest.ref
                   DEPENDS constructor.C

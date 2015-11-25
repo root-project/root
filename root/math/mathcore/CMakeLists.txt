@@ -1,5 +1,5 @@
-ROOTTEST_ADD_TEST(roottest-root-math-mathcore-testRootFinder
+ROOTTEST_ADD_TEST(testRootFinder
                   MACRO ${ROOT_SOURCE_DIR}/math/mathcore/test/testRootFinder.cxx+)
 
-ROOTTEST_ADD_TEST(roottest-root-math-mathcore-testSpecFuncSiCi
+ROOTTEST_ADD_TEST(testSpecFuncSiCi
                   MACRO ${ROOT_SOURCE_DIR}/math/mathcore/test/testSpecFuncSiCi.cxx+)

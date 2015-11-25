@@ -1,4 +1,4 @@
-#ROOTTEST_ADD_TEST(roottest-cling-staticinit-ROOT-7775
+#ROOTTEST_ADD_TEST(7775
 #                  COMMAND ${ROOT_rootcling_CMD} -f ROOT-7775.cxx -I${CMAKE_CURRENT_SOURCE_DIR}
 #                  ${CMAKE_CURRENT_SOURCE_DIR}/ROOT-7775/BaseInfo.h
 #                  ${CMAKE_CURRENT_SOURCE_DIR}/ROOT-7775/CLASS_DEF.h

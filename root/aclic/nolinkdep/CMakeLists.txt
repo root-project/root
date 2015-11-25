@@ -1,1 +1,1 @@
-# ROOTTEST_ADD_TEST(roottest-root-aclic-nolinkdep-link MACRO link.C MACROARG 1)
+# ROOTTEST_ADD_TEST(link MACRO link.C MACROARG 1)

@@ -1,4 +1,4 @@
-ROOTTEST_ADD_TEST(roottest-cling-stack-tbox
+ROOTTEST_ADD_TEST(tbox
                   MACRO runtbox.C
                   OUTREF tbox.ref
                   LABELS roottest regression cling)

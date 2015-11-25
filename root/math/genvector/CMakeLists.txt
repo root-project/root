@@ -1,12 +1,12 @@
-ROOTTEST_ADD_TEST(roottest-root-math-genvector-coordinates3D
+ROOTTEST_ADD_TEST(coordinates3D
                   MACRO ${ROOT_SOURCE_DIR}/math/genvector/test/coordinates3D.cxx+)
 
-ROOTTEST_ADD_TEST(roottest-root-math-genvector-coordinates4D
+ROOTTEST_ADD_TEST(coordinates4D
                   MACRO ${ROOT_SOURCE_DIR}/math/genvector/test/coordinates4D.cxx+)
 
-ROOTTEST_ADD_TEST(roottest-root-math-genvector-rotationApplication
+ROOTTEST_ADD_TEST(rotationApplication
                   MACRO ${ROOT_SOURCE_DIR}/math/genvector/test/rotationApplication.cxx+)
 
-ROOTTEST_ADD_TEST(roottest-root-math-genvector-testGenVector
+ROOTTEST_ADD_TEST(testGenVector
                   MACRO ${ROOT_SOURCE_DIR}/math/genvector/test/testGenVector.cxx+)
 

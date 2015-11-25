@@ -1,1 +1,1 @@
-ROOTTEST_ADD_TEST(roottest-root-fit-linear-runstoring MACRO runstoring.C OUTREF storing.ref)
+ROOTTEST_ADD_TEST(runstoring MACRO runstoring.C OUTREF storing.ref)

@@ -1,4 +1,4 @@
-ROOTTEST_ADD_TEST(roottest-root-meta-rootmap-runspaces
+ROOTTEST_ADD_TEST(runspaces
                   MACRO runspaces.C
                   OUTREF spaces.ref
                   DEPENDS spaces.C)

@@ -1,5 +1,5 @@
 if(ROOT_python_FOUND)
-  ROOTTEST_ADD_TEST(roottest-python-regression
+  ROOTTEST_ADD_TEST(regression
                     MACRO PyROOT_regressiontests.py OPTS -b
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                     PRECMD root -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARY}\"\)

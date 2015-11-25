@@ -1,25 +1,25 @@
 #ROOT-6752
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(expressiveErrorMessages expressiveErrorMessages.h SELECTION expressiveErrorMessages_selection.xml)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-expressiveErrorMessages
+ROOTTEST_ADD_TEST(expressiveErrorMessages
                   MACRO  expressiveErrorMessages.C
                   OUTREF expressiveErrorMessages.ref
                   PASSRC 1
                   OUTCNV expressiveErrorMessages_filter.sh
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
-ROOTTEST_ADD_TEST(roottest-root-meta-rlibmap
+ROOTTEST_ADD_TEST(rlibmap
                   EXEC rlibmapLauncher.py
                   PASSRC 1
                   OUTREF  rlibmap.ref)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-execpragmasTest
+ROOTTEST_ADD_TEST(execpragmasTest
                   MACRO execpragmasTest.C+
                   OUTREF execpragmasTest.ref)
 
 ROOTTEST_GENERATE_EXECUTABLE(loadernotapp loadernotapp.cxx LIBRARIES Core Hist)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-loadernotapp
+ROOTTEST_ADD_TEST(loadernotapp
                   EXEC loadernotapp
                   OUTREF loadernotapp.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
@@ -35,14 +35,14 @@ ROOTTEST_ADD_AUTOMACROS(DEPENDS ANSTmpltInt.C TmpltInt0.C TmpltInt1.C TmpltFloat
                                 TmpltNoSpec.C Event.cxx ${COMPILE_MACRO_TEST})
 
 
-ROOTTEST_ADD_TEST(roottest-root-meta-drawing
+ROOTTEST_ADD_TEST(drawing
                   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/DrawTest.sh
                   OUTCNVCMD grep -v -e "--- Switching to" -e "--- Using "
                                     -e "^make" -e "Event.*root made" -e "dt.*made" -e ExecutionContext
                   OUTREF drawing.ref
                   WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-ROOTTEST_ADD_TEST(roottest-root-meta-namespaceconflict
+ROOTTEST_ADD_TEST(namespaceconflict
                   MACRO execnamespaceconflict.C+)
 
 

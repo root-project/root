@@ -1,4 +1,4 @@
-ROOTTEST_ADD_TEST(roottest-root-rint-TabCom
+ROOTTEST_ADD_TEST(TabCom
                   COMMAND root.exe -l -b
                   INPUT TabCom_input.txt
                   OUTREF TabCom.oref

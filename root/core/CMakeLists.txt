@@ -1,4 +1,4 @@
-ROOTTEST_ADD_TEST(roottest-root-core-TEnv
+ROOTTEST_ADD_TEST(TEnv
                   MACRO  testTEnv.C
                   OUTREF testTEnv.ref)
 

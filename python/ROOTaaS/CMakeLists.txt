@@ -19,7 +19,7 @@ if(PY_IPYTHON_FOUND)
   foreach(pyfile ${pyfiles})
     get_filename_component(SHORTPYFILE ${pyfile} NAME_WE)
     if (NOT ${SHORTPYFILE} STREQUAL "__init__")
-      ROOTTEST_ADD_TEST(roottest-python-ROOTaaS-${SHORTPYFILE}_doctest
+      ROOTTEST_ADD_TEST(${SHORTPYFILE}_doctest
                         COMMAND ${PYTHON_EXECUTABLE} -m doctest ${pyfile})
     endif()
   endforeach()
@@ -27,7 +27,7 @@ if(PY_IPYTHON_FOUND)
 # Test all notebooks available
   foreach(NOTEBOOK ${NOTEBOOKS})
     get_filename_component(NOTEBOOKBASE ${NOTEBOOK} NAME_WE)
-    ROOTTEST_ADD_TEST(roottest-python-ROOTaaS-${NOTEBOOKBASE}
+    ROOTTEST_ADD_TEST(${NOTEBOOKBASE}
                       COMMAND ${PYTHON_EXECUTABLE} ${NBDIFFUTIL} ${NOTEBOOK})
   endforeach()
 endif()
