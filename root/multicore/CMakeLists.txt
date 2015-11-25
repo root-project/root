@@ -103,6 +103,7 @@ configure_file(commands2.txt . COPYONLY)
 
 ROOTTEST_ADD_TEST(fork
                   EXEC fork
+                  FAILREGEX "Error in"
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 ROOTTEST_ADD_TEST(semaphore
