@@ -17,7 +17,7 @@
 /**
 \file RooGaussian.cxx
 \class RooGaussian
-\ingroup RooFitCore
+\ingroup Roofit
 
 Plain Gaussian p.d.f
 **/

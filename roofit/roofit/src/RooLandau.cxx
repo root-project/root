@@ -17,7 +17,7 @@
 /**
 \file RooLandau.cxx
 \class RooLandau
-\ingroup RooFitCore
+\ingroup Roofit
 
 Landau Distribution p.d.f
 **/

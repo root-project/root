@@ -19,7 +19,7 @@
 /**
 \file RooBDecay.cxx
 \class RooBDecay
-\ingroup RooFitCore
+\ingroup Roofit
 
 Most general description of B decay time distribution with effects
 of CP violation, mixing and life time differences. This function can 

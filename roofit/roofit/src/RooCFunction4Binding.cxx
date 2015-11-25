@@ -13,7 +13,7 @@
 /**
 \file RooCFunction4Binding.cxx
 \class RooCFunction4Binding
-\ingroup RooFitCore
+\ingroup Roofit
 
 RooCFunction4Binding is a templated implementation of class RooAbsReal that binds 
 generic C(++) functions to a RooAbsReal argument thus allowing generic C++

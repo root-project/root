@@ -26,7 +26,7 @@
 /**
 \file RooNDKeysPdf.cxx
 \class RooNDKeysPdf
-\ingroup RooFitCore
+\ingroup Roofit
 
 Generic N-dimensional implementation of a kernel estimation p.d.f. This p.d.f. models the distribution
 of an arbitrary input dataset as a superposition of Gaussian kernels, one for each data point,

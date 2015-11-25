@@ -39,7 +39,7 @@ ClassImp(RooKeysPdf)
 /**
 \file RooKeysPdf.cxx
 \class RooKeysPdf
-\ingroup RooFitCore
+\ingroup Roofit
 
 Class RooKeysPdf implements a one-dimensional kernel estimation p.d.f which model the distribution
 of an arbitrary input dataset as a superposition of Gaussian kernels, one for each data point,

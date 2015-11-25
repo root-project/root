@@ -16,7 +16,7 @@
 /**
 \file RooChebychev.cxx
 \class RooChebychev
-\ingroup RooFitCore
+\ingroup Roofit
 
 Chebychev polynomial p.d.f. of the first kind
 **/

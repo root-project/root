@@ -17,7 +17,7 @@
 /**
 \file RooChi2MCSModule.cxx
 \class RooChi2MCSModule
-\ingroup RooFitCore
+\ingroup Roofit
 
 RooChi2MCSModule is an add-on modules to RooMCStudy that
 calculates the chi-squared of fitted p.d.f with respect to a binned

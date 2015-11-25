@@ -9,7 +9,7 @@
 /**
 \file RooPoisson.cxx
 \class RooPoisson
-\ingroup RooFitCore
+\ingroup Roofit
 
 Poisson pdf
 **/

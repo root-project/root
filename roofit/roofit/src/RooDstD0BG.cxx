@@ -19,7 +19,7 @@
 /**
 \file RooDstD0BG.cxx
 \class RooDstD0BG
-\ingroup RooFitCore
+\ingroup Roofit
 
 Special p.d.f shape that can be used to model the background of
 D*-D0 mass difference distributions

@@ -18,7 +18,7 @@
 /**
 \file RooBreitWigner.cxx
 \class RooBreitWigner
-\ingroup RooFitCore
+\ingroup Roofit
 
 Class RooBreitWigner is a RooAbsPdf implementation 
 that models a non-relativistic Breit-Wigner shape

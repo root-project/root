@@ -16,7 +16,7 @@
 /**
 \file RooBukinPdf.cxx
 \class RooBukinPdf
-\ingroup RooFitCore
+\ingroup Roofit
 
 RooBukinPdf implements the NovosibirskA function 
 **/

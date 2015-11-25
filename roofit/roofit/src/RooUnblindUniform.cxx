@@ -16,7 +16,7 @@
 /**
 \file RooUnblindUniform.cxx
 \class RooUnblindUniform
-\ingroup RooFitCore
+\ingroup Roofit
 
 Implementation of BlindTools' offset blinding method
 A RooUnblindUniform object is a real valued function

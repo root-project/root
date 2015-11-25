@@ -17,7 +17,7 @@
 /**
 \file RooCBShape.cxx
 \class RooCBShape
-\ingroup RooFitCore
+\ingroup Roofit
 
 P.d.f implementing the Crystall Ball line shape
 **/

@@ -5,7 +5,7 @@
 /**
 \file RooJeffreysPrior.cxx
 \class RooJeffreysPrior
-\ingroup RooFitCore
+\ingroup Roofit
 
 RooJeffreysPrior 
 **/

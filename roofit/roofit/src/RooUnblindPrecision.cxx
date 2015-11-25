@@ -17,7 +17,7 @@
 /**
 \file RooUnblindPrecision.cxx
 \class RooUnblindPrecision
-\ingroup RooFitCore
+\ingroup Roofit
 
 Implementation of BlindTools' precision blinding method
 A RooUnblindPrecision object is a real valued function

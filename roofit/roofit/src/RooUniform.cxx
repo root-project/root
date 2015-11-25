@@ -17,7 +17,7 @@
 /**
 \file RooUniform.cxx
 \class RooUniform
-\ingroup RooFitCore
+\ingroup Roofit
 
 Flat p.d.f. in N dimensions
 **/

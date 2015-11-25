@@ -10,7 +10,7 @@
 /**
 \file RooNonCentralChiSquare.cxx
 \class RooNonCentralChiSquare
-\ingroup RooFitCore
+\ingroup Roofit
 
 The PDF of the Non-Central Chi Square distribution for n degrees of freedom.  
 It is the asymptotic distribution of the profile likeihood ratio test q_mu 

@@ -27,7 +27,7 @@
 /**
 \file RooNonCPEigenDecay.cxx
 \class RooNonCPEigenDecay
-\ingroup RooFitCore
+\ingroup Roofit
 
 Time-dependent RooAbsAnaConvPdf for CP violating decays 
 to Non-CP eigenstates (eg, B0 -> rho+- pi-+).

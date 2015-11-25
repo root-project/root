@@ -17,7 +17,7 @@
 /**
 \file RooExponential.cxx
 \class RooExponential
-\ingroup RooFitCore
+\ingroup Roofit
 
 Exponential p.d.f
 **/

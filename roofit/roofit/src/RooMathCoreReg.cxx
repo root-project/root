@@ -13,7 +13,7 @@
 /**
 \file RooMathCoreReg.cxx
 \class RooMathCoreReg
-\ingroup RooFitCore
+\ingroup Roofit
 
 **/
 

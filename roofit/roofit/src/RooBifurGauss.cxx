@@ -18,7 +18,7 @@
 /**
 \file RooBifurGauss.cxx
 \class RooBifurGauss
-\ingroup RooFitCore
+\ingroup Roofit
 
 Bifurcated Gaussian p.d.f with different widths on left and right
 side of maximum value

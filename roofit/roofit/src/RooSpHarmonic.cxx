@@ -15,7 +15,7 @@
 /**
 \file RooSpHarmonic.cxx
 \class RooSpHarmonic
-\ingroup RooFitCore
+\ingroup Roofit
 
   Implementation of the so-called real spherical harmonics, using the orthonormal normalization,
 which are related to spherical harmonics as:

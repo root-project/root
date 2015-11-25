@@ -17,7 +17,7 @@
 /**
 \file RooGExpModel.cxx
 \class RooGExpModel
-\ingroup RooFitCore
+\ingroup Roofit
 
 Class RooGExpModel is a RooResolutionModel implementation that models
 a resolution function that is the convolution of a Gaussian with

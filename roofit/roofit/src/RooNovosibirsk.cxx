@@ -20,7 +20,7 @@
 /**
 \file RooNovosibirsk.cxx
 \class RooNovosibirsk
-\ingroup RooFitCore
+\ingroup Roofit
 
 
 RooNovosibirsk implements the Novosibirsk function 

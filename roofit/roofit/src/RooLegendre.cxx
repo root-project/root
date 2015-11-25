@@ -15,7 +15,7 @@
 /**
 \file RooLegendre.cxx
 \class RooLegendre
-\ingroup RooFitCore
+\ingroup Roofit
 
 **/
 

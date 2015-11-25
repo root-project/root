@@ -17,7 +17,7 @@
 /**
 \file RooBMixDecay.cxx
 \class RooBMixDecay
-\ingroup RooFitCore
+\ingroup Roofit
 
 Class RooBMixDecay is a RooAbsAnaConvPdf implementation that describes
 the decay of B mesons with the effects of B0/B0bar mixing. 

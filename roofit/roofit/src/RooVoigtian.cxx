@@ -16,7 +16,7 @@
 /**
 \file RooVoigtian.cxx
 \class RooVoigtian
-\ingroup RooFitCore
+\ingroup Roofit
 
 RooVoigtian is an efficient implementation of the convolution of a 
 Breit-Wigner with a Gaussian, making use of the complex error function.

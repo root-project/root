@@ -17,7 +17,7 @@
 /**
 \file RooDecay.cxx
 \class RooDecay
-\ingroup RooFitCore
+\ingroup Roofit
 
 Single or double sided decay function that can be analytically convolved
 with any RooResolutionModel implementation

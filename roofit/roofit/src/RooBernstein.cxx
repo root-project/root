@@ -10,7 +10,7 @@
 /**
 \file RooBernstein.cxx
 \class RooBernstein
-\ingroup RooFitCore
+\ingroup Roofit
 
 Bernstein basis polynomials are positive-definite in the range [0,1].
 In this implementation, we extend [0,1] to be the range of the parameter.

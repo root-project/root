@@ -17,7 +17,7 @@
 /**
 \file RooPolynomial.cxx
 \class RooPolynomial
-\ingroup RooFitCore
+\ingroup Roofit
 
 RooPolynomial implements a polynomial p.d.f of the form
 <pre>

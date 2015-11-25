@@ -17,7 +17,7 @@
 /**
 \file RooGaussModel.cxx
 \class RooGaussModel
-\ingroup RooFitCore
+\ingroup Roofit
 
 Class RooGaussModel implements a RooResolutionModel that models a Gaussian
 distribution. Object of class RooGaussModel can be used

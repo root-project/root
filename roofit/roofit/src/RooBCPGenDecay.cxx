@@ -20,7 +20,7 @@
 /**
 \file RooBCPGenDecay.cxx
 \class RooBCPGenDecay
-\ingroup RooFitCore
+\ingroup Roofit
 
 Implement standard CP physics model with S and C (no mention of lambda)
 Suitably stolen and modified from RooBCPEffDecay

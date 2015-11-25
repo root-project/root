@@ -11,7 +11,7 @@
 /**
 \file RooLognormal.cxx
 \class RooLognormal
-\ingroup RooFitCore
+\ingroup Roofit
 
 RooFit Lognormal PDF. The two parameters are:
  - m0: the median of the distribution

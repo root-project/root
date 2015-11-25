@@ -10,7 +10,7 @@
 /**
 \file RooChiSquarePdf.cxx
 \class RooChiSquarePdf
-\ingroup RooFitCore
+\ingroup Roofit
 
 The PDF of the Chi Square distribution for n degrees of freedom.  
 Oddly, this is hard to find in ROOT (except via relation to GammaDist).

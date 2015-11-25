@@ -14,7 +14,7 @@
 /**
 \file RooMultiBinomial.cxx
 \class RooMultiBinomial
-\ingroup RooFitCore
+\ingroup Roofit
 
 RooMultiBinomial is an efficiency function which makes all combinations of 
 efficiencies given as input different effiency functions for different categories.

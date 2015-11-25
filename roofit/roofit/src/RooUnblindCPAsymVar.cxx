@@ -17,7 +17,7 @@
 /**
 \file RooUnblindCPAsymVar.cxx
 \class RooUnblindCPAsymVar
-\ingroup RooFitCore
+\ingroup Roofit
 
 Implementation of BlindTools' CP asymmetry blinding method
 A RooUnblindCPAsymVar object is a real valued function
