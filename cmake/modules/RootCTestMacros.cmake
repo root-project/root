@@ -254,17 +254,15 @@ function(ROOTTEST_ADD_TEST testname)
   # will be compiled and the dependencies are set accordingly.
   if(ARG_DEPENDS)
     foreach(dep ${ARG_DEPENDS})
-      list(APPEND deplist ${dep})
-
       if(${dep} MATCHES "[.]C" OR ${dep} MATCHES "[.]cxx" OR ${dep} MATCHES "[.]h")
         ROOTTEST_COMPILE_MACRO(${dep})
-
-        set(depends ${depends} ${COMPILE_MACRO_TEST})
-        
-        list(REMOVE_ITEM deplist ${dep})
+        list(APPEND deplist ${COMPILE_MACRO_TEST})
+      elseif(NOT ${dep} MATCHES "^roottest-")
+        list(APPEND deplist ${testprefix}-${dep})
+      else()
+        list(APPEND deplist ${dep})
       endif()
     endforeach()
-    set(depends ${depends} ${deplist})
   endif(ARG_DEPENDS)
 
   if(ARG_FAILREGEX)
@@ -326,6 +324,6 @@ function(ROOTTEST_ADD_TEST testname)
                         ${failregex}
                         ${passregex}
                         ${copy_to_builddir}
-                        DEPENDS ${depends})
+                        DEPENDS ${deplist})
 
 endfunction(ROOTTEST_ADD_TEST)

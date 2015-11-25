@@ -93,12 +93,12 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(MyClass_v2 MyClass_v2.h SELECTION MyClass_v2
 ROOTTEST_ADD_TEST(escapedQuotesWriteTree
                   MACRO execwriteTree.C
                   OUTREF execwriteTree.ref
-                  DEPENDS ${GENERATE_REFLEX_TEST} roottest-root-meta-genreflex-escapedQuotesRootmapGen)
+                  DEPENDS ${GENERATE_REFLEX_TEST} escapedQuotesRootmapGen)
 
 ROOTTEST_ADD_TEST(escapedQuotesreadTree
                   MACRO execreadTree.C
                   OUTREF execreadTree.ref
-                  DEPENDS roottest-root-meta-genreflex-escapedQuotesWriteTree)
+                  DEPENDS escapedQuotesWriteTree)
 
 ROOTTEST_ADD_TEST(classSelectedTwice
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/classSelectedTwice.h --verbose --select=${CMAKE_CURRENT_SOURCE_DIR}/classSelectedTwice_selection.xml

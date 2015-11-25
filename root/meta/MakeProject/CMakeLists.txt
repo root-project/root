@@ -28,9 +28,9 @@ ROOTTEST_ADD_TEST(examples
 ROOTTEST_ADD_TEST(stltest
                   MACRO runstltest.C
                   OUTREF teststlCTEST.ref
-                  DEPENDS roottest-root-meta-MakeProject-stltest-create-examples)
+                  DEPENDS examples)
 
 ROOTTEST_ADD_TEST(stltest2
                   MACRO runstltest2.C
-                  DEPENDS roottest-root-meta-MakeProject-stltest)
+                  DEPENDS stltest)
 

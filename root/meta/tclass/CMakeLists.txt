@@ -53,7 +53,7 @@ ROOTTEST_ADD_TEST(execReadTmplt
                   COPY_TO_BUILDDIR tmplt.h
                   MACRO execReadTmplt.cxx+
                   OUTREF execReadTmplt.ref
-                  DEPENDS ${COMPILE_MACRO_TEST} roottest-root-meta-tclass-execTmpltD32 roottest-root-meta-tclass-execTmpltD)
+                  DEPENDS ${COMPILE_MACRO_TEST} execTmpltD32 execTmpltD)
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(SimpleVector simpleVector.h SELECTION simpleVector_selection.xml)
 

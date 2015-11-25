@@ -227,10 +227,7 @@ ROOTTEST_ADD_TEST(SimpleRootcp3CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootcp3Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r copy3.root
-                  DEPENDS
-                  SimpleRootcp3CheckOutput)
-
-
+                  DEPENDS SimpleRootcp3CheckOutput)
 
 ROOTTEST_ADD_TEST(SimpleRootcp4PrepareInput
                   COMMAND ${TOOLS_PREFIX}/rootcp -r test.root copy4.root)
@@ -246,8 +243,7 @@ ROOTTEST_ADD_TEST(SimpleRootcp4CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootcp4Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r copy4.root
-                  DEPENDS
-                  SimpleRootcp4CheckOutput)
+                  DEPENDS SimpleRootcp4CheckOutput)
 
 
 
@@ -319,10 +315,7 @@ ROOTTEST_ADD_TEST(SimpleRootmv3CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootmv3Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r move3.root
-                  DEPENDS
-                  SimpleRootmv3CheckOutput)
-
-
+                  DEPENDS SimpleRootmv3CheckOutput)
 
 ROOTTEST_ADD_TEST(SimpleRootmv4PrepareInput
                   COMMAND ${TOOLS_PREFIX}/rootcp -r test.root move4.root)
@@ -338,10 +331,7 @@ ROOTTEST_ADD_TEST(SimpleRootmv4CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootmv4Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r move4.root
-                  DEPENDS
-                  SimpleRootmv4CheckOutput)
-
-
+                  DEPENDS SimpleRootmv4CheckOutput)
 
 ROOTTEST_ADD_TEST(SimpleRootmv5PrepareInput
                   COMMAND ${TOOLS_PREFIX}/rootcp -r test.root move5.root)

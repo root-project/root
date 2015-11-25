@@ -14,4 +14,4 @@ ROOTTEST_ADD_TEST(linktest
 ROOTTEST_ADD_TEST(autoloadNamespace
                   MACRO execautoloadNamespace.C
                   OUTREF execautoloadNamespace.ref
-                  DEPENDS MyClass.cxx roottest-root-aclic-load-autoload)
+                  DEPENDS MyClass.cxx autoload)
