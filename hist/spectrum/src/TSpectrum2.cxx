@@ -1,85 +1,48 @@
 // @(#)root/spectrum:$Id$
 // Author: Miroslav Morhac   17/01/2006
 
-
-/////////////////////////////////////////////////////////////////////////////
-//   THIS CLASS CONTAINS ADVANCED SPECTRA PROCESSING FUNCTIONS.            //
-//                                                                         //
-//   ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTIONS                       //
-//   TWO-DIMENSIONAL BACKGROUND ESTIMATION FUNCTIONS                       //
-//   ONE-DIMENSIONAL SMOOTHING FUNCTIONS                                   //
-//   TWO-DIMENSIONAL SMOOTHING FUNCTIONS                                   //
-//   ONE-DIMENSIONAL DECONVOLUTION FUNCTIONS                               //
-//   TWO-DIMENSIONAL DECONVOLUTION FUNCTIONS                               //
-//   ONE-DIMENSIONAL PEAK SEARCH FUNCTIONS                                 //
-//   TWO-DIMENSIONAL PEAK SEARCH FUNCTIONS                                 //
-//                                                                         //
-//   These functions were written by:                                      //
-//   Miroslav Morhac                                                       //
-//   Institute of Physics                                                  //
-//   Slovak Academy of Sciences                                            //
-//   Dubravska cesta 9, 842 28 BRATISLAVA                                  //
-//   SLOVAKIA                                                              //
-//                                                                         //
-//   email:fyzimiro@savba.sk,    fax:+421 7 54772479                       //
-//                                                                         //
-//  The original code in C has been repackaged as a C++ class by R.Brun    //
-//                                                                         //
-//  The algorithms in this class have been published in the following      //
-//  references:                                                            //
-//   [1]  M.Morhac et al.: Background elimination methods for              //
-//   multidimensional coincidence gamma-ray spectra. Nuclear               //
-//   Instruments and Methods in Physics Research A 401 (1997) 113-         //
-//   132.                                                                  //
-//                                                                         //
-//   [2]  M.Morhac et al.: Efficient one- and two-dimensional Gold         //
-//   deconvolution and its application to gamma-ray spectra                //
-//   decomposition. Nuclear Instruments and Methods in Physics             //
-//   Research A 401 (1997) 385-408.                                        //
-//                                                                         //
-//   [3]  M.Morhac et al.: Identification of peaks in multidimensional     //
-//   coincidence gamma-ray spectra. Nuclear Instruments and Methods in     //
-//   Research Physics A  443(2000), 108-125.                               //
-//                                                                         //
-//   These NIM papers are also available as Postscript files from:         //
-//
-//
-//   ftp://root.cern.ch/root/SpectrumDec.ps.gz
-//   ftp://root.cern.ch/root/SpectrumSrc.ps.gz
-//   ftp://root.cern.ch/root/SpectrumBck.ps.gz
-//
-//
-/////////////////////////////////////////////////////////////////////////////
-//
-/////////////////////NEW FUNCTIONS  January 2006
-//
-//<div class=Section1>
-//
-//<p class=MsoNormal style='text-align:justify'><i><span lang=EN-US
-//style='font-size:16.0pt'>All figures in this page were prepared using DaqProVis
-//system, Data Acquisition, Processing and Visualization system, which is being
-//developed at the Institute of Physics, Slovak Academy of Sciences, Bratislava,
-//Slovakia:  </span></i></p>
-//
-//<p class=MsoNormal style='text-align:justify'><i><span lang=EN-US
-//style='font-size:16.0pt'><a href="http://www.fu.sav.sk/nph/projects/DaqProVis/">http://www.fu.sav.sk/nph/projects/DaqProVis/</a>
-//under construction</span></i></p>
-//
-//<p class=MsoNormal style='text-align:justify'><i><span lang=EN-US
-//style='font-size:16.0pt'><a href="http://www.fu.sav.sk/nph/projects/ProcFunc/">http://www.fu.sav.sk/nph/projects/ProcFunc/</a>
-//.</span></i></p>
-//
-//</div>
-//
-//<!-- */
-// --> End_Html
-
-//______________________________________________________________________________
 /** \class TSpectrum2
  \ingroup Hist
- \brief Advanced 2-dimentional spectra processing
-*/
+ \brief Advanced 2-dimensional spectra processing
 
+ This class contains advanced spectra processing functions.
+
+  - One-dimensional background estimation functions
+  - Two-dimensional background estimation functions
+  - One-dimensional smoothing functions
+  - Two-dimensional smoothing functions
+  - One-dimensional deconvolution functions
+  - Two-dimensional deconvolution functions
+  - One-dimensional peak search functions
+  - Two-dimensional peak search functions
+
+ \author
+ Miroslav Morhac
+ Institute of Physics
+ Slovak Academy of Sciences
+ Dubravska cesta 9, 842 28 BRATISLAVA
+ SLOVAKIA
+ email:fyzimiro@savba.sk, fax:+421 7 54772479
+
+ The original code in C has been repackaged as a C++ class by R.Brun.
+
+ The algorithms in this class have been published in the following references:
+
+ 1.  M.Morhac et al.: Background elimination methods for multidimensional coincidence gamma-ray spectra. Nuclear Instruments and Methods in Physics Research A 401 (1997) 113-132.
+ 2.  M.Morhac et al.: Efficient one- and two-dimensional Gold deconvolution and its application to gamma-ray spectra decomposition. Nuclear Instruments and Methods in Physics Research A 401 (1997) 385-408.
+ 3.  M.Morhac et al.: Identification of peaks in multidimensional coincidence gamma-ray spectra. Nuclear Instruments and Methods in Research Physics A 443(2000), 108-125.
+
+ These NIM papers are also available as doc or ps files from:
+
+ - [SpectrumDec.ps.gz](ftp://root.cern.ch/root/SpectrumDec.ps.gz)
+ - [SpectrumSrc.ps.gz](ftp://root.cern.ch/root/SpectrumSrc.ps.gz)
+ - [SpectrumBck.ps.gz](ftp://root.cern.ch/root/SpectrumBck.ps.gz)
+
+ All the figures in this page were prepared using the DaqProVis
+ system, Data Acquisition, Processing and Visualization system,
+ developed at the Institute of Physics, Slovak Academy of Sciences, Bratislava,
+ Slovakia.
+*/
 
 #include "TSpectrum2.h"
 #include "TPolyMarker.h"
@@ -108,14 +71,13 @@ TSpectrum2::TSpectrum2() :TNamed("Spectrum", "Miroslav Morhac peak finder")
    fNPeaks     = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///  maxpositions:  maximum number of peaks
-///  resolution:    determines resolution of the neighboring peaks
-///                 default value is 1 correspond to 3 sigma distance
-///                 between peaks. Higher values allow higher resolution
-///                 (smaller distance between peaks.
-///                 May be set later through SetResolution.
+///  - maxpositions:  maximum number of peaks
+///  - resolution:    determines resolution of the neighbouring peaks
+///                   default value is 1 correspond to 3 sigma distance
+///                   between peaks. Higher values allow higher resolution
+///                   (smaller distance between peaks.
+///                   May be set later through SetResolution.
 
 TSpectrum2::TSpectrum2(Int_t maxpositions, Double_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder")
 {
@@ -129,7 +91,6 @@ TSpectrum2::TSpectrum2(Int_t maxpositions, Double_t resolution) :TNamed("Spectru
    SetResolution(resolution);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -140,7 +101,6 @@ TSpectrum2::~TSpectrum2()
    delete [] fPositionY;
    delete    fHistogram;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// static function: Set average window of searched peaks
@@ -160,33 +120,32 @@ void TSpectrum2::SetDeconIterations(Int_t n)
    fgIterations = n;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-///   TWO-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION                        //
 ///   This function calculates the background spectrum in the input histogram h.
 ///   The background is returned as a histogram.
 ///
 ///   Function parameters:
-///   -h: input 2-d histogram
-///   -numberIterations, (default value = 20)
-///      Increasing numberIterations make the result smoother and lower.
-///   -option: may contain one of the following options
+///   - h: input 2-d histogram
+///   - numberIterations, (default value = 20)
+///     Increasing numberIterations make the result smoother and lower.
+///   - option: may contain one of the following options
 ///      - to set the direction parameter
 ///        "BackIncreasingWindow". By default the direction is BackDecreasingWindow
-///      - filterOrder-order of clipping filter,  (default "BackOrder2"
-///                  -possible values= "BackOrder4"
-///                                    "BackOrder6"
-///                                    "BackOrder8"
+///      - filterOrder-order of clipping filter. Possible values:
+///            - "BackOrder2" (default)
+///            - "BackOrder4"
+///            - "BackOrder6"
+///            - "BackOrder8"
 ///      - "nosmoothing"- if selected, the background is not smoothed
-///           By default the background is smoothed.
-///      - smoothWindow-width of smoothing window, (default is "BackSmoothing3")
-///                  -possible values= "BackSmoothing5"
-///                                    "BackSmoothing7"
-///                                    "BackSmoothing9"
-///                                    "BackSmoothing11"
-///                                    "BackSmoothing13"
-///                                    "BackSmoothing15"
+///         By default the background is smoothed.
+///      - smoothWindow-width of smoothing window. Possible values:
+///            - "BackSmoothing3" (default)
+///            - "BackSmoothing5"
+///            - "BackSmoothing7"
+///            - "BackSmoothing9"
+///            - "BackSmoothing11"
+///            - "BackSmoothing13"
+///            - "BackSmoothing15"
 ///      - "Compton" if selected the estimation of Compton edge
 ///                  will be included.
 ///      - "same" : if this option is specified, the resulting background
@@ -197,8 +156,6 @@ void TSpectrum2::SetDeconIterations(Int_t n)
 ///  the returned histogram will be created with the same number of bins
 ///  as the input histogram h, but only bins from binmin to binmax will be filled
 ///  with the estimated background.
-///                                                                         //
-//////////////////////////////////////////////////////////////////////////////
 
 TH1 *TSpectrum2::Background(const TH1 * h, Int_t number_of_iterations,
                                    Option_t * option)
@@ -209,7 +166,7 @@ TH1 *TSpectrum2::Background(const TH1 * h, Int_t number_of_iterations,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Print the array of positions
+/// Print the array of positions.
 
 void TSpectrum2::Print(Option_t *) const
 {
@@ -219,41 +176,37 @@ void TSpectrum2::Print(Option_t *) const
    }
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-///   TWO-DIMENSIONAL PEAK SEARCH FUNCTION                                  //
-///   This function searches for peaks in source spectrum in hin            //
-///   The number of found peaks and their positions are written into        //
-///   the members fNpeaks and fPositionX.                                   //
-///   The search is performed in the current histogram range.               //
-///                                                                         //
-///   Function parameters:                                                  //
-///   hin:       pointer to the histogram of source spectrum                //
-///   sigma:   sigma of searched peaks, for details we refer to manual      //
-///   threshold: (default=0.05)  peaks with amplitude less than             //
-///       threshold*highest_peak are discarded.  0<threshold<1              //
-///                                                                         //
-///   By default, the background is removed before deconvolution.           //
-///   Specify the option "nobackground" to not remove the background.       //                //
-///                                                                         //
-///   By default the "Markov" chain algorithm is used.                      //
-///   Specify the option "noMarkov" to disable this algorithm               //
-///   Note that by default the source spectrum is replaced by a new spectrum//          //
-///                                                                         //
-///   By default a polymarker object is created and added to the list of    //
-///   functions of the histogram. The histogram is drawn with the specified //
-///   option and the polymarker object drawn on top of the histogram.       //
-///   The polymarker coordinates correspond to the npeaks peaks found in    //
-///   the histogram.                                                        //
-///   A pointer to the polymarker object can be retrieved later via:        //
-///    TList *functions = hin->GetListOfFunctions();                        //
-///    TPolyMarker *pm = (TPolyMarker*)functions->FindObject("TPolyMarker") //
-///   Specify the option "goff" to disable the storage and drawing of the   //
-///   polymarker.                                                           //
-///                                                                         //
-//////////////////////////////////////////////////////////////////////////////
+///   This function searches for peaks in source spectrum in hin
+///   The number of found peaks and their positions are written into
+///   the members fNpeaks and fPositionX.
+///   The search is performed in the current histogram range.
+///
+///   Function parameters:
+///  - hin:       pointer to the histogram of source spectrum
+///  - sigma:   sigma of searched peaks, for details we refer to manual
+///  - threshold: (default=0.05)  peaks with amplitude less than
+///    threshold*highest_peak are discarded.  0<threshold<1
+///
+///   By default, the background is removed before deconvolution.
+///   Specify the option "nobackground" to not remove the background.
+///
+///   By default the "Markov" chain algorithm is used.
+///   Specify the option "noMarkov" to disable this algorithm
+///   Note that by default the source spectrum is replaced by a new spectrum
+///
+///   By default a polymarker object is created and added to the list of
+///   functions of the histogram. The histogram is drawn with the specified
+///   option and the polymarker object drawn on top of the histogram.
+///   The polymarker coordinates correspond to the npeaks peaks found in
+///   the histogram.
+///   A pointer to the polymarker object can be retrieved later via:
+/// ~~~ {cpp}
+///    TList *functions = hin->GetListOfFunctions();
+///    TPolyMarker *pm = (TPolyMarker*)functions->FindObject("TPolyMarker")
+/// ~~~
+///   Specify the option "goff" to disable the storage and drawing of the
+///   polymarker.
 
 Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
                              Option_t * option, Double_t threshold)
@@ -328,7 +281,6 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
    return npeaks;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///  resolution: determines resolution of the neighboring peaks
 ///              default value is 1 correspond to 3 sigma distance
@@ -344,35 +296,193 @@ void TSpectrum2::SetResolution(Double_t resolution)
       fResolution = 1;
 }
 
-
-//_____________________________________________________________________________
-//_____________________________________________________________________________
-
-/////////////////////NEW FUNCTIONS  JANUARY 2006
 ////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-///   TWO-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION - RECTANGULAR RIDGES   //
-///   This function calculates background spectrum from source spectrum.    //
-///   The result is placed to the array pointed by spectrum pointer.        //
-///                                                                         //
-///   Function parameters:                                                  //
-///   spectrum-pointer to the array of source spectrum                      //
-///   ssizex-x length of spectrum                                           //
-///   ssizey-y length of spectrum                                           //
-///   numberIterationsX-maximal x width of clipping window                  //
-///   numberIterationsY-maximal y width of clipping window                  //
-///                           for details we refer to manual                //
-///   direction- direction of change of clipping window                     //
-///               - possible values=kBackIncreasingWindow                   //
-///                                 kBackDecreasingWindow                   //
-///   filterType-determines the algorithm of the filtering                  //
-///                  -possible values=kBackSuccessiveFiltering              //
-///                                   kBackOneStepFiltering                 //
-///                                                                         //
-///                                                                         //
-//////////////////////////////////////////////////////////////////////////////
+///   This function calculates background spectrum from source spectrum.
+///   The result is placed to the array pointed by spectrum pointer.
 ///
-///Begin_Html <!--
+///   Function parameters:
+///  - spectrum-pointer to the array of source spectrum
+///  - ssizex-x length of spectrum
+///  - ssizey-y length of spectrum
+///  - numberIterationsX-maximal x width of clipping window
+///  - numberIterationsY-maximal y width of clipping window
+///                           for details we refer to manual
+///  - direction- direction of change of clipping window
+///               - possible values=kBackIncreasingWindow
+///                                 kBackDecreasingWindow
+///  - filterType-determines the algorithm of the filtering
+///               - possible values=kBackSuccessiveFiltering
+///                                 kBackOneStepFiltering
+///
+/// ### Background estimation
+///
+/// Goal: Separation of useful information (peaks) from useless information (background)
+///
+///  - method is based on Sensitive Nonlinear Iterative Peak (SNIP) clipping algorithm [1]
+///
+///  - there exist two algorithms for the estimation of new value in the channel \f$ i_1,i_2\f$
+///
+/// Algorithm based on Successive Comparisons:
+///
+/// It is an extension of one-dimensional SNIP algorithm to another dimension. For
+/// details we refer to [2].
+///
+/// Algorithm based on One Step Filtering:
+///
+/// New value in the estimated channel is calculated as:
+/// \f[ a = \nu_{p-1}(i_1,i_2)\f]
+/// \f[
+/// b = \frac{\nu_{p-1}(i_1-p,i_2-p) - 2\nu_{p-1}(i_1-p,i_2) + \nu_{p-1}(i_1-p,i_2+p) - 2\nu_{p-1}(i_1,i_2-p)}{4} +
+/// \f]
+/// \f[
+/// \frac{-2\nu_{p-1}(i_1,i_2+p) + \nu_{p-1}(i_1+p,i_2-p) - 2\nu_{p-1}(i_1+p,i_2) + \nu_{p-1}(i_1+p,i_2+p)}{4}
+/// \f]
+/// \f[ \nu_{p-1}(i_1,i_2) = min(a,b)\f]
+/// where p = 1, 2, ..., number_of_iterations.
+///
+/// #### References:
+///
+/// [1] C. G Ryan et al.: SNIP, a statistics-sensitive background treatment for the
+/// quantitative analysis of PIXE spectra in geoscience applications. NIM, B34 (1988), 396-402.
+///
+/// [2] M. Morhac;, J. Kliman, V.
+/// Matouoek, M. Veselsky, I. Turzo.:
+/// Background elimination methods for multidimensional gamma-ray spectra. NIM,
+/// A401 (1997) 113-132.
+///
+/// ### Example 1 - script Back_gamma64.c
+///
+/// \image html TSpectrum2_Background1.jpg Fig. 1 Original two-dimensional gamma-gamma-ray spectrum
+/// \image html TSpectrum2_Background2.jpg Fig. 2 Background estimated from data from Fig. 1 using decreasing clipping window with widths 4, 4 and algorithm based on successive comparisons. The estimate includes not only continuously changing background but also one-dimensional ridges.
+/// \image html TSpectrum2_Background3.jpg Fig. 3 Resulting peaks after subtraction of the estimated background (Fig. 2) from original two-dimensional gamma-gamma-ray spectrum (Fig. 1).
+///
+/// #### Script:
+///
+/// Example to illustrate the background estimator (class TSpectrum). To execute this example, do:
+///
+/// `root > .x Back_gamma64.C`
+///
+/// ~~~ {.cpp}
+///   #include <TSpectrum>
+///   void Back_gamma64() {
+///      Int_t i, j;
+///      Double_t nbinsx = 64;
+///      Double_t nbinsy = 64;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbinsx;
+///      Double_t ymin = 0;
+///      Double_t ymax = (Double_t)nbinsy;
+///      Double_t ** source = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i]=new Double_t[nbinsy];
+///      TH2F *back = new TH2F("back","Background estimation",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      TFile *f = new TFile("spectra2/TSpectrum2.root");
+///      back=(TH2F*) f->Get("back1;1");
+///      TCanvas *Background = new TCanvas("Background","Estimation of background with increasing window",10,10,1000,700);
+///      TSpectrum *s = new TSpectrum();
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            source[i][j] = back->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      s->Background(source,nbinsx,nbinsy,4,4,kBackDecreasingWindow,kBackSuccessiveFiltering);
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++)
+///            back->SetBinContent(i + 1,j + 1, source[i][j]);
+///      }
+///      back->Draw("SURF");
+///   }
+/// ~~~
+///
+/// ### Example 2- script Back_gamma256.c
+///
+/// \image html TSpectrum2_Background4.jpg Fig. 4 Original two-dimensional gamma-gamma-ray spectrum 256x256 channels
+/// \image html TSpectrum2_Background5.jpg Fig. 5 Peaks after subtraction of the estimated background (increasing clipping window with widths 8, 8 and algorithm based on successive comparisons) from original two-dimensional gamma-gamma-ray spectrum (Fig. 4).
+///
+/// #### Script:
+///
+// Example to illustrate the background estimator (class TSpectrum).
+/// To execute this example, do
+///
+/// `root > .x Back_gamma256.C`
+///
+/// ~~~ {.cpp}
+///   #include <TSpectrum>
+///   void Back_gamma256() {
+///      Int_t i, j;
+///      Double_t nbinsx = 64;
+///      Double_t nbinsy = 64;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbinsx;
+///      Double_t ymin = 0;
+///      Double_t ymax = (Double_t)nbinsy;
+///      Double_t** source = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i]=new Double_t[nbinsy];
+///      TH2F *back = new TH2F("back","Background estimation",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      TFile *f = new TFile("spectra2/TSpectrum2.root");
+///      back=(TH2F*) f->Get("back2;1");
+///      TCanvas *Background = new TCanvas("Background","Estimation of background with increasing window",10,10,1000,700);
+///      TSpectrum *s = new TSpectrum();
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            source[i][j] = back->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      s->Background(source,nbinsx,nbinsy,8,8,kBackIncreasingWindow,kBackSuccessiveFiltering);
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++)
+///            back->SetBinContent(i + 1,j + 1, source[i][j]);
+///      }
+///      back->Draw("SURF");
+///   }
+/// ~~~
+///
+/// Example 3- script Back_synt256.c
+///
+/// \image html TSpectrum2_Background6.jpg Fig. 6 Original two-dimensional synthetic spectrum 256x256 channels
+/// \image html TSpectrum2_Background7.jpg Fig. 7 Peaks after subtraction of the estimated background (increasing clipping window with widths 8, 8 and algorithm based on successive comparisons) from original two-dimensional gamma-gamma-ray spectrum (Fig. 6). One can observe artefacts (ridges) around the peaks due to the employed algorithm.
+/// \image html TSpectrum2_Background8.jpg Fig. 8 Peaks after subtraction of the estimated background (increasing clipping window with widths 8, 8 and algorithm based on one step filtering) from original two-dimensional gamma-gamma-ray spectrum (Fig. 6). The artefacts from the above given Fig. 7 disappeared.
+///
+/// #### Script:
+///
+/// Example to illustrate the background estimator (class TSpectrum).
+/// To execute this example, do
+///
+/// `root > .x Back_synt256.C`
+///
+/// ~~~ {.cpp}
+///   #include <TSpectrum>
+///   void Back_synt256() {
+///      Int_t i, j;
+///      Double_t nbinsx = 64;
+///      Double_t nbinsy = 64;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbinsx;
+///      Double_t ymin = 0;
+///      Double_t ymax = (Double_t)nbinsy;
+///      Double_t** source = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i]=new Double_t[nbinsy];
+///      TH2F *back = new TH2F("back","Background estimation",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      TFile *f = new TFile("spectra2/TSpectrum2.root");
+///      back=(TH2F*) f->Get("back3;1");
+///      TCanvas *Background = new TCanvas("Background","Estimation of background with increasing window",10,10,1000,700);
+///      TSpectrum *s = new TSpectrum();
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            source[i][j] = back->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      s->Background(source,nbinsx,nbinsy,8,8,
+///                    kBackIncreasingWindow,kBackSuccessiveFiltering);//kBackOneStepFiltering
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++)
+///            back->SetBinContent(i + 1,j + 1, source[i][j]);
+///      }
+///      back->Draw("SURF");
+///   }
+/// ~~~
 
 const char *TSpectrum2::Background(Double_t **spectrum,
                        Int_t ssizex, Int_t ssizey,
@@ -381,463 +491,6 @@ const char *TSpectrum2::Background(Double_t **spectrum,
                        Int_t direction,
                        Int_t filterType)
 {
-/* -->
-<div class=Section1>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:20.0pt'>Background
-estimation</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:18.0pt'>&nbsp;</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:18.0pt'>Goal:
-Separation of useful information (peaks) from useless information (background)</span></i><span
-style='font-size:18.0pt'> </span></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>method is based on Sensitive
-Nonlinear Iterative Peak (SNIP) clipping algorithm [1]</span></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>there exist two algorithms for the
-estimation of new value in the channel “<sub><img width=28 height=24
-src="gif/TSpectrum2_Background1.gif"></sub>”</span></p>
-
-<p class=MsoNormal style='margin-left:18.0pt;text-align:justify'><span
-style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:16.0pt'>Algorithm
-based on Successive Comparisons</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>It
-is an extension of one-dimensional SNIP algorithm to another dimension. For
-details we refer to [2].</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:16.0pt'>Algorithm
-based on One Step Filtering</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>New
-value in the estimated channel is calculated as</span></p>
-
-<p class=MsoNormal style='text-align:justify'><sub><img width=133 height=39
-src="gif/TSpectrum2_Background2.gif"></sub></p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'><sub><img width=600 height=128
-src="gif/TSpectrum2_Background3.gif"></sub></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal><sub><img width=190 height=38
-src="gif/TSpectrum2_Background4.gif"></sub>.</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>where
-p = 1, 2, …, number_of_iterations. </span></p>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>&nbsp;</span></i></p>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Function:</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:18.0pt'>const
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#char" target="_parent">char</a>*
-</span></b><span style='font-size:18.0pt'><a
-href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrum2::Background</b></a><b>
-(<a href="http://root.cern.ch/root/html/ListOfTypes.html#double" target="_parent">double</a>
-**spectrum, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
-target="_parent">int</a> ssizex, <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#int" target="_parent">int</a>
-ssizey, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
-target="_parent">int</a> numberIterationsX, <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#int" target="_parent">int</a>
-numberIterationsY, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
-target="_parent">int</a> direction, <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#int" target="_parent">int</a>
-filterType)  </b></span></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>This
-function calculates background spectrum from the source spectrum.  The result
-is placed in the matrix pointed by spectrum pointer.  One can also switch the
-direction of the change of the clipping window and to select one of the two
-above given algorithms.</span><span style='font-size:18.0pt'> </span><span
-style='font-size:16.0pt'>On successful completion it returns 0. On error it
-returns pointer to the string describing error.</span></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt;color:red'>Parameters:</span></i></p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>spectrum</span></b>-pointer
-to the matrix of source spectrum                  </p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>ssizex, ssizey</span></b>-lengths
-of the spectrum matrix                                 </p>
-
-<p class=MsoNormal style='text-align:justify'>        <b><span
-style='font-size:14.0pt'>numberIterationsX, numberIterationsY</span></b>maximal
-widths of clipping</p>
-
-<p class=MsoNormal style='text-align:justify'>        window,                                
-</p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>direction</span></b>-
-direction of change of clipping window                  </p>
-
-<p class=MsoNormal>               - possible
-values=kBackIncreasingWindow                      </p>
-
-<p class=MsoNormal>                                           
-kBackDecreasingWindow                      </p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>filterType</span></b>-type
-of the clipping algorithm,                              </p>
-
-<p class=MsoNormal>                  -possible values=kBack SuccessiveFiltering</p>
-
-<p class=MsoNormal>                                             
-kBackOneStepFiltering                              </p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><i><span style='font-size:18.0pt'>References:</span></i></b></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>[1] 
-C. G Ryan et al.: SNIP, a statistics-sensitive background treatment for the
-quantitative analysis of PIXE spectra in geoscience applications. NIM, B34
-(1988), 396-402.</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>[2]
-</span><span lang=SK style='font-size:16.0pt'> M. Morhá&#269;, J. Kliman, V.
-Matoušek, M. Veselský, I. Turzo</span><span style='font-size:16.0pt'>.:
-Background elimination methods for multidimensional gamma-ray spectra. NIM,
-A401 (1997) 113-132.</span></p>
-
-</div>
-
-<!-- */
-// --> End_Html
-//Begin_Html <!--
-/* -->
-<div class=Section1>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 1– script Back_gamma64.c
-:</span></i></p>
-
-<p class=MsoNormal><img width=602 height=418
-src="gif/TSpectrum2_Background1.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-1 Original two-dimensional gamma-gamma-ray spectrum</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-width=602 height=418 src="gif/TSpectrum2_Background2.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-2 Background estimated from data from Fig. 1 using decreasing clipping window with
-widths 4, 4 and algorithm based on successive comparisons. The estimate
-includes not only continuously changing background but also one-dimensional
-ridges.</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt;color:green'><img
-width=602 height=418 src="gif/TSpectrum2_Background3.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-3 Resulting peaks after subtraction of the estimated background (Fig. 2) from original
-two-dimensional gamma-gamma-ray spectrum (Fig. 1).</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt;color:green'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt;color:green'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:green'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the background estimator (class
-TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Back_gamma64.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt; </p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Back_gamma64() {</p>
-
-<p class=MsoNormal>   Int_t i, j;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 64;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Double_t ** source = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>      source[i]=new Double_t[nbinsy];     </p>
-
-<p class=MsoNormal>   TH2F *back = new TH2F(&quot;back&quot;,&quot;Background estimation&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   back=(TH2F*) f-&gt;Get(&quot;back1;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Background = new
-TCanvas(&quot;Background&quot;,&quot;Estimation of background with increasing
-window&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = back-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }     </p>
-
-<p class=MsoNormal> s-&gt;Background(source,nbinsx,nbinsy,4,4,kBackDecreasingWindow,kBackSuccessiveFiltering);</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++)</p>
-
-<p class=MsoNormal>       back-&gt;SetBinContent(i + 1,j + 1, source[i][j]);   </p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal>   back-&gt;Draw(&quot;SURF&quot;);  </p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 2– script Back_gamma256.c
-:</span></i></p>
-
-<p class=MsoNormal><img width=602 height=418
-src="gif/TSpectrum2_Background4.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-4 Original two-dimensional gamma-gamma-ray spectrum 256x256 channels</span></b></p>
-
-<p class=MsoNormal><img width=602 height=418
-src="gif/TSpectrum2_Background5.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-5 Peaks after subtraction of the estimated background (increasing clipping
-window with widths 8, 8 and algorithm based on successive comparisons) from original
-two-dimensional gamma-gamma-ray spectrum (Fig. 4).</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:green'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:green'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the background estimator (class
-TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Back_gamma256.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt; </p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Back_gamma256() {</p>
-
-<p class=MsoNormal>   Int_t i, j;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 64;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>      source[i]=new Double_t[nbinsy];     </p>
-
-<p class=MsoNormal>   TH2F *back = new TH2F(&quot;back&quot;,&quot;Background estimation&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   back=(TH2F*) f-&gt;Get(&quot;back2;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Background = new
-TCanvas(&quot;Background&quot;,&quot;Estimation of background with increasing
-window&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = back-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }     </p>
-
-<p class=MsoNormal> s-&gt;Background(source,nbinsx,nbinsy,8,8,kBackIncreasingWindow,kBackSuccessiveFiltering);</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++)</p>
-
-<p class=MsoNormal>       back-&gt;SetBinContent(i + 1,j + 1, source[i][j]);   </p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal>   back-&gt;Draw(&quot;SURF&quot;);  </p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 3– script Back_synt256.c
-:</span></i></p>
-
-<p class=MsoNormal><img width=602 height=418
-src="gif/TSpectrum2_Background6.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-6 Original two-dimensional synthetic spectrum 256x256 channels</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-width=602 height=418 src="gif/TSpectrum2_Background7.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-7 Peaks after subtraction of the estimated background (increasing clipping
-window with widths 8, 8 and algorithm based on successive comparisons) from original
-two-dimensional gamma-gamma-ray spectrum (Fig. 6). One can observe artifacts
-(ridges) around the peaks due to the employed algorithm.</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-width=602 height=418 src="gif/TSpectrum2_Background8.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-8 Peaks after subtraction of the estimated background (increasing clipping
-window with widths 8, 8 and algorithm based on one step filtering) from original
-two-dimensional gamma-gamma-ray spectrum (Fig. 6).  The artifacts from the
-above given Fig. 7 disappeared.</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:green'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the background estimator (class
-TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Back_synt256.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt; </p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Back_synt256() {</p>
-
-<p class=MsoNormal>   Int_t i, j;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 64;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>      source[i]=new Double_t[nbinsy];     </p>
-
-<p class=MsoNormal>   TH2F *back = new TH2F(&quot;back&quot;,&quot;Background estimation&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   back=(TH2F*) f-&gt;Get(&quot;back3;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Background = new
-TCanvas(&quot;Background&quot;,&quot;Estimation of background with increasing
-window&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = back-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }     </p>
-
-<p class=MsoNormal> s-&gt;Background(source,nbinsx,nbinsy,8,8,kBackIncreasingWindow,kBackSuccessiveFiltering);//kBackOneStepFiltering</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++)</p>
-
-<p class=MsoNormal>       back-&gt;SetBinContent(i + 1,j + 1, source[i][j]);   </p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal>   back-&gt;Draw(&quot;SURF&quot;);  </p>
-
-<p class=MsoNormal>   }</p>
-
-</div>
-
-<!-- */
-// --> End_Html
-
    Int_t i, x, y, sampling, r1, r2;
    Double_t a, b, p1, p2, p3, p4, s1, s2, s3, s4;
    if (ssizex <= 0 || ssizey <= 0)
@@ -1008,239 +661,85 @@ window&quot;,10,10,1000,700);</p>
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-///   TWO-DIMENSIONAL MARKOV SPECTRUM SMOOTHING FUNCTION
+/// This function calculates smoothed spectrum from source spectrum
+/// based on Markov chain method.
+/// The result is placed in the array pointed by source pointer.
 ///
-///   This function calculates smoothed spectrum from source spectrum
-///      based on Markov chain method.
-///   The result is placed in the array pointed by source pointer.
+/// Function parameters:
+///  - source-pointer to the array of source spectrum
+///  - ssizex-x length of source
+///  - ssizey-y length of source
+///  - averWindow-width of averaging smoothing window
 ///
-///   Function parameters:
-///   source-pointer to the array of source spectrum
-///   ssizex-x length of source
-///   ssizey-y length of source
-///   averWindow-width of averaging smoothing window
+/// ### Smoothing
 ///
-//////////////////////////////////////////////////////////////////////////////
-///Begin_Html <!--
+/// Goal: Suppression of statistical fluctuations the algorithm is based on discrete
+/// Markov chain, which has very simple invariant distribution
+/// \f[
+/// U_2 = \frac{p_{1.2}}{p_{2,1}}U_1, U_3 = \frac{p_{2,3}}{p_{3,2}}U_2 U_1, ... , U_n = \frac{p_{n-1,n}}{p_{n,n-1}}U_{n-1} ... U_2 U_1
+/// \f]
+/// \f$U_1\f$ being defined from the normalization condition \f$ \sum_{i=1}^{n} U_i = 1\f$
+/// n is the length of the smoothed spectrum and
+/// \f[
+/// p_{i,i\pm1} = A_i \sum_{k=1}^{m} exp\left[\frac{y(i\pm k)-y(i)}{y(i\pm k)+y(i)}\right]
+/// \f]
+/// is the probability of the change of the peak position from channel i to the channel i+1.
+/// \f$A_i\f$ is the normalization constant so that\f$ p_{i,i-1}+p_{i,i+1}=1\f$ and m is a width
+/// of smoothing window. We have extended this algorithm to two dimensions.
+///
+/// #### Reference:
+///
+/// [1] Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376 (1996), 451.
+///
+/// ### Example 4 - script Smooth.c
+///
+/// \image html TSpectrum2_Smoothing1.jpg Fig. 9 Original noisy spectrum.
+/// \image html TSpectrum2_Smoothing2.jpg Fig. 10 Smoothed spectrum m=3 Peaks can hardly be observed. Peaks become apparent.
+/// \image html TSpectrum2_Smoothing3.jpg Fig. 11 Smoothed spectrum m=5
+/// \image html TSpectrum2_Smoothing4.jpg Fig.12 Smoothed spectrum m=7
+///
+/// #### Script:
+///
+/// Example to illustrate the Markov smoothing (class TSpectrum).
+/// To execute this example, do
+///
+/// `root > .x Smooth.C`
+///
+/// ~~~ {.cpp}
+///   #include <TSpectrum>
+///   void Smooth() {
+///      Int_t i, j;
+///      Double_t nbinsx = 256;
+///      Double_t nbinsy = 256;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbinsx;
+///      Double_t ymin = 0;
+///      Double_t ymax = (Double_t)nbinsy;
+///      Double_t** source = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i] = new Double_t[nbinsy];
+///      TH2F *smooth = new TH2F("smooth","Background estimation",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      TFile *f = new TFile("spectra2/TSpectrum2.root");
+///      smooth=(TH2F*) f->Get("smooth1;1");
+///      TCanvas *Smoothing = new TCanvas("Smoothing","Markov smoothing",10,10,1000,700);
+///      TSpectrum *s = new TSpectrum();
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            source[i][j] = smooth->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      s->SmoothMarkov(source,nbinsx,nbinsx,3); //5,7
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++)
+///            smooth->SetBinContent(i + 1,j + 1, source[i][j]);
+///      }
+///      smooth->Draw("SURF");
+///   }
+/// ~~~
 
 const char* TSpectrum2::SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssizey, Int_t averWindow)
 {
-/* -->
-<div class=Section1>
 
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:20.0pt'>Smoothing</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:18.0pt'>&nbsp;</span></i></p>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Goal: Suppression of
-statistical fluctuations</span></i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>the algorithm is based on discrete
-Markov chain, which has very simple invariant distribution</span></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>            <sub><img width=551 height=63
-src="gif/TSpectrum2_Smoothing1.gif"></sub><span style='font-size:16.0pt;
-font-family:Arial'>     </span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt;
-font-family:Arial'>        </span><sub><img width=28 height=36
-src="gif/TSpectrum2_Smoothing2.gif"></sub><span style='font-size:16.0pt;
-font-family:Arial'>  being defined from the normalization condition </span><sub><img
-width=70 height=52 src="gif/TSpectrum2_Smoothing3.gif"></sub></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><span style='font-size:16.0pt;font-family:Arial'>         n
-is the length of the smoothed spectrum and </span></p>
-
-<p class=MsoNormal>
-
-<table cellpadding=0 cellspacing=0 align=left>
- <tr>
-  <td width=57 height=15></td>
- </tr>
- <tr>
-  <td></td>
-  <td><img width=258 height=60 src="gif/TSpectrum2_Smoothing4.gif"></td>
- </tr>
-</table>
-
-<span style='font-size:16.0pt;font-family:Arial'>&nbsp;</span></p>
-
-<p class=MsoNormal><span style='font-size:18.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<br clear=ALL>
-
-<p class=MsoNormal style='margin-left:34.2pt;text-align:justify'><span
-style='font-size:16.0pt;font-family:Arial'>is the probability of the change of
-the peak position from channel i to the channel i+1. </span> <sub><img
-width=28 height=36 src="gif/TSpectrum2_Smoothing5.gif"></sub><span
-style='font-size:16.0pt;font-family:Arial'>is the normalization constant so
-that </span><span style='font-family:Arial'><sub><img width=133 height=34
-src="gif/TSpectrum2_Smoothing6.gif"></sub> </span><span style='font-size:16.0pt;
-font-family:Arial'>and m is a width of smoothing window. We have extended this
-algortihm to two dimensions. </span></p>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>&nbsp;</span></i></p>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Function:</span></i></p>
-
-<p class=MsoNormal><b><span style='font-size:18.0pt'>const <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#char" target="_parent">char</a>*
-</span></b><span style='font-size:18.0pt'><a
-href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrum2::SmoothMarkov</b></a><b>(<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#double" target="_parent">double</a>
-**fSpectrum, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
-target="_parent">int</a> ssizex, <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#int" target="_parent">int</a>
-ssizey,  <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
-target="_parent">int</a> averWindow)  </b></span></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>This
-function calculates smoothed spectrum from the source spectrum based on Markov
-chain method. The result is placed in the vector pointed by source pointer. On
-successful completion it returns 0. On error it returns pointer to the string
-describing error.</span></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt;color:red'>Parameters:</span></i></p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>fSpectrum</span></b>-pointer
-to the matrix of source spectrum                  </p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>ssizex, ssizey</span></b>
--lengths of the spectrum matrix                                 </p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>averWindow</span></b>-width
-of averaging smoothing window </p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><i><span style='font-size:18.0pt'>Reference:</span></i></b></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>[1]
-Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
-(1996), 451<b>.</b>  </span></p>
-
-</div>
-
-<!-- */
-// --> End_Html
-//Begin_Html <!--
-/* -->
-<div class=Section1>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 4 – script Smooth.c
-:</span></i></p>
-
-<p class=MsoNormal><span style='font-size:16.0pt'><img width=300 height=209
-src="gif/TSpectrum2_Smoothing1.jpg"><img width=297 height=207
-src="gif/TSpectrum2_Smoothing2.jpg"></span></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt'>Fig. 9 Original noisy
-spectrum.</span></b><b><span style='font-size:14.0pt'>    </span></b><b><span
-style='font-size:16.0pt'>Fig. 10 Smoothed spectrum m=3</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt'>Peaks can hardly be
-observed.     Peaks become apparent.</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt'><img width=293 height=203
-src="gif/TSpectrum2_Smoothing3.jpg"><img width=297 height=205
-src="gif/TSpectrum2_Smoothing4.jpg"></span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt'>Fig. 11 Smoothed spectrum
-m=5 Fig.12 Smoothed spectrum m=7</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the Markov smoothing (class
-TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Smooth.C</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt; </p>
-
-<p class=MsoNormal>void Smooth() {</p>
-
-<p class=MsoNormal>   Int_t i, j;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 256;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 256;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-Double_t[nbinsy];     </p>
-
-<p class=MsoNormal>   TH2F *smooth = new
-TH2F(&quot;smooth&quot;,&quot;Background
-estimation&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   smooth=(TH2F*) f-&gt;Get(&quot;smooth1;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Smoothing = new
-TCanvas(&quot;Smoothing&quot;,&quot;Markov smoothing&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = smooth-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal>   s-&gt;SmoothMarkov(source,nbinsx,nbinsx,3);//5,7</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++)</p>
-
-<p class=MsoNormal>       smooth-&gt;SetBinContent(i + 1,j + 1,
-source[i][j]);   </p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal>   smooth-&gt;Draw(&quot;SURF&quot;);  </p>
-
-<p class=MsoNormal>   }</p>
-
-</div>
-
-<!-- */
-// --> End_Html
    Int_t xmin, xmax, ymin, ymax, i, j, l;
    Double_t a, b, maxch;
    Double_t nom, nip, nim, sp, sm, spx, spy, smx, smy, plocha = 0;
@@ -1423,23 +922,218 @@ source[i][j]);   </p>
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-///   TWO-DIMENSIONAL DECONVOLUTION FUNCTION
-///   This function calculates deconvolution from source spectrum
-///   according to response spectrum
-///   The result is placed in the matrix pointed by source pointer.
+/// This function calculates deconvolution from source spectrum
+/// according to response spectrum
+/// The result is placed in the matrix pointed by source pointer.
 ///
-///   Function parameters:
-///   source-pointer to the matrix of source spectrum
-///   resp-pointer to the matrix of response spectrum
-///   ssizex-x length of source and response spectra
-///   ssizey-y length of source and response spectra
-///   numberIterations, for details we refer to manual
-///   numberRepetitions, for details we refer to manual
-///   boost, boosting factor, for details we refer to manual
+/// Function parameters:
+///  - source-pointer to the matrix of source spectrum
+///  - resp-pointer to the matrix of response spectrum
+///  - ssizex-x length of source and response spectra
+///  - ssizey-y length of source and response spectra
+///  - numberIterations, for details we refer to manual
+///  - numberRepetitions, for details we refer to manual
+///  - boost, boosting factor, for details we refer to manual
 ///
-//////////////////////////////////////////////////////////////////////////////
-///Begin_Html <!--
+/// ### Deconvolution
+///
+/// Goal: Improvement of the resolution in spectra, decomposition of multiplets
+///
+/// Mathematical formulation of the 2-dimensional convolution system is
+///
+///\f[
+/// y(i_1,i_2) = \sum_{k_1=0}^{N_1-1} \sum_{k_2=0}^{N_2-1} h(i_1-k_1,i_2-k_2)x(k_1,k_2)
+///\f]
+///\f[
+/// i_1 = 0,1,2, ... ,N_1-1, i_2 = 0,1,2, ... ,N_2-1
+///\f]
+///
+/// where h(i,j) is the impulse response function, x, y are input and output
+/// matrices, respectively, \f$ N_1, N_2\f$ are the lengths of x and h matrices
+///
+///  - let us assume that we know the response and the output matrices (spectra) of the above given system.
+///  - the deconvolution represents solution of the overdetermined system of linear equations, i.e., the
+///    calculation of the matrix x.
+///  - from numerical stability point of view the operation of deconvolution is
+///    extremely critical (ill-posed problem) as well as time consuming operation.
+///  - the Gold deconvolution algorithm proves to work very well even for 2-dimensional
+///    systems. Generalisation of the algorithm for 2-dimensional systems was presented in [1], [2].
+///  - for Gold deconvolution algorithm as well as for boosted deconvolution algorithm we refer also to TSpectrum
+///
+/// #### References:
+///
+/// [1] M. Morhac;, J. Kliman, V. Matouoek, M. Veselsky, I. Turzo.:
+/// Efficient one- and two-dimensional Gold deconvolution and its application to
+/// gamma-ray spectra decomposition. NIM, A401 (1997) 385-408.
+///
+/// [2] Morhac; M., Matouoek V., Kliman J., Efficient algorithm of multidimensional
+/// deconvolution and its application to nuclear data processing, Digital Signal
+/// Processing 13 (2003) 144.
+///
+/// ### Example 5 - script Decon.c
+///
+/// response function (usually peak) should be shifted to the beginning of the coordinate system (see Fig. 13)
+///
+/// \image html TSpectrum2_Deconvolution1.jpg Fig. 13 2-dimensional response spectrum
+/// \image html TSpectrum2_Deconvolution2.jpg Fig. 14 2-dimensional gamma-gamma-ray input spectrum (before deconvolution)
+/// \image html TSpectrum2_Deconvolution3.jpg Fig. 15 Spectrum from Fig. 14 after deconvolution (1000 iterations)
+///
+/// #### Script:
+///
+/// Example to illustrate the Gold deconvolution (class TSpectrum2).
+/// To execute this example, do
+///
+/// `root > .x Decon.C`
+///
+/// ~~~ {.cpp}
+///   #include <TSpectrum2>
+///   void Decon() {
+///      Int_t i, j;
+///      Double_t nbinsx = 256;
+///      Double_t nbinsy = 256;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbinsx;
+///      Double_t ymin = 0;
+///      Double_t ymax = (Double_t)nbinsy;
+///      Double_t** source = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i]=new Double_t[nbinsy];
+///      TH2F *decon = new TH2F("decon","Gold deconvolution",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      TFile *f = new TFile("spectra2/TSpectrum2.root");
+///      decon=(TH2F*) f->Get("decon1;1");
+///      Double_t** response = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         response[i]=new Double_t[nbinsy];
+///      TH2F *resp = new TH2F("resp","Response matrix",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      resp=(TH2F*) f->Get("resp1;1");
+///      TCanvas *Deconvol = new TCanvas("Deconvolution","Gold deconvolution",10,10,1000,700);
+///      TSpectrum *s = new TSpectrum();
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            source[i][j] = decon->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            response[i][j] = resp->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      s->Deconvolution(source,response,nbinsx,nbinsy,1000,1,1);
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++)
+///            decon->SetBinContent(i + 1,j + 1, source[i][j]);
+///      }
+///      decon->Draw("SURF");
+///   }
+/// ~~~
+///
+/// ### Example 6 - script Decon2.c
+///
+/// \image html TSpectrum2_Deconvolution4.jpg Fig. 16 Response spectrum
+/// \image html TSpectrum2_Deconvolution5.jpg Fig. 17 Original synthetic input spectrum (before deconvolution). It is composed of 17 peaks. 5 peaks are overlapping in the outlined multiplet and two peaks in doublet.
+/// \image html TSpectrum2_Deconvolution6.jpg Fig. 18 Spectrum from Fig. 17 after deconvolution (1000 iterations). Resolution is improved but the peaks in multiplet remained unresolved.
+///
+/// #### Script:
+///
+/// Example to illustrate the Gold deconvolution (class TSpectrum2).
+/// To execute this example, do
+///
+/// `root > .x Decon2.C`
+///
+/// ~~~ {.cpp}
+///   #include <TSpectrum2>
+///   void Decon2() {
+///      Int_t i, j;
+///      Double_t nbinsx = 64;
+///      Double_t nbinsy = 64;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbinsx;
+///      Double_t ymin = 0;
+///      Double_t ymax = (Double_t)nbinsy;
+///      Double_t** source = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i]=new Double_t[nbinsy];
+///      TH2F *decon = new TH2F("decon","Gold deconvolution",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      TFile *f = new TFile("spectra2/TSpectrum2.root");
+///      decon=(TH2F*) f->Get("decon2;1");
+///      Double_t** response = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         response[i]=new Double_t[nbinsy];
+///      TH2F *resp = new TH2F("resp","Response matrix",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      resp=(TH2F*) f->Get("resp2;1");
+///      TCanvas *Deconvol = new TCanvas("Deconvolution","Gold deconvolution",10,10,1000,700);
+///      TSpectrum *s = new TSpectrum();
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            source[i][j] = decon->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            response[i][j] = resp->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      s->Deconvolution(source,response,nbinsx,nbinsy,1000,1,1);
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++)
+///            decon->SetBinContent(i + 1,j + 1, source[i][j]);
+///      }
+///      decon->Draw("SURF");
+///   }
+/// ~~~
+///
+/// ### Example 7 - script Decon2HR.c
+///
+/// \image html TSpectrum2_Deconvolution7.jpg Fig. 19 Spectrum from Fig. 17 after boosted deconvolution (50 iterations repeated 20 times, boosting coefficient was 1.2). All the peaks in multiplet as well as in doublet are completely decomposed.
+///
+/// #### Script:
+///
+/// Example to illustrate boosted Gold deconvolution (class TSpectrum2).
+/// To execute this example, do
+///
+/// `root > .x Decon2HR.C`
+///
+/// ~~~ {.cpp}
+///   #include <TSpectrum2>
+///   void Decon2HR() {
+///      Int_t i, j;
+///      Double_t nbinsx = 64;
+///      Double_t nbinsy = 64;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbinsx;
+///      Double_t ymin = 0;
+///      Double_t ymax = (Double_t)nbinsy;
+///      Double_t** source = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i]=new Double_t[nbinsy];
+///      TH2F *decon = new TH2F("decon","Boosted Gold deconvolution",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      TFile *f = new TFile("spectra2/TSpectrum2.root");
+///      decon=(TH2F*) f->Get("decon2;1");
+///      Double_t** response = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         response[i]=new Double_t[nbinsy];
+///      TH2F *resp = new TH2F("resp","Response matrix",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      resp=(TH2F*) f->Get("resp2;1");
+///      TCanvas *Deconvol = new TCanvas("Deconvolution","Gold deconvolution",10,10,1000,700);
+///      TSpectrum *s = new TSpectrum();
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            source[i][j] = decon->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            response[i][j] = resp->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      s->Deconvolution(source,response,nbinsx,nbinsy,1000,1,1);
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++)
+///            dec   on->SetBinContent(i + 1,j + 1, source[i][j]);
+///      }
+///      decon->Draw("SURF");
+///   }
+/// ~~~
 
 const char *TSpectrum2::Deconvolution(Double_t **source, Double_t **resp,
                                        Int_t ssizex, Int_t ssizey,
@@ -1447,543 +1141,6 @@ const char *TSpectrum2::Deconvolution(Double_t **source, Double_t **resp,
                                        Int_t numberRepetitions,
                                        Double_t boost)
 {
-/* -->
-<div class=Section1>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:20.0pt'>Deconvolution</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:18.0pt'>&nbsp;</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:18.0pt'>Goal:
-Improvement of the resolution in spectra, decomposition of multiplets</span></i></p>
-
-<p class=MsoNormal><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal><span style='font-size:16.0pt'>Mathematical formulation of
-the 2-dimensional convolution system is</span></p>
-
-<p class=MsoNormal style='margin-left:18.0pt'>
-
-<table cellpadding=0 cellspacing=0 align=left>
- <tr>
-  <td width=0 height=18></td>
- </tr>
- <tr>
-  <td></td>
-  <td><img width=577 height=138 src="gif/TSpectrum2_Deconvolution1.gif"></td>
- </tr>
-</table>
-
-<span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<br clear=ALL>
-
-<p class=MsoNormal><span style='font-size:16.0pt'>where h(i,j) is the impulse
-response function, x, y are input and output matrices, respectively, <sub><img
-width=45 height=24 src="gif/TSpectrum2_Deconvolution2.gif"></sub> are the lengths
-of x and h matrices</span><i><span style='font-size:18.0pt'> </span></i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>let us assume that we know the
-response and the output matrices (spectra) of the above given system. </span></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>the deconvolution represents
-solution of the overdetermined system of linear equations, i.e.,  the
-calculation of the matrix <b>x.</b></span></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>from numerical stability point of
-view the operation of deconvolution is extremely critical (ill-posed  problem)
-as well as time consuming operation. </span></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>the Gold deconvolution algorithm
-proves to work very well even for 2-dimensional systems. Generalization of the
-algorithm for 2-dimensional systems was presented in [1], [2].</span></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>for Gold deconvolution algorithm
-as well as for boosted deconvolution algorithm we refer also to TSpectrum </span></p>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>&nbsp;</span></i></p>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Function:</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:18.0pt'>const
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#char">char</a>* </span></b><a
-name="TSpectrum:Deconvolution1"></a><a
-href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b><span
-style='font-size:18.0pt'>TSpectrum2::Deconvolution</span></b></a><b><span
-style='font-size:18.0pt'>(<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> **source,
-const <a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
-**resp, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a> ssizex,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a> ssizey, <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a> numberIterations,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a> numberRepetitions,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a></span></b><b><span
-style='font-size:16.0pt'> </span></b><b><span style='font-size:18.0pt'>boost)</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>This
-function calculates deconvolution from source spectrum according to response
-spectrum using Gold deconvolution algorithm. The result is placed in the matrix
-pointed by source pointer. On successful completion it returns 0. On error it
-returns pointer to the string describing error. If desired after every
-numberIterations one can apply boosting operation (exponential function with
-exponent given by boost coefficient) and repeat it numberRepetitions times.</span></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt;color:red'>Parameters:</span></i></p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>source</span></b>-pointer
-to the matrix of source spectrum                  </p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>resp</span></b>-pointer
-to the matrix of response spectrum                  </p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>ssizex, ssizey</span></b>-lengths
-of the spectrum matrix                                 </p>
-
-<p class=MsoNormal style='text-align:justify'>        <b><span
-style='font-size:14.0pt'>numberIterations</span></b>-number of iterations </p>
-
-<p class=MsoNormal style='text-align:justify'>        <b><span
-style='font-size:14.0pt'>numberRepetitions</span></b>-number of repetitions
-for boosted deconvolution. It must be </p>
-
-<p class=MsoNormal style='text-align:justify'>        greater or equal to one.</p>
-
-<p class=MsoNormal style='text-align:justify'>        <b><span
-style='font-size:14.0pt'>boost</span></b>-boosting coefficient, applies only
-if numberRepetitions is greater than one.  </p>
-
-<p class=MsoNormal style='text-align:justify'>        <span style='font-size:
-14.0pt;color:fuchsia'>Recommended range &lt;1,2&gt;.</span></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><i><span style='font-size:18.0pt'>References:</span></i></b></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'> [1]
-</span><span lang=SK style='font-size:16.0pt'>M. Morhá&#269;, J. Kliman, V.
-Matoušek, M. Veselský, I. Turzo</span><span style='font-size:16.0pt'>.:
-Efficient one- and two-dimensional Gold deconvolution and its application to
-gamma-ray spectra decomposition. NIM, A401 (1997) 385-408.</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>[2]
-Morhá&#269; M., Matoušek V., Kliman J., Efficient algorithm of multidimensional
-deconvolution and its application to nuclear data processing, Digital Signal
-Processing 13 (2003) 144. </span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-</div>
-
-<!-- */
-// --> End_Html
-//Begin_Html <!--
-/* -->
-<div class=Section1>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 5 – script Decon.c
-:</span></i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>response function (usually peak)
-should be shifted to the beginning of the coordinate system (see Fig. 13)</span></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><img width=602 height=418
-src="gif/TSpectrum2_Deconvolution1.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-13 2-dimensional response spectrum</span></b></p>
-
-<p class=MsoNormal><img width=602 height=418
-src="gif/TSpectrum2_Deconvolution2.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-14 2-dimensional gamma-gamma-ray input spectrum (before deconvolution)</span></b></p>
-
-<p class=MsoNormal><img width=602 height=418
-src="gif/TSpectrum2_Deconvolution3.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-15 Spectrum from Fig. 14 after deconvolution (1000 iterations)</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the Gold deconvolution (class
-TSpectrum2).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Decon.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum2&gt; </p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Decon() {</p>
-
-<p class=MsoNormal>   Int_t i, j;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 256;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 256;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-Double_t[nbinsy];     </p>
-
-<p class=MsoNormal>   TH2F *decon = new TH2F(&quot;decon&quot;,&quot;Gold
-deconvolution&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   decon=(TH2F*) f-&gt;Get(&quot;decon1;1&quot;);</p>
-
-<p class=MsoNormal>   Double_t** response = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    response[i]=new
-Double_t[nbinsy];     </p>
-
-<p class=MsoNormal>   TH2F *resp = new TH2F(&quot;resp&quot;,&quot;Response
-matrix&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   resp=(TH2F*) f-&gt;Get(&quot;resp1;1&quot;);   </p>
-
-<p class=MsoNormal>   TCanvas *Deconvol = new
-TCanvas(&quot;Deconvolution&quot;,&quot;Gold deconvolution&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = decon-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                response[i][j] = resp-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }   </p>
-
-<p class=MsoNormal>   s-&gt;Deconvolution(source,response,nbinsx,nbinsy,1000,1,1);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++)</p>
-
-<p class=MsoNormal>       decon-&gt;SetBinContent(i + 1,j + 1, source[i][j]);  
-</p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal>   </p>
-
-<p class=MsoNormal>   decon-&gt;Draw(&quot;SURF&quot;);  </p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 6 – script
-Decon2.c :</span></i></p>
-
-<p class=MsoNormal><img width=602 height=418
-src="gif/TSpectrum2_Deconvolution4.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-16 Response spectrum</span></b></p>
-
-<p class=MsoNormal><img width=602 height=418
-src="gif/TSpectrum2_Deconvolution5.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-17 Original synthetic input spectrum (before deconvolution). It is composed of
-17 peaks. 5 peaks are overlapping in the outlined multiplet and two peaks in
-doublet.</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-width=602 height=418 src="gif/TSpectrum2_Deconvolution6.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-18 Spectrum from Fig. 17 after deconvolution (1000 iterations). Resolution is
-improved but the peaks in multiplet remained unresolved.</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the Gold deconvolution (class
-TSpectrum2).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Decon2.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum2&gt; </p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Decon2() {</p>
-
-<p class=MsoNormal>   Int_t i, j;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 64;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-Double_t[nbinsy];     </p>
-
-<p class=MsoNormal>   TH2F *decon = new TH2F(&quot;decon&quot;,&quot;Gold
-deconvolution&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   decon=(TH2F*) f-&gt;Get(&quot;decon2;1&quot;);</p>
-
-<p class=MsoNormal>   Double_t** response = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    response[i]=new
-Double_t[nbinsy];     </p>
-
-<p class=MsoNormal>   TH2F *resp = new TH2F(&quot;resp&quot;,&quot;Response
-matrix&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   resp=(TH2F*) f-&gt;Get(&quot;resp2;1&quot;);   </p>
-
-<p class=MsoNormal>   TCanvas *Deconvol = new
-TCanvas(&quot;Deconvolution&quot;,&quot;Gold
-deconvolution&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = decon-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                response[i][j] = resp-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }   </p>
-
-<p class=MsoNormal>   s-&gt;Deconvolution(source,response,nbinsx,nbinsy,1000,1,1);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++)</p>
-
-<p class=MsoNormal>       decon-&gt;SetBinContent(i + 1,j + 1, source[i][j]);  
-</p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal>   decon-&gt;Draw(&quot;SURF&quot;);  </p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 7 – script
-Decon2HR.c :</span></i></p>
-
-<p class=MsoNormal><img width=602 height=418
-src="gif/TSpectrum2_Deconvolution7.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-19 Spectrum from Fig. 17 after boosted deconvolution (50 iterations repeated 20
-times, boosting coefficient was 1.2). All the peaks in multiplet as well as in
-doublet are completely decomposed.</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate boosted Gold deconvolution (class
-TSpectrum2).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Decon2HR.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>//#include &lt;TSpectrum2&gt; </p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Decon2HR() {</p>
-
-<p class=MsoNormal>   Int_t i, j;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 64;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-Double_t[nbinsy];     </p>
-
-<p class=MsoNormal>   TH2F *decon = new TH2F(&quot;decon&quot;,&quot;Boosted
-Gold deconvolution&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   decon=(TH2F*) f-&gt;Get(&quot;decon2;1&quot;);</p>
-
-<p class=MsoNormal>   Double_t** response = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    response[i]=new
-Double_t[nbinsy];     </p>
-
-<p class=MsoNormal>   TH2F *resp = new TH2F(&quot;resp&quot;,&quot;Response
-matrix&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   resp=(TH2F*) f-&gt;Get(&quot;resp2;1&quot;);   </p>
-
-<p class=MsoNormal>   TCanvas *Deconvol = new
-TCanvas(&quot;Deconvolution&quot;,&quot;Gold
-deconvolution&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = decon-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                response[i][j] = resp-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }   </p>
-
-<p class=MsoNormal>   s-&gt;Deconvolution(source,response,nbinsx,nbinsy,1000,1,1);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++)</p>
-
-<p class=MsoNormal>       decon-&gt;SetBinContent(i + 1,j + 1, source[i][j]);  
-</p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal>   decon-&gt;Draw(&quot;SURF&quot;);  </p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-</div>
-
-<!-- */
-// --> End_Html
    Int_t i, j, lhx, lhy, i1, i2, j1, j2, k1, k2, lindex, i1min, i1max,
        i2min, i2max, j1min, j1max, j2min, j2max, positx = 0, posity = 0, repet;
    Double_t lda, ldb, ldc, area, maximum = 0;
@@ -2143,6 +1300,295 @@ deconvolution&quot;,10,10,1000,700);</p>
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// This function searches for peaks in source spectrum
+/// It is based on deconvolution method. First the background is
+/// removed (if desired), then Markov spectrum is calculated
+/// (if desired), then the response function is generated
+/// according to given sigma and deconvolution is carried out.
+///
+/// Function parameters:
+///  - source-pointer to the matrix of source spectrum
+///  - dest-pointer to the matrix of resulting deconvolved spectrum
+///  - ssizex-x length of source spectrum
+///  - ssizey-y length of source spectrum
+///  - sigma-sigma of searched peaks, for details we refer to manual
+///  - threshold-threshold value in % for selected peaks, peaks with
+///    amplitude less than threshold*highest_peak/100
+///    are ignored, see manual
+///  - backgroundRemove-logical variable, set if the removal of
+///    background before deconvolution is desired
+///  - deconIterations-number of iterations in deconvolution operation
+///  - markov-logical variable, if it is true, first the source spectrum
+///    is replaced by new spectrum calculated using Markov
+///    chains method.
+///  - averWindow-averaging window of searched peaks, for details
+///    we refer to manual (applies only for Markov method)
+///
+/// ### Peaks searching
+///
+/// Goal: to identify automatically the peaks in spectrum with the presence of the
+/// continuous background, one-fold coincidences (ridges) and statistical
+/// fluctuations - noise.
+///
+/// The common problems connected with correct peak identification in two-dimensional coincidence spectra are
+///
+///  - non-sensitivity to noise, i.e., only statistically relevant peaks should be identified
+///  - non-sensitivity of the algorithm to continuous background
+///  - non-sensitivity to one-fold coincidences (coincidences peak - background in both dimensions) and their crossings
+///  - ability to identify peaks close to the edges of the spectrum region. Usually peak finders fail to detect them
+///  - resolution, decomposition of doublets and multiplets. The algorithm should be able to recognise close positioned peaks.
+///  - ability to identify peaks with different sigma
+///
+/// #### References:
+///
+/// [1] M.A. Mariscotti: A method for identification of peaks in the presence of
+/// background and its application to spectrum analysis. NIM 50 (1967), 309-320.
+///
+/// [2] M. Morhac;, J. Kliman, V. Matouoek, M. Veselsky, I. Turzo.:Identification
+/// of peaks in multidimensional coincidence gamma-ray spectra. NIM, A443 (2000)
+/// 108-125.
+///
+/// [3] Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
+/// (1996), 451.
+///
+/// ### Examples of peak searching method
+///
+/// SearchHighRes function provides users with the possibility
+/// to vary the input parameters and with the access to the output deconvolved data
+/// in the destination spectrum. Based on the output data one can tune the
+/// parameters.
+///
+/// ### Example 8 - script Src.c
+///
+/// \image html TSpectrum2_Searching1.jpg Fig. 20 Two-dimensional spectrum with found peaks denoted by markers (sigma=2, threshold=5%, 3 iterations steps in the deconvolution)
+/// \image html TSpectrum2_Searching3.jpg Fig. 21 Spectrum from Fig. 20 after background elimination and deconvolution
+///
+/// #### Script:
+///
+/// Example to illustrate high resolution peak searching function (class TSpectrum).
+/// To execute this example, do
+///
+/// `root > .x Src.C
+///
+/// ~~~ {.cpp}
+///   #include <TSpectrum2>
+///   void Src() {
+///      Int_t i, j, nfound;
+///      Double_t nbinsx = 64;
+///      Double_t nbinsy = 64;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbinsx;
+///      Double_t ymin = 0;
+///      Double_t ymax = (Double_t)nbinsy;
+///      Double_t** source = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i]=new Double_t[nbinsy];
+///      Double_t** dest = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         dest[i]=new Double_t[nbinsy];
+///      TH2F *search = new TH2F("search","High resolution peak searching",nbinsx,xmin,xmax,nbinsy,ymin,ymax);/
+///      TFile *f = new TFile("spectra2/TSpectrum2.root");
+///      search=(TH2F*) f->Get("search4;1");
+///      TCanvas *Searching = new TCanvas("Searching","High resolution peak searching",10,10,1000,700);
+///      TSpectrum2 *s = new TSpectrum2();
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            source[i][j] = search->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      nfound = s->SearchHighRes(source, dest, nbinsx, nbinsy, 2, 5, kTRUE, 3, kFALSE, 3);
+///      printf("Found %d candidate peaks\n",nfound);
+///      for(i=0;i<nfound;i++)
+///         printf("posx= %d, posy= %d, value=%d\n",(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
+///         (Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);
+///  }
+/// ~~~
+///
+/// ### Example 9 - script Src2.c
+///
+/// \image html TSpectrum2_Searching4.jpg Fig. 22 Two-dimensional noisy spectrum with found peaks denoted by markers (sigma=2, threshold=10%, 10 iterations steps in the deconvolution). One can observe that the algorithm is insensitive to the crossings of one-dimensional ridges. It identifies only two-coincidence peaks.
+/// \image html TSpectrum2_Searching5.jpg Fig. 23 Spectrum from Fig. 22 after background elimination and deconvolution
+///
+/// #### Script:
+///
+/// Example to illustrate high resolution peak searching function (class TSpectrum).
+/// To execute this example, do
+///
+/// `root > .x Src2.C`
+///
+/// ~~~ {.cpp}
+///   #include <TSpectrum2>
+///   void Src2() {
+///      Int_t i, j, nfound;
+///      Double_t nbinsx = 256;
+///      Double_t nbinsy = 256;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbinsx;
+///      Double_t ymin = 0;
+///      Double_t ymax = (Double_t)nbinsy;
+///      Double_t** source = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i]=new Double_t[nbinsy];
+///      Double_t** dest = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         dest[i]=new Double_t[nbinsy];
+///      TH2F *search = new TH2F("search","High resolution peak searching",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      TFile *f = new TFile("spectra2/TSpectrum2.root");
+///      search=(TH2F*) f->Get("back3;1");
+///      TCanvas *Searching = new TCanvas("Searching","High resolution peak searching",10,10,1000,700);
+///      TSpectrum2 *s = new TSpectrum2();
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            source[i][j] = search->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      nfound = s->SearchHighRes(source, dest, nbinsx, nbinsy, 2, 10, kTRUE, 10, kFALSE, 3);
+///      printf("Found %d candidate peaks\n",nfound);
+///      for(i=0;i<nfound;i++)
+///         printf("posx= %d, posy= %d, value=%d\n",(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
+///         (Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);
+///   }
+/// ~~~
+///
+/// ### Example 10 - script Src3.c
+///
+/// \image html TSpectrum2_Searching6.jpg Fig. 24 Two-dimensional spectrum with 15 found peaks denoted by markers. Some peaks are positioned close to each other. It is necessary to increase number of iterations in the deconvolution. In next 3 Figs. we shall study the influence of this parameter.
+/// \image html TSpectrum2_Searching7.jpg Fig. 25 Spectrum from Fig. 24 after deconvolution (# of iterations = 3). Number of identified peaks = 13.
+/// \image html TSpectrum2_Searching8.jpg Fig. 26 Spectrum from Fig. 24 after deconvolution (# of iterations = 10). Number of identified peaks = 13.
+/// \image html TSpectrum2_Searching9.jpg Fig. 27 Spectrum from Fig. 24 after deconvolution (# of iterations = 100). Number of identified peaks = 15. Now the algorithm is able to decompose two doublets in the spectrum.
+///
+/// #### Script:
+///
+/// Example to illustrate high resolution peak searching function (class TSpectrum).
+/// To execute this example, do
+///
+/// `root > .x Src3.C`
+///
+/// ~~~ {.cpp}
+///   #include <TSpectrum2>
+///   void Src3() {
+///      Int_t i, j, nfound;
+///      Double_t nbinsx = 64;
+///      Double_t nbinsy = 64;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbinsx;
+///      Double_t ymin = 0;
+///      Double_t ymax = (Double_t)nbinsy;
+///      Double_t** source = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i]=new Double_t[nbinsy];
+///      Double_t** dest = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         dest[i]=new Double_t[nbinsy];
+///      TH2F *search = new TH2F("search","High resolution peak searching",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      TFile *f = new TFile("spectra2/TSpectrum2.root");
+///      search=(TH2F*) f->Get("search1;1");
+///      TCanvas *Searching = new TCanvas("Searching","High resolution peak searching",10,10,1000,700);
+///      TSpectrum2 *s = new TSpectrum2();
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            source[i][j] = search->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      nfound = s->SearchHighRes(source, dest, nbinsx, nbinsy, 2, 2, kFALSE, 3, kFALSE, 1);//3, 10, 100
+///      printf("Found %d candidate peaks\n",nfound);
+///      for(i=0;i<nfound;i++)
+///         printf("posx= %d, posy= %d, value=%d\n",(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
+///         (Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);
+///  }
+/// ~~~
+///
+/// ### Example 11 - script Src4.c
+///
+/// \image html TSpectrum2_Searching10.jpg Fig. 28 Two-dimensional spectrum with peaks with different sigma denoted by markers (sigma=3, threshold=5%, 10 iterations steps in the deconvolution, Markov smoothing with window=3)
+/// \image html TSpectrum2_Searching12.jpg Fig. 29 Spectrum from Fig. 28 after smoothing and deconvolution.
+///
+/// #### Script:
+///
+/// Example to illustrate high resolution peak searching function (class TSpectrum).
+/// To execute this example, do
+///
+/// `root > .x Src4.C`
+///
+/// ~~~ {.cpp}
+///   #include <TSpectrum2>
+///   void Src4() {
+///   Int_t i, j, nfound;
+///      Double_t nbinsx = 64;
+///      Double_t nbinsy = 64;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbinsx;
+///      Double_t ymin = 0;
+///      Double_t ymax = (Double_t)nbinsy;
+///      Double_t** source = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i]=new Double_t[nbinsy];
+///      Double_t** dest = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         dest[i]=new Double_t[nbinsy];
+///      TH2F *search = new TH2F("search","High resolution peak searching",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      TFile *f = new TFile("spectra2/TSpectrum2.root");
+///      search=(TH2F*) f->Get("search2;1");
+///      TCanvas *Searching = new TCanvas("Searching","High resolution peak searching",10,10,1000,700);
+///      TSpectrum2 *s = new TSpectrum2();
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            source[i][j] = search->GetBinContent(i + 1,j + 1);
+///         }
+///       }
+///      nfound = s->SearchHighRes(source, dest, nbinsx, nbinsy, 3, 5, kFALSE, 10, kTRUE, 3);
+///      printf("Found %d candidate peaks\n",nfound);
+///      for(i=0;i<nfound;i++)
+///         printf("posx= %d, posy= %d, value=%d\n",(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
+///         (Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);
+///  }
+/// ~~~
+///
+/// ### Example 12 - script Src5.c`
+///
+/// \image html TSpectrum2_Searching13.jpg Fig. 30 Two-dimensional spectrum with peaks positioned close to the edges denoted by markers (sigma=2, threshold=5%, 10 iterations steps in the deconvolution)
+/// \image html TSpectrum2_Searching14.jpg Fig. 31 Spectrum from Fig. 30 after deconvolution.
+///
+/// #### Script:
+///
+/// Example to illustrate high resolution peak searching function (class TSpectrum).
+/// To execute this example, do
+///
+/// `root > .x Src5.C`
+///
+/// ~~~ {.cpp}
+///   #include <TSpectrum2>
+///   void Src5() {
+///      Int_t i, j, nfound;
+///      Double_t nbinsx = 64;
+///      Double_t nbinsy = 64;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbinsx;
+///      Double_t ymin = 0;
+///      Double_t ymax = (Double_t)nbinsy;
+///      Double_t** source = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i]=new Double_t[nbinsy];
+///      Double_t** dest = new Double_t*[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         dest[i]=new Double_t[nbinsy];
+///      TH2F *search = new TH2F("search","High resolution peak searching",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      TFile *f = new TFile("spectra2/TSpectrum2.root");
+///      search=(TH2F*) f->Get("search3;1");
+///      TCanvas *Searching = new TCanvas("Searching","High resolution peak searching",10,10,1000,700);
+///      TSpectrum2 *s = new TSpectrum2();
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            source[i][j] = search->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      nfound = s->SearchHighRes(source, dest, nbinsx, nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);
+///      printf("Found %d candidate peaks\n",nfound);
+///      for(i=0;i<nfound;i++)
+///         printf("posx= %d, posy= %d, value=%d\n",(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
+///         (Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);
+///  }
+/// ~~~
 
 Int_t TSpectrum2::SearchHighRes(Double_t **source, Double_t **dest, Int_t ssizex, Int_t ssizey,
                                  Double_t sigma, Double_t threshold,
@@ -2150,714 +1596,6 @@ Int_t TSpectrum2::SearchHighRes(Double_t **source, Double_t **dest, Int_t ssizex
                                  Bool_t markov, Int_t averWindow)
 
 {
-/////////////////////////////////////////////////////////////////////////////
-//   TWO-DIMENSIONAL HIGH-RESOLUTION PEAK SEARCH FUNCTION                  //
-//   This function searches for peaks in source spectrum                   //
-//      It is based on deconvolution method. First the background is       //
-//      removed (if desired), then Markov spectrum is calculated           //
-//      (if desired), then the response function is generated              //
-//      according to given sigma and deconvolution is carried out.         //
-//                                                                         //
-//   Function parameters:                                                  //
-//   source-pointer to the matrix of source spectrum                       //
-//   dest-pointer to the matrix of resulting deconvolved spectrum          //
-//   ssizex-x length of source spectrum                                    //
-//   ssizey-y length of source spectrum                                    //
-//   sigma-sigma of searched peaks, for details we refer to manual         //
-//   threshold-threshold value in % for selected peaks, peaks with         //
-//                amplitude less than threshold*highest_peak/100           //
-//                are ignored, see manual                                  //
-//      backgroundRemove-logical variable, set if the removal of           //
-//                background before deconvolution is desired               //
-//      deconIterations-number of iterations in deconvolution operation    //
-//      markov-logical variable, if it is true, first the source spectrum  //
-//             is replaced by new spectrum calculated using Markov         //
-//             chains method.                                              //
-//   averWindow-averanging window of searched peaks, for details           //
-//                  we refer to manual (applies only for Markov method)    //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
-//Begin_Html <!--
-/* -->
-<div class=Section1>
-
-<p class=MsoNormal><b><span style='font-size:20.0pt'>Peaks searching</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:18.0pt'>&nbsp;</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:18.0pt'>Goal:
-to identify automatically the peaks in spectrum with the presence of the
-continuous background, one-fold coincidences (ridges) and statistical
-fluctuations - noise.</span></i><span style='font-size:18.0pt'> </span></p>
-
-<p class=MsoNormal><span style='font-size:16.0pt;font-family:Arial'>&nbsp;</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt;
-font-family:Arial'>The common problems connected with correct peak
-identification in two-dimensional coincidence spectra are</span></p>
-
-<ul style='margin-top:0mm' type=disc>
- <li class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt;
-     font-family:Arial'>non-sensitivity to noise, i.e., only statistically
-     relevant peaks should be identified</span></li>
- <li class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt;
-     font-family:Arial'>non-sensitivity of the algorithm to continuous
-     background</span></li>
- <li class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt;
-     font-family:Arial'>non-sensitivity to one-fold coincidences (coincidences
-     peak – background in both dimensions) and their crossings</span></li>
- <li class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt;
-     font-family:Arial'>ability to identify peaks close to the edges of the
-     spectrum region. Usually peak finders fail to detect them</span></li>
- <li class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt;
-     font-family:Arial'>resolution, decomposition of doublets and multiplets.
-     The algorithm should be able to recognize close positioned peaks.</span><span
-     style='font-size:18.0pt'> </span></li>
- <li class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt;
-     font-family:Arial'>ability to identify peaks with different sigma</span></li>
-</ul>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Function:</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:18.0pt'><a
-href="http://root.cern.ch/root/html/ListOfTypes.html#Int_t">Int_t</a> </span></b><a
-name="TSpectrum:Search1HighRes"></a><a
-href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b><span
-style='font-size:18.0pt'>TSpectrum2::SearchHighRes</span></b></a><b><span
-style='font-size:18.0pt'> (<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> **source,<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> **dest, <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a> ssizex, <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a> ssizey, <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> sigma, <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> threshold,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#bool">bool</a> backgroundRemove,<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a> deconIterations,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#bool">bool</a> markov,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a> averWindow)
-  </span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>This
-function searches for peaks in source spectrum. It is based on deconvolution
-method. First the background is removed (if desired), then Markov smoothed
-spectrum is calculated (if desired), then the response function is generated
-according to given sigma and deconvolution is carried out. The order of peaks
-is arranged according to their heights in the spectrum after background
-elimination. The highest peak is the first in the list. On success it returns
-number of found peaks.</span></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt;color:red'>Parameters:</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'>        <b><span
-style='font-size:14.0pt'>source</span></b>-pointer to the matrix of source
-spectrum                  </p>
-
-<p class=MsoNormal style='text-align:justify'>        <b><span
-style='font-size:14.0pt'>dest</span></b>-resulting spectrum after deconvolution</p>
-
-<p class=MsoNormal style='text-align:justify'>        <b><span
-style='font-size:14.0pt'>ssizex, ssizey</span></b>-lengths of the source and
-destination spectra                </p>
-
-<p class=MsoNormal style='text-align:justify'>        <b><span
-style='font-size:14.0pt'>sigma</span></b>-sigma of searched peaks</p>
-
-<p class=MsoNormal style='margin-left:22.8pt;text-align:justify'><b><span
-style='font-size:14.0pt'>threshold</span></b>-<span style='font-size:16.0pt'> </span>threshold
-value in % for selected peaks, peaks with amplitude less than
-threshold*highest_peak/100 are ignored</p>
-
-<p class=MsoNormal style='margin-left:22.8pt;text-align:justify'><b><span
-style='font-size:14.0pt'>backgroundRemove</span></b>-<span style='font-size:
-16.0pt'> </span>background_remove-logical variable, true if the removal of
-background before deconvolution is desired  </p>
-
-<p class=MsoNormal style='margin-left:22.8pt;text-align:justify'><b><span
-style='font-size:14.0pt'>deconIterations</span></b>-number of iterations in
-deconvolution operation</p>
-
-<p class=MsoNormal style='margin-left:22.8pt;text-align:justify'><b><span
-style='font-size:14.0pt'>markov</span></b>-logical variable, if it is true,
-first the source spectrum is replaced by new spectrum calculated using Markov
-chains method </p>
-
-<p class=MsoNormal style='margin-left:19.95pt;text-align:justify;text-indent:
-2.85pt'><b><span style='font-size:14.0pt'>averWindow</span></b>-width of
-averaging smoothing window </p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><i><span style='font-size:18.0pt'>References:</span></i></b></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>[1]
-M.A. Mariscotti: A method for identification of peaks in the presence of
-background and its application to spectrum analysis. NIM 50 (1967), 309-320.</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>[2]
-</span><span lang=SK style='font-size:16.0pt'> M. Morhá&#269;, J. Kliman, V.
-Matoušek, M. Veselský, I. Turzo</span><span style='font-size:16.0pt'>.:Identification
-of peaks in multidimensional coincidence gamma-ray spectra. NIM, A443 (2000)
-108-125.</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>[3]
-Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
-(1996), 451.</span></p>
-
-</div>
-
-<!-- */
-// --> End_Html
-//Begin_Html <!--
-/* -->
-<div class=Section1>
-
-<p class=MsoNormal><b><span style='font-size:18.0pt'>Examples of peak searching
-method</span></b></p>
-
-<p class=MsoNormal><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'><a
-href="http://root.cern.ch/root/html/src/TSpectrum.cxx.html#TSpectrum:Search1HighRes"
-target="_parent">SearchHighRes</a> function provides users with the possibility
-to vary the input parameters and with the access to the output deconvolved data
-in the destination spectrum. Based on the output data one can tune the
-parameters. </span></p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 8 – script Src.c:</span></i></p>
-
-<p class=MsoNormal><span style='font-size:16.0pt'><img border=0 width=602
-height=455 src="gif/TSpectrum2_Searching1.jpg"></span></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-20 Two-dimensional spectrum with found peaks denoted by markers (<sub><img
-border=0 width=40 height=19 src="gif/TSpectrum2_Searching2.gif"></sub>,
-threshold=5%, 3 iterations steps in the deconvolution)</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching3.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-21 Spectrum from Fig. 20 after background elimination and deconvolution</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate high resolution peak searching
-function (class TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Src.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Src() {</p>
-
-<p class=MsoNormal>   Int_t i, j, nfound;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 64;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-Double_t[nbinsy];</p>
-
-<p class=MsoNormal>   Double_t** dest = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    dest[i]=new
-Double_t[nbinsy];</p>
-
-<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
-resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;search4;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Searching = new
-TCanvas(&quot;Searching&quot;,&quot;High resolution peak
-searching&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }   </p>
-
-<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
-nbinsy, 2, 5, kTRUE, 3, kFALSE, 3);   </p>
-
-<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
-
-<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
-
-<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
-(Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);        </p>
-
-<p class=MsoNormal>}</p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 9 – script Src2.c:</span></i></p>
-
-<p class=MsoNormal><img border=0 width=602 height=455
-src="gif/TSpectrum2_Searching4.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-22 Two-dimensional noisy spectrum with found peaks denoted by markers (<sub><img
-border=0 width=40 height=19 src="gif/TSpectrum2_Searching2.gif"></sub>,
-threshold=10%, 10 iterations steps in the deconvolution). One can observe that
-the algorithm is insensitive to the crossings of one-dimensional ridges. It
-identifies only two-cooincidence peaks.</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching5.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-23 Spectrum from Fig. 22 after background elimination and deconvolution</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate high resolution peak searching
-function (class TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Src2.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Src2() {</p>
-
-<p class=MsoNormal>   Int_t i, j, nfound;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 256;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 256;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-Double_t[nbinsy];</p>
-
-<p class=MsoNormal>   Double_t** dest = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    dest[i]=new
-Double_t[nbinsy];</p>
-
-<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
-resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;back3;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Searching = new
-TCanvas(&quot;Searching&quot;,&quot;High resolution peak
-searching&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }   </p>
-
-<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
-nbinsy, 2, 10, kTRUE, 10, kFALSE, 3);   </p>
-
-<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
-
-<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
-
-<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
-(Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);        </p>
-
-<p class=MsoNormal>}</p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 10 – script Src3.c:</span></i></p>
-
-<p class=MsoNormal><img border=0 width=602 height=455
-src="gif/TSpectrum2_Searching6.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-24 Two-dimensional spectrum with 15 found peaks denoted by markers. Some peaks
-are positioned close to each other. It is necessary to increase number of
-iterations in the deconvolution. In next 3 Figs. we shall study the influence
-of this parameter.</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching7.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-25 Spectrum from Fig. 24 after deconvolution (# of iterations = 3). Number of
-identified peaks = 13.</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching8.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-26 Spectrum from Fig. 24 after deconvolution (# of iterations = 10). Number of
-identified peaks = 13.</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching9.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-27 Spectrum from Fig. 24 after deconvolution (# of iterations = 100). Number of
-identified peaks = 15. Now the algorithm is able to decompose two doublets in
-the spectrum.</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate high resolution peak searching
-function (class TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Src3.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Src3() {</p>
-
-<p class=MsoNormal>   Int_t i, j, nfound;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 64;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-Double_t[nbinsy];</p>
-
-<p class=MsoNormal>   Double_t** dest = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    dest[i]=new
-Double_t[nbinsy];</p>
-
-<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
-resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;search1;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Searching = new
-TCanvas(&quot;Searching&quot;,&quot;High resolution peak
-searching&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }   </p>
-
-<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
-nbinsy, 2, 2, kFALSE, 3, kFALSE, 1);//3, 10, 100   </p>
-
-<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
-
-<p class=MsoNormal> </p>
-
-<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
-
-<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
-(Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);        </p>
-
-<p class=MsoNormal>}</p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 11 – script Src4.c:</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching10.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-28 Two-dimensional spectrum with peaks with different sigma denoted by markers (<sub><img
-border=0 width=39 height=19 src="gif/TSpectrum2_Searching11.gif"></sub>,
-threshold=5%, 10 iterations steps in the deconvolution, Markov smoothing with
-window=3)</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching12.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-29 Spectrum from Fig. 28 after smoothing and deconvolution.</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate high resolution peak searching
-function (class TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Src4.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Src4() {</p>
-
-<p class=MsoNormal>   Int_t i, j, nfound;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 64;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-Double_t[nbinsy];</p>
-
-<p class=MsoNormal>   Double_t** dest = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    dest[i]=new
-Double_t[nbinsy];</p>
-
-<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
-resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;search2;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Searching = new
-TCanvas(&quot;Searching&quot;,&quot;High resolution peak
-searching&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }   </p>
-
-<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
-nbinsy, 3, 5, kFALSE, 10, kTRUE, 3);   </p>
-
-<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
-
-<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
-
-<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
-(Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);        </p>
-
-<p class=MsoNormal>}</p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 12 – script Src5.c:</span></i></p>
-
-<p class=MsoNormal><img border=0 width=602 height=455
-src="gif/TSpectrum2_Searching13.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-30 Two-dimensional spectrum with peaks positioned close to the edges denoted by
-markers (<sub><img border=0 width=40 height=19
-src="gif/TSpectrum2_Searching2.gif"></sub>, threshold=5%, 10 iterations
-steps in the deconvolution)</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching14.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-31 Spectrum from Fig. 30 after deconvolution.</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate high resolution peak searching
-function (class TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Src5.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Src5() {</p>
-
-<p class=MsoNormal>   Int_t i, j, nfound;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 64;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-Double_t[nbinsy];</p>
-
-<p class=MsoNormal>   Double_t** dest = new Double_t*[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    dest[i]=new
-Double_t[nbinsy];</p>
-
-<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
-resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;search3;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Searching = new
-TCanvas(&quot;Searching&quot;,&quot;High resolution peak
-searching&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }   </p>
-
-<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
-nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
-
-<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
-
-<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
-
-<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
-(Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);        </p>
-
-<p class=MsoNormal>}</p>
-
-</div>
-
-<!-- */
-// --> End_Html
    Int_t number_of_iterations = (Int_t)(4 * sigma + 0.5);
    Int_t k, lindex, priz;
    Double_t lda, ldb, ldc, area, maximum;
@@ -2886,7 +1624,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
 
    if (markov == true) {
       if (averWindow <= 0) {
-         Error("SearchHighRes", "Averanging window must be positive");
+         Error("SearchHighRes", "Averaging window must be positive");
          return 0;
       }
    }
@@ -3467,11 +2205,8 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
    return fNPeaks;
 }
 
-
-// STATIC functions (called by TH1)
-
 ////////////////////////////////////////////////////////////////////////////////
-///static function, interface to TSpectrum2::Search
+/// static function (called by TH1), interface to TSpectrum2::Search
 
 Int_t TSpectrum2::StaticSearch(const TH1 *hist, Double_t sigma, Option_t *option, Double_t threshold)
 {
@@ -3480,7 +2215,7 @@ Int_t TSpectrum2::StaticSearch(const TH1 *hist, Double_t sigma, Option_t *option
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///static function, interface to TSpectrum2::Background
+/// static function (called by TH1), interface to TSpectrum2::Background
 
 TH1 *TSpectrum2::StaticBackground(const TH1 *hist,Int_t niter, Option_t *option)
 {
