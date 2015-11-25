@@ -125,7 +125,7 @@ function(ROOTTEST_ADD_TEST testname)
                             "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS" ${ARGN})
   # Test name
   ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
-  if(testname MATCHES "^${testprefix}-.*")
+  if(testname MATCHES "^roottest-")
     set(fulltestname ${testname})
   else()
     set(fulltestname ${testprefix}-${testname})
