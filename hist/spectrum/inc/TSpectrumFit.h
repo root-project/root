@@ -31,54 +31,54 @@ class TH1;
 
 class TSpectrumFit : public TNamed {
 protected:
-   Int_t     fNPeaks;                    //number of peaks present in fit, input parameter, it should be > 0
-   Int_t     fNumberIterations;          //number of iterations in fitting procedure, input parameter, it should be > 0
-   Int_t     fXmin;                      //first fitted channel
-   Int_t     fXmax;                      //last fitted channel
-   Int_t     fStatisticType;             //type of statistics, possible values kFitOptimChiCounts (chi square statistics with counts as weighting coefficients), kFitOptimChiFuncValues (chi square statistics with function values as weighting coefficients),kFitOptimMaxLikelihood
-   Int_t     fAlphaOptim;                //optimization of convergence algorithm, possible values kFitAlphaHalving, kFitAlphaOptimal
-   Int_t     fPower;                     //possible values kFitPower2,4,6,8,10,12, for details see references. It applies only for Awmi fitting function.
-   Int_t     fFitTaylor;                 //order of Taylor expansion, possible values kFitTaylorOrderFirst, kFitTaylorOrderSecond. It applies only for Awmi fitting function.
-   Double_t  fAlpha;                     //convergence coefficient, input parameter, it should be positive number and <=1, for details see references
-   Double_t  fChi;                       //here the fitting functions return resulting chi square
-   Double_t *fPositionInit;              //[fNPeaks] array of initial values of peaks positions, input parameters
-   Double_t *fPositionCalc;              //[fNPeaks] array of calculated values of fitted positions, output parameters
-   Double_t *fPositionErr;               //[fNPeaks] array of position errors
-   Double_t *fAmpInit;                   //[fNPeaks] array of initial values of peaks amplitudes, input parameters
-   Double_t *fAmpCalc;                   //[fNPeaks] array of calculated values of fitted amplitudes, output parameters
-   Double_t *fAmpErr;                    //[fNPeaks] array of amplitude errors
-   Double_t *fArea;                      //[fNPeaks] array of calculated areas of peaks
-   Double_t *fAreaErr;                   //[fNPeaks] array of errors of peak areas
-   Double_t  fSigmaInit;                 //initial value of sigma parameter
-   Double_t  fSigmaCalc;                 //calculated value of sigma parameter
-   Double_t  fSigmaErr;                  //error value of sigma parameter
-   Double_t  fTInit;                     //initial value of t parameter (relative amplitude of tail), for details see html manual and references
-   Double_t  fTCalc;                     //calculated value of t parameter
-   Double_t  fTErr;                      //error value of t parameter
-   Double_t  fBInit;                     //initial value of b parameter (slope), for details see html manual and references
-   Double_t  fBCalc;                     //calculated value of b parameter
-   Double_t  fBErr;                      //error value of b parameter
-   Double_t  fSInit;                     //initial value of s parameter (relative amplitude of step), for details see html manual and references
-   Double_t  fSCalc;                     //calculated value of s parameter
-   Double_t  fSErr;                      //error value of s parameter
-   Double_t  fA0Init;                    //initial value of background a0 parameter(backgroud is estimated as a0+a1*x+a2*x*x)
-   Double_t  fA0Calc;                    //calculated value of background a0 parameter
-   Double_t  fA0Err;                     //error value of background a0 parameter
-   Double_t  fA1Init;                    //initial value of background a1 parameter(backgroud is estimated as a0+a1*x+a2*x*x)
-   Double_t  fA1Calc;                    //calculated value of background a1 parameter
-   Double_t  fA1Err;                     //error value of background a1 parameter
-   Double_t  fA2Init;                    //initial value of background a2 parameter(backgroud is estimated as a0+a1*x+a2*x*x)
-   Double_t  fA2Calc;                    //calculated value of background a2 parameter
-   Double_t  fA2Err;                     //error value of background a2 parameter
-   Bool_t   *fFixPosition;               //[fNPeaks] array of logical values which allow to fix appropriate positions (not fit). However they are present in the estimated functional
-   Bool_t   *fFixAmp;                    //[fNPeaks] array of logical values which allow to fix appropriate amplitudes (not fit). However they are present in the estimated functional
-   Bool_t    fFixSigma;                  //logical value of sigma parameter, which allows to fix the parameter (not to fit).
-   Bool_t    fFixT;                      //logical value of t parameter, which allows to fix the parameter (not to fit).
-   Bool_t    fFixB;                      //logical value of b parameter, which allows to fix the parameter (not to fit).
-   Bool_t    fFixS;                      //logical value of s parameter, which allows to fix the parameter (not to fit).
-   Bool_t    fFixA0;                     //logical value of a0 parameter, which allows to fix the parameter (not to fit).
-   Bool_t    fFixA1;                     //logical value of a1 parameter, which allows to fix the parameter (not to fit).
-   Bool_t    fFixA2;                     //logical value of a2 parameter, which allows to fix the parameter (not to fit).
+   Int_t     fNPeaks;                    ///< number of peaks present in fit, input parameter, it should be > 0
+   Int_t     fNumberIterations;          ///< number of iterations in fitting procedure, input parameter, it should be > 0
+   Int_t     fXmin;                      ///< first fitted channel
+   Int_t     fXmax;                      ///< last fitted channel
+   Int_t     fStatisticType;             ///< type of statistics, possible values kFitOptimChiCounts (chi square statistics with counts as weighting coefficients), kFitOptimChiFuncValues (chi square statistics with function values as weighting coefficients),kFitOptimMaxLikelihood
+   Int_t     fAlphaOptim;                ///< optimization of convergence algorithm, possible values kFitAlphaHalving, kFitAlphaOptimal
+   Int_t     fPower;                     ///< possible values kFitPower2,4,6,8,10,12, for details see references. It applies only for Awmi fitting function.
+   Int_t     fFitTaylor;                 ///< order of Taylor expansion, possible values kFitTaylorOrderFirst, kFitTaylorOrderSecond. It applies only for Awmi fitting function.
+   Double_t  fAlpha;                     ///< convergence coefficient, input parameter, it should be positive number and <=1, for details see references
+   Double_t  fChi;                       ///< here the fitting functions return resulting chi square
+   Double_t *fPositionInit;              ///< [fNPeaks] array of initial values of peaks positions, input parameters
+   Double_t *fPositionCalc;              ///< [fNPeaks] array of calculated values of fitted positions, output parameters
+   Double_t *fPositionErr;               ///< [fNPeaks] array of position errors
+   Double_t *fAmpInit;                   ///< [fNPeaks] array of initial values of peaks amplitudes, input parameters
+   Double_t *fAmpCalc;                   ///< [fNPeaks] array of calculated values of fitted amplitudes, output parameters
+   Double_t *fAmpErr;                    ///< [fNPeaks] array of amplitude errors
+   Double_t *fArea;                      ///< [fNPeaks] array of calculated areas of peaks
+   Double_t *fAreaErr;                   ///< [fNPeaks] array of errors of peak areas
+   Double_t  fSigmaInit;                 ///< initial value of sigma parameter
+   Double_t  fSigmaCalc;                 ///< calculated value of sigma parameter
+   Double_t  fSigmaErr;                  ///< error value of sigma parameter
+   Double_t  fTInit;                     ///< initial value of t parameter (relative amplitude of tail), for details see html manual and references
+   Double_t  fTCalc;                     ///< calculated value of t parameter
+   Double_t  fTErr;                      ///< error value of t parameter
+   Double_t  fBInit;                     ///< initial value of b parameter (slope), for details see html manual and references
+   Double_t  fBCalc;                     ///< calculated value of b parameter
+   Double_t  fBErr;                      ///< error value of b parameter
+   Double_t  fSInit;                     ///< initial value of s parameter (relative amplitude of step), for details see html manual and references
+   Double_t  fSCalc;                     ///< calculated value of s parameter
+   Double_t  fSErr;                      ///< error value of s parameter
+   Double_t  fA0Init;                    ///< initial value of background a0 parameter(backgroud is estimated as a0+a1*x+a2*x*x)
+   Double_t  fA0Calc;                    ///< calculated value of background a0 parameter
+   Double_t  fA0Err;                     ///< error value of background a0 parameter
+   Double_t  fA1Init;                    ///< initial value of background a1 parameter(backgroud is estimated as a0+a1*x+a2*x*x)
+   Double_t  fA1Calc;                    ///< calculated value of background a1 parameter
+   Double_t  fA1Err;                     ///< error value of background a1 parameter
+   Double_t  fA2Init;                    ///< initial value of background a2 parameter(backgroud is estimated as a0+a1*x+a2*x*x)
+   Double_t  fA2Calc;                    ///< calculated value of background a2 parameter
+   Double_t  fA2Err;                     ///< error value of background a2 parameter
+   Bool_t   *fFixPosition;               ///< [fNPeaks] array of logical values which allow to fix appropriate positions (not fit). However they are present in the estimated functional
+   Bool_t   *fFixAmp;                    ///< [fNPeaks] array of logical values which allow to fix appropriate amplitudes (not fit). However they are present in the estimated functional
+   Bool_t    fFixSigma;                  ///< logical value of sigma parameter, which allows to fix the parameter (not to fit).
+   Bool_t    fFixT;                      ///< logical value of t parameter, which allows to fix the parameter (not to fit).
+   Bool_t    fFixB;                      ///< logical value of b parameter, which allows to fix the parameter (not to fit).
+   Bool_t    fFixS;                      ///< logical value of s parameter, which allows to fix the parameter (not to fit).
+   Bool_t    fFixA0;                     ///< logical value of a0 parameter, which allows to fix the parameter (not to fit).
+   Bool_t    fFixA1;                     ///< logical value of a1 parameter, which allows to fix the parameter (not to fit).
+   Bool_t    fFixA2;                     ///< logical value of a2 parameter, which allows to fix the parameter (not to fit).
 
 public:
    enum {
