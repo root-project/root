@@ -17,7 +17,7 @@
 /**
 \file RooTObjWrap.cxx
 \class RooTObjWrap
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooInt is a minimal implementation of a TNamed holding a TObject
 **/

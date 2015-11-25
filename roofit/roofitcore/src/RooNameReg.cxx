@@ -17,7 +17,7 @@
 /**
 \file RooNameReg.cxx
 \class RooNameReg
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooNameReg is a registry for 'const char*' name. For each unique
 name (which is not necessarily a unique pointer in the C++ standard),

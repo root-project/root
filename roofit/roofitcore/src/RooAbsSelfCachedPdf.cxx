@@ -12,7 +12,7 @@
 /**
 \file RooAbsSelfCachedPdf.cxx
 \class RooAbsSelfCachedPdf
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsSelfCachedPdf is an abstract base class for probability
 density functions whose output is cached in terms of a histogram in

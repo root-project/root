@@ -17,7 +17,7 @@
 /**
 \file RooPolyVar.cxx
 \class RooPolyVar
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooPolyVar is a RooAbsReal implementing a polynomial in terms
 of a list of RooAbsReal coefficients

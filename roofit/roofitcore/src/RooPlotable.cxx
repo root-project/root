@@ -17,7 +17,7 @@
 /**
 \file RooPlotable.cxx
 \class RooPlotable
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooPotable is a base class for objects that can be inserted into RooPlots and take
 advantage of its internal normalization and axis range adjustment features. The

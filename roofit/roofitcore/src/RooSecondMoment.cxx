@@ -17,7 +17,7 @@
 /**
 \file RooSecondMoment.cxx
 \class RooSecondMoment
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooSecondMoment represents the first, second, or third order derivative
 of any RooAbsReal as calculated (numerically) by the MathCore Richardson

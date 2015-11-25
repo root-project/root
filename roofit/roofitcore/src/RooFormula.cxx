@@ -17,7 +17,7 @@
 /**
 \file RooFormula.cxx
 \class RooFormula
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooFormula an implementation of ROOT::v5::TFormula that interfaces it to RooAbsArg
 value objects. It allows to use the value of a given list of RooAbsArg objects in the formula

@@ -12,7 +12,7 @@
 /**
 \file RooProfileLL.cxx
 \class RooProfileLL
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooProfileLL implements the profile likelihood estimator for
 a given likelihood and set of parameters of interest. The value return by 

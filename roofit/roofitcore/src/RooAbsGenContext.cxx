@@ -17,7 +17,7 @@
 /**
 \file RooAbsGenContext.cxx
 \class RooAbsGenContext
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsGenContext is the abstract base class for generator contexts of 
 RooAbsPdf objects. A generator context is an object that controls

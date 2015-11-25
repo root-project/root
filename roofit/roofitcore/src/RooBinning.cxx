@@ -17,7 +17,7 @@
 /**
 \file RooBinning.cxx
 \class RooBinning
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooBinning is an implements RooAbsBinning in terms
 of an array of boundary values, posing no constraints on the choice

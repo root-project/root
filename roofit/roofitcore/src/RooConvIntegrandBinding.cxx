@@ -17,7 +17,7 @@
 /**
 \file RooConvIntegrandBinding.cxx
 \class RooConvIntegrandBinding
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Implementation of RooAbsFunc that represent the the integrand
 of a generic (numeric) convolution A (x) B so that it can be

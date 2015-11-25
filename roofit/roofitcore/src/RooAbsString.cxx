@@ -17,7 +17,7 @@
 /**
 \file RooAbsString.cxx
 \class RooAbsString
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsString is the common abstract base class for objects that represent a
 string value

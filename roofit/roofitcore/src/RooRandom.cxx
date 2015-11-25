@@ -17,7 +17,7 @@
 /**
 \file RooRandom.cxx
 \class RooRandom
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 This class provides a static interface for generating random numbers.
 By default a private copy of TRandom3 is used to generate all random numbers.

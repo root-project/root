@@ -17,7 +17,7 @@
 /**
 \file RooScaledFunc.cxx
 \class RooScaledFunc
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Lightweight RooAbsFunction implementation that applies a constant scale 
 factor to another RooAbsFunc.

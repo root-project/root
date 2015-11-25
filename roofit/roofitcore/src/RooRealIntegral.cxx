@@ -17,7 +17,7 @@
 /**
 \file RooRealIntegral.cxx
 \class RooRealIntegral
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooRealIntegral performs hybrid numerical/analytical integrals of RooAbsReal objects
 The class performs none of the actual integration, but only manages the logic

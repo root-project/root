@@ -17,7 +17,7 @@
 /**
 \file RooGenContext.cxx
 \class RooGenContext
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooGenContext implement a universal generator context for all
 RooAbsPdf classes that do not have or need a specialized generator

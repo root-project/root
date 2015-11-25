@@ -17,7 +17,7 @@
 /**
 \file RooSimSplitGenContext.cxx
 \class RooSimSplitGenContext
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooSimSplitGenContext is an efficient implementation of the generator context
 specific for RooSimultaneous PDFs when generating more than one of the

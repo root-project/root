@@ -12,7 +12,7 @@
 /**
 \file RooNumCdf.cxx
 \class RooNumCdf
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooNumCdf is an implementation of RooNumRunningInt specialized
 to calculate cumulative distribution functions from p.d.f.s. The main

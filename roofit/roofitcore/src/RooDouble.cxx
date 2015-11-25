@@ -17,7 +17,7 @@
 /**
 \file RooDouble.cxx
 \class RooDouble
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooDouble is a minimal implementation of a TObject holding a Double_t
 value.

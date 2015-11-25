@@ -17,7 +17,7 @@
 /**
 \file RooRealVar.cxx
 \class RooRealVar
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooRealVar represents a fundamental (non-derived) real valued object
 

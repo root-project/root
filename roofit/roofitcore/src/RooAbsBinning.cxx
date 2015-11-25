@@ -17,7 +17,7 @@
 /**
 \file RooAbsBinning.cxx
 \class RooAbsBinning
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsBinning is the abstract base class for RooRealVar binning definitions
 This class defines the interface to retrieve bin boundaries, ranges etc.

@@ -17,7 +17,7 @@
 /**
 \file RooAddGenContext.cxx
 \class RooAddGenContext
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAddGenContext is an efficient implementation of the
 generator context specific for RooAddPdf PDFs. The strategy

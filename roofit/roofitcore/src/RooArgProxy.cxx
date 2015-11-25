@@ -26,7 +26,7 @@ using namespace std ;
 /**
 \file RooArgProxy.cxx
 \class RooArgProxy
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooArgProxy is the abstact interface for RooAbsArg proxy classes.
 A RooArgProxy is the general mechanism to store references

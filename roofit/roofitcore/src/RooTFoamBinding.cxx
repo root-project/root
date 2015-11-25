@@ -17,7 +17,7 @@
 /**
 \file RooTFoamBinding.cxx
 \class RooTFoamBinding
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Lightweight interface adaptor that binds a RooAbsPdf to TFOAM
 **/

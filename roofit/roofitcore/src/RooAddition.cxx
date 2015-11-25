@@ -17,7 +17,7 @@
 /**
 \file RooAddition.cxx
 \class RooAddition
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAddition calculates the sum of a set of RooAbsReal terms, or
 when constructed with two sets, it sums the product of the terms

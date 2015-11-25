@@ -17,7 +17,7 @@
 /**
 \file RooThresholdCategory.cxx
 \class RooThresholdCategory
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooThresholdCategory provides a real-to-category mapping defined
 by a series of thresholds.

@@ -17,7 +17,7 @@
 /**
 \file RooDerivative.cxx
 \class RooDerivative
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooDerivative represents the first, second, or third order derivative
 of any RooAbsReal as calculated (numerically) by the MathCore Richardson

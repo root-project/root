@@ -17,7 +17,7 @@
 /**
 \file RooAcceptReject.cxx
 \class RooAcceptReject
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooAcceptReject is a generic toy monte carlo generator implement
 the accept/reject sampling technique on any positively valued function.

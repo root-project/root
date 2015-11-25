@@ -17,7 +17,7 @@
 /**
 \file RooObjCacheManager.cxx
 \class RooObjCacheManager
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooObjCacheManager is an implementation of class RooCacheManager<RooAbsCacheElement>
 and specializes in the storage of cache elements that contain RooAbsArg objects.

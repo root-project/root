@@ -17,7 +17,7 @@
 /**
 \file RooFactoryWSTool.cxx
 \class RooFactoryWSTool
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooFactoryWSTool is a clase like TTree::MakeClass() that generates
 skeleton code for RooAbsPdf and RooAbsReal functions given

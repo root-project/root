@@ -17,7 +17,7 @@
 /**
 \file RooAbsFunc.cxx
 \class RooAbsFunc
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Abstract interface for evaluating a real-valued function of one real variable
 and performing numerical algorithms on it. The purpose of this interface is

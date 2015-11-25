@@ -17,7 +17,7 @@
 /**
 \file RooNormSetCache.cxx
 \class RooNormSetCache
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooNormSet cache manage the bookkeeping of multiple instances
 of sets of integration and normalization observables that effectively

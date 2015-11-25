@@ -17,7 +17,7 @@
 /**
 \file RooSharedProperties.cxx
 \class RooSharedProperties
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooSharedProperties is the base class for shared properties
 that can be stored in RooSharedPropertiesList.

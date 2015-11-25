@@ -16,7 +16,7 @@
 /**
 \file RooWorkspace.cxx
 \class RooWorkspace
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 The RooWorkspace is a persistable container for RooFit projects. A workspace
 can contain and own variables, p.d.f.s, functions and datasets. All objects

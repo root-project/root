@@ -17,7 +17,7 @@
 /**
 \file RooSegmentedIntegrator1D.cxx
 \class RooSegmentedIntegrator1D
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooSegmentedIntegrator1D implements an adaptive one-dimensional 
 numerical integration algorithm.

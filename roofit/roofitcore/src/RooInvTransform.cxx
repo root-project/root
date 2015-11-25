@@ -17,7 +17,7 @@
 /**
 \file RooInvTransform.cxx
 \class RooInvTransform
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Lightweight function binding that returns the inverse of an input function binding
 Apply the change of variables transformation x -> 1/x to the input

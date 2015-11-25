@@ -17,7 +17,7 @@
 /**
 \file RooRangeBoolean.cxx
 \class RooRangeBoolean
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooRangeBoolean
 **/

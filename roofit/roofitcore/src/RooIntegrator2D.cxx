@@ -17,7 +17,7 @@
 /**
 \file RooIntegrator2D.cxx
 \class RooIntegrator2D
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooIntegrator2D implements a numeric two-dimensiona integrator
 in terms of a recursive application of RooIntegrator1D

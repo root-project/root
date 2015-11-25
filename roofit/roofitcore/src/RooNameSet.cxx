@@ -17,7 +17,7 @@
 /**
 \file RooNameSet.cxx
 \class RooNameSet
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooNameSet is a utility class that stores the names the objects
 in a RooArget. This allows to preserve the contents of a RooArgSet

@@ -16,7 +16,7 @@
 /**
 \file RooUnitTest.cxx
 \class RooUnitTest
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooUnit test is an abstract base class for unit regression tests for
 RooFit and RooStats tests performed in stressRooFit and stressRooStats

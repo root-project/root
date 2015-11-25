@@ -17,7 +17,7 @@
 /**
 \file RooProdPdf.cxx
 \class RooProdPdf
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooProdPdf is an efficient implementation of a product of PDFs of the form
 

@@ -17,7 +17,7 @@
 /**
 \file RooClassFactory.cxx
 \class RooClassFactory
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooClassFactory is a clase like TTree::MakeClass() that generates
 skeleton code for RooAbsPdf and RooAbsReal functions given

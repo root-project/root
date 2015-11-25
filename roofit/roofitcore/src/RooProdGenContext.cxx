@@ -17,7 +17,7 @@
 /**
 \file RooProdGenContext.cxx
 \class RooProdGenContext
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooProdGenContext is an efficient implementation of the generator context
 specific for RooProdPdf PDFs. The sim-context owns a list of

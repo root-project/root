@@ -17,7 +17,7 @@
 /**
 \file RooAbsCollection.cxx
 \class RooAbsCollection
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsCollection is an abstract container object that can hold
 multiple RooAbsArg objects.  Collections are ordered and can

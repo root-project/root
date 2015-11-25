@@ -17,7 +17,7 @@
 /**
 \file RooSetPair.cxx
 \class RooSetPair
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooSetPair is a utility class that stores a pair of RooArgSets
 **/

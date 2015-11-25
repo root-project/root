@@ -17,7 +17,7 @@
 /**
 \file RooMultiVarGaussian.cxx
 \class RooMultiVarGaussian
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Multivariate Gaussian p.d.f. with correlations
 **/

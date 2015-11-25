@@ -17,7 +17,7 @@
 /**
 \file RooConvCoefVar.cxx
 \class RooConvCoefVar
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooConvCoefVar is an auxilary class that represents the coefficient
 of a RooAbsAnaConvPdf implementation as a separate RooAbsReal object

@@ -17,7 +17,7 @@
 /**
 \file RooAbsLValue.cxx
 \class RooAbsLValue
-\ingroup RooFitCore
+\ingroup Roofitcore
 
  Abstract base class for objects that are lvalues, i.e. objects
  whose value can be modified directly. This class implements

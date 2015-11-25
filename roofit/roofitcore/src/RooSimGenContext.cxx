@@ -17,7 +17,7 @@
 /**
 \file RooSimGenContext.cxx
 \class RooSimGenContext
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooSimGenContext is an efficient implementation of the generator context
 specific for RooSimultaneous PDFs when generating more than one of the

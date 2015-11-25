@@ -17,7 +17,7 @@
 /**
 \file RooRefCountList.cxx
 \class RooRefCountList
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 A RooRefCountList is a RooLinkedList that keeps a reference counter
 with each added node. Multiple Add()s of the same object will increase

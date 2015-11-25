@@ -17,7 +17,7 @@
 /**
 \file RooExpensiveObjectCache.cxx
 \class RooExpensiveObjectCache
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooExpensiveObjectCache is a singleton class that serves as repository
 for objects that are expensive to calculate. Owners of such objects

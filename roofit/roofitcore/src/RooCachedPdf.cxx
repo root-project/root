@@ -12,7 +12,7 @@
 /**
 \file RooCachedPdf.cxx
 \class RooCachedPdf
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooCachedPdf is an implementation of RooAbsCachedPdf that can cache
 any external RooAbsPdf input function provided in the constructor. 

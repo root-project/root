@@ -32,7 +32,7 @@ ClassImp(RooHashTable)
 /**
 \file RooHashTable.cxx
 \class RooHashTable
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooHashTable implements a hash table for TObjects. The hashing can be
 done on the object addresses, object names, or using the objects

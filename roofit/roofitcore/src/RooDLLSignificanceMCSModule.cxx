@@ -17,7 +17,7 @@
 /**
 \file RooDLLSignificanceMCSModule.cxx
 \class RooDLLSignificanceMCSModule
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooDLLSignificanceMCSModule is an add-on modules to RooMCStudy that
 calculates the significance of a signal by comparing the likelihood of

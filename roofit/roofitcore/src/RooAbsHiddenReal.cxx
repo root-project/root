@@ -17,7 +17,7 @@
 /**
 \file RooAbsHiddenReal.cxx
 \class RooAbsHiddenReal
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsHiddenReal is a base class for objects that want to hide
 their return value from interactive use, e.g. for implementations

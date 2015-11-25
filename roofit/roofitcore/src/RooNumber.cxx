@@ -17,7 +17,7 @@
 /**
 \file RooNumber.cxx
 \class RooNumber
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooNumber implements numeric constants used by RooFit
 **/

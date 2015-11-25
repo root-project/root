@@ -17,7 +17,7 @@
 /**
 \file RooConvGenContext.cxx
 \class RooConvGenContext
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooConvGenContext is an efficient implementation of the generator context
 specific for RooAbsAnaConvPdf objects. The physics model is generated

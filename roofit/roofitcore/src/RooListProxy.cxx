@@ -17,7 +17,7 @@
 /**
 \file RooListProxy.cxx
 \class RooListProxy
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooListProxy is the concrete proxy for RooArgList objects.
 A RooListProxy is the only safe mechanism to store a RooArgList

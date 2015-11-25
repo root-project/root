@@ -17,7 +17,7 @@
 /**
 \file RooPullVar.cxx
 \class RooPullVar
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooPullVar represents the pull of measurement w.r.t to true value
 using the measurement value and its error. Both the true value and

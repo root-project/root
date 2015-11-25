@@ -17,7 +17,7 @@
 /**
 \file RooStringVar.cxx
 \class RooStringVar
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooStringVar implements a string values RooAbsArg
 **/

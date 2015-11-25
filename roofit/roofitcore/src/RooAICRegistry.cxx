@@ -17,7 +17,7 @@
 /**
 \file RooAICRegistry.cxx
 \class RooAICRegistry
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAICRegistry is a utility class for operator p.d.f
 classes that keeps track of analytical integration codes and

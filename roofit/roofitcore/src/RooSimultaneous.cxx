@@ -17,7 +17,7 @@
 /**
 \file RooSimultaneous.cxx
 \class RooSimultaneous
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooSimultaneous facilitates simultaneous fitting of multiple PDFs
 to subsets of a given dataset.

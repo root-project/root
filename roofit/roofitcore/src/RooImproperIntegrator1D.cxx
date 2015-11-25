@@ -17,7 +17,7 @@
 /**
 \file RooImproperIntegrator1D.cxx
 \class RooImproperIntegrator1D
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Special numeric integrator that can handle integrals over open domains.
 To this end the range is cut in up three pieces: [-inf,-1],[-1,+1] and [+1,inf]

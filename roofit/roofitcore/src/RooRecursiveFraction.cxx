@@ -17,7 +17,7 @@
 /**
 \file RooRecursiveFraction.cxx
 \class RooRecursiveFraction
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooRecursiveFraction is a RooAbsReal implementation that
 calculates the plain fraction of sum of RooAddPdf components

@@ -17,7 +17,7 @@
 /**
 \file RooPlot.cxx
 \class RooPlot
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 A RooPlot is a plot frame and a container for graphics objects
 within that frame. As a frame, it provides the TH1-style public interface

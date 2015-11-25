@@ -17,7 +17,7 @@
 /**
 \file RooBinningCategory.cxx
 \class RooBinningCategory
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooBinningCategory provides a real-to-category mapping defined
 by a series of thresholds.

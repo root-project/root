@@ -17,7 +17,7 @@
 /**
 \file RooAbsCache.cxx
 \class RooAbsCache
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsCache is the abstract base class for data members of RooAbsArgs
 that cache other (composite) RooAbsArg expressions. The RooAbsCache

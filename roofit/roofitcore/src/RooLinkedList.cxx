@@ -17,7 +17,7 @@
 /**
 \file RooLinkedList.cxx
 \class RooLinkedList
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooLinkedList is an collection class for internal use, storing
 a collection of RooAbsArg pointers in a doubly linked list.

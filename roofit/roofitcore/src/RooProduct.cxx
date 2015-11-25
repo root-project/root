@@ -17,7 +17,7 @@
 /**
 \file RooProduct.cxx
 \class RooProduct
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 
 RooProduct a RooAbsReal implementation that represent the product

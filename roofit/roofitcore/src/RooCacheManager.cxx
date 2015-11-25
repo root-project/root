@@ -17,7 +17,7 @@
 /**
 \file RooCacheManager.cxx
 \class RooCacheManager
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Template class RooCacheManager manages the storage of any type of data indexed on
 the choice of normalization and optionally the set of integrated observables.

@@ -17,7 +17,7 @@
 /**
 \file RooConstVar.cxx
 \class RooConstVar
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooConstVar represent a constant real-valued object
 **/

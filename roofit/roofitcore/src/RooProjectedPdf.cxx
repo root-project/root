@@ -12,7 +12,7 @@
 /**
 \file RooProjectedPdf.cxx
 \class RooProjectedPdf
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooProjectedPdf is a RooAbsPdf implementation that represent a projection 
 of a given input p.d.f and the object returned by RooAbsPdf::createProjection.

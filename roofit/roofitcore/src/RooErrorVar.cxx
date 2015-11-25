@@ -17,7 +17,7 @@
 /**
 \file RooErrorVar.cxx
 \class RooErrorVar
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooErrorVar is an auxilary class that represents the error
 of a RooRealVar as a seperate object. The main reason of

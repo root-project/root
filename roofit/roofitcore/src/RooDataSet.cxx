@@ -17,7 +17,7 @@
 /**
 \file RooDataSet.cxx
 \class RooDataSet
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooDataSet is a container class to hold unbinned data. Each data point
 in N-dimensional space is represented by a RooArgSet of RooRealVar, RooCategory 

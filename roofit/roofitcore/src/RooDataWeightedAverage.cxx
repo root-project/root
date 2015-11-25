@@ -17,7 +17,7 @@
 /**
 \file RooDataWeightedAverage.cxx
 \class RooDataWeightedAverage
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooDataWeightedAverage calculate a weighted
 average of a function or p.d.f given a dataset with observable

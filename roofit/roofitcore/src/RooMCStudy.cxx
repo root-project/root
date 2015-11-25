@@ -17,7 +17,7 @@
 /**
 \file RooMCStudy.cxx
 \class RooMCStudy
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooMCStudy is a help class to facilitate Monte Carlo studies
 such as 'goodness-of-fit' studies, that involve fitting a PDF 

@@ -15,7 +15,7 @@
 /**
 \file RooMinimizer.cxx
 \class RooMinimizer
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooMinimizer is a wrapper class around ROOT::Fit:Fitter that
 provides a seamless interface between the minimizer functionality

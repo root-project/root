@@ -17,7 +17,7 @@
 /**
 \file RooLinTransBinning.cxx
 \class RooLinTransBinning
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooLinTransBinning is a special binning implementation for RooLinearVar
 that transforms the binning of the RooLinearVar input variable in the same

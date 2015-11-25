@@ -17,7 +17,7 @@
 /**
 \file RooTrace.cxx
 \class RooTrace
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooTrace controls the memory tracing hooks in all RooFit
 objects. When tracing is active, a table of live RooFit objects

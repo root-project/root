@@ -17,7 +17,7 @@
 /**
 \file RooRangeBinning.cxx
 \class RooRangeBinning
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooRangeBinning is binning/range definition that only defines a range
 but no binning. It it used to store named ranges created by

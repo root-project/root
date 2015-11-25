@@ -17,7 +17,7 @@
 /**
 \file RooAbsTestStatistic.cxx
 \class RooAbsTestStatistic
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsTestStatistic is the abstract base class for all test
 statistics. Test statistics that evaluate the PDF at each data

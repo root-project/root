@@ -17,7 +17,7 @@
 /**
 \file RooSetProxy.cxx
 \class RooSetProxy
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooSetProxy is the concrete proxy for RooArgSet objects.
 A RooSetProxy is the general mechanism to store a RooArgSet

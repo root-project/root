@@ -17,7 +17,7 @@
 /**
 \file RooTreeData.cxx
 \class RooTreeData
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooTreeData is the abstract base class for data collection that
 use a TTree as internal storage mechanism

@@ -17,7 +17,7 @@
 /**
 \file RooNumGenConfig.cxx
 \class RooNumGenConfig
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooNumGenConfig holds the configuration parameters of the various
 numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf

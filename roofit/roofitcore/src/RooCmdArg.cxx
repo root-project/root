@@ -18,7 +18,7 @@
 /**
 \file RooCmdArg.cxx
 \class RooCmdArg
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooCmdArg is a named container for two doubles, two integers
 two object points and three string pointers that can be passed

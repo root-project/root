@@ -17,7 +17,7 @@
 /**
 \file RooMsgService.cxx
 \class RooMsgService
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 
 The RooMsgService class is a singleton class that organizes informational, debugging, 

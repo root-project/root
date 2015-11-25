@@ -17,7 +17,7 @@
 /**
 \file RooBrentRootFinder.cxx
 \class RooBrentRootFinder
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Implement the abstract 1-dimensional root finding interface using
 the Brent-Decker method. This implementation is based on the one

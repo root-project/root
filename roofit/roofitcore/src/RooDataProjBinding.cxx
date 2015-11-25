@@ -17,7 +17,7 @@
 /**
 \file RooDataProjBinding.cxx
 \class RooDataProjBinding
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 adaptor that projects a real function via summation of states
 provided in a dataset. The real function must be attached to the

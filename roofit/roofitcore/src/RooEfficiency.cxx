@@ -17,7 +17,7 @@
 /**
 \file RooEfficiency.cxx
 \class RooEfficiency
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooEfficiency is a PDF helper class to fit efficiencies parameterized
 by a supplied function F.

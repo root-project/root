@@ -17,7 +17,7 @@
 /**
 \file RooStudyPackage.cxx
 \class RooStudyPackage
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooStudyPackage is a utility class to manage studies that consist of
 repeated applications of generate-and-fit operations on a workspace

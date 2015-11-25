@@ -17,7 +17,7 @@
 /**
 \file RooAbsCategoryLValue.cxx
 \class RooAbsCategoryLValue
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsCategoryLValue is the common abstract base class for objects that represent a
 discrete value that may appear on the left hand side of an equation ('lvalue')

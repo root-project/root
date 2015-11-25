@@ -17,7 +17,7 @@
 /**
 \file RooTable.cxx
 \class RooTable
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooTable is the abstract interface for table objects.
 Table objects are the category equivalent of RooPlot objects

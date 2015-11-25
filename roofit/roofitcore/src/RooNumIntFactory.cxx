@@ -17,7 +17,7 @@
 /**
 \file RooNumIntFactory.cxx
 \class RooNumIntFactory
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooNumIntFactory is a factory to instantiate numeric integrators
 from a given function binding and a given configuration. The factory

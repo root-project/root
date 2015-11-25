@@ -17,7 +17,7 @@
 /**
 \file RooSharedPropertiesList.cxx
 \class RooSharedPropertiesList
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooSharedPropertiesList maintains the properties of RooRealVars
 and RooCategories that are clones of each other.

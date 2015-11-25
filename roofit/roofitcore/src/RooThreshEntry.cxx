@@ -17,7 +17,7 @@
 /**
 \file RooThreshEntry.cxx
 \class RooThreshEntry
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooThreshEntry is a utility class for RooThresholdCategory
 **/

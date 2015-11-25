@@ -17,7 +17,7 @@
 /**
 \file RooRealConstant.cxx
 \class RooRealConstant
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooRealConstant provides static functions to create and keep track
 of RooRealVar constants. Instead of creating such constants by

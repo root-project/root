@@ -12,7 +12,7 @@
 /**
 \file RooCachedReal.cxx
 \class RooCachedReal
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooCachedReal is an implementation of RooAbsCachedReal that can cache
 any external RooAbsReal input function provided in the constructor.

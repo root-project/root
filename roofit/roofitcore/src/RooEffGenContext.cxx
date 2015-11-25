@@ -16,7 +16,7 @@
 /**
 \file RooEffGenContext.cxx
 \class RooEffGenContext
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooEffGenContext is a specialized generator context for p.d.fs represented
 by class RooEffProd, which are p.d.fs multiplied with an efficiency function.

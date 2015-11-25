@@ -17,7 +17,7 @@
 /**
 \file RooChangeTracker.cxx
 \class RooChangeTracker
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooChangeTracker is a meta object that tracks value
 changes in a given set of RooAbsArgs by registering itself as value

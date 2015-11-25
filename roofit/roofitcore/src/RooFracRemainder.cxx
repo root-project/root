@@ -17,7 +17,7 @@
 /**
 \file RooFracRemainder.cxx
 \class RooFracRemainder
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 
 RooFracRemainder calculates the remainder fraction of a sum of RooAbsReal

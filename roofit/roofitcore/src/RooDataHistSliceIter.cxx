@@ -17,7 +17,7 @@
 /**
 \file RooDataHistSliceIter.cxx
 \class RooDataHistSliceIter
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooDataHistSliceIter iterates over all bins in a RooDataHist that
 occur in a slice defined by the bin coordinates of the input

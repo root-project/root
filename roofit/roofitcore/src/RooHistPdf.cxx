@@ -17,7 +17,7 @@
 /**
 \file RooHistPdf.cxx
 \class RooHistPdf
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooHistPdf implements a probablity density function sampled from a 
 multidimensional histogram. The histogram distribution is explicitly

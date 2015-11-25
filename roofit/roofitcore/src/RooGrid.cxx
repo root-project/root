@@ -17,7 +17,7 @@
 /**
 \file RooGrid.cxx
 \class RooGrid
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooGrid is a utility class for RooMCIntegrator which
 implements an adaptive multi-dimensional Monte Carlo numerical

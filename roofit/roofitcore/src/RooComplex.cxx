@@ -17,7 +17,7 @@
 /**
 \file RooComplex.cxx
 \class RooComplex
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooComplex is a simple container class for complex values
 **/

@@ -17,7 +17,7 @@
 /**
 \file RooCategoryProxy.cxx
 \class RooCategoryProxy
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooCategoryProxy is the proxy implementation for RooAbsCategory objects
 A RooCategoryProxy is the general mechanism to store references

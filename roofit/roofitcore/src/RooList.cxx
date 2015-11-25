@@ -17,7 +17,7 @@
 /**
 \file RooList.cxx
 \class RooList
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 A RooList is a TList with extra support for working with options
 that are associated with each node. This is a utility class for RooPlot

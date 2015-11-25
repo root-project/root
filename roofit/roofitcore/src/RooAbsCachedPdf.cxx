@@ -12,7 +12,7 @@
 /**
 \file RooAbsCachedPdf.cxx
 \class RooAbsCachedPdf
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsCachedPdf is the abstract base class for p.d.f.s that need or
 want to cache their evaluate() output in a RooHistPdf defined in

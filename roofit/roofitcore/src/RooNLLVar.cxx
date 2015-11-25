@@ -17,7 +17,7 @@
 /**
 \file RooNLLVar.cxx
 \class RooNLLVar
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooNLLVar implements a a -log(likelihood) calculation from a dataset
 and a PDF. The NLL is calculated as

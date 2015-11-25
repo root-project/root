@@ -17,7 +17,7 @@
 /**
 \file RooSentinel.cxx
 \class RooSentinel
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooSentinel is a special purposes singleton class that terminates
 all other RooFit singleton services when the process exists. 

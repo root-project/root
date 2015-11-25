@@ -17,7 +17,7 @@
 /**
 \file RooRealBinding.cxx
 \class RooRealBinding
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Lightweight interface adaptor that binds a RooAbsReal object to a subset
 of its servers and present it as a simple array oriented interface.

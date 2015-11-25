@@ -17,7 +17,7 @@
 /**
 \file RooHist.cxx
 \class RooHist
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 A RooHist is a graphical representation of binned data based on the
 TGraphAsymmErrors class. Error bars are calculated using either Poisson

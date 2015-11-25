@@ -17,7 +17,7 @@
 /**
 \file RooDirItem.cxx
 \class RooDirItem
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooDirItem is a utility base class for RooFit objects that are to be attached
 to ROOT directories. Concrete classes inherit the appendToDir and removeToDir

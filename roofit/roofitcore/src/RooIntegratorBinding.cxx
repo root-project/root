@@ -17,7 +17,7 @@
 /**
 \file RooIntegratorBinding.cxx
 \class RooIntegratorBinding
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Function binding representing the output of a RooAbsIntegrator
 **/

@@ -17,7 +17,7 @@
 /**
 \file RooMPSentinel.cxx
 \class RooMPSentinel
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooMPSentinel is a singleton class that keeps track of all
 parellel execution processes for goodness-of-fit calculations.

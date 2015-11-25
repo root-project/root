@@ -17,7 +17,7 @@
 /**
 \file RooAbsIntegrator.cxx
 \class RooAbsIntegrator
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsIntegrator is the abstract interface for integrators of real-valued
 functions that implement the RooAbsFunc interface.

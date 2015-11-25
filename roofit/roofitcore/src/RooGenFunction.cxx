@@ -18,7 +18,7 @@
 /**
 \file RooGenFunction.cxx
 \class RooGenFunction
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Lightweight interface adaptor that exports a RooAbsReal as a ROOT::Math::IGenFunction
 **/

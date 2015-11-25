@@ -17,7 +17,7 @@
 /**
 \file RooInt.cxx
 \class RooInt
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooInt is a minimal implementation of a TObject holding a Int_t
 value.

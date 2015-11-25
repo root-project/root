@@ -17,7 +17,7 @@
 /**
 \file RooAbsRootFinder.cxx
 \class RooAbsRootFinder
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsRootFinder is the abstract interface for finding roots of real-valued
 1-dimensional function that implements the RooAbsFunc interface.

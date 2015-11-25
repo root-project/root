@@ -17,7 +17,7 @@
 /**
 \file RooDataHist.cxx
 \class RooDataHist
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooDataSet is a container class to hold N-dimensional binned data. Each bins central 
 coordinates in N-dimensional space are represented by a RooArgSet of RooRealVar, RooCategory 

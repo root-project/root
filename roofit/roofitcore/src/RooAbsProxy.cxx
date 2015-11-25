@@ -25,7 +25,7 @@
 /**
 \file RooAbsProxy.cxx
 \class RooAbsProxy
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsProxy is the abstact interface for proxy classes.
 Proxy classes hold pointers to other Roofit objects 

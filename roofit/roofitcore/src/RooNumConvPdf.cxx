@@ -17,7 +17,7 @@
 /**
 \file RooNumConvPdf.cxx
 \class RooNumConvPdf
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Numeric 1-dimensional convolution operator PDF. This class can convolve any PDF
 with any other PDF using a straightforward numeric calculation of the

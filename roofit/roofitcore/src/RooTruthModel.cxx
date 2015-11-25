@@ -17,7 +17,7 @@
 /**
 \file RooTruthModel.cxx
 \class RooTruthModel
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooTruthModel is an implementation of RooResolution
 model that provides a delta-function resolution model

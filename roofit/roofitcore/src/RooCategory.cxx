@@ -17,7 +17,7 @@
 /**
 \file RooCategory.cxx
 \class RooCategory
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooCategory represents a fundamental (non-derived) discrete value object. The class
 has a public interface to define the possible value states.

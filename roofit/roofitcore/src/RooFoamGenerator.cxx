@@ -17,7 +17,7 @@
 /**
 \file RooFoamGenerator.cxx
 \class RooFoamGenerator
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooFoamGenerator is a generic toy monte carlo generator that implement
 the TFOAM sampling technique on any positively valued function.

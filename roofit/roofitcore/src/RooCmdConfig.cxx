@@ -18,7 +18,7 @@
 /**
 \file RooCmdConfig.cxx
 \class RooCmdConfig
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooCmdConfig is a configurable parser for RooCmdArg named
 arguments. It maps the contents of named arguments named to integers,

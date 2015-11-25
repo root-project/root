@@ -17,7 +17,7 @@
 /**
 \file RooQuasiRandomGenerator.cxx
 \class RooQuasiRandomGenerator
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 This class generates the quasi-random (aka "low discrepancy")
 sequence for dimensions up to 12 using the Niederreiter base 2

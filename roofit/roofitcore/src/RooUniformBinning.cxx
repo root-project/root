@@ -17,7 +17,7 @@
 /**
 \file RooUniformBinning.cxx
 \class RooUniformBinning
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooUniformBinning is an implementation of RooAbsBinning that provides
 a uniform binning in 'n' bins between the range end points. A RooUniformBinning

@@ -7,7 +7,7 @@
 /**
 \file RooBanner.cxx
 \class RooBanner
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Print banner message when RooFit library is loaded
 **/

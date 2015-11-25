@@ -17,7 +17,7 @@
 /**
 \file RooRealProxy.cxx
 \class RooRealProxy
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooRealProxy is the concrete proxy for RooAbsReal objects
 A RooRealProxy is the general mechanism to store references

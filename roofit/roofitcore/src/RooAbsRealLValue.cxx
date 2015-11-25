@@ -17,7 +17,7 @@
 /**
 \file RooAbsRealLValue.cxx
 \class RooAbsRealLValue
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsRealLValue is the common abstract base class for objects that represent a
 real value that may appear on the left hand side of an equation ('lvalue')

@@ -18,7 +18,7 @@
 /**
 \file RooFunctor.cxx
 \class RooFunctor
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Lightweight interface adaptor that exports a RooAbsPdf as a functor
 **/

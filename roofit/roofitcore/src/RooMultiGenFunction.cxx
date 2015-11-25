@@ -18,7 +18,7 @@
 /**
 \file RooMultiGenFunction.cxx
 \class RooMultiGenFunction
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Lightweight interface adaptor that exports a RooAbsReal as a ROOT::Math::IMultiGenFunction
 **/

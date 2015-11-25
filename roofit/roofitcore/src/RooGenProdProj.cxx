@@ -17,7 +17,7 @@
 /**
 \file RooGenProdProj.cxx
 \class RooGenProdProj
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 
 RooGenProdProj is an auxiliary class for RooProdPdf that calculates

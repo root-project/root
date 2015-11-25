@@ -17,7 +17,7 @@
 /**
 \file RooHistError.cxx
 \class RooHistError
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooHistError is a singleton class used to calculate the error bars
 for each bin of a RooHist object. Errors are calculated by integrating

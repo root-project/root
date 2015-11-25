@@ -17,7 +17,7 @@
 /**
 \file RooAbsData.cxx
 \class RooAbsData
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsData is the common abstract base class for binned and unbinned
 datasets. The abstract interface defines plotting and tabulating entry

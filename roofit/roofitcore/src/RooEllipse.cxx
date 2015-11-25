@@ -17,7 +17,7 @@
 /**
 \file RooEllipse.cxx
 \class RooEllipse
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 A RooEllipse is a two-dimensional ellipse that can be used to represent
 an error contour.

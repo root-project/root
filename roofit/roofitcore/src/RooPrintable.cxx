@@ -17,7 +17,7 @@
 /**
 \file RooPrintable.cxx
 \class RooPrintable
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooPlotable is a 'mix-in' base class that define the standard RooFit plotting and
 printing methods. Each RooPlotable implementation must define methods that

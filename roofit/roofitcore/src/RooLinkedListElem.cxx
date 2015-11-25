@@ -17,7 +17,7 @@
 /**
 \file RooLinkedListElem.cxx
 \class RooLinkedListElem
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooLinkedListElem is an link element for the RooLinkedList class
 **/

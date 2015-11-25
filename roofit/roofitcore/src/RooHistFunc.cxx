@@ -17,7 +17,7 @@
 /**
 \file RooHistFunc.cxx
 \class RooHistFunc
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooHistFunc implements a real-valued function sampled from a 
 multidimensional histogram. The histogram can have an arbitrary number of real or 

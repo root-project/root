@@ -17,7 +17,7 @@
 /**
 \file RooSuperCategory.cxx
 \class RooSuperCategory
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooSuperCategory consolidates several RooAbsCategoryLValue objects into
 a single category. The states of the super category consist of all the permutations

@@ -17,7 +17,7 @@
 /**
 \file RooMultiCategory.cxx
 \class RooMultiCategory
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooMultiCategory consolidates several RooAbsCategory objects into
 a single category. The states of the multi-category consist of all the permutations

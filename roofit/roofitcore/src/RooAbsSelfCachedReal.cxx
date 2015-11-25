@@ -12,7 +12,7 @@
 /**
 \file RooAbsSelfCachedReal.cxx
 \class RooAbsSelfCachedReal
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsSelfCachedReal is an abstract base class for functions whose
 output is cached in terms of a histogram in all observables between

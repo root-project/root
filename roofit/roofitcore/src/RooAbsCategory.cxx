@@ -17,7 +17,7 @@
 /**
 \file RooAbsCategory.cxx
 \class RooAbsCategory
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsCategory is the common abstract base class for objects that
 represent a discrete value with a finite number of states. Each

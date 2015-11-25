@@ -17,7 +17,7 @@
 /**
 \file RooMultiCatIter.cxx
 \class RooMultiCatIter
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooMultiCatIter iterators over all state permutations of a list of categories.
 It serves as the state iterator for a RooSuperCategory or a RooMultiCategory.

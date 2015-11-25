@@ -17,7 +17,7 @@
 /**
 \file RooConstraintSum.cxx
 \class RooConstraintSum
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooConstraintSum calculates the sum of the -(log) likelihoods of
 a set of RooAbsPfs that represent constraint functions. This class

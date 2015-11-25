@@ -17,7 +17,7 @@
 /**
 \file RooParamBinning.cxx
 \class RooParamBinning
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooParamBinning is an implementation of RooAbsBinning that constructs
 a binning with a range definition that depends on external RooAbsReal objects.

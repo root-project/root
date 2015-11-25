@@ -17,7 +17,7 @@
 /**
 \file RooLinkedListIter.cxx
 \class RooLinkedListIter
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooLinkedListIter is the TIterator implementation for RooLinkedList
 **/

@@ -17,7 +17,7 @@
 /**
 \file RooAbsNumGenerator.cxx
 \class RooAbsNumGenerator
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooAbsNumGenerator is the abstract base class for MC event generator
 implementations like RooAcceptReject and RooFoam

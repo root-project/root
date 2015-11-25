@@ -17,7 +17,7 @@
 /**
 \file RooAbsOptTestStatistic.cxx
 \class RooAbsOptTestStatistic
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsOptTestStatistic is the abstract base class for test
 statistics objects that evaluate a function or PDF at each point of a given

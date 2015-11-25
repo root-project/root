@@ -12,7 +12,7 @@
 /**
 \file RooNumRunningInt.cxx
 \class RooNumRunningInt
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 Class RooNumRunningInt is an implementation of RooAbsCachedReal that represents a running integral
 \f[ RI(f(x)) = \int_{xlow}^{x} f(x') dx'                 \f]

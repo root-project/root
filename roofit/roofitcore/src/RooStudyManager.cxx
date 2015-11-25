@@ -17,7 +17,7 @@
 /**
 \file RooStudyManager.cxx
 \class RooStudyManager
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooStudyManager is a utility class to manage studies that consist of
 repeated applications of generate-and-fit operations on a workspace

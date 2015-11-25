@@ -17,7 +17,7 @@
 /**
 \file RooMCIntegrator.cxx
 \class RooMCIntegrator
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooMCIntegrator implements an adaptive multi-dimensional Monte Carlo
 numerical integration, following the VEGAS algorithm originally described

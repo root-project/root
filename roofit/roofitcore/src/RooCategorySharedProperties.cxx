@@ -17,7 +17,7 @@
 /**
 \file RooCategorySharedProperties.cxx
 \class RooCategorySharedProperties
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooCategorySharedProperties is the container for all properties
 that are shared between instance of RooCategory objects that

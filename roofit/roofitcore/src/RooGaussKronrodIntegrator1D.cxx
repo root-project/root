@@ -17,7 +17,7 @@
 /**
 \file RooGaussKronrodIntegrator1D.cxx
 \class RooGaussKronrodIntegrator1D
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooGaussKronrodIntegrator1D implements the Gauss-Kronrod integration algorithm.
 

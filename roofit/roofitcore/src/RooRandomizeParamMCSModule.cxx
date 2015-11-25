@@ -17,7 +17,7 @@
 /**
 \file RooRandomizeParamMCSModule.cxx
 \class RooRandomizeParamMCSModule
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooRandomizeParamMCSModule is an add-on modules to RooMCStudy that
 allows you to randomize input generation parameters. Randomized generation

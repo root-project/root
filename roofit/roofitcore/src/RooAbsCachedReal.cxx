@@ -12,7 +12,7 @@
 /**
 \file RooAbsCachedReal.cxx
 \class RooAbsCachedReal
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooAbsCachedReal is the abstract base class for functions that need or
 want to cache their evaluate() output in a RooHistFunc defined in

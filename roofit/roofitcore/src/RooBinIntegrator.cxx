@@ -17,7 +17,7 @@
 /**
 \file RooBinIntegrator.cxx
 \class RooBinIntegrator
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooBinIntegrator implements an adaptive one-dimensional 
 numerical integration algorithm. 

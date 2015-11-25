@@ -17,7 +17,7 @@
 /**
 \file RooRealMPFE.cxx
 \class RooRealMPFE
-\ingroup RooFitCore
+\ingroup Roofitcore
 
 RooRealMPFE is the multi-processor front-end for parallel calculation
 of RooAbsReal objects. Each RooRealMPFE forks a process that calculates
