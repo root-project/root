@@ -9,16 +9,6 @@
 //   THREE-DIMENSIONAL DECONVOLUTION FUNCTIONS                             //
 //   THREE-DIMENSIONAL PEAK SEARCH FUNCTIONS                               //
 //                                                                         //
-//   These functions were written by:                                      //
-//   Miroslav Morhac                                                       //
-//   Institute of Physics                                                  //
-//   Slovak Academy of Sciences                                            //
-//   Dubravska cesta 9, 842 28 BRATISLAVA                                  //
-//   SLOVAKIA                                                              //
-//                                                                         //
-//   email:fyzimiro@savba.sk,    fax:+421 7 54772479                       //
-//                                                                         //
-//  The original code in C has been repackaged as a C++ class by R.Brun    //
 //                                                                         //
 //  The algorithms in this class have been published in the following      //
 //  references:                                                            //
@@ -51,9 +41,9 @@
 /////////////////////////////////////////////////////////////////////////////
 
 /** \class TSpectrum3
- \ingroup Hist
- \brief Advanced 3-dimentional spectra processing functions
- \author Miroslav Morhac
+    \ingroup Spectrum
+    \brief Advanced 3-dimentional spectra processing functions
+    \author Miroslav Morhac
 
 */
 

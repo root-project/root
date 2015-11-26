@@ -4,16 +4,6 @@
 //__________________________________________________________________________
 //   THIS CLASS CONTAINS ORTHOGONAL TRANSFORM  FUNCTIONS.                  //
 //                                                                         //
-//   These functions were written by:                                      //
-//   Miroslav Morhac                                                       //
-//   Institute of Physics                                                  //
-//   Slovak Academy of Sciences                                            //
-//   Dubravska cesta 9, 842 28 BRATISLAVA                                  //
-//   SLOVAKIA                                                              //
-//                                                                         //
-//   email:fyzimiro@savba.sk,    fax:+421 7 54772479                       //
-//                                                                         //
-//  The original code in C has been repackaged as a C++ class by R.Brun    //
 //                                                                         //
 //  The algorithms in this class have been published in the following      //
 //  references:                                                            //
@@ -32,9 +22,9 @@
 //____________________________________________________________________________
 
 /** \class TSpectrumTransform
- \ingroup Hist
- \brief Advanced 1-dimentional orthogonal transform functions
- \author Miroslav Morhac
+    \ingroup Spectrum
+    \brief Advanced 1-dimentional orthogonal transform functions
+    \author Miroslav Morhac
 
  The original code in C has been repackaged as a C++ class by R.Brun
 
@@ -52,7 +42,7 @@
    4. Morhac M., Matousek V.: Multidimensional nuclear data compression
        using fast adaptive Walsh-Haar transform. Acta Physica Slovaca 51
       (2001) 307.
- 
+
  */
 
 

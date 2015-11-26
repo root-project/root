@@ -5,16 +5,6 @@
 //   THIS CLASS CONTAINS ADVANCED SPECTRA FITTING FUNCTIONS.               //
 //                                                                         //
 //                                                                         //
-//   These functions were written by:                                      //
-//   Miroslav Morhac                                                       //
-//   Institute of Physics                                                  //
-//   Slovak Academy of Sciences                                            //
-//   Dubravska cesta 9, 842 28 BRATISLAVA                                  //
-//   SLOVAKIA                                                              //
-//                                                                         //
-//   email:fyzimiro@savba.sk,    fax:+421 7 54772479                       //
-//                                                                         //
-//  The original code in C has been repackaged as a C++ class by R.Brun    //
 //                                                                         //
 //  The algorithms in this class have been published in the following      //
 //  references:                                                            //
@@ -30,10 +20,10 @@
 //____________________________________________________________________________
 
 /** \class TSpectrumFit
- \ingroup Hist
- \brief Advanced 1-dimentional spectra fitting functions
- \author Miroslav Morhac
- 
+    \ingroup Spectrum
+    \brief Advanced 1-dimentional spectra fitting functions
+    \author Miroslav Morhac
+
  The original code in C has been repackaged as a C++ class by R.Brun
 
  The algorithms in this class have been published in the following

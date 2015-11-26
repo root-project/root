@@ -1,42 +1,10 @@
 // @(#)root/spectrum:$Id$
 // Author: Miroslav Morhac   25/09/06
 
-//__________________________________________________________________________
-//   THIS CLASS CONTAINS 2-DIMENSIONAL ORTHOGONAL TRANSFORM  FUNCTIONS.    //
-//                                                                         //
-//   These functions were written by:                                      //
-//   Miroslav Morhac                                                       //
-//   Institute of Physics                                                  //
-//   Slovak Academy of Sciences                                            //
-//   Dubravska cesta 9, 842 28 BRATISLAVA                                  //
-//   SLOVAKIA                                                              //
-//                                                                         //
-//   email:fyzimiro@savba.sk,    fax:+421 7 54772479                       //
-//                                                                         //
-//  The original code in C has been repackaged as a C++ class by R.Brun    //
-//                                                                         //
-//  The algorithms in this class have been published in the following      //
-//  references:                                                            //
-//                                                                         //
-//  [1] C.V. Hampton, B. Lian, Wm. C. McHarris: Fast-Fourier-transform     //
-//      spectral enhancement techniques for gamma-ray spectroscopy.NIM A353//
-//      (1994) 280-284.                                                    //
-//  [2] Morhac M., Matousek V., New adaptive Cosine-Walsh  transform and   //
-//      its application to nuclear data compression, IEEE Transactions on  //
-//      Signal Processing 48 (2000) 2693.                                  //
-//  [3] Morhac M., Matousek V., Data compression using new fast adaptive   //
-//      Cosine-Haar transforms, Digital Signal Processing 8 (1998) 63.     //
-//  [4] Morhac M., Matousek V.: Multidimensional nuclear data compression  //
-//      using fast adaptive Walsh-Haar transform. Acta Physica Slovaca 51  //
-//     (2001) 307.                                                         //
-//____________________________________________________________________________
-
 /** \class TSpectrum2Transform
- \ingroup Hist
- \brief Advanced 2-dimentional orthogonal transform functions
- \author Miroslav Morhac
-
- The original code in C has been repackaged as a C++ class by R.Brun
+    \ingroup Spectrum
+    \brief Advanced 2-dimentional orthogonal transform functions
+    \author Miroslav Morhac
 
    The algorithms in this class have been published in the following
    references:
@@ -52,7 +20,6 @@
    4. Morhac M., Matousek V.: Multidimensional nuclear data compression
        using fast adaptive Walsh-Haar transform. Acta Physica Slovaca 51
       (2001) 307.
- 
  */
 
 #include "TSpectrum2Transform.h"
@@ -61,7 +28,7 @@
 ClassImp(TSpectrum2Transform)
 
 ////////////////////////////////////////////////////////////////////////////////
-///default constructor
+/// Default constructor
 
 TSpectrum2Transform::TSpectrum2Transform()
 {
@@ -78,8 +45,8 @@ TSpectrum2Transform::TSpectrum2Transform()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///the constructor creates TSpectrum2Transform object. Its sizes must be > than zero and must be power of 2.
-///It sets default transform type to be Cosine transform. Transform parameters can be changed using setter functions.
+/// The constructor creates TSpectrum2Transform object. Its sizes must be > than zero and must be power of 2.
+/// It sets default transform type to be Cosine transform. Transform parameters can be changed using setter functions.
 
 TSpectrum2Transform::TSpectrum2Transform(Int_t sizeX, Int_t sizeY) :TObject()
 {
@@ -120,27 +87,20 @@ TSpectrum2Transform::TSpectrum2Transform(Int_t sizeX, Int_t sizeY) :TObject()
    fEnhanceCoeff=0.5;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///destructor
+/// Destructor
 
 TSpectrum2Transform::~TSpectrum2Transform()
 {
 }
 
-
-//////////AUXILIARY FUNCTIONS FOR TRANSFORM BASED FUNCTIONS////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function calculates Haar transform of a part of data                   //
-///      Function parameters:                                                    //
-///              -working_space-pointer to vector of transformed data            //
-///              -num-length of processed data                                   //
-///              -direction-forward or inverse transform                         //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///   This function calculates Haar transform of a part of data
+///
+///      Function parameters:
+///              - working_space-pointer to vector of transformed data
+///              - num-length of processed data
+///              - direction-forward or inverse transform
 
 void TSpectrum2Transform::Haar(Double_t *working_space, Int_t num, Int_t direction)
 {
@@ -215,15 +175,11 @@ void TSpectrum2Transform::Haar(Double_t *working_space, Int_t num, Int_t directi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function calculates Walsh transform of a part of data                  //
-///      Function parameters:                                                    //
-///              -working_space-pointer to vector of transformed data            //
-///              -num-length of processed data                                   //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///   This function calculates Walsh transform of a part of data
+///
+///      Function parameters:
+///              - working_space-pointer to vector of transformed data
+///              - num-length of processed data
 
 void TSpectrum2Transform::Walsh(Double_t *working_space, Int_t num)
 {
@@ -273,15 +229,11 @@ void TSpectrum2Transform::Walsh(Double_t *working_space, Int_t num)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function carries out bir-reverse reordering of data                    //
-///      Function parameters:                                                    //
-///              -working_space-pointer to vector of processed data              //
-///              -num-length of processed data                                   //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///   This function carries out bir-reverse reordering of data
+///
+///      Function parameters:
+///              - working_space-pointer to vector of processed data
+///              - num-length of processed data
 
 void TSpectrum2Transform::BitReverse(Double_t *working_space, Int_t num)
 {
@@ -314,17 +266,13 @@ void TSpectrum2Transform::BitReverse(Double_t *working_space, Int_t num)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function calculates Fourier based transform of a part of data          //
-///      Function parameters:                                                    //
-///              -working_space-pointer to vector of transformed data            //
-///              -num-length of processed data                                   //
-///              -hartley-1 if it is Hartley transform, 0 othewise               //
-///              -direction-forward or inverse transform                         //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///   This function calculates Fourier based transform of a part of data
+///
+///      Function parameters:
+///              - working_space-pointer to vector of transformed data
+///              - num-length of processed data
+///              - hartley-1 if it is Hartley transform, 0 othewise
+///              - direction-forward or inverse transform
 
 void TSpectrum2Transform::Fourier(Double_t *working_space, Int_t num, Int_t hartley,
                            Int_t direction, Int_t zt_clear)
@@ -440,17 +388,13 @@ void TSpectrum2Transform::Fourier(Double_t *working_space, Int_t num, Int_t hart
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function carries out bir-reverse reordering for Haar transform         //
-///      Function parameters:                                                    //
-///              -working_space-pointer to vector of processed data              //
-///              -shift-shift of position of processing                          //
-///              -start-initial position of processed data                       //
-///              -num-length of processed data                                   //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///   This function carries out bir-reverse reordering for Haar transform
+///
+///      Function parameters:
+///              - working_space-pointer to vector of processed data
+///              - shift-shift of position of processing
+///              - start-initial position of processed data
+///              - num-length of processed data
 
 void TSpectrum2Transform::BitReverseHaar(Double_t *working_space, Int_t shift, Int_t num,
                                   Int_t start)

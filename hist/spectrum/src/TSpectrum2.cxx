@@ -2,8 +2,9 @@
 // Author: Miroslav Morhac   17/01/2006
 
 /** \class TSpectrum2
- \ingroup Hist
- \brief Advanced 2-dimensional spectra processing
+    \ingroup Spectrum
+    \brief Advanced 2-dimensional spectra processing
+    \author Miroslav Morhac
 
  This class contains advanced spectra processing functions.
 
@@ -15,16 +16,6 @@
   - Two-dimensional deconvolution functions
   - One-dimensional peak search functions
   - Two-dimensional peak search functions
-
- \author
- Miroslav Morhac
- Institute of Physics
- Slovak Academy of Sciences
- Dubravska cesta 9, 842 28 BRATISLAVA
- SLOVAKIA
- email:fyzimiro@savba.sk, fax:+421 7 54772479
-
- The original code in C has been repackaged as a C++ class by R.Brun.
 
  The algorithms in this class have been published in the following references:
 

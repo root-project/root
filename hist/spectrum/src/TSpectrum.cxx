@@ -8,14 +8,11 @@
 #include "TH1.h"
 #include "TMath.h"
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-
 /** \class TSpectrum
-    \ingroup Hist
+    \ingroup Spectrum
     \brief Advanced Spectra Processing
+    \author Miroslav Morhac
+
 
  ## Advanced spectra processing
 
@@ -25,16 +22,6 @@
  -   One-dimensional smoothing
  -   One-dimensional deconvolution
  -   One-dimensional peak search
-
- \author
- Miroslav Morhac
- Institute of Physics
- Slovak Academy of Sciences
- Dubravska cesta 9, 842 28 BRATISLAVA
- SLOVAKIA
- email:fyzimiro@savba.sk, fax:+421 7 54772479
-
- The original code in C has been repackaged as a C++ class by R.Brun.
 
  The algorithms in this class have been published in the following references:
 

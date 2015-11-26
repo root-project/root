@@ -2,9 +2,9 @@
 // Author: Miroslav Morhac   25/09/2006
 
 /** \class TSpectrum2Fit
- \ingroup Hist
- \brief Advanced 2-dimensional spectra fitting functions
- \authors Miroslav Morhac, R.Brun (repackaged the original code in C into C++ class)
+    \ingroup Spectrum
+    \brief Advanced 2-dimensional spectra fitting functions
+    \author Miroslav Morhac
 
 Class for fitting 2D spectra using AWMI (algorithm without matrix
 inversion) and conjugate gradient algorithms for symmetrical
