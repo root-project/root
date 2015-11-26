@@ -25,7 +25,7 @@ ClassImp(TPaletteAxis)
 ////////////////////////////////////////////////////////////////////////////////
 
 /*! \class TPaletteAxis
-\ingroup Hist
+\ingroup Histpainter
 \brief The palette painting class.
 
 A `TPaletteAxis` object is used to display the color palette when

@@ -40,7 +40,7 @@ ClassImp(TGraphPainter);
 ////////////////////////////////////////////////////////////////////////////////
 
 /*! \class TGraphPainter
-    \ingroup Hist
+    \ingroup Histpainter
     \brief The graph painter class. Implements all graphs' drawing's options.
 
 - [Introduction](#GP00)
