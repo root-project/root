@@ -14,17 +14,16 @@
 \ingroup Roofit
 
 RooFit Lognormal PDF. The two parameters are:
- - m0: the median of the distribution
- - k=exp(sigma): sigma is called the shape parameter in the TMath parametrization
+  - m0: the median of the distribution
+  - k=exp(sigma): sigma is called the shape parameter in the TMath parametrization
 
-  Lognormal(x,m0,k) = 1/(sqrt(2*pi)*ln(k)*x)*exp(-ln^2(x/m0)/(2*ln^2(k)))
+\f[ Lognormal(x,m_0,k) = \frac{e^{(-ln^2(x/m_0))/(2ln^2(k))}}{\sqrt{2\pi \cdot ln(k)\cdot x}} \f]
 
 The parametrization here is physics driven and differs from the ROOT::Math::lognormal_pdf(x,m,s,x0) with:
- - m = log(m0)
- - s = log(k)
- - x0 = 0
+  - m = log(m0)
+  - s = log(k)
+  - x0 = 0
 **/
-
 
 #include "RooFit.h"
 

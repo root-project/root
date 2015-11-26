@@ -19,28 +19,32 @@
 
   Implementation of the so-called real spherical harmonics, using the orthonormal normalization,
 which are related to spherical harmonics as:
-
- Y_{l0} = Y_l^0   (m=0)
- Y_{lm} = \frac{1}{\sqrt{2}}  \left( Y_l^m     + (-1)^m     Y_l^{-m}   \right) (m>0)
+\f[
+ Y_{l0} = Y_l^0   (m=0) \\
+ Y_{lm} = \frac{1}{\sqrt{2}}  \left( Y_l^m     + (-1)^m     Y_l^{-m}   \right) (m>0) \\
  Y_{lm} = \frac{1}{i\sqrt{2}} \left( Y_l^{|m|} - (-1)^{|m|} Y_l^{-|m|} \right) (m<0)
+\f]
 
 which implies:
-
+\f[
 Y_{l0}(\cos\theta,\phi) =          N_{l0}   P_l^0    (\cos\theta)              (m=0)
 Y_{lm}(\cos\theta,\phi) = \sqrt{2} N_{lm}   P_l^m    (\cos\theta) cos(|m|\phi) (m>0)
 Y_{lm}(\cos\theta,\phi) = \sqrt{2} N_{l|m|} P_l^{|m|}(\cos\theta) sin(|m|\phi) (m<0)
+\f]
 
 where
+\f[
  N_{lm} = \sqrt{ \frac{2l+1}{4\pi} \frac{ (l-m)! }{ (l+m)! } } 
+\f]
 
 Note that the normalization corresponds to the orthonormal case,
-and thus we have Int d\cos\theta d\phi Y_{lm} Y_{l'm'} = \delta_{ll'} \delta{mm'}
+and thus we have \f$ \int d\cos\theta d\phi Y_{lm} Y_{l'm'} = \delta_{ll'} \delta{mm'}\f$
 
 Note that in addition, this code can also represent the product of two
-(real) spherical harmonics -- it actually uses the fact that Y_{00} = \sqrt{\frac{1}{4\pi}}
+(real) spherical harmonics -- it actually uses the fact that \f$Y_{00} = \sqrt{\frac{1}{4\pi}}\f$
 in order to represent a single spherical harmonics by multiplying it
-by \sqrt{4\pi} Y_00, as this makes it trivial to compute the analytical
-integrals, using the orthogonality properties of Y_l^m...
+by \f$\sqrt{4\pi} Y_00\f$, as this makes it trivial to compute the analytical
+integrals, using the orthogonality properties of \f$Y_l^m\f$...
 
 **/
 

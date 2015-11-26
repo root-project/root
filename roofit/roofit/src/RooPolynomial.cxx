@@ -20,8 +20,7 @@
 \ingroup Roofit
 
 RooPolynomial implements a polynomial p.d.f of the form
-<pre>
-f(x) = sum_i a_i * x^i
+\f[ f(x) = \sum_{i} a_{i} * x^i \f]
 By default coefficient a_0 is chosen to be 1, as polynomial
 probability density functions have one degree of freedome
 less than polynomial functions due to the normalization condition
