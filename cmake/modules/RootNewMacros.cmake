@@ -8,6 +8,9 @@ if(CMAKE_VERSION VERSION_GREATER 2.8.12)
   cmake_policy(SET CMP0022 OLD) # See "cmake --help-policy CMP0022" for more details
 endif()
 
+
+set(THISDIR ${CMAKE_CURRENT_LIST_DIR})
+
 set(lib lib)
 set(bin bin)
 if(WIN32)
@@ -805,7 +808,7 @@ function(ROOT_ADD_TEST test)
   endif()
 
   #- Locate the test driver
-  find_file(ROOT_TEST_DRIVER RootTestDriver.cmake PATHS ${CMAKE_MODULE_PATH})
+  find_file(ROOT_TEST_DRIVER RootTestDriver.cmake PATHS ${THISDIR} ${CMAKE_MODULE_PATH})
   if(NOT ROOT_TEST_DRIVER)
     message(FATAL_ERROR "ROOT_ADD_TEST: RootTestDriver.cmake not found!")
   endif()

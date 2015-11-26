@@ -60,7 +60,6 @@ get_filename_component(_thisdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 @ROOT_INCLUDE_DIR_SETUP@
 @ROOT_LIBRARY_DIR_SETUP@
 @ROOT_BINARY_DIR_SETUP@
-@ROOT_MODULE_PATH_SETUP@
 
 #----------------------------------------------------------------------------
 # Include the file listing all the imported targets and options
