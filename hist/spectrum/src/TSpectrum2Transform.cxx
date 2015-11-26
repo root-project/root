@@ -3,11 +3,17 @@
 
 /** \class TSpectrum2Transform
     \ingroup Spectrum
-    \brief Advanced 2-dimentional orthogonal transform functions
+    \brief Advanced 2-dimensional orthogonal transform functions
     \author Miroslav Morhac
 
-   The algorithms in this class have been published in the following
-   references:
+ Class to carry out transforms of 2D spectra, its filtering and
+ enhancement. It allows to calculate classic Fourier, Cosine, Sin,
+ Hartley, Walsh, Haar transforms as well as mixed transforms (Fourier-
+ Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sin-Walsh
+ and Sin-Haar). All the transforms are fast.
+
+ The algorithms in this class have been published in the following
+ references:
 
    1. C.V. Hampton, B. Lian, Wm. C. McHarris: Fast-Fourier-transform
        spectral enhancement techniques for gamma-ray spectroscopy.NIM A353
@@ -229,7 +235,7 @@ void TSpectrum2Transform::Walsh(Double_t *working_space, Int_t num)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///   This function carries out bir-reverse reordering of data
+///   This function carries out bit-reverse reordering of data
 ///
 ///      Function parameters:
 ///              - working_space-pointer to vector of processed data
@@ -271,7 +277,7 @@ void TSpectrum2Transform::BitReverse(Double_t *working_space, Int_t num)
 ///      Function parameters:
 ///              - working_space-pointer to vector of transformed data
 ///              - num-length of processed data
-///              - hartley-1 if it is Hartley transform, 0 othewise
+///              - hartley-1 if it is Hartley transform, 0 otherwise
 ///              - direction-forward or inverse transform
 
 void TSpectrum2Transform::Fourier(Double_t *working_space, Int_t num, Int_t hartley,
@@ -388,7 +394,7 @@ void TSpectrum2Transform::Fourier(Double_t *working_space, Int_t num, Int_t hart
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///   This function carries out bir-reverse reordering for Haar transform
+///   This function carries out bit-reverse reordering for Haar transform
 ///
 ///      Function parameters:
 ///              - working_space-pointer to vector of processed data
@@ -433,18 +439,14 @@ void TSpectrum2Transform::BitReverseHaar(Double_t *working_space, Int_t shift, I
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function calculates generalized (mixed) transforms of different degrees//
-///      Function parameters:                                                    //
-///              -working_space-pointer to vector of transformed data            //
-///              -zt_clear-flag to clear imaginary data before staring           //
-///              -num-length of processed data                                   //
-///              -degree-degree of transform (see manual)                        //
-///              -type-type of mixed transform (see manual)                      //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///   This function calculates generalized (mixed) transforms of different degrees
+///
+///      Function parameters:
+///              - working_space-pointer to vector of transformed data
+///              - zt_clear-flag to clear imaginary data before staring
+///              - num-length of processed data
+///              - degree-degree of transform (see manual)
+///              - type-type of mixed transform (see manual)
 
 Int_t TSpectrum2Transform::GeneralExe(Double_t *working_space, Int_t zt_clear, Int_t num,
                              Int_t degree, Int_t type)
@@ -555,17 +557,13 @@ Int_t TSpectrum2Transform::GeneralExe(Double_t *working_space, Int_t zt_clear, I
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function calculates inverse generalized (mixed) transforms             //
-///      Function parameters:                                                    //
-///              -working_space-pointer to vector of transformed data            //
-///              -num-length of processed data                                   //
-///              -degree-degree of transform (see manual)                        //
-///              -type-type of mixed transform (see manual)                      //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///
+///   This function calculates inverse generalized (mixed) transforms
+///      Function parameters:
+///              - working_space-pointer to vector of transformed data
+///              - num-length of processed data
+///              - degree-degree of transform (see manual)
+///              - type-type of mixed transform (see manual)
 
 Int_t TSpectrum2Transform::GeneralInv(Double_t *working_space, Int_t num, Int_t degree,
                              Int_t type)
@@ -677,18 +675,14 @@ Int_t TSpectrum2Transform::GeneralInv(Double_t *working_space, Int_t num, Int_t 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function calculates 2D Haar and Walsh transforms                       //
-///      Function parameters:                                                    //
-///              -working_matrix-pointer to matrix of transformed data           //
-///              -working_vector-pointer to vector where the data are processed  //
-///              -numx,numy-lengths of processed data                            //
-///              -direction-forward or inverse                                   //
-///              -type-type of transform (see manual)                            //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///
+///   This function calculates 2D Haar and Walsh transforms
+///      Function parameters:
+///              - working_matrix-pointer to matrix of transformed data
+///              - working_vector-pointer to vector where the data are processed
+///              - numx,numy-lengths of processed data
+///              - direction-forward or inverse
+///              - type-type of transform (see manual)
 
 void TSpectrum2Transform::HaarWalsh2(Double_t **working_matrix,
                               Double_t *working_vector, Int_t numx, Int_t numy,
@@ -772,18 +766,14 @@ void TSpectrum2Transform::HaarWalsh2(Double_t **working_matrix,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function calculates 2D Fourier based transforms                        //
-///      Function parameters:                                                    //
-///              -working_matrix-pointer to matrix of transformed data           //
-///              -working_vector-pointer to vector where the data are processed  //
-///              -numx,numy-lengths of processed data                            //
-///              -direction-forward or inverse                                   //
-///              -type-type of transform (see manual)                            //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///
+///   This function calculates 2D Fourier based transforms
+///      Function parameters:
+///              - working_matrix-pointer to matrix of transformed data
+///              - working_vector-pointer to vector where the data are processed
+///              - numx,numy-lengths of processed data
+///              - direction-forward or inverse
+///              - type-type of transform (see manual)
 
 void TSpectrum2Transform::FourCos2(Double_t **working_matrix, Double_t *working_vector,
                             Int_t numx, Int_t numy, Int_t direction, Int_t type)
@@ -1043,19 +1033,15 @@ void TSpectrum2Transform::FourCos2(Double_t **working_matrix, Double_t *working_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function calculates generalized (mixed) 2D transforms                  //
-///      Function parameters:                                                    //
-///              -working_matrix-pointer to matrix of transformed data           //
-///              -working_vector-pointer to vector where the data are processed  //
-///              -numx,numy-lengths of processed data                            //
-///              -direction-forward or inverse                                   //
-///              -type-type of transform (see manual)                            //
-///              -degree-degree of transform (see manual)                        //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///
+///   This function calculates generalized (mixed) 2D transforms
+///      Function parameters:
+///              - working_matrix-pointer to matrix of transformed data
+///              - working_vector-pointer to vector where the data are processed
+///              - numx,numy-lengths of processed data
+///              - direction-forward or inverse
+///              - type-type of transform (see manual)
+///              - degree-degree of transform (see manual)
 
 void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_vector,
                             Int_t numx, Int_t numy, Int_t direction, Int_t type,
@@ -1667,303 +1653,106 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
    return;
 }
 
-///////////////////////END OF AUXILIARY TRANSFORM2 FUNCTIONS//////////////////////////////////////////
-
-
-//////////TRANSFORM2 FUNCTION - CALCULATES DIFFERENT 2-D DIRECT AND INVERSE ORTHOGONAL TRANSFORMS//////
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////
+/// This function transforms the source spectrum. The calling program
+///      should fill in input parameters.
+/// Transformed data are written into dest spectrum.
+///
+/// Function parameters:
+///  - fSource-pointer to the matrix of source spectrum, its size should
+///    be fSizex*fSizey except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR
+///    transform. These need fSizex*2*fSizey length to supply real and
+///    imaginary coefficients.
+///  - fDest-pointer to the matrix of destination data, its size should be
+///    fSizex*fSizey except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These
+///    need fSizex*2*fSizey length to store real and imaginary coefficients
+///  - fSizex,fSizey-basic dimensions of source and dest spectra
+///
+/// ### Transform methods
+///
+/// Goal: to analyse experimental data using orthogonal transforms
+///
+///  - orthogonal transforms can be successfully used for the processing of
+///    nuclear spectra (not only)
+///
+///  - they can be used to remove high frequency noise, to increase
+///    signal-to-background ratio as well as to enhance low intensity components [1],
+/// to carry out e.g. Fourier analysis etc.
+///
+///   - we have implemented the function for the calculation of the commonly
+/// used orthogonal transforms as well as functions for the filtration and
+/// enhancement of experimental data
+///
+/// #### References:
+///
+/// [1] C.V. Hampton, B. Lian, Wm. C.
+/// McHarris: Fast-Fourier-transform spectral enhancement techniques for gamma-ray
+/// spectroscopy. NIM A353 (1994) 280-284.
+///
+/// [2] Morhac M., Matouoek V.,
+/// New adaptive Cosine-Walsh transform and its application to nuclear data
+/// compression, IEEE Transactions on Signal Processing 48 (2000) 2693.
+///
+/// [3] Morhac M., Matouoek V.,
+/// Data compression using new fast adaptive Cosine-Haar transforms, Digital Signal
+/// Processing 8 (1998) 63.
+///
+/// [4] Morhac M., Matouoek V.:
+/// Multidimensional nuclear data compression using fast adaptive Walsh-Haar
+/// transform. Acta Physica Slovaca 51 (2001) 307.
+///
+/// ### Example 1 - script Transform2.c:
+///
+/// \image html spectrum2transform_transform_image002.jpg Fig. 1 Original two-dimensional noisy spectrum
+///
+/// \image html spectrum2transform_transform_image003.jpg Fig. 2 Transformed spectrum from Fig. 1 using Cosine transform. Energy of the transformed data is concentrated around the beginning of the coordinate system
+///
+/// #### Script:
+///
+/// Example to illustrate Transform function (class TSpectrumTransform2).
+/// To execute this example, do
+///
+/// `root > .x Transform2.C`
+///
+/// ~~~ {.cpp}
+///   void Transform2() {
+///      Int_t i, j;
+///      Int_t nbinsx = 256;
+///      Int_t nbinsy = 256;
+///      Int_t xmin = 0;
+///      Int_t xmax = nbinsx;
+///      Int_t ymin = 0;
+///      Int_t ymax = nbinsy;
+///      Double_t ** source = new Double_t *[nbinsx];
+///      Double_t ** dest = new Double_t *[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i]=newDouble_t[nbinsy];
+///      for (i=0;i<nbinsx;i++)
+///         dest[i]=newDouble_t[nbinsy];
+///      TH2F *trans = newTH2F("trans","Background estimation",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      TFile *f = new TFile("TSpectrum2.root");
+///      trans=(TH2F*)f->Get("back3;1");
+///      TCanvas *Tr = new TCanvas("Transform","Illustration of transform function",10,10,1000,700);
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            source[i][j] = trans->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      TSpectrumTransform2 *t = new TSpectrumTransform2(256,256);
+///      t->SetTransformType(t->kTransformCos,0);
+///      t->SetDirection(t->kTransformForward);
+///      t->Transform(source,dest);
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            trans->SetBinContent(i+ 1, j + 1,dest[i][j]);
+///         }
+///      }
+///      trans->Draw("SURF");
+///   }
+/// ~~~
 
 void TSpectrum2Transform::Transform(const Double_t **fSource, Double_t **fDest)
 {
-/* TWO-DIMENSIONAL TRANSFORM FUNCTION                    */
-/* This function transforms the source spectrum. The calling program               */
-/*      should fill in input parameters.                                          */
-/* Transformed data are written into dest spectrum.                                */
-/*                         */
-/* Function parameters:                      */
-/* fSource-pointer to the matrix of source spectrum, its size should               */
-/*             be fSizex*fSizey except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR       */
-/*             transform. These need fSizex*2*fSizey length to supply real and          */
-/*             imaginary coefficients.                                                  */
-/* fDest-pointer to the matrix of destination data, its size should be             */
-/*           fSizex*fSizey except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These      */
-/*           need fSizex*2*fSizey length to store real and imaginary coefficients       */
-/* fSizex,fSizey-basic dimensions of source and dest spectra                       */
-/*                         */
-//////////////////////////////////////////////////////////////////////////////////////////
-//Begin_Html <!--
-/* -->
-<div class=Section1>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt'>Transform methods</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><i>&nbsp;</i></p>
-
-<p class=MsoNormal style='text-align:justify'><i>Goal: to analyze experimental
-data using orthogonal transforms</i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>orthogonal transforms can be successfully used for the processing of
-nuclear spectra (not only) </p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>they can be used to remove high frequency noise, to increase
-signal-to-background ratio as well as to enhance low intensity components [1],
-to carry out e.g. Fourier analysis etc. </p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>we have implemented the function for the calculation of the commonly
-used orthogonal transforms as well as functions for the filtration and
-enhancement of experimental data</p>
-
-<p class=MsoNormal><i>&nbsp;</i></p>
-
-<p class=MsoNormal><i>Function:</i></p>
-
-<p class=MsoNormal>void <a
-href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrumTransform2::Transform</b></a><b>(const
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> **fSource,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> **fDest)</b></p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'>This function transforms the
-source spectrum according to the given input parameters. Transformed data are
-written into dest spectrum. Before the Transform function is called the class
-must be created by constructor and the type of the transform as well as some
-other parameters must be set using a set of setter functions:</p>
-
-<p class=MsoNormal><span lang=FR>&nbsp;</span></p>
-
-<p class=MsoNormal><i><span style='color:red'>Member variables of
-TSpectrumTransform2 class:</span></i></p>
-
-<p class=MsoNormal style='margin-left:25.65pt;text-align:justify'><b>fSource</b>-pointer
-to the matrix of source spectrum. Its lengths should be equal to the “fSizex,
-fSizey” parameters except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR
-transforms. These need “2*fSizex*fSizey” length to supply real and imaginary
-coefficients.                   </p>
-
-<p class=MsoNormal style='margin-left:25.65pt;text-align:justify'><b>fDest</b>-pointer
-to the matrix of destination spectrum. Its lengths should be equal to the
-“fSizex, fSizey” parameters except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR
-transforms. These need “2*fSizex*fSizey” length to store real and imaginary
-coefficients. </p>
-
-<p class=MsoNormal style='text-align:justify'>        <b>fSizeX,fSizeY</b>-basic
-lengths of the source and dest spectra. They<span style='color:fuchsia'> should
-be power  </span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='color:fuchsia'>     
-of 2.</span></p>
-
-<p class=MsoNormal style='margin-left:25.65pt;text-align:justify;text-indent:
--2.85pt'><b>fType</b>-type of transform</p>
-
-<p class=MsoNormal style='text-align:justify'>            Classic transforms:</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformHaar
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformWalsh
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformCos
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformSin
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformFourier
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformHartley
-</p>
-
-<p class=MsoNormal style='text-align:justify'>            Mixed transforms:</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformFourierWalsh
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformFourierHaar
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformWalshHaar
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformCosWalsh
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformCosHaar
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformSinWalsh
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformSinHaar
-</p>
-
-<p class=MsoNormal style='text-align:justify;text-indent:22.8pt'><b>fDirection</b>-direction-transform
-direction (forward, inverse)</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformForward
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformInverse
-</p>
-
-<p class=MsoNormal style='text-align:justify;text-indent:22.8pt'><b>fDegree</b>-applies
-only for mixed transforms [2], [3], [4]. </p>
-
-<p class=MsoNormal style='text-align:justify;text-indent:22.8pt'>                
-<span style='color:fuchsia'> Allowed range  <sub><img border=0 width=100
-height=27 src="gif/spectrum2transform_transform_image001.gif"></sub>. </span></p>
-
-<p class=MsoNormal style='text-align:justify'><b><i>References:</i></b></p>
-
-<p class=MsoNormal style='text-align:justify'>[1] C.V. Hampton, B. Lian, Wm. C.
-McHarris: Fast-Fourier-transform spectral enhancement techniques for gamma-ray
-spectroscopy. NIM A353 (1994) 280-284. </p>
-
-<p class=MsoNormal style='text-align:justify'>[2] Morhá&#269; M., Matoušek V.,
-New adaptive Cosine-Walsh  transform and its application to nuclear data
-compression, IEEE Transactions on Signal Processing 48 (2000) 2693.  </p>
-
-<p class=MsoNormal style='text-align:justify'>[3] Morhá&#269; M., Matoušek V.,
-Data compression using new fast adaptive Cosine-Haar transforms, Digital Signal
-Processing 8 (1998) 63. </p>
-
-<p class=MsoNormal style='text-align:justify'>[4] Morhá&#269; M., Matoušek V.:
-Multidimensional nuclear data compression using fast adaptive Walsh-Haar
-transform. Acta Physica Slovaca 51 (2001) 307. </p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'><i>Example 1 – script Transform2.c:</i></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/spectrum2transform_transform_image002.jpg"></span></p>
-
-<p class=MsoNormal><b>Fig. 1 Original two-dimensional noisy spectrum</b></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/spectrum2transform_transform_image003.jpg"></span></p>
-
-<p class=MsoNormal style='text-align:justify'><b>Fig. 2 Transformed spectrum
-from Fig. 1 using Cosine transform. Energy of the trasnsformed data is
-concentrated around the beginning of the coordinate system</b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate
-Transform function (class TSpectrumTransform2).</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
-do</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x Transform2.C</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>void Transform2() {</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t i, j;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsx =
-256;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsy =
-256;   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmin  = 0;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmax  =
-nbinsx;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymin  = 0;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymax  = nbinsy;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Double_t ** source = new Double_t *[nbinsx];   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t ** dest = new
-Double_t *[nbinsx];      </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>                                                source[i]=new
-Double_t[nbinsy];</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>                                                dest[i]=new
-Double_t[nbinsy];   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TH2F *trans = new
-TH2F(&quot;trans&quot;,&quot;Background
-estimation&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
-TFile(&quot;TSpectrum2.root&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   trans=(TH2F*)
-f-&gt;Get(&quot;back3;1&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Tr = new
-TCanvas(&quot;Transform&quot;,&quot;Illustation of transform
-function&quot;,10,10,1000,700);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
-i++){</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
-nbinsy; j++){</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>                    source[i][j]
-= trans-&gt;GetBinContent(i + 1,j + 1); </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>                 }</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   }           </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-TSpectrumTransform2 *t = new TSpectrumTransform2(256,256);   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-t-&gt;SetTransformType(t-&gt;kTransformCos,0);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   t-&gt;SetDirection(t-&gt;kTransformForward);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-t-&gt;Transform(source,dest);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>for (i = 0; i &lt; nbinsx; i++){</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
-nbinsy; j++){</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>                  trans-&gt;SetBinContent(i
-+ 1, j + 1,dest[i][j]);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>                 }</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   }   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-trans-&gt;Draw(&quot;SURF&quot;);      </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
-
-</div>
-
-<!-- */
-// --> End_Html
    Int_t i, j;
    Int_t size;
    Double_t *working_vector = 0, **working_matrix = 0;
@@ -2248,186 +2037,82 @@ trans-&gt;Draw(&quot;SURF&quot;);      </span></p>
    delete[]working_vector;
    return;
 }
-//////////END OF TRANSFORM2 FUNCTION/////////////////////////////////
-//_______________________________________________________________________________________
-//////////FILTER2_ZONAL FUNCTION - CALCULATES DIFFERENT 2-D ORTHOGONAL TRANSFORMS, SETS GIVEN REGION TO FILTER COEFFICIENT AND TRANSFORMS IT BACK//////
+
+////////////////////////////////////////////////////////////////////////////////
+/// This function transforms the source spectrum. The calling program
+///      should fill in input parameters. Then it sets transformed
+///      coefficients in the given region to the given
+///      filter_coeff and transforms it back
+/// Filtered data are written into dest spectrum.
+///
+/// Function parameters:
+///  - fSource-pointer to the matrix of source spectrum, its size should
+///    be fSizeX*fSizeY
+///  - fDest-pointer to the matrix of destination data, its size should be
+///    fSizeX*fSizeY
+///
+/// ### Example of zonal filtering
+///
+/// This function transforms the
+/// source spectrum (for details see Transform function). Before the FilterZonal
+/// function is called the class must be created by constructor and the type of the
+/// transform as well as some other parameters must be set using a set of setter
+/// functions. The FilterZonal function sets transformed coefficients in the given
+/// region (fXmin, fXmax) to the given fFilterCoeff and transforms it back. Filtered
+/// data are written into dest spectrum.
+///
+/// ### Example - script Fitler2.c:
+///
+/// \image html spectrum2transform_filter_image001.jpg Fig. 1 Original two-dimensional noisy spectrum
+/// \image html spectrum2transform_filter_image002.jpg Fig. 2 Filtered spectrum using Cosine transform and zonal filtration (channels in regions (128-255)x(0-255) and (0-255)x(128-255) were set to 0).
+///
+/// #### Script:
+///
+/// Example to illustrate zonal filtration (class TSpectrumTransform2). To execute this example, do
+///
+/// `root > .x Filter2.C`
+///
+/// ~~~ {.cpp}
+///   void Filter2() {
+///      Int_t i, j;
+///      Int_t nbinsx = 256;
+///      Int_t nbinsy = 256;
+///      Int_t xmin = 0;
+///      Int_t xmax = nbinsx;
+///      Int_t ymin = 0;
+///      Int_t ymax = nbinsy;
+///      Double_t ** source = new Double_t *[nbinsx];
+///      Double_t ** dest = new Double_t *[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i] = new Double_t[nbinsy];
+///      for (i=0;i<nbinsx;i++)
+///         dest[i]= new Double_t[nbinsy];
+///      TH2F *trans = new TH2F("trans","Background estimation",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      TFile *f = new TFile("TSpectrum2.root");
+///      trans=(TH2F*)f->Get("back3;1");
+///      TCanvas *Tr = new TCanvas("Transform","Illustration of transform function",10,10,1000,700);
+///      for (i = 0; i < nbinsx;i++){
+///         for (j = 0; j <nbinsy; j++){
+///            source[i][j] = trans->GetBinContent(i + 1,j+ 1);
+///         }
+///      }
+///      TSpectrumTransform2 *t = new TSpectrumTransform2(256,256);
+///      t->SetTransformType(t->kTransformCos,0);
+///      t->SetRegion(0,255,128,255);
+///      t->FilterZonal(source,dest);
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j <nbinsy; j++){
+///            source[i][j] = dest[i][j];
+///         }
+///      }
+///      t->SetRegion(128,255,0,255);
+///      t->FilterZonal(source,dest);
+///      trans->Draw("SURF");
+///   }
+/// ~~~
+
 void TSpectrum2Transform::FilterZonal(const Double_t **fSource, Double_t **fDest)
 {
-//////////////////////////////////////////////////////////////////////////////////////////
-/* TWO-DIMENSIONAL FILTER ZONAL FUNCTION                      */
-/* This function transforms the source spectrum. The calling program               */
-/*      should fill in input parameters. Then it sets transformed                       */
-/*      coefficients in the given region to the given                                   */
-/*      filter_coeff and transforms it back                                             */
-/* Filtered data are written into dest spectrum.                                   */
-/*                         */
-/* Function parameters:                      */
-/* fSource-pointer to the matrix of source spectrum, its size should               */
-/*             be fSizeX*fSizeY                                                         */
-/* fDest-pointer to the matrix of destination data, its size should be             */
-/*           fSizeX*fSizeY                                                              */
-/*                         */
-//////////////////////////////////////////////////////////////////////////////////////////
-//Begin_Html <!--
-/* -->
-<div class=Section2>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt'>Example of zonal filtering</span></b></p>
-
-<p class=MsoNormal><i>&nbsp;</i></p>
-
-<p class=MsoNormal><i>Function:</i></p>
-
-<p class=MsoNormal>void <a
-href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrumTransform2::FilterZonal</b></a><b>(const
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> **fSource,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> **fDest)</b></p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'>This function transforms the
-source spectrum (for details see Transform function).  Before the FilterZonal
-function is called the class must be created by constructor and the type of the
-transform as well as some other parameters must be set using a set of setter
-functions. The FilterZonal function sets transformed coefficients in the given
-region (fXmin, fXmax) to the given fFilterCoeff and transforms it back. Filtered
-data are written into dest spectrum. </p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'><i>Example  – script Fitler2.c:</i></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/spectrum2transform_filter_image001.jpg"></span></p>
-
-<p class=MsoNormal><b>Fig. 1 Original two-dimensional noisy spectrum</b></p>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt'><img border=0 width=602
-height=455 src="gif/spectrum2transform_filter_image002.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b>Fig. 2 Filtered spectrum using
-Cosine transform and zonal filtration (channels in regions (128-255)x(0-255)
-and (0-255)x(128-255) were set to 0).  </b></p>
-
-<p class=MsoNormal><b><span style='color:#339966'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate
-zonal filtration (class TSpectrumTransform2).</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
-do</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x Filter2.C</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'> </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>void Filter2() {</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t i, j;</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   </span><span lang=FR
-style='font-size:10.0pt'>Int_t nbinsx = 256;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsy =
-256;   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmin  = 0;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmax  =
-nbinsx;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymin  = 0;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymax  =
-nbinsy;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Double_t ** source = new Double_t *[nbinsx];   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t ** dest = new
-Double_t *[nbinsx];      </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>                                                source[i]=new
-Double_t[nbinsy];</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>                                                dest[i]=new
-Double_t[nbinsy];   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TH2F *trans = new
-TH2F(&quot;trans&quot;,&quot;Background
-estimation&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
-TFile(&quot;TSpectrum2.root&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   trans=(TH2F*)
-f-&gt;Get(&quot;back3;1&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Tr = new
-TCanvas(&quot;Transform&quot;,&quot;Illustation of transform
-function&quot;,10,10,1000,700);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
-i++){</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
-nbinsy; j++){</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>                    </span><span
-lang=FR style='font-size:10.0pt'>source[i][j] = trans-&gt;GetBinContent(i + 1,j
-+ 1); </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>                 }</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   }           </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-TSpectrumTransform2 *t = new TSpectrumTransform2(256,256);   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   t-&gt;SetTransformType(t-&gt;kTransformCos,0);  
-</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-t-&gt;SetRegion(0,255,128,255);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-t-&gt;FilterZonal(source,dest);     </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>for (i = 0; i &lt; nbinsx; i++){</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
-nbinsy; j++){</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>                    </span><span
-lang=FR style='font-size:10.0pt'>source[i][j] = dest[i][j]; </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>                 }</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   }   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-t-&gt;SetRegion(128,255,0,255);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   t-&gt;FilterZonal(source,dest);       
-</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-trans-&gt;Draw(&quot;SURF&quot;);     </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
-
-</div>
-
-<!-- */
-// --> End_Html
-
    Int_t i, j;
    Double_t a, old_area = 0, new_area = 0;
    Int_t size;
@@ -2691,170 +2376,74 @@ trans-&gt;Draw(&quot;SURF&quot;);     </span></p>
    return;
 }
 
-
-//////////  END OF FILTER2_ZONAL FUNCTION/////////////////////////////////
-//////////ENHANCE2 FUNCTION - CALCULATES DIFFERENT 2-D ORTHOGONAL TRANSFORMS, MULTIPLIES GIVEN REGION BY ENHANCE COEFFICIENT AND TRANSFORMS IT BACK//////
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////
+/// This function transforms the source spectrum. The calling program
+///      should fill in input parameters. Then it multiplies transformed
+///      coefficients in the given region by the given
+///      enhance_coeff and transforms it back
+///
+/// Function parameters:
+///  - fSource-pointer to the matrix of source spectrum, its size should
+///    be fSizeX*fSizeY
+///  - fDest-pointer to the matrix of destination data, its size should be
+///    fSizeX*fSizeY
+///
+/// ### Example of enhancement
+///
+/// This function transforms the
+/// source spectrum (for details see Transform function). Before the Enhance
+/// function is called the class must be created by constructor and the type of the
+/// transform as well as some other parameters must be set using a set of setter
+/// functions. The Enhance function multiplies transformed coefficients in the given
+/// region (fXmin, fXmax, fYmin, fYmax) by the given fEnhancCoeff and transforms it
+/// back. Enhanced data are written into dest spectrum.
+///
+/// ### Example - script Enhance2.c:
+///
+/// \image html spectrum2transform_enhance_image001.jpg Fig. 1 Original two-dimensional noisy spectrum
+/// \image html spectrum2transform_enhance_image002.jpg Fig. 2 Enhanced spectrum of the data from Fig. 1 using Cosine transform (channels in region (0-63)x(0-63) were multiplied by 5)
+///
+/// #### Script:
+///
+/// Example to illustrate enhancement (class TSpectrumTransform2). To execute this example, do
+///
+/// `root > .x Enhance2.C`
+///
+/// ~~~ {.cpp}
+///   void Enhance2() {
+///      Int_t i, j;
+///      Int_t nbinsx = 256;
+///      Int_t nbinsy = 256;
+///      Int_t xmin = 0;
+///      Int_t xmax = nbinsx;
+///      Int_t ymin = 0;
+///      Int_t ymax = nbinsy;
+///      Double_t ** source = new Double_t *[nbinsx];
+///      Double_t ** dest = new Double_t *[nbinsx];
+///      for (i=0;i<nbinsx;i++)
+///         source[i]= new Double_t[nbinsy];
+///      for (i=0;i<nbinsx;i++)
+///         dest[i]= new Double_t[nbinsy];
+///      TH2F *trans = new TH2F("trans","Background estimation",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+///      TFile *f = new TFile("TSpectrum2.root");
+///      trans=(TH2F*)f->Get("back3;1");
+///      TCanvas *Tr = new TCanvas("Transform","Illustration of transform function",10,10,1000,700);
+///      for (i = 0; i < nbinsx; i++){
+///         for (j = 0; j < nbinsy; j++){
+///            source[i][j] = trans->GetBinContent(i + 1,j + 1);
+///         }
+///      }
+///      TSpectrumTransform2 *t = new TSpectrumTransform2(256,256);
+///      t->SetTransformType(t->kTransformCos,0);
+///      t->SetRegion(0,63,0,63);
+///      t->SetEnhanceCoeff(5);
+///      t->Enhance(source,dest);
+///      trans->Draw("SURF");
+///   }
+/// ~~~
 
 void TSpectrum2Transform::Enhance(const Double_t **fSource, Double_t **fDest)
 {
-/* TWO-DIMENSIONAL ENHANCE ZONAL FUNCTION                     */
-/* This function transforms the source spectrum. The calling program               */
-/*      should fill in input parameters. Then it multiplies transformed                 */
-/*      coefficients in the given region by the given                                   */
-/*      enhance_coeff and transforms it back                                            */
-/*                         */
-/* Function parameters:                      */
-/* fSource-pointer to the matrix of source spectrum, its size should               */
-/*             be fSizeX*fSizeY                                                         */
-/* fDest-pointer to the matrix of destination data, its size should be             */
-/*           fSizeX*fSizeY                                                              */
-/*                         */
-//////////////////////////////////////////////////////////////////////////////////////////
-//Begin_Html <!--
-/* -->
-<div class=Section3>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt'>Example of enhancement</span></b></p>
-
-<p class=MsoNormal><i>&nbsp;</i></p>
-
-<p class=MsoNormal><i>Function:</i></p>
-
-<p class=MsoNormal>void <a
-href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrumTransform2::Enhance</b></a><b>(const
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
-**fSource, <a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
-**fDest)</b></p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'>This function transforms the
-source spectrum (for details see Transform function).  Before the Enhance
-function is called the class must be created by constructor and the type of the
-transform as well as some other parameters must be set using a set of setter
-functions. The Enhance function multiplies transformed coefficients in the given
-region (fXmin, fXmax, fYmin, fYmax) by the given fEnhancCoeff and transforms it
-back. Enhanced data are written into dest spectrum.</p>
-
-<p class=MsoNormal style='text-align:justify'><i>Example – script Enhance2.c:</i></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/spectrum2transform_enhance_image001.jpg"></span></p>
-
-<p class=MsoNormal><b>Fig. 1 Original two-dimensional noisy spectrum</b></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/spectrum2transform_enhance_image002.jpg"></span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><b>Fig. 2 Enhanced spectrum of
-the data from Fig. 1 using Cosine transform (channels in region (0-63)x(0-63)
-were multiplied by 5) </b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate
-enhancement (class TSpectrumTransform2).</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
-do</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x Enhance2.C</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'> </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>void Enhance2() {</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t i, j;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsx =
-256;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsy =
-256;   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmin  = 0;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmax  =
-nbinsx;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymin  = 0;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymax  =
-nbinsy;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Double_t ** source = new Double_t *[nbinsx];   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t ** dest = new
-Double_t *[nbinsx];      </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>                                                source[i]=new
-Double_t[nbinsy];</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>                                                dest[i]=new
-Double_t[nbinsy];   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TH2F *trans = new
-TH2F(&quot;trans&quot;,&quot;Background
-estimation&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
-TFile(&quot;TSpectrum2.root&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   trans=(TH2F*)
-f-&gt;Get(&quot;back3;1&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Tr = new
-TCanvas(&quot;Transform&quot;,&quot;Illustation of transform
-function&quot;,10,10,1000,700);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
-i++){</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
-nbinsy; j++){</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>                    </span><span
-lang=FR style='font-size:10.0pt'>source[i][j] = trans-&gt;GetBinContent(i + 1,j
-+ 1); </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>                 }</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   }           </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-TSpectrumTransform2 *t = new TSpectrumTransform2(256,256);   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-t-&gt;SetTransformType(t-&gt;kTransformCos,0);   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-t-&gt;SetRegion(0,63,0,63);   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-t-&gt;SetEnhanceCoeff(5);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-t-&gt;Enhance(source,dest);   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'> </span><span
-style='font-size:10.0pt'>  trans-&gt;Draw(&quot;SURF&quot;);     </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
-
-</div>
-
-<!-- */
-// --> End_Html
-
    Int_t i, j;
    Double_t a, old_area = 0, new_area = 0;
    Int_t size;
@@ -3118,17 +2707,10 @@ style='font-size:10.0pt'>  trans-&gt;Draw(&quot;SURF&quot;);     </span></p>
    return;
 }
 
-
-//////////  END OF ENHANCE2 FUNCTION/////////////////////////////////
-
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///   SETTER FUNCION
-///
-///   This function sets the following parameters for transform:
-///         -transType - type of transform (Haar, Walsh, Cosine, Sine, Fourier, Hartley, Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar)
-///         -degree - degree of mixed transform, applies only for Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar transforms
-///////////////////////////////////////////////////////////////////////////////
+/// This function sets the following parameters for transform:
+///  - transType - type of transform (Haar, Walsh, Cosine, Sine, Fourier, Hartley, Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar)
+///  - degree - degree of mixed transform, applies only for Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar transforms
 
 void TSpectrum2Transform::SetTransformType(Int_t transType, Int_t degree)
 {
@@ -3160,12 +2742,8 @@ void TSpectrum2Transform::SetTransformType(Int_t transType, Int_t degree)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///   SETTER FUNCION
-///
-///   This function sets the filtering or enhancement region:
-///         -xmin, xmax, ymin, ymax
-///////////////////////////////////////////////////////////////////////////////
+/// This function sets the filtering or enhancement region:
+///  - xmin, xmax, ymin, ymax
 
 void TSpectrum2Transform::SetRegion(Int_t xmin, Int_t xmax, Int_t ymin, Int_t ymax)
 {
@@ -3184,12 +2762,8 @@ void TSpectrum2Transform::SetRegion(Int_t xmin, Int_t xmax, Int_t ymin, Int_t ym
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///   SETTER FUNCION
-///
-///   This function sets the direction of the transform:
-///         -direction (forward or inverse)
-///////////////////////////////////////////////////////////////////////////////
+/// This function sets the direction of the transform:
+///  - direction (forward or inverse)
 
 void TSpectrum2Transform::SetDirection(Int_t direction)
 {
@@ -3201,12 +2775,8 @@ void TSpectrum2Transform::SetDirection(Int_t direction)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///   SETTER FUNCION
-///
-///   This function sets the filter coefficient:
-///         -filterCoeff - after the transform the filtered region (xmin, xmax, ymin, ymax) is replaced by this coefficient. Applies only for filtereng operation.
-///////////////////////////////////////////////////////////////////////////////
+/// This function sets the filter coefficient:
+///  - filterCoeff - after the transform the filtered region (xmin, xmax, ymin, ymax) is replaced by this coefficient. Applies only for filtereng operation.
 
 void TSpectrum2Transform::SetFilterCoeff(Double_t filterCoeff)
 {
@@ -3214,12 +2784,8 @@ void TSpectrum2Transform::SetFilterCoeff(Double_t filterCoeff)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///   SETTER FUNCION
-///
-///   This function sets the enhancement coefficient:
-///         -enhanceCoeff - after the transform the enhanced region (xmin, xmax, ymin, ymax) is multiplied by this coefficient. Applies only for enhancement operation.
-///////////////////////////////////////////////////////////////////////////////
+/// This function sets the enhancement coefficient:
+///  - enhanceCoeff - after the transform the enhanced region (xmin, xmax, ymin, ymax) is multiplied by this coefficient. Applies only for enhancement operation.
 
 void TSpectrum2Transform::SetEnhanceCoeff(Double_t enhanceCoeff)
 {
