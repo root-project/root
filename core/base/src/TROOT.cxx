@@ -369,6 +369,21 @@ namespace Internal {
 
    static GetROOTFun_t gGetROOT = &GetROOT1;
 
+   void *GetSymInLibThread(const char *funcname)
+   {
+      const static auto loadSuccess = -1 != gSystem->Load("libThread");
+      if (loadSuccess) {
+         if (auto sym = dlsym(RTLD_DEFAULT, funcname)) {
+            return sym;
+         } else {
+            Error("GetSymInLibThread", "Cannot get symbol %s.", funcname);
+         }
+      } else {
+         Error("GetSymInLibThread", "Cannot load Thread library.");
+      }
+      return nullptr;
+   }
+
 } // end of Internal sub namespace
 // back to ROOT namespace
 
@@ -385,21 +400,40 @@ namespace Internal {
    /// Enables the global mutex to make ROOT thread safe/aware.
    void EnableThreadSafety()
    {
-      static void (*tthreadInitialize)() = nullptr;
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TThread_Initialize");
+      if (sym)
+         sym();
+   }
 
-      if (!tthreadInitialize) {
-         const static auto loadSuccess = -1 != gSystem->Load("libThread");
-         if (loadSuccess) {
-            if (auto sym = dlsym(RTLD_DEFAULT,"ROOT_TThread_Initialize")) {
-               tthreadInitialize = (void(*)()) sym;
-               tthreadInitialize();
-            } else {
-               Error("EnableThreadSafety","Cannot initialize multithreading support.");
-            }
-         } else {
-            Error("EnableThreadSafety","Cannot load Thread library.");
-         }
-      }
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Enables the implicit multi-threading in ROOT.
+   /// @param[in] numthreads Number of threads to use. If not specified, it is
+   ///            automatically decided by the implementation.
+   void EnableImplicitMT(UInt_t numthreads)
+   {
+      static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableImplicitMT");
+      if (sym)
+         sym(numthreads);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Disables the implicit multi-threading in ROOT.
+   void DisableImplicitMT()
+   {
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableImplicitMT");
+      if (sym)
+         sym();
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Returns true if the implicit multi-threading in ROOT is enabled.
+   Bool_t IsImplicitMTEnabled()
+   {
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsImplicitMTEnabled");
+      if (sym)
+         return sym();
+      else
+         return kFALSE;
    }
 
 }
