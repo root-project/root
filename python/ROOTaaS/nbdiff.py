@@ -1,5 +1,7 @@
 import difflib
 import subprocess
+import shutil
+import os
 
 nbExtension=".ipynb"
 convCmdTmpl = "ipython nbconvert  --to notebook --ExecutePreprocessor.enabled=True %s --output %s"
@@ -32,10 +34,25 @@ def compareNotebooks(inNBName,outNBName):
     if areDifferent: print "\n"
     return areDifferent
 
+class tmpDirCreator:
+    def __init__(self,nbName):
+       tmpDirName = nbName.replace(nbExtension,"") + "_profileDir"
+       self.dirname = tmpDirName
+    def __enter__(self):
+       if not os.path.exists(self.dirname):
+           print "[tmpDirCreator] Creating tmp directory %s" %self.dirname
+           os.makedirs(self.dirname)
+       return self
+    def __exit__(self, type, value, traceback):
+       if os.path.exists(self.dirname):
+           shutil.rmtree(self.dirname)
+           print "[tmpDirCreator] Deleting tmp directory %s" %self.dirname
+
 def canReproduceNotebook(inNBName):
     outNBName = inNBName.replace(nbExtension,"_out"+nbExtension)
     convCmd = convCmdTmpl %(inNBName,outNBName)
-    subprocess.check_output(convCmd.split())
+    with tmpDirCreator(inNBName) as creator:    
+        subprocess.check_output(convCmd.split(), env = dict(os.environ, IPYTHONDIR=creator.dirname))
     return compareNotebooks(inNBName,outNBName)
 
 def isInputNotebookFileName(filename):
