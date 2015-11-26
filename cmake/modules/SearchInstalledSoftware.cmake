@@ -232,7 +232,7 @@ if(mathmore OR builtin_gsl)
       # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
       URL ${repository_tarfiles}/gsl-${gsl_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no CFLAGS=${CMAKE_C_FLAGS}
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no CC=${CMAKE_C_COMPILER} CFLAGS=${CMAKE_C_FLAGS}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     )
     set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
