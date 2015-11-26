@@ -1,7 +1,11 @@
+/// \file
+/// \ingroup tutorial_io
+/// This macro displays the physical ROOT file structure
+/// \macro_code
+///
+/// \author Rene Brun
+
 void file(){
-   //
-   // This macro displays the physical ROOT file structure
-   //Author: Rene Brun
 
    TCanvas *c1 = new TCanvas("c1","ROOT File description",200,10,700,550);
 

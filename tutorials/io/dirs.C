@@ -1,29 +1,34 @@
-void dirs() {
-// .........................macro dirs.C............................
-// This macro illustrates how to create a hierarchy of directories
-// in a Root file.
-// 10 directories called plane0, plane1, plane9 are created.
-// Each plane directory contains 200 histograms.
-//
-// Run this macro (Note that the macro delete the TFile object at the end!)
-// Connect the file again in read mode:
-//   Root > TFile *top = new TFile("top.root");
-// The hierarchy can be browsed by the Root browser as shown below
-//   Root > TBrowser b;
-//    click on the left pane on one of the plane directories.
-//    this shows the list of all histograms in this directory.
-//    Double click on one histogram to draw it (left mouse button).
-//    Select different options with the right mouse button.
-//
-//  You can see the begin_html <a href="gif/dirs.gif" >picture of the browser </a> end_html
-//
-//    Instead of using the browser, you can also do:
-//   Root > tof->cd();
-//   Root > plane3->cd();
-//   Root > h3_90N->Draw();
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_io
+/// This macro illustrates how to create a hierarchy of directories
+/// in a Root file.
+/// Ten directories called plane0, plane1, ..., plane9 are created.
+/// Each plane directory contains 200 histograms.
+/// Note that the macro deletes the TFile object at the end!
+/// Connect the file again in read mode:
+/// ~~~{.bash}
+///   Root [0] TFile top("top.root");
+/// ~~~
+/// The hierarchy can be browsed by the Root browser as shown below
+/// ~~~{.bash}
+///   Root  TBrowser b;
+/// ~~~
+/// Click on the left pane on one of the plane directories.
+/// This shows the list of all histograms in this directory.
+/// Double click on one histogram to draw it (left mouse button).
+/// Select different options with the right mouse button.
+/// Instead of using the browser, you can also do:
+/// ~~~{.bash}
+///   Root > tof->cd();
+///   Root > plane3->cd();
+///   Root > h3_90N->Draw();
+/// ~~~
+/// \macro_code
+///
+/// \author Rene Brun
 
-    // create a new Root file
+void dirs() {
+   // create a new Root file
    TFile *top = new TFile("top.root","recreate");
 
    // create a subdirectory "tof" in this file

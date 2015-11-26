@@ -1,53 +1,53 @@
-//////////////////////////////////////////////////////////////////////////////
-//
-//+  Tutorial illustrating use and precision of the Double32_t data type
-//
-// You must run this tutorial with ACLIC
-//    root > .x double32.C+
-//
-// The following cases are supported for streaming a Double32_t type
-// depending on the range declaration in the comment field of the data member:
-//  A-    Double32_t     fNormal;
-//  B-    Double32_t     fTemperature; //[0,100]
-//  C-    Double32_t     fCharge;      //[-1,1,2]
-//  D-    Double32_t     fVertex[3];   //[-30,30,10]
-//  E-    Double32_t     fChi2;        //[0,0,6]
-//  F-    Int_t          fNsp;
-//        Double32_t*    fPointValue;   //[fNsp][0,3]
-//
-// In case A fNormal is converted from a Double_t to a Float_t
-// In case B fTemperature is converted to a 32 bit unsigned integer
-// In case C fCharge is converted to a 2 bits unsigned integer
-// In case D the array elements of fVertex are converted to an unsigned 10 bits integer
-// In case E fChi2 is converted to a Float_t with truncated precision at 6 bits
-// In case F the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer
-//           Note that the range specifier must follow the dimension specifier.
-// the case B has more precision (9 to 10 significative digits than case A (6 to 7 digits).
-//
-// The range specifier has the general format: [xmin,xmax] or [xmin,xmax,nbits]
-//  [0,1]
-//  [-10,100];
-//  [-pi,pi], [-pi/2,pi/4],[-2pi,2*pi]
-//  [-10,100,16]
-//  [0,0,8]
-// if nbits is not specified, or nbits <2 or nbits>32 it is set to 32
-// if (xmin==0 and xmax==0 and nbits <=14) the double word will be converted
-// to a float and its mantissa truncated to nbits significative bits.
-//
-// IMPORTANT NOTE
-// --------------
-// Lets assume an original variable double x:
-// When using the format [0,0,8] (ie range not specified) you get the best
-// relative precision when storing and reading back the truncated x, say xt.
-// The variance of (x-xt)/x will be better than when specifying a range
-// for the same number of bits. However the precision relative to the
-// range (x-xt)/(xmax-xmin) will be worst, and vice-versa.
-// The format [0,0,8] is also interesting when the range of x is infinite
-// or unknown.
-//
-//Author: Rene Brun
-//
-///////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_io
+/// Tutorial illustrating use and precision of the Double32_t data type
+/// You must run this tutorial with ACLIC: a dictionary will be automatically
+/// created.
+/// ~~~{.bash}
+///    root > .x double32.C+
+/// ~~~
+/// The following cases are supported for streaming a Double32_t type
+/// depending on the range declaration in the comment field of the data member:
+/// Case | Declaration
+/// -----|------------
+///  A   | Double32_t     fNormal;
+///  B   | Double32_t     fTemperature; //[0,100]
+///  C   | Double32_t     fCharge;      //[-1,1,2]
+///  D   | Double32_t     fVertex[3];   //[-30,30,10]
+///  E   | Double32_t     fChi2;        //[0,0,6]
+///  F   | Int_t          fNsp;<br>Double32_t*    fPointValue;   //[fNsp][0,3]
+///
+///   * Case A fNormal is converted from a Double_t to a Float_t
+///   * Case B fTemperature is converted to a 32 bit unsigned integer
+///   * Case C fCharge is converted to a 2 bits unsigned integer
+///   * Case D the array elements of fVertex are converted to an unsigned 10 bits integer
+///   * Case E fChi2 is converted to a Float_t with truncated precision at 6 bits
+///   * Case F the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer. Note that the range specifier must follow the dimension specifier.
+/// 
+/// Case B has more precision than case A: 9 to 10 significative digits and 6 to 7 digits respectively.
+/// The range specifier has the general format: [xmin,xmax] or [xmin,xmax,nbits]. Examples
+///   * [0,1]
+///   * [-10,100];
+///   * [-pi,pi], [-pi/2,pi/4],[-2pi,2*pi]
+///   * [-10,100,16]
+///   * [0,0,8]
+/// Note that:
+///   * If nbits is not specified, or nbits <2 or nbits>32 it is set to 32
+///   * If (xmin==0 and xmax==0 and nbits <=14) the double word will be converted to a float and its mantissa truncated to nbits significative bits.
+///
+/// ## IMPORTANT NOTE
+/// Lets assume an original variable double x.
+/// When using the format [0,0,8] (i.e. range not specified) you get the best
+/// relative precision when storing and reading back the truncated x, say xt.
+/// The variance of (x-xt)/x will be better than when specifying a range
+/// for the same number of bits. However the precision relative to the
+/// range (x-xt)/(xmax-xmin) will be worst, and vice-versa.
+/// The format [0,0,8] is also interesting when the range of x is infinite
+/// or unknown.
+///
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TFile.h"
 #include "TCanvas.h"
