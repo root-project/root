@@ -1,5 +1,5 @@
 #---Define the Standard macros for ROOT-----------------------------------------------------------
-include(RootNewMacros)
+include(@ROOT_MODULE_PATH@/RootNewMacros.cmake)
 
 #---Set Link and include directories--------------------------------------------------------------
 include_directories(${ROOT_INCLUDE_DIRS})
