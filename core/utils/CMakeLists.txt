@@ -110,7 +110,7 @@ foreach(file  Interpreter/DynamicExprInfo.h
               Interpreter/DynamicLookupLifetimeHandler.h
               Interpreter/Interpreter.h
               Interpreter/InvocationOptions.h
-              Interpreter/RuntimeException.h
+              Interpreter/Exception.h
               Interpreter/RuntimePrintValue.h
               Interpreter/RuntimeUniverse.h
               Interpreter/Value.h)

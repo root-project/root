@@ -98,7 +98,7 @@ clang/LLVM technology.
 #include "cling/Interpreter/Transaction.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
-#include "cling/Interpreter/RuntimeException.h"
+#include "cling/Interpreter/Exception.h"
 
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/Module.h"
@@ -1868,7 +1868,7 @@ static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
    try {
       return metaProcessor->process(input_line, compRes, result);
    }
-   catch (cling::runtime::NullDerefException& ex)
+   catch (cling::NullDerefException& ex)
    {
       Info("Handle", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
       ex.diagnose();
