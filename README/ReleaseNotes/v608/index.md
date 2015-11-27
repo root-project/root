@@ -15,12 +15,11 @@ The following people have contributed to this new version:
  David Abdurachmanov, CERN, CMS,\
  Bertrand Bellenot, CERN/SFT,\
  Rene Brun, CERN/SFT,\
- Philippe Canal, FNAL,\
+ Philippe Canal, Fermilab,\
  Cristina Cristescu, CERN/SFT,\
  Olivier Couet, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
- Andrei Gheata, CERN/Alice,\
- Lukasz Janyst, CERN/IT,\
+ Andrei Gheata, CERN/SFT,\
  Christopher Jones, Fermilab, CMS,\
  Wim Lavrijsen, LBNL, PyRoot,\
  Sergey Linev, GSI, http,\
@@ -29,7 +28,7 @@ The following people have contributed to this new version:
  Axel Naumann, CERN/SFT,\
  Danilo Piparo, CERN/SFT,\
  Timur Pocheptsov, CERN/SFT,\
- Fons Rademakers, CERN/SFT,\
+ Fons Rademakers, CERN/IT,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Liza Sakellari, CERN/SFT,\
  Manuel Tobias Schiller,\

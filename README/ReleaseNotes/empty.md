@@ -20,10 +20,8 @@ The following people have contributed to this new version:
  Olivier Couet, CERN/SFT,\
  Kyle Cranmer, NYU, RooStats,\
  Gerri Ganis, CERN/SFT,\
- Andrei Gheata, CERN/Alice,\
- Lukasz Janyst, CERN/IT,\
+ Andrei Gheata, CERN/SFT,\
  Christopher Jones, Fermilab, CMS,\
- Wim Lavrijsen, LBNL, PyRoot,\
  Sergey Linev, GSI, http,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
