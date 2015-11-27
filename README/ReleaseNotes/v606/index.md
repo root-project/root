@@ -1,5 +1,5 @@
 % ROOT Version 6.06 Release Notes
-% 2015-11-27
+% 2015-06-02
 <a name="TopOfPage"></a>
 
 ## Introduction
@@ -342,7 +342,37 @@ invalid path.
 ## Multi-processing
 
 With this version we introduce a new module, core/multiproc, for multi-processing on multi-core machines. This module is based on fork technology and offers an interface inspired from Python multiprocessor module. The new interface, implemented in the class TProcPool, provides the possibility to perform in parallel a very generic set of tasks, described by macros, functions or lambdas.
-Tutorials illustrating the usage of the new class TProcPool are available under tutorials/multicore.
+
+This illustrates te usage of lambdas:
+
+``` {.cpp}
+{
+  TProcPool pool;
+  auto ten = pool.MapReduce([]() { return 1; }, 10, [](std::vector<int> v) { return std::accumulate(v.begin(), v.end(), 0); })
+}
+```
+
+
+And this how it can be used to generate ten histos and merge them:
+
+``` {.cpp}
+{
+TObject *CreateAndFillHists()
+{
+  
+  TH1F *h = new TH1F("h", "", 100, -3., 3.);
+  h->SetDirectory(0);
+  h->FillRandom("gaus", 1000);
+    return h;
+}
+
+    TProcPool pool; 
+    auto hist = pool.MapReduce(CreateAndFillHists, 10, PoolUtils::ReduceObjects);
+    hist->DrawClone();
+}
+```
+
+Tutorials illustrating other usages of the new class TProcPool are available under tutorials/multicore.
 
 
 ## Language Bindings
@@ -361,15 +391,6 @@ Support for capturing large outputs (stderr/stdout) coming from C++ libraries ha
 - provide workaround for websites using require.js and older jquery-ui
 - support custom requests to remote objects, demonstrated in httptextlog.C tutorial
 - rewrite draw.htm (page for individual object drawing) to support all custom features as main gui does
-
-## Interpreter
-
-ROOT can now dump the contect of STL collections, for instance `map<string,int>`. A few ROOT types print their content, too.
-
-This release contains everal bug fixes and improvements, notably in unloading and performance.
-
-> NOTE: The GCC 5 ABI is *not* supported yet, due to a lack of support in clang.
-
 
 ## Tutorials
 
