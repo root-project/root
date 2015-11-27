@@ -989,3 +989,9 @@ hostname is looked up and Locate() returns the full url, including the path.
 
 Changes will be part of the future 6.04/12
 
+### TWebFile
+Fixed ROOT-7809. Returns an error for a redirect which does not specify the new
+URI, rather than going into a loop.
+
+Fixed ROOT-7817. Avoid a crash under some circumstances when trying to open an
+invalid path.
