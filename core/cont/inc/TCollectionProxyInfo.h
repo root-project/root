@@ -233,6 +233,7 @@ namespace Detail {
       size_t              fSpace;
    };
    template <typename T> struct Environ : public EnvironBase {
+      Environ() : fIterator() {}
       typedef T           Iter_t;
       Iter_t              fIterator;
       T& iter() { return fIterator; }
