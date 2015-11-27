@@ -11,18 +11,6 @@
 #ifndef ROOT_TSpectrumTransform
 #define ROOT_TSpectrumTransform
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSpectrumTransform                                                   //
-//                                                                      //
-// Class to carry out transforms of 1D spectra, its filtering and       //
-// enhancement. It allows to calculate classic Fourier, Cosine, Sin,    //
-// Hartley, Walsh, Haar transforms as well as mixed transforms (Fourier-//
-// Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sin-Walsh//
-// and Sin-Haar). All the transforms are fast.                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
