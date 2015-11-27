@@ -19,15 +19,15 @@ class TH1;
 
 class TSpectrum2 : public TNamed {
 protected:
-   Int_t         fMaxPeaks;        ///< Maximum number of peaks to be found
-   Int_t         fNPeaks;          ///< number of peaks found
-   Double_t      *fPosition;       ///< [fNPeaks] array of current peak positions
-   Double_t      *fPositionX;      ///< [fNPeaks] X position of peaks
-   Double_t      *fPositionY;      ///< [fNPeaks] Y position of peaks
-   Double_t       fResolution;     ///< resolution of the neighboring peaks
-   TH1          *fHistogram;       ///< resulting histogram
-static Int_t     fgAverageWindow;  ///< Average window of searched peaks
-static Int_t     fgIterations;     ///< Maximum number of decon iterations (default=3)
+   Int_t         fMaxPeaks;         ///< Maximum number of peaks to be found
+   Int_t         fNPeaks;           ///< number of peaks found
+   Double_t      *fPosition;        ///< [fNPeaks] array of current peak positions
+   Double_t      *fPositionX;       ///< [fNPeaks] X position of peaks
+   Double_t      *fPositionY;       ///< [fNPeaks] Y position of peaks
+   Double_t       fResolution;      ///< resolution of the neighboring peaks
+   TH1           *fHistogram;       ///< resulting histogram
+static Int_t      fgAverageWindow;  ///< Average window of searched peaks
+static Int_t      fgIterations;     ///< Maximum number of decon iterations (default=3)
 
 public:
    enum {

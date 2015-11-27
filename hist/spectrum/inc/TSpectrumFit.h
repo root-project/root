@@ -11,18 +11,6 @@
 #ifndef ROOT_TSpectrumFit
 #define ROOT_TSpectrumFit
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSpectrumFit                                                         //
-//                                                                      //
-// Class for fitting 1D spectra using AWMI (algorithm without matrix    //
-// inversion) and conjugate gradient algorithms for symmetrical         //
-// matrices (Stiefel-Hestens method). AWMI method allows to fit         //
-// simulaneously 100s up to 1000s peaks. Stiefel method is very stable, //
-// it converges faster, but is more time consuming                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
