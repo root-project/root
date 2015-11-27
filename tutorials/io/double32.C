@@ -23,7 +23,7 @@
 ///   * Case D the array elements of fVertex are converted to an unsigned 10 bits integer
 ///   * Case E fChi2 is converted to a Float_t with truncated precision at 6 bits
 ///   * Case F the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer. Note that the range specifier must follow the dimension specifier.
-/// 
+///
 /// Case B has more precision than case A: 9 to 10 significative digits and 6 to 7 digits respectively.
 /// The range specifier has the general format: [xmin,xmax] or [xmin,xmax,nbits]. Examples
 ///   * [0,1]
@@ -45,6 +45,7 @@
 /// The format [0,0,8] is also interesting when the range of x is infinite
 /// or unknown.
 ///
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun

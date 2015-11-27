@@ -1,6 +1,8 @@
 /// \file
 /// \ingroup tutorial_io
 /// This macro displays the ROOT Directory data structure
+///
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
@@ -121,4 +123,5 @@ void fildir(){
    keydata->AddText("fClassName: 'TKey'");
    keydata->AddText("fName: Object name");
    keydata->AddText("fTitle: Object Title");
+   c1->Print("fildir.png");
 }
