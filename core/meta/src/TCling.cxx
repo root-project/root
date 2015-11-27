@@ -136,7 +136,7 @@
 #include <mach-o/dyld.h>
 #endif // __APPLE__
 
-#ifdef R__LINUX
+#ifdef R__UNIX
 #include <dlfcn.h>
 #endif
 
