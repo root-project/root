@@ -1,51 +1,30 @@
 // @(#)root/spectrum:$Id$
 // Author: Miroslav Morhac   25/09/06
 
-//__________________________________________________________________________
-//   THIS CLASS CONTAINS ORTHOGONAL TRANSFORM  FUNCTIONS.                  //
-//                                                                         //
-//                                                                         //
-//  The algorithms in this class have been published in the following      //
-//  references:                                                            //
-//                                                                         //
-//  [1] C.V. Hampton, B. Lian, Wm. C. McHarris: Fast-Fourier-transform     //
-//      spectral enhancement techniques for gamma-ray spectroscopy.NIM A353//
-//      (1994) 280-284.                                                    //
-//  [2] Morhac M., Matousek V., New adaptive Cosine-Walsh  transform and   //
-//      its application to nuclear data compression, IEEE Transactions on  //
-//      Signal Processing 48 (2000) 2693.                                  //
-//  [3] Morhac M., Matousek V., Data compression using new fast adaptive   //
-//      Cosine-Haar transforms, Digital Signal Processing 8 (1998) 63.     //
-//  [4] Morhac M., Matousek V.: Multidimensional nuclear data compression  //
-//      using fast adaptive Walsh-Haar transform. Acta Physica Slovaca 51  //
-//     (2001) 307.                                                         //
-//____________________________________________________________________________
-
 /** \class TSpectrumTransform
     \ingroup Spectrum
-    \brief Advanced 1-dimentional orthogonal transform functions
+    \brief Advanced 1-dimensional orthogonal transform functions
     \author Miroslav Morhac
 
- The original code in C has been repackaged as a C++ class by R.Brun
+ Class to carry out transforms of 1D spectra, its filtering and
+ enhancement. It allows to calculate classic Fourier, Cosine, Sin,
+ Hartley, Walsh, Haar transforms as well as mixed transforms (Fourier-
+ Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sin-Walsh
+ and Sin-Haar). All the transforms are fast.
 
-   The algorithms in this class have been published in the following
-   references:
+ The algorithms in this class have been published in the following
+ references:
 
-   1. C.V. Hampton, B. Lian, Wm. C. McHarris: Fast-Fourier-transform
-       spectral enhancement techniques for gamma-ray spectroscopy.NIM A353
-       (1994) 280-284.
-   2. Morhac M., Matousek V., New adaptive Cosine-Walsh  transform and
-       its application to nuclear data compression, IEEE Transactions on
-       Signal Processing 48 (2000) 2693.
-   3. Morhac M., Matousek V., Data compression using new fast adaptive
-       Cosine-Haar transforms, Digital Signal Processing 8 (1998) 63.
-   4. Morhac M., Matousek V.: Multidimensional nuclear data compression
-       using fast adaptive Walsh-Haar transform. Acta Physica Slovaca 51
-      (2001) 307.
-
+  1. C.V. Hampton, B. Lian, Wm. C. McHarris: Fast-Fourier-transform
+     spectral enhancement techniques for gamma-ray spectroscopy.NIM A353(1994) 280-284.
+  2. Morhac M., Matousek V., New adaptive Cosine-Walsh  transform and
+     its application to nuclear data compression, IEEE Transactions on
+     Signal Processing 48 (2000) 2693.
+  3. Morhac M., Matousek V., Data compression using new fast adaptive
+     Cosine-Haar transforms, Digital Signal Processing 8 (1998) 63.
+  4. Morhac M., Matousek V.: Multidimensional nuclear data compression
+     using fast adaptive Walsh-Haar transform. Acta Physica Slovaca 51 (2001) 307.
  */
-
-
 
 #include "TSpectrumTransform.h"
 #include "TMath.h"
@@ -68,8 +47,8 @@ TSpectrumTransform::TSpectrumTransform()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///the constructor creates TSpectrumTransform object. Its size must be > than zero and must be power of 2.
-///It sets default transform type to be Cosine transform. Transform parameters can be changed using setter functions.
+/// the constructor creates TSpectrumTransform object. Its size must be > than zero and must be power of 2.
+/// It sets default transform type to be Cosine transform. Transform parameters can be changed using setter functions.
 
 TSpectrumTransform::TSpectrumTransform(Int_t size):TNamed("SpectrumTransform", "Miroslav Morhac transformer")
 {
@@ -100,23 +79,18 @@ TSpectrumTransform::TSpectrumTransform(Int_t size):TNamed("SpectrumTransform", "
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///destructor
+/// Destructor
 
 TSpectrumTransform::~TSpectrumTransform()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function calculates Haar transform of a part of data                   //
-///      Function parameters:                                                    //
-///              -working_space-pointer to vector of transformed data            //
-///              -num-length of processed data                                   //
-///              -direction-forward or inverse transform                         //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///   This function calculates Haar transform of a part of data
+///      Function parameters:
+///              - working_space-pointer to vector of transformed data
+///              - num-length of processed data
+///              - direction-forward or inverse transform
 
 void TSpectrumTransform::Haar(Double_t *working_space, int num, int direction)
 {
@@ -191,15 +165,10 @@ void TSpectrumTransform::Haar(Double_t *working_space, int num, int direction)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function calculates Walsh transform of a part of data                  //
-///      Function parameters:                                                    //
-///              -working_space-pointer to vector of transformed data            //
-///              -num-length of processed data                                   //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///   This function calculates Walsh transform of a part of data
+///      Function parameters:
+///              - working_space-pointer to vector of transformed data
+///              - num-length of processed data
 
 void TSpectrumTransform::Walsh(Double_t *working_space, int num)
 {
@@ -249,15 +218,10 @@ void TSpectrumTransform::Walsh(Double_t *working_space, int num)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function carries out bir-reverse reordering of data                    //
-///      Function parameters:                                                    //
-///              -working_space-pointer to vector of processed data              //
-///              -num-length of processed data                                   //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///   This function carries out bit-reverse reordering of data
+///      Function parameters:
+///              - working_space-pointer to vector of processed data
+///              - num-length of processed data
 
 void TSpectrumTransform::BitReverse(Double_t *working_space, int num)
 {
@@ -290,17 +254,12 @@ void TSpectrumTransform::BitReverse(Double_t *working_space, int num)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function calculates Fourier based transform of a part of data          //
-///      Function parameters:                                                    //
-///              -working_space-pointer to vector of transformed data            //
-///              -num-length of processed data                                   //
-///              -hartley-1 if it is Hartley transform, 0 othewise               //
-///              -direction-forward or inverse transform                         //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///   This function calculates Fourier based transform of a part of data
+///      Function parameters:
+///              - working_space-pointer to vector of transformed data
+///              - num-length of processed data
+///              - hartley-1 if it is Hartley transform, 0 otherwise
+///              - direction-forward or inverse transform
 
 void TSpectrumTransform::Fourier(Double_t *working_space, int num, int hartley,
                           int direction, int zt_clear)
@@ -416,17 +375,12 @@ void TSpectrumTransform::Fourier(Double_t *working_space, int num, int hartley,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function carries out bir-reverse reordering for Haar transform         //
-///      Function parameters:                                                    //
-///              -working_space-pointer to vector of processed data              //
-///              -shift-shift of position of processing                          //
-///              -start-initial position of processed data                       //
-///              -num-length of processed data                                   //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///   This function carries out bit-reverse reordering for Haar transform
+///      Function parameters:
+///              - working_space-pointer to vector of processed data
+///              - shift-shift of position of processing
+///              - start-initial position of processed data
+///              - num-length of processed data
 
 void TSpectrumTransform::BitReverseHaar(Double_t *working_space, int shift, int num,
                                  int start)
@@ -465,18 +419,13 @@ void TSpectrumTransform::BitReverseHaar(Double_t *working_space, int shift, int 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function calculates generalized (mixed) transforms of different degrees//
-///      Function parameters:                                                    //
-///              -working_space-pointer to vector of transformed data            //
-///              -zt_clear-flag to clear imaginary data before staring           //
-///              -num-length of processed data                                   //
-///              -degree-degree of transform (see manual)                        //
-///              -type-type of mixed transform (see manual)                      //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///   This function calculates generalized (mixed) transforms of different degrees
+///      Function parameters:
+///              - working_space-pointer to vector of transformed data
+///              - zt_clear-flag to clear imaginary data before staring
+///              - num-length of processed data
+///              - degree-degree of transform (see manual)
+///              - type-type of mixed transform (see manual)
 
 int TSpectrumTransform::GeneralExe(Double_t *working_space, int zt_clear, int num,
                             int degree, int type)
@@ -587,17 +536,12 @@ int TSpectrumTransform::GeneralExe(Double_t *working_space, int zt_clear, int nu
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///   AUXILIARY FUNCION                                                          //
-///                                                                              //
-///   This function calculates inverse generalized (mixed) transforms             //
-///      Function parameters:                                                    //
-///              -working_space-pointer to vector of transformed data            //
-///              -num-length of processed data                                   //
-///              -degree-degree of transform (see manual)                        //
-///              -type-type of mixed transform (see manual)                      //
-///                                                                              //
-///////////////////////////////////////////////////////////////////////////////////
+///   This function calculates inverse generalized (mixed) transforms
+///      Function parameters:
+///              - working_space-pointer to vector of transformed data
+///              - num-length of processed data
+///              - degree-degree of transform (see manual)
+///              - type-type of mixed transform (see manual)
 
 int TSpectrumTransform::GeneralInv(Double_t *working_space, int num, int degree,
                             int type)
@@ -708,279 +652,93 @@ int TSpectrumTransform::GeneralInv(Double_t *working_space, int num, int degree,
    return (0);
 }
 
-
-//////////END OF AUXILIARY FUNCTIONS FOR TRANSFORM! FUNCTION////////////////////////
-//////////TRANSFORM FUNCTION - CALCULATES DIFFERENT 1-D DIRECT AND INVERSE ORTHOGONAL TRANSFORMS//////
-
 ////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-///        ONE-DIMENSIONAL TRANSFORM FUNCTION
-///        This function transforms the source spectrum. The calling program
-///        should fill in input parameters.
-///        Transformed data are written into dest spectrum.
+/// This function transforms the source spectrum. The calling program
+/// should fill in input parameters.
+/// Transformed data are written into dest spectrum.
 ///
-///        Function parameters:
-///        source-pointer to the vector of source spectrum, its length should
-///             be size except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR
-///             transform. These need 2*size length to supply real and
-///             imaginary coefficients.
-///        destVector-pointer to the vector of dest data, its length should be
-///             size except for direct FOURIER, FOUR-WALSH, FOUR-HAAR. These
-///             need 2*size length to store real and imaginary coefficients
+/// Function parameters:
+///  - source-pointer to the vector of source spectrum, its length should
+///    be size except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR
+///    transform. These need 2*size length to supply real and
+///    imaginary coefficients.
+///  - destVector-pointer to the vector of dest data, its length should be
+///    size except for direct FOURIER, FOUR-WALSH, FOUR-HAAR. These
+///    need 2*size length to store real and imaginary coefficients
 ///
-////////////////////////////////////////////////////////////////////////////////
-///Begin_Html <!--
+/// ### Transform methods
+///
+///  Goal: to analyse experimental data using orthogonal transforms
+///
+///  - orthogonal transforms can be successfully used for the processing of
+///    nuclear spectra (not only)
+///
+///  - they can be used to remove high frequency noise, to increase
+///    signal-to-background ratio as well as to enhance low intensity components [1],
+///    to carry out e.g. Fourier analysis etc.
+///
+///  - we have implemented the function for the calculation of the commonly
+///    used orthogonal transforms as well as functions for the filtration and
+///    enhancement of experimental data
+///
+/// #### References:
+///
+/// [1] C.V. Hampton, B. Lian, Wm. C.
+/// McHarris: Fast-Fourier-transform spectral enhancement techniques for gamma-ray
+/// spectroscopy. NIM A353 (1994) 280-284.
+///
+/// [2] Morhac; M., Matouoek V.,
+/// New adaptive Cosine-Walsh transform and its application to nuclear data
+/// compression, IEEE Transactions on Signal Processing 48 (2000) 2693.
+///
+/// [3] Morhac; M., Matouoek V.,
+/// Data compression using new fast adaptive Cosine-Haar transforms, Digital Signal
+/// Processing 8 (1998) 63.
+///
+/// [4] Morhac; M., Matouoek V.:
+/// Multidimensional nuclear data compression using fast adaptive Walsh-Haar
+/// transform. Acta Physica Slovaca 51 (2001) 307.
+///
+/// ### Example - script Transform.c:
+///
+/// \image html spectrumtransform_transform_image002.jpg Fig. 1 Original gamma-ray spectrum
+/// \image html spectrumtransform_transform_image003.jpg Fig. 2 Transformed spectrum from Fig. 1 using Cosine transform
+///
+/// #### Script:
+/// Example to illustrate Transform function (class TSpectrumTransform).
+/// To execute this example, do:
+///
+/// `root > .x Transform.C`
+///
+/// ~~~ {.cpp}
+///   #include <TSpectrum>
+///   #include <TSpectrumTransform>
+///   void Transform() {
+///      Int_t i;
+///      Double_t nbins = 4096;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbins;
+///      Double_t * source = new Double_t[nbins];
+///      Double_t * dest = new Double_t[nbins];
+///      TH1F *h = new TH1F("h","Transformed spectrum using Cosine transform",nbins,xmin,xmax);
+///      TFile *f = new TFile("spectra\\TSpectrum.root");
+///      h=(TH1F*) f->Get("transform1;1");
+///      for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
+///      TCanvas *Transform1 = gROOT->GetListOfCanvases()->FindObject("Transform1");
+///      if (!Transform1) Transform1 = new TCanvas("Transform","Transform1",10,10,1000,700);
+///      TSpectrum *s = new TSpectrum();
+///      TSpectrumTransform *t = new TSpectrumTransform(4096);
+///      t->SetTransformType(t->kTransformCos,0);
+///      t->SetDirection(t->kTransformForward);
+///      t->Transform(source,dest);
+///      for (i = 0; i < nbins; i++) h->SetBinContent(i + 1,dest[i]);
+///      h->SetLineColor(kRed);
+///      h->Draw("L");
+///   }
+/// ~~~
 
 void TSpectrumTransform::Transform(const Double_t *source, Double_t *destVector)
 {
-/* -->
-<div class=Section1>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt'>Transform methods</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><i>&nbsp;</i></p>
-
-<p class=MsoNormal style='text-align:justify'><i>Goal: to analyze experimental
-data using orthogonal transforms</i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>orthogonal transforms can be successfully used for the processing of
-nuclear spectra (not only) </p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>they can be used to remove high frequency noise, to increase
-signal-to-background ratio as well as to enhance low intensity components [1],
-to carry out e.g. Fourier analysis etc. </p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>we have implemented the function for the calculation of the commonly
-used orthogonal transforms as well as functions for the filtration and
-enhancement of experimental data</p>
-
-<p class=MsoNormal><i>&nbsp;</i></p>
-
-<p class=MsoNormal><i>Function:</i></p>
-
-<p class=MsoNormal><b>void TSpectrumTransform::Transform(const <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> *fSource,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
-*fDest)</b></p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'>This function transforms the
-source spectrum according to the given input parameters. Transformed data are
-written into dest spectrum. Before the Transform function is called the class
-must be created by constructor and the type of the transform as well as some
-other parameters must be set using a set of setter functions.</p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal><i><span style='color:red'>Member variables of
-TSpectrumTransform class:</span></i></p>
-
-<p class=MsoNormal style='margin-left:25.65pt;text-align:justify'> <b>fSource</b>-pointer
-to the vector of source spectrum. Its length should be equal to the “fSize”
-parameter except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR transforms. These
-need “2*fSize” length to supply real and imaginary coefficients.                   </p>
-
-<p class=MsoNormal style='margin-left:25.65pt;text-align:justify'><b>fDest</b>-pointer
-to the vector of destination spectrum. Its length should be equal to the
-“fSize” parameter except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR transforms.
-These need “2*fSize” length to store real and imaginary coefficients. </p>
-
-<p class=MsoNormal style='text-align:justify'>        <b>fSize</b>-basic length
-of the source and dest spectrum. <span style='color:fuchsia'>It should be power
-of 2.</span></p>
-
-<p class=MsoNormal style='margin-left:25.65pt;text-align:justify;text-indent:
--2.85pt'><b>fType</b>-type of transform</p>
-
-<p class=MsoNormal style='text-align:justify'>            Classic transforms:</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformHaar
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformWalsh
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformCos
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformSin
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformFourier
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformHartey
-</p>
-
-<p class=MsoNormal style='text-align:justify'>            Mixed transforms:</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformFourierWalsh
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformFourierHaar
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformWalshHaar
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformCosWalsh
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformCosHaar
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformSinWalsh
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformSinHaar
-</p>
-
-<p class=MsoNormal style='text-align:justify;text-indent:22.8pt'><b>fDirection</b>-direction-transform
-direction (forward, inverse)</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformForward
-</p>
-
-<p class=MsoNormal style='text-align:justify'>                        kTransformInverse
-</p>
-
-<p class=MsoNormal style='text-align:justify;text-indent:22.8pt'><b>fDegree</b>-applies
-only for mixed transforms [2], [3], [4]. </p>
-
-<p class=MsoNormal style='text-align:justify;text-indent:22.8pt'>                
-<span style='color:fuchsia'> Allowed range  <sub><img border=0 width=100
-height=27 src="gif/spectrumtransform_transform_image001.gif"></sub>. </span></p>
-
-<p class=MsoNormal style='text-align:justify'><b><i>References:</i></b></p>
-
-<p class=MsoNormal style='text-align:justify'>[1] C.V. Hampton, B. Lian, Wm. C.
-McHarris: Fast-Fourier-transform spectral enhancement techniques for gamma-ray
-spectroscopy. NIM A353 (1994) 280-284. </p>
-
-<p class=MsoNormal style='text-align:justify'>[2] Morhá&#269; M., Matoušek V.,
-New adaptive Cosine-Walsh  transform and its application to nuclear data
-compression, IEEE Transactions on Signal Processing 48 (2000) 2693.  </p>
-
-<p class=MsoNormal style='text-align:justify'>[3] Morhá&#269; M., Matoušek V.,
-Data compression using new fast adaptive Cosine-Haar transforms, Digital Signal
-Processing 8 (1998) 63. </p>
-
-<p class=MsoNormal style='text-align:justify'>[4] Morhá&#269; M., Matoušek V.:
-Multidimensional nuclear data compression using fast adaptive Walsh-Haar
-transform. Acta Physica Slovaca 51 (2001) 307. </p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'><i>Example  – script Transform.c:</i></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:18.0pt'><img
-width=600 height=324 src="gif/spectrumtransform_transform_image002.jpg"></span></p>
-
-<p class=MsoNormal><b>Fig. 1 Original gamma-ray spectrum</b></p>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt'><img border=0 width=601
-height=402 src="gif/spectrumtransform_transform_image003.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:18.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal><b>Fig. 2 Transformed spectrum from Fig. 1 using Cosine
-transform</b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate
-Transform function (class TSpectrumTransform).</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
-do</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x Transform.C</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>#include &lt;TSpectrum&gt;</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>#include
-&lt;TSpectrumTransform&gt;</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>void Transform() {</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t i;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t nbins =
-4096;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t xmin  =
-0;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t xmax  =
-(Double_t)nbins;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Double_t * source = new Double_t[nbins];</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t * dest = new
-Double_t[nbins];   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *h = new TH1F(&quot;h&quot;,&quot;Transformed
-spectrum using Cosine transform&quot;,nbins,xmin,xmax);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   h=(TH1F*)
-f-&gt;Get(&quot;transform1;1&quot;);   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbins;
-i++) source[i]=h-&gt;GetBinContent(i + 1);         </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Transform1 =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Transform1&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   if (!Transform1)
-Transform1 = new
-TCanvas(&quot;Transform&quot;,&quot;Transform1&quot;,10,10,1000,700);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrum *s = new
-TSpectrum();</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrumTransform *t =
-new TSpectrumTransform(4096);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   </span><span lang=FR
-style='font-size:10.0pt'>t-&gt;SetTransformType(t-&gt;kTransformCos,0);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-t-&gt;SetDirection(t-&gt;kTransformForward);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>t-&gt;Transform(source,dest);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbins;
-i++) h-&gt;SetBinContent(i + 1,dest[i]);   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-h-&gt;SetLineColor(kRed);      </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   h-&gt;Draw(&quot;L&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
-
-</div>
-
-<!-- */
-// --> End_Html
    int i, j=0, k = 1, m, l;
    Double_t val;
    Double_t a, b, pi = 3.14159265358979323846;
@@ -1450,166 +1208,65 @@ h-&gt;SetLineColor(kRed);      </span></p>
    return;
 }
 
-//////////FilterZonal FUNCTION - CALCULATES DIFFERENT 1-D ORTHOGONAL TRANSFORMS, SETS GIVEN REGION TO FILTER COEFFICIENT AND TRANSFORMS IT BACK//////
-
 ////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////
-///        ONE-DIMENSIONAL FILTER ZONAL FUNCTION
-///        This function transforms the source spectrum. The calling program
-///        should fill in input parameters. Then it sets transformed
-///        coefficients in the given region (fXmin, fXmax) to the given
-///        fFilterCoeff and transforms it back.
-///        Filtered data are written into dest spectrum.
+/// This function transforms the source spectrum. The calling program
+/// should fill in input parameters. Then it sets transformed
+/// coefficients in the given region (fXmin, fXmax) to the given
+/// fFilterCoeff and transforms it back.
+/// Filtered data are written into dest spectrum.
 ///
-///        Function parameters:
-///        source-pointer to the vector of source spectrum, its length should
-///             be size except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR
-///             transform. These need 2*size length to supply real and
-///             imaginary coefficients.
-///        destVector-pointer to the vector of dest data, its length should be
-///           size except for direct FOURIER, FOUR-WALSH, FOUR-HAAR. These
-///           need 2*size length to store real and imaginary coefficients
+/// Function parameters:
+///  - source-pointer to the vector of source spectrum, its length should
+///    be size except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR
+///    transform. These need 2*size length to supply real and
+///    imaginary coefficients.
+///  - destVector-pointer to the vector of dest data, its length should be
+///    size except for direct FOURIER, FOUR-WALSH, FOUR-HAAR. These
+///    need 2*size length to store real and imaginary coefficients
 ///
-/////////////////////////////////////////////////////////////////////////////////
+/// ### Example - script Filter.c:
 ///
-///Begin_Html <!--
+/// \image html spectrumtransform_filter_image001.jpg Fig. 1 Original spectrum (black line) and filtered spectrum (red line) using Cosine transform and zonal filtration (channels 2048-4095 were set to 0)
+///
+/// #### Script:
+///
+/// Example to illustrate FilterZonal function (class TSpectrumTransform).
+/// To execute this example, do:
+///
+/// `root > .x Filter.C`
+///
+/// ~~~ {.cpp}
+///   #include <TSpectrum>
+///   #include <TSpectrumTransform>
+///   void Filter() {
+///      Int_t i;
+///      Double_t nbins = 4096;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbins;
+///      Double_t * source = new Double_t[nbins];
+///      Double_t * dest = new Double_t[nbins];
+///      TH1F *h = new TH1F("h","Zonal filtering using Cosine transform",nbins,xmin,xmax);
+///      TH1F *d = new TH1F("d","",nbins,xmin,xmax);
+///      TFile *f = new TFile("spectra\\TSpectrum.root");
+///      h=(TH1F*) f->Get("transform1;1");
+///      for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
+///      TCanvas *Transform1 = gROOT->GetListOfCanvases()->FindObject("Transform1");
+///      if (!Transform1) Transform1 = new TCanvas("Transform","Transform1",10,10,1000,700);
+///      h->SetAxisRange(700,1024);
+///      h->Draw("L");
+///      TSpectrum *s = new TSpectrum();
+///      TSpectrumTransform *t = new TSpectrumTransform(4096);
+///      t->SetTransformType(t->kTransformCos,0);
+///      t->SetRegion(2048, 4095);
+///      t->FilterZonal(source,dest);
+///      for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,dest[i]);
+///      d->SetLineColor(kRed);
+///      d->Draw("SAME L");
+///   }
+/// ~~~
 
 void TSpectrumTransform::FilterZonal(const Double_t *source, Double_t *destVector)
 {
-/* -->
-<div class=Section2>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt'>Example of zonal filtering</span></b></p>
-
-<p class=MsoNormal><i>&nbsp;</i></p>
-
-<p class=MsoNormal><i>Function:</i></p>
-
-<p class=MsoNormal><b>void TSpectrumTransform::FilterZonal(const <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#Double_t">Double_t</a> *fSource,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#Double_t">Double_t</a> *fDest)</b></p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'>This function transforms the
-source spectrum (for details see Transform function). Before the FilterZonal
-function is called the class must be created by constructor and the type of the
-transform as well as some other parameters must be set using a set of setter
-functions. The FilterZonal function sets transformed coefficients in the given
-region (fXmin, fXmax) to the given fFilterCoeff and transforms it back.
-Filtered data are written into dest spectrum. </p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:16.0pt'>&nbsp;</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><i>Example – script Filter.c:</i></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:16.0pt'><img
-border=0 width=601 height=402 src="gif/spectrumtransform_filter_image001.jpg"></span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><b>Fig. 1 Original spectrum
-(black line) and filtered spectrum (red line) using Cosine transform and zonal
-filtration (channels 2048-4095 were set to 0) </b></p>
-
-<p class=MsoNormal><b><span style='color:#339966'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate
-FilterZonal function (class TSpectrumTransform).</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
-do</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x Filter.C</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>#include &lt;TSpectrum&gt;</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>#include
-&lt;TSpectrumTransform&gt;</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>void Filter() {</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t i;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t nbins =
-4096;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t xmin  =
-0;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t xmax  =
-(Double_t)nbins;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Double_t * source = new Double_t[nbins];</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t * dest = new
-Double_t[nbins];   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *h = new
-TH1F(&quot;h&quot;,&quot;Zonal filtering using Cosine
-transform&quot;,nbins,xmin,xmax);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *d = new
-TH1F(&quot;d&quot;,&quot;&quot;,nbins,xmin,xmax);         </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   h=(TH1F*)
-f-&gt;Get(&quot;transform1;1&quot;);   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbins;
-i++) source[i]=h-&gt;GetBinContent(i + 1);     </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Transform1 =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Transform1&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   if (!Transform1)
-Transform1 = new
-TCanvas(&quot;Transform&quot;,&quot;Transform1&quot;,10,10,1000,700);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-h-&gt;SetAxisRange(700,1024);   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-h-&gt;Draw(&quot;L&quot;);   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrum *s = new
-TSpectrum();</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrumTransform *t =
-new TSpectrumTransform(4096);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   </span><span lang=FR
-style='font-size:10.0pt'>t-&gt;SetTransformType(t-&gt;kTransformCos,0);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-t-&gt;SetRegion(2048, 4095);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-t-&gt;FilterZonal(source,dest);     </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>for (i = 0; i &lt; nbins; i++) d-&gt;SetBinContent(i +
-1,dest[i]);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-d-&gt;SetLineColor(kRed);   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   d-&gt;Draw(&quot;SAME
-L&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
-
-</div>
-
-<!-- */
-// --> End_Html
    int i, j=0, k = 1, m, l;
    Double_t val;
    Double_t *working_space = 0;
@@ -2061,163 +1718,65 @@ L&quot;);</span></p>
    return;
 }
 
-//////////ENHANCE FUNCTION - CALCULATES DIFFERENT 1-D ORTHOGONAL TRANSFORMS, MULTIPLIES GIVEN REGION BY ENHANCE COEFFICIENT AND TRANSFORMS IT BACK//////
-////////////////////////////////////////////////////////////////////////////////
+
 /////////////////////////////////////////////////////////////////////////////////
-///        ONE-DIMENSIONAL ENHANCE ZONAL FUNCTION
-///        This function transforms the source spectrum. The calling program
-///      should fill in input parameters. Then it multiplies transformed
-///      coefficients in the given region (fXmin, fXmax) by the given
-///      fEnhanceCoeff and transforms it back
-///        Processed data are written into dest spectrum.
+/// This function transforms the source spectrum. The calling program
+/// should fill in input parameters. Then it multiplies transformed
+/// coefficients in the given region (fXmin, fXmax) by the given
+/// fEnhanceCoeff and transforms it back
+/// Processed data are written into dest spectrum.
 ///
-///        Function parameters:
-///        source-pointer to the vector of source spectrum, its length should
-///             be size except for inverse FOURIER, FOUR-WALSh, FOUR-HAAR
-///             transform. These need 2*size length to supply real and
-///             imaginary coefficients.
-///        destVector-pointer to the vector of dest data, its length should be
-///           size except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These
-///           need 2*size length to store real and imaginary coefficients
+/// Function parameters:
+///  - source-pointer to the vector of source spectrum, its length should
+///    be size except for inverse FOURIER, FOUR-WALSh, FOUR-HAAR
+///    transform. These need 2*size length to supply real and
+///    imaginary coefficients.
+///  - destVector-pointer to the vector of dest data, its length should be
+///    size except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These
+///    need 2*size length to store real and imaginary coefficients
 ///
-/////////////////////////////////////////////////////////////////////////////////
-///Begin_Html <!--
+/// ### Example - script Enhance.c:
+///
+/// \image html spectrumtransform_enhance_image001.jpg Fig. 1 Original spectrum (black line) and enhanced spectrum (red line) using Cosine transform (channels 0-1024 were multiplied by 2)
+///
+/// #### Script:
+///
+/// Example to illustrate Enhance function (class TSpectrumTransform).
+/// To execute this example, do:
+///
+/// `root > .x Enhance.C`
+///
+/// ~~~ {.cpp}
+///   void Enhance() {
+///      Int_t i;
+///      Double_t nbins = 4096;
+///      Double_t xmin = 0;
+///      Double_t xmax = (Double_t)nbins;
+///      Double_t * source = new Double_t[nbins];
+///      Double_t * dest = new Double_t[nbins];
+///      TH1F *h = new TH1F("h","Enhancement using Cosine transform",nbins,xmin,xmax);
+///      TH1F *d = new TH1F("d","",nbins,xmin,xmax);
+///      TFile *f = new TFile("spectra\\TSpectrum.root");
+///      h=(TH1F*) f->Get("transform1;1");
+///      for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
+///      TCanvas *Transform1 = gROOT->GetListOfCanvases()->FindObject("Transform1");
+///      if (!Transform1) Transform1 = new TCanvas("Transform","Transform1",10,10,1000,700);
+///      h->SetAxisRange(700,1024);
+///      h->Draw("L");
+///      TSpectrum *s = new TSpectrum();
+///      TSpectrumTransform *t = new TSpectrumTransform(4096);
+///      t->SetTransformType(t->kTransformCos,0);
+///      t->SetRegion(0, 1024);
+///      t->SetEnhanceCoeff(2);
+///      t->Enhance(source,dest);
+///      for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,dest[i]);
+///      d->SetLineColor(kRed);
+///      d->Draw("SAME L");
+///   }
+/// ~~~
 
 void TSpectrumTransform::Enhance(const Double_t *source, Double_t *destVector)
 {
-/* -->
-<div class=Section3>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt'>Example of enhancement</span></b></p>
-
-<p class=MsoNormal><i>&nbsp;</i></p>
-
-<p class=MsoNormal><i>Function:</i></p>
-
-<p class=MsoNormal><b>void TSpectrumTransform::Enhance(const <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> *fSource,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
-*fDest)</b></p>
-
-<p class=MsoNormal><b>&nbsp;</b></p>
-
-<p class=MsoNormal style='text-align:justify'>This function transforms the
-source spectrum (for details see Transform function). Before the Enhance
-function is called the class must be created by constructor and the type of the
-transform as well as some other parameters must be set using a set of setter functions.
-The Enhance function multiplies transformed coefficients in the given region
-(fXmin, fXmax) by the given fEnhancCoeff and transforms it back. Enhanced data
-are written into dest spectrum.</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'><i>Example  – script Enhance.c:</i></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:16.0pt'><img
-border=0 width=601 height=402 src="gif/spectrumtransform_enhance_image001.jpg"></span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:18.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal style='text-align:justify'><b>Fig. 1 Original spectrum (black
-line) and enhanced spectrum (red line) using Cosine transform (channels 0-1024
-were multiplied by 2) </b></p>
-
-<p class=MsoNormal><b><span style='color:#339966'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate
-Enhance function (class TSpectrumTransform).</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
-do</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x Enhance.C</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>void Enhance() {</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t i;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t nbins =
-4096;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t xmin  =
-0;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t xmax  =
-(Double_t)nbins;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Double_t * source = new Double_t[nbins];</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t * dest = new
-Double_t[nbins];   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *h = new
-TH1F(&quot;h&quot;,&quot;Enhancement using Cosine transform&quot;,nbins,xmin,xmax);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *d = new
-TH1F(&quot;d&quot;,&quot;&quot;,nbins,xmin,xmax);         </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   h=(TH1F*)
-f-&gt;Get(&quot;transform1;1&quot;);   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbins;
-i++) source[i]=h-&gt;GetBinContent(i + 1);     </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Transform1 = gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Transform1&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   if (!Transform1)
-Transform1 = new
-TCanvas(&quot;Transform&quot;,&quot;Transform1&quot;,10,10,1000,700);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-h-&gt;SetAxisRange(700,1024);   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-h-&gt;Draw(&quot;L&quot;);   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrum *s = new
-TSpectrum();</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrumTransform *t =
-new TSpectrumTransform(4096);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   </span><span lang=FR
-style='font-size:10.0pt'>t-&gt;SetTransformType(t-&gt;kTransformCos,0);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   t-&gt;SetRegion(0,
-1024);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-t-&gt;SetEnhanceCoeff(2);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-t-&gt;Enhance(source,dest);        </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>for (i = 0; i &lt; nbins; i++) d-&gt;SetBinContent(i +
-1,dest[i]);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-d-&gt;SetLineColor(kRed);   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   d-&gt;Draw(&quot;SAME
-L&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
-
-</div>
-
-<!-- */
-// --> End_Html
    int i, j=0, k = 1, m, l;
    Double_t val;
    Double_t *working_space = 0;
@@ -2670,13 +2229,9 @@ L&quot;);</span></p>
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///   SETTER FUNCION
-///
-///   This function sets the following parameters for transform:
-///         -transType - type of transform (Haar, Walsh, Cosine, Sine, Fourier, Hartley, Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar)
-///         -degree - degree of mixed transform, applies only for Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar transforms
-///////////////////////////////////////////////////////////////////////////////
+/// This function sets the following parameters for transform:
+///  - transType - type of transform (Haar, Walsh, Cosine, Sine, Fourier, Hartley, Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar)
+///  - degree - degree of mixed transform, applies only for Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar transforms
 
 void TSpectrumTransform::SetTransformType(Int_t transType, Int_t degree)
 {
@@ -2701,14 +2256,9 @@ void TSpectrumTransform::SetTransformType(Int_t transType, Int_t degree)
    fDegree=degree;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///   SETTER FUNCION
-///
-///   This function sets the filtering or enhancement region:
-///         -xmin, xmax
-///////////////////////////////////////////////////////////////////////////////
+/// This function sets the filtering or enhancement region:
+///  - xmin, xmax
 
 void TSpectrumTransform::SetRegion(Int_t xmin, Int_t xmax)
 {
@@ -2721,12 +2271,8 @@ void TSpectrumTransform::SetRegion(Int_t xmin, Int_t xmax)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///   SETTER FUNCION
-///
-///   This function sets the direction of the transform:
-///         -direction (forward or inverse)
-///////////////////////////////////////////////////////////////////////////////
+/// This function sets the direction of the transform:
+///  - direction (forward or inverse)
 
 void TSpectrumTransform::SetDirection(Int_t direction)
 {
@@ -2738,12 +2284,8 @@ void TSpectrumTransform::SetDirection(Int_t direction)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///   SETTER FUNCION
-///
-///   This function sets the filter coefficient:
-///         -filterCoeff - after the transform the filtered region (xmin, xmax) is replaced by this coefficient. Applies only for filtereng operation.
-///////////////////////////////////////////////////////////////////////////////
+/// This function sets the filter coefficient:
+///  - filterCoeff - after the transform the filtered region (xmin, xmax) is replaced by this coefficient. Applies only for filtereng operation.
 
 void TSpectrumTransform::SetFilterCoeff(Double_t filterCoeff)
 {
@@ -2751,12 +2293,8 @@ void TSpectrumTransform::SetFilterCoeff(Double_t filterCoeff)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///   SETTER FUNCION
-///
-///   This function sets the enhancement coefficient:
-///         -enhanceCoeff - after the transform the enhanced region (xmin, xmax) is multiplied by this coefficient. Applies only for enhancement operation.
-///////////////////////////////////////////////////////////////////////////////
+/// This function sets the enhancement coefficient:
+///  - enhanceCoeff - after the transform the enhanced region (xmin, xmax) is multiplied by this coefficient. Applies only for enhancement operation.
 
 void TSpectrumTransform::SetEnhanceCoeff(Double_t enhanceCoeff)
 {
