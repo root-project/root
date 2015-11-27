@@ -104,7 +104,7 @@ configure_file(commands2.txt . COPYONLY)
 ROOTTEST_ADD_TEST(fork
                   EXEC fork
                   FAILREGEX "Error in"
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST} tsenums tclass_methods)
 
 ROOTTEST_ADD_TEST(semaphore
                  MACRO  tSemaphore.C
