@@ -3,7 +3,7 @@
 
 /** \class TSpectrumFit
     \ingroup Spectrum
-    \brief Advanced 1-dimentional spectra fitting functions
+    \brief Advanced 1-dimensional spectra fitting functions
     \author Miroslav Morhac
 
  Class for fitting 1D spectra using AWMI (algorithm without matrix
@@ -704,14 +704,14 @@ Double_t TSpectrumFit::Ourpowl(Double_t a, Int_t pw)
 ///  - peaks can be fitted separately, each peak (or multiplets) in a region or
 ///    together all peaks in a spectrum. To fit separately each peak one needs to
 ///    determine the fitted region. However it can happen that the regions of
-///    neighboring peaks are overlapping. Then the results of fitting are very poor.
+///    neighbouring peaks are overlapping. Then the results of fitting are very poor.
 ///    On the other hand, when fitting together all peaks found in a spectrum, one
 ///    needs to have a method that is stable (converges) and fast enough to carry out
 ///    fitting in reasonable time
 ///
-///  - we have implemented the nonsymmetrical semiempirical peak shape function [1]
+///  - we have implemented the non-symmetrical semi-empirical peak shape function [1]
 ///
-///  - it contains the symmetrical Gaussian as well as nonsymmetrical terms.
+///  - it contains the symmetrical Gaussian as well as non-symmetrical terms.
 ///
 /// \image html spectrumfit_awmi_image001.gif
 ///
@@ -2648,10 +2648,10 @@ void TSpectrumFit::SetFitParameters(Int_t xmin,Int_t xmax, Int_t numberIteration
 ///   This function sets the following fitting parameters of peaks:
 ///         - sigma - initial value of sigma parameter
 ///         - fixSigma - logical value of sigma parameter, which allows to fix the parameter (not to fit)
-///         - positionInit - aray of initial values of peaks positions
+///         - positionInit - array of initial values of peaks positions
 ///         - fixPosition - array of logical values which allow to fix appropriate positions (not fit). However they are present in the estimated functional.
-///         - ampInit - aray of initial values of peaks amplitudes
-///         - fixAmp - aray of logical values which allow to fix appropriate amplitudes (not fit). However they are present in the estimated functional
+///         - ampInit - array of initial values of peaks amplitudes
+///         - fixAmp - array of logical values which allow to fix appropriate amplitudes (not fit). However they are present in the estimated functional
 
 void TSpectrumFit::SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Double_t *positionInit, const Bool_t *fixPosition, const Double_t *ampInit, const Bool_t *fixAmp)
 {
@@ -2681,7 +2681,7 @@ void TSpectrumFit::SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Doub
 
 ////////////////////////////////////////////////////////////////////////////////
 ///   This function sets the following fitting parameters of background:
-///         - a0Init - initial value of a0 parameter (backgroud is estimated as a0+a1*x+a2*x*x)
+///         - a0Init - initial value of a0 parameter (background is estimated as a0+a1*x+a2*x*x)
 ///         - fixA0 - logical value of a0 parameter, which allows to fix the parameter (not to fit)
 ///         - a1Init - initial value of a1 parameter
 ///         - fixA1 - logical value of a1 parameter, which allows to fix the parameter (not to fit)
