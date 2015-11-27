@@ -39,6 +39,7 @@ The following people have contributed to this new version:
  Wouter Verkerke, NIKHEF/Atlas, RooFit
 
 <a name="core-libs"></a>
+
 ## Core Libraries
 
 ROOT prepares for [cxx modules](http://clang.llvm.org/docs/Modules.html). One of
@@ -66,7 +67,7 @@ Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
 
 ## I/O Libraries
 Custom streamers need to #include TBuffer.h explicitly (see
-[section Core Libraries](#core-libs)
+[section Core Libraries](#core-libs))
 
 
 ## TTree Libraries
