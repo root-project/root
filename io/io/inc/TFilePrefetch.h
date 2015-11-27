@@ -58,12 +58,11 @@ private:
    std::mutex fMutexReadList;      // mutex for the list of read blocks
    std::condition_variable fNewBlockAdded;  // signal the addition of a new pending block
    std::condition_variable fReadBlockAdded; // signal the addition of a new red block
-   TSemaphore *fSemMasterWorker;   // semaphore used to kill the consumer thread
-   TSemaphore *fSemWorkerMaster;   // semaphore used to notify the master that worker is killed
    TSemaphore *fSemChangeFile;     // semaphore used when changin a file in TChain
    TString     fPathCache;         // path to the cache directory
    TStopwatch  fWaitTime;          // time wating to prefetch a buffer (in usec)
    Bool_t      fThreadJoined;      // mark if async thread was joined
+   Bool_t      fPrefetchFinished;  // true if prefetching is over
 
    static TThread::VoidRtnFunc_t ThreadProc(void*);  //create a joinable worker thread
 
@@ -97,6 +96,7 @@ public:
    void      SetFile(TFile*);
    std::condition_variable &GetCondNewBlock() { return fNewBlockAdded; };
    void      WaitFinishPrefetch();
+   Bool_t    IsPrefetchFinished() const { return fPrefetchFinished; }
 
    ClassDef(TFilePrefetch, 0);  // File block prefetcher
 };

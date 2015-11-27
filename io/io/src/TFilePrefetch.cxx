@@ -51,7 +51,8 @@ and must be explicitly enabled by the user.
 TFilePrefetch::TFilePrefetch(TFile* file) :
   fFile(file),
   fConsumer(0),
-  fThreadJoined(kTRUE)
+  fThreadJoined(kTRUE),
+  fPrefetchFinished(kFALSE)
 {
    fPendingBlocks    = new TList();
    fReadBlocks       = new TList();
@@ -59,8 +60,6 @@ TFilePrefetch::TFilePrefetch(TFile* file) :
    fPendingBlocks->SetOwner();
    fReadBlocks->SetOwner();
 
-   fSemMasterWorker  = new TSemaphore(0);
-   fSemWorkerMaster  = new TSemaphore(0);
    fSemChangeFile    = new TSemaphore(0);
 }
 
@@ -76,8 +75,6 @@ TFilePrefetch::~TFilePrefetch()
    SafeDelete(fConsumer);
    SafeDelete(fPendingBlocks);
    SafeDelete(fReadBlocks);
-   SafeDelete(fSemMasterWorker);
-   SafeDelete(fSemWorkerMaster);
    SafeDelete(fSemChangeFile);
 }
 
@@ -87,14 +84,16 @@ TFilePrefetch::~TFilePrefetch()
 
 void TFilePrefetch::WaitFinishPrefetch()
 {
-   fSemMasterWorker->Post();
-
-   while ( fSemWorkerMaster->Wait(10) != 0 ) {
-      fNewBlockAdded.notify_one();
+   // Inform the consumer thread that prefetching is over
+   {
+      std::lock_guard<std::mutex> lk(fMutexPendingList);
+      fPrefetchFinished = kTRUE;
    }
+   fNewBlockAdded.notify_one();
 
    fConsumer->Join();
-   fThreadJoined=kTRUE;
+   fThreadJoined = kTRUE;
+   fPrefetchFinished = kFALSE;
 }
 
 
@@ -238,7 +237,8 @@ TFPBlock* TFilePrefetch::GetPendingBlock()
    // is changed on the fly by TChain
    fSemChangeFile->Post();
    std::unique_lock<std::mutex> lk(fMutexPendingList);
-   fNewBlockAdded.wait(lk);
+   // Wait unless there is a pending block or prefetching is over
+   fNewBlockAdded.wait(lk, [&]{ return fPendingBlocks->GetSize() > 0 || fPrefetchFinished; });
    lk.unlock();
    fSemChangeFile->Wait();
 
@@ -358,11 +358,10 @@ TThread::VoidRtnFunc_t TFilePrefetch::ThreadProc(void* arg)
 {
    TFilePrefetch* pClass = (TFilePrefetch*) arg;
 
-   while( pClass->fSemMasterWorker->TryWait() != 0 ) {
+   while (!pClass->IsPrefetchFinished()) {
       pClass->ReadListOfBlocks();
    }
 
-   pClass->fSemWorkerMaster->Post();
    return (TThread::VoidRtnFunc_t) 1;
 }
 
