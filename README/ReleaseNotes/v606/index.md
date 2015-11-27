@@ -412,4 +412,6 @@ This release contains everal bug fixes and improvements, notably in unloading an
 ROOT uses the CMake cross-platform build-generator tool as a primary build system. CMake does not build the project, it generates the files needed by your build tool (GNU make, Ninja, Visual Studio, etc) for building ROOT. The classic build with configure/make is is still available but it will not be evolving with the new features of ROOT.
 
 Minor chages in the build system:
-- Renamed CMake option POSTGRESQL_LIBRARIES to POSTGRESQL_LIBRARY
+
+- Renamed build option POSTGRESQL_LIBRARIES to POSTGRESQL_LIBRARY
+- Added build option `builtin_openssl` to build OpenSSL internally. This is specially needed for the lastest Mac OSX (El Capitan)
