@@ -356,6 +356,15 @@ Support for capturing large outputs (stderr/stdout) coming from C++ libraries ha
 - support custom requests to remote objects, demonstrated in httptextlog.C tutorial
 - rewrite draw.htm (page for individual object drawing) to support all custom features as main gui does
 
+## Interpreter
+
+ROOT can now dump the contect of STL collections, for instance `map<string,int>`. A few ROOT types print their content, too.
+
+This release contains everal bug fixes and improvements, notably in unloading and performance.
+
+> NOTE: The GCC 5 ABI is *not* supported yet, due to a lack of support in clang.
+
+
 ## Tutorials
 
 
