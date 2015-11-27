@@ -391,6 +391,7 @@ Support for capturing large outputs (stderr/stdout) coming from C++ libraries ha
 - provide workaround for websites using require.js and older jquery-ui
 - support custom requests to remote objects, demonstrated in httptextlog.C tutorial
 - rewrite draw.htm (page for individual object drawing) to support all custom features as main gui does
+- See also the [JSRoot 3.9 examples page](https://root.cern.ch/js/3.9/) and the [JSRoot 3.9 release notes](https://github.com/linev/jsroot/releases/tag/3.9)
 
 ## Interpreter
 
