@@ -84,8 +84,10 @@ void TWebSocket::ReOpen()
 {
    // Re-open web file socket.
 
-   if (fWebFile->fSocket)
+   if (fWebFile->fSocket) {
       delete fWebFile->fSocket;
+      fWebFile->fSocket = 0;
+   }
 
    TUrl connurl;
    if (fWebFile->fProxy.IsValid())
@@ -123,7 +125,7 @@ void TWebSocket::ReOpen()
 ClassImp(TWebFile)
 
 //______________________________________________________________________________
-TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB")
+TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB"), fSocket(0)
 {
    // Create a Web file object. A web file is the same as a read-only
    // TFile except that it is being read via a HTTP server. The url
@@ -157,7 +159,7 @@ TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB")
 }
 
 //______________________________________________________________________________
-TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB")
+TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB"), fSocket(0)
 {
    // Create a Web file object. A web file is the same as a read-only
    // TFile except that it is being read via a HTTP server. Make sure url
