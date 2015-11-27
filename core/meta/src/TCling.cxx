@@ -2061,11 +2061,16 @@ void TCling::PrintIntro()
 ////////////////////////////////////////////////////////////////////////////////
 /// Add the given path to the list of directories in which the interpreter
 /// looks for include files. Only one path item can be specified at a
-/// time, i.e. "path1:path2" is not supported.
+/// time, i.e. "path1:path2" is NOT supported.
 
 void TCling::AddIncludePath(const char *path)
 {
    R__LOCKGUARD(gInterpreterMutex);
+   // Favorite source of annoyance: gSystem->AddIncludePath() needs "-I",
+   // gCling->AddIncludePath() does not! Work around that inconsistency:
+   if (path[0] == '-' && path[1] == 'I')
+      path += 2;
+
    fInterpreter->AddIncludePath(path);
 }
 
