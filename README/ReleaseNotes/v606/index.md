@@ -353,14 +353,14 @@ And this how it can be used to generate ten histos and merge them:
 {
 TObject *CreateAndFillHists()
 {
-  
+
   TH1F *h = new TH1F("h", "", 100, -3., 3.);
   h->SetDirectory(0);
   h->FillRandom("gaus", 1000);
     return h;
 }
 
-    TProcPool pool; 
+    TProcPool pool;
     auto hist = pool.MapReduce(CreateAndFillHists, 10, PoolUtils::ReduceObjects);
     hist->DrawClone();
 }
@@ -394,11 +394,25 @@ This release contains everal bug fixes and improvements, notably in unloading an
 
 > NOTE: The GCC 5 ABI is *not* supported yet, due to a lack of support in clang.
 
+## Class Reference Guide
+
+The ROOT [reference guide](https://root.cern.ch/doc/master/index.html) is moving
+to the Doxygen system. Doxygen is the de-facto standard for code documentation. It offers
+many nice features we are now exploring and trying to get the best of them. Having
+[MathJax rendered math formula](https://root.cern.ch/doc/master/classTSpectrum2.html#a482a7f144b9cc1b0405d0ac0d8cc9bbb)
+is one of them. The documentation can be structured in a more logical way
+[using groups](https://root.cern.ch/doc/master/modules.html). Still there is a lot
+to do but big progresses have been done. We developed also a Doxygen filter allowing
+to execute macros given as examples in the documentation and show the
+[resulting picture directly in the documentation](https://root.cern.ch/doc/master/classTHistPainter.html#HP16).
 
 ## Tutorials
 
-
-## Class Reference Guide
+[The tutorials](https://root.cern.ch/doc/master/group__Tutorials.html) in
+`$ROOTSYS/tutorials` are also presented on the web thanks to Doxygen. They
+are now part of the reference guide allowing nice cross-referencing with the
+classes documentation. Here also a filter has been developed to generate
+[the resulting picture](https://root.cern.ch/doc/master/ContourList_8C.html).
 
 ## Build, Configuration and Testing Infrastructure
 
