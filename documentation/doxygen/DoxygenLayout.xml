@@ -20,6 +20,7 @@
       <tab type="filelist" visible="yes" title="" intro=""/>
       <tab type="globals" visible="yes" title="" intro=""/>
     </tab>
+    <tab type="user" visible="yes" title="Release Notes" url="release-notes.html"/>
     <tab type="examples" visible="yes" title="" intro=""/>
   </navindex>
 
