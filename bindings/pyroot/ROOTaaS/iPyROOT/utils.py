@@ -286,14 +286,14 @@ class CanvasDrawer(object):
     jsUID = 0
 
     def __init__(self, thePad):
-        self.thePad = thePad
+        self.canvas = thePad
 
     def _getListOfPrimitivesNamesAndTypes(self):
        """
        Get the list of primitives in the pad, recursively descending into
        histograms and graphs looking for fitted functions.
        """
-       primitives = self.thePad.GetListOfPrimitives()
+       primitives = self.canvas.GetListOfPrimitives()
        primitivesNames = map(lambda p: p.ClassName(), primitives)
        #primitivesWithFunctions = filter(lambda primitive: hasattr(primitive,"GetListOfFunctions"), primitives)
        #for primitiveWithFunctions in primitivesWithFunctions:
@@ -320,10 +320,10 @@ class CanvasDrawer(object):
                     return False
         return True
 
-    def _jsDisplay(self):
+
+    def getJsCode(self):
         # Workaround to have ConvertToJSON work
-        pad = ROOT.gROOT.GetListOfCanvases().FindObject(ROOT.gPad.GetName())
-        json = ROOT.TBufferJSON.ConvertToJSON(pad, 3)
+        json = ROOT.TBufferJSON.ConvertToJSON(self.canvas, 3)
         #print "JSON:",json
 
         # Here we could optimise the string manipulation
@@ -334,18 +334,25 @@ class CanvasDrawer(object):
                                     jsonContent=json.Data(),
                                     jsDrawOptions="",
                                     jsDivId = divId)
+        return thisJsCode
 
+
+    def _jsDisplay(self):
+        thisJsCode = getJsCode()
         # display is the key point of this hook
         IPython.display.display(HTML(thisJsCode))
         return 0
 
-    def _pngDisplay(self):
+    def getPngImage(self):
         ofile = tempfile.NamedTemporaryFile(suffix=".png")
         with _setIgnoreLevel(ROOT.kError):
-            self.thePad.SaveAs(ofile.name)
+            self.canvas.SaveAs(ofile.name)
         img = IPython.display.Image(filename=ofile.name, format='png', embed=True)
+        return img
+
+    def _pngDisplay(self):
+        img = self.getPngImage()
         IPython.display.display(img)
-        return 0
 
     def _display(self):
        if _enableJSVisDebug:
