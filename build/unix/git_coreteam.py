@@ -193,7 +193,7 @@ def main() :
                 if 'Stefan Roiser' in names :
                     names.remove('Stefan Roiser')
                 names.append('Valeri Onuchine')
-                names.sort(sort_predicate)
+                #names.sort(sort_predicate)
                 generate_rootheader(names)
     except :
         pass
