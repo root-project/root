@@ -40,6 +40,8 @@
 #include "TSysEvtHandler.h"
 #include "XProofProtocol.h"
 
+#include "XrdProofConn.h"
+
 ClassImp(TXProofMgr)
 
 //
