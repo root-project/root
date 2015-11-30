@@ -19,22 +19,20 @@
 
 #include "TMCVerbose.h"
 
-//______________________________________________________________________________
-//
-// Class for printing detailed info from MC application.
-// Defined levels:
-//  0  no output
-//  1  info up to event level
-//  2  info up to tracking level
-//  3  detailed info for each step
-//______________________________________________________________________________
+/** \class TMCVerbose
+Class for printing a detailed infomation from MC application.
 
+Defined levels:
+- 0  no output
+- 1  info up to event level
+- 2  info up to tracking level
+- 3  detailed info for each step
+*/
 
 ClassImp(TMCVerbose)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Standard constructor
-/// ---
 
 TMCVerbose::TMCVerbose(Int_t level)
   : TObject(),
@@ -45,7 +43,6 @@ TMCVerbose::TMCVerbose(Int_t level)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
-/// ---
 
 TMCVerbose::TMCVerbose()
   : TObject(),
@@ -56,7 +53,6 @@ TMCVerbose::TMCVerbose()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
-/// ---
 
 TMCVerbose::~TMCVerbose()
 {
@@ -68,7 +64,6 @@ TMCVerbose::~TMCVerbose()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Prints banner for track information
-/// ---
 
 void TMCVerbose::PrintBanner() const
 {
@@ -79,7 +74,6 @@ void TMCVerbose::PrintBanner() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Prints track information
-/// ---
 
 void TMCVerbose::PrintTrackInfo() const
 {
@@ -103,7 +97,6 @@ void TMCVerbose::PrintTrackInfo() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Prints the header for stepping information
-/// ---
 
 void TMCVerbose::PrintStepHeader() const
 {
@@ -126,7 +119,6 @@ void TMCVerbose::PrintStepHeader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize MC info.
-/// ---
 
 void TMCVerbose::InitMC()
 {
@@ -136,7 +128,6 @@ void TMCVerbose::InitMC()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// MC run info.
-/// ---
 
 void TMCVerbose::RunMC(Int_t nofEvents)
 {
@@ -146,7 +137,6 @@ void TMCVerbose::RunMC(Int_t nofEvents)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Finish MC run info.
-/// ---
 
 void TMCVerbose::FinishRun()
 {
@@ -156,7 +146,6 @@ void TMCVerbose::FinishRun()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct geometry info
-/// ---
 
 void TMCVerbose::ConstructGeometry()
 {
@@ -166,7 +155,6 @@ void TMCVerbose::ConstructGeometry()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct geometry for optical physics info
-/// ---
 
 void TMCVerbose::ConstructOpGeometry()
 {
@@ -176,7 +164,6 @@ void TMCVerbose::ConstructOpGeometry()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize geometry info
-/// ---
 
 void TMCVerbose::InitGeometry()
 {
@@ -186,7 +173,6 @@ void TMCVerbose::InitGeometry()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add particles info
-/// ---
 
 void TMCVerbose::AddParticles()
 {
@@ -196,7 +182,6 @@ void TMCVerbose::AddParticles()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add ions info
-/// ---
 
 void TMCVerbose::AddIons()
 {
@@ -206,7 +191,6 @@ void TMCVerbose::AddIons()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate primaries info
-/// ---
 
 void TMCVerbose::GeneratePrimaries()
 {
@@ -216,7 +200,6 @@ void TMCVerbose::GeneratePrimaries()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Begin event info
-/// ---
 
 void TMCVerbose::BeginEvent()
 {
@@ -226,7 +209,6 @@ void TMCVerbose::BeginEvent()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Begin of a primary track info
-/// ---
 
 void TMCVerbose::BeginPrimary()
 {
@@ -236,7 +218,6 @@ void TMCVerbose::BeginPrimary()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Begin of each track info
-/// ---
 
 void TMCVerbose::PreTrack()
 {
@@ -257,7 +238,6 @@ void TMCVerbose::PreTrack()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stepping info
-/// ---
 
 void TMCVerbose::Stepping()
 {
@@ -318,7 +298,6 @@ void TMCVerbose::Stepping()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Finish of each track info
-/// ---
 
 void TMCVerbose::PostTrack()
 {
@@ -328,7 +307,6 @@ void TMCVerbose::PostTrack()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Finish of a primary track info
-/// ---
 
 void TMCVerbose::FinishPrimary()
 {
@@ -338,7 +316,6 @@ void TMCVerbose::FinishPrimary()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Finish of an event info
-/// ---
 
 void TMCVerbose::FinishEvent()
 {

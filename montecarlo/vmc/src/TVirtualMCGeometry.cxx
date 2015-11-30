@@ -12,10 +12,13 @@
 
 #include "TVirtualMCGeometry.h"
 
-//______________________________________________________________________________
-//   Virtual MCGeometry provides a virtual interface to Monte Carlo
-//   geometry construction.
-//______________________________________________________________________________
+/** \class TVirtualMCGeometry
+
+Interface to Monte Carlo geometry construction.
+
+This class has been separated from VirtualMC and it is used
+internally in TVirtualMC implementations.
+*/
 
 ClassImp(TVirtualMCGeometry)
 

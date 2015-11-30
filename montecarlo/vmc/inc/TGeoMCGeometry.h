@@ -140,10 +140,10 @@ private:
    Double_t* CreateDoubleArray(Float_t* array, Int_t size) const;
    void     Vname(const char *name, char *vname) const;
 
-   Bool_t  fG3CompatibleVolumeNames;   // option to convert volumes names to
-                                        // be compatible with G3
+   /// Option to convert volumes names to be compatible with G3
+   Bool_t  fG3CompatibleVolumeNames;
 
-   static TGeoMCGeometry*  fgInstance; // singleton instance
+   static TGeoMCGeometry*  fgInstance; ///< Singleton instance
 
    ClassDef(TGeoMCGeometry,2)  // VMC TGeo Geometry builder
 };

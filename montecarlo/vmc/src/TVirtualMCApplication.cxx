@@ -13,10 +13,11 @@
 #include "TVirtualMCApplication.h"
 #include "TError.h"
 
-//______________________________________________________________________________
-//
-// Interface to a user Monte Carlo application.
-//______________________________________________________________________________
+/** \class TVirtualMCApplication
+
+Interface to a user Monte Carlo application.
+
+*/
 
 ClassImp(TVirtualMCApplication)
 

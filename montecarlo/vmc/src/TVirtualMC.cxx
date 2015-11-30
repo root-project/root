@@ -12,17 +12,20 @@
 
 #include "TVirtualMC.h"
 
-//______________________________________________________________________________
-//   Virtual MC provides a virtual interface to Monte Carlo.
-//   It enables the user to build a virtual Monte Carlo application
-//   independent of any actual underlying Monte Carlo implementation itself.
-//
-//   A user will have to implement a class derived from the abstract
-//   Monte Carlo application class, and provide functions like
-//   ConstructGeometry(), BeginEvent(), FinishEvent(), ... .
-//   The concrete Monte Carlo (Geant3, Geant4) is selected at run time -
-//   when processing a ROOT macro where the concrete Monte Carlo is instantiated.
-//______________________________________________________________________________
+/** \class TVirtualMC
+
+Abstract Monte Carlo interface
+
+Virtual MC provides a virtual interface to Monte Carlo.
+It enables the user to build a virtual Monte Carlo application
+independent of any actual underlying Monte Carlo implementation itself.
+
+A user will have to implement a class derived from the abstract
+Monte Carlo application class, and provide functions like
+ConstructGeometry(), BeginEvent(), FinishEvent(), ... .
+The concrete Monte Carlo (Geant3, Geant4) is selected at run time -
+when processing a ROOT macro where the concrete Monte Carlo is instantiated.
+*/
 
 ClassImp(TVirtualMC)
 
