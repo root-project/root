@@ -43,6 +43,7 @@
 #include "TStopwatch.h"
 #endif
 
+#include <atomic>
 #include <condition_variable>
 #include <mutex>
 
@@ -62,7 +63,7 @@ private:
    TString     fPathCache;         // path to the cache directory
    TStopwatch  fWaitTime;          // time wating to prefetch a buffer (in usec)
    Bool_t      fThreadJoined;      // mark if async thread was joined
-   Bool_t      fPrefetchFinished;  // true if prefetching is over
+   std::atomic<Bool_t> fPrefetchFinished;  // true if prefetching is over
 
    static TThread::VoidRtnFunc_t ThreadProc(void*);  //create a joinable worker thread
 
