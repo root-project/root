@@ -18,14 +18,14 @@ ROOTTEST_ADD_TEST(TestCache
                   MACRO execTestCache.cxx+
                   OUTREF execTestCache.ref)
                   
-ROOT_GENERATE_DICTIONARY(EventDict Event.h LINKDEF EventLinkDef.h)
-ROOT_LINKER_LIBRARY(Event TEST Event.cxx EventDict.cxx LIBRARIES ${ROOT_LIBRARIES})
-ROOTTEST_ADD_TEST(event-build 
-                  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target Event${fast})
-                  
-set(RootExeOptions -e "gSystem->Load(\"libEvent\")")            
+ROOT_GENERATE_DICTIONARY(TheEventDict Event.h LINKDEF EventLinkDef.h)
+ROOT_LINKER_LIBRARY(TheEvent TEST Event.cxx TheEventDict.cxx LIBRARIES ${ROOT_LIBRARIES})
+ROOTTEST_ADD_TEST(perfstattest-libevent-build 
+                  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target TheEvent${fast})
+                  set(RootExeOptions -e "gSystem->Load(\"libTheEvent\")")
+
 ROOTTEST_ADD_TEST(perfstattest
                   MACRO execperfstattest.C
                   OUTREF execperfstattest.ref
-                  DEPENDS event-build)
-                  
+                  DEPENDS perfstattest-libevent-build)
+
