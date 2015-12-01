@@ -209,12 +209,16 @@ namespace PyROOT {
 
    class TCppObjectPtrConverter : public TCppObjectConverter {
    public:
-      using TCppObjectConverter::TCppObjectConverter;
+      TCppObjectPtrConverter( Cppyy::TCppType_t klass, Bool_t keepControl, Bool_t isReference) :
+         TCppObjectConverter(klass, keepControl),
+         fIsReference(isReference) {}
 
    public:
       virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
+   protected:
+      Bool_t fIsReference;
    };
 
    class TCppObjectArrayConverter : public TCppObjectConverter {
