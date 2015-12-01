@@ -5,7 +5,7 @@
 
 namespace IncidentType
 {
-   const Marker m3 = "from third part";
+   const Marker m4 = "from third part";
 }
 
 #endif
