@@ -36,6 +36,9 @@
 //    S3_SECRET_KEY, or                                                 //
 // b) by specifying them when opening each file.                        //
 //                                                                      //
+// (You can also access session keys via the S3_SESSION_KEY             //
+//  environment variable, or by specifying it on open.)                 //
+//                                                                      //
 // The first method is convenient if all the S3 files you want to       //
 // access are hosted by a single provider. The second one is more       //
 // flexible as it allows you to specify which credentials to use        //
@@ -108,7 +111,10 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
    // open several files hosted by different providers in the same program/macro,
    // where the environemntal variables solution is not convenient (see below).
    //
-   // If you need to specify both NOPROXY and AUTH separate them by ' '
+   // You can also specify the session key (if needed) by adding a string of the form
+   // TOKEN=mySessionToken.
+   //
+   // If you need to specify more than one option, separate them by ' '
    // (blank), for instance: 
    // "NOPROXY AUTH=F38XYZABCDeFgH4D0E1F:V+frt4re7J1euSNFnmaf8wwmI4AAAE7kzxZ/TTM+"
    //
@@ -117,6 +123,8 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
    //                            "NOPROXY AUTH=F38XYZABCDeFgH4D0E1F:V+frt4re7J1euSNFnmaf8wwmI4AAAE7kzxZ/TTM+");
    //    TFile* f2 = TFile::Open("s3://host.example.com/bucket/path/to/my/file",
    //                            "AUTH=F38XYZABCDeFgH4D0E1F:V+frt4re7J1euSNFnmaf8wwmI4AAAE7kzxZ/TTM+");
+   //    TFile* f3 = TFile::Open("s3://host.example.com/bucket/path/to/my/file",
+   //                            "TOKEN=AQoDYXdzEM///////////wEa8AHEYmCinjD+TsGEjtgKSMAT6wnY");
    //
    // If there is no authentication information in the 'options' argument
    // (i.e. not AUTH="....") the values of the environmental variables
@@ -136,12 +144,14 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
    TString errorMsg;
    TString accessKey;
    TString secretKey;
+   TString token;
+
    TPMERegexp rex("^([a]?s3|s3http[s]?|gs|gshttp[s]?){1}://([^/]+)/([^/]+)/([^/].*)", "i");
    if (rex.Match(TString(path)) != 5) {
       errorMsg = TString::Format("invalid S3 path '%s'", path);
       doMakeZombie = kTRUE;
    }
-   else if (!ParseOptions(options, accessKey, secretKey)) {
+   else if (!ParseOptions(options, accessKey, secretKey, token)) {
       errorMsg = TString::Format("could not parse options '%s'", options);
       doMakeZombie = kTRUE;
    }
@@ -173,8 +183,10 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
    // variables.
    const char* kAccessKeyEnv = "S3_ACCESS_KEY";
    const char* kSecretKeyEnv = "S3_SECRET_KEY";
+   const char* kSessionToken = "S3_SESSION_TOKEN";
    if (accessKey.IsNull())
-      GetCredentialsFromEnv(kAccessKeyEnv, kSecretKeyEnv, accessKey, secretKey);
+      GetCredentialsFromEnv(kAccessKeyEnv, kSecretKeyEnv, kSessionToken,
+			     accessKey, secretKey, token);
 
    // Initialize the S3 HTTP request
    fS3Request.SetHost(fUrl.GetHost());
@@ -188,6 +200,8 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
       // Set the authentication information we need to use
       // for this file
       fS3Request.SetAuthKeys(accessKey, secretKey);
+      if (!token.IsNull()) { fS3Request.fToken = token; }
+
       if (rex[1].BeginsWith("gs"))
          fS3Request.SetAuthType(TS3HTTPRequest::kGoogle);
       else
@@ -214,7 +228,7 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
 
 
 //_____________________________________________________________________________
-Bool_t TS3WebFile::ParseOptions(Option_t* options, TString& accessKey, TString& secretKey)
+Bool_t TS3WebFile::ParseOptions(Option_t* options, TString& accessKey, TString& secretKey, TString& token)
 {
    // Extracts the S3 authentication key pair (access key and secret key)
    // from the options. The authentication credentials can be specified in
@@ -235,13 +249,17 @@ Bool_t TS3WebFile::ParseOptions(Option_t* options, TString& accessKey, TString& 
    CheckProxy();
    
    // Look in the options string for the authentication information.
-   TPMERegexp rex("(^AUTH=|^.* AUTH=)([a-z0-9]+):([a-z0-9+/]+)[\\s]*.*$", "i");
-   if (rex.Match(optStr) < 4) {
-      Error("ParseOptions", "expecting options of the form \"AUTH=myAccessKey:mySecretKey\"");
-      return kFALSE;
+   TPMERegexp rex_token("(^TOKEN=|^.* TOKEN=)([\\S]+)[\\s]*.*$", "i");
+   if (rex_token.Match(optStr) == 3) {
+     token = rex_token[2];
    }
-   accessKey = rex[2];
-   secretKey = rex[3];
+
+   TPMERegexp rex("(^AUTH=|^.* AUTH=)([a-z0-9]+):([a-z0-9+/]+)[\\s]*.*$", "i");
+   if (rex.Match(optStr) == 4) {
+     accessKey = rex[2];
+     secretKey = rex[3];
+   }
+
    if (gDebug > 0)
       Info("ParseOptions", "using authentication information from 'options' argument");
    return kTRUE;
@@ -326,10 +344,10 @@ void TS3WebFile::ProcessHttpHeader(const TString& headerLine)
    fUseMultiRange = multirangeServers.Contains(serverId, TString::kIgnoreCase) ? kTRUE : kFALSE;
 }
 
-
 //_____________________________________________________________________________
 Bool_t TS3WebFile::GetCredentialsFromEnv(const char* accessKeyEnv, const char* secretKeyEnv,
-                                         TString& outAccessKey, TString& outSecretKey)
+                                         const char* tokenEnv, TString& outAccessKey,
+					 TString& outSecretKey, TString& outToken)
 {
    // Sets the access and secret keys from the environmental variables, if
    // they are both set.
@@ -338,6 +356,12 @@ Bool_t TS3WebFile::GetCredentialsFromEnv(const char* accessKeyEnv, const char* s
    // must be set.
    TString accKey = gSystem->Getenv(accessKeyEnv);
    TString secKey = gSystem->Getenv(secretKeyEnv);
+   TString token = gSystem->Getenv(tokenEnv);
+
+   if (!token.IsNull()) {
+     outToken = token;
+   }
+
    if (!accKey.IsNull() && !secKey.IsNull()) {
       outAccessKey = accKey;
       outSecretKey = secKey;

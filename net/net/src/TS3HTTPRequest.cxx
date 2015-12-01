@@ -116,6 +116,10 @@ TString TS3HTTPRequest::ComputeSignature(TS3HTTPRequest::EHTTPVerb httpVerb) con
       toSign += "x-goog-api-version:1\n"; // Lowercase, no spaces around ':'
    }
 
+   if (!fToken.IsNull()) {
+     toSign += "x-amz-security-token:" + fToken + "\n";
+   }
+
    toSign += "/" + fBucket + fObjectKey;
 
    unsigned char digest[SHA_DIGEST_LENGTH] = {0};
@@ -210,6 +214,18 @@ TString TS3HTTPRequest::MakeAuthPrefix() const
 }
 
 //______________________________________________________________________________
+TString TS3HTTPRequest::MakeTokenHeader() const
+{
+
+  if (fToken.IsNull())
+    return "";
+
+  return TString::Format("x-amz-security-token: %s",
+			 (const char*) fToken.Data());
+}
+
+
+//______________________________________________________________________________
 TString TS3HTTPRequest::MakeAuthHeader(TS3HTTPRequest::EHTTPVerb httpVerb) const
 {
    // Returns the authentication header for this HTTP request
@@ -236,6 +252,10 @@ TString TS3HTTPRequest::GetRequest(TS3HTTPRequest::EHTTPVerb httpVerb, Bool_t ap
       (const char*)MakeRequestLine(httpVerb),
       (const char*)MakeHostHeader(),
       (const char*)MakeDateHeader());
+   TString tokenHeader = MakeTokenHeader();
+   if (!tokenHeader.IsNull())
+     request += tokenHeader + "\r\n";
+
    TString authHeader = MakeAuthHeader(httpVerb);
    if (!authHeader.IsNull())
       request += authHeader + "\r\n";
