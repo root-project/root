@@ -13,6 +13,7 @@
 #include "TVirtualMC.h"
 
 /** \class TVirtualMC
+    \ingroup vmc
 
 Abstract Monte Carlo interface
 

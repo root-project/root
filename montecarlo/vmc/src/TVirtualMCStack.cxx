@@ -13,6 +13,7 @@
 #include "TVirtualMCStack.h"
 
 /** \class TVirtualMCStack
+    \ingroup vmc
 
 Interface to a user defined particles stack.
 */

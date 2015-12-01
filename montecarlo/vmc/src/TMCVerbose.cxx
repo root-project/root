@@ -20,7 +20,9 @@
 #include "TMCVerbose.h"
 
 /** \class TMCVerbose
-Class for printing a detailed infomation from MC application.
+    \ingroup vmc
+
+Class for printing a detailed information from MC application.
 
 Defined levels:
 - 0  no output

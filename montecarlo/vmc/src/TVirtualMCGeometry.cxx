@@ -13,6 +13,7 @@
 #include "TVirtualMCGeometry.h"
 
 /** \class TVirtualMCGeometry
+    \ingroup vmc
 
 Interface to Monte Carlo geometry construction.
 

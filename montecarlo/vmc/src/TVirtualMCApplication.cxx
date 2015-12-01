@@ -14,6 +14,7 @@
 #include "TError.h"
 
 /** \class TVirtualMCApplication
+    \ingroup vmc
 
 Interface to a user Monte Carlo application.
 
