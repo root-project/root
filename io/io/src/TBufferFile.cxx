@@ -3118,7 +3118,7 @@ UInt_t TBufferFile::WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object given its C++ typeinfo information.
 
-void TBufferFile::StreamObject(void *obj, const type_info &typeinfo, const TClass* onFileClass )
+void TBufferFile::StreamObject(void *obj, const std::type_info &typeinfo, const TClass* onFileClass )
 {
    TClass *cl = TClass::GetClass(typeinfo);
    if (cl) cl->Streamer(obj, *this, (TClass*)onFileClass );

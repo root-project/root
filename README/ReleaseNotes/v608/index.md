@@ -57,6 +57,10 @@ by including a ROOT header. For example:
   * GeneticMinimizer.h
   * ...
 
+Other improvements, which may cause compilation errors in third party code:
+  * If you get std::type_info from Rtypeinfo.h, type_info should be spelled
+    std::type_info.
+
 ### Containers
 A pseudo-container (generator) was created, ROOT::TSeq<T>. This template is
 inspired by the xrange built-in function of Python. See the example

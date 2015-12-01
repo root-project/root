@@ -2050,7 +2050,7 @@ Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream object to/from buffer
 
-void TBufferSQL2::StreamObject(void *obj, const type_info &typeinfo, const TClass *onFileClass)
+void TBufferSQL2::StreamObject(void *obj, const std::type_info &typeinfo, const TClass *onFileClass)
 {
    StreamObject(obj, TClass::GetClass(typeinfo), onFileClass);
 }

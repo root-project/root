@@ -123,9 +123,9 @@ TClass* TIsAProxy::operator()(const void *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// See if we have already cached the TClass that correspond to this type_info.
+/// See if we have already cached the TClass that correspond to this std::type_info.
 
-inline void* TIsAProxy::FindSubType(const type_info* type) const
+inline void* TIsAProxy::FindSubType(const std::type_info* type) const
 {
    bool needToWait = kTRUE;
    do {
@@ -153,9 +153,9 @@ inline void* TIsAProxy::FindSubType(const type_info* type) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Record the TClass found for a type_info, so that we can retrieved it faster.
+/// Record the TClass found for a std::type_info, so that we can retrieved it faster.
 
-void* TIsAProxy::CacheSubType(const type_info* type, TClass* cls)
+void* TIsAProxy::CacheSubType(const std::type_info* type, TClass* cls)
 {
    //See if another thread has the write lock, wait if it does
    Bool_t expected = kFALSE;
