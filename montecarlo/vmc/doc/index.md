@@ -1,4 +1,5 @@
-\defgroup vmc The VirtuaL MONTE CARLO classes.
+\defgroup vmc VirtuaL Monte Carlo
+\ingroup montecarlo
 
 More details can be found in [the Virtual Monte Carlo documentation](https://root.cern.ch/vmc).
 

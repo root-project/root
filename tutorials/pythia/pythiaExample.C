@@ -1,65 +1,76 @@
-//____________________________________________________________________
-//
-// Using Pythia6 with ROOT
-// To make an event sample (of size 100) do
-//
-//    shell> root
-//    root [0] .L pythiaExample.C
-//    root [1] makeEventSample(1000)
-//
-// To start the tree view on the generated tree, do
-//
-//    shell> root
-//    root [0] .L pythiaExample.C
-//    root [1] showEventSample()
-//
-//
-// The following session:
-//    shell> root
-//    root [0] .x pythiaExample.C(500)
-// will execute makeEventSample(500) and showEventSample()
-//
-// Alternatively, you can compile this to a program
-// and then generate 1000 events with
-//
-//    ./pythiaExample 1000
-//
-// To use the program to start the viewer, do
-//
-//    ./pythiaExample -1
-//
-// NOTE 1: To run this example, you must have a version of ROOT
-// compiled with the Pythia6 version enabled and have Pythia6 installed.
-// The statement gSystem->Load("$HOME/pythia6/libPythia6");  (see below)
-// assumes that the directory containing the Pythia6 library
-// is in the pythia6 subdirectory of your $HOME.  Locations
-// that can specify this, are:
-//
-//  Root.DynamicPath resource in your ROOT configuration file
-//    (/etc/root/system.rootrc or ~/.rootrc).
-//  Runtime load paths set on the executable (Using GNU ld,
-//    specified with flag `-rpath').
-//  Dynamic loader search path as specified in the loaders
-//    configuration file (On GNU/Linux this file is
-//    etc/ld.so.conf).
-//  For Un*x: Any directory mentioned in LD_LIBRARY_PATH
-//  For Windows: Any directory mentioned in PATH
-//
-// NOTE 2: The example can also be run with ACLIC:
-//  root > gSystem->Load("libEG");
-//  root > gSystem->Load("$ROOTSYS/../pythia6/libPythia6"); //change to your setup
-//  root > gSystem->Load("libEGPythia6");
-//  root > .x pythiaExample.C+
-//
-//
-//____________________________________________________________________
-//
-// Author: Christian Holm Christensen <cholm@hilux15.nbi.dk>
-// Update: 2002-08-16 16:40:27+0200
-// Copyright: 2002 (C) Christian Holm Christensen
-// Copyright (C) 2006, Rene Brun and Fons Rademakers.
-// For the licensing terms see $ROOTSYS/LICENSE.
-//
+/// \file
+/// \ingroup tutorial_pythia
+/// Using Pythia6 with ROOT
+/// To make an event sample (of size 100) do
+///
+/// ~~~ {.cpp}
+///    shell> root
+///    root [0] .L pythiaExample.C
+///    root [1] makeEventSample(1000)
+/// ~~~
+///
+/// To start the tree view on the generated tree, do
+///
+/// ~~~ {.cpp}
+///    shell> root
+///    root [0] .L pythiaExample.C
+///    root [1] showEventSample()
+/// ~~~
+///
+/// The following session:
+///
+/// ~~~ {.cpp}
+///    shell> root
+///    root [0] .x pythiaExample.C(500)
+/// ~~~
+///
+/// will execute makeEventSample(500) and showEventSample()
+///
+/// Alternatively, you can compile this to a program
+/// and then generate 1000 events with
+///
+/// ~~~ {.cpp}
+///    ./pythiaExample 1000
+/// ~~~
+///
+/// To use the program to start the viewer, do
+///
+/// ~~~ {.cpp}
+///    ./pythiaExample -1
+/// ~~~
+///
+/// NOTE 1: To run this example, you must have a version of ROOT
+/// compiled with the Pythia6 version enabled and have Pythia6 installed.
+/// The statement `gSystem->Load("$HOME/pythia6/libPythia6");`  (see below)
+/// assumes that the directory containing the Pythia6 library
+/// is in the pythia6 subdirectory of your $HOME.  Locations
+/// that can specify this, are:
+///
+/// ~~~ {.cpp}
+///  Root.DynamicPath resource in your ROOT configuration file
+///    (/etc/root/system.rootrc or ~/.rootrc).
+///  Runtime load paths set on the executable (Using GNU ld,
+///    specified with flag `-rpath').
+///  Dynamic loader search path as specified in the loaders
+///    configuration file (On GNU/Linux this file is
+///    etc/ld.so.conf).
+///  For Un*x: Any directory mentioned in LD_LIBRARY_PATH
+///  For Windows: Any directory mentioned in PATH
+/// ~~~
+///
+/// NOTE 2: The example can also be run with ACLIC:
+///
+/// ~~~ {.cpp}
+///  root > gSystem->Load("libEG");
+///  root > gSystem->Load("$ROOTSYS/../pythia6/libPythia6"); //change to your setup
+///  root > gSystem->Load("libEGPythia6");
+///  root > .x pythiaExample.C+
+/// ~~~
+///
+/// \macro_code
+///
+/// \author Christian Holm Christensen
+
 #ifndef __CINT__
 #include "TApplication.h"
 #include "TPythia6.h"
@@ -240,9 +251,4 @@ int main(int argc, char** argv)
   return retVal;
 }
 #endif
-
-//____________________________________________________________________
-//
-// EOF
-//
 
