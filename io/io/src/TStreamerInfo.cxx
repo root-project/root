@@ -792,7 +792,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
       }
 
       if (!searchOnChecksum) {
-         if (fClassVersion < array->GetEntriesFast()) {
+         if (fClassVersion < (array->GetEntriesFast() - 1)) {
             info = (TStreamerInfo*) array->At(fClassVersion);
          }
       } else {
