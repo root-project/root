@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TClassTable
+\ingroup Containers
 This class registers for all classes their name, id and dictionary
 function in a hash table. Classes are automatically added by the
 ctor of a special init class when a global of this init class is

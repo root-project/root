@@ -10,8 +10,9 @@
  *************************************************************************/
 
 /** \class TClonesArray
-An array of clone (identical) objects. Memory for the objects        //
-// stored in the array is allocated only once in the lifetime of the
+\ingroup Containers
+An array of clone (identical) objects. Memory for the objects
+stored in the array is allocated only once in the lifetime of the
 clones array. All objects must be of the same class. For the rest
 this class has the same properties as TObjArray.
 

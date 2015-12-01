@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TArrayC
+\ingroup Containers
 Array of chars or bytes (8 bits per element).
 */
 

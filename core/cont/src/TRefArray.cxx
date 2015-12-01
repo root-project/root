@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TRefArray
+\ingroup Containers
 An array of references to TObjects. The array expands automatically
 when  objects are added (shrinking can be done by hand using Expand() )
 

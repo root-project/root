@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TSortedList
+\ingroup Containers
 A sorted doubly linked list. All sortable classes inheriting from
 TObject can be inserted in a TSortedList.
 */
