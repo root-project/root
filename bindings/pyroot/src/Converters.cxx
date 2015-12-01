@@ -1021,7 +1021,7 @@ Bool_t PyROOT::TCppObjectPtrConverter::SetArg(
 
    // set pointer (may be null) and declare success
       para.fValue.fVoidp = &((ObjectProxy*)pyobject)->fObject;
-      para.fTypeCode = 'p';
+      para.fTypeCode = fIsReference ? 'V' : 'p';
       return kTRUE;
    }
 
@@ -1372,7 +1372,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
         else
           // -- CLING WORKAROUND
         if ( cpd == "**" || cpd == "*&" || cpd == "&*" )
-          result = new TCppObjectPtrConverter( klass, control );
+          result = new TCppObjectPtrConverter( klass, control, cpd[1] == '&');
         else if ( cpd == "*" && size <= 0 )
           result = new TCppObjectConverter( klass, control );
         else if ( cpd == "&" )
