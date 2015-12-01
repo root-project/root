@@ -721,7 +721,7 @@ int TSpectrumTransform::GeneralInv(Double_t *working_space, int num, int degree,
 ///      Double_t * source = new Double_t[nbins];
 ///      Double_t * dest = new Double_t[nbins];
 ///      TH1F *h = new TH1F("h","Transformed spectrum using Cosine transform",nbins,xmin,xmax);
-///      TFile *f = new TFile("spectra\\TSpectrum.root");
+///      TFile *f = new TFile("spectra/TSpectrum.root");
 ///      h=(TH1F*) f->Get("transform1;1");
 ///      for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
 ///      TCanvas *Transform1 = gROOT->GetListOfCanvases()->FindObject("Transform1");
@@ -1247,7 +1247,7 @@ void TSpectrumTransform::Transform(const Double_t *source, Double_t *destVector)
 ///      Double_t * dest = new Double_t[nbins];
 ///      TH1F *h = new TH1F("h","Zonal filtering using Cosine transform",nbins,xmin,xmax);
 ///      TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-///      TFile *f = new TFile("spectra\\TSpectrum.root");
+///      TFile *f = new TFile("spectra/TSpectrum.root");
 ///      h=(TH1F*) f->Get("transform1;1");
 ///      for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
 ///      TCanvas *Transform1 = gROOT->GetListOfCanvases()->FindObject("Transform1");
@@ -1756,7 +1756,7 @@ void TSpectrumTransform::FilterZonal(const Double_t *source, Double_t *destVecto
 ///      Double_t * dest = new Double_t[nbins];
 ///      TH1F *h = new TH1F("h","Enhancement using Cosine transform",nbins,xmin,xmax);
 ///      TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-///      TFile *f = new TFile("spectra\\TSpectrum.root");
+///      TFile *f = new TFile("spectra/TSpectrum.root");
 ///      h=(TH1F*) f->Get("transform1;1");
 ///      for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
 ///      TCanvas *Transform1 = gROOT->GetListOfCanvases()->FindObject("Transform1");
