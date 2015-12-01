@@ -36,5 +36,10 @@ ROOTTEST_ADD_TEST(interpreted
 ROOTTEST_ADD_TEST(compiled
                   MACRO smalltest.C+
                   LABELS roottest regression cling)
-
+                  
+ROOTTEST_ADD_TEST(defaultTemplateParam
+                  MACRO execdefaultTemplateParam.cxx+
+                  OUTREF execdefaultTemplateParam.ref
+                  LABELS roottest regression cling)
+                  
 ROOTTEST_ADD_TESTDIRS()

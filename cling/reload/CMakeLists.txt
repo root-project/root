@@ -7,3 +7,8 @@ ROOTTEST_ADD_TEST(reloadvector
                   OUTREF reloadvector.ref
                   ${_willfail}
                   LABELS roottest regression cling)
+                  
+                  
+ROOTTEST_ADD_TEST(ROOT-7364
+                  MACRO assertROOT7364.C
+                  LABELS roottest regression cling)

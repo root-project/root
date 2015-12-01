@@ -35,3 +35,7 @@ ROOTTEST_ADD_TEST(runmissingXFunc
 ROOTTEST_ADD_TEST(assertBaseMembers
                   MACRO assertBaseMembers.C
                   LABELS roottest regression cling)
+                  
+ROOTTEST_ADD_TEST(assertRedirect
+                  MACRO assertRedirect.C
+                  LABELS roottest regression cling)

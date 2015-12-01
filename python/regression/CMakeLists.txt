@@ -13,5 +13,11 @@ if(ROOT_python_FOUND)
                                          -e .L\ CoralAttributeList.C+
                     # OUTREF PyROOT_regressiontests.ref
                     )
+  ROOTTEST_ADD_TEST(root_6023
+                    MACRO exec_root_6023.py OPTS -b
+                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+                    PRECMD root -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARY}\"\)
+                                         -e .L\ root_6023.h+
+                    )
 
 endif()

@@ -36,15 +36,11 @@ macro(ROOTTEST_SETUP_MACROTEST)
     string(REPLACE "+" "" compile_name "${ARG_MACRO}")
     get_filename_component(realfp ${compile_name} REALPATH)
 
-    #---Do not compile the macro beforehand
-    #ROOTTEST_COMPILE_MACRO(${compile_name})
-    #set(depends ${depends} ${COMPILE_MACRO_TEST})
-
     if(DEFINED ARG_MACROARG)
-      set(realfp "${realfp}(${ARG_MACROARG})") 
+      set(command ${root_cmd} "${realfp}+(${ARG_MACROARG})")
+    else()
+      set(command ${root_cmd} "${realfp}+")   
     endif()
-
-    set(command ${root_cmd} "${realfp}+")
 
   # Add interpreted macro to CTest.
   elseif(ARG_MACRO MATCHES "[.]C" OR ARG_MACRO MATCHES "[.]cxx")

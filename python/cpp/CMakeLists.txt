@@ -11,4 +11,10 @@ if(ROOT_python_FOUND)
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                     PRECMD root -b -q -l -e .L\ AdvancedCpp.C+
                                          -e .L\ Template.C+)
+                                         
+  ROOTTEST_ADD_TEST(cpp11
+                    MACRO PyROOT_cpp11tests.py
+                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+                    PRECMD root -b -q -l -e .L\ Cpp11Features.C+)
+                                         
 endif()
