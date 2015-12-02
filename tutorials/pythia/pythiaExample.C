@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_pythia
 /// Using Pythia6 with ROOT
+///
 /// To make an event sample (of size 100) do
 ///
 /// ~~~ {.cpp}

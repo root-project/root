@@ -8,15 +8,10 @@
 ///  root > .x pythia8.C
 /// ~~~
 ///
-/// \macro_image
-/// \macro_output
-///
 /// Note that before executing this script,
 ///
 ///  - the env variable PYTHIA8 must point to the pythia8100 (or newer) directory
 ///  - the env variable PYTHIA8DATA must be defined and it must point to $PYTHIA8/xmldoc
-///
-/// \macro_code
 ///
 /// \author Andreas Morsch
 

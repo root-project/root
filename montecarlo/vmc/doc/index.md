@@ -1,5 +1,6 @@
-\defgroup vmc VirtuaL Monte Carlo
+\defgroup vmc Virtual Monte Carlo
 \ingroup montecarlo
+\brief Virtual interface to Monte Carlo packages
 
 More details can be found in [the Virtual Monte Carlo documentation](https://root.cern.ch/vmc).
 

@@ -1,7 +1,8 @@
 \defgroup eg The particles related classes
 \ingroup montecarlo
+\brief Particle Data Group interface
 
-This directory contains classes with interfaces to the Particle Data Group (PDG)
+These classes are interfaces to the Particle Data Group (PDG)
 data base, a static and dynamic particle class and a decay class framework.
 
 These classes are extensively used in the VMC (Virtual Monte Carlo).
