@@ -1,2 +1,3 @@
-\defgroup montecarlo The Monte Carlo related packages.
-\brief Monte Carlo packages
+\defgroup montecarlo Monte Carlo
+\brief The Monte Carlo related packages.
+
