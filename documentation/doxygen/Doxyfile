@@ -811,10 +811,7 @@ INPUT                  = . \
                          ../../math/ \
                          ../../misc/memstat/ \
                          ../../misc/table/ \
-                         ../../montecarlo/eg/ \
-                         ../../montecarlo/pythia8/ \
-                         ../../montecarlo/pythia6/ \
-                         ../../montecarlo/vmc/ \
+                         ../../montecarlo/ \
                          ../../net/alien/ \
                          ../../net/auth/ \
                          ../../net/bonjour/ \
