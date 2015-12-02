@@ -424,7 +424,7 @@ def printModulesMessageOnScreen(selModules):
 def getExtraHeaders():
    """ Get extra headers which do not fall in other special categories
    """
-   extraHeaders=["root/TSeq.h"]
+   extraHeaders=["ROOT/TSeq.h"]
    code = "// Extra headers\n"
    for extraHeader in extraHeaders:
       code += '#include "%s"\n' %extraHeader
