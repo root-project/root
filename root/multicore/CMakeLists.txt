@@ -9,7 +9,7 @@ STRING(FIND LINUX_VERSION
        "buntu"
        BUNTU_MATCH)
 if(NOT BUNTU_MATCH STREQUAL "")
-   set(UBUNTU_EXTRA_FLAGS "-Wl,--no-as-needed")
+   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 endif()
 
 endif()
@@ -61,7 +61,7 @@ ROOTTEST_ADD_TEST(execautoloadts
                  MACRO  execautoloadts.C
                  OUTREF execautoloadts.ref)
 
-ROOTTEST_GENERATE_EXECUTABLE(tclass_methods tclass_methods.cpp LIBRARIES Core Thread COMPILE_FLAGS ${UBUNTU_EXTRA_FLAGS})
+ROOTTEST_GENERATE_EXECUTABLE(tclass_methods tclass_methods.cpp LIBRARIES Core Thread)
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(tclass_methods tclass_methods.h  SELECTION tclass_methods_selection.xml)
 
@@ -99,7 +99,7 @@ ROOTTEST_ADD_TEST(th1f_fill
 #                   EXEC tformula
 #                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-ROOTTEST_GENERATE_EXECUTABLE(tprofile tprofile.cpp LIBRARIES Core Hist Thread COMPILE_FLAGS ${UBUNTU_EXTRA_FLAGS})
+ROOTTEST_GENERATE_EXECUTABLE(tprofile tprofile.cpp LIBRARIES Core Hist Thread)
 
 ROOTTEST_ADD_TEST(tprofile
                   EXEC tprofile
