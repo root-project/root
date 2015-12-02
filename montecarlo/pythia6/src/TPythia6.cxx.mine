@@ -12,53 +12,52 @@ See the installation instructions at
                                                                     
 CERNLIB event generators, written by T.Sjostrand.                   
 For the details about these generators look at Pythia/Jetset manual:
-
 \verbatim
-******************************************************************************
-**                                                                          **
-**                                                                          **
-**  PPP  Y   Y TTTTT H   H III   A        JJJJ EEEE TTTTT  SSS  EEEE TTTTT  **
-**  P  P  Y Y    T   H   H  I   A A          J E      T   S     E      T    **
-**  PPP    Y     T   HHHHH  I  AAAAA         J EEE    T    SSS  EEE    T    **
-**  P      Y     T   H   H  I  A   A      J  J E      T       S E      T    **
-**  P      Y     T   H   H III A   A       JJ  EEEE   T    SSS  EEEE   T    **
-**                                                                          **
-**                                                                          **
-**              *......*                  Welcome to the Lund Monte Carlo!  **
-**         *:::!!:::::::::::*                                               **
-**      *::::::!!::::::::::::::*            This is PYTHIA version 5.720    **
-**    *::::::::!!::::::::::::::::*        Last date of change: 29 Nov 1995  **
-**   *:::::::::!!:::::::::::::::::*                                         **
-**   *:::::::::!!:::::::::::::::::*         This is JETSET version 7.408    **
-**    *::::::::!!::::::::::::::::*!       Last date of change: 23 Aug 1995  **
-**      *::::::!!::::::::::::::* !!                                         **
-**      !! *:::!!:::::::::::*    !!                 Main author:            **
-**      !!     !* -><- *         !!              Torbjorn Sjostrand         **
-**      !!     !!                !!        Dept. of theoretical physics 2   **
-**      !!     !!                !!              University of Lund         **
-**      !!                       !!                Solvegatan 14A           **
-**      !!        ep             !!             S-223 62 Lund, Sweden       **
-**      !!                       !!          phone: +46 - 46 - 222 48 16    **
-**      !!                 pp    !!          E-mail: torbjorn@thep.lu.se    **
-**      !!   e+e-                !!                                         **
-**      !!                       !!         Copyright Torbjorn Sjostrand    **
-**      !!                                     and CERN, Geneva 1993        **
-**                                                                          **
-**                                                                          **
-** The latest program versions and documentation is found on WWW address    **
-** http://thep.lu.se/tf2/staff/torbjorn/Welcome.html                        **
-**                                                                          **
-** When you cite these programs, priority should always be given to the     **
-** latest published description. Currently this is                          **
-** T. Sjostrand, Computer Physics Commun. 82 (1994) 74.                     **
-** The most recent long description (unpublished) is                        **
-** T. Sjostrand, LU TP 95-20 and CERN-TH.7112/93 (revised August 1995).     **
-** Also remember that the programs, to a large extent, represent original   **
-** physics research. Other publications of special relevance to your        **
-** studies may therefore deserve separate mention.                          **
-**                                                                          **
-**                                                                          **
-******************************************************************************
+//******************************************************************************
+//**                                                                          **
+//**                                                                          **
+//**  PPP  Y   Y TTTTT H   H III   A        JJJJ EEEE TTTTT  SSS  EEEE TTTTT  **
+//**  P  P  Y Y    T   H   H  I   A A          J E      T   S     E      T    **
+//**  PPP    Y     T   HHHHH  I  AAAAA         J EEE    T    SSS  EEE    T    **
+//**  P      Y     T   H   H  I  A   A      J  J E      T       S E      T    **
+//**  P      Y     T   H   H III A   A       JJ  EEEE   T    SSS  EEEE   T    **
+//**                                                                          **
+//**                                                                          **
+//**              *......*                  Welcome to the Lund Monte Carlo!  **
+//**         *:::!!:::::::::::*                                               **
+//**      *::::::!!::::::::::::::*            This is PYTHIA version 5.720    **
+//**    *::::::::!!::::::::::::::::*        Last date of change: 29 Nov 1995  **
+//**   *:::::::::!!:::::::::::::::::*                                         **
+//**   *:::::::::!!:::::::::::::::::*         This is JETSET version 7.408    **
+//**    *::::::::!!::::::::::::::::*!       Last date of change: 23 Aug 1995  **
+//**      *::::::!!::::::::::::::* !!                                         **
+//**      !! *:::!!:::::::::::*    !!                 Main author:            **
+//**      !!     !* -><- *         !!              Torbjorn Sjostrand         **
+//**      !!     !!                !!        Dept. of theoretical physics 2   **
+//**      !!     !!                !!              University of Lund         **
+//**      !!                       !!                Solvegatan 14A           **
+//**      !!        ep             !!             S-223 62 Lund, Sweden       **
+//**      !!                       !!          phone: +46 - 46 - 222 48 16    **
+//**      !!                 pp    !!          E-mail: torbjorn@thep.lu.se    **
+//**      !!   e+e-                !!                                         **
+//**      !!                       !!         Copyright Torbjorn Sjostrand    **
+//**      !!                                     and CERN, Geneva 1993        **
+//**                                                                          **
+//**                                                                          **
+//** The latest program versions and documentation is found on WWW address    **
+//** http://thep.lu.se/tf2/staff/torbjorn/Welcome.html                        **
+//**                                                                          **
+//** When you cite these programs, priority should always be given to the     **
+//** latest published description. Currently this is                          **
+//** T. Sjostrand, Computer Physics Commun. 82 (1994) 74.                     **
+//** The most recent long description (unpublished) is                        **
+//** T. Sjostrand, LU TP 95-20 and CERN-TH.7112/93 (revised August 1995).     **
+//** Also remember that the programs, to a large extent, represent original   **
+//** physics research. Other publications of special relevance to your        **
+//** studies may therefore deserve separate mention.                          **
+//**                                                                          **
+//**                                                                          **
+//******************************************************************************
 \endverbatim
 */
 
