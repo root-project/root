@@ -1,16 +1,17 @@
-//  Data unfolding using Singular Value Decomposition
-//
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSVDUnfold example                                                   //
-//                                                                      //
-// Data unfolding using Singular Value Decomposition (hep-ph/9509307)   //
-// Authors: Kerstin Tackmann, Andreas Hoecker, Heiko Lacker             //
-//                                                                      //
-// Example distribution and smearing model from Tim Adye (RAL)          //
-//                                                                      //
-// Nov 23, 2010                                                         //
-//////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_math
+///  Data unfolding using Singular Value Decomposition
+///
+/// TSVDUnfold example
+///
+/// Data unfolding using Singular Value Decomposition (hep-ph/9509307)
+///
+/// Example distribution and smearing model from Tim Adye (RAL)
+///
+/// \macro_image
+/// \macro_code
+///
+/// \authors Kerstin Tackmann, Andreas Hoecker, Heiko Lacker
 
 #include <iostream>
 

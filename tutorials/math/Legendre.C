@@ -1,5 +1,13 @@
-//Example of first few Legendre Polynomials
-//Draws a graph
+/// \file
+/// \ingroup tutorial_math
+/// Example of first few Legendre Polynomials
+///
+/// Draws a graph.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 #if defined(__CINT__) && !defined(__MAKECINT__)
 {
@@ -30,8 +38,6 @@ void Legendre()
   Canvas->SetGrid();
   Canvas->SetFrameFillColor(19);
   TLegend *leg = new TLegend(0.5, 0.7, 0.4, 0.89);
-  //leg->TLegend::SetNDC();
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //drawing the set of Legendre functions
   TF1* L[5];
   for(int nu = 0; nu <= 4; nu++)
@@ -53,9 +59,5 @@ void Legendre()
   leg->Draw();
 
   Canvas->cd();
-
 }
-
 #endif
-
-
