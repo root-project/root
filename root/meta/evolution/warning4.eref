@@ -1,5 +1,3 @@
-
-Processing checkWarn.C(4)...
 No warning is expected from the 1st 4 files opening since we
 can not distinguish an emulated ClassDef(name,1) from a foreign class
 Warning in <TClass::Init>: no dictionary for class data is available

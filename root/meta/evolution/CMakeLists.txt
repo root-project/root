@@ -6,11 +6,12 @@ foreach(_i 1 2 3 4 5 6)
   list(APPEND _data_depends data${_i})
 endforeach()
 
-foreach(_i 0 1 2 3 4 10 11 12 13 14 15 17 18)
+foreach(_i 0 1 2 3 4 10 11 12 13 14 15 16 17 18)
   ROOTTEST_ADD_TEST(checkWarn${_i}
                   MACRO checkWarn.C
                   MACROARG ${_i}
-                  OUTREF warning${_i}.ref
+                  OUTREF warning${_i}.oref
+                  ERRREF warning${_i}.eref
                   OUTCNVCMD sed -e s,offset=[[:space:]][[:space:]]*[0-9]*,offset=n/a,g
                   DEPENDS ${_data_depends})
 endforeach()

@@ -1,0 +1,6 @@
+
+Processing /Users/mato/Development/ROOT/roottest.git/root/meta/evolution/checkWarn.C(3)...
+
+StreamerInfo for class: Tdata, version=1, checksum=0x30d1fe9d
+  double         mydouble_two    offset=n/a type= 8                     
+   i= 0, mydouble_two    type=  8, offset=n/a, len=1, method=0
