@@ -452,6 +452,8 @@ classes documentation. Here also a filter has been developed to generate
 
 ROOT uses the CMake cross-platform build-generator tool as a primary build system. CMake does not build the project, it generates the files needed by your build tool (GNU make, Ninja, Visual Studio, etc) for building ROOT. The classic build with configure/make is is still available but it will not be evolving with the new features of ROOT.
 
+We added full support for C++14.
+
 Minor chages in the build system:
 
 - Renamed build option POSTGRESQL_LIBRARIES to POSTGRESQL_LIBRARY
