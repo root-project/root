@@ -58,8 +58,7 @@ namespace ROOT {
    template<class T>
    class TSeq {
    private:
-      void checkIntegralType()
-      {
+      void checkIntegralType() {
          static_assert(std::is_integral<T>::value, "Only integral types are supported.");
       }
       const T fBegin;
@@ -68,13 +67,11 @@ namespace ROOT {
    public:
       using value_type = T;
 
-      TSeq(T end): fBegin(0), fEnd(end), fStep(1)
-      {
+      TSeq(T end): fBegin(0), fEnd(end), fStep(1) {
          checkIntegralType();
       }
       TSeq(T begin, T end, T step = 1):
-         fBegin(begin), fEnd(end), fStep(step)
-      {
+         fBegin(begin), fEnd(end), fStep(step) {
          checkIntegralType();
       }
 
@@ -84,78 +81,67 @@ namespace ROOT {
          T fStep;
       public:
          iterator(T start, T step): fCounter(start), fStep(step) {}
-         T operator*() const
-         {
+         T operator*() const {
             return fCounter;
          }
-         iterator &operator++()
-         {
+         iterator &operator++() {
             fCounter += fStep;
             return *this;
          };
-         iterator operator++(Int_t)
-         {
+         iterator operator++(Int_t) {
             iterator tmp(*this);
             operator++();
             return tmp;
          }
-         Bool_t operator==(const iterator &other)
-         {
+         Bool_t operator==(const iterator &other) {
             return fCounter == other.fCounter;
          }
-         Bool_t operator!=(const iterator &other)
-         {
+         Bool_t operator!=(const iterator &other) {
             return fCounter != other.fCounter;
          }
-         T operator+(const iterator &s)
-         {
+         T operator+(const iterator &s) {
             return fCounter + s.fCounter;
          }
-         T operator-(const iterator &s)
-         {
+         T operator-(const iterator &s) {
             return fCounter - s.fCounter;
          }
-         iterator &operator--()
-         {
+         iterator &operator--() {
             fCounter -= fStep;
             return *this;
          }
-         iterator operator--(Int_t)
-         {
+         iterator operator--(Int_t) {
             iterator tmp(*this);
             operator--();
             return tmp;
          }
       };
 
-      iterator begin()
-      {
+      iterator begin() const {
          return iterator(fBegin, fStep);
       }
-      iterator end()
-      {
+      iterator end() const {
          auto isStepMultiple = (fEnd - fBegin) % fStep == 0;
          auto theEnd = isStepMultiple ? fEnd : fStep * ((T)((fEnd - fBegin) / fStep) + 1) + fBegin;
          return iterator(theEnd, fStep);
       }
 
-      T const &front() const
-      {
+      T const &front() const {
          return fBegin;
       }
 
-      T operator[](T s)
-      {
+      T operator[](T s) const {
          return s * fStep + fBegin;
       }
 
-      size_t size()
-      {
+      size_t GetSize() const {
          return ((fEnd - fBegin) / fStep);
       }
 
-      Bool_t empty()
-      {
+      T GetStep() const {
+         return fStep;
+      }
+
+      Bool_t IsEmpty() const {
          return fEnd == fBegin;
       }
 
@@ -179,4 +165,22 @@ namespace ROOT {
    }
 
 }
+
+#include <sstream>
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print a TSeq at the prompt:
+
+namespace cling {
+   template<class T>
+   std::string printValue(ROOT::TSeq<T> *val)
+   {
+      std::ostringstream ret;
+      ret << "Sequence of values. Begin: " << *val->begin()
+          << " - End: " << *val->end()
+          << " - Step: " <<  val->GetStep();
+      return ret.str();
+   }
+}
+
 #endif
