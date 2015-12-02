@@ -152,9 +152,6 @@ We updated TBuffer::Expand to properly shrink the buffer when requested, hence r
 
 We added support for template parameter packs in class name involved in the I/O.
 
-### I/O Behavior change.
-
-
 
 ## TTree Libraries
 
@@ -177,7 +174,50 @@ inconsistently, see [ROOT-6885]) a larger value was used (named theBigNumber).  
 `TChain::kBigNumber` is deprecated and its value has been changed to be equal
 to `TTree::kMaxEntries`.
 
+### MakeSelector
 
+`TTree::MakeSelector` has been update to generate a code skeleton based on the `TTreeReader` rather than the old style relying on numeric data members replacements for the user objects.  The main advantage is the lifting of the problem related to the fact that the old style was using fixed size array to represent variable size collection.
+
+`TTree::MakeSelector` takes an option parameter that can be used to specify the branches that will have a data member.
+- If option is `"=legacy"`, a pre-ROOT6 selector will be generated (data members and branch pointers instead of TTreeReaders).
+- If option is empty, readers will be generated for each leaf.
+- If option is "@", readers will be generated for the topmost branches.
+- Individual branches can also be picked by their name:
+  - "X" generates readers for leaves of X.
+  - "@X" generates a reader for X as a whole.
+  - "@X;Y" generates a reader for X as a whole and also readers for the
+    leaves of Y.
+  - For further examples see the figure below.
+
+\image html ttree_makeselector_option_examples.png
+
+The generated code in selector.h includes the following:
+- Identification of the original Tree and Input file name
+- Definition of selector class (data and functions)
+- The following class functions:
+  - constructor and destructor
+  - void    Begin(TTree *tree)
+  - void    SlaveBegin(TTree *tree)
+  - void    Init(TTree *tree)
+  - Bool_t  Notify()
+  - Bool_t  Process(Long64_t entry)
+  - void    Terminate()
+  - void    SlaveTerminate()
+
+The class selector derives from TSelector.
+The generated code in selector.C includes empty functions defined above.
+
+To use this function:
+
+- connect your Tree file (eg: `TFile f("myfile.root");`)
+- `T->MakeSelector("myselect");`
+
+where T is the name of the Tree in file myfile.root
+and myselect.h, myselect.C the name of the files created by this function.
+In a ROOT session, you can do:
+``` {.cpp}
+  root > T->Process("myselect.C")
+```
 
 ## Histogram Libraries
 
