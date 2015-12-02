@@ -22,10 +22,11 @@ ROOT_GENERATE_DICTIONARY(TheEventDict Event.h LINKDEF EventLinkDef.h)
 ROOT_LINKER_LIBRARY(TheEvent TEST Event.cxx TheEventDict.cxx LIBRARIES ${ROOT_LIBRARIES})
 ROOTTEST_ADD_TEST(perfstattest-libevent-build 
                   COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target TheEvent${fast})
-                  set(RootExeOptions -e "gSystem->Load(\"libTheEvent\")")
 
+set(RootExeOptions -e "gSystem->Load(\"libTheEvent\")")
 ROOTTEST_ADD_TEST(perfstattest
                   MACRO execperfstattest.C
-                  OUTREF execperfstattest.ref
+                  OUTREF execperfstattest.oref
+                  ERRREF execperfstattest.eref
                   DEPENDS perfstattest-libevent-build)
 
