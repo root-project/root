@@ -207,19 +207,19 @@ namespace PyROOT {
       Cppyy::TCppType_t fClass;
    };
 
+   template <bool ISREFERENCE>
    class TCppObjectPtrConverter : public TCppObjectConverter {
    public:
-      TCppObjectPtrConverter( Cppyy::TCppType_t klass, Bool_t keepControl, Bool_t isReference) :
-         TCppObjectConverter(klass, keepControl),
-         fIsReference(isReference) {}
+      using TCppObjectConverter::TCppObjectConverter;
 
    public:
       virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
-   protected:
-      Bool_t fIsReference;
    };
+
+   extern template class TCppObjectPtrConverter<true>;
+   extern template class TCppObjectPtrConverter<false>;
 
    class TCppObjectArrayConverter : public TCppObjectConverter {
    public:
