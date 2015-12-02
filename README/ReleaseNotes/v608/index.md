@@ -57,6 +57,11 @@ by including a ROOT header. For example:
   * GeneticMinimizer.h
   * ...
 
+### Containers
+A pseudo-container (generator) was created, ROOT::TSeq<T>. This template is
+inspired by the xrange built-in function of Python. See the example
+[here](https://root.cern.ch/doc/master/cnt001__basictseq_8C.html).
+
 ### Dictionaries
 
 Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
