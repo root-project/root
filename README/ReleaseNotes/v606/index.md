@@ -56,7 +56,13 @@ marked inlined.
 
 Added mechanisms to stop the dictionary generation while parsing the XML and while selecting in presence of duplicates.
 
-Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
+Fix [ROOT-7760] : fully allow the usage of the dylib extension on OSx.
+
+Fix [ROOT-7723] : allow IOCtors to have as argument a ref to a type called __void__.
+
+We added a dictionary for map<string,string> as part of the default STL dictionary.
+
+We added support for template parameter packs in class name involved in the I/O.
 
 ### Thread safety and thread awareness
 
@@ -68,6 +74,8 @@ We reduced thread serialization in `TClass::GetCheckSum`, `TClass::GetBaseClassO
 
 We removed the need to create a TThread object per thread in a multi-threaded application. Now ROOT can be used with any threading model (e.g. OpenMP, STL threads, TBB) transparently.  All the internal synchronisation mechanisms of ROOT are activated by a single call: `ROOT::EnableThreadSafety()` which is the successor of the existing `TThread::Initialize`.  This call must take place if ROOT needs to be used in a thread safe manner.
 
+The implementation of TSemaphore was redone based on C++11 thread primitive in order to prevent cases where some of request post were lost.
+
 ### TDirectory::TContext
 
 We added a default constructor to `TDirectory::TContext` which record the current directory
@@ -78,11 +86,33 @@ an argument was changed to set `gDirectory` to zero when being passed a null poi
 previously it was interpreting a null pointer as a request to *not* change the current
 directory - this behavior is now implement by the default constructor.
 
-### Cleanups.
+### Collections
+
+In THashList and THashTable, GetListForObject now returns a pointer to const as modifying the returned list (in particular adding to it) can break invariant of THashTable so we need to clearly mark the list as not being allowed to be modified.
+
+In TSeqCollection::Merge, we no longer delete the object in the case where the original collection is marked as a owner.
+
+### Global resources.
+
+Several tweaks to if and when, resources held by the global ROOT object (TROOT, TApplication) are deleted.  When the default TApplication is replaced by a user provide TApplication, do not call EndOfProcessCleanups and co. and thus do not delete TFiles, TSockets or TColors that have already been created.  In EndOfProcessCleanups, we now delete the objects held in TROOT's TDirectory part.  If the libCling library is unloaded, this now induces an immediate tear down of the ROOT resources; consequently objects might be deleted sooner in the process tear down process on some platforms.
+
+### Code Cleanups.
 
 Several definition where moved from the global or ROOT namespace to the ROOT::Internal namespace as they are not intended to be used outside of ROOT, including: `gROOTLocal` and related functions, `TSchemaHelper`, `TSchemaMatch`, `TSchemaType`, `RStl`, `ROOT::TROOTAllocator`, `TSchemaRuleProcessor`, `TStdBitsetHelper`, `TInitBehavior`, `TDefaultInitBehavior`, `DefineBehavior`, `THnBaseBrowsable`, `THnBaseBinIter`, `GenericShowMembers`, `TOperatorNewHelper` and `BranchProxy` implementations classes.
 
 Several definition where moved from the global or ROOT namespace to the ROOT::Details namespace as they are intended to be used in 'expert' level code and have a lower level of backward compatibility requirement.  This includes `TCollectionProxyInfo`, `TSchemaRuleSet`.
+
+## Interpreter
+
+ROOT can now dump the contect of STL collections, for instance `map<string,int>`. A few ROOT types print their content, too.
+
+Fixed the handling of the current directory in `#include` of system headers, avoid problem with local files named `new` or `vector`.
+
+Fixed the issue with the ROOT special variable where the objects were read from the file at each and every access by caching those object.  See [ROOT-7830] for example.
+
+This release contains everal bug fixes and improvements, notably in unloading and performance.
+
+> NOTE: The GCC 5 ABI is *not* supported yet, due to a lack of support in clang.
 
 ## I/O Libraries
 
@@ -114,8 +144,13 @@ The command line utilities are:
 - `rootrm`: to remove content from files
 These utilities took inspiration from the well known *nix commands and all offer the `-h` switch which provides documentation for all options available and example invocation lines.
 
+### TBufferFile.
+
+We updated TBuffer::Expand to properly shrink the buffer when requested, hence reducing memory usage in some cases.
 
 ### I/O New functionalities
+
+We added support for template parameter packs in class name involved in the I/O.
 
 ### I/O Behavior change.
 
@@ -392,14 +427,6 @@ Support for capturing large outputs (stderr/stdout) coming from C++ libraries ha
 - support custom requests to remote objects, demonstrated in httptextlog.C tutorial
 - rewrite draw.htm (page for individual object drawing) to support all custom features as main gui does
 - See also the [JSRoot 3.9 examples page](https://root.cern.ch/js/3.9/) and the [JSRoot 3.9 release notes](https://github.com/linev/jsroot/releases/tag/3.9)
-
-## Interpreter
-
-ROOT can now dump the contect of STL collections, for instance `map<string,int>`. A few ROOT types print their content, too.
-
-This release contains everal bug fixes and improvements, notably in unloading and performance.
-
-> NOTE: The GCC 5 ABI is *not* supported yet, due to a lack of support in clang.
 
 ## Class Reference Guide
 
