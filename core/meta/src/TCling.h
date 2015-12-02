@@ -33,6 +33,7 @@
 
 #include <set>
 #include <unordered_set>
+#include <unordered_map>
 #include <map>
 #include <vector>
 
@@ -136,6 +137,10 @@ private: // Data Members
    void* fAutoLoadCallBack;
    ULong64_t fTransactionCount; // Cling counter for commited or unloaded transactions which changed the AST.
    std::vector<const char*> fCurExecutingMacros;
+
+   typedef void* SpecialObjectLookupCtx_t;
+   typedef std::unordered_map<std::string, TObject*> SpecialObjectMap_t;
+   std::map<SpecialObjectLookupCtx_t, SpecialObjectMap_t> fSpecialObjectMaps;
 
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
 
@@ -305,6 +310,8 @@ public: // Public Interface
    void               RegisterTemporary(const TInterpreterValue& value);
    void               RegisterTemporary(const cling::Value& value);
    const ROOT::TMetaUtils::TNormalizedCtxt& GetNormalizedContext() const {return *fNormalizedCtxt;};
+   TObject* GetObjectAddress(const char *Name, void *&LookupCtx);
+
 
    // core/meta helper functions.
    virtual EReturnType MethodCallReturnType(TFunction *func) const;
