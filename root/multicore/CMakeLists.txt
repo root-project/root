@@ -1,20 +1,12 @@
 ROOTTEST_ADD_TESTDIRS()
 
 # Workaround (k)ubuntu bug: runtime issue when using pthread and gcc48
-if(UNIX)
-EXEC_PROGRAM(uname
-             ARGS -v
-             OUTPUT_VARIABLE LINUX_VERSION)
-STRING(FIND LINUX_VERSION
-       "buntu"
-       BUNTU_MATCH)
-if(NOT BUNTU_MATCH STREQUAL "")
-   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
+if(NOT WIN32 AND NOT APPLE)
+  execute_process(COMMAND lsb_release -is OUTPUT_VARIABLE osid OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(osid MATCHES Ubuntu)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
+  endif()
 endif()
-
-endif()
-
-
 
 
 ROOTTEST_GENERATE_EXECUTABLE(procPoolTreeTest tProcPoolTreeTest.cpp LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist)
