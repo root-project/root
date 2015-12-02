@@ -57,7 +57,8 @@ using std::vector;
 
 ClassImp(TMVA::MethodCompositeBase)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::MethodCompositeBase::MethodCompositeBase( const TString& jobName,
                                                 Types::EMVA methodType,
                                                 const TString& methodTitle,
@@ -68,7 +69,8 @@ TMVA::MethodCompositeBase::MethodCompositeBase( const TString& jobName,
    fCurrentMethodIdx(0), fCurrentMethod(0)
 {}
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::MethodCompositeBase::MethodCompositeBase( Types::EMVA methodType,
                                                 DataSetInfo& dsi,
                                                 const TString& weightFile,
@@ -77,10 +79,11 @@ TMVA::MethodCompositeBase::MethodCompositeBase( Types::EMVA methodType,
    fCurrentMethodIdx(0), fCurrentMethod(0)     
 {}
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns pointer to MVA that corresponds to given method title
+
 TMVA::IMethod* TMVA::MethodCompositeBase::GetMethod( const TString &methodTitle ) const
 {
-   // returns pointer to MVA that corresponds to given method title
    std::vector<IMethod*>::const_iterator itrMethod    = fMethods.begin();
    std::vector<IMethod*>::const_iterator itrMethodEnd = fMethods.end();
 
@@ -91,17 +94,19 @@ TMVA::IMethod* TMVA::MethodCompositeBase::GetMethod( const TString &methodTitle 
    return 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns pointer to MVA that corresponds to given method index
+
 TMVA::IMethod* TMVA::MethodCompositeBase::GetMethod( const Int_t index ) const
 {
-   // returns pointer to MVA that corresponds to given method index
    std::vector<IMethod*>::const_iterator itrMethod = fMethods.begin()+index;
    if (itrMethod<fMethods.end()) return *itrMethod;
    else                          return 0;
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodCompositeBase::AddWeightsXMLTo( void* parent ) const
 {
    void* wght = gTools().AddChild(parent, "Weights");
@@ -126,10 +131,11 @@ void TMVA::MethodCompositeBase::AddWeightsXMLTo( void* parent ) const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// delete methods
+
 TMVA::MethodCompositeBase::~MethodCompositeBase( void )
 {
-   // delete methods
    std::vector<IMethod*>::iterator itrMethod = fMethods.begin();
    for (; itrMethod != fMethods.end(); itrMethod++) {
       Log() << kVERBOSE << "Delete method: " << (*itrMethod)->GetName() << Endl;
@@ -138,10 +144,11 @@ TMVA::MethodCompositeBase::~MethodCompositeBase( void )
    fMethods.clear();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// XML streamer
+
 void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
 {
-   // XML streamer
    UInt_t nMethods;
    TString methodName, methodTypeName, jobName, optionString;
 
@@ -205,10 +212,11 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
    //Log() << kINFO << "Reading methods from XML done " << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// text streamer
+
 void  TMVA::MethodCompositeBase::ReadWeightsFromStream( std::istream& istr )
 {
-   // text streamer
    TString var, dummy;
    TString methodName, methodTitle=GetMethodName(),
     jobName=GetJobName(),optionString=GetOptions();
@@ -246,10 +254,11 @@ void  TMVA::MethodCompositeBase::ReadWeightsFromStream( std::istream& istr )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return composite MVA response
+
 Double_t TMVA::MethodCompositeBase::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // return composite MVA response
    Double_t mvaValue = 0;
    for (UInt_t i=0;i< fMethods.size(); i++) mvaValue+=fMethods[i]->GetMvaValue()*fMethodWeight[i];
 

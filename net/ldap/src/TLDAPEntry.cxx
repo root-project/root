@@ -13,24 +13,24 @@
 
 ClassImp(TLDAPEntry)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates the new TLDAPEntry object with the specified DN (distinguished
+/// name) and the empty list of attributes.
+/// const char *dn: The DN of the entry. You can change it later by calling
+///                 the SetDn() member function
+
 TLDAPEntry::TLDAPEntry(const char *dn) : fNCount(0)
 {
-   // Creates the new TLDAPEntry object with the specified DN (distinguished
-   // name) and the empty list of attributes.
-   // const char *dn: The DN of the entry. You can change it later by calling
-   //                 the SetDn() member function
-
    SetDn(dn);
    fAttr = new TList;
    fAttr->SetOwner();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TLDAPEntry::TLDAPEntry(const TLDAPEntry &e) : TObject(e), fNCount(e.fNCount)
 {
-   // Copy ctor.
-
    SetDn(e.GetDn());
    fAttr = new TList;
    fAttr->SetOwner();
@@ -41,10 +41,11 @@ TLDAPEntry::TLDAPEntry(const TLDAPEntry &e) : TObject(e), fNCount(e.fNCount)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Equal operator
+
 TLDAPEntry& TLDAPEntry::operator=(const TLDAPEntry& lde)
 {
-   // Equal operator
    if(this!=&lde) {
       TObject::operator=(lde);
       fDn=lde.fDn;
@@ -53,28 +54,28 @@ TLDAPEntry& TLDAPEntry::operator=(const TLDAPEntry& lde)
    } return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes all the attributes of the entry.
+
 TLDAPEntry::~TLDAPEntry()
 {
-   // Deletes all the attributes of the entry.
-
    delete fAttr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an attribute to the entry.
+/// TLDAPAtrribute attr: attribute to be added.
+
 void TLDAPEntry::AddAttribute(const TLDAPAttribute &attr)
 {
-   // Add an attribute to the entry.
-   // TLDAPAtrribute attr: attribute to be added.
-
    fAttr->AddLast(new TLDAPAttribute(attr));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print entry in LDIF format.
+
 void TLDAPEntry::Print(Option_t *) const
 {
-   // Print entry in LDIF format.
-
    std::cout << "dn: "<< fDn << std::endl;
    TLDAPAttribute *attr = GetAttribute("objectClass");
    if (attr != 0)
@@ -88,12 +89,12 @@ void TLDAPEntry::Print(Option_t *) const
    std::cout << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next attribute of the entry. Returns zero after the last attribute,
+/// then returns the first attribute again.
+
 TLDAPAttribute *TLDAPEntry::GetAttribute() const
 {
-   // Get next attribute of the entry. Returns zero after the last attribute,
-   // then returns the first attribute again.
-
    Int_t n = GetCount();
    if (n > fNCount) {
       return (TLDAPAttribute*)fAttr->At(fNCount++);
@@ -103,13 +104,13 @@ TLDAPAttribute *TLDAPEntry::GetAttribute() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get attribute by name.
+/// Doesn't affect the order of attributes to be returned from the
+/// next GetAttribute() call. Attribute name is case insensitive.
+
 TLDAPAttribute *TLDAPEntry::GetAttribute(const char *name) const
 {
-   // Get attribute by name.
-   // Doesn't affect the order of attributes to be returned from the
-   // next GetAttribute() call. Attribute name is case insensitive.
-
    Int_t n = GetCount();
    for (Int_t i = 0; i < n; i++) {
       if (TString(((TLDAPAttribute*)fAttr->At(i))->GetName()).CompareTo(name, TString::kIgnoreCase) == 0) {
@@ -119,12 +120,12 @@ TLDAPAttribute *TLDAPEntry::GetAttribute(const char *name) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete attribute by name.
+/// Attribute name is case insensitive.
+
 void TLDAPEntry::DeleteAttribute(const char *name)
 {
-   // Delete attribute by name.
-   // Attribute name is case insensitive.
-
    Int_t n = GetCount();
    for (Int_t i = 0; i < n; i++) {
       if (TString(((TLDAPAttribute*)fAttr->At(i))->GetName()).CompareTo(name, TString::kIgnoreCase) == 0) {
@@ -135,11 +136,11 @@ void TLDAPEntry::DeleteAttribute(const char *name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if entry is referal.
+
 Bool_t TLDAPEntry::IsReferral() const
 {
-   // Check if entry is referal.
-
    Bool_t att = kFALSE;
    Bool_t obj = kFALSE;
    Int_t n = GetCount();
@@ -160,13 +161,13 @@ Bool_t TLDAPEntry::IsReferral() const
    return (att && obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the TList of referrals.
+/// Returns an empty list if entry is not referral.
+/// User is responsible for deleting returned TList.
+
 TList *TLDAPEntry::GetReferrals() const
 {
-   // Get the TList of referrals.
-   // Returns an empty list if entry is not referral.
-   // User is responsible for deleting returned TList.
-
    TList *list = new TList;
    TLDAPAttribute *ref = GetAttribute("ref");
    if (ref != 0) {
@@ -178,11 +179,11 @@ TList *TLDAPEntry::GetReferrals() const
    return list;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get array of "LDAPMod" structures for entry.
+
 LDAPMod **TLDAPEntry::GetMods(Int_t op)
 {
-   // Get array of "LDAPMod" structures for entry.
-
    Int_t n = GetCount();
    LDAPMod **mods = new LDAPMod* [n + 1];
    for (Int_t i = 0; i < n; i++)

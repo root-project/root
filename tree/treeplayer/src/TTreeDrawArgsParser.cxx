@@ -28,33 +28,35 @@ Int_t TTreeDrawArgsParser::fgMaxParameters = 9;
 
 ClassImp(TTreeDrawArgsParser)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor - cleans all the class variables.
+
 TTreeDrawArgsParser::TTreeDrawArgsParser()
 {
-   // Constructor - cleans all the class variables.
-
    ClearPrevious();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TTreeDrawArgsParser::~TTreeDrawArgsParser()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return fgMaxDimension (cannot be inline)
+
 Int_t TTreeDrawArgsParser::GetMaxDimension()
 {
-   // return fgMaxDimension (cannot be inline)
    return fgMaxDimension;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resets all the variables of the class.
+
 void TTreeDrawArgsParser::ClearPrevious()
 {
-   // Resets all the variables of the class.
-
    fExp = "";
    fSelection = "";
    fOption = "";
@@ -78,22 +80,22 @@ void TTreeDrawArgsParser::ClearPrevious()
    fOutputType = kUNKNOWN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse expression [var1 [:var2 [:var3] ...]],
+/// number of variables cannot be greater than fgMaxDimension.
+/// A colon which is followed by (or that follows) another semicolon
+/// is not regarded as a separator.
+/// If there are more separating : than fgMaxDimension - 1 then
+/// all characters after (fgMaxDimension - 1)th colon is put into
+/// the last variable.
+/// fDimension := <number of variables>
+/// fVarExp[0] := <first variable string>
+/// fVarExp[1] := <second variable string>
+/// ..
+/// Returns kFALSE in case of an error.
+
 Bool_t TTreeDrawArgsParser::SplitVariables(TString variables)
 {
-   // Parse expression [var1 [:var2 [:var3] ...]],
-   // number of variables cannot be greater than fgMaxDimension.
-   // A colon which is followed by (or that follows) another semicolon
-   // is not regarded as a separator.
-   // If there are more separating : than fgMaxDimension - 1 then
-   // all characters after (fgMaxDimension - 1)th colon is put into
-   // the last variable.
-   // fDimension := <number of variables>
-   // fVarExp[0] := <first variable string>
-   // fVarExp[1] := <second variable string>
-   // ..
-   // Returns kFALSE in case of an error.
-
    fDimension = 0;
    if (variables.Length() == 0)
       return kTRUE;
@@ -117,16 +119,16 @@ Bool_t TTreeDrawArgsParser::SplitVariables(TString variables)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Syntax:
+/// [' '*][[\+][' '*]name[(num1 [, [num2] ] [, [num3] ] ...)]]
+/// num's are floating point numbers
+/// sets the fileds fNoParameters, fParameterGiven, fParameters, fAdd, fName
+/// to apropriate values.
+/// Returns kFALSE in case of an error.
+
 Bool_t TTreeDrawArgsParser::ParseName(TString name)
 {
-   // Syntax:
-   // [' '*][[\+][' '*]name[(num1 [, [num2] ] [, [num3] ] ...)]]
-   // num's are floating point numbers
-   // sets the fileds fNoParameters, fParameterGiven, fParameters, fAdd, fName
-   // to apropriate values.
-   // Returns kFALSE in case of an error.
-
    name.ReplaceAll(" ", "");
 
    if (name.Length() != 0 && name[0] == '+') {
@@ -177,11 +179,11 @@ Bool_t TTreeDrawArgsParser::ParseName(TString name)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Split variables and parse name and parameters in brackets.
+
 Bool_t TTreeDrawArgsParser::ParseVarExp()
 {
-   // Split variables and parse name and parameters in brackets.
-
    char* gg = (char*)strstr(fExp.Data(), ">>");
    TString variables;
    TString name;
@@ -202,12 +204,12 @@ Bool_t TTreeDrawArgsParser::ParseVarExp()
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if options contain some data important for choosing the type of the
+/// drawn object.
+
 Bool_t TTreeDrawArgsParser::ParseOption()
 {
-   // Check if options contain some data important for choosing the type of the
-   // drawn object.
-
    fOption.ToLower();
 
    if (fOption.Contains("goff")) {
@@ -225,14 +227,14 @@ Bool_t TTreeDrawArgsParser::ParseOption()
    return true;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parses parameters from TTree::Draw().
+/// varexp - Variable expression; see TTree::Draw()
+/// selection - selection expression; see TTree::Draw()
+/// option - Drawnig option; see TTree::Draw
+
 Bool_t TTreeDrawArgsParser::Parse(const char *varexp, const char *selection, Option_t *option)
 {
-   // Parses parameters from TTree::Draw().
-   // varexp - Variable expression; see TTree::Draw()
-   // selection - selection expression; see TTree::Draw()
-   // option - Drawnig option; see TTree::Draw
-
    ClearPrevious();
 
    // read the data provided and fill class fields
@@ -257,11 +259,11 @@ Bool_t TTreeDrawArgsParser::Parse(const char *varexp, const char *selection, Opt
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Put the type of the draw result into fOutputType and return it.
+
 TTreeDrawArgsParser::EOutputType TTreeDrawArgsParser::DefineType()
 {
-   // Put the type of the draw result into fOutputType and return it.
-
    if (fDimension == 0){
       if (fEntryList)
          return fOutputType = kENTRYLIST;
@@ -305,12 +307,12 @@ TTreeDrawArgsParser::EOutputType TTreeDrawArgsParser::DefineType()
    return kUNKNOWN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns apropriate TSelector class name for proof for the object that is to be drawn
+/// assumes that Parse() method has been called before.
+
 TString TTreeDrawArgsParser::GetProofSelectorName() const
 {
-   // Returns apropriate TSelector class name for proof for the object that is to be drawn
-   // assumes that Parse() method has been called before.
-
    switch (fOutputType) {
       case kUNKNOWN:
          return "";
@@ -339,13 +341,13 @@ TString TTreeDrawArgsParser::GetProofSelectorName() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns *num*-th parameter from brackets in the expression
+/// in case of an error (wrong number) returns 0.0
+/// num - number of parameter (counted from 0)
+
 Double_t TTreeDrawArgsParser::GetParameter(Int_t num) const
 {
-   // returns *num*-th parameter from brackets in the expression
-   // in case of an error (wrong number) returns 0.0
-   // num - number of parameter (counted from 0)
-
    if (num >= 0 && num <= fgMaxParameters && fParameterGiven[num])
       return fParameters[num];
    else {
@@ -354,28 +356,28 @@ Double_t TTreeDrawArgsParser::GetParameter(Int_t num) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// num - parameter number
+/// def - default value of the parameter
+/// returns the value of *num*-th parameter from the brackets in the variable expression
+/// if the parameter of that number wasn't specified returns *def*.
+
 Double_t TTreeDrawArgsParser::GetIfSpecified(Int_t num, Double_t def) const
 {
-   // num - parameter number
-   // def - default value of the parameter
-   // returns the value of *num*-th parameter from the brackets in the variable expression
-   // if the parameter of that number wasn't specified returns *def*.
-
    if (num >= 0 && num <= fgMaxParameters && fParameterGiven[num])
       return fParameters[num];
    else
       return def;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns kTRUE if the *num*-th parameter was specified
+/// otherwise returns fFALSE
+/// in case of an error (wrong num) prints an error message and
+/// returns kFALSE.
+
 Bool_t TTreeDrawArgsParser::IsSpecified(int num) const
 {
-   // returns kTRUE if the *num*-th parameter was specified
-   // otherwise returns fFALSE
-   // in case of an error (wrong num) prints an error message and
-   // returns kFALSE.
-
    if (num >= 0 && num <= fgMaxParameters)
       return fParameterGiven[num];
    else
@@ -383,12 +385,12 @@ Bool_t TTreeDrawArgsParser::IsSpecified(int num) const
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the *num*-th variable string
+/// in case of an error prints an error message and returns an empty string.
+
 TString TTreeDrawArgsParser::GetVarExp(Int_t num) const
 {
-   // Returns the *num*-th variable string
-   // in case of an error prints an error message and returns an empty string.
-
    if (num >= 0 && num < fDimension)
       return fVarExp[num];
    else
@@ -396,11 +398,11 @@ TString TTreeDrawArgsParser::GetVarExp(Int_t num) const
    return "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the variable string, i.e. [var1[:var2[:var2[:var4]]]].
+
 TString TTreeDrawArgsParser::GetVarExp() const
 {
-   // Returns the variable string, i.e. [var1[:var2[:var2[:var4]]]].
-
    if (fDimension <= 0)
       return "";
    TString exp = fVarExp[0];
@@ -412,10 +414,11 @@ TString TTreeDrawArgsParser::GetVarExp() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the desired plot title.
+
 TString TTreeDrawArgsParser::GetObjectTitle() const
 {
-   // Returns the desired plot title.
    if (fSelection != "")
       return Form("%s {%s}", GetVarExp().Data(), fSelection.Data());
    else

@@ -44,26 +44,29 @@
 
 ClassImp(TMVA::PDEFoamKernelBase)
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer
+
 TMVA::PDEFoamKernelBase::PDEFoamKernelBase()
    : TObject()
    , fLogger(new MsgLogger("PDEFoamKernelBase"))
 {
-   // Default constructor for streamer
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TMVA::PDEFoamKernelBase::PDEFoamKernelBase(const PDEFoamKernelBase &other)
    : TObject()
    , fLogger(new MsgLogger(*other.fLogger))
 {
-   // Copy constructor
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TMVA::PDEFoamKernelBase::~PDEFoamKernelBase()
 {
-   // Destructor
    if (fLogger != NULL)
       delete fLogger;
 }

@@ -29,7 +29,9 @@
 #include "TMVA/Option.h"
 #include "ThreadLocalStorage.h"
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::OptionBase::OptionBase( const TString& name, const TString& desc )
    : TObject(),
      fName        ( name ),
@@ -37,14 +39,14 @@ TMVA::OptionBase::OptionBase( const TString& name, const TString& desc )
      fDescription ( desc ),
      fIsSet       ( kFALSE )
 {
-   // constructor
    fNameAllLower.ToLower();
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set value for option
+
 Bool_t TMVA::OptionBase::SetValue( const TString& vs, Int_t )
 {
-   // set value for option
    fIsSet = kTRUE;
    SetValueLocal(vs);
    return kTRUE;

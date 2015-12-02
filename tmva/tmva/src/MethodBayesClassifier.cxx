@@ -39,7 +39,9 @@ REGISTER_METHOD(BayesClassifier)
 
 ClassImp(TMVA::MethodBayesClassifier)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor
+
 TMVA::MethodBayesClassifier::MethodBayesClassifier( const TString& jobName,
                                                     const TString& methodTitle,
                                                     DataSetInfo& theData, 
@@ -47,72 +49,81 @@ TMVA::MethodBayesClassifier::MethodBayesClassifier( const TString& jobName,
                                                     TDirectory* theTargetDir ) :
    TMVA::MethodBase( jobName, Types::kBayesClassifier, methodTitle, theData, theOption, theTargetDir )
 {
-   // standard constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from weight file
+
 TMVA::MethodBayesClassifier::MethodBayesClassifier( DataSetInfo& theData, 
                                                     const TString& theWeightFile,  
                                                     TDirectory* theTargetDir ) :
    TMVA::MethodBase( Types::kBayesClassifier, theData, theWeightFile, theTargetDir ) 
 {
-   // constructor from weight file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Variable can handle classification with 2 classes 
+
 Bool_t TMVA::MethodBayesClassifier::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
 {
-   // Variable can handle classification with 2 classes 
    if( type == Types::kClassification && numberClasses == 2 ) return kTRUE;
    return kFALSE;
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default initialisation
+
 void TMVA::MethodBayesClassifier::Init( void )
 {
-   // default initialisation
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define the options (their key words) that can be set in the option string 
+
 void TMVA::MethodBayesClassifier::DeclareOptions() 
 {
-   // define the options (their key words) that can be set in the option string 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the option string is decoded, for availabel options see "DeclareOptions"
+
 void TMVA::MethodBayesClassifier::ProcessOptions() 
 {
-   // the option string is decoded, for availabel options see "DeclareOptions"
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodBayesClassifier::~MethodBayesClassifier( void )
 {
-   // destructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// some training 
+
 void TMVA::MethodBayesClassifier::Train( void )
 {
-   // some training 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodBayesClassifier::AddWeightsXMLTo( void* /*parent*/ ) const {
    Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
 }
   
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read back the training results from a file (stream)
+
 void  TMVA::MethodBayesClassifier::ReadWeightsFromStream( std::istream & )
 {
-   // read back the training results from a file (stream)
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns MVA value for given event
+
 Double_t TMVA::MethodBayesClassifier::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // returns MVA value for given event
    Double_t myMVA = 0;
 
    // cannot determine error
@@ -121,21 +132,23 @@ Double_t TMVA::MethodBayesClassifier::GetMvaValue( Double_t* err, Double_t* errU
    return myMVA;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write specific classifier response
+
 void TMVA::MethodBayesClassifier::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
-   // write specific classifier response
    fout << "   // not implemented for class: \"" << className << "\"" << std::endl;
    fout << "};" << std::endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get help message text
+///
+/// typical length of text line: 
+///         "|--------------------------------------------------------------|"
+
 void TMVA::MethodBayesClassifier::GetHelpMessage() const
 {
-   // get help message text
-   //
-   // typical length of text line: 
-   //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;

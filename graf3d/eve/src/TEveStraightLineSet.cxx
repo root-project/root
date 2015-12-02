@@ -26,7 +26,8 @@
 
 ClassImp(TEveStraightLineSet);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveStraightLineSet::TEveStraightLineSet(const char* n, const char* t):
    TEveElement (),
    TNamed      (n, t),
@@ -53,75 +54,75 @@ TEveStraightLineSet::TEveStraightLineSet(const char* n, const char* t):
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a line.
+
 TEveStraightLineSet::Line_t*
 TEveStraightLineSet::AddLine(Float_t x1, Float_t y1, Float_t z1,
                              Float_t x2, Float_t y2, Float_t z2)
 {
-   // Add a line.
-
    fLastLine = new (fLinePlex.NewAtom()) Line_t(x1, y1, z1, x2, y2, z2);
    fLastLine->fId = fLinePlex.Size() - 1;
    return fLastLine;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a line.
+
 TEveStraightLineSet::Line_t*
 TEveStraightLineSet::AddLine(const TEveVector& p1, const TEveVector& p2)
 {
-   // Add a line.
-
    return AddLine(p1.fX, p1.fY, p1.fZ, p2.fX, p2.fY, p2.fZ);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line vertices with given index.
+
 void
 TEveStraightLineSet::SetLine(int idx,
                              Float_t x1, Float_t y1, Float_t z1,
                              Float_t x2, Float_t y2, Float_t z2)
 {
-   // Set line vertices with given index.
-
    Line_t* l = (Line_t*) fLinePlex.Atom(idx);
 
    l->fV1[0] = x1; l->fV1[1] = y1; l->fV1[2] = z1;
    l->fV2[0] = x2; l->fV2[1] = y2; l->fV2[2] = z2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line vertices with given index.
+
 void
 TEveStraightLineSet::SetLine(int idx, const TEveVector& p1, const TEveVector& p2)
 {
-   // Set line vertices with given index.
-
    SetLine(idx, p1.fX, p1.fY, p1.fZ, p2.fX, p2.fY, p2.fZ);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a marker with given position.
+
 TEveStraightLineSet::Marker_t*
 TEveStraightLineSet::AddMarker(Float_t x, Float_t y, Float_t z, Int_t line_id)
 {
-   // Add a marker with given position.
-
    Marker_t* marker = new (fMarkerPlex.NewAtom()) Marker_t(x, y, z, line_id);
    return marker;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a marker with given position.
+
 TEveStraightLineSet::Marker_t*
 TEveStraightLineSet::AddMarker(const TEveVector& p, Int_t line_id)
 {
-   // Add a marker with given position.
-
    return AddMarker(p.fX, p.fY, p.fZ, line_id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a marker for line with given index on relative position pos.
+
 TEveStraightLineSet::Marker_t*
 TEveStraightLineSet::AddMarker(Int_t line_id, Float_t pos)
 {
-   // Add a marker for line with given index on relative position pos.
-
    Line_t& l = * (Line_t*) fLinePlex.Atom(line_id);
    return AddMarker(l.fV1[0] + (l.fV2[0] - l.fV1[0])*pos,
                     l.fV1[1] + (l.fV2[1] - l.fV1[1])*pos,
@@ -131,11 +132,11 @@ TEveStraightLineSet::AddMarker(Int_t line_id, Float_t pos)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy visualization parameters from element el.
+
 void TEveStraightLineSet::CopyVizParams(const TEveElement* el)
 {
-   // Copy visualization parameters from element el.
-
    const TEveStraightLineSet* m = dynamic_cast<const TEveStraightLineSet*>(el);
    if (m)
    {
@@ -149,11 +150,11 @@ void TEveStraightLineSet::CopyVizParams(const TEveElement* el)
    TEveElement::CopyVizParams(el);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write visualization parameters.
+
 void TEveStraightLineSet::WriteVizParams(std::ostream& out, const TString& var)
 {
-   // Write visualization parameters.
-
    TEveElement::WriteVizParams(out, var);
 
    TString t = "   " + var + "->";
@@ -166,23 +167,23 @@ void TEveStraightLineSet::WriteVizParams(std::ostream& out, const TString& var)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return class of projected object.
+/// Virtual from TEveProjectable.
+
 TClass* TEveStraightLineSet::ProjectedClass(const TEveProjection*) const
 {
-   // Return class of projected object.
-   // Virtual from TEveProjectable.
-
    return TEveStraightLineSetProjected::Class();
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding-box.
+/// Virtual from TAttBBox.
+
 void TEveStraightLineSet::ComputeBBox()
 {
-   // Compute bounding-box.
-   // Virtual from TAttBBox.
-
    if (fLinePlex.Size() == 0 && fMarkerPlex.Size() == 0) {
       BBoxZero();
       return;
@@ -205,11 +206,11 @@ void TEveStraightLineSet::ComputeBBox()
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the line-set.
+
 void TEveStraightLineSet::Paint(Option_t*)
 {
-   // Paint the line-set.
-
    PaintStandard(this);
 }
 
@@ -225,31 +226,32 @@ void TEveStraightLineSet::Paint(Option_t*)
 
 ClassImp(TEveStraightLineSetProjected);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveStraightLineSetProjected::TEveStraightLineSetProjected() :
    TEveStraightLineSet(), TEveProjected ()
 {
-   // Constructor.
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set projection manager and model object.
+
 void TEveStraightLineSetProjected::SetProjection(TEveProjectionManager* mng,
                                                  TEveProjectable* model)
 {
-   // Set projection manager and model object.
-
    TEveProjected::SetProjection(mng, model);
 
    CopyVizParams(dynamic_cast<TEveElement*>(model));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set depth (z-coordinate) of the projected points.
+
 void TEveStraightLineSetProjected::SetDepthLocal(Float_t d)
 {
-   // Set depth (z-coordinate) of the projected points.
-
    SetDepthCommon(d, this, fBBox);
 
    TEveChunkManager::iterator li(fLinePlex);
@@ -268,12 +270,12 @@ void TEveStraightLineSetProjected::SetDepthLocal(Float_t d)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Callback that actually performs the projection.
+/// Called when projection parameters have been updated.
+
 void TEveStraightLineSetProjected::UpdateProjection()
 {
-   // Callback that actually performs the projection.
-   // Called when projection parameters have been updated.
-
    TEveProjection&      proj = * fManager->GetProjection();
    TEveStraightLineSet& orig = * dynamic_cast<TEveStraightLineSet*>(fProjectable);
 

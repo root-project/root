@@ -67,58 +67,58 @@ static Int_t gFioVn1 = -1;             // Number of real+hyper cores for fgFioV
 
 TList *TProofBench::fgGraphs = new TList;
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simple polynomial 1st degree
+
 Double_t funp1(Double_t *xx, Double_t *par)
 {
-   // Simple polynomial 1st degree
-
    Double_t res = par[0] + par[1] * xx[0];
    return res;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simple polynomial 2nd degree
+
 Double_t funp2(Double_t *xx, Double_t *par)
 {
-   // Simple polynomial 2nd degree
-
    Double_t res = par[0] + par[1] * xx[0] + par[2] * xx[0] * xx[0];
    return res;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normalized 1st degree
+
 Double_t funp1n(Double_t *xx, Double_t *par)
 {
-   // Normalized 1st degree
-
    Double_t res = par[0] / xx[0] + par[1];
    return res;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normalized 2nd degree
+
 Double_t funp2n(Double_t *xx, Double_t *par)
 {
-   // Normalized 2nd degree
-
    Double_t res = par[0] / xx[0] + par[1] + par[2] * xx[0];
    return res;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// I/O saturated rate function
+
 Double_t funio(Double_t *xx, Double_t *par)
 {
-   // I/O saturated rate function
-
    Double_t sat = par[0] / par[1] * (xx[0] * par[1] / par[2] - 1.);
    if (xx[0] < par[2] / par[1]) sat = 0.;
    Double_t res = par[0] * xx[0] / (1. + sat);
    return res;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// I/O saturated rate function with varying Rcpu
+
 Double_t funiov(Double_t *xx, Double_t *par)
 {
-   // I/O saturated rate function with varying Rcpu
-
    // par[0] = rio
    // par[1] = b1
    // par[2] = b2
@@ -137,11 +137,11 @@ Double_t funiov(Double_t *xx, Double_t *par)
    return res;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Function with varying Rcpu
+
 Double_t funcpuv(Double_t *xx, Double_t *par)
 {
-   // Function with varying Rcpu
-
    // par[0] = offset
    // par[1] = rate contribution from real cores
    // par[2] = rate contribution from hyper cores
@@ -154,11 +154,11 @@ Double_t funcpuv(Double_t *xx, Double_t *par)
    return rcpu;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Function with varying Rcpu normalized
+
 Double_t funcpuvn(Double_t *xx, Double_t *par)
 {
-   // Function with varying Rcpu normalized
-
    // par[0] = offset
    // par[1] = rate contribution from real cores
    // par[2] = rate contribution from hyper cores
@@ -171,7 +171,9 @@ Double_t funcpuvn(Double_t *xx, Double_t *par)
    return rcpu / xx[0];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor: check PROOF and load selectors PAR
+
 TProofBench::TProofBench(const char *url, const char *outfile, const char *proofopt)
             : fUnlinkOutfile(kFALSE), fProofDS(0), fOutFile(0),
               fNtries(4), fHistType(0), fNHist(16), fReadType(0),
@@ -179,8 +181,6 @@ TProofBench::TProofBench(const char *url, const char *outfile, const char *proof
               fDataGenSel(kPROOF_BenchSelDataGenDef),
               fRunCPU(0), fRunDS(0), fDS(0), fDebug(kFALSE), fDescription(0)
 {
-   // Constructor: check PROOF and load selectors PAR
-
    SetBit(kInvalidObject);
    if (!url) {
       Error("TProofBench", "specifying a PROOF master url is mandatory - cannot continue");
@@ -234,11 +234,11 @@ TProofBench::TProofBench(const char *url, const char *outfile, const char *proof
                                    " again or with another file", outfile);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TProofBench::~TProofBench()
 {
-   // Destructor
-
    CloseOutFile();
    if (fUnlinkOutfile) gSystem->Unlink(fOutFileName);
    SafeDelete(fReadType);
@@ -247,12 +247,12 @@ TProofBench::~TProofBench()
    SafeDelete(fDescription);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the otuput file
+/// Return 0 on success, -1 on error
+
 Int_t TProofBench::OpenOutFile(Bool_t wrt, Bool_t verbose)
 {
-   // Set the otuput file
-   // Return 0 on success, -1 on error
-
    // Remove any bad file
    if (fOutFile && fOutFile->IsZombie()) SafeDelete(fOutFile);
 
@@ -281,12 +281,12 @@ Int_t TProofBench::OpenOutFile(Bool_t wrt, Bool_t verbose)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the output file
+/// Return 0 on success, -1 on error
+
 Int_t TProofBench::SetOutFile(const char *outfile, Bool_t verbose)
 {
-   // Set the output file
-   // Return 0 on success, -1 on error
-
    Int_t rc = 0;
    // Close existing file, if any
    if (fOutFile) {
@@ -313,21 +313,21 @@ Int_t TProofBench::SetOutFile(const char *outfile, Bool_t verbose)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close output file
+
 void TProofBench::CloseOutFile()
 {
-   // Close output file
-
    if (SetOutFile(0) != 0)
       Warning("CloseOutFile", "problems closing '%s'", fOutFileName.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the CPU run
+/// Return 0 on success, -1 on error
+
 Int_t TProofBench::RunCPU(Long64_t nevents, Int_t start, Int_t stop, Int_t step)
 {
-   // Perform the CPU run
-   // Return 0 on success, -1 on error
-
    // Open the file for the results
    if (OpenOutFile(kTRUE) != 0) {
       Error("RunCPU", "problems opening '%s' to save the result", fOutFileName.Data());
@@ -351,12 +351,12 @@ Int_t TProofBench::RunCPU(Long64_t nevents, Int_t start, Int_t stop, Int_t step)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the CPU run scanning over the number of workers per node
+/// Return 0 on success, -1 on error
+
 Int_t TProofBench::RunCPUx(Long64_t nevents, Int_t start, Int_t stop)
 {
-   // Perform the CPU run scanning over the number of workers per node
-   // Return 0 on success, -1 on error
-
    // Open the file for the results
    if (OpenOutFile(kTRUE) != 0) {
       Error("RunCPUx", "problems opening '%s' to save the result", fOutFileName.Data());
@@ -380,27 +380,27 @@ Int_t TProofBench::RunCPUx(Long64_t nevents, Int_t start, Int_t stop)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the CPU speedup plot.
+///  opt = 'typewhat', e.g. 'std:max:'
+///    type = 'std:'      draw standard evt/s plot
+///           'stdx:'     draw standard evt/s plot, 1 worker per node
+///           'norm:'     draw normalized plot
+///           'normx:'    draw normalized plot, 1 worker per node
+///    what = 'max:'      draw max rate
+///           'avg:'      draw average rate
+///           'all:'      draw max and average rate on same plot (default)
+///  dofit =  0           no fit
+///           1           fit with the relevant '1st degree related' function
+///           2           fit with the relevant '2nd degree related' function
+///           3           fit with varying rcpu function
+///     n0 = for dofit == 3, number of real cores
+///     n1 = for dofit == 3, number of total cores (real + hyperthreaded)
+///
+
 void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
                           Int_t dofit, Int_t n0, Int_t n1)
 {
-   // Draw the CPU speedup plot.
-   //  opt = 'typewhat', e.g. 'std:max:'
-   //    type = 'std:'      draw standard evt/s plot
-   //           'stdx:'     draw standard evt/s plot, 1 worker per node
-   //           'norm:'     draw normalized plot
-   //           'normx:'    draw normalized plot, 1 worker per node
-   //    what = 'max:'      draw max rate
-   //           'avg:'      draw average rate
-   //           'all:'      draw max and average rate on same plot (default)
-   //  dofit =  0           no fit
-   //           1           fit with the relevant '1st degree related' function
-   //           2           fit with the relevant '2nd degree related' function
-   //           3           fit with varying rcpu function
-   //     n0 = for dofit == 3, number of real cores
-   //     n1 = for dofit == 3, number of total cores (real + hyperthreaded)
-    //
-
    // Get the TProfile an create the graphs
    TFile *fout = TFile::Open(outfile, "READ");
    if (!fout || (fout && fout->IsZombie())) {
@@ -618,14 +618,14 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
    if (grmx) fgGraphs->Add(grmx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get from TDirectory 'd' the TProfile named 'pfn' and create the graph.
+/// Return also the max y in mx.
+
 TGraphErrors *TProofBench::GetGraph(TDirectory *d, const char *pfn, Int_t &nb,
                                     Double_t &xmi, Double_t &xmx,
                                     Double_t &ymi, Double_t &ymx, Int_t &kmx, TProfile *&pf)
 {
-   // Get from TDirectory 'd' the TProfile named 'pfn' and create the graph.
-   // Return also the max y in mx.
-
    // Sanity checks
    if (!d || !pfn || (pfn && strlen(pfn) <= 0)) {
       ::Error("TProofBench::GetGraph", "directory or name not defined!");
@@ -677,11 +677,11 @@ TGraphErrors *TProofBench::GetGraph(TDirectory *d, const char *pfn, Int_t &nb,
    return gr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that the fitting functions are defined
+
 void TProofBench::AssertFittingFun(Double_t mi, Double_t mx)
 {
-   // Make sure that the fitting functions are defined
-
    if (!fgFp1) {
       fgFp1 = new TF1("funp1", funp1, mi, mx, 2);
       fgFp1->SetParNames("offset", "slope");
@@ -723,7 +723,8 @@ void TProofBench::AssertFittingFun(Double_t mi, Double_t mx)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class fileDesc : public TNamed {
 public:
    Long_t  fMtime; // Modification time
@@ -738,13 +739,13 @@ public:
    }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get performance specs. Check file 'path', or files in directory 'path'
+/// (default current directory).
+/// The degree of the polynomial used for the fit is 'degfit' (default 1).
+
 void TProofBench::GetPerfSpecs(const char *path, Int_t degfit)
 {
-   // Get performance specs. Check file 'path', or files in directory 'path'
-   // (default current directory).
-   // The degree of the polynomial used for the fit is 'degfit' (default 1).
-
    // Locate the file (ask if many)
    TString pp(path), fn, oo;
    if (pp.IsNull()) pp = gSystem->WorkingDirectory();
@@ -875,14 +876,14 @@ void TProofBench::GetPerfSpecs(const char *path, Int_t degfit)
    TProofBench::DrawCPU(fn.Data(), oo.Data(), kFALSE, degfit);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a test using dataset 'dset'
+/// Return 0 on success, -1 on error
+/// Open the file for the results
+
 Int_t TProofBench::RunDataSet(const char *dset,
                               Int_t start, Int_t stop, Int_t step)
 {
-   // Perform a test using dataset 'dset'
-   // Return 0 on success, -1 on error
-   // Open the file for the results
-
    if (OpenOutFile(kTRUE) != 0) {
       Error("RunDataSet", "problems opening '%s' to save the result", fOutFileName.Data());
       return -1;
@@ -909,14 +910,14 @@ Int_t TProofBench::RunDataSet(const char *dset,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a test using dataset 'dset' scanning over the number of workers
+/// per node.
+/// Return 0 on success, -1 on error
+/// Open the file for the results
+
 Int_t TProofBench::RunDataSetx(const char *dset, Int_t start, Int_t stop)
 {
-   // Perform a test using dataset 'dset' scanning over the number of workers
-   // per node.
-   // Return 0 on success, -1 on error
-   // Open the file for the results
-
    if (OpenOutFile(kTRUE) != 0) {
       Error("RunDataSetx", "problems opening '%s' to save the result", fOutFileName.Data());
       return -1;
@@ -942,29 +943,29 @@ Int_t TProofBench::RunDataSetx(const char *dset, Int_t start, Int_t stop)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the CPU speedup plot.
+///  opt = 'typewhat', e.g. 'std:max:'
+///    type = 'std:'      draw standard plot
+///           'stdx:'     draw standard plot, 1 worker per node
+///           'norm:'     draw normalized plot
+///           'normx:'    draw normalized plot, 1 worker per node
+///    what = 'max:'      draw max rate
+///           'avg:'      draw average rate
+///           'all:'      draw max and average rate on same plot (default)
+/// type =    'mbs'           MB/s scaling plots (default)
+///           'evts'          Event/s scaling plots
+///  dofit =  0           no fit
+///           1           fit with default 3 parameter saturated I/O formula
+///           2           fit with 4 parameter saturated I/O formula (varying Rcpu)
+///     n0 = for dofit == 2, number of real cores
+///     n1 = for dofit == 2, number of total cores (real + hyperthreaded)
+///
+
 void TProofBench::DrawDataSet(const char *outfile,
                               const char *opt, const char *type, Bool_t verbose,
                               Int_t dofit, Int_t n0, Int_t n1)
 {
-   // Draw the CPU speedup plot.
-   //  opt = 'typewhat', e.g. 'std:max:'
-   //    type = 'std:'      draw standard plot
-   //           'stdx:'     draw standard plot, 1 worker per node
-   //           'norm:'     draw normalized plot
-   //           'normx:'    draw normalized plot, 1 worker per node
-   //    what = 'max:'      draw max rate
-   //           'avg:'      draw average rate
-   //           'all:'      draw max and average rate on same plot (default)
-   // type =    'mbs'           MB/s scaling plots (default)
-   //           'evts'          Event/s scaling plots
-   //  dofit =  0           no fit
-   //           1           fit with default 3 parameter saturated I/O formula
-   //           2           fit with 4 parameter saturated I/O formula (varying Rcpu)
-   //     n0 = for dofit == 2, number of real cores
-   //     n1 = for dofit == 2, number of total cores (real + hyperthreaded)
-   //
-
    // Get the TProfile an create the graphs
    TFile *fout = TFile::Open(outfile, "READ");
    if (!fout || (fout && fout->IsZombie())) {
@@ -1161,14 +1162,14 @@ void TProofBench::DrawDataSet(const char *outfile,
    if (grmx) fgGraphs->Add(grmx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the efficiency plot.
+///  opt = 'cpu' or 'data' (default the first found)
+///
+
 void TProofBench::DrawEfficiency(const char *outfile,
                                  const char *opt, Bool_t verbose)
 {
-   // Draw the efficiency plot.
-   //  opt = 'cpu' or 'data' (default the first found)
-   //
-
    // Get the TProfile an create the graphs
    TFile *fout = TFile::Open(outfile, "READ");
    if (!fout || (fout && fout->IsZombie())) {
@@ -1276,53 +1277,53 @@ void TProofBench::DrawEfficiency(const char *outfile,
    if (gr) fgGraphs->Add(gr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release memory cache for dataset 'dset'
+/// Return 0 on success, -1 on error
+
 Int_t TProofBench::ReleaseCache(const char *dset)
 {
-   // Release memory cache for dataset 'dset'
-   // Return 0 on success, -1 on error
-
    // Do it via the dataset handler
    if (!fDS) fDS = new TProofBenchDataSet(fProofDS);
    return fDS ? fDS->ReleaseCache(dset) : -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Physically remove the dataset 'dset', i.e. remove the dataset and the files
+/// it describes
+/// Return 0 on success, -1 on error
+
 Int_t TProofBench::RemoveDataSet(const char *dset)
 {
-   // Physically remove the dataset 'dset', i.e. remove the dataset and the files
-   // it describes
-   // Return 0 on success, -1 on error
-
    // Do it via the dataset handler
    if (!fDS) fDS = new TProofBenchDataSet(fProofDS);
    return fDS ? fDS->RemoveFiles(dset) : -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the largest dataset for the run.
+/// Defaults for
+///          dataset name, filename root
+/// are
+///          "BenchDataSet", "event"
+/// respectively.
+/// These can be changed via dset and fnroot, respectively.
+/// The string 'fnroot' defines the location of the files, interpreted as an URL.
+/// Examples:
+///          fnroot             files
+///          'event'            <datadir>/event_<ord>_<#>.root
+///          '/mss/event'       /mss/event_<ord>_<#>.root
+///          'root://srv//mss/event?remote=1'
+///                             root://srv//mss/event_<ord>_<#>?remote=1.root
+/// Default selector is TSelEventGen. Use SetDataGenSel and SetDataGenPar to change it
+/// and to pass the list of PARs defining the alternative selector.
+/// The argument 'nevt' controls the number of events per file (-1 for the default,
+/// which is 30000).
+/// Return 0 on success, -1 on error
+
 Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnroot,
                                Bool_t regenerate)
 {
-   // Create the largest dataset for the run.
-   // Defaults for
-   //          dataset name, filename root
-   // are
-   //          "BenchDataSet", "event"
-   // respectively.
-   // These can be changed via dset and fnroot, respectively.
-   // The string 'fnroot' defines the location of the files, interpreted as an URL.
-   // Examples:
-   //          fnroot             files
-   //          'event'            <datadir>/event_<ord>_<#>.root
-   //          '/mss/event'       /mss/event_<ord>_<#>.root
-   //          'root://srv//mss/event?remote=1'
-   //                             root://srv//mss/event_<ord>_<#>?remote=1.root
-   // Default selector is TSelEventGen. Use SetDataGenSel and SetDataGenPar to change it
-   // and to pass the list of PARs defining the alternative selector.
-   // The argument 'nevt' controls the number of events per file (-1 for the default,
-   // which is 30000).
-   // Return 0 on success, -1 on error
-
    if (dset && strlen(dset) > 0) fDataSet = dset;
 
    // Load the selector, if needed
@@ -1494,13 +1495,13 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the files of dataset 'dset' to 'destdir' and create a new dataset named 'dsetdst'
+/// decribing them.
+/// Return 0 on success, -1 on error
+
 Int_t TProofBench::CopyDataSet(const char *dset, const char *dsetdst, const char *destdir)
 {
-   // Copy the files of dataset 'dset' to 'destdir' and create a new dataset named 'dsetdst'
-   // decribing them.
-   // Return 0 on success, -1 on error
-
    // Make some checks
    if (!fProof) {
       Error("CopyDataSet", "no PROOF found - cannot continue");
@@ -1566,13 +1567,13 @@ Int_t TProofBench::CopyDataSet(const char *dset, const char *dsetdst, const char
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the PROOF instance to be used for dataset operations, like releasing
+/// cache ...
+/// Use SetProofDS(0) to reset and using the default PROOF
+
 void TProofBench::SetProofDS(TProof *pds)
 {
-   // Set the PROOF instance to be used for dataset operations, like releasing
-   // cache ...
-   // Use SetProofDS(0) to reset and using the default PROOF
-
    if (pds && !pds->IsValid()) {
       Error("SetProofDS", "trying to set an invalid PROOF instance");
       return;

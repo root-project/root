@@ -30,12 +30,12 @@
 ClassImp(TGShutterItem)
 ClassImp(TGShutter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create shutter frame.
+
 TGShutter::TGShutter(const TGWindow *p, UInt_t options) :
    TGCompositeFrame(p, 10, 10, options)
 {
-   // Create shutter frame.
-
    fSelectedItem        = 0;
    fClosingItem         = 0;
    fHeightIncrement     = 1;
@@ -51,11 +51,11 @@ TGShutter::TGShutter(const TGWindow *p, UInt_t options) :
    fLayoutManager = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup shutter widget.
+
 TGShutter::~TGShutter()
 {
-   // Cleanup shutter widget.
-
    if (fTimer) delete fTimer;
 
    if (!MustCleanup()) {
@@ -65,11 +65,11 @@ TGShutter::~TGShutter()
    fTrash = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add shutter item to shutter frame.
+
 void TGShutter::AddItem(TGShutterItem *item)
 {
-   // Add shutter item to shutter frame.
-
    TGLayoutHints *hints = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
    AddFrame(item, hints);
    fTrash->Add(hints);
@@ -78,11 +78,11 @@ void TGShutter::AddItem(TGShutterItem *item)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove item from shutter
+
 void TGShutter::RemoveItem(const char *name)
 {
-   // Remove item from shutter
-
    TGShutterItem *item = GetItem(name);
 
    if (!item) {
@@ -113,11 +113,11 @@ void TGShutter::RemoveItem(const char *name)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove selected page
+
 void TGShutter::RemovePage()
 {
-   // Remove selected page
-
    if (!fSelectedItem) {
       return;
    }
@@ -125,11 +125,11 @@ void TGShutter::RemovePage()
    RemoveItem(btn->GetString().Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rename selected page
+
 void TGShutter::RenamePage(const char *name)
 {
-   // Rename selected page
-
    if (!fSelectedItem) {
       return;
    }
@@ -137,11 +137,11 @@ void TGShutter::RenamePage(const char *name)
    btn->SetText(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add new page (shutter item)
+
 TGShutterItem *TGShutter::AddPage(const char *name)
 {
-   // Add new page (shutter item)
-
    static int id = 1000;
    TGShutterItem *item = new TGShutterItem(this, new TGHotString(name), id++);
    AddItem(item);
@@ -150,11 +150,11 @@ TGShutterItem *TGShutter::AddPage(const char *name)
    return item;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle shutter messages.
+
 Bool_t TGShutter::ProcessMessage(Long_t /*msg*/, Long_t parm1, Long_t /*parm2*/)
 {
-   // Handle shutter messages.
-
    if (!fList) return kFALSE;
 
    TGFrameElement *el;
@@ -190,11 +190,11 @@ Bool_t TGShutter::ProcessMessage(Long_t /*msg*/, Long_t parm1, Long_t /*parm2*/)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shutter item animation.
+
 Bool_t TGShutter::HandleTimer(TTimer *)
 {
-   // Shutter item animation.
-
    if (!fClosingItem) return kFALSE;
    fClosingHeight -= fHeightIncrement;
    fHeightIncrement += 5;
@@ -210,11 +210,11 @@ Bool_t TGShutter::HandleTimer(TTimer *)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout shutter items.
+
 void TGShutter::Layout()
 {
-   // Layout shutter items.
-
    TGFrameElement *el;
    TGShutterItem  *child;
    Int_t y, bh, exh;
@@ -259,21 +259,21 @@ void TGShutter::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set item to be the currently open shutter item.
+
 void TGShutter::SetSelectedItem(TGShutterItem *item)
 {
-   // Set item to be the currently open shutter item.
-
    fSelectedItem = item;
    fSelectedItem->Selected(); // emit signal
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set item to be the currently open shutter item.
+
 void TGShutter::SetSelectedItem(const char *name)
 {
-   // Set item to be the currently open shutter item.
-
    TGShutterItem *item = GetItem(name);
    if (!item) {
       return;
@@ -281,11 +281,11 @@ void TGShutter::SetSelectedItem(const char *name)
    SetSelectedItem(item);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disable/enbale shutter item.
+
 void TGShutter::EnableItem(const char *name, Bool_t on)
 {
-   // Disable/enbale shutter item.
-
    TGShutterItem *item = GetItem(name);
    if (!item) {
       return;
@@ -294,11 +294,11 @@ void TGShutter::EnableItem(const char *name, Bool_t on)
    item->GetButton()->SetEnabled(on);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns a shutter item by name (name is hot string of shutter item)
+
 TGShutterItem *TGShutter::GetItem(const char *name)
 {
-   // returns a shutter item by name (name is hot string of shutter item)
-
    TGFrameElement *el;
    TGShutterItem  *item = 0;
 
@@ -314,33 +314,33 @@ TGShutterItem *TGShutter::GetItem(const char *name)
    return item;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the default / minimal size of the widget.
+
 TGDimension TGShutter::GetDefaultSize() const
 {
-   // Return the default / minimal size of the widget.
-
    UInt_t w = (GetOptions() & kFixedWidth)  || (fDefWidth  == 0) ? fWidth  : fDefWidth;
    UInt_t h = (GetOptions() & kFixedHeight) || (fDefHeight == 0) ? fHeight : fDefHeight;
    return TGDimension(w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the default / minimal size of the widget.
+
 void TGShutter::SetDefaultSize(UInt_t w, UInt_t h)
 {
-   // Set the default / minimal size of the widget.
-
    fDefWidth  = w;
    fDefHeight = h;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a shutter item.
+
 TGShutterItem::TGShutterItem(const TGWindow *p, TGHotString *s, Int_t id,
                              UInt_t options) :
    TGVerticalFrame (p, 10, 10, options), TGWidget (id)
 {
-   // Create a shutter item.
-
    if (!p && !s) {
       MakeZombie();
       // coverity [uninit_ctor]
@@ -363,11 +363,11 @@ TGShutterItem::TGShutterItem(const TGWindow *p, TGHotString *s, Int_t id,
    fEditDisabled = kEditDisableGrab | kEditDisableLayout;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clan up shutter item.
+
 TGShutterItem::~TGShutterItem()
 {
-   // Clan up shutter item.
-
    if (!IsZombie() && !MustCleanup()) {
       delete fL1;
       delete fL2;
@@ -377,11 +377,11 @@ TGShutterItem::~TGShutterItem()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a shutter item widget as a C++ statement(s) on output stream out
+
 void TGShutterItem::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a shutter item widget as a C++ statement(s) on output stream out
-
    char quote = '"';
    TGTextButton *b = (TGTextButton *)fButton;
    const char *text = b->GetText()->GetString();
@@ -431,11 +431,11 @@ void TGShutterItem::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a shutter widget as a C++ statement(s) on output stream out.
+
 void TGShutter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a shutter widget as a C++ statement(s) on output stream out.
-
    out << std::endl;
    out << "   // shutter" << std::endl;
 

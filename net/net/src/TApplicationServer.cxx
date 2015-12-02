@@ -67,7 +67,8 @@
 
 
 //----- Interrupt signal handler -----------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TASInterruptHandler : public TSignalHandler {
    TApplicationServer  *fServ;
 public:
@@ -76,11 +77,11 @@ public:
    Bool_t  Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle this interrupt
+
 Bool_t TASInterruptHandler::Notify()
 {
-   // Handle this interrupt
-
    fServ->HandleUrgentData();
    if (TROOT::Initialized()) {
       Throw(GetSignal());
@@ -89,7 +90,8 @@ Bool_t TASInterruptHandler::Notify()
 }
 
 //----- SigPipe signal handler -------------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TASSigPipeHandler : public TSignalHandler {
    TApplicationServer  *fServ;
 public:
@@ -98,17 +100,18 @@ public:
    Bool_t  Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle this signal
+
 Bool_t TASSigPipeHandler::Notify()
 {
-   // Handle this signal
-
    fServ->HandleSigPipe();
    return kTRUE;
 }
 
 //----- Input handler for messages from client -----------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TASInputHandler : public TFileHandler {
    TApplicationServer  *fServ;
 public:
@@ -118,22 +121,22 @@ public:
    Bool_t ReadNotify() { return Notify(); }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle this input
+
 Bool_t TASInputHandler::Notify()
 {
-   // Handle this input
-
    fServ->HandleSocketInput();
    return kTRUE;
 }
 
 TString TASLogHandler::fgPfx = ""; // Default prefix to be prepended to messages
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute 'cmd' in a pipe and handle output messages from the related file
+
 TASLogHandler::TASLogHandler(const char *cmd, TSocket *s, const char *pfx)
               : TFileHandler(-1, 1), fSocket(s), fPfx(pfx)
 {
-   // Execute 'cmd' in a pipe and handle output messages from the related file
-
    ResetBit(kFileIsPipe);
    fFile = 0;
    if (s && cmd) {
@@ -153,12 +156,12 @@ TASLogHandler::TASLogHandler(const char *cmd, TSocket *s, const char *pfx)
             "undefined command (%p) or socket (%p)", (int *)cmd, s);
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle available message from the open file 'f'
+
 TASLogHandler::TASLogHandler(FILE *f, TSocket *s, const char *pfx)
               : TFileHandler(-1, 1), fSocket(s), fPfx(pfx)
 {
-   // Handle available message from the open file 'f'
-
    ResetBit(kFileIsPipe);
    fFile = 0;
    if (s && f) {
@@ -170,22 +173,22 @@ TASLogHandler::TASLogHandler(FILE *f, TSocket *s, const char *pfx)
       Error("TASLogHandler", "undefined file (%p) or socket (%p)", f, s);
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle available message in the open file
+
 TASLogHandler::~TASLogHandler()
 {
-   // Handle available message in the open file
-
    if (TestBit(kFileIsPipe) && fFile)
       gSystem->ClosePipe(fFile);
    fFile = 0;
    fSocket = 0;
    ResetBit(kFileIsPipe);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle available message in the open file
+
 Bool_t TASLogHandler::Notify()
 {
-   // Handle available message in the open file
-
    if (IsValid()) {
       TMessage m(kMESS_ANY);
       // Read buffer
@@ -212,20 +215,20 @@ Bool_t TASLogHandler::Notify()
    }
    return kTRUE;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to set the default prefix
+
 void TASLogHandler::SetDefaultPrefix(const char *pfx)
 {
-   // Static method to set the default prefix
-
    fgPfx = pfx;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init a guard for executing a command in a pipe
+
 TASLogHandlerGuard::TASLogHandlerGuard(const char *cmd, TSocket *s,
                                        const char *pfx, Bool_t on)
 {
-   // Init a guard for executing a command in a pipe
-
    fExecHandler = 0;
    if (cmd && on) {
       fExecHandler = new TASLogHandler(cmd, s, pfx);
@@ -240,12 +243,12 @@ TASLogHandlerGuard::TASLogHandlerGuard(const char *cmd, TSocket *s,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init a guard for executing a command in a pipe
+
 TASLogHandlerGuard::TASLogHandlerGuard(FILE *f, TSocket *s,
                                        const char *pfx, Bool_t on)
 {
-   // Init a guard for executing a command in a pipe
-
    fExecHandler = 0;
    if (f && on) {
       fExecHandler = new TASLogHandler(f, s, pfx);
@@ -260,11 +263,11 @@ TASLogHandlerGuard::TASLogHandlerGuard(FILE *f, TSocket *s,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close a guard for executing a command in a pipe
+
 TASLogHandlerGuard::~TASLogHandlerGuard()
 {
-   // Close a guard for executing a command in a pipe
-
    if (fExecHandler && fExecHandler->IsValid()) {
       gSystem->RemoveFileHandler(fExecHandler);
       SafeDelete(fExecHandler);
@@ -273,14 +276,14 @@ TASLogHandlerGuard::~TASLogHandlerGuard()
 
 ClassImp(TApplicationServer)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor. Create an application environment. The TApplicationServer
+/// environment provides an eventloop via inheritance of TApplication.
+
 TApplicationServer::TApplicationServer(Int_t *argc, char **argv,
                                        FILE *flog, const char *logfile)
        : TApplication("server", argc, argv, 0, -1)
 {
-   // Main constructor. Create an application environment. The TApplicationServer
-   // environment provides an eventloop via inheritance of TApplication.
-
    // Parse options
    GetOptions(argc, argv);
 
@@ -356,12 +359,12 @@ TApplicationServer::TApplicationServer(Int_t *argc, char **argv,
    SendLogFile();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the Remote Server logo on standard output.
+/// Return 0 on success, -1 on failure
+
 Int_t TApplicationServer::Setup()
 {
-   // Print the Remote Server logo on standard output.
-   // Return 0 on success, -1 on failure
-
    char str[512];
    snprintf(str, 512, "**** Remote session @ %s started ****", gSystem->HostName());
    if (fSocket->Send(str) != 1+static_cast<Int_t>(strlen(str))) {
@@ -429,24 +432,24 @@ Int_t TApplicationServer::Setup()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup. Not really necessary since after this dtor there is no
+/// live anyway.
+
 TApplicationServer::~TApplicationServer()
 {
-   // Cleanup. Not really necessary since after this dtor there is no
-   // live anyway.
-
    fSentCanvases->SetOwner(kFALSE);
    SafeDelete(fSentCanvases);
    SafeDelete(fSocket);
    close(fLogFileDes);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get and handle command line options. Fixed format:
+/// "protocol  url"
+
 void TApplicationServer::GetOptions(Int_t *argc, char **argv)
 {
-   // Get and handle command line options. Fixed format:
-   // "protocol  url"
-
    if (*argc < 4) {
       Fatal("GetOptions", "must be started with 4 arguments");
       gSystem->Exit(1);
@@ -467,11 +470,11 @@ void TApplicationServer::GetOptions(Int_t *argc, char **argv)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main server eventloop.
+
 void TApplicationServer::Run(Bool_t retrn)
 {
-   // Main server eventloop.
-
    // Setup the server
    if (fIsValid) {
       // Run the main event loop
@@ -482,11 +485,11 @@ void TApplicationServer::Run(Bool_t retrn)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle input coming from the client or from the master server.
+
 void TApplicationServer::HandleSocketInput()
 {
-   // Handle input coming from the client or from the master server.
-
    TMessage *mess;
    char      str[2048];
    Int_t     what;
@@ -572,11 +575,11 @@ void TApplicationServer::HandleSocketInput()
    delete mess;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Out-Of-Band data sent by the master or client.
+
 void TApplicationServer::HandleUrgentData()
 {
-   // Handle Out-Of-Band data sent by the master or client.
-
    char  oob_byte;
    Int_t n, nch, wasted = 0;
 
@@ -688,12 +691,12 @@ void TApplicationServer::HandleUrgentData()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when the client is not alive anymore (i.e. when kKeepAlive
+/// has failed).
+
 void TApplicationServer::HandleSigPipe()
 {
-   // Called when the client is not alive anymore (i.e. when kKeepAlive
-   // has failed).
-
    // Real-time notification of messages
    TASLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
 
@@ -701,11 +704,11 @@ void TApplicationServer::HandleSigPipe()
    Terminate(0);  // will not return from here....
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset environment to be ready for execution of next command.
+
 void TApplicationServer::Reset(const char *dir)
 {
-   // Reset environment to be ready for execution of next command.
-
    // First go to new directory.
    gDirectory->cd(dir);
 
@@ -719,14 +722,14 @@ void TApplicationServer::Reset(const char *dir)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a file, either sent by a client or a master server.
+/// If bin is true it is a binary file, other wise it is an ASCII
+/// file and we need to check for Windows \r tokens. Returns -1 in
+/// case of error, 0 otherwise.
+
 Int_t TApplicationServer::ReceiveFile(const char *file, Bool_t bin, Long64_t size)
 {
-   // Receive a file, either sent by a client or a master server.
-   // If bin is true it is a binary file, other wise it is an ASCII
-   // file and we need to check for Windows \r tokens. Returns -1 in
-   // case of error, 0 otherwise.
-
    if (size <= 0) return 0;
 
    // open file, overwrite already existing file
@@ -793,13 +796,13 @@ Int_t TApplicationServer::ReceiveFile(const char *file, Bool_t bin, Long64_t siz
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send log file to master.
+/// If start > -1 send only bytes in the range from start to end,
+/// if end <= start send everything from start.
+
 void TApplicationServer::SendLogFile(Int_t status, Int_t start, Int_t end)
 {
-   // Send log file to master.
-   // If start > -1 send only bytes in the range from start to end,
-   // if end <= start send everything from start.
-
    // Determine the number of bytes left to be read from the log file.
    fflush(stdout);
 
@@ -874,11 +877,11 @@ void TApplicationServer::SendLogFile(Int_t status, Int_t start, Int_t end)
    fSocket->Send(m);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send any created canvas to client
+
 Int_t TApplicationServer::SendCanvases()
 {
-   // Send any created canvas to client
-
    Int_t nc = 0;
 
    // Send back new canvases
@@ -911,11 +914,11 @@ Int_t TApplicationServer::SendCanvases()
    return nc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse directory and send back its content to client.
+
 Int_t TApplicationServer::BrowseDirectory(const char *dirname)
 {
-   // Browse directory and send back its content to client.
-
    Int_t nc = 0;
 
    TMessage mess(kMESS_OBJECT);
@@ -939,12 +942,12 @@ Int_t TApplicationServer::BrowseDirectory(const char *dirname)
    return nc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse root file and send back its content;
+/// if fname is null, send the full list of files.
+
 Int_t TApplicationServer::BrowseFile(const char *fname)
 {
-   // Browse root file and send back its content;
-   // if fname is null, send the full list of files.
-
    Int_t nc = 0;
 
    TList *list = new TList;
@@ -995,11 +998,11 @@ Int_t TApplicationServer::BrowseFile(const char *fname)
    return nc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read key object and send it back to client.
+
 Int_t TApplicationServer::BrowseKey(const char *keyname)
 {
-   // Read key object and send it back to client.
-
    Int_t nc = 0;
 
    TMessage mess(kMESS_OBJECT);
@@ -1013,11 +1016,11 @@ Int_t TApplicationServer::BrowseKey(const char *keyname)
    return nc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminate the proof server.
+
 void TApplicationServer::Terminate(Int_t status)
 {
-   // Terminate the proof server.
-
    // Close and remove the log file; remove the cleanup script
    if (fLogFile) {
       fclose(fLogFile);
@@ -1043,11 +1046,11 @@ void TApplicationServer::Terminate(Int_t status)
    gSystem->Exit(status);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle file checking request.
+
 void TApplicationServer::HandleCheckFile(TMessage *mess)
 {
-   // Handle file checking request.
-
    TString filenam;
    TMD5    md5;
    TMessage m(kMESS_ANY);
@@ -1072,13 +1075,13 @@ void TApplicationServer::HandleCheckFile(TMessage *mess)
    delete md5local;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The error handler function. It prints the message on stderr and
+/// if abort is set it aborts the application.
+
 void TApplicationServer::ErrorHandler(Int_t level, Bool_t abort, const char *location,
                               const char *msg)
 {
-   // The error handler function. It prints the message on stderr and
-   // if abort is set it aborts the application.
-
    if (gErrorIgnoreLevel == kUnset) {
       gErrorIgnoreLevel = 0;
       if (gEnv) {
@@ -1166,14 +1169,14 @@ void TApplicationServer::ErrorHandler(Int_t level, Bool_t abort, const char *loc
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse a command line received from the client, making sure that the files
+/// needed for the execution, if any, are available. The line is either a C++
+/// statement or an interpreter command starting with a ".".
+/// Return the return value of the command casted to a long.
+
 Long_t TApplicationServer::ProcessLine(const char *line, Bool_t, Int_t *)
 {
-   // Parse a command line received from the client, making sure that the files
-   // needed for the execution, if any, are available. The line is either a C++
-   // statement or an interpreter command starting with a ".".
-   // Return the return value of the command casted to a long.
-
    if (!line || !*line) return 0;
 
    // If load or execute request we must make sure that we have the files.
@@ -1256,17 +1259,17 @@ Long_t TApplicationServer::ProcessLine(const char *line, Bool_t, Int_t *)
    return TApplication::ProcessLine(line);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute logon macro's. There are three levels of logon macros that
+/// will be executed: the system logon etc/system.rootlogon.C, the global
+/// user logon ~/.rootlogon.C and the local ./.rootlogon.C. For backward
+/// compatibility also the logon macro as specified by the Rint.Logon
+/// environment setting, by default ./rootlogon.C, will be executed.
+/// No logon macros will be executed when the system is started with
+/// the -n option.
+
 void TApplicationServer::ExecLogon()
 {
-   // Execute logon macro's. There are three levels of logon macros that
-   // will be executed: the system logon etc/system.rootlogon.C, the global
-   // user logon ~/.rootlogon.C and the local ./.rootlogon.C. For backward
-   // compatibility also the logon macro as specified by the Rint.Logon
-   // environment setting, by default ./rootlogon.C, will be executed.
-   // No logon macros will be executed when the system is started with
-   // the -n option.
-
    if (NoLogOpt()) return;
 
    TString name = ".rootlogon.C";

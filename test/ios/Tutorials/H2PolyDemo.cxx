@@ -10,7 +10,8 @@ namespace ROOT {
 namespace iOS {
 namespace Demos {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 H2PolyDemo::H2PolyDemo(const char *fileName)
 {
    std::auto_ptr<TFile> inputFile(TFile::Open(fileName, "read"));
@@ -22,13 +23,15 @@ H2PolyDemo::H2PolyDemo(const char *fileName)
       fPoly->SetDirectory(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///For auto_ptr's dtor only.
+
 H2PolyDemo::~H2PolyDemo()
 {
-   //For auto_ptr's dtor only.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void H2PolyDemo::PresentDemo()
 {
    if (fPoly.get())

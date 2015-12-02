@@ -76,20 +76,20 @@ namespace std {} using namespace std;
 
 ClassImp(TList)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the list. Objects are not deleted unless the TList is the
+/// owner (set via SetOwner()).
+
 TList::~TList()
 {
-   // Delete the list. Objects are not deleted unless the TList is the
-   // owner (set via SetOwner()).
-
    Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the beginning of the list.
+
 void TList::AddFirst(TObject *obj)
 {
-   // Add object at the beginning of the list.
-
    if (IsArgNull("AddFirst", obj)) return;
 
    if (!fFirst) {
@@ -105,15 +105,15 @@ void TList::AddFirst(TObject *obj)
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the beginning of the list and also store option.
+/// Storing an option is useful when one wants to change the behaviour
+/// of an object a little without having to create a complete new
+/// copy of the object. This feature is used, for example, by the Draw()
+/// method. It allows the same object to be drawn in different ways.
+
 void TList::AddFirst(TObject *obj, Option_t *opt)
 {
-   // Add object at the beginning of the list and also store option.
-   // Storing an option is useful when one wants to change the behaviour
-   // of an object a little without having to create a complete new
-   // copy of the object. This feature is used, for example, by the Draw()
-   // method. It allows the same object to be drawn in different ways.
-
    if (IsArgNull("AddFirst", obj)) return;
 
    if (!fFirst) {
@@ -129,11 +129,11 @@ void TList::AddFirst(TObject *obj, Option_t *opt)
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the end of the list.
+
 void TList::AddLast(TObject *obj)
 {
-   // Add object at the end of the list.
-
    if (IsArgNull("AddLast", obj)) return;
 
    if (!fFirst) {
@@ -145,15 +145,15 @@ void TList::AddLast(TObject *obj)
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the end of the list and also store option.
+/// Storing an option is useful when one wants to change the behaviour
+/// of an object a little without having to create a complete new
+/// copy of the object. This feature is used, for example, by the Draw()
+/// method. It allows the same object to be drawn in different ways.
+
 void TList::AddLast(TObject *obj, Option_t *opt)
 {
-   // Add object at the end of the list and also store option.
-   // Storing an option is useful when one wants to change the behaviour
-   // of an object a little without having to create a complete new
-   // copy of the object. This feature is used, for example, by the Draw()
-   // method. It allows the same object to be drawn in different ways.
-
    if (IsArgNull("AddLast", obj)) return;
 
    if (!fFirst) {
@@ -165,11 +165,11 @@ void TList::AddLast(TObject *obj, Option_t *opt)
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object before object before in the list.
+
 void TList::AddBefore(const TObject *before, TObject *obj)
 {
-   // Insert object before object before in the list.
-
    if (IsArgNull("AddBefore", obj)) return;
 
    if (!before)
@@ -191,13 +191,13 @@ void TList::AddBefore(const TObject *before, TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object before the specified ObjLink object. If before = 0 then add
+/// to the head of the list. An ObjLink can be obtained by looping over a list
+/// using the above describe iterator method 3.
+
 void TList::AddBefore(TObjLink *before, TObject *obj)
 {
-   // Insert object before the specified ObjLink object. If before = 0 then add
-   // to the head of the list. An ObjLink can be obtained by looping over a list
-   // using the above describe iterator method 3.
-
    if (IsArgNull("AddBefore", obj)) return;
 
    if (!before)
@@ -213,11 +213,11 @@ void TList::AddBefore(TObjLink *before, TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object after object after in the list.
+
 void TList::AddAfter(const TObject *after, TObject *obj)
 {
-   // Insert object after object after in the list.
-
    if (IsArgNull("AddAfter", obj)) return;
 
    if (!after)
@@ -239,13 +239,13 @@ void TList::AddAfter(const TObject *after, TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object after the specified ObjLink object. If after = 0 then add
+/// to the tail of the list. An ObjLink can be obtained by looping over a list
+/// using the above describe iterator method 3.
+
 void TList::AddAfter(TObjLink *after, TObject *obj)
 {
-   // Insert object after the specified ObjLink object. If after = 0 then add
-   // to the tail of the list. An ObjLink can be obtained by looping over a list
-   // using the above describe iterator method 3.
-
    if (IsArgNull("AddAfter", obj)) return;
 
    if (!after)
@@ -261,11 +261,11 @@ void TList::AddAfter(TObjLink *after, TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object at position idx in the list.
+
 void TList::AddAt(TObject *obj, Int_t idx)
 {
-   // Insert object at position idx in the list.
-
    if (IsArgNull("AddAt", obj)) return;
 
    TObjLink *lnk = LinkAt(idx);
@@ -280,12 +280,12 @@ void TList::AddAt(TObject *obj, Int_t idx)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the object after object obj. Obj is found using the
+/// object's IsEqual() method.  Returns 0 if obj is last in list.
+
 TObject *TList::After(const TObject *obj) const
 {
-   // Returns the object after object obj. Obj is found using the
-   // object's IsEqual() method.  Returns 0 if obj is last in list.
-
    TObjLink *t;
 
    if (fCache && fCache->GetObject() && fCache->GetObject()->IsEqual(obj)) {
@@ -303,22 +303,22 @@ TObject *TList::After(const TObject *obj) const
       return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the object at position idx. Returns 0 if idx is out of range.
+
 TObject *TList::At(Int_t idx) const
 {
-   // Returns the object at position idx. Returns 0 if idx is out of range.
-
    TObjLink *lnk = LinkAt(idx);
    if (lnk) return lnk->GetObject();
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the object before object obj. Obj is found using the
+/// object's IsEqual() method.  Returns 0 if obj is first in list.
+
 TObject *TList::Before(const TObject *obj) const
 {
-   // Returns the object before object obj. Obj is found using the
-   // object's IsEqual() method.  Returns 0 if obj is first in list.
-
    TObjLink *t;
 
    if (fCache && fCache->GetObject() && fCache->GetObject()->IsEqual(obj)) {
@@ -336,16 +336,16 @@ TObject *TList::Before(const TObject *obj) const
       return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all objects from the list. Does not delete the objects
+/// unless the TList is the owner (set via SetOwner()) and option
+/// "nodelete" is not set.
+/// If option="nodelete" then don't delete any heap objects that were
+/// marked with the kCanDelete bit, otherwise these objects will be
+/// deleted (this option is used by THashTable::Clear()).
+
 void TList::Clear(Option_t *option)
 {
-   // Remove all objects from the list. Does not delete the objects
-   // unless the TList is the owner (set via SetOwner()) and option
-   // "nodelete" is not set.
-   // If option="nodelete" then don't delete any heap objects that were
-   // marked with the kCanDelete bit, otherwise these objects will be
-   // deleted (this option is used by THashTable::Clear()).
-
    Bool_t nodel = option ? (!strcmp(option, "nodelete") ? kTRUE : kFALSE) : kFALSE;
 
    if (!nodel && IsOwner()) {
@@ -393,15 +393,15 @@ void TList::Clear(Option_t *option)
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all objects from the list AND delete all heap based objects.
+/// If option="slow" then keep list consistent during delete. This allows
+/// recursive list operations during the delete (e.g. during the dtor
+/// of an object in this list one can still access the list to search for
+/// other not yet deleted objects).
+
 void TList::Delete(Option_t *option)
 {
-   // Remove all objects from the list AND delete all heap based objects.
-   // If option="slow" then keep list consistent during delete. This allows
-   // recursive list operations during the delete (e.g. during the dtor
-   // of an object in this list one can still access the list to search for
-   // other not yet deleted objects).
-
    Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
 
    TList removeDirectory; // need to deregistere these from their directory
@@ -476,24 +476,24 @@ void TList::Delete(Option_t *option)
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a TObjLink object.
+
 void TList::DeleteLink(TObjLink *lnk)
 {
-   // Delete a TObjLink object.
-
    lnk->fNext = lnk->fPrev = 0;
    lnk->fObject = 0;
    delete lnk;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find an object in this list using its name. Requires a sequential
+/// scan till the object has been found. Returns 0 if object with specified
+/// name is not found. This method overrides the generic FindObject()
+/// of TCollection for efficiency reasons.
+
 TObject *TList::FindObject(const char *name) const
 {
-   // Find an object in this list using its name. Requires a sequential
-   // scan till the object has been found. Returns 0 if object with specified
-   // name is not found. This method overrides the generic FindObject()
-   // of TCollection for efficiency reasons.
-
    if (!name) return 0;
    TObjLink *lnk = FirstLink();
    while (lnk) {
@@ -505,15 +505,15 @@ TObject *TList::FindObject(const char *name) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find an object in this list using the object's IsEqual()
+/// member function. Requires a sequential scan till the object has
+/// been found. Returns 0 if object is not found.
+/// This method overrides the generic FindObject() of TCollection for
+/// efficiency reasons.
+
 TObject *TList::FindObject(const TObject *obj) const
 {
-   // Find an object in this list using the object's IsEqual()
-   // member function. Requires a sequential scan till the object has
-   // been found. Returns 0 if object is not found.
-   // This method overrides the generic FindObject() of TCollection for
-   // efficiency reasons.
-
    TObjLink *lnk = FirstLink();
 
    while (lnk) {
@@ -524,12 +524,12 @@ TObject *TList::FindObject(const TObject *obj) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the TObjLink object that contains object obj. In idx it returns
+/// the position of the object in the list.
+
 TObjLink *TList::FindLink(const TObject *obj, Int_t &idx) const
 {
-   // Returns the TObjLink object that contains object obj. In idx it returns
-   // the position of the object in the list.
-
    if (!fFirst) return 0;
 
    TObject *object;
@@ -549,20 +549,20 @@ TObjLink *TList::FindLink(const TObject *obj, Int_t &idx) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the first object in the list. Returns 0 when list is empty.
+
 TObject *TList::First() const
 {
-   // Return the first object in the list. Returns 0 when list is empty.
-
    if (fFirst) return fFirst->GetObject();
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return address of pointer to obj
+
 TObject **TList::GetObjectRef(const TObject *obj) const
 {
-   // Return address of pointer to obj
-
    TObjLink *lnk = FirstLink();
 
    while (lnk) {
@@ -573,20 +573,20 @@ TObject **TList::GetObjectRef(const TObject *obj) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the last object in the list. Returns 0 when list is empty.
+
 TObject *TList::Last() const
 {
-   // Return the last object in the list. Returns 0 when list is empty.
-
    if (fLast) return fLast->GetObject();
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the TObjLink object at index idx.
+
 TObjLink *TList::LinkAt(Int_t idx) const
 {
-   // Return the TObjLink object at index idx.
-
    Int_t    i = 0;
    TObjLink *lnk = fFirst;
    while (i < idx && lnk) {
@@ -596,42 +596,42 @@ TObjLink *TList::LinkAt(Int_t idx) const
    return lnk;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a list iterator.
+
 TIterator *TList::MakeIterator(Bool_t dir) const
 {
-   // Return a list iterator.
-
    return new TListIter(this, dir);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a new TObjLink.
+
 TObjLink *TList::NewLink(TObject *obj, TObjLink *prev)
 {
-   // Return a new TObjLink.
-
    if (prev)
       return new TObjLink(obj, prev);
    else
       return new TObjLink(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a new TObjOptLink (a TObjLink that also stores the option).
+
 TObjLink *TList::NewOptLink(TObject *obj, Option_t *opt, TObjLink *prev)
 {
-   // Return a new TObjOptLink (a TObjLink that also stores the option).
-
    if (prev)
       return new TObjOptLink(obj, prev, opt);
    else
       return new TObjOptLink(obj, opt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from this collection and recursively remove the object
+/// from all other objects (and collections).
+
 void TList::RecursiveRemove(TObject *obj)
 {
-   // Remove object from this collection and recursively remove the object
-   // from all other objects (and collections).
-
    if (!obj) return;
 
    TObjLink *lnk  = fFirst;
@@ -667,11 +667,11 @@ void TList::RecursiveRemove(TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from the list.
+
 TObject *TList::Remove(TObject *obj)
 {
-   // Remove object from the list.
-
    if (!obj) return 0;
 
    Int_t    idx;
@@ -706,12 +706,12 @@ TObject *TList::Remove(TObject *obj)
    return ob;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object link (and therefore the object it contains)
+/// from the list.
+
 TObject *TList::Remove(TObjLink *lnk)
 {
-   // Remove object link (and therefore the object it contains)
-   // from the list.
-
    if (!lnk) return 0;
 
    TObject *obj = lnk->GetObject();
@@ -739,11 +739,11 @@ TObject *TList::Remove(TObjLink *lnk)
    return obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the last object of the list.
+
 void TList::RemoveLast()
 {
-   // Remove the last object of the list.
-
    TObjLink *lnk = fLast;
    if (!lnk) return;
 
@@ -761,13 +761,13 @@ void TList::RemoveLast()
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort linked list. Real sorting is done in private function DoSort().
+/// The list can only be sorted when is contains objects of a sortable
+/// class.
+
 void TList::Sort(Bool_t order)
 {
-   // Sort linked list. Real sorting is done in private function DoSort().
-   // The list can only be sorted when is contains objects of a sortable
-   // class.
-
    if (!fFirst) return;
 
    fAscending = order;
@@ -793,13 +793,13 @@ void TList::Sort(Bool_t order)
    fSorted = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compares the objects stored in the TObjLink objects.
+/// Depending on the flag IsAscending() the function returns
+/// true if the object in l1 <= l2 (ascending) or l2 <= l1 (descending).
+
 Bool_t TList::LnkCompare(TObjLink *l1, TObjLink *l2)
 {
-   // Compares the objects stored in the TObjLink objects.
-   // Depending on the flag IsAscending() the function returns
-   // true if the object in l1 <= l2 (ascending) or l2 <= l1 (descending).
-
    Int_t cmp = l1->GetObject()->Compare(l2->GetObject());
 
    if ((IsAscending() && cmp <=0) || (!IsAscending() && cmp > 0))
@@ -807,11 +807,11 @@ Bool_t TList::LnkCompare(TObjLink *l1, TObjLink *l2)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort linked list.
+
 TObjLink **TList::DoSort(TObjLink **head, Int_t n)
 {
-   // Sort linked list.
-
    TObjLink *p1, *p2, **h2, **t2;
 
    switch (n) {
@@ -859,12 +859,12 @@ TObjLink **TList::DoSort(TObjLink **head, Int_t n)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new TObjLink.
+
 TObjLink::TObjLink(TObject *obj, TObjLink *prev)
           : fNext(prev->fNext), fPrev(prev), fObject(obj)
 {
-   // Create a new TObjLink.
-
    fPrev->fNext = this;
    if (fNext) fNext->fPrev = this;
 }
@@ -879,19 +879,20 @@ TObjLink::TObjLink(TObject *obj, TObjLink *prev)
 
 ClassImp(TListIter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new list iterator. By default the iteration direction
+/// is kIterForward. To go backward use kIterBackward.
+
 TListIter::TListIter(const TList *l, Bool_t dir)
         : fList(l), fCurCursor(0), fCursor(0), fDirection(dir), fStarted(kFALSE)
 {
-   // Create a new list iterator. By default the iteration direction
-   // is kIterForward. To go backward use kIterBackward.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TListIter::TListIter(const TListIter &iter) : TIterator(iter)
 {
-   // Copy ctor.
-
    fList      = iter.fList;
    fCurCursor = iter.fCurCursor;
    fCursor    = iter.fCursor;
@@ -899,11 +900,11 @@ TListIter::TListIter(const TListIter &iter) : TIterator(iter)
    fStarted   = iter.fStarted;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overridden assignment operator.
+
 TIterator &TListIter::operator=(const TIterator &rhs)
 {
-   // Overridden assignment operator.
-
    const TListIter *rhs1 = dynamic_cast<const TListIter *>(&rhs);
    if (this != &rhs && rhs1) {
       TIterator::operator=(rhs);
@@ -916,11 +917,11 @@ TIterator &TListIter::operator=(const TIterator &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overloaded assignment operator.
+
 TListIter &TListIter::operator=(const TListIter &rhs)
 {
-   // Overloaded assignment operator.
-
    if (this != &rhs) {
       TIterator::operator=(rhs);
       fList      = rhs.fList;
@@ -932,11 +933,11 @@ TListIter &TListIter::operator=(const TListIter &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return next object in the list. Returns 0 when no more objects in list.
+
 TObject *TListIter::Next()
 {
-   // Return next object in the list. Returns 0 when no more objects in list.
-
    if (!fList) return 0;
 
    if (fDirection == kIterForward) {
@@ -959,36 +960,36 @@ TObject *TListIter::Next()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the object option stored in the list.
+
 Option_t *TListIter::GetOption() const
 {
-   // Returns the object option stored in the list.
-
    if (fCurCursor) return fCurCursor->GetOption();
    return "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the object option stored in the list.
+
 void TListIter::SetOption(Option_t *option)
 {
-   // Sets the object option stored in the list.
-
    if (fCurCursor) fCurCursor->SetOption(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset list iterator.
+
 void TListIter::Reset()
 {
-   // Reset list iterator.
-
    fStarted = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This operator compares two TIterator objects.
+
 Bool_t TListIter::operator!=(const TIterator &aIter) const
 {
-   // This operator compares two TIterator objects.
-
    if (IsA() == aIter.IsA()) {
       // We compared equal only two iterator of the same type.
       // Since this is a function of TListIter, we consequently know that
@@ -999,18 +1000,19 @@ Bool_t TListIter::operator!=(const TIterator &aIter) const
    return false; // for base class we don't implement a comparison
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This operator compares two TListIter objects.
+
 Bool_t TListIter::operator!=(const TListIter &aIter) const
 {
-   // This operator compares two TListIter objects.
    return (fCurCursor != aIter.fCurCursor);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream all objects in the collection to or from the I/O buffer.
+
 void TList::Streamer(TBuffer &b)
 {
-   // Stream all objects in the collection to or from the I/O buffer.
-
    Int_t nobjects;
    UChar_t nch;
    Int_t nbig;

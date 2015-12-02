@@ -12,14 +12,14 @@ enum EPieSliceID{
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TPieSliceEditor constructor.
+
 TPieSliceEditor::TPieSliceEditor(const TGWindow *p,
                   Int_t width, Int_t height,
                   UInt_t options, Pixel_t back)
                   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // TPieSliceEditor constructor.
-
    fPieSlice = 0;
 
    // start initializing the window components
@@ -51,18 +51,19 @@ TPieSliceEditor::TPieSliceEditor(const TGWindow *p,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TPieSliceEditor destructor.
+
 TPieSliceEditor::~TPieSliceEditor()
 {
-   // TPieSliceEditor destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model.
+
 void TPieSliceEditor::SetModel(TObject *obj)
 {
-   // Set model.
-
    fPieSlice = (TPieSlice*) (obj);
 
    fAvoidSignal = kTRUE;
@@ -75,11 +76,11 @@ void TPieSliceEditor::SetModel(TObject *obj)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TPieSliceEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fTitle->Connect("TextChanged(const char *)","TPieSliceEditor",this,"DoTitle(const char *)");
    fValue->Connect("ValueSet(Long_t)", "TPieSliceEditor", this, "DoValue()");
    fOffset->Connect("ValueSet(Long_t)", "TPieSliceEditor", this, "DoOffset()");
@@ -88,22 +89,22 @@ void TPieSliceEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting the graph title.
+
 void TPieSliceEditor::DoTitle(const char *text)
 {
-   // Slot for setting the graph title.
-
    if (fAvoidSignal) return;
    fPieSlice->SetTitle(text);
    Update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting the graph title.
+
 void TPieSliceEditor::DoValue()
 {
-   // Slot for setting the graph title.
-
    if (fAvoidSignal) return;
 
    fPieSlice->SetValue(fValue->GetNumber());
@@ -111,11 +112,11 @@ void TPieSliceEditor::DoValue()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting the graph title.
+
 void TPieSliceEditor::DoOffset()
 {
-   // Slot for setting the graph title.
-
    if (fAvoidSignal) return;
 
    fPieSlice->SetRadiusOffset(fOffset->GetNumber());

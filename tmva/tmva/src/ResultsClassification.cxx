@@ -31,26 +31,29 @@
 #include "TMVA/MsgLogger.h"
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::ResultsClassification::ResultsClassification( const DataSetInfo* dsi, TString resultsName  ) 
    : Results( dsi,resultsName  ),
      fRet(1),
      fLogger( new MsgLogger(Form("ResultsClassification%s",resultsName.Data()) , kINFO) )
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::ResultsClassification::~ResultsClassification()
 {
-   // destructor
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set MVA response
+
 void TMVA::ResultsClassification::SetValue( Float_t value, Int_t ievt ) 
 {
-   // set MVA response
    if (ievt >= (Int_t)fMvaValues.size()) fMvaValues.resize( ievt+1 );
    fMvaValues[ievt] = value;
 }

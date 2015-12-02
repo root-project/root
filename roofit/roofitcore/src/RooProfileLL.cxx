@@ -37,7 +37,10 @@ using namespace std ;
 ClassImp(RooProfileLL) 
 
 
-//_____________________________________________________________________________ 
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor 
+/// Should only be used by proof. 
+
  RooProfileLL::RooProfileLL() : 
    RooAbsReal("RooProfileLL","RooProfileLL"), 
    _nll(), 
@@ -49,14 +52,17 @@ ClassImp(RooProfileLL)
    _absMin(0),
    _neval(0)
 { 
-  // Default constructor 
-  // Should only be used by proof. 
   _piter = _par.createIterator() ; 
   _oiter = _obs.createIterator() ; 
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of profile likelihood given input likelihood nll w.r.t
+/// the given set of variables. The input log likelihood is minimized w.r.t
+/// to all other variables of the likelihood at each evaluation and the
+/// value of the global log likelihood minimum is always subtracted.
+
 RooProfileLL::RooProfileLL(const char *name, const char *title, 
 			   RooAbsReal& nllIn, const RooArgSet& observables) :
   RooAbsReal(name,title), 
@@ -69,11 +75,6 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
   _absMin(0),
   _neval(0)
 { 
-  // Constructor of profile likelihood given input likelihood nll w.r.t
-  // the given set of variables. The input log likelihood is minimized w.r.t
-  // to all other variables of the likelihood at each evaluation and the
-  // value of the global log likelihood minimum is always subtracted.
-
   // Determine actual parameters and observables
   RooArgSet* actualObs = nllIn.getObservables(observables) ;
   RooArgSet* actualPars = nllIn.getParameters(observables) ;
@@ -90,7 +91,9 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :  
   RooAbsReal(other,name), 
   _nll("nll",this,other._nll),
@@ -103,8 +106,6 @@ RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :
   _paramFixed(other._paramFixed),
   _neval(0)
 { 
-  // Copy constructor
-
   _piter = _par.createIterator() ;
   _oiter = _obs.createIterator() ;
 
@@ -115,11 +116,11 @@ RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooProfileLL::~RooProfileLL()
 {
-  // Destructor
-
   // Delete instance of minuit if it was ever instantiated
   if (_minimizer) {
     delete _minimizer ;
@@ -132,7 +133,8 @@ RooProfileLL::~RooProfileLL()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const RooArgSet& RooProfileLL::bestFitParams() const 
 {
   validateAbsMin() ;
@@ -140,7 +142,8 @@ const RooArgSet& RooProfileLL::bestFitParams() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const RooArgSet& RooProfileLL::bestFitObs() const 
 {
   validateAbsMin() ;
@@ -150,20 +153,21 @@ const RooArgSet& RooProfileLL::bestFitObs() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Optimized implementation of createProfile for profile likelihoods.
+/// Return profile of original function in terms of stated parameters 
+/// of interest rather than profiling recursively.
+
 RooAbsReal* RooProfileLL::createProfile(const RooArgSet& paramsOfInterest) 
 {
-  // Optimized implementation of createProfile for profile likelihoods.
-  // Return profile of original function in terms of stated parameters 
-  // of interest rather than profiling recursively.
-
   return nll().createProfile(paramsOfInterest) ;
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooProfileLL::initializeMinimizer() const
 {
   coutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") Creating instance of MINUIT" << endl ;
@@ -180,13 +184,13 @@ void RooProfileLL::initializeMinimizer() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate profile likelihood by minimizing likelihood w.r.t. all
+/// parameters that are not considered observables of this profile
+/// likelihood object.
+
 Double_t RooProfileLL::evaluate() const 
 { 
-  // Evaluate profile likelihood by minimizing likelihood w.r.t. all
-  // parameters that are not considered observables of this profile
-  // likelihood object.
-
   // Instantiate minimizer if we haven't done that already
   if (!_minimizer) {
     initializeMinimizer() ;
@@ -233,13 +237,13 @@ Double_t RooProfileLL::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check that parameters and likelihood value for 'best fit' are still valid. If not,
+/// because the best fit has never been calculated, or because constant parameters have
+/// changed value or parameters have changed const/float status, the minimum is recalculated
+
 void RooProfileLL::validateAbsMin() const 
 {
-  // Check that parameters and likelihood value for 'best fit' are still valid. If not,
-  // because the best fit has never been calculated, or because constant parameters have
-  // changed value or parameters have changed const/float status, the minimum is recalculated
-
   // Check if constant status of any of the parameters have changed
   if (_absMinValid) {
     _piter->Reset() ;
@@ -329,7 +333,8 @@ void RooProfileLL::validateAbsMin() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t RooProfileLL::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
 					 Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 { 

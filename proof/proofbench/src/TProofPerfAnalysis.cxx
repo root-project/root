@@ -37,7 +37,8 @@
 
 //
 // Auxilliary internal classes
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TProofPerfAnalysis::TWrkInfo : public TNamed {
 public:
    TWrkInfo(const char *ord, const char *name) :
@@ -139,7 +140,8 @@ public:
    void Print(Option_t * = "") const { Printf("%.4f \t%.3f evt/s \t%.3f MB/s \t%.3f s ", fXx, fEvtRate, fMBRate, fProcTime); }
 };
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TProofPerfAnalysis::TFileInfo : public TNamed {
 public:
    TFileInfo(const char *name, const char *srv) :
@@ -208,7 +210,9 @@ public:
 };
 
 Bool_t TProofPerfAnalysis::fgDebug = kTRUE;
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor: open the file and attach to the tree
+
 TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
                                const char *title, const char *treename)
                : TNamed(perffile, title), fFile(0), fTreeName(treename), fTree(0),
@@ -221,8 +225,6 @@ TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
                  fFileResult(""), fSaveResult(kFALSE),
                  fDebug(0)
 {
-   // Constructor: open the file and attach to the tree
-
    // Use default title, if not specified
    if (!title) SetTitle("PROOF Performance Analysis");
 
@@ -280,7 +282,9 @@ TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
    return;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor: open the file and attach to the tree
+
 TProofPerfAnalysis::TProofPerfAnalysis(TTree *tree, const char *title)
                : TNamed("", title), fFile(0), fTree(0),
                  fInitTime(-1.), fMergeTime(-1.), fMaxTime(-1.),
@@ -291,8 +295,6 @@ TProofPerfAnalysis::TProofPerfAnalysis(TTree *tree, const char *title)
                  fEvtRateAvg(-1.), fMBRateAvg(0),
                  fDebug(0)
 {
-   // Constructor: open the file and attach to the tree
-
    // The tree must be defined
    if (!tree) {
       SetBit(TObject::kInvalidObject);
@@ -323,22 +325,22 @@ TProofPerfAnalysis::TProofPerfAnalysis(TTree *tree, const char *title)
    return;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor: detach the tree and close the file
+
 TProofPerfAnalysis::~TProofPerfAnalysis()
 {
-   // Destructor: detach the tree and close the file
-
    SafeDelete(fEvents);
    SafeDelete(fPackets);
    if (fFile) fFile->Close();
    SafeDelete(fFile);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If defined, add '- <this title>' to the canvas title 't'
+
 TString TProofPerfAnalysis::GetCanvasTitle(const char *t)
 {
-   // If defined, add '- <this title>' to the canvas title 't'
-
    if (fTitle.IsNull()) return TString(t);
 
    TString newt;
@@ -351,14 +353,14 @@ TString TProofPerfAnalysis::GetCanvasTitle(const char *t)
    return newt;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load tree fTreeName from directory 'dir'. If not found, look for the
+/// first TTree in the directory (and sub-directories) with the name containing
+/// fTreeName.
+/// The tree pointer is saved in fTree.
+
 void TProofPerfAnalysis::LoadTree(TDirectory *dir)
 {
-   // Load tree fTreeName from directory 'dir'. If not found, look for the
-   // first TTree in the directory (and sub-directories) with the name containing
-   // fTreeName.
-   // The tree pointer is saved in fTree.
-
    fTree = 0;
    if (!dir) return;
 
@@ -390,12 +392,12 @@ void TProofPerfAnalysis::LoadTree(TDirectory *dir)
    return;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Analyse the file distribution. If writedet, underling details are
+/// written out to a text file.
+
 void TProofPerfAnalysis::FileDist(Bool_t writedet)
 {
-   // Analyse the file distribution. If writedet, underling details are
-   // written out to a text file.
-
    if (!IsValid()) {
       Error("FileDist","not a valid instance - do nothing");
       return;
@@ -576,11 +578,11 @@ void TProofPerfAnalysis::FileDist(Bool_t writedet)
    return;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill file info
+
 void TProofPerfAnalysis::GetWrkFileList(TList *wl, TList *sl)
 {
-   // Fill file info
-
    if (!wl || !sl) return;
 
    // Extract information
@@ -616,12 +618,12 @@ void TProofPerfAnalysis::GetWrkFileList(TList *wl, TList *sl)
    return;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return -1 if ord1 comes before ord2, 0 i they are equal,
+/// 1 if ord1 comes after ord2
+
 Int_t TProofPerfAnalysis::CompareOrd(const char *ord1, const char *ord2)
 {
-   // Return -1 if ord1 comes before ord2, 0 i they are equal,
-   // 1 if ord1 comes after ord2
-
    TString o1(ord1), o2(ord2), p1, p2;
    Int_t o1d = 0, o2d = 0;
    if ((o1d = o1.CountChar('.')) > (o2d = o2.CountChar('.'))) {
@@ -653,11 +655,11 @@ Int_t TProofPerfAnalysis::CompareOrd(const char *ord1, const char *ord2)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill file info
+
 void TProofPerfAnalysis::FillFileDist(TH1F *hf, TH1F *hb, TH2F *hx, Bool_t wdet)
 {
-   // Fill file info
-
    if (!hf || !hb || !hx) return;
 
    TString fnout;
@@ -704,11 +706,11 @@ void TProofPerfAnalysis::FillFileDist(TH1F *hf, TH1F *hb, TH2F *hx, Bool_t wdet)
    return;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill file info when there is only one file server
+
 void TProofPerfAnalysis::FillFileDistOneSrv(TH1F *hx, Bool_t wdet)
 {
-   // Fill file info when there is only one file server
-
    if (!hx) return;
 
    TString fnout;
@@ -751,11 +753,11 @@ void TProofPerfAnalysis::FillFileDistOneSrv(TH1F *hx, Bool_t wdet)
    return;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Measure the worker activity
+
 void TProofPerfAnalysis::WorkerActivity()
 {
-   // Measure the worker activity
-
    if (!IsValid()) {
       Error("WorkerActivity","not a valid instance - do nothing");
       return;
@@ -827,12 +829,12 @@ void TProofPerfAnalysis::WorkerActivity()
    return;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print information for all or the slowest showlast workers.
+/// Use showlast < 0 to print all
+
 void TProofPerfAnalysis::PrintWrkInfo(Int_t showlast)
 {
-   // Print information for all or the slowest showlast workers.
-   // Use showlast < 0 to print all
-
    // Create the sorted list
    Int_t k = fWrksInfo.GetSize();
    TIter nxw(&fWrksInfo);
@@ -844,13 +846,13 @@ void TProofPerfAnalysis::PrintWrkInfo(Int_t showlast)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print information for worker 'wn' (ordinal) or on the machine whose
+/// ordinal or fqdn matches 'wn'. Multiple specifications separated by ','
+/// or ' ' are supported, as well as wildcards '*', e.g. '0.2*,lxb10* lxf2323.doma.in"
+
 void TProofPerfAnalysis::PrintWrkInfo(const char *wn)
 {
-   // Print information for worker 'wn' (ordinal) or on the machine whose
-   // ordinal or fqdn matches 'wn'. Multiple specifications separated by ','
-   // or ' ' are supported, as well as wildcards '*', e.g. '0.2*,lxb10* lxf2323.doma.in"
-
    if (!wn || (wn && strlen(wn) <= 0)) {
       Error("PrintWrkInfo", "worker name or host must be defined!");
       return;
@@ -875,12 +877,12 @@ void TProofPerfAnalysis::PrintWrkInfo(const char *wn)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print information for all or the slowest showlast workers.
+/// Use showlast < 0 to print all
+
 void TProofPerfAnalysis::PrintFileInfo(Int_t showlast, const char *opt, const char *out)
 {
-   // Print information for all or the slowest showlast workers.
-   // Use showlast < 0 to print all
-
    RedirectHandle_t rh;
    if (out && strlen(out) > 0) gSystem->RedirectOutput(out, "w", &rh);
 
@@ -897,13 +899,13 @@ void TProofPerfAnalysis::PrintFileInfo(Int_t showlast, const char *opt, const ch
    if (out && strlen(out) > 0) gSystem->RedirectOutput(0, 0, &rh);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print information for file 'fn' (path including directory) or server 'fn'.
+/// Multiple specifications separated by ','
+/// or ' ' are supported, as well as wildcards '*', e.g. 'pippo.root, h4mu*,lxb10*"
+
 void TProofPerfAnalysis::PrintFileInfo(const char *fn, const char *opt, const char *out)
 {
-   // Print information for file 'fn' (path including directory) or server 'fn'.
-   // Multiple specifications separated by ','
-   // or ' ' are supported, as well as wildcards '*', e.g. 'pippo.root, h4mu*,lxb10*"
-
    if (!fn || (fn && strlen(fn) <= 0)) {
       Error("PrintFileInfo", "file path must be defined!");
       return;
@@ -933,11 +935,11 @@ void TProofPerfAnalysis::PrintFileInfo(const char *fn, const char *opt, const ch
    if (out && strlen(out) > 0) gSystem->RedirectOutput(0, 0, &rh);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill basic worker info; if 'force' rescan the TTree even already done
+
 void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
 {
-   // Fill basic worker info; if 'force' rescan the TTree even already done
-
    // Nothing to do if already called
    if (fWrksInfo.GetSize() > 0 && !force) return;
 
@@ -1229,12 +1231,12 @@ void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
    if (fgDebug) Summary();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print summary of query. Use opt = 'S' for compact version.
+/// Output to 'out' or to screen.
+
 void TProofPerfAnalysis::Summary(Option_t *opt, const char *out)
 {
-   // Print summary of query. Use opt = 'S' for compact version.
-   // Output to 'out' or to screen.
-
    TString o(out);
    RedirectHandle_t rh;
    if (!o.IsNull()) {
@@ -1261,11 +1263,11 @@ void TProofPerfAnalysis::Summary(Option_t *opt, const char *out)
    if (!o.IsNull()) gSystem->RedirectOutput(0, 0, &rh);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill basic worker info; if 'force' rescan the TTree even already done
+
 void TProofPerfAnalysis::FillFileInfo(Bool_t force)
 {
-   // Fill basic worker info; if 'force' rescan the TTree even already done
-
    // Nothing to do if already called
    if (fFilesInfo.GetSize() > 0 && !force) return;
 
@@ -1384,20 +1386,20 @@ void TProofPerfAnalysis::FillFileInfo(Bool_t force)
       Printf(" +++ %d files were processed during this query", fFilesInfo.GetSize());
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static setter for the verbosity level
+
 void TProofPerfAnalysis::SetDebug(Int_t d)
 {
-   // Static setter for the verbosity level
-
    fDebug = d;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw object 'o' with options 'opt'
+/// Save it with 'name' if in saving mode (see SetSaveResult)
+
 void TProofPerfAnalysis::DoDraw(TObject *o, Option_t *opt, const char *name)
 {
-   // Draw object 'o' with options 'opt'
-   // Save it with 'name' if in saving mode (see SetSaveResult)
-
    // Draw
    o->Draw(opt);
 
@@ -1416,14 +1418,14 @@ void TProofPerfAnalysis::DoDraw(TObject *o, Option_t *opt, const char *name)
    }
 } 
  
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set save result mode and validate 'file' according to 'mode'.
+/// Return 0 on success, -1 if any problem with the file is encountered
+/// (save result mode is not enabled in such a case).
+/// If 'file' is null saving is disabled.
+
 Int_t TProofPerfAnalysis::SetSaveResult(const char *file, Option_t *mode)
 {
-   // Set save result mode and validate 'file' according to 'mode'.
-   // Return 0 on success, -1 if any problem with the file is encountered
-   // (save result mode is not enabled in such a case).
-   // If 'file' is null saving is disabled.
-
    // A null 'file' indicates the will to disable
    if (!file) {
       fFileResult = "";
@@ -1463,18 +1465,18 @@ Int_t TProofPerfAnalysis::SetSaveResult(const char *file, Option_t *mode)
    return 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static setter for the verbosity level
+
 void TProofPerfAnalysis::SetgDebug(Bool_t on)
 {
-   // Static setter for the verbosity level
-
    fgDebug = on;
 }
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display event and packet distribution
+
 void TProofPerfAnalysis::EventDist()
 {
-   // Display event and packet distribution
-
    if (!fEvents || !fPackets) {
       Error("EventDist", "distributions not initialized - do nothing");
    }
@@ -1495,11 +1497,11 @@ void TProofPerfAnalysis::EventDist()
 
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show event processing or MB processing rate plot vs time
+
 void TProofPerfAnalysis::RatePlot(const char *wrks)
 {
-   // Show event processing or MB processing rate plot vs time
-
    Bool_t global = (wrks && !strcmp(wrks, "global")) ? kTRUE : kFALSE;
 
    TH1F *hrt1 = 0, *hrt2 = 0;
@@ -1596,12 +1598,12 @@ void TProofPerfAnalysis::RatePlot(const char *wrks)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show event processing or MB processing rate plot vs time
+/// Create the histograms
+
 void TProofPerfAnalysis::LatencyPlot(const char *wrks)
 {
-   // Show event processing or MB processing rate plot vs time
-   // Create the histograms
-
    TObject *o = 0;
    if ((o = gDirectory->FindObject("lt1"))) delete o;
    TH1F *hlt1 = new TH1F("lt1", "Packet retrieval latency", 100, 0., fMaxTime);
@@ -1653,11 +1655,11 @@ void TProofPerfAnalysis::LatencyPlot(const char *wrks)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show event processing or MB processing rate plot vs time
+
 void TProofPerfAnalysis::FileProcPlot(const char *fn, const char *out)
 {
-   // Show event processing or MB processing rate plot vs time
-
    if (!fn || strlen(fn) <= 0) {
       Error("FileRatePlot", "file name is mandatory!");
       return;
@@ -1772,11 +1774,11 @@ void TProofPerfAnalysis::FileProcPlot(const char *fn, const char *out)
    c1->Update();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show MB processing rate plot per file vs time
+
 void TProofPerfAnalysis::FileRatePlot(const char *fns)
 {
-   // Show MB processing rate plot per file vs time
-
    // Create the histograms
    TObject *o = 0;
    if ((o = gDirectory->FindObject("rt1"))) delete o;

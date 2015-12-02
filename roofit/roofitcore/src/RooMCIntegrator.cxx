@@ -51,12 +51,12 @@ ClassImp(RooMCIntegrator)
 // Register this class with RooNumIntFactory
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function registers class RooMCIntegrator, its configuration options
+/// and its capabilities with RooNumIntFactory
+
 void RooMCIntegrator::registerIntegrator(RooNumIntFactory& fact)
 {
-  // This function registers class RooMCIntegrator, its configuration options
-  // and its capabilities with RooNumIntFactory
-  
   RooCategory samplingMode("samplingMode","Sampling Mode") ;
   samplingMode.defineType("Importance",RooMCIntegrator::Importance) ;
   samplingMode.defineType("ImportanceOnly",RooMCIntegrator::ImportanceOnly) ;
@@ -90,29 +90,30 @@ void RooMCIntegrator::registerIntegrator(RooNumIntFactory& fact)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor 
+/// 
+/// coverity[UNINIT_CTOR] 
+
  RooMCIntegrator::RooMCIntegrator()
 {
-  // Default constructor 
-  // 
-  // coverity[UNINIT_CTOR] 
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct an integrator over 'function' with given sampling mode
+/// and generator type.  The sampling mode can be 'Importance'
+/// (default), 'ImportanceOnly' and 'Stratified'. The generator type
+/// can be 'QuasiRandom' (default) and 'PseudoRandom'. Consult the original
+/// VEGAS documentation on details of the mode and type parameters.
+
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
 				 GeneratorType genType, Bool_t verbose) :
   RooAbsIntegrator(function), _grid(function), _verbose(verbose),
   _alpha(1.5),  _mode(mode), _genType(genType),
   _nRefineIter(5),_nRefinePerDim(1000),_nIntegratePerDim(5000)
 {
-  // Construct an integrator over 'function' with given sampling mode
-  // and generator type.  The sampling mode can be 'Importance'
-  // (default), 'ImportanceOnly' and 'Stratified'. The generator type
-  // can be 'QuasiRandom' (default) and 'PseudoRandom'. Consult the original
-  // VEGAS documentation on details of the mode and type parameters.
-
   // coverity[UNINIT_CTOR]
   if(!(_valid= _grid.isValid())) return;
   if(_verbose) _grid.Print();
@@ -120,13 +121,13 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct an integrator over 'function' where the configuration details
+/// are taken from 'config'
+
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _grid(function)
 { 
-  // Construct an integrator over 'function' where the configuration details
-  // are taken from 'config'
-
   const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;
   _verbose = (Bool_t) configSet.getCatIndex("verbose",0) ;
   _alpha = configSet.getRealValue("alpha",1.5) ;
@@ -143,45 +144,46 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConf
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return clone of this generator operating on given function with given configuration
+/// Needed to support RooNumIntFactory
+
 RooAbsIntegrator* RooMCIntegrator::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
-  // Return clone of this generator operating on given function with given configuration
-  // Needed to support RooNumIntFactory
-
   return new RooMCIntegrator(function,config) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooMCIntegrator::~RooMCIntegrator() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if we can integrate over the current domain. If return value
+/// is kTRUE we cannot handle the current limits (e.g. where the domain
+/// of one or more observables is open ended.
+
 Bool_t RooMCIntegrator::checkLimits() const 
 {
-  // Check if we can integrate over the current domain. If return value
-  // is kTRUE we cannot handle the current limits (e.g. where the domain
-  // of one or more observables is open ended.
-  
   return _grid.initialize(*integrand());
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the integral using a fixed number of calls to evaluate the integrand
+/// equal to about 10k per dimension. Use the first 5k calls to refine the grid
+/// over 5 iterations of 1k calls each, and the remaining 5k calls for a single
+/// high statistics integration.
+
 Double_t RooMCIntegrator::integral(const Double_t* /*yvec*/) 
 {
-  // Evaluate the integral using a fixed number of calls to evaluate the integrand
-  // equal to about 10k per dimension. Use the first 5k calls to refine the grid
-  // over 5 iterations of 1k calls each, and the remaining 5k calls for a single
-  // high statistics integration.
-
   _timer.Start(kTRUE);
   vegas(AllStages,_nRefinePerDim*_grid.getDimension(),_nRefineIter);
   Double_t ret = vegas(ReuseGrid,_nIntegratePerDim*_grid.getDimension(),1);
@@ -190,15 +192,15 @@ Double_t RooMCIntegrator::integral(const Double_t* /*yvec*/)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform one step of Monte Carlo integration using the specified number of iterations
+/// with (approximately) the specified number of integrand evaluation calls per iteration.
+/// Use the VEGAS algorithm, starting from the specified stage. Returns the best estimate
+/// of the integral. Also sets *absError to the estimated absolute error of the integral
+/// estimate if absError is non-zero.
+
 Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Double_t *absError) 
 {
-  // Perform one step of Monte Carlo integration using the specified number of iterations
-  // with (approximately) the specified number of integrand evaluation calls per iteration.
-  // Use the VEGAS algorithm, starting from the specified stage. Returns the best estimate
-  // of the integral. Also sets *absError to the estimated absolute error of the integral
-  // estimate if absError is non-zero.
-
   //cout << "VEGAS stage = " << stage << " calls = " << calls << " iterations = " << iterations << endl ;
 
   // reset the grid to its initial state if we are starting from scratch

@@ -30,7 +30,9 @@
 #include "TSystem.h"
 #include "TVirtualMonitoring.h"
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor
+
 TProofMonSenderSQL::TProofMonSenderSQL(const char *serv, const char *user,
                                        const char *pass, const char *table,
                                        const char *dstab, const char *filestab)
@@ -38,8 +40,6 @@ TProofMonSenderSQL::TProofMonSenderSQL(const char *serv, const char *user,
                     fDSetSendOpts("bulk,table=proofquerydsets"),
                     fFilesSendOpts("bulk,table=proofqueryfiles")
 {
-   // Main constructor
-
    fWriter = 0;
    // Init the sender instance using the plugin manager
    TPluginHandler *h = 0;
@@ -68,73 +68,73 @@ TProofMonSenderSQL::TProofMonSenderSQL(const char *serv, const char *user,
    if (filestab && strlen(filestab) > 0) fFilesSendOpts.Form("bulk,table=%s", filestab);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TProofMonSenderSQL::~TProofMonSenderSQL()
 {
-   // Destructor
-
    SafeDelete(fWriter);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send 'summary' record for the table 'proofquerylog'.
+///
+/// There are three versions of this record, corresponding the evolution
+/// in time of the monitoring requirements.
+///
+/// The default version 2 corresponds to the table created with the following command:
+///
+/// CREATE TABLE proofquerylog (
+///    id int(11) NOT NULL auto_increment,
+///    proofuser varchar(32) NOT NULL,
+///    proofgroup varchar(32) default NULL,
+///    querybegin datetime default NULL,
+///    queryend datetime default NULL,
+///    walltime int(11) default NULL,
+///    cputime float default NULL,
+///    bytesread bigint(20) default NULL,
+///    events bigint(20) default NULL,
+///    totevents bigint(20) default NULL,
+///    workers int(11) default NULL,
+///    querytag varchar(64) NOT NULL,
+///    vmemmxw bigint(20) default NULL,
+///    rmemmxw bigint(20) default NULL,
+///    vmemmxm bigint(20) default NULL,
+///    rmemmxm bigint(20) default NULL,
+///    numfiles int(11) default NULL,
+///    missfiles int(11) default NULL,
+///    status int(11) default NULL,
+///    rootver varchar(32) NOT NULL,
+///    PRIMARY KEY (id) );
+///
+/// Version 1 corresponds to the table created with the following command:
+///    ('user','begin','end' instead of 'proofuser', 'querybegin', 'queryend';
+///     no 'status', 'missfiles', 'rootver'; 'dataset' field with name(s) of
+///     processed dataset(s))
+///
+/// CREATE TABLE proofquerylog (
+///    id int(11) NOT NULL auto_increment,
+///    user varchar(32) NOT NULL,
+///    proofgroup varchar(32) default NULL,
+///    begin datetime default NULL,
+///    end datetime default NULL,
+///    walltime int(11) default NULL,
+///    cputime float default NULL,
+///    bytesread bigint(20) default NULL,
+///    events bigint(20) default NULL,
+///    totevents bigint(20) default NULL,
+///    workers int(11) default NULL,
+///    querytag varchar(64) NOT NULL,
+///    vmemmxw bigint(20) default NULL,
+///    rmemmxw bigint(20) default NULL,
+///    vmemmxm bigint(20) default NULL,
+///    rmemmxm bigint(20) default NULL,
+///    numfiles int(11) default NULL,
+///    dataset varchar(512) NOT NULL,
+///    PRIMARY KEY (id) );
+
 Int_t TProofMonSenderSQL::SendSummary(TList *recs, const char *dumid)
 {
-   // Send 'summary' record for the table 'proofquerylog'.
-   //
-   // There are three versions of this record, corresponding the evolution
-   // in time of the monitoring requirements.
-   //
-   // The default version 2 corresponds to the table created with the following command:
-   //
-   // CREATE TABLE proofquerylog (
-   //    id int(11) NOT NULL auto_increment,
-   //    proofuser varchar(32) NOT NULL,
-   //    proofgroup varchar(32) default NULL,
-   //    querybegin datetime default NULL,
-   //    queryend datetime default NULL,
-   //    walltime int(11) default NULL,
-   //    cputime float default NULL,
-   //    bytesread bigint(20) default NULL,
-   //    events bigint(20) default NULL,
-   //    totevents bigint(20) default NULL,
-   //    workers int(11) default NULL,
-   //    querytag varchar(64) NOT NULL,
-   //    vmemmxw bigint(20) default NULL,
-   //    rmemmxw bigint(20) default NULL,
-   //    vmemmxm bigint(20) default NULL,
-   //    rmemmxm bigint(20) default NULL,
-   //    numfiles int(11) default NULL,
-   //    missfiles int(11) default NULL,
-   //    status int(11) default NULL,
-   //    rootver varchar(32) NOT NULL,
-   //    PRIMARY KEY (id) );
-   //
-   // Version 1 corresponds to the table created with the following command:
-   //    ('user','begin','end' instead of 'proofuser', 'querybegin', 'queryend';
-   //     no 'status', 'missfiles', 'rootver'; 'dataset' field with name(s) of
-   //     processed dataset(s))
-   //
-   // CREATE TABLE proofquerylog (
-   //    id int(11) NOT NULL auto_increment,
-   //    user varchar(32) NOT NULL,
-   //    proofgroup varchar(32) default NULL,
-   //    begin datetime default NULL,
-   //    end datetime default NULL,
-   //    walltime int(11) default NULL,
-   //    cputime float default NULL,
-   //    bytesread bigint(20) default NULL,
-   //    events bigint(20) default NULL,
-   //    totevents bigint(20) default NULL,
-   //    workers int(11) default NULL,
-   //    querytag varchar(64) NOT NULL,
-   //    vmemmxw bigint(20) default NULL,
-   //    rmemmxw bigint(20) default NULL,
-   //    vmemmxm bigint(20) default NULL,
-   //    rmemmxm bigint(20) default NULL,
-   //    numfiles int(11) default NULL,
-   //    dataset varchar(512) NOT NULL,
-   //    PRIMARY KEY (id) );
-
    //
    // Version 0 corresponds to the table created with the following command:
    //    ('group' instead of 'proofgroup'; no 'querytag', 'vmemmxw',
@@ -212,48 +212,48 @@ Int_t TProofMonSenderSQL::SendSummary(TList *recs, const char *dumid)
    return (rc ? 0 : -1);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Post information about the processed dataset(s). The information is taken
+/// from the TDSet object 'dset' and integrated with the missing files
+/// information in the list 'missing'. The string 'qid' is the uninque
+/// ID of the query; 'begin' the starting time.
+///
+/// The record is formatted for the table 'proofquerydsets'.
+///
+/// There are two versions of this record, with or without the starting time.
+/// The starting time could be looked up from the summary record, if available.
+///
+/// The default version 1 corresponds to the table created with the following command:
+///
+/// CREATE TABLE proofquerydsets (
+///    id int(11) NOT NULL auto_increment,
+///    dsn varchar(512) NOT NULL,
+///    querytag varchar(64) NOT NULL,
+///    querybegin datetime default NULL,
+///    numfiles int(11) default NULL,
+///    missfiles int(11) default NULL,
+///    PRIMARY KEY  (id),
+///    KEY ix_querytag (querytag) );
+///
+/// Version 0 corresponds to the table created with the following command:
+///    (no 'querybegin')
+///
+/// CREATE TABLE proofquerydsets (
+///    id int(11) NOT NULL auto_increment,
+///    dsn varchar(512) NOT NULL,
+///    querytag varchar(64) NOT NULL,
+///    numfiles int(11) default NULL,
+///    missfiles int(11) default NULL,
+///    PRIMARY KEY  (id),
+///    KEY ix_querytag (querytag) );
+///
+/// The information is posted with a bulk insert.
+///
+/// Returns 0 on success, -1 on failure.
+
 Int_t TProofMonSenderSQL::SendDataSetInfo(TDSet *dset, TList *missing,
                                           const char *begin, const char *qid)
 {
-   // Post information about the processed dataset(s). The information is taken
-   // from the TDSet object 'dset' and integrated with the missing files
-   // information in the list 'missing'. The string 'qid' is the uninque
-   // ID of the query; 'begin' the starting time.
-   //
-   // The record is formatted for the table 'proofquerydsets'.
-   //
-   // There are two versions of this record, with or without the starting time.
-   // The starting time could be looked up from the summary record, if available.
-   //
-   // The default version 1 corresponds to the table created with the following command:
-   //
-   // CREATE TABLE proofquerydsets (
-   //    id int(11) NOT NULL auto_increment,
-   //    dsn varchar(512) NOT NULL,
-   //    querytag varchar(64) NOT NULL,
-   //    querybegin datetime default NULL,
-   //    numfiles int(11) default NULL,
-   //    missfiles int(11) default NULL,
-   //    PRIMARY KEY  (id),
-   //    KEY ix_querytag (querytag) );
-   //
-   // Version 0 corresponds to the table created with the following command:
-   //    (no 'querybegin')
-   //
-   // CREATE TABLE proofquerydsets (
-   //    id int(11) NOT NULL auto_increment,
-   //    dsn varchar(512) NOT NULL,
-   //    querytag varchar(64) NOT NULL,
-   //    numfiles int(11) default NULL,
-   //    missfiles int(11) default NULL,
-   //    PRIMARY KEY  (id),
-   //    KEY ix_querytag (querytag) );
-   //
-   // The information is posted with a bulk insert.
-   //
-   // Returns 0 on success, -1 on failure.
-
    if (!IsValid()) {
       Error("SendDataSetInfo", "invalid instance: do nothing!");
       return -1;
@@ -373,48 +373,48 @@ Int_t TProofMonSenderSQL::SendDataSetInfo(TDSet *dset, TList *missing,
    return (rc ? 0 : -1);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Post information about the requested files. The information is taken
+/// from the TDSet object 'dset' and integrated with the missing files
+/// information in the list 'missing'. The string 'qid' is the unique
+/// ID of the query; 'begin' the starting time.
+///
+/// The record is formatted for the table 'proofqueryfiles'.
+///
+/// There are two versions of this record, with or without the starting time.
+/// The starting time could be looked up from the summary record, if available.
+///
+/// The default version 1 corresponds to the table created with the following command:
+///
+/// CREATE TABLE proofqueryfiles (
+///    id int(11) NOT NULL auto_increment,
+///    lfn varchar(255) NOT NULL,
+///    path varchar(2048) NOT NULL,
+///    querytag varchar(64) NOT NULL,
+///    querybegin datetime default NULL,
+///    status enum('Ok','Failed') NOT NULL default 'Ok',
+///    PRIMARY KEY  (id),
+///    KEY ix_querytag (querytag) );
+///
+/// Version 0 corresponds to the table created with the following command:
+///    (no 'querybegin')
+///
+/// CREATE TABLE proofqueryfiles (
+///    id int(11) NOT NULL auto_increment,
+///    lfn varchar(255) NOT NULL,
+///    path varchar(2048) NOT NULL,
+///    querytag varchar(64) NOT NULL,
+///    status enum('Ok','Failed') NOT NULL default 'Ok',
+///    PRIMARY KEY  (id),
+///    KEY ix_querytag (querytag) );
+///
+/// The information is posted with a bulk insert.
+///
+/// Returns 0 on success, -1 on failure.
+
 Int_t TProofMonSenderSQL::SendFileInfo(TDSet *dset, TList *missing,
                                        const char *begin, const char *qid)
 {
-   // Post information about the requested files. The information is taken
-   // from the TDSet object 'dset' and integrated with the missing files
-   // information in the list 'missing'. The string 'qid' is the unique
-   // ID of the query; 'begin' the starting time.
-   //
-   // The record is formatted for the table 'proofqueryfiles'.
-   //
-   // There are two versions of this record, with or without the starting time.
-   // The starting time could be looked up from the summary record, if available.
-   //
-   // The default version 1 corresponds to the table created with the following command:
-   //
-   // CREATE TABLE proofqueryfiles (
-   //    id int(11) NOT NULL auto_increment,
-   //    lfn varchar(255) NOT NULL,
-   //    path varchar(2048) NOT NULL,
-   //    querytag varchar(64) NOT NULL,
-   //    querybegin datetime default NULL,
-   //    status enum('Ok','Failed') NOT NULL default 'Ok',
-   //    PRIMARY KEY  (id),
-   //    KEY ix_querytag (querytag) );
-   //
-   // Version 0 corresponds to the table created with the following command:
-   //    (no 'querybegin')
-   //
-   // CREATE TABLE proofqueryfiles (
-   //    id int(11) NOT NULL auto_increment,
-   //    lfn varchar(255) NOT NULL,
-   //    path varchar(2048) NOT NULL,
-   //    querytag varchar(64) NOT NULL,
-   //    status enum('Ok','Failed') NOT NULL default 'Ok',
-   //    PRIMARY KEY  (id),
-   //    KEY ix_querytag (querytag) );
-   //
-   // The information is posted with a bulk insert.
-   //
-   // Returns 0 on success, -1 on failure.
-
    if (!IsValid()) {
       Error("SendFileInfo", "invalid instance: do nothing!");
       return -1;

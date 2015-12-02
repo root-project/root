@@ -12,7 +12,8 @@
 #include <iostream>
 #include <sstream>
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 DictSelectionReader::DictSelectionReader(SelectionRules &selectionRules,
       const clang::ASTContext &C, ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
    : fSelectionRules(selectionRules), fIsFirstPass(true), fNormCtxt(normCtxt)
@@ -37,7 +38,9 @@ DictSelectionReader::DictSelectionReader(SelectionRules &selectionRules,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If it's not contained by 2 namespaces, drop it.
+
 /**
  * Check that the recordDecl is enclosed in the ROOT::Meta::Selection namespace,
  * excluding the portion dedicated the definition of the syntax, which is part
@@ -50,7 +53,6 @@ bool
 DictSelectionReader::InSelectionNamespace(const clang::RecordDecl &recordDecl,
       const std::string &className)
 {
-   // If it's not contained by 2 namespaces, drop it.
    std::list<std::pair<std::string, bool> > enclosingNamespaces;
    ROOT::TMetaUtils::ExtractEnclosingNameSpaces(recordDecl,
          enclosingNamespaces);
@@ -81,7 +83,8 @@ DictSelectionReader::InSelectionNamespace(const clang::RecordDecl &recordDecl,
    return true;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /**
  * Get the pointer to the template arguments list. Return zero if not available.
  **/
@@ -96,7 +99,8 @@ DictSelectionReader::GetTmplArgList(const clang::CXXRecordDecl &cxxRcrdDecl)
    return &tmplSpecDecl->getTemplateArgs();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /**
  * Extract the value of the integral template parameter of a CXXRecordDecl when
  * it has a certain name. If nothing can be extracted, the value of @c zero
@@ -123,7 +127,11 @@ DictSelectionReader::ExtractTemplateArgValue(const T &myClass,
    return tmplArgs->get(0).getAsIntegral().getLimitedValue();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Iterate on the members to see if
+/// 1) They are transient
+/// 2) They imply further selection
+
 /**
  * Loop over the class filelds and take actions according to their properties
  *    1. Insert a field selection rule marking a member transient
@@ -136,10 +144,6 @@ void DictSelectionReader::ManageFields(const clang::RecordDecl &recordDecl,
                                        ClassSelectionRule &csr,
                                        bool autoselect)
 {
-   // Iterate on the members to see if
-   // 1) They are transient
-   // 2) They imply further selection
-
    std::string pattern = className.substr(0, className.find_first_of("<"));
 
    for (auto fieldPtr : recordDecl.fields()) {
@@ -181,7 +185,13 @@ void DictSelectionReader::ManageFields(const clang::RecordDecl &recordDecl,
    } // end loop on fields
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the traits of the class. Useful information may be there
+/// extract mothers, make a switchcase:
+/// 1) templates args are to be skipped
+/// 2) There are properties. Make a loop. make a switch:
+///  2a) Is splittable
+
 /**
  * Manage the loop over the base classes.
  * Initially, the class attributes are identified and selection rules filled
@@ -198,12 +208,6 @@ DictSelectionReader::ManageBaseClasses(const clang::CXXRecordDecl &cxxRcrdDecl,
                                        const std::string &className,
                                        bool &autoselect)
 {
-   // Check the traits of the class. Useful information may be there
-   // extract mothers, make a switchcase:
-   // 1) templates args are to be skipped
-   // 2) There are properties. Make a loop. make a switch:
-   //  2a) Is splittable
-
    std::string baseName;
    clang::ASTContext &C = cxxRcrdDecl.getASTContext();
    for (auto & base : cxxRcrdDecl.bases()) {
@@ -226,7 +230,8 @@ DictSelectionReader::ManageBaseClasses(const clang::CXXRecordDecl &cxxRcrdDecl,
    } // end loop on base classes
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /**
  * Manage the first pass over the AST, inspecting only nodes which are within
  * the selection namespace. Selection rules are directly filled as well as
@@ -234,7 +239,6 @@ DictSelectionReader::ManageBaseClasses(const clang::CXXRecordDecl &cxxRcrdDecl,
  **/
 bool DictSelectionReader::FirstPass(const clang::RecordDecl &recordDecl)
 {
-
    std::string className;
    ROOT::TMetaUtils::GetQualifiedName(
       className, *recordDecl.getTypeForDecl(), recordDecl);
@@ -274,7 +278,8 @@ bool DictSelectionReader::FirstPass(const clang::RecordDecl &recordDecl)
    return true;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /**
  * Second pass through the AST. Two operations are performed:
  *    1. Selection rules for classes to be autoselected are created. The
@@ -365,17 +370,18 @@ bool DictSelectionReader::SecondPass(const clang::RecordDecl &recordDecl)
    return true;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 bool DictSelectionReader::VisitRecordDecl(clang::RecordDecl *recordDecl)
 {
-
    if (fIsFirstPass)
       return FirstPass(*recordDecl);
    else
       return SecondPass(*recordDecl);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /**
  * Transform a name of a class instance into a pattern for selection
  * e.g. myClass<double, int, ...> in the selection namespace
@@ -383,12 +389,12 @@ bool DictSelectionReader::VisitRecordDecl(clang::RecordDecl *recordDecl)
  **/
 inline std::string DictSelectionReader::PatternifyName(const std::string &className)
 {
-
    return className.substr(0, className.find_first_of("<")) + "<*>";
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /**
  * Transform the name of the type eliminating the trailing & and *
  **/

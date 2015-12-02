@@ -48,7 +48,9 @@ REGISTER_METHOD(LD)
 
 ClassImp(TMVA::MethodLD)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor for the LD
+
 TMVA::MethodLD::MethodLD( const TString& jobName,
                           const TString& methodTitle,
                           DataSetInfo& dsi,
@@ -61,10 +63,11 @@ TMVA::MethodLD::MethodLD( const TString& jobName,
    fCoeffMatx ( 0 ),
    fLDCoeff   ( 0 )
 {
-   // standard constructor for the LD
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from weight file
+
 TMVA::MethodLD::MethodLD( DataSetInfo& theData, const TString& theWeightFile, TDirectory* theTargetDir )
    : MethodBase( Types::kLD, theData, theWeightFile, theTargetDir ),
      fNRegOut   ( 0 ),
@@ -73,14 +76,13 @@ TMVA::MethodLD::MethodLD( DataSetInfo& theData, const TString& theWeightFile, TD
      fCoeffMatx ( 0 ),
      fLDCoeff   ( 0 )
 {
-   // constructor from weight file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default initialization called by all constructors
+
 void TMVA::MethodLD::Init( void )
 {
-   // default initialization called by all constructors
-
    if(DataInfo().GetNTargets()!=0) fNRegOut = DataInfo().GetNTargets();
    else                fNRegOut = 1;
 
@@ -93,10 +95,11 @@ void TMVA::MethodLD::Init( void )
    SetSignalReferenceCut( 0.0 );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodLD::~MethodLD( void )
 {
-   // destructor
    if (fSumMatx)    { delete fSumMatx;    fSumMatx    = 0; }
    if (fSumValMatx) { delete fSumValMatx; fSumValMatx = 0; }
    if (fCoeffMatx)  { delete fCoeffMatx;  fCoeffMatx  = 0; }
@@ -108,10 +111,11 @@ TMVA::MethodLD::~MethodLD( void )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// LD can handle classification with 2 classes and regression with one regression-target
+
 Bool_t TMVA::MethodLD::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets )
 {
-   // LD can handle classification with 2 classes and regression with one regression-target
    if      (type == Types::kClassification && numberClasses == 2) return kTRUE;
    else if (type == Types::kRegression     && numberTargets == 1) {
      Log() << "regression with " << numberTargets << " targets.";
@@ -121,10 +125,11 @@ Bool_t TMVA::MethodLD::HasAnalysisType( Types::EAnalysisType type, UInt_t number
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute fSumMatx
+
 void TMVA::MethodLD::Train( void )
 {
-   // compute fSumMatx
    GetSum();
 
    // compute fSumValMatx
@@ -137,10 +142,11 @@ void TMVA::MethodLD::Train( void )
    PrintCoefficients();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the MVA classification output
+
 Double_t TMVA::MethodLD::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   //Returns the MVA classification output
    const Event* ev = GetEvent();
 
    if (fRegressionReturnVal == NULL) fRegressionReturnVal = new vector< Float_t >();
@@ -161,10 +167,11 @@ Double_t TMVA::MethodLD::GetMvaValue( Double_t* err, Double_t* errUpper )
    return (*fRegressionReturnVal)[0];
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Calculates the regression output
+
 const std::vector< Float_t >& TMVA::MethodLD::GetRegressionValues()
 {
-  //Calculates the regression output
    const Event* ev = GetEvent();
 
    if (fRegressionReturnVal == NULL) fRegressionReturnVal = new vector< Float_t >();
@@ -191,22 +198,23 @@ const std::vector< Float_t >& TMVA::MethodLD::GetRegressionValues()
    return (*fRegressionReturnVal);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initializaton method; creates global matrices and vectors
+
 void TMVA::MethodLD::InitMatrices( void )
 {
-   // Initializaton method; creates global matrices and vectors
-
    fSumMatx    = new TMatrixD( GetNvar()+1, GetNvar()+1 );
    fSumValMatx = new TMatrixD( GetNvar()+1, fNRegOut ); 
    fCoeffMatx  = new TMatrixD( GetNvar()+1, fNRegOut ); 
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the matrix transposed(X)*W*X with W being the diagonal weight matrix 
+/// and X the coordinates values
+
 void TMVA::MethodLD::GetSum( void )
 {
-   // Calculates the matrix transposed(X)*W*X with W being the diagonal weight matrix 
-   // and X the coordinates values
    const UInt_t nvar = DataInfo().GetNVariables();
 
    for (UInt_t ivar = 0; ivar<=nvar; ivar++){
@@ -239,10 +247,11 @@ void TMVA::MethodLD::GetSum( void )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Calculates the vector transposed(X)*W*Y with Y being the target vector
+
 void TMVA::MethodLD::GetSumVal( void )
 {
-   //Calculates the vector transposed(X)*W*Y with Y being the target vector
    const UInt_t nvar = DataInfo().GetNVariables();
 
    for (Int_t ivar = 0; ivar<fNRegOut; ivar++){
@@ -278,10 +287,11 @@ void TMVA::MethodLD::GetSumVal( void )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Calculates the coeffiecients used for classification/regression
+
 void TMVA::MethodLD::GetLDCoeff( void )
 {
-   //Calculates the coeffiecients used for classification/regression
    const UInt_t nvar = DataInfo().GetNVariables();
 
    for (Int_t ivar = 0; ivar<fNRegOut; ivar++){
@@ -315,10 +325,11 @@ void TMVA::MethodLD::GetLDCoeff( void )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read LD coefficients from weight file
+
 void  TMVA::MethodLD::ReadWeightsFromStream( std::istream& istr )
 {
-   // read LD coefficients from weight file
    for (Int_t iout=0; iout<fNRegOut; iout++){
       for (UInt_t icoeff=0; icoeff<GetNvar()+1; icoeff++){
          istr >> (*(*fLDCoeff)[iout])[icoeff];
@@ -326,12 +337,12 @@ void  TMVA::MethodLD::ReadWeightsFromStream( std::istream& istr )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create XML description for LD classification and regression 
+/// (for arbitrary number of output classes/targets)
+
 void TMVA::MethodLD::AddWeightsXMLTo( void* parent ) const 
 {
-   // create XML description for LD classification and regression 
-   // (for arbitrary number of output classes/targets)
-
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "NOut",   fNRegOut    );
    gTools().AddAttr( wght, "NCoeff", GetNvar()+1 );
@@ -345,10 +356,11 @@ void TMVA::MethodLD::AddWeightsXMLTo( void* parent ) const
    }
 }
   
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read coefficients from xml weight file
+
 void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode ) 
 {
-   // read coefficients from xml weight file
    UInt_t ncoeff;
    gTools().ReadAttr( wghtnode, "NOut",   fNRegOut );
    gTools().ReadAttr( wghtnode, "NCoeff", ncoeff   );
@@ -381,10 +393,11 @@ void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write LD-specific classifier response
+
 void TMVA::MethodLD::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
-   // write LD-specific classifier response
    fout << "   std::vector<double> fLDCoefficients;" << std::endl;
    fout << "};" << std::endl;
    fout << "" << std::endl;
@@ -422,11 +435,11 @@ void TMVA::MethodLD::MakeClassSpecific( std::ostream& fout, const TString& class
    fout << "   fLDCoefficients.clear(); " << std::endl;
    fout << "}" << std::endl;
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes ranking of input variables
+
 const TMVA::Ranking* TMVA::MethodLD::CreateRanking()
 {
-   // computes ranking of input variables
-
    // create the ranking object
    fRanking = new Ranking( GetName(), "Discr. power" );
 
@@ -437,24 +450,27 @@ const TMVA::Ranking* TMVA::MethodLD::CreateRanking()
    return fRanking;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///MethodLD options
+
 void TMVA::MethodLD::DeclareOptions()
 {
-   //MethodLD options
    AddPreDefVal(TString("LD"));
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// this is the preparation for training
+
 void TMVA::MethodLD::ProcessOptions()
 {
-   // this is the preparation for training
    if (HasTrainingTree()) InitMatrices();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Display the classification/regression coefficients for each variable
+
 void TMVA::MethodLD::PrintCoefficients( void ) 
 {
-   //Display the classification/regression coefficients for each variable
    Log() << kINFO << "Results for LD coefficients:" << Endl;
 
    if (GetTransformationHandler().GetTransformationList().GetSize() != 0) {
@@ -498,13 +514,14 @@ void TMVA::MethodLD::PrintCoefficients( void )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get help message text
+///
+/// typical length of text line: 
+///         "|--------------------------------------------------------------|"
+
 void TMVA::MethodLD::GetHelpMessage() const
 {
-   // get help message text
-   //
-   // typical length of text line: 
-   //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;

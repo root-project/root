@@ -33,165 +33,166 @@ const unsigned int listSize=3;
 
 ClassImp(TListOfEnums)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TListOfEnums::TListOfEnums(TClass *cl /*=0*/) :
    THashList(listSize), fClass(cl), fIds(0), fUnloaded(0), fIsLoaded(kFALSE), fLastLoadMarker(0)
 {
-   // Constructor.
-
    fIds = new TExMap(listSize);
    fUnloaded = new THashList(listSize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TListOfEnums::~TListOfEnums()
 {
-   // Destructor.
-
    THashList::Delete();
    delete fIds;
    fUnloaded->Delete();
    delete fUnloaded;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add pair<id, object> to the map of functions and their ids.
+
 void TListOfEnums::MapObject(TObject *obj)
 {
-   // Add pair<id, object> to the map of functions and their ids.
-
    TEnum *e = dynamic_cast<TEnum *>(obj);
    if (e && e->GetDeclId()) {
       fIds->Add((Long64_t)e->GetDeclId(), (Long64_t)e);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the beginning of the list.
+
 void TListOfEnums::AddFirst(TObject *obj)
 {
-   // Add object at the beginning of the list.
-
    THashList::AddFirst(obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the beginning of the list and also store option.
+/// Storing an option is useful when one wants to change the behaviour
+/// of an object a little without having to create a complete new
+/// copy of the object. This feature is used, for example, by the Draw()
+/// method. It allows the same object to be drawn in different ways.
+
 void TListOfEnums::AddFirst(TObject *obj, Option_t *opt)
 {
-   // Add object at the beginning of the list and also store option.
-   // Storing an option is useful when one wants to change the behaviour
-   // of an object a little without having to create a complete new
-   // copy of the object. This feature is used, for example, by the Draw()
-   // method. It allows the same object to be drawn in different ways.
-
    THashList::AddFirst(obj, opt);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the end of the list.
+
 void TListOfEnums::AddLast(TObject *obj)
 {
-   // Add object at the end of the list.
-
    THashList::AddLast(obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the end of the list and also store option.
+/// Storing an option is useful when one wants to change the behaviour
+/// of an object a little without having to create a complete new
+/// copy of the object. This feature is used, for example, by the Draw()
+/// method. It allows the same object to be drawn in different ways.
+
 void TListOfEnums::AddLast(TObject *obj, Option_t *opt)
 {
-   // Add object at the end of the list and also store option.
-   // Storing an option is useful when one wants to change the behaviour
-   // of an object a little without having to create a complete new
-   // copy of the object. This feature is used, for example, by the Draw()
-   // method. It allows the same object to be drawn in different ways.
-
    THashList::AddLast(obj, opt);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object at location idx in the list.
+
 void TListOfEnums::AddAt(TObject *obj, Int_t idx)
 {
-   // Insert object at location idx in the list.
-
    THashList::AddAt(obj, idx);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object after object after in the list.
+
 void TListOfEnums::AddAfter(const TObject *after, TObject *obj)
 {
-   // Insert object after object after in the list.
-
    THashList::AddAfter(after, obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object after object after in the list.
+
 void TListOfEnums::AddAfter(TObjLink *after, TObject *obj)
 {
-   // Insert object after object after in the list.
-
    THashList::AddAfter(after, obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object before object before in the list.
+
 void TListOfEnums::AddBefore(const TObject *before, TObject *obj)
 {
-   // Insert object before object before in the list.
-
    THashList::AddBefore(before, obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object before object before in the list.
+
 void TListOfEnums::AddBefore(TObjLink *before, TObject *obj)
 {
-   // Insert object before object before in the list.
-
    THashList::AddBefore(before, obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all objects from the list. Does not delete the objects unless
+/// the THashList is the owner (set via SetOwner()).
+
 void TListOfEnums::Clear(Option_t *option)
 {
-   // Remove all objects from the list. Does not delete the objects unless
-   // the THashList is the owner (set via SetOwner()).
-
    fUnloaded->Clear(option);
    fIds->Clear();
    THashList::Clear(option);
    fIsLoaded = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete all TDataMember object files.
+
 void TListOfEnums::Delete(Option_t *option /* ="" */)
 {
-   // Delete all TDataMember object files.
-
    fUnloaded->Delete(option);
    THashList::Delete(option);
    fIsLoaded = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the TEnum corresponding to the Decl 'id' or NULL if it does not
+/// exist.
+
 TEnum *TListOfEnums::Find(DeclId_t id) const
 {
-   // Return the TEnum corresponding to the Decl 'id' or NULL if it does not
-   // exist.
    if (!id) return 0;
 
    return (TEnum *)fIds->GetValue((Long64_t)id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return (after creating it if necessary) the TEnum
+/// describing the enum corresponding to the Decl 'id'.
+
 TEnum *TListOfEnums::Get(DeclId_t id, const char *name)
 {
-   // Return (after creating it if necessary) the TEnum
-   // describing the enum corresponding to the Decl 'id'.
-
    if (!id) return 0;
 
    TEnum *e = Find(id);
@@ -249,36 +250,37 @@ TEnum *TListOfEnums::Get(DeclId_t id, const char *name)
    return e;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an object from the list of enums *if and only if* is has already
+/// been loaded in the list.  This is an internal routine.
+
 TEnum *TListOfEnums::GetObject(const char *name) const
 {
-   // Return an object from the list of enums *if and only if* is has already
-   // been loaded in the list.  This is an internal routine.
-
    return (TEnum*)THashList::FindObject(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a pair<id, object> from the map of functions and their ids.
+
 void TListOfEnums::UnmapObject(TObject *obj)
 {
-   // Remove a pair<id, object> from the map of functions and their ids.
    TEnum *e = dynamic_cast<TEnum *>(obj);
    if (e) {
       fIds->Remove((Long64_t)e->GetDeclId());
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from this collection and recursively remove the object
+/// from all other objects (and collections).
+/// This function overrides TCollection::RecursiveRemove that calls
+/// the Remove function. THashList::Remove cannot be called because
+/// it uses the hash value of the hash table. This hash value
+/// is not available anymore when RecursiveRemove is called from
+/// the TObject destructor.
+
 void TListOfEnums::RecursiveRemove(TObject *obj)
 {
-   // Remove object from this collection and recursively remove the object
-   // from all other objects (and collections).
-   // This function overrides TCollection::RecursiveRemove that calls
-   // the Remove function. THashList::Remove cannot be called because
-   // it uses the hash value of the hash table. This hash value
-   // is not available anymore when RecursiveRemove is called from
-   // the TObject destructor.
-
    if (!obj) return;
 
    THashList::RecursiveRemove(obj);
@@ -286,11 +288,11 @@ void TListOfEnums::RecursiveRemove(TObject *obj)
    UnmapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from the list.
+
 TObject *TListOfEnums::Remove(TObject *obj)
 {
-   // Remove object from the list.
-
    Bool_t found;
 
    found = THashList::Remove(obj);
@@ -302,11 +304,11 @@ TObject *TListOfEnums::Remove(TObject *obj)
    else return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object via its objlink from the list.
+
 TObject *TListOfEnums::Remove(TObjLink *lnk)
 {
-   // Remove object via its objlink from the list.
-
    if (!lnk) return 0;
 
    TObject *obj = lnk->GetObject();
@@ -317,12 +319,12 @@ TObject *TListOfEnums::Remove(TObjLink *lnk)
    return obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load all the DataMembers known to the intepreter for the scope 'fClass'
+/// into this collection.
+
 void TListOfEnums::Load()
 {
-   // Load all the DataMembers known to the intepreter for the scope 'fClass'
-   // into this collection.
-
    if (fClass && fClass->Property() & (kIsClass | kIsStruct | kIsUnion)) {
       // Class and union are not extendable, if we already
       // loaded all the data member there is no need to recheck
@@ -375,14 +377,14 @@ void TListOfEnums::Load()
    gInterpreter->LoadEnums(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mark 'all func' as being unloaded.
+/// After the unload, the data member can no longer be found directly,
+/// until the decl can be found again in the interpreter (in which
+/// the func object will be reused.
+
 void TListOfEnums::Unload()
 {
-   // Mark 'all func' as being unloaded.
-   // After the unload, the data member can no longer be found directly,
-   // until the decl can be found again in the interpreter (in which
-   // the func object will be reused.
-
    TObjLink *lnk = FirstLink();
    while (lnk) {
       TEnum *data = (TEnum *)lnk->GetObject();
@@ -398,14 +400,14 @@ void TListOfEnums::Unload()
    fIsLoaded = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mark enum 'e' as being unloaded.
+/// After the unload, the data member can no longer be found directly,
+/// until the decl can be found again in the interpreter (in which
+/// the func object will be reused.
+
 void TListOfEnums::Unload(TEnum *e)
 {
-   // Mark enum 'e' as being unloaded.
-   // After the unload, the data member can no longer be found directly,
-   // until the decl can be found again in the interpreter (in which
-   // the func object will be reused.
-
    if (THashList::Remove(e)) {
       // We contains the object, let remove it from the other internal
       // list and move it to the list of unloaded objects.

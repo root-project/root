@@ -40,40 +40,43 @@ ClassImp(RooNumCdf)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a cumulative distribution function from given input p.d.f over observable x.
+/// using a numeric sampling algorithm. Use binning named 'bname' to control sampling
+/// granularity
+
 RooNumCdf::RooNumCdf(const char *name, const char *title, RooAbsPdf& _pdf, RooRealVar& _x, const char* bname) :
    RooNumRunningInt(name,title,_pdf,_x,bname)
  { 
-   // Construct a cumulative distribution function from given input p.d.f over observable x.
-   // using a numeric sampling algorithm. Use binning named 'bname' to control sampling
-   // granularity
  } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooNumCdf::RooNumCdf(const RooNumCdf& other, const char* name) :  
    RooNumRunningInt(other,name)
  { 
-   // Copy constructor
  } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooNumCdf::~RooNumCdf() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill cache using running integral cache elements calculate()
+/// method with specification of cdf-specific boundary conditions
+
 void RooNumCdf::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const 
 {
-  // Fill cache using running integral cache elements calculate()
-  // method with specification of cdf-specific boundary conditions
-
   RICacheElem& riCache = static_cast<RICacheElem&>(cache) ;  
   riCache.calculate(kTRUE) ;
 }

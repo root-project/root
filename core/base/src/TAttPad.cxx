@@ -22,23 +22,26 @@ ClassImp(TAttPad)
 //  Manages default Pad attributes. Referenced by TStyle.
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 TAttPad::TAttPad()
 {
-   //constructor
    ResetAttPad();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TAttPad::~TAttPad()
 {
-   //destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy function
+
 void TAttPad::Copy(TAttPad &attpad) const
 {
-   //copy function
    attpad.fLeftMargin   = fLeftMargin;
    attpad.fRightMargin  = fRightMargin;
    attpad.fBottomMargin = fBottomMargin;
@@ -58,16 +61,18 @@ void TAttPad::Copy(TAttPad &attpad) const
    attpad.fFrameBorderMode= fFrameBorderMode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///print function
+
 void TAttPad::Print(Option_t *) const
 {
-   //print function
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///reset pad attributes
+
 void TAttPad::ResetAttPad(Option_t *)
 {
-   //reset pad attributes
    fLeftMargin   = gStyle->GetPadLeftMargin();
    fRightMargin  = gStyle->GetPadRightMargin();
    fBottomMargin = gStyle->GetPadBottomMargin();
@@ -87,62 +92,66 @@ void TAttPad::ResetAttPad(Option_t *)
    fFrameBorderMode= gStyle->GetFrameBorderMode();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Set Pad bottom margin in fraction of the pad height*-*-*-*
+///*-*              ===================================================
+
 void TAttPad::SetBottomMargin(Float_t margin)
 {
-//*-*-*-*-*-*-*-*-*Set Pad bottom margin in fraction of the pad height*-*-*-*
-//*-*              ===================================================
    if (margin < 0 || margin >=1) margin = 0.1;
    if (margin + fTopMargin >= 1) return;
    fBottomMargin = margin;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Set Pad left margin in fraction of the pad width*-*-*-*-*
+///*-*              ================================================
+
 void TAttPad::SetLeftMargin(Float_t margin)
 {
-//*-*-*-*-*-*-*-*-*Set Pad left margin in fraction of the pad width*-*-*-*-*
-//*-*              ================================================
    if (margin < 0 || margin >=1) margin = 0.1;
    if (margin + fRightMargin >= 1) return;
    fLeftMargin = margin;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Set Pad right margin in fraction of the pad width*-*-*-*-*
+///*-*              =================================================
+
 void TAttPad::SetRightMargin(Float_t margin)
 {
-//*-*-*-*-*-*-*-*-*Set Pad right margin in fraction of the pad width*-*-*-*-*
-//*-*              =================================================
    if (margin < 0 || margin >=1) margin = 0.1;
    if (margin + fLeftMargin >= 1) return;
    fRightMargin = margin;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Set Pad top margin in fraction of the pad height*-*-*-*-*
+///*-*              ================================================
+
 void TAttPad::SetTopMargin(Float_t margin)
 {
-//*-*-*-*-*-*-*-*-*Set Pad top margin in fraction of the pad height*-*-*-*-*
-//*-*              ================================================
    if (margin < 0 || margin >=1) margin = 0.1;
    if (margin + fBottomMargin >= 1) return;
    fTopMargin = margin;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Set all margins
+
 void TAttPad::SetMargin(Float_t left, Float_t right, Float_t bottom, Float_t top)
 {
-//*-*-*-*-*-*-*-*-*Set all margins
-
    SetLeftMargin(left);
    SetRightMargin(right);
    SetBottomMargin(bottom);
    SetTopMargin(top);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TAttPad.
+
 void TAttPad::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TAttPad.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

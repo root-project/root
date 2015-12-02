@@ -2246,14 +2246,14 @@ static TConfiguredAction GetCollectionWriteAction(TVirtualStreamerInfo *info, TS
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// loop on the TStreamerElement list
+/// regroup members with same type
+/// Store predigested information into local arrays. This saves a huge amount
+/// of time compared to an explicit iteration on all elements.
+
 void TStreamerInfo::Compile()
 {
-   // loop on the TStreamerElement list
-   // regroup members with same type
-   // Store predigested information into local arrays. This saves a huge amount
-   // of time compared to an explicit iteration on all elements.
-
    if (IsCompiled()) {
       //Error("Compile","can only be called once; this first call generates both the optimized and memberwise actions.");
       return;
@@ -2504,11 +2504,11 @@ static void AddReadConvertAction(TStreamerInfoActions::TActionSequence *sequence
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a read action for the given element.
+
 void TStreamerInfo::AddReadAction(TStreamerInfoActions::TActionSequence *readSequence, Int_t i, TStreamerInfo::TCompInfo *compinfo)
 {
-   // Add a read action for the given element.
-
    TStreamerElement *element = compinfo->fElem;
 
    if (element->TestBit(TStreamerElement::kWrite)) return;
@@ -2736,12 +2736,12 @@ void TStreamerInfo::AddReadAction(TStreamerInfoActions::TActionSequence *readSeq
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a read action for the given element.
+/// This is for streaming via a TClonesArray (or a vector of pointers of this type).
+
 void TStreamerInfo::AddReadMemberWiseVecPtrAction(TStreamerInfoActions::TActionSequence *readSequence, Int_t i, TStreamerInfo::TCompInfo *compinfo)
 {
-   // Add a read action for the given element.
-   // This is for streaming via a TClonesArray (or a vector of pointers of this type).
-
    TStreamerElement *element = compinfo->fElem;
 
    if (element->TestBit(TStreamerElement::kWrite)) return;
@@ -2754,7 +2754,8 @@ void TStreamerInfo::AddReadMemberWiseVecPtrAction(TStreamerInfoActions::TActionS
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TStreamerInfo::AddWriteAction(TStreamerInfoActions::TActionSequence *writeSequence, Int_t i, TStreamerInfo::TCompInfo *compinfo)
 {
    TStreamerElement *element = compinfo->fElem;
@@ -2859,11 +2860,11 @@ void TStreamerInfo::AddWriteAction(TStreamerInfoActions::TActionSequence *writeS
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is for streaming via a TClonesArray (or a vector of pointers of this type).
+
 void TStreamerInfo::AddWriteMemberWiseVecPtrAction(TStreamerInfoActions::TActionSequence *writeSequence, Int_t i, TStreamerInfo::TCompInfo *compinfo)
 {
-   // This is for streaming via a TClonesArray (or a vector of pointers of this type).
-
    TStreamerElement *element = compinfo->fElem;
    if (element->TestBit(TStreamerElement::kCache) && !element->TestBit(TStreamerElement::kWrite)) {
       // Skip element cached for reading purposes.
@@ -2887,11 +2888,11 @@ void TStreamerInfo::AddWriteMemberWiseVecPtrAction(TStreamerInfoActions::TAction
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the bundle of the actions necessary for the streaming memberwise of the content described by 'info' into the collection described by 'proxy'
+
 TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy)
 {
-   // Create the bundle of the actions necessary for the streaming memberwise of the content described by 'info' into the collection described by 'proxy'
-
    if (info == 0) {
       return new TStreamerInfoActions::TActionSequence(0,0);
    }
@@ -3003,11 +3004,11 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
    return sequence;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the bundle of the actions necessary for the streaming memberwise of the content described by 'info' into the collection described by 'proxy'
+
 TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateWriteMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy)
 {
-      // Create the bundle of the actions necessary for the streaming memberwise of the content described by 'info' into the collection described by 'proxy'
-
       if (info == 0) {
          return new TStreamerInfoActions::TActionSequence(0,0);
       }

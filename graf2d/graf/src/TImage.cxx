@@ -18,7 +18,8 @@
 ClassImp(TImage)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>Image class</h2></center>
 TImage is an abstract interface to image processing library.
@@ -31,12 +32,12 @@ methods are documented in that class.
 End_Html */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an image.
+/// Use ReadImage() or SetImage() to initialize the image.
+
 TImage *TImage::Create()
 {
-   // Create an image.
-   // Use ReadImage() or SetImage() to initialize the image.
-
    static TPluginHandler *h = 0;
 
    if (!h) {
@@ -54,14 +55,14 @@ TImage *TImage::Create()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the image type for the extension specified in filename.
+/// Case of the extension is ignored. E.g. for a filename "myimg.GIF",
+/// kGif is returned.
+/// kAnimGif is returned if the file extension is ".anim.gif".
+
 TImage::EImageFileTypes TImage::GetImageFileTypeFromFilename(const char* filename)
 {
-   // Return the image type for the extension specified in filename.
-   // Case of the extension is ignored. E.g. for a filename "myimg.GIF",
-   // kGif is returned.
-   // kAnimGif is returned if the file extension is ".anim.gif".
-
    if (!filename) return kUnknown;
 
    TString sFilename(filename);
@@ -108,11 +109,11 @@ TImage::EImageFileTypes TImage::GetImageFileTypeFromFilename(const char* filenam
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a specified image file.
+
 TImage *TImage::Open(const char *file, EImageFileTypes type)
 {
-   // Open a specified image file.
-
    TImage *img = Create();
    char *fullname = gSystem->ExpandPathName(file);
 
@@ -125,12 +126,12 @@ TImage *TImage::Open(const char *file, EImageFileTypes type)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open an image with the specified data in a Double_t array.
+
 TImage *TImage::Open(const char *name, const Double_t *imageData, UInt_t width,
                      UInt_t height, TImagePalette *palette)
 {
-   // Open an image with the specified data in a Double_t array.
-
    TImage *img = Create();
 
    if (img) {
@@ -141,12 +142,12 @@ TImage *TImage::Open(const char *name, const Double_t *imageData, UInt_t width,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open an image with the specified data in a TArrayD.
+
 TImage *TImage::Open(const char *name, const TArrayD &imageData, UInt_t width,
                      TImagePalette *palette)
 {
-   // Open an image with the specified data in a TArrayD.
-
    TImage *img = Create();
 
    if (img) {
@@ -157,12 +158,12 @@ TImage *TImage::Open(const char *name, const TArrayD &imageData, UInt_t width,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open an image with the specified data in a TVectorD.
+
 TImage *TImage::Open(const char *name, const TVectorD &imageData, UInt_t width,
                      TImagePalette *palette)
 {
-   // Open an image with the specified data in a TVectorD.
-
    TImage *img = Create();
 
    if (img) {
@@ -173,11 +174,11 @@ TImage *TImage::Open(const char *name, const TVectorD &imageData, UInt_t width,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create image from XPM data array.
+
 TImage *TImage::Open(char **data)
 {
-   // Create image from XPM data array.
-
    TImage *img = Create();
 
    if (img) {

@@ -21,12 +21,12 @@
 
 ClassImp(TSortedList)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object in sorted list. Uses object Compare() member to find right
+/// position.
+
 void TSortedList::Add(TObject *obj)
 {
-   // Add object in sorted list. Uses object Compare() member to find right
-   // position.
-
    if (IsArgNull("Add", obj)) return;
 
    if (!obj->IsSortable()) {
@@ -58,13 +58,13 @@ void TSortedList::Add(TObject *obj)
    TList::AddLast(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object in sorted list. Uses object Compare() member to find right
+/// position and also store option. See TList::Add for explanation of
+/// usage of option.
+
 void TSortedList::Add(TObject *obj, Option_t *opt)
 {
-   // Add object in sorted list. Uses object Compare() member to find right
-   // position and also store option. See TList::Add for explanation of
-   // usage of option.
-
    if (IsArgNull("Add", obj)) return;
 
    if (!obj->IsSortable()) {

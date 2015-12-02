@@ -23,45 +23,46 @@
 
 ClassImp(TLeafObject)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Default constructor for LeafObject*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*        =================================
+
 TLeafObject::TLeafObject(): TLeaf()
 {
-//*-*-*-*-*-*Default constructor for LeafObject*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        =================================
    fClass      = 0;
    fObjAddress = 0;
    fVirtual    = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafObject*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                      ==================
+///*-*
+
 TLeafObject::TLeafObject(TBranch *parent, const char *name, const char *type)
    :TLeaf(parent, name,type)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafObject*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ==================
-//*-*
-
    SetTitle(type);
    fClass      = TClass::GetClass(type);
    fObjAddress = 0;
    fVirtual    = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Default destructor for a LeafObject*-*-*-*-*-*-*-*-*-*-*-*
+///*-*        ==================================
+
 TLeafObject::~TLeafObject()
 {
-//*-*-*-*-*-*Default destructor for a LeafObject*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ==================================
-
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
+///*-*                  =========================================
+
 void TLeafObject::FillBasket(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
-//*-*                  =========================================
-
    if (!fObjAddress) return;
    TObject *object  = GetObject();
    if (object) {
@@ -86,16 +87,16 @@ void TLeafObject::FillBasket(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*Returns pointer to method corresponding to name*-*-*-*-*-*-*
+///*-*            ============================================
+///*-*
+///*-*    name is a string with the general form  "method(list of params)"
+///*-*   If list of params is omitted, () is assumed;
+///*-*
+
 TMethodCall *TLeafObject::GetMethodCall(const char *name)
 {
-//*-*-*-*-*-*-*-*Returns pointer to method corresponding to name*-*-*-*-*-*-*
-//*-*            ============================================
-//*-*
-//*-*    name is a string with the general form  "method(list of params)"
-//*-*   If list of params is omitted, () is assumed;
-//*-*
-
    char *namecpy = new char[strlen(name)+1];
    strcpy(namecpy,name);
    char *params = strchr(namecpy,'(');
@@ -111,38 +112,38 @@ TMethodCall *TLeafObject::GetMethodCall(const char *name)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*Returns name of leaf type*-*-*-*-*-*-*-*-*-*-*-*
+///*-*            =========================
+
 const char *TLeafObject::GetTypeName() const
 {
-//*-*-*-*-*-*-*-*Returns name of leaf type*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            =========================
-
    return fTitle.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method must be overridden to handle object notifcation.
+
 Bool_t TLeafObject::Notify()
 {
-   // This method must be overridden to handle object notifcation.
-
    fClass      = TClass::GetClass(GetTitle());
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints leaf value
+
 void TLeafObject::PrintValue(Int_t) const
 {
-// Prints leaf value
-
    printf("%lx\n",(Long_t)GetValuePointer());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
+///*-*                  ===========================================
+
 void TLeafObject::ReadBasket(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
-//*-*                  ===========================================
-
    char classname[128];
    UChar_t n;
    if (fVirtual) {
@@ -186,20 +187,20 @@ void TLeafObject::ReadBasket(TBuffer &b)
    } else GetBranch()->SetAddress(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
+///*-*                  ============================
+
 void TLeafObject::SetAddress(void *add)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
-//*-*                  ============================
-
    fObjAddress = (void **)add;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TLeafObject.
+
 void TLeafObject::Streamer(TBuffer &b)
 {
-   // Stream an object of class TLeafObject.
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
@@ -226,11 +227,11 @@ void TLeafObject::Streamer(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if this leaf is does not have any sub-branch/leaf.
+
 Bool_t TLeafObject::IsOnTerminalBranch() const
 {
-   // Return true if this leaf is does not have any sub-branch/leaf.
-
    if (fBranch->GetListOfBranches()->GetEntriesFast()) return kFALSE;
    return kTRUE;
 }

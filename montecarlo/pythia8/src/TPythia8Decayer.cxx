@@ -22,26 +22,29 @@
 
 ClassImp(TPythia8Decayer)
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 TPythia8Decayer::TPythia8Decayer():
   fPythia8(new TPythia8()),
   fDebug(0)
 {
-   //constructor
    fPythia8->Pythia8()->readString("SoftQCD:elastic = on");
    fPythia8->Pythia8()->init();
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the decayer
+
 void TPythia8Decayer::Init()
 {
-   // Initialize the decayer
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decay a single particle
+
 void TPythia8Decayer::Decay(Int_t pdg, TLorentzVector* p)
 {
-   // Decay a single particle
    ClearEvent();
    AppendParticle(pdg, p);
    Int_t idPart = fPythia8->Pythia8()->event[0].id();
@@ -50,56 +53,64 @@ void TPythia8Decayer::Decay(Int_t pdg, TLorentzVector* p)
    if (fDebug > 0) fPythia8->EventListing();
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///import the decay products into particles array
+
 Int_t TPythia8Decayer::ImportParticles(TClonesArray *particles)
 {
-   //import the decay products into particles array
    return (fPythia8->ImportParticles(particles, "All"));
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set forced decay mode
+
 void TPythia8Decayer::SetForceDecay(Int_t /*type*/)
 {
-   // Set forced decay mode
    printf("SetForceDecay not yet implemented !\n");
 }
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ForceDecay not yet implemented
+
 void TPythia8Decayer::ForceDecay()
 {
-   // ForceDecay not yet implemented
    printf("ForceDecay not yet implemented !\n");
 }
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Float_t TPythia8Decayer::GetPartialBranchingRatio(Int_t /*ipart*/)
 {
    return 0.0;
 }
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return lifetime in seconds of teh particle with PDG number pdg
+
 Float_t TPythia8Decayer::GetLifetime(Int_t pdg)
 {
-   //return lifetime in seconds of teh particle with PDG number pdg
    return (fPythia8->Pythia8()->particleData.tau0(pdg) * 3.3333e-12) ;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to read a decay table (not yet implemented)
+
 void    TPythia8Decayer::ReadDecayTable()
 {
-   //to read a decay table (not yet implemented)
 }
 
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Append a particle to the stack
+
 void TPythia8Decayer::AppendParticle(Int_t pdg, TLorentzVector* p)
 {
-   // Append a particle to the stack
    fPythia8->Pythia8()->event.append(pdg, 11, 0, 0, p->Px(), p->Py(), p->Pz(), p->E(), p->M());
 }
 
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the event stack
+
 void TPythia8Decayer::ClearEvent()
 {
-   // Clear the event stack
    fPythia8->Pythia8()->event.clear();
 }
 

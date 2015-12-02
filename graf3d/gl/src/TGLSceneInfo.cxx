@@ -33,7 +33,8 @@
 ClassImp(TGLSceneInfo)
 
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLSceneInfo::TGLSceneInfo(TGLViewerBase* view, TGLSceneBase* scene) :
    fViewer    (view),
    fScene     (scene),
@@ -65,11 +66,11 @@ TGLSceneInfo::TGLSceneInfo(TGLViewerBase* view, TGLSceneBase* scene) :
    // Default constructor.
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set active state of the scene, mark viewer as changed.
+
 void TGLSceneInfo::SetActive(Bool_t a)
 {
-   // Set active state of the scene, mark viewer as changed.
-
    if (a != fActive)
    {
       fActive = a;
@@ -77,14 +78,14 @@ void TGLSceneInfo::SetActive(Bool_t a)
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Combine information from scene, scene-info and camera (should be
+/// optional) into transformation matrices.
+///
+/// Transform scene bounding box using this transformation.
+
 void TGLSceneInfo::SetupTransformsAndBBox()
 {
-   // Combine information from scene, scene-info and camera (should be
-   // optional) into transformation matrices.
-   //
-   // Transform scene bounding box using this transformation.
-
    // !!! Transforms not implemented yet, just copy the scene bounding
    // box.
 

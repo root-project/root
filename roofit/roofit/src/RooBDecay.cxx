@@ -41,7 +41,8 @@ using namespace std;
 ClassImp(RooBDecay);
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooBDecay::RooBDecay(const char *name, const char* title, 
 	       RooRealVar& t, RooAbsReal& tau, RooAbsReal& dgamma,
 	       RooAbsReal& f0, RooAbsReal& f1, RooAbsReal& f2, RooAbsReal& f3, 
@@ -82,7 +83,9 @@ RooBDecay::RooBDecay(const char *name, const char* title,
     }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Copy constructor
+
 RooBDecay::RooBDecay(const RooBDecay& other, const char* name) :
   RooAbsAnaConvPdf(other, name),
   _t("t", this, other._t),
@@ -99,19 +102,20 @@ RooBDecay::RooBDecay(const RooBDecay& other, const char* name) :
   _basisSin(other._basisSin),
   _type(other._type)
 {
-  //Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Destructor
+
 RooBDecay::~RooBDecay()
 {
-  //Destructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooBDecay::coefficient(Int_t basisIndex) const
 {
   if(basisIndex == _basisCosh)
@@ -135,7 +139,8 @@ Double_t RooBDecay::coefficient(Int_t basisIndex) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooArgSet* RooBDecay::coefVars(Int_t basisIndex) const 
 {
   if(basisIndex == _basisCosh)
@@ -160,7 +165,8 @@ RooArgSet* RooBDecay::coefVars(Int_t basisIndex) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooBDecay::getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   if(coef == _basisCosh)
@@ -185,7 +191,8 @@ Int_t RooBDecay::getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooAr
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooBDecay::coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName) const 
 {
   if(coef == _basisCosh)
@@ -210,7 +217,8 @@ Double_t RooBDecay::coefAnalyticalIntegral(Int_t coef, Int_t code, const char* r
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooBDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars, generateVars, _t)) return 1;
@@ -219,7 +227,8 @@ Int_t RooBDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVa
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooBDecay::generateEvent(Int_t code)
 {
   R__ASSERT(code==1);

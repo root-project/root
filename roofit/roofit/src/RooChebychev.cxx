@@ -47,13 +47,16 @@
 ClassImp(RooChebychev)
 ;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooChebychev::RooChebychev() : _refRangeName(0)
 {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooChebychev::RooChebychev(const char* name, const char* title, 
                            RooAbsReal& x, const RooArgList& coefList): 
   RooAbsPdf(name, title),
@@ -61,7 +64,6 @@ RooChebychev::RooChebychev(const char* name, const char* title,
   _coefList("coefficients","List of coefficients",this),
   _refRangeName(0)
 {
-  // Constructor
   TIterator* coefIter = coefList.createIterator() ;
   RooAbsArg* coef ;
   while((coef = (RooAbsArg*)coefIter->Next())) {
@@ -79,7 +81,8 @@ RooChebychev::RooChebychev(const char* name, const char* title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooChebychev::RooChebychev(const RooChebychev& other, const char* name) :
   RooAbsPdf(other, name), 
   _x("x", this, other._x), 
@@ -95,7 +98,8 @@ inline static double p3(double t,double a,double b,double c,double d) { return p
 //inline static double p4(double t,double a,double b,double c,double d,double e) { return p3(t,p1(t,a,b),c,d,e); }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooChebychev::selectNormalizationRange(const char* rangeName, Bool_t force) 
 {
   if (rangeName && (force || !_refRangeName)) {
@@ -107,10 +111,10 @@ void RooChebychev::selectNormalizationRange(const char* rangeName, Bool_t force)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooChebychev::evaluate() const 
 {
-  
   Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0) ; Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
   Double_t x(-1+2*(_x-xmin)/(xmax-xmin));
   Double_t x2(x*x);
@@ -133,7 +137,8 @@ Double_t RooChebychev::evaluate() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /* rangeName */) const 
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
@@ -141,10 +146,10 @@ Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-
   R__ASSERT(1 == code);
 
   // the full range of the function is mapped to the normalised [-1, 1] range

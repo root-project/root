@@ -301,19 +301,19 @@ static char gAcMsChar[] = {
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Translate escape sequences in the string "z".  "z" is overwritten
+/// with the translated sequence.
+///
+/// Unrecognized escape sequences are unaltered.
+///
+/// Example:
+///
+///      input  = "AT&amp;T &gt MCI"
+///      output = "AT&T > MCI"
+
 void HtmlTranslateEscapes(char *z)
 {
-   // Translate escape sequences in the string "z".  "z" is overwritten
-   // with the translated sequence.
-   //
-   // Unrecognized escape sequences are unaltered.
-   //
-   // Example:
-   //
-   //      input  = "AT&amp;T &gt MCI"
-   //      output = "AT&T > MCI"
-
    int from;   // Read characters from this position in z[]
    int to;     // Write characters into this position in z[]
    int h;      // A hash on the escape sequence
@@ -473,11 +473,11 @@ static void HtmlHashInit(void){
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Append the given TGHtmlElement to the tokenizers list of elements
+
 void TGHtml::AppendElement(TGHtmlElement *pElem)
 {
-   // Append the given TGHtmlElement to the tokenizers list of elements
-
    pElem->fPNext = 0;
    pElem->fPPrev = fPLast;
    if (fPFirst == 0) {
@@ -489,11 +489,11 @@ void TGHtml::AppendElement(TGHtmlElement *pElem)
    fNToken++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert token pNew before token p
+
 void TGHtml::AppToken(TGHtmlElement *pNew, TGHtmlElement *p, int offs)
 {
-   // Insert token pNew before token p
-
    if (offs < 0) {
       if (p) {
          offs = p->fOffs;
@@ -521,11 +521,11 @@ void TGHtml::AppToken(TGHtmlElement *pNew, TGHtmlElement *p, int offs)
    fNToken++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the new column index following the given character.
+
 static int NextColumn(int iCol, char c)
 {
-   // Compute the new column index following the given character.
-
    switch (c) {
       case '\n': return 0;
       case '\t': return (iCol | 7) + 1;
@@ -534,33 +534,33 @@ static int NextColumn(int iCol, char c)
    /* NOT REACHED */
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a string to all lower-case letters.
+
 void ToLower(char *z)
 {
-   // Convert a string to all lower-case letters.
-
    while (*z) {
       if (isupper(*z)) *z = tolower(*z);
       z++;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process as much of the input HTML as possible. Construct new
+/// TGHtmlElement objects and appended them to the list. Return
+/// the number of characters actually processed.
+///
+/// This routine may invoke a callback procedure which could delete
+/// the HTML widget.
+///
+/// This routine is not reentrant for the same HTML widget.  To
+/// prevent reentrancy (during a callback), the p->fICol field is
+/// set to a negative number. This is a flag to future invocations
+/// not to reentry this routine. The p->fICol field is restored
+/// before exiting, of course.
+
 int TGHtml::Tokenize()
 {
-   // Process as much of the input HTML as possible. Construct new
-   // TGHtmlElement objects and appended them to the list. Return
-   // the number of characters actually processed.
-   //
-   // This routine may invoke a callback procedure which could delete
-   // the HTML widget.
-   //
-   // This routine is not reentrant for the same HTML widget.  To
-   // prevent reentrancy (during a callback), the p->fICol field is
-   // set to a negative number. This is a flag to future invocations
-   // not to reentry this routine. The p->fICol field is restored
-   // before exiting, of course.
-
    char *z;             // The input HTML text
    int c;               // The next character of input
    int n;               // Number of characters processed so far
@@ -1012,12 +1012,12 @@ incomplete:
 
 /************************** End HTML Tokenizer Code ***************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make one markup entry.
+
 TGHtmlMarkupElement *TGHtml::MakeMarkupEntry(int objType, int type, int argc,
                                              int arglen[], char *argv[])
 {
-   // Make one markup entry.
-
    TGHtmlMarkupElement *e;
 
    switch (objType) {
@@ -1077,11 +1077,11 @@ TGHtmlMarkupElement *TGHtml::MakeMarkupEntry(int objType, int type, int argc,
    return e;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Append text to the tokenizer engine.
+
 void TGHtml::TokenizerAppend(const char *text)
 {
-   // Append text to the tokenizer engine.
-
    int len = strlen(text);
 
    if (fNText == 0) {
@@ -1108,25 +1108,25 @@ void TGHtml::TokenizerAppend(const char *text)
    fNComplete = Tokenize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine takes a text representation of a token, converts it into an
+/// TGHtmlElement object and inserts it immediately prior to pToken. If pToken
+/// is 0, then the newly created TGHtmlElement is appended.
+///
+/// This routine does nothing to resize, restyle, relayout or redisplay
+/// the HTML. That is the calling routines responsibility.
+///
+/// Return the new TGHtmlElement object if successful. Return zero if
+/// zType is not a known markup name.
+///
+///  pToken  - Insert before this. Append if pToken == 0
+///  zType   - Type of markup. Ex: "/a" or "table"
+///  zArgs   - List of arguments
+///  offs    - Calculate offset, and insert changed text into fZText!
+
 TGHtmlElement *TGHtml::InsertToken(TGHtmlElement *pToken,
                                   char *zType, char *zArgs, int offs)
 {
-   // This routine takes a text representation of a token, converts it into an
-   // TGHtmlElement object and inserts it immediately prior to pToken. If pToken
-   // is 0, then the newly created TGHtmlElement is appended.
-   //
-   // This routine does nothing to resize, restyle, relayout or redisplay
-   // the HTML. That is the calling routines responsibility.
-   //
-   // Return the new TGHtmlElement object if successful. Return zero if
-   // zType is not a known markup name.
-   //
-   //  pToken  - Insert before this. Append if pToken == 0
-   //  zType   - Type of markup. Ex: "/a" or "table"
-   //  zArgs   - List of arguments
-   //  offs    - Calculate offset, and insert changed text into fZText!
-
    SHtmlTokenMap_t *pMap;     // For searching the markup name hash table
    int h;                   // The hash on zType
    TGHtmlElement *pElem;     // The new element
@@ -1190,13 +1190,13 @@ TGHtmlElement *TGHtml::InsertToken(TGHtmlElement *pToken,
    return pElem;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert text into text token, or break token into two text tokens.
+/// Also, handle backspace char by deleting text.
+/// Should also handle newline char by splitting text.
+
 int TGHtml::TextInsertCmd(int /*argc*/, char ** /*argv*/)
 {
-   // Insert text into text token, or break token into two text tokens.
-   // Also, handle backspace char by deleting text.
-   // Should also handle newline char by splitting text.
-
 #if 0
   TGHtmlElement *p, *pElem;
   int i, l, n = 0;
@@ -1290,11 +1290,11 @@ int TGHtml::TextInsertCmd(int /*argc*/, char ** /*argv*/)
   return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns token map matching zType name.
+
 SHtmlTokenMap_t *TGHtml::NameToPmap(char *zType)
 {
-   // Returns token map matching zType name.
-
    SHtmlTokenMap_t *pMap;     // For searching the markup name hash table
    int h;                   // The hash on zType
 
@@ -1310,20 +1310,20 @@ SHtmlTokenMap_t *TGHtml::NameToPmap(char *zType)
    return pMap;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a markup name into a type integer
+
 int TGHtml::NameToType(char *zType)
 {
-   // Convert a markup name into a type integer
-
    SHtmlTokenMap_t *pMap = NameToPmap(zType);
    return pMap ? pMap->fType : (int)Html_Unknown;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a type into a symbolic name
+
 const char *TGHtml::TypeToName(int type)
 {
-   // Convert a type into a symbolic name
-
    if (type >= Html_A && type <= Html_EndXMP) {
       SHtmlTokenMap_t *pMap = gApMap[type - Html_A];
       return pMap->fZName;
@@ -1332,11 +1332,11 @@ const char *TGHtml::TypeToName(int type)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For debugging purposes, print information about a token
+
 char *TGHtml::DumpToken(TGHtmlElement *p)
 {
-   // For debugging purposes, print information about a token
-
 //#ifdef DEBUG
    static char zBuf[200];
    int j;
@@ -1394,19 +1394,19 @@ char *TGHtml::DumpToken(TGHtmlElement *p)
 //#endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Append all the arguments of the given markup to the given TGString.
+///
+/// Example:  If the markup is <IMG SRC=image.gif ALT="hello!">
+/// then the following text is appended to the TGString:
+///
+///       "src image.gif alt hello!"
+///
+/// Notice how all attribute names are converted to lower case.
+/// This conversion happens in the parser.
+
 void TGHtml::AppendArglist(TGString *str, TGHtmlMarkupElement *pElem)
 {
-   // Append all the arguments of the given markup to the given TGString.
-   //
-   // Example:  If the markup is <IMG SRC=image.gif ALT="hello!">
-   // then the following text is appended to the TGString:
-   //
-   //       "src image.gif alt hello!"
-   //
-   // Notice how all attribute names are converted to lower case.
-   // This conversion happens in the parser.
-
    int i;
 
    for (i = 0; i + 1 < pElem->fCount; i += 2) {
@@ -1417,11 +1417,11 @@ void TGHtml::AppendArglist(TGString *str, TGHtmlMarkupElement *pElem)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns token name of html element p.
+
 char *TGHtml::GetTokenName(TGHtmlElement *p)
 {
-   // Returns token name of html element p.
-
    static char zBuf[200];
    //int j;
    const char *zName;
@@ -1454,19 +1454,19 @@ char *TGHtml::GetTokenName(TGHtmlElement *p)
    return zBuf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns token map at location n.
+
 SHtmlTokenMap_t* TGHtml::GetMarkupMap(int n)
 {
-   // Returns token map at location n.
-
    return HtmlMarkupMap+n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return all tokens between the two elements as a string list.
+
 TGString *TGHtml::ListTokens(TGHtmlElement *p, TGHtmlElement *pEnd)
 {
-   // Return all tokens between the two elements as a string list.
-
    TGString *str;
    int i;
    const char *zName;
@@ -1517,11 +1517,11 @@ TGString *TGHtml::ListTokens(TGHtmlElement *p, TGHtmlElement *pEnd)
    return str;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print a list of tokens
+
 void TGHtml::PrintList(TGHtmlElement *first, TGHtmlElement *last)
 {
-   // Print a list of tokens
-
    TGHtmlElement *p;
 
    for (p = first; p != last; p = p->fPNext) {

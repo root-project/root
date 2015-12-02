@@ -27,42 +27,42 @@
 
 ClassImp(TStatus)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TStatus::TStatus() : fIter(&fMsgs), fExitStatus(-1),
                      fVirtMemMax(-1), fResMemMax(-1),
                      fVirtMaxMst(-1), fResMaxMst(-1)
 {
-   // Default constructor.
-
    SetName("PROOF_Status");
    fMsgs.SetOwner(kTRUE);
    fInfoMsgs.SetOwner(kTRUE);
    ResetBit(TStatus::kNotOk);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an error message.
+
 void TStatus::Add(const char *mesg)
 {
-   // Add an error message.
-
    fMsgs.Add(new TObjString(mesg));
    SetBit(TStatus::kNotOk);
    Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an info message.
+
 void TStatus::AddInfo(const char *mesg)
 {
-   // Add an info message.
-
    fInfoMsgs.Add(new TObjString(mesg));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PROOF Merge() function.
+
 Int_t TStatus::Merge(TCollection *li)
 {
-   // PROOF Merge() function.
-
    TIter stats(li);
    PDB(kOutput,1)
       Info("Merge", "start: max virtual memory: %.2f MB \tmax resident memory: %.2f MB ",
@@ -103,11 +103,11 @@ Int_t TStatus::Merge(TCollection *li)
    return fMsgs.GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Standard print function.
+
 void TStatus::Print(Option_t * /*option*/) const
 {
-   // Standard print function.
-
    Printf("OBJ: %s\t%s\t%s", IsA()->GetName(), GetName(), (IsOk() ? "OK" : "ERROR"));
 
    TObjString *os = 0;
@@ -135,29 +135,29 @@ void TStatus::Print(Option_t * /*option*/) const
           GetVirtMemMax(kTRUE)/1024., GetResMemMax(kTRUE)/1024.);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the iterator on the messages.
+
 void TStatus::Reset()
 {
-   // Reset the iterator on the messages.
-
    fIter.Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the next message or 0.
+
 const char *TStatus::NextMesg()
 {
-   // Return the next message or 0.
-
    TObjString *os = (TObjString *) fIter();
    if (os) return os->GetName();
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set max memory values
+
 void TStatus::SetMemValues(Long_t vmem, Long_t rmem, Bool_t master)
 {
-   // Set max memory values
-
    if (master) {
       if (vmem > 0. && (fVirtMaxMst < 0. || vmem > fVirtMaxMst)) fVirtMaxMst = vmem;
       if (rmem > 0. && (fResMaxMst < 0. || rmem > fResMaxMst)) fResMaxMst = rmem;
@@ -167,10 +167,11 @@ void TStatus::SetMemValues(Long_t vmem, Long_t rmem, Bool_t master)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TStatus.
+
 void TStatus::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TStatus.
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

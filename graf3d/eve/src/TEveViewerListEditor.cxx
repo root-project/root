@@ -19,7 +19,8 @@
 
 ClassImp(TEveViewerListEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveViewerListEditor::TEveViewerListEditor(const TGWindow *p, Int_t width, Int_t height,
              UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
@@ -48,11 +49,11 @@ TEveViewerListEditor::TEveViewerListEditor(const TGWindow *p, Int_t width, Int_t
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveViewerListEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveViewerList*>(obj);
 
    fBrightness->SetValue(fM->GetColorBrightness());
@@ -62,20 +63,20 @@ void TEveViewerListEditor::SetModel(TObject* obj)
 
 // Implements callback/slot methods
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for brightness.
+
 void TEveViewerListEditor::DoBrightness()
 {
-   // Slot for brightness.
-
    fColorSet->SetText(fM->UseLightColorSet()?"DarkColorSet": "Light ColorSet");
    fM->SetColorBrightness(fBrightness->GetValue());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for color set.
+
 void TEveViewerListEditor::SwitchColorSet()
 {
-   // Slot for color set.
-
    fColorSet->SetText(fM->UseLightColorSet()? "Light ColorSet":"Dark ColorSet");
    fM->SwitchColorSet();
 }

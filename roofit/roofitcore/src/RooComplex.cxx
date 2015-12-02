@@ -41,9 +41,10 @@ void RooComplex::warn() const
     }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  WVE Solaric CC5.0 complains about this
+
 void RooComplex::Print() const {
-//  WVE Solaric CC5.0 complains about this
   cout << *this << endl;
 }
 

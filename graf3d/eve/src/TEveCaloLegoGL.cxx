@@ -38,7 +38,8 @@
 
 ClassImp(TEveCaloLegoGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveCaloLegoGL::TEveCaloLegoGL() :
    TGLObject(),
 
@@ -67,11 +68,11 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
    fAxisPainter.SetFontMode(TGLFont::kPixmap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveCaloLegoGL::~TEveCaloLegoGL()
 {
-   // Destructor.
-
    DLCachePurge();
 
    delete fEtaAxis;
@@ -79,28 +80,28 @@ TEveCaloLegoGL::~TEveCaloLegoGL()
    delete fZAxis;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEveCaloLegoGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEveCaloLego>(obj);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding box.
+
 void TEveCaloLegoGL::SetBBox()
 {
-   // Set bounding box.
-
    SetAxisAlignedBBox(((TEveCaloLego*)fExternalObj)->AssertBBox());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drop all display-list definitions.
+
 void TEveCaloLegoGL::DLCacheDrop()
 {
-   // Drop all display-list definitions.
-
    fDLCacheOK = kFALSE;
    for (SliceDLMap_i i = fDLMap.begin(); i != fDLMap.end(); ++i)
       i->second = 0;
@@ -108,11 +109,11 @@ void TEveCaloLegoGL::DLCacheDrop()
    TGLObject::DLCacheDrop();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unregister all display-lists.
+
 void TEveCaloLegoGL::DLCachePurge()
 {
-   // Unregister all display-lists.
-
    // all lego cells
    fDLCacheOK = kFALSE;
    if (! fDLMap.empty()) {
@@ -126,12 +127,12 @@ void TEveCaloLegoGL::DLCachePurge()
    TGLObject::DLCachePurge();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw an axis-aligned box using quads.
+
 void TEveCaloLegoGL::MakeQuad(Float_t x1, Float_t y1, Float_t z1,
       Float_t xw, Float_t yw, Float_t h) const
 {
-   // Draw an axis-aligned box using quads.
-
    //    z
    //    |
    //    |
@@ -198,12 +199,12 @@ void TEveCaloLegoGL::MakeQuad(Float_t x1, Float_t y1, Float_t z1,
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create display-list that draws histogram bars for non-rebinned data.
+/// It is used for filled and outline passes.
+
 void TEveCaloLegoGL::Make3DDisplayList(TEveCaloData::vCellId_t& cellList, SliceDLMap_t& dlMap, Bool_t selection) const
 {
-   // Create display-list that draws histogram bars for non-rebinned data.
-   // It is used for filled and outline passes.
-
    TEveCaloData::CellData_t cellData;
    Int_t   prevTower = 0;
    Float_t offset = 0;
@@ -240,12 +241,12 @@ void TEveCaloLegoGL::Make3DDisplayList(TEveCaloData::vCellId_t& cellList, SliceD
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create display-list that draws histogram bars for rebinned data.
+/// It is used for filled and outline passes.
+
 void TEveCaloLegoGL::Make3DDisplayListRebin(TEveCaloData::RebinData_t& rebinData, SliceDLMap_t& dlMap, Bool_t selection) const
 {
-   // Create display-list that draws histogram bars for rebinned data.
-   // It is used for filled and outline passes.
-
    Int_t nSlices = fM->fData->GetNSlices();
    Float_t *vals;
    Float_t offset;
@@ -286,7 +287,8 @@ void TEveCaloLegoGL::Make3DDisplayListRebin(TEveCaloData::RebinData_t& rebinData
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TEveCaloLegoGL::SetAxis3DTitlePos(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, Float_t y0, Float_t y1) const
 {
    const GLdouble *pm = rnrCtx.RefCamera().RefLastNoPickProjM().CArr();
@@ -414,12 +416,12 @@ void TEveCaloLegoGL::SetAxis3DTitlePos(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw z-axis and z-box at the appropriate grid corner-point including
+/// tick-marks and labels.
+
 void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
 {
-   // Draw z-axis and z-box at the appropriate grid corner-point including
-   // tick-marks and labels.
-
    // set font size first depending on size of projected axis
 
    TGLMatrix mm;
@@ -573,7 +575,8 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
 
 } // DrawAxis3D
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void  TEveCaloLegoGL::GetScaleForMatrix(Float_t& sx, Float_t& sy, Float_t& sz) const
 {
    Double_t em, eM, pm, pM;
@@ -594,11 +597,11 @@ void  TEveCaloLegoGL::GetScaleForMatrix(Float_t& sx, Float_t& sy, Float_t& sz) c
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw XY axis.
+
 void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
 {
-   // Draw XY axis.
-
    if (fM->GetData()->Empty())
       fAxisPainter.SetTMNDim(1);
 
@@ -672,11 +675,11 @@ void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
    fAxisPainter.SetTMNDim(2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate view-dependent grid density.
+
 Int_t TEveCaloLegoGL::GetGridStep(TGLRnrCtx &rnrCtx) const
 {
-   // Calculate view-dependent grid density.
-
    TGLCamera &camera = rnrCtx.RefCamera();
    Float_t l = -camera.FrustumPlane(TGLCamera::kLeft).D();
    Float_t r =  camera.FrustumPlane(TGLCamera::kRight).D();
@@ -715,11 +718,11 @@ Int_t TEveCaloLegoGL::GetGridStep(TGLRnrCtx &rnrCtx) const
    return ngroup;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rebin eta, phi axis.
+
 void TEveCaloLegoGL::RebinAxis(TAxis *orig, TAxis *curr) const
 {
-   // Rebin eta, phi axis.
-
    Double_t center = 0.5 * (orig->GetXmin() + orig->GetXmax());
    Int_t    idx0   = orig->FindBin(center);
    Double_t bc     = orig->GetBinCenter(idx0);
@@ -735,11 +738,11 @@ void TEveCaloLegoGL::RebinAxis(TAxis *orig, TAxis *curr) const
    curr->Set(nbR, &bins[0]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw basic histogram components: x-y grid
+
 void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
 {
-   // Draw basic histogram components: x-y grid
-
    Float_t eta0 = fM->fEtaMin;
    Float_t eta1 = fM->fEtaMax;
    Float_t phi0 = fM->GetPhiMin();
@@ -802,11 +805,11 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
    glPopAttrib();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render the calo lego-plot with OpenGL.
+
 void TEveCaloLegoGL::DrawCells3D(TGLRnrCtx & rnrCtx) const
 {
-   // Render the calo lego-plot with OpenGL.
-
    // quads
    {
       for (SliceDLMap_i i = fDLMap.begin(); i != fDLMap.end(); ++i) {
@@ -829,11 +832,11 @@ void TEveCaloLegoGL::DrawCells3D(TGLRnrCtx & rnrCtx) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prepare cells 2D data non-rebinned for drawing.
+
 void TEveCaloLegoGL::PrepareCell2DData(TEveCaloData::vCellId_t& cellList, vCell2D_t& cells2D) const
 {
-   // Prepare cells 2D data non-rebinned for drawing.
-
    Int_t   max_energy_slice, cellID=0;
    Float_t sum, max_energy;
 
@@ -877,11 +880,11 @@ void TEveCaloLegoGL::PrepareCell2DData(TEveCaloData::vCellId_t& cellList, vCell2
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prepare cells 2D rebinned data for drawing.
+
 void TEveCaloLegoGL::PrepareCell2DDataRebin(TEveCaloData::RebinData_t& rebinData, vCell2D_t& cells2D) const
 {
-   // Prepare cells 2D rebinned data for drawing.
-
    const Int_t nEta = fEtaAxis->GetNbins();
    const Int_t nPhi = fPhiAxis->GetNbins();
    std::vector<Float_t> vec;
@@ -926,11 +929,11 @@ void TEveCaloLegoGL::PrepareCell2DDataRebin(TEveCaloData::RebinData_t& rebinData
    }
 }
 
-//--------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Draw cells in top view.
+
 void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
 {
-   // Draw cells in top view.
-
    Float_t bws    = -1; //smallest bin
    Float_t logMax = -1;
 
@@ -1080,11 +1083,11 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw highligted cells.
+
 void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*pshp*/, Int_t /*lvl*/) const
 {
-   // Draw highligted cells.
-
    if (fM->fData->GetCellsSelected().empty() && fM->fData->GetCellsHighlighted().empty())
    {
       return;
@@ -1128,11 +1131,11 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw selected cells in highlight mode.
+
 void TEveCaloLegoGL::DrawSelectedCells(TGLRnrCtx & rnrCtx, TEveCaloData::vCellId_t cellsSelectedInput) const
 {
-   // Draw selected cells in highlight mode.
-
    // check eta&phi range of selected cells
    TEveCaloData::vCellId_t  cellsSelected;
    TEveCaloData::CellData_t cellData;
@@ -1244,11 +1247,11 @@ void TEveCaloLegoGL::DrawSelectedCells(TGLRnrCtx & rnrCtx, TEveCaloData::vCellId
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the object.
+
 void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Draw the object.
-
    if (! fM->fData || ! fM->fData->GetEtaBins() || ! fM->fData->GetPhiBins())
       return;
 
@@ -1396,11 +1399,11 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    glPopMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Processes tower selection from TGLViewer.
+
 void TEveCaloLegoGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec)
 {
-   // Processes tower selection from TGLViewer.
-
    TEveCaloData::vCellId_t sel;
    if (rec.GetN() > 2)
    {

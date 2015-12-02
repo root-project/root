@@ -40,53 +40,56 @@ ClassImp(RooRangeBinning)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooRangeBinning::RooRangeBinning(const char* name) :
   RooAbsBinning(name)
 {
-  // Default constructor
   _range[0] = -RooNumber::infinity() ;
   _range[1] = +RooNumber::infinity() ;
 
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct binning with range [xmin,xmax] with no binning substructure
+
 RooRangeBinning::RooRangeBinning(Double_t xmin, Double_t xmax, const char* name) :
   RooAbsBinning(name)
 {
-  // Construct binning with range [xmin,xmax] with no binning substructure
   _range[0] = xmin ;
   _range[1] = xmax ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooRangeBinning::RooRangeBinning(const RooRangeBinning& other, const char* name) :
   RooAbsBinning(name)
 {
-  // Copy constructor
-
   _range[0] = other._range[0] ;
   _range[1] = other._range[1] ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor 
+
 RooRangeBinning::~RooRangeBinning() 
 {
-  // Destructor 
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change limits of the binning to [xlo,xhi]
+
 void RooRangeBinning::setRange(Double_t xlo, Double_t xhi) 
 {
-  // Change limits of the binning to [xlo,xhi]
-
   if (xlo>xhi) {
     oocoutE((TObject*)0,InputArguments) << "RooRangeBinning::setRange: ERROR low bound > high bound" << endl ;
     return ;

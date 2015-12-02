@@ -43,46 +43,48 @@ ClassImp(TMemFile)
 
 Long64_t TMemFile::fgDefaultBlockSize = 2*1024*1024;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TMemFile::TMemBlock::TMemBlock() : fPrevious(0), fNext(0), fBuffer(0), fSize(0)
 {
-   // Default constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor allocating the memory buffer.
+
 TMemFile::TMemBlock::TMemBlock(Long64_t size, TMemBlock *previous) :
    fPrevious(previous), fNext(0), fBuffer(0), fSize(0)
 {
-   // Constructor allocating the memory buffer.
-
    fBuffer = new UChar_t[size];
    fSize = size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Usual destructors.  Delete the block memory.
+
 TMemFile::TMemBlock::~TMemBlock()
 {
-   // Usual destructors.  Delete the block memory.
-
    delete fNext;
    delete [] fBuffer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMemFile::TMemBlock::CreateNext(Long64_t size)
 {
    R__ASSERT(fNext == 0);
    fNext = new TMemBlock(size,this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Usual Constructor.  See the TFile constructor for details.
+
 TMemFile::TMemFile(const char *path, Option_t *option,
                    const char *ftitle, Int_t compress) :
    TFile(path, "WEB", ftitle, compress),
    fSize(-1), fSysOffset(0), fBlockSeek(&fBlockList), fBlockOffset(0)
 {
-   // Usual Constructor.  See the TFile constructor for details.
-
    fOption = option;
    fOption.ToUpper();
    if (fOption == "NEW")  fOption = "CREATE";
@@ -128,14 +130,14 @@ zombie:
    gDirectory = gROOT;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Usual Constructor.  See the TFile constructor for details.
+
 TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *option,
                    const char *ftitle, Int_t compress):
    TFile(path, "WEB", ftitle, compress), fBlockList(size),
    fSize(size), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
 {
-   // Usual Constructor.  See the TFile constructor for details.
-
    fOption = option;
    fOption.ToUpper();
    Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
@@ -178,14 +180,14 @@ zombie:
    gDirectory = gROOT;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copying the content of the TMemFile into another TMemFile.
+
 TMemFile::TMemFile(const TMemFile &orig) :
    TFile(orig.GetEndpointUrl()->GetUrl(), "WEB", orig.GetTitle(),
          orig.GetCompressionSettings() ), fBlockList(orig.GetEND()),
    fSize(orig.GetEND()), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
 {
-   // Copying the content of the TMemFile into another TMemFile.
-
    fOption = orig.fOption;
 
    Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
@@ -207,24 +209,24 @@ TMemFile::TMemFile(const TMemFile &orig) :
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close and clean-up HDFS file.
+
 TMemFile::~TMemFile()
 {
-   // Close and clean-up HDFS file.
-
    // Need to call close, now as it will need both our virtual table
    // and the content of the list of blocks
    Close();
    TRACE("destroy")
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the binary representation of the TMemFile into
+/// the memory area starting at 'to' and of length at most 'maxsize'
+/// returns the number of bytes actually copied.
+
 Long64_t TMemFile::CopyTo(void *to, Long64_t maxsize) const
 {
-   // Copy the binary representation of the TMemFile into
-   // the memory area starting at 'to' and of length at most 'maxsize'
-   // returns the number of bytes actually copied.
-
    Long64_t len = GetSize();
    if (len > maxsize) {
       len = maxsize;
@@ -242,12 +244,12 @@ Long64_t TMemFile::CopyTo(void *to, Long64_t maxsize) const
    return len;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the binary representation of the TMemFile into
+/// the TBuffer tobuf
+
 void TMemFile::CopyTo(TBuffer &tobuf) const
 {
-   // Copy the binary representation of the TMemFile into
-   // the TBuffer tobuf
-
    const TMemBlock *current = &fBlockList;
    while(current) {
       tobuf.WriteFastArray(current->fBuffer,current->fSize);
@@ -255,16 +257,17 @@ void TMemFile::CopyTo(TBuffer &tobuf) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the current size of the memory file
+
 Long64_t TMemFile::GetSize() const
 {
-   // Return the current size of the memory file
-
    // We could also attempt to read it from the beginning of the buffer
    return fSize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMemFile::Print(Option_t *option /* = "" */) const
 {
    Printf("TMemFile: name=%s, title=%s, option=%s", GetName(), GetTitle(), GetOption());
@@ -283,12 +286,12 @@ void TMemFile::Print(Option_t *option /* = "" */) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wipe all the data from the permanent buffer but keep, the in-memory object
+/// alive.
+
 void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
 {
-   // Wipe all the data from the permanent buffer but keep, the in-memory object
-   // alive.
-
    ResetObjects(this,info);
 
    fNbytesKeys = 0;
@@ -350,12 +353,12 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wipe all the data from the permanent buffer but keep, the in-memory object
+/// alive.
+
 void TMemFile::ResetObjects(TDirectoryFile *directory, TFileMergeInfo *info) const
 {
-   // Wipe all the data from the permanent buffer but keep, the in-memory object
-   // alive.
-
    if (directory->GetListOfKeys()) {
       TIter next(directory->GetListOfKeys());
       TKey *key;
@@ -393,12 +396,12 @@ void TMemFile::ResetObjects(TDirectoryFile *directory, TFileMergeInfo *info) con
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified number of bytes from current offset into the buffer.
+/// See documentation for TFile::SysRead().
+
 Int_t TMemFile::SysRead(Int_t, void *buf, Int_t len)
 {
-   // Read specified number of bytes from current offset into the buffer.
-   // See documentation for TFile::SysRead().
-
    TRACE("READ")
 
    if (fBlockList.fBuffer == 0) {
@@ -450,12 +453,12 @@ Int_t TMemFile::SysRead(Int_t, void *buf, Int_t len)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Seek to a specified position in the file.  See TFile::SysSeek().
+/// Note that TMemFile does not support seeks when the file is open for write.
+
 Long64_t TMemFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
 {
-   // Seek to a specified position in the file.  See TFile::SysSeek().
-   // Note that TMemFile does not support seeks when the file is open for write.
-
    TRACE("SEEK")
    if (whence == SEEK_SET) {
       fSysOffset = offset;
@@ -527,11 +530,11 @@ Long64_t TMemFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
    return fSysOffset;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a file in 'MemFile'.
+
 Int_t TMemFile::SysOpen(const char * /* pathname */, Int_t /* flags */, UInt_t /* mode */)
 {
-   // Open a file in 'MemFile'.
-
    if (!fBlockList.fBuffer) {
       fBlockList.fBuffer = new UChar_t[fgDefaultBlockSize];
       fBlockList.fSize = fgDefaultBlockSize;
@@ -544,19 +547,19 @@ Int_t TMemFile::SysOpen(const char * /* pathname */, Int_t /* flags */, UInt_t /
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the mem file.
+
 Int_t TMemFile::SysClose(Int_t /* fd */)
 {
-   // Close the mem file.
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write a buffer into the file;
+
 Int_t TMemFile::SysWrite(Int_t /* fd */, const void *buf, Int_t len)
 {
-   // Write a buffer into the file;
-
    TRACE("WRITE")
 
    if (fBlockList.fBuffer == 0) {
@@ -611,28 +614,28 @@ Int_t TMemFile::SysWrite(Int_t /* fd */, const void *buf, Int_t len)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a stat on the HDFS file; see TFile::SysStat().
+
 Int_t TMemFile::SysStat(Int_t, Long_t* /* id */, Long64_t* /* size */, Long_t* /* flags */, Long_t* /* modtime */)
 {
-   // Perform a stat on the HDFS file; see TFile::SysStat().
-
    MayNotUse("SysStat");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sync remaining data to disk;
+/// Nothing to do here.
+
 Int_t TMemFile::SysSync(Int_t)
 {
-   // Sync remaining data to disk;
-   // Nothing to do here.
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ResetErrno; simply calls TSystem::ResetErrno().
+
 void TMemFile::ResetErrno() const
 {
-   // ResetErrno; simply calls TSystem::ResetErrno().
-
    TSystem::ResetErrno();
 }

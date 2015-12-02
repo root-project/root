@@ -37,11 +37,11 @@
 
 ClassImp(TSelHandleDataSet)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init the type from the input parameters
+
 void TSelHandleDataSet::SlaveBegin(TTree *)
 {
-   // Init the type from the input parameters
-
 
    TObject *o = fInput->FindObject("PROOF_Benchmark_HandleDSType");
    if (o) fType = dynamic_cast<TPBHandleDSType *>(o);
@@ -69,11 +69,11 @@ void TSelHandleDataSet::SlaveBegin(TTree *)
    if (!fType) fType = new TPBHandleDSType(TPBHandleDSType::kReleaseCache);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release the memory cache associated with file 'fn'.
+
 void TSelHandleDataSet::ReleaseCache(const char *fn)
 {
-   // Release the memory cache associated with file 'fn'.
-
 #if defined(R__LINUX)
    TString filename(fn);
    Int_t fd;
@@ -94,21 +94,21 @@ void TSelHandleDataSet::ReleaseCache(const char *fn)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the memory cache associated with file 'fn'.
+
 void TSelHandleDataSet::CheckCache(const char * /*fn*/)
 {
-   // Check the memory cache associated with file 'fn'.
-
    Warning("CheckCache", "cache checker not implemented yet");
    // Done
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Physically remove the file 'fn'.
+
 void TSelHandleDataSet::RemoveFile(const char *fn)
 {
-   // Physically remove the file 'fn'.
-
    if (!gSystem->AccessPathName(fn, kWritePermission)) {
       if (gSystem->Unlink(fn) != 0) {
          Error("RemoveFile", "problems removing file '%s' ...", fn);
@@ -127,11 +127,11 @@ void TSelHandleDataSet::RemoveFile(const char *fn)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy file 'fn' to fDestDir
+
 void TSelHandleDataSet::CopyFile(const char *fn)
 {
-   // Copy file 'fn' to fDestDir
-
    // Check if we have a destination dir
    if (fDestDir.IsNull()) {
       Error("CopyFile", "destination dir undefined: file '%s' not copied", fn);
@@ -150,21 +150,21 @@ void TSelHandleDataSet::CopyFile(const char *fn)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Process() function is called for each entry in the tree (or possibly
+/// keyed object in the case of PROOF) to be processed. The entry argument
+/// specifies which entry in the currently loaded tree is to be processed.
+/// It can be passed to either TTree::GetEntry() or TBranch::GetEntry()
+/// to read either all or the required parts of the data. When processing
+/// keyed objects with PROOF, the object is already loaded and is available
+/// via the fObject pointer.
+///
+/// This function should contain the "body" of the analysis. It can contain
+/// simple or elaborate selection criteria, run algorithms on the data
+/// of the event and typically fill histograms.
+
 Bool_t TSelHandleDataSet::Process(Long64_t entry)
 {
-   // The Process() function is called for each entry in the tree (or possibly
-   // keyed object in the case of PROOF) to be processed. The entry argument
-   // specifies which entry in the currently loaded tree is to be processed.
-   // It can be passed to either TTree::GetEntry() or TBranch::GetEntry()
-   // to read either all or the required parts of the data. When processing
-   // keyed objects with PROOF, the object is already loaded and is available
-   // via the fObject pointer.
-   //
-   // This function should contain the "body" of the analysis. It can contain
-   // simple or elaborate selection criteria, run algorithms on the data
-   // of the event and typically fill histograms.
-
    // WARNING when a selector is used with a TChain, you must use
    //  the pointer to the current TTree to call GetEntry(entry).
    //  The entry is always the local entry number in the current tree.

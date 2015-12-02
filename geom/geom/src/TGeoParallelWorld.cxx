@@ -31,7 +31,9 @@
 
 ClassImp(TGeoParallelWorld)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoParallelWorld::TGeoParallelWorld(const char *name, TGeoManager *mgr)
                   : TNamed(name,""),
                     fGeoManager(mgr),
@@ -42,22 +44,23 @@ TGeoParallelWorld::TGeoParallelWorld(const char *name, TGeoManager *mgr)
                     fLastState(0),
                     fPhysical(new TObjArray(256))
 {
-// Default constructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoParallelWorld::~TGeoParallelWorld()
 {
-// Destructor
    if (fPhysical) {fPhysical->Delete(); delete fPhysical;}
    if (fPaths) {fPaths->Delete(); delete fPaths;}
    delete fVolume;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a node normally to this world. Overlapping nodes not allowed
+
 void TGeoParallelWorld::AddNode(const char *path)
 {
-// Add a node normally to this world. Overlapping nodes not allowed
    if (fIsClosed) Fatal("AddNode", "Cannot add nodes to a closed parallel geometry");
    if (!fGeoManager->CheckPath(path)) {
       Error("AddNode", "Path %s not valid.\nCannot add to parallel world!", path);
@@ -66,22 +69,24 @@ void TGeoParallelWorld::AddNode(const char *path)
    fPaths->Add(new TObjString(path));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// To use this optimization, the user should declare the full list of volumes
+/// which may overlap with any of the physical nodes of the parallel world. Better
+/// be done before misalignment
+
 void TGeoParallelWorld::AddOverlap(TGeoVolume *vol, Bool_t activate)
 {
-// To use this optimization, the user should declare the full list of volumes
-// which may overlap with any of the physical nodes of the parallel world. Better
-// be done before misalignment
    if (activate) fUseOverlaps = kTRUE;
    vol->SetOverlappingCandidate(kTRUE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// To use this optimization, the user should declare the full list of volumes
+/// which may overlap with any of the physical nodes of the parallel world. Better
+/// be done before misalignment
+
 void TGeoParallelWorld::AddOverlap(const char *volname, Bool_t activate)
 {
-// To use this optimization, the user should declare the full list of volumes
-// which may overlap with any of the physical nodes of the parallel world. Better
-// be done before misalignment
    if (activate) fUseOverlaps = kTRUE;
    TIter next(fGeoManager->GetListOfVolumes());
    TGeoVolume *vol;
@@ -90,10 +95,11 @@ void TGeoParallelWorld::AddOverlap(const char *volname, Bool_t activate)
    }
 }      
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the overlaps which were detected during real tracking
+
 Int_t TGeoParallelWorld::PrintDetectedOverlaps() const
 {
-// Print the overlaps which were detected during real tracking
    TIter next(fGeoManager->GetListOfVolumes());
    TGeoVolume *vol;
    Int_t noverlaps = 0;
@@ -107,19 +113,21 @@ Int_t TGeoParallelWorld::PrintDetectedOverlaps() const
    return noverlaps;  
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset overlapflag for all volumes in geometry
+
 void TGeoParallelWorld::ResetOverlaps() const
 {
-// Reset overlapflag for all volumes in geometry
    TIter next(fGeoManager->GetListOfVolumes());
    TGeoVolume *vol;
    while ((vol=(TGeoVolume*)next())) vol->SetOverlappingCandidate(kFALSE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The main geometry must be closed.
+
 Bool_t TGeoParallelWorld::CloseGeometry()
 {
-// The main geometry must be closed.
    if (fIsClosed) return kTRUE;
    if (!fGeoManager->IsClosed()) Fatal("CloseGeometry", "Main geometry must be closed first");
    if (!fPaths || !fPaths->GetEntriesFast()) {
@@ -139,11 +147,12 @@ Bool_t TGeoParallelWorld::CloseGeometry()
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refresh the node pointers and re-voxelize. To be called mandatory in case
+/// re-alignment happened.
+
 void TGeoParallelWorld::RefreshPhysicalNodes()
 {
-// Refresh the node pointers and re-voxelize. To be called mandatory in case
-// re-alignment happened.
    delete fVolume;
    fVolume = new TGeoVolumeAssembly(GetName());
    fGeoManager->GetListOfVolumes()->Remove(fVolume);
@@ -164,10 +173,11 @@ void TGeoParallelWorld::RefreshPhysicalNodes()
    fVolume->Voxelize("ALL");
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finds physical node containing the point
+
 TGeoPhysicalNode *TGeoParallelWorld::FindNode(Double_t point[3])
 {
-// Finds physical node containing the point
    if (!fIsClosed) Fatal("FindNode", "Parallel geometry must be closed first");
    TGeoNavigator *nav = fGeoManager->GetCurrentNavigator();
    // Fast return if not in an overlapping candidate
@@ -196,12 +206,13 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNode(Double_t point[3])
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Same functionality as TGeoNavigator::FindNextDaughterBoundary for the
+/// parallel world
+
 TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_t dir[3],
                               Double_t &step, Double_t stepmax)
 {
-// Same functionality as TGeoNavigator::FindNextDaughterBoundary for the
-// parallel world
    if (!fIsClosed) Fatal("FindNextBoundary", "Parallel geometry must be closed first");
    TGeoPhysicalNode *pnode = 0;
    TGeoNavigator *nav = fGeoManager->GetCurrentNavigator();
@@ -283,10 +294,11 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safety for the parallel world
+
 Double_t TGeoParallelWorld::Safety(Double_t point[3], Double_t safmax)
 {
-// Compute safety for the parallel world
    TGeoNavigator *nav = fGeoManager->GetCurrentNavigator();
    // Fast return if the state matches the last one recorded
    if (fLastState && fLastState->IsMatchingState(nav)) return TGeoShape::Big();   
@@ -328,17 +340,19 @@ Double_t TGeoParallelWorld::Safety(Double_t point[3], Double_t safmax)
    return safe;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check overlaps within a tolerance value.
+
 void TGeoParallelWorld::CheckOverlaps(Double_t ovlp)
 {
-// Check overlaps within a tolerance value.
    fVolume->CheckOverlaps(ovlp);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the parallel world
+
 void TGeoParallelWorld::Draw(Option_t *option)
 {
-// Draw the parallel world
    fVolume->Draw(option);
 }
 

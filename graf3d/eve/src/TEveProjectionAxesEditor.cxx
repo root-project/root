@@ -24,7 +24,8 @@
 
 ClassImp(TEveProjectionAxesEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t width, Int_t height,
                                                    UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
@@ -117,11 +118,11 @@ TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t widt
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveProjectionAxesEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveProjectionAxes*>(obj);
 
    fLabMode->Select(fM->GetLabMode(), kFALSE);
@@ -131,39 +132,39 @@ void TEveProjectionAxesEditor::SetModel(TObject* obj)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting draw of origin.
+
 void TEveProjectionAxesEditor::DoDrawOrigin()
 {
-   // Slot for setting draw of origin.
-
    fM->SetDrawOrigin(fDrawOrigin->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting draw of center.
+
 void TEveProjectionAxesEditor::DoDrawCenter()
 {
-   // Slot for setting draw of center.
-
    fM->SetDrawCenter(fDrawCenter->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting tick-mark step mode.
+
 void TEveProjectionAxesEditor::DoLabMode(Int_t mode)
 {
-   // Slot for setting tick-mark step mode.
-
    TEveProjectionAxes::ELabMode em = (TEveProjectionAxes::ELabMode ) mode;
    fM->SetLabMode(em);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting number of axes.
+
 void TEveProjectionAxesEditor::DoAxesMode(Int_t mode)
 {
-   // Slot for setting number of axes.
-
    TEveProjectionAxes::EAxesMode em = (TEveProjectionAxes::EAxesMode ) mode;
    fM->SetAxesMode(em);
    Update();

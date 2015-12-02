@@ -27,65 +27,65 @@
 
 ClassImp(TMutex)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a mutex lock. The actual mutex implementation will be
+/// provided via the TThreadFactory.
+
 TMutex::TMutex(Bool_t recursive)
 {
-   // Create a mutex lock. The actual mutex implementation will be
-   // provided via the TThreadFactory.
-
    fMutexImp = gThreadFactory->CreateMutexImp(recursive);
 
    if (!fMutexImp)
       Error("TMutex", "could not create TMutexImp");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lock the mutex. Returns 0 when no error, EDEADLK when mutex was already
+/// locked by this thread and this mutex is not reentrant.
+
 Int_t TMutex::Lock()
 {
-   // Lock the mutex. Returns 0 when no error, EDEADLK when mutex was already
-   // locked by this thread and this mutex is not reentrant.
-
    Int_t iret = fMutexImp->Lock();
 
    return iret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try to lock mutex. Returns 0 when no error, EDEADLK when mutex was
+/// already locked by this thread and this mutex is not reentrant.
+
 Int_t TMutex::TryLock()
 {
-   // Try to lock mutex. Returns 0 when no error, EDEADLK when mutex was
-   // already locked by this thread and this mutex is not reentrant.
-
    Int_t iret = fMutexImp->TryLock();
 
    return iret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlock the mutex. Returns 0 when no error, EPERM when mutex was already
+/// unlocked by this thread.
+
 Int_t TMutex::UnLock()
 {
-   // Unlock the mutex. Returns 0 when no error, EPERM when mutex was already
-   // unlocked by this thread.
-
    return fMutexImp->UnLock();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up of mutex.
+
 Int_t TMutex::CleanUp()
 {
-   // Clean up of mutex.
-
    return UnLock();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create mutex and return pointer to it. Calling function must care
+/// about proper deletion. The function is intended to be used in connection
+/// with the R__LOCKGUARD2 macro for local thread protection. Since "new" is
+/// used the TStorage class has to be protected by gGlobalMutex.
+
 TVirtualMutex *TMutex::Factory(Bool_t recursive)
 {
-   // Create mutex and return pointer to it. Calling function must care
-   // about proper deletion. The function is intended to be used in connection
-   // with the R__LOCKGUARD2 macro for local thread protection. Since "new" is
-   // used the TStorage class has to be protected by gGlobalMutex.
-
    TVirtualMutex *ret = new TMutex(recursive);
    return ret;
 }

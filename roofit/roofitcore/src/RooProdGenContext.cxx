@@ -43,12 +43,12 @@ ClassImp(RooProdGenContext)
 ;
   
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &vars, 
 				     const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose), _uniIter(0), _pdf(&model)
 {
-
   // Constructor of optimization generator context for RooProdPdf objects
 
   //Build an array of generator contexts for each product component PDF
@@ -308,11 +308,11 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Delete all owned subgenerator contexts
+
 RooProdGenContext::~RooProdGenContext()
 {
-  // Destructor. Delete all owned subgenerator contexts
-
   delete _uniIter ;
   for (list<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
     delete (*iter) ;
@@ -320,11 +320,11 @@ RooProdGenContext::~RooProdGenContext()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Attach generator to given event buffer
+
 void RooProdGenContext::attach(const RooArgSet& args) 
 {
-  // Attach generator to given event buffer
-
   //Forward initGenerator call to all components
   for (list<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
     (*iter)->attach(args) ;
@@ -332,11 +332,11 @@ void RooProdGenContext::attach(const RooArgSet& args)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// One-time initialization of generator context, forward to component generators
+
 void RooProdGenContext::initGenerator(const RooArgSet &theEvent)
 {
-  // One-time initialization of generator context, forward to component generators
-
   // Forward initGenerator call to all components
   for (list<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
     (*iter)->initGenerator(theEvent) ;
@@ -345,14 +345,14 @@ void RooProdGenContext::initGenerator(const RooArgSet &theEvent)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate a single event of the product by generating the components
+/// of the products sequentially. The subcontext have been order such
+/// that all conditional dependencies are correctly taken into account
+/// when processed in sequential order
+
 void RooProdGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 {
-  // Generate a single event of the product by generating the components
-  // of the products sequentially. The subcontext have been order such
-  // that all conditional dependencies are correctly taken into account
-  // when processed in sequential order
-
   // Loop over the component generators
 
   for (list<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
@@ -376,12 +376,12 @@ void RooProdGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the traversal order of the prototype dataset by the
+/// given lookup table
+
 void RooProdGenContext::setProtoDataOrder(Int_t* lut)
 {
-  // Set the traversal order of the prototype dataset by the
-  // given lookup table
-
   // Forward call to component generators
   RooAbsGenContext::setProtoDataOrder(lut) ;
 
@@ -393,11 +393,11 @@ void RooProdGenContext::setProtoDataOrder(Int_t* lut)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Detailed printing interface
+
 void RooProdGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const 
 {
-  // Detailed printing interface
-
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
   os << indent << "--- RooProdGenContext ---" << endl ;
   os << indent << "Using PDF ";

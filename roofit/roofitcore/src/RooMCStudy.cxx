@@ -71,7 +71,8 @@ ClassImp(RooMCStudy)
   ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
    		       const RooCmdArg& arg1, const RooCmdArg& arg2,
    		       const RooCmdArg& arg3,const RooCmdArg& arg4,const RooCmdArg& arg5,
@@ -303,7 +304,23 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// OBSOLETE, RETAINED FOR BACKWARD COMPATIBILY. PLEASE
+/// USE CONSTRUCTOR WITH NAMED ARGUMENTS
+///
+/// Constructor with a generator and fit model. Both models may point
+/// to the same object. The 'dependents' set of variables is generated 
+/// in the generator phase. The optional prototype dataset is passed to
+/// the generator
+///
+/// Available generator options
+///  v  - Verbose
+///  e  - Extended: use Poisson distribution for Nevts generated
+///
+/// Available fit options
+///  See RooAbsPdf::fitTo()
+///
+
 RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel, 
    		       const RooArgSet& dependents, const char* genOptions, 
    		       const char* fitOptions, const RooDataSet* genProtoData, 
@@ -325,22 +342,6 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   _perExptGenParams(0),
   _silence(kFALSE)
 {
-  // OBSOLETE, RETAINED FOR BACKWARD COMPATIBILY. PLEASE
-  // USE CONSTRUCTOR WITH NAMED ARGUMENTS
-  //
-  // Constructor with a generator and fit model. Both models may point
-  // to the same object. The 'dependents' set of variables is generated 
-  // in the generator phase. The optional prototype dataset is passed to
-  // the generator
-  //
-  // Available generator options
-  //  v  - Verbose
-  //  e  - Extended: use Poisson distribution for Nevts generated
-  //
-  // Available fit options
-  //  See RooAbsPdf::fitTo()
-  //
-  
   // Decode generator options
   TString genOpt(genOptions) ;
   genOpt.ToLower() ;
@@ -410,11 +411,11 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor 
+
 RooMCStudy::~RooMCStudy() 
 {  
-  // Destructor 
-  
   _genDataList.Delete() ;
   _fitResList.Delete() ;
   _fitOptList.Delete() ;
@@ -433,33 +434,33 @@ RooMCStudy::~RooMCStudy()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert given RooMCStudy add-on module to the processing chain
+/// of this MCStudy object
+
 void RooMCStudy::addModule(RooAbsMCStudyModule& module) 
 {
-  // Insert given RooMCStudy add-on module to the processing chain
-  // of this MCStudy object
-
   module.doInitializeInstance(*this) ;
   _modList.push_back(&module) ;        
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run engine method. Generate and/or fit, according to flags, 'nSamples' samples of 'nEvtPerSample' events.
+/// If keepGenData is set, all generated data sets will be kept in memory and can be accessed
+/// later via genData().
+///
+/// When generating, data sets will be written out in ascii form if the pattern string is supplied
+/// The pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
+/// and should contain one integer field that encodes the sample serial number.
+///
+/// When fitting only, data sets may optionally be read from ascii files, using the same file
+/// pattern.
+///
+
 Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData, const char* asciiFilePat) 
 {
-  // Run engine method. Generate and/or fit, according to flags, 'nSamples' samples of 'nEvtPerSample' events.
-  // If keepGenData is set, all generated data sets will be kept in memory and can be accessed
-  // later via genData().
-  //
-  // When generating, data sets will be written out in ascii form if the pattern string is supplied
-  // The pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
-  // and should contain one integer field that encodes the sample serial number.
-  //
-  // When fitting only, data sets may optionally be read from ascii files, using the same file
-  // pattern.
-  //
-
   RooFit::MsgLevel oldLevel(RooFit::FATAL) ;
   if (_silence) {
     oldLevel = RooMsgService::instance().globalKillBelow() ;
@@ -642,18 +643,18 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate and fit 'nSamples' samples of 'nEvtPerSample' events.
+/// If keepGenData is set, all generated data sets will be kept in memory and can be accessed
+/// later via genData().
+///
+/// Data sets will be written out is ascii form if the pattern string is supplied.
+/// The pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
+/// and should contain one integer field that encodes the sample serial number.
+///
+
 Bool_t RooMCStudy::generateAndFit(Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData, const char* asciiFilePat) 
 {
-  // Generate and fit 'nSamples' samples of 'nEvtPerSample' events.
-  // If keepGenData is set, all generated data sets will be kept in memory and can be accessed
-  // later via genData().
-  //
-  // Data sets will be written out is ascii form if the pattern string is supplied.
-  // The pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
-  // and should contain one integer field that encodes the sample serial number.
-  //
-  
   // Clear any previous data in memory
   _fitResList.Delete() ;
   _genDataList.Delete() ;
@@ -664,18 +665,18 @@ Bool_t RooMCStudy::generateAndFit(Int_t nSamples, Int_t nEvtPerSample, Bool_t ke
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate 'nSamples' samples of 'nEvtPerSample' events.
+/// If keepGenData is set, all generated data sets will be kept in memory 
+/// and can be accessed later via genData().
+///
+/// Data sets will be written out in ascii form if the pattern string is supplied.
+/// The pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
+/// and should contain one integer field that encodes the sample serial number.
+///
+
 Bool_t RooMCStudy::generate(Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData, const char* asciiFilePat) 
 {
-  // Generate 'nSamples' samples of 'nEvtPerSample' events.
-  // If keepGenData is set, all generated data sets will be kept in memory 
-  // and can be accessed later via genData().
-  //
-  // Data sets will be written out in ascii form if the pattern string is supplied.
-  // The pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
-  // and should contain one integer field that encodes the sample serial number.
-  //
-  
   // Clear any previous data in memory
   _genDataList.Delete() ;
   
@@ -684,15 +685,15 @@ Bool_t RooMCStudy::generate(Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenD
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fit 'nSamples' datasets, which are read from ASCII files.
+///
+/// The ascii file pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
+/// and should contain one integer field that encodes the sample serial number.
+///
+
 Bool_t RooMCStudy::fit(Int_t nSamples, const char* asciiFilePat) 
 {
-  // Fit 'nSamples' datasets, which are read from ASCII files.
-  //
-  // The ascii file pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
-  // and should contain one integer field that encodes the sample serial number.
-  //
-  
   // Clear any previous data in memory
   _fitResList.Delete() ;
   _fitParData->reset() ;
@@ -702,12 +703,12 @@ Bool_t RooMCStudy::fit(Int_t nSamples, const char* asciiFilePat)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fit 'nSamples' datasets, as supplied in 'dataSetList'
+/// 
+
 Bool_t RooMCStudy::fit(Int_t nSamples, TList& dataSetList) 
 {
-  // Fit 'nSamples' datasets, as supplied in 'dataSetList'
-  // 
-  
   // Clear any previous data in memory
   _fitResList.Delete() ;
   _genDataList.Delete() ;
@@ -726,22 +727,22 @@ Bool_t RooMCStudy::fit(Int_t nSamples, TList& dataSetList)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset all fit parameters to the initial model
+/// parameters at the time of the RooMCStudy constructor
+
 void RooMCStudy::resetFitParams()
 {
-  // Reset all fit parameters to the initial model
-  // parameters at the time of the RooMCStudy constructor
-
   *_fitParams = *_fitInitParams ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal function. Performs actual fit according to specifications
+
 RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
 {
-  // Internal function. Performs actual fit according to specifications
-
   // Fit model to data set
   TString fitOpt2(_fitOptions) ; fitOpt2.Append("r") ;
   if (_silence) {
@@ -787,12 +788,12 @@ RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redo fit on 'current' toy sample, or if genSample is not NULL
+/// do fit on given sample instead
+
 RooFitResult* RooMCStudy::refit(RooAbsData* genSample) 
 {
-  // Redo fit on 'current' toy sample, or if genSample is not NULL
-  // do fit on given sample instead
-
   if (!genSample) {
     genSample = _genSample ;
   }
@@ -807,19 +808,19 @@ RooFitResult* RooMCStudy::refit(RooAbsData* genSample)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal method. Fit given dataset with fit model. If fit
+/// converges (TMinuit status code zero) The fit results are appended
+/// to the fit results dataset
+///
+/// If the fit option "r" is supplied, the RooFitResult
+/// objects will always be saved, regardless of the
+/// fit status. RooFitResults objects can be retrieved
+/// later via fitResult().
+///  
+
 Bool_t RooMCStudy::fitSample(RooAbsData* genSample) 
 {  
-  // Internal method. Fit given dataset with fit model. If fit
-  // converges (TMinuit status code zero) The fit results are appended
-  // to the fit results dataset
-  //
-  // If the fit option "r" is supplied, the RooFitResult
-  // objects will always be saved, regardless of the
-  // fit status. RooFitResults objects can be retrieved
-  // later via fitResult().
-  //  
-
   // Reset all fit parameters to their initial values  
   resetFitParams() ;
 
@@ -862,18 +863,18 @@ Bool_t RooMCStudy::fitSample(RooAbsData* genSample)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Utility function to add fit result from external fit to this RooMCStudy
+/// and process its results through the standard RooMCStudy statistics gathering tools.
+/// This function allows users to run the toy MC generation and/or fitting
+/// in a distributed way and to collect and analyze the results in a RooMCStudy
+/// as if they were run locally.
+///
+/// This method is only functional if this RooMCStudy object is cleanm, i.e. it was not used
+/// to generate and/or fit any samples.
+
 Bool_t RooMCStudy::addFitResult(const RooFitResult& fr) 
 {  
-  // Utility function to add fit result from external fit to this RooMCStudy
-  // and process its results through the standard RooMCStudy statistics gathering tools.
-  // This function allows users to run the toy MC generation and/or fitting
-  // in a distributed way and to collect and analyze the results in a RooMCStudy
-  // as if they were run locally.
-  //
-  // This method is only functional if this RooMCStudy object is cleanm, i.e. it was not used
-  // to generate and/or fit any samples.
-
   if (!_canAddFitResults) {
     oocoutE(_fitModel,InputArguments) << "RooMCStudy::addFitResult: ERROR cannot add fit results in current state" << endl ;
     return kTRUE ;
@@ -902,12 +903,12 @@ Bool_t RooMCStudy::addFitResult(const RooFitResult& fr)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the pulls for all fit parameters in
+/// the fit results data set, and add them to that dataset
+
 void RooMCStudy::calcPulls() 
 {
-  // Calculate the pulls for all fit parameters in
-  // the fit results data set, and add them to that dataset
-  
   TIterator* iter = _fitParams->createIterator()  ;
   RooRealVar* par ;
   while((par=(RooRealVar*)iter->Next())) {
@@ -950,13 +951,13 @@ void RooMCStudy::calcPulls()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a RooDataSet the resulting fit parameters of each toy cycle.
+/// This dataset also contains any additional output that was generated
+/// by study modules that were added to this RooMCStudy
+
 const RooDataSet& RooMCStudy::fitParDataSet()
 {
-  // Return a RooDataSet the resulting fit parameters of each toy cycle.
-  // This dataset also contains any additional output that was generated
-  // by study modules that were added to this RooMCStudy
-
   if (_canAddFitResults) {
     calcPulls() ;  
     _canAddFitResults = kFALSE ; 
@@ -967,16 +968,16 @@ const RooDataSet& RooMCStudy::fitParDataSet()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an argset with the fit parameters for the given sample number
+///
+/// NB: The fit parameters are only stored for successfull fits,
+///     thus the maximum sampleNum can be less that the number
+///     of generated samples and if so, the indeces will
+///     be out of synch with genData() and fitResult()
+
 const RooArgSet* RooMCStudy::fitParams(Int_t sampleNum) const 
 {
-  // Return an argset with the fit parameters for the given sample number
-  //
-  // NB: The fit parameters are only stored for successfull fits,
-  //     thus the maximum sampleNum can be less that the number
-  //     of generated samples and if so, the indeces will
-  //     be out of synch with genData() and fitResult()
-  
   // Check if sampleNum is in range
   if (sampleNum<0 || sampleNum>=_fitParData->numEntries()) {
     oocoutE(_fitModel,InputArguments) << "RooMCStudy::fitParams: ERROR, invalid sample number: " << sampleNum << endl ;    
@@ -988,11 +989,11 @@ const RooArgSet* RooMCStudy::fitParams(Int_t sampleNum) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the RooFitResult object of the fit to given sample 
+
 const RooFitResult* RooMCStudy::fitResult(Int_t sampleNum) const
 {
-  // Return the RooFitResult object of the fit to given sample 
-  
   // Check if sampleNum is in range
   if (sampleNum<0 || sampleNum>=_fitResList.GetSize()) {
     oocoutE(_fitModel,InputArguments) << "RooMCStudy::fitResult: ERROR, invalid sample number: " << sampleNum << endl ;    
@@ -1012,12 +1013,12 @@ const RooFitResult* RooMCStudy::fitResult(Int_t sampleNum) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the given generated dataset. This method will only return datasets
+/// if during the run cycle it was indicated that generator data should be saved.
+
 const RooAbsData* RooMCStudy::genData(Int_t sampleNum) const 
 {
-  // Return the given generated dataset. This method will only return datasets
-  // if during the run cycle it was indicated that generator data should be saved.
-  
   // Check that generated data was saved
   if (_genDataList.GetSize()==0) {
     oocoutE(_fitModel,InputArguments) << "RooMCStudy::genData() ERROR, generated data was not saved" << endl ;
@@ -1035,39 +1036,39 @@ const RooAbsData* RooMCStudy::genData(Int_t sampleNum) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Plot the distribution of fitted values of a parameter. The parameter shown is the one from which the RooPlot
+/// was created, e.g.
+///
+/// RooPlot* frame = param.frame(100,-10,10) ;
+/// mcstudy.paramOn(frame,LineStyle(kDashed)) ;
+/// 
+/// Any named arguments passed to plotParamOn() are forwarded to the underlying plotOn() call
+
 RooPlot* RooMCStudy::plotParamOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4, 
    				 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {
-  // Plot the distribution of fitted values of a parameter. The parameter shown is the one from which the RooPlot
-  // was created, e.g.
-  //
-  // RooPlot* frame = param.frame(100,-10,10) ;
-  // mcstudy.paramOn(frame,LineStyle(kDashed)) ;
-  // 
-  // Any named arguments passed to plotParamOn() are forwarded to the underlying plotOn() call
-  
   _fitParData->plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
   return frame ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Plot the distribution of the fitted value of the given parameter on a newly created frame.
+///
+/// This function accepts the following optional arguments
+/// FrameRange(double lo, double hi) -- Set range of frame to given specification
+/// FrameBins(int bins)              -- Set default number of bins of frame to given number
+/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
+///                                     for list of allowed arguments
+///
+/// If no frame specifications are given, the AutoRange() feature will be used to set the range
+/// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
+
 RooPlot* RooMCStudy::plotParam(const char* paramName, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4, 
    			       const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {
-  // Plot the distribution of the fitted value of the given parameter on a newly created frame.
-  //
-  // This function accepts the following optional arguments
-  // FrameRange(double lo, double hi) -- Set range of frame to given specification
-  // FrameBins(int bins)              -- Set default number of bins of frame to given number
-  // Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-  //                                     for list of allowed arguments
-  //
-  // If no frame specifications are given, the AutoRange() feature will be used to set the range
-  // Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
-
 
   // Find parameter in fitParDataSet
   RooRealVar* param = static_cast<RooRealVar*>(_fitParData->get()->find(paramName)) ;
@@ -1082,21 +1083,21 @@ RooPlot* RooMCStudy::plotParam(const char* paramName, const RooCmdArg& arg1, con
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Plot the distribution of the fitted value of the given parameter on a newly created frame.
+///
+/// This function accepts the following optional arguments
+/// FrameRange(double lo, double hi) -- Set range of frame to given specification
+/// FrameBins(int bins)              -- Set default number of bins of frame to given number
+/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
+///                                     for list of allowed arguments
+///
+/// If no frame specifications are given, the AutoRange() feature will be used to set the range
+/// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
+
 RooPlot* RooMCStudy::plotParam(const RooRealVar& param, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4, 
    			       const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {
-  // Plot the distribution of the fitted value of the given parameter on a newly created frame.
-  //
-  // This function accepts the following optional arguments
-  // FrameRange(double lo, double hi) -- Set range of frame to given specification
-  // FrameBins(int bins)              -- Set default number of bins of frame to given number
-  // Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-  //                                     for list of allowed arguments
-  //
-  // If no frame specifications are given, the AutoRange() feature will be used to set the range
-  // Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
-
   // Stuff all arguments in a list
   RooLinkedList cmdList;
   cmdList.Add(const_cast<RooCmdArg*>(&arg1)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg2)) ;
@@ -1114,45 +1115,45 @@ RooPlot* RooMCStudy::plotParam(const RooRealVar& param, const RooCmdArg& arg1, c
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Plot the distribution of the -log(L) values on a newly created frame.
+///
+/// This function accepts the following optional arguments
+/// FrameRange(double lo, double hi) -- Set range of frame to given specification
+/// FrameBins(int bins)              -- Set default number of bins of frame to given number
+/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
+///                                     for list of allowed arguments
+///
+/// If no frame specifications are given, the AutoRange() feature will be used to set the range
+/// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
+
 RooPlot* RooMCStudy::plotNLL(const RooCmdArg& arg1, const RooCmdArg& arg2,
                      const RooCmdArg& arg3, const RooCmdArg& arg4,
                      const RooCmdArg& arg5, const RooCmdArg& arg6,
                      const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {
-  // Plot the distribution of the -log(L) values on a newly created frame.
-  //
-  // This function accepts the following optional arguments
-  // FrameRange(double lo, double hi) -- Set range of frame to given specification
-  // FrameBins(int bins)              -- Set default number of bins of frame to given number
-  // Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-  //                                     for list of allowed arguments
-  //
-  // If no frame specifications are given, the AutoRange() feature will be used to set the range
-  // Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
-
   return plotParam(*_nllVar,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Plot the distribution of the fit errors for the specified parameter on a newly created frame.
+///
+/// This function accepts the following optional arguments
+/// FrameRange(double lo, double hi) -- Set range of frame to given specification
+/// FrameBins(int bins)              -- Set default number of bins of frame to given number
+/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
+///                                     for list of allowed arguments
+///
+/// If no frame specifications are given, the AutoRange() feature will be used to set the range
+/// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
+
 RooPlot* RooMCStudy::plotError(const RooRealVar& param, const RooCmdArg& arg1, const RooCmdArg& arg2,
                      const RooCmdArg& arg3, const RooCmdArg& arg4,
                      const RooCmdArg& arg5, const RooCmdArg& arg6,
                      const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {
-  // Plot the distribution of the fit errors for the specified parameter on a newly created frame.
-  //
-  // This function accepts the following optional arguments
-  // FrameRange(double lo, double hi) -- Set range of frame to given specification
-  // FrameBins(int bins)              -- Set default number of bins of frame to given number
-  // Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-  //                                     for list of allowed arguments
-  //
-  // If no frame specifications are given, the AutoRange() feature will be used to set the range
-  // Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
-
   if (_canAddFitResults) {
     calcPulls() ;
     _canAddFitResults=kFALSE ;
@@ -1168,25 +1169,25 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, const RooCmdArg& arg1, c
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Plot the distribution of pull values for the specified parameter on a newly created frame. If asymmetric
+/// errors are calculated in the fit (by MINOS) those will be used in the pull calculation
+///
+/// This function accepts the following optional arguments
+/// FrameRange(double lo, double hi) -- Set range of frame to given specification
+/// FrameBins(int bins)              -- Set default number of bins of frame to given number
+/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
+///                                     for list of allowed arguments
+/// FitGauss(Bool_t flag)            -- Add a gaussian fit to the frame
+///
+/// If no frame specifications are given, the AutoSymRange() feature will be used to set the range
+/// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
+
 RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, const RooCmdArg& arg2,
                      const RooCmdArg& arg3, const RooCmdArg& arg4,
                      const RooCmdArg& arg5, const RooCmdArg& arg6,
                      const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {
-  // Plot the distribution of pull values for the specified parameter on a newly created frame. If asymmetric
-  // errors are calculated in the fit (by MINOS) those will be used in the pull calculation
-  //
-  // This function accepts the following optional arguments
-  // FrameRange(double lo, double hi) -- Set range of frame to given specification
-  // FrameBins(int bins)              -- Set default number of bins of frame to given number
-  // Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-  //                                     for list of allowed arguments
-  // FitGauss(Bool_t flag)            -- Add a gaussian fit to the frame
-  //
-  // If no frame specifications are given, the AutoSymRange() feature will be used to set the range
-  // Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
-
   // Stuff all arguments in a list
   RooLinkedList cmdList;
   cmdList.Add(const_cast<RooCmdArg*>(&arg1)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg2)) ;
@@ -1231,13 +1232,13 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, co
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal function. Construct RooPlot from given parameter and modify the list of named
+/// arguments 'cmdList' to only contain the plot arguments that should be forwarded to 
+/// RooAbsData::plotOn()
+
 RooPlot* RooMCStudy::makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList& cmdList, Bool_t symRange) const 
 {
-  // Internal function. Construct RooPlot from given parameter and modify the list of named
-  // arguments 'cmdList' to only contain the plot arguments that should be forwarded to 
-  // RooAbsData::plotOn()
-
   // Select the frame-specific commands 
   RooCmdConfig pc(Form("RooMCStudy::plotParam(%s)",_genModel->GetName())) ;
   pc.defineInt("nbins","Bins",0,0) ;
@@ -1288,12 +1289,12 @@ RooPlot* RooMCStudy::makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList&
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a RooPlot of the -log(L) distribution in the range lo-hi
+/// with 'nBins' bins
+
 RooPlot* RooMCStudy::plotNLL(Double_t lo, Double_t hi, Int_t nBins) 
 {
-  // Create a RooPlot of the -log(L) distribution in the range lo-hi
-  // with 'nBins' bins
-
   RooPlot* frame = _nllVar->frame(lo,hi,nBins) ;
   
   _fitParData->plotOn(frame) ;
@@ -1302,12 +1303,12 @@ RooPlot* RooMCStudy::plotNLL(Double_t lo, Double_t hi, Int_t nBins)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a RooPlot of the distribution of the fitted errors of the given parameter. 
+/// The frame is created with a range [lo,hi] and plotted data will be binned in 'nbins' bins
+
 RooPlot* RooMCStudy::plotError(const RooRealVar& param, Double_t lo, Double_t hi, Int_t nbins) 
 {
-  // Create a RooPlot of the distribution of the fitted errors of the given parameter. 
-  // The frame is created with a range [lo,hi] and plotted data will be binned in 'nbins' bins
-
   if (_canAddFitResults) {
     calcPulls() ;
     _canAddFitResults=kFALSE ;
@@ -1323,15 +1324,15 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, Double_t lo, Double_t hi
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a RooPlot of the pull distribution for the given
+/// parameter.  The range lo-hi is plotted in nbins.  If fitGauss is
+/// set, an unbinned ML fit of the distribution to a Gaussian p.d.f
+/// is performed. The fit result is overlaid on the returned RooPlot
+/// and a box with the fitted mean and sigma is added.
+
 RooPlot* RooMCStudy::plotPull(const RooRealVar& param, Double_t lo, Double_t hi, Int_t nbins, Bool_t fitGauss) 
 {
-  // Create a RooPlot of the pull distribution for the given
-  // parameter.  The range lo-hi is plotted in nbins.  If fitGauss is
-  // set, an unbinned ML fit of the distribution to a Gaussian p.d.f
-  // is performed. The fit result is overlaid on the returned RooPlot
-  // and a box with the fitted mean and sigma is added.
-
   if (_canAddFitResults) {
     calcPulls() ;
     _canAddFitResults=kFALSE ;

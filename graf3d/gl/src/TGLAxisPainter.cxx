@@ -35,7 +35,8 @@
 
 ClassImp(TGLAxisPainter);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLAxisPainter::TGLAxisPainter():
    fExp(0),
    fMaxDigits(5),
@@ -59,28 +60,28 @@ TGLAxisPainter::TGLAxisPainter():
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLAxisPainter::~TGLAxisPainter()
 {
-   // Destructor.
-
    delete fAllZeroesRE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set label align.
+
 void TGLAxisPainter::SetLabelAlign(TGLFont::ETextAlignH_e h, TGLFont::ETextAlignV_e v)
 {
-   // Set label align.
-
    fLabelAlignH = h;
    fLabelAlignV = v;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find first and last character of a label.
+
 void TGLAxisPainter::LabelsLimits(const char *label, Int_t &first, Int_t &last) const
 {
-   // Find first and last character of a label.
-
    last = strlen(label) - 1;
    for (Int_t i = 0; i <= last; i++) {
       if (strchr("1234567890-+.", label[i])) {
@@ -91,11 +92,11 @@ void TGLAxisPainter::LabelsLimits(const char *label, Int_t &first, Int_t &last) 
    Error("LabelsLimits", "attempt to draw a blank label");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns formatted text suitable for display of value.
+
 void TGLAxisPainter::FormAxisValue(Double_t  val, TString &s) const
 {
-   // Returns formatted text suitable for display of value.
-
    s.Form(fFormat, val);
    s = s.Strip(TString::kLeading);
 
@@ -116,11 +117,11 @@ void TGLAxisPainter::FormAxisValue(Double_t  val, TString &s) const
    fAllZeroesRE->Substitute(s, "0", kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct print format from given primary bin width.
+
 void TGLAxisPainter::SetTextFormat(Double_t min, Double_t max, Double_t bw1)
 {
-   // Construct print format from given primary bin width.
-
    Double_t absMax = TMath::Max(TMath::Abs(min), TMath::Abs(max));
    Double_t epsilon = 1e-5;
    Double_t absMaxLog = TMath::Log10(absMax) + epsilon;
@@ -203,11 +204,11 @@ void TGLAxisPainter::SetTextFormat(Double_t min, Double_t max, Double_t bw1)
 //
 // Utility functions.
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render text at the given position. Offset depends of text aligment.
+
 void TGLAxisPainter::RnrText(const TString &txt, const TGLVector3 &p, TGLFont::ETextAlignH_e aH, TGLFont::ETextAlignV_e aV, const TGLFont &font) const
 {
-   // Render text at the given position. Offset depends of text aligment.
-
    if (fFontMode == TGLFont::kPixmap || fFontMode ==  TGLFont::kBitmap)
    {
      font.Render(txt, p.X(), p.Y(), p.Z(), aH, aV);
@@ -226,21 +227,21 @@ void TGLAxisPainter::RnrText(const TString &txt, const TGLVector3 &p, TGLFont::E
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set label font derived from TAttAxis.
+
 void TGLAxisPainter::SetLabelFont(TGLRnrCtx &rnrCtx, const char* fontName, Int_t fontSize, Double_t size3d)
 {
-   // Set label font derived from TAttAxis.
-
    rnrCtx.RegisterFontNoScale(fontSize, fontName, fFontMode, fLabelFont);
    fLabel3DFontSize = size3d;
    fLabelPixelFontSize = fLabelFont.GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render label reading prepared list ov value-pos pairs.
+
 void TGLAxisPainter::RnrLabels() const
 {
-   // Render label reading prepared list ov value-pos pairs.
-
    if (fUseAxisColors)
       TGLUtil::Color(fAttAxis->GetLabelColor());
 
@@ -263,22 +264,22 @@ void TGLAxisPainter::RnrLabels() const
    glPopMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set title font derived from TAttAxis.
+
 void TGLAxisPainter::SetTitleFont(TGLRnrCtx &rnrCtx, const char* fontName,
                                   Int_t fontSize, Double_t size3d)
 {
-   // Set title font derived from TAttAxis.
-
    rnrCtx.RegisterFontNoScale(fontSize, fontName, fFontMode, fTitleFont);
    fTitlePixelFontSize = fTitleFont.GetSize();
    fTitle3DFontSize = size3d;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw title at given position.
+
 void TGLAxisPainter::RnrTitle(const TString &txt, TGLVector3 &pos , TGLFont::ETextAlignH_e aH, TGLFont::ETextAlignV_e aV) const
 {
-   // Draw title at given position.
-
    if (fUseAxisColors)
       TGLUtil::Color(fAttAxis->GetTitleColor());
 
@@ -288,11 +289,11 @@ void TGLAxisPainter::RnrTitle(const TString &txt, TGLVector3 &pos , TGLFont::ETe
    fTitleFont.PostRender();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render axis main line and tickmarks.
+
 void TGLAxisPainter::RnrLines() const
 {
-   // Render axis main line and tickmarks.
-
    if (fUseAxisColors)
       TGLUtil::Color(fAttAxis->GetAxisColor());
 
@@ -330,11 +331,11 @@ void TGLAxisPainter::RnrLines() const
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GL render TAxis.
+
 void TGLAxisPainter::PaintAxis(TGLRnrCtx &rnrCtx, TAxis* ax)
 {
-   // GL render TAxis.
-
    fAttAxis = ax;
    Double_t min = ax->GetXmin();
    Double_t max = ax->GetXmax();
@@ -458,26 +459,27 @@ void TGLAxisPainter::PaintAxis(TGLRnrCtx &rnrCtx, TAxis* ax)
 
 ClassImp(TGLAxisPainterBox);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLAxisPainterBox::TGLAxisPainterBox() :
    TGLAxisPainter()
 {
-   // Constructor.
-
    fAxis[0] = fAxis[1] = fAxis[2] = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLAxisPainterBox::~TGLAxisPainterBox()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get position of axes and titles from projected corners.
+
 void TGLAxisPainterBox::SetAxis3DTitlePos(TGLRnrCtx &rnrCtx)
 {
-   // Get position of axes and titles from projected corners.
-
    Double_t x0 =  fAxis[0]->GetXmin();
    Double_t x1 =  fAxis[0]->GetXmax();
 
@@ -555,11 +557,11 @@ void TGLAxisPainterBox::SetAxis3DTitlePos(TGLRnrCtx &rnrCtx)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw XYZ axis with bitmap font.
+
 void TGLAxisPainterBox::DrawAxis3D(TGLRnrCtx &rnrCtx)
 {
-   // Draw XYZ axis with bitmap font.
-
    // set font size first depending on size of projected axis
    TGLMatrix mm;
    GLdouble pm[16];
@@ -624,13 +626,13 @@ void TGLAxisPainterBox::DrawAxis3D(TGLRnrCtx &rnrCtx)
    glPopMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGLAxisPainterBox::PlotStandard(      TGLRnrCtx      &rnrCtx,
                                      TH1                  *histo,
                                      const TGLBoundingBox &bbox)
 {
-   //
-
    fAxis[0] = histo->GetXaxis();
    fAxis[1] = histo->GetYaxis();
    fAxis[2] = histo->GetZaxis();

@@ -26,33 +26,35 @@
 
 ClassImp(TDictAttributeMap)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Default constructor.
+
 TDictAttributeMap::TDictAttributeMap()
 {
-   //Default constructor.
    fStringProperty.SetOwner(kTRUE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Default destructor.
+
 TDictAttributeMap::~TDictAttributeMap()
 {
-   //Default destructor.
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Add a property with a String value to the TDictAttributeMap.
+///Parameters: key and char* value of the property.
+
 void TDictAttributeMap::AddProperty(const char* key, const char* value)
 {
-   //Add a property with a String value to the TDictAttributeMap.
-   //Parameters: key and char* value of the property.
-
    //Add the property pair name - Int value to the hash table.
    fStringProperty.Add(new TNamed(key, value));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TDictAttributeMap::HasKey(const char* key) const
 {
-
    //Check whether the class has a property using the key.
 
    if (fStringProperty.FindObject(key))
@@ -60,11 +62,11 @@ Bool_t TDictAttributeMap::HasKey(const char* key) const
    return false;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Access the value of a String property using the key.
+
 const char* TDictAttributeMap::GetPropertyAsString(const char* key) const
 {
-   //Access the value of a String property using the key.
-
    //Copy object into found to avoid calling the function two times.
    TObject* found = fStringProperty.FindObject(key);
    if(found)
@@ -76,12 +78,12 @@ const char* TDictAttributeMap::GetPropertyAsString(const char* key) const
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Remove a String property from the attribute map specified by the key.
+///Returns the TString property removed or NULL if the property does not exist.
+
 TString TDictAttributeMap::RemovePropertyString(const char* key)
 {
-   //Remove a String property from the attribute map specified by the key.
-   //Returns the TString property removed or NULL if the property does not exist.
-
    TObject *property = fStringProperty.FindObject(key);
    if (property) {
       fStringProperty.Remove(property);
@@ -103,10 +105,10 @@ Bool_t TDictAttributeMap::RemoveProperty(const char* key)
    return false;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Deletes all the properties of the class.
+
 void TDictAttributeMap::Clear(Option_t* /*option = ""*/)
 {
-   //Deletes all the properties of the class.
-
    fStringProperty.Delete();
 }

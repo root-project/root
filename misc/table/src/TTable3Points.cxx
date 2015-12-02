@@ -89,13 +89,15 @@
 
 ClassImp(TTable3Points)
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TTable3Points::TTable3Points():fColumnOffset(0)
 {
-   //to be documented
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TTable3Points::TTable3Points(TTableSorter *sorter,const void *key,
                        const Char_t *xName, const Char_t *yName, const Char_t *zName
                       ,Option_t *opt)
@@ -107,7 +109,8 @@ TTable3Points::TTable3Points(TTableSorter *sorter,const void *key,
    SetXColumn(xName);  SetYColumn(yName);  SetZColumn(zName);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TTable3Points::TTable3Points(TTableSorter *sorter,Int_t keyIndex,
                        const Char_t *xName, const Char_t *yName, const Char_t *zName
                       ,Option_t *opt)
@@ -119,17 +122,19 @@ TTable3Points::TTable3Points(TTableSorter *sorter,Int_t keyIndex,
    SetXColumn(xName);  SetYColumn(yName);  SetZColumn(zName);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TTable3Points::~TTable3Points()
 {
-   //to be documented
    SafeDelete(fColumnOffset);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Float_t TTable3Points::GetAnyPoint(Int_t idx, EPointDirection xAxis) const
 {
-   //to be documented
    Float_t point  = 0;
    TTable  *table = 0;
    if (fTableSorter) table = fTableSorter->GetTable();
@@ -140,18 +145,20 @@ Float_t TTable3Points::GetAnyPoint(Int_t idx, EPointDirection xAxis) const
    return point;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TTable3Points::SetAnyColumn(const Char_t *anyName, EPointDirection indx)
 {
-   //to be documented
    fColumnOffset[indx] = fTableSorter->GetTable()->GetOffset(anyName);
    if (fColumnOffset[indx] == ULong_t(-1))  MakeZombie();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Float_t *TTable3Points::GetXYZ(Float_t *xyz,Int_t idx, Int_t num) const
 {
-   //to be documented
    if (xyz) {
       Int_t size = TMath::Min(idx+num,Size());
       Int_t j=0;

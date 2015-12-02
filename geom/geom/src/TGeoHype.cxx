@@ -54,10 +54,11 @@
 
 ClassImp(TGeoHype)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoHype::TGeoHype()
 {
-// Default constructor
    SetShapeBit(TGeoShape::kGeoHype);
    fStIn = 0.;
    fStOut = 0.;
@@ -68,22 +69,24 @@ TGeoHype::TGeoHype()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor specifying hyperboloid parameters.
+
 TGeoHype::TGeoHype(Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz)
          :TGeoTube(rin, rout, dz)
 {
-// Constructor specifying hyperboloid parameters.
    SetShapeBit(TGeoShape::kGeoHype);
    SetHypeDimensions(rin, stin, rout, stout, dz);
    // dz<0 can be used to force dz of hyperboloid fit the container volume
    if (fDz<0) SetShapeBit(kGeoRunTimeShape);
    ComputeBBox();
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor specifying parameters and name.
+
 TGeoHype::TGeoHype(const char *name,Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz)
          :TGeoTube(name, rin, rout, dz)
 {
-// Constructor specifying parameters and name.
    SetShapeBit(TGeoShape::kGeoHype);
    SetHypeDimensions(rin, stin, rout, stout, dz);
    // dz<0 can be used to force dz of hyperboloid fit the container volume
@@ -91,16 +94,17 @@ TGeoHype::TGeoHype(const char *name,Double_t rin, Double_t stin, Double_t rout, 
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor specifying a list of parameters
+/// param[0] = dz
+/// param[1] = rin
+/// param[2] = stin
+/// param[3] = rout
+/// param[4] = stout
+
 TGeoHype::TGeoHype(Double_t *param)
          :TGeoTube(param[1],param[3],param[0])
 {
-// Default constructor specifying a list of parameters
-// param[0] = dz
-// param[1] = rin
-// param[2] = stin
-// param[3] = rout
-// param[4] = stout
    SetShapeBit(TGeoShape::kGeoHype);
    SetDimensions(param);
    // dz<0 can be used to force dz of hyperboloid fit the container volume
@@ -108,25 +112,28 @@ TGeoHype::TGeoHype(Double_t *param)
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoHype::~TGeoHype()
 {
-// destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes capacity of the shape in [length^3]
+
 Double_t TGeoHype::Capacity() const
 {
-// Computes capacity of the shape in [length^3]
    Double_t capacity = 2.*TMath::Pi()*fDz*(fRmax*fRmax-fRmin*fRmin) +
                        (2.*TMath::Pi()/3.)*fDz*fDz*fDz*(fToutsq-fTinsq);
    return capacity;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding box of the hyperboloid
+
 void TGeoHype::ComputeBBox()
 {
-// Compute bounding box of the hyperboloid
    if (fRmin<0.) {
       Warning("ComputeBBox", "Shape %s has invalid rmin=%g ! SET TO 0.", GetName(),fRmin);
       fRmin = 0.;
@@ -142,10 +149,11 @@ void TGeoHype::ComputeBBox()
    fDZ = fDz;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute normal to closest surface from POINT.
+
 void TGeoHype::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT.
    Double_t saf[3];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
@@ -178,10 +186,11 @@ void TGeoHype::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if point is inside this tube
+
 Bool_t TGeoHype::Contains(const Double_t *point) const
 {
-// test if point is inside this tube
    if (TMath::Abs(point[2]) > fDz) return kFALSE;
    Double_t r2 = point[0]*point[0]+point[1]*point[1];
    Double_t routsq = RadiusHypeSq(point[2], kFALSE);
@@ -192,18 +201,20 @@ Bool_t TGeoHype::Contains(const Double_t *point) const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute closest distance from point px,py to each corner
+
 Int_t TGeoHype::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// compute closest distance from point px,py to each corner
    Int_t numPoints = GetNmeshVertices();
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from inside point to surface of the hyperboloid.
+
 Double_t TGeoHype::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// Compute distance from inside point to surface of the hyperboloid.
    if (iact<3 && safe) {
       *safe = Safety(point, kTRUE);
       if (iact==0) return TGeoShape::Big();
@@ -239,10 +250,11 @@ Double_t TGeoHype::DistFromInside(const Double_t *point, const Double_t *dir, In
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute distance from outside point to surface of the hyperboloid.
+
 Double_t TGeoHype::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from outside point to surface of the hyperboloid.
    if (iact<3 && safe) {
       *safe = Safety(point, kFALSE);
       if (iact==0) return TGeoShape::Big();
@@ -297,11 +309,12 @@ Double_t TGeoHype::DistFromOutside(const Double_t *point, const Double_t *dir, I
    return TMath::Min(sin, sout);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from an arbitrary point to inner/outer surface of hyperboloid.
+/// Returns number of positive solutions. S[2] contains the solutions.
+
 Int_t TGeoHype::DistToHype(const Double_t *point, const Double_t *dir, Double_t *s, Bool_t inner, Bool_t in) const
 {
-// Compute distance from an arbitrary point to inner/outer surface of hyperboloid.
-// Returns number of positive solutions. S[2] contains the solutions.
    Double_t r0, t0, snext;
    if (inner) {
       if (!HasInner()) return 0;
@@ -348,19 +361,21 @@ Int_t TGeoHype::DistToHype(const Double_t *point, const Double_t *dir, Double_t 
    return npos;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cannot divide hyperboloids.
+
 TGeoVolume *TGeoHype::Divide(TGeoVolume * /*voldiv*/, const char *divname, Int_t /*iaxis*/, Int_t /*ndiv*/,
                              Double_t /*start*/, Double_t /*step*/)
 {
-// Cannot divide hyperboloids.
    Error("Divide", "Hyperboloids cannot be divided. Division volume %s not created", divname);
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get range of shape for a given axis.
+
 Double_t TGeoHype::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
-// Get range of shape for a given axis.
    xlo = 0;
    xhi = 0;
    Double_t dx = 0;
@@ -384,11 +399,12 @@ Double_t TGeoHype::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
    return dx;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// is the following : Rmin, Rmax, Phi1, Phi2, dZ
+
 void TGeoHype::GetBoundingCylinder(Double_t *param) const
 {
-//--- Fill vector param[4] with the bounding cylinder parameters. The order
-// is the following : Rmin, Rmax, Phi1, Phi2, dZ
    param[0] = fRmin; // Rmin
    param[0] *= param[0];
    param[1] = TMath::Sqrt(RadiusHypeSq(fDz, kFALSE)); // Rmax
@@ -397,11 +413,12 @@ void TGeoHype::GetBoundingCylinder(Double_t *param) const
    param[3] = 360.;  // Phi1
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// in case shape has some negative parameters, these has to be computed
+/// in order to fit the mother
+
 TGeoShape *TGeoHype::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-// in case shape has some negative parameters, these has to be computed
-// in order to fit the mother
    if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    Double_t dz;
    Double_t zmin,zmax;
@@ -418,10 +435,11 @@ TGeoShape *TGeoHype::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
    return hype;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print shape parameters
+
 void TGeoHype::InspectShape() const
 {
-// print shape parameters
    printf("*** Shape %s: TGeoHype ***\n", GetName());
    printf("    Rin  = %11.5f\n", fRmin);
    printf("    sin  = %11.5f\n", fStIn);
@@ -433,12 +451,12 @@ void TGeoHype::InspectShape() const
    TGeoBBox::InspectShape();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a TBuffer3D describing *this* shape.
+/// Coordinates are in local reference frame.
+
 TBuffer3D *TGeoHype::MakeBuffer3D() const
 {
-   // Creates a TBuffer3D describing *this* shape.
-   // Coordinates are in local reference frame.
-
    Int_t n = gGeoManager->GetNsegments();
    Bool_t hasRmin = HasInner();
    Int_t nbPnts = (hasRmin)?(2*n*n):(n*n+2);
@@ -456,10 +474,11 @@ TBuffer3D *TGeoHype::MakeBuffer3D() const
    return buff;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill TBuffer3D structure for segments and polygons.
+
 void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
 {
-// Fill TBuffer3D structure for segments and polygons.
    Int_t c = GetBasicColor();
    Int_t i, j, n;
    n = gGeoManager->GetNsegments();
@@ -652,10 +671,11 @@ void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute r^2 = x^2 + y^2 at a given z coordinate, for either inner or outer hyperbolas.
+
 Double_t TGeoHype::RadiusHypeSq(Double_t z, Bool_t inner) const
 {
-// Compute r^2 = x^2 + y^2 at a given z coordinate, for either inner or outer hyperbolas.
    Double_t r0, tsq;
    if (inner) {
       r0 = fRmin;
@@ -667,10 +687,11 @@ Double_t TGeoHype::RadiusHypeSq(Double_t z, Bool_t inner) const
    return (r0*r0+tsq*z*z);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute z^2 at a given  r^2, for either inner or outer hyperbolas.
+
 Double_t TGeoHype::ZHypeSq(Double_t r, Bool_t inner) const
 {
-// Compute z^2 at a given  r^2, for either inner or outer hyperbolas.
    Double_t r0, tsq;
    if (inner) {
       r0 = fRmin;
@@ -683,11 +704,12 @@ Double_t TGeoHype::ZHypeSq(Double_t r, Bool_t inner) const
    return ((r*r-r0*r0)/tsq);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes the closest distance from given point to this shape, according
+/// to option. The matching point on the shape is stored in spoint.
+
 Double_t TGeoHype::Safety(const Double_t *point, Bool_t in) const
 {
-// computes the closest distance from given point to this shape, according
-// to option. The matching point on the shape is stored in spoint.
    Double_t safe, safrmin, safrmax;
    if (in) {
       safe    = fDz-TMath::Abs(point[2]);
@@ -705,11 +727,12 @@ Double_t TGeoHype::Safety(const Double_t *point, Bool_t in) const
    return safe;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute an underestimate of the closest distance from a point to inner or
+/// outer infinite hyperbolas.
+
 Double_t TGeoHype::SafetyToHype(const Double_t *point, Bool_t inner, Bool_t in) const
 {
-// Compute an underestimate of the closest distance from a point to inner or
-// outer infinite hyperbolas.
    Double_t r, rsq, rhsq, rh, dr, tsq, saf;
    if (inner && !HasInner()) return (in)?TGeoShape::Big():-TGeoShape::Big();
    rsq = point[0]*point[0]+point[1]*point[1];
@@ -741,10 +764,11 @@ Double_t TGeoHype::SafetyToHype(const Double_t *point, Bool_t inner, Bool_t in) 
    return saf;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoHype::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
    out << "   rin   = " << fRmin << ";" << std::endl;
@@ -756,10 +780,11 @@ void TGeoHype::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set dimensions of the hyperboloid.
+
 void TGeoHype::SetHypeDimensions(Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz)
 {
-// Set dimensions of the hyperboloid.
    fRmin = rin;
    fRmax = rout;
    fDz   = dz;
@@ -773,15 +798,16 @@ void TGeoHype::SetHypeDimensions(Double_t rin, Double_t stin, Double_t rout, Dou
    else                          SetShapeBit(kGeoRSeg, kFALSE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set dimensions of the hyperboloid starting from an array.
+/// param[0] = dz
+/// param[1] = rin
+/// param[2] = stin
+/// param[3] = rout
+/// param[4] = stout
+
 void TGeoHype::SetDimensions(Double_t *param)
 {
-// Set dimensions of the hyperboloid starting from an array.
-// param[0] = dz
-// param[1] = rin
-// param[2] = stin
-// param[3] = rout
-// param[4] = stout
    Double_t dz = param[0];
    Double_t rin = param[1];
    Double_t stin = param[2];
@@ -790,10 +816,11 @@ void TGeoHype::SetDimensions(Double_t *param)
    SetHypeDimensions(rin, stin, rout, stout, dz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create tube mesh points
+
 void TGeoHype::SetPoints(Double_t *points) const
 {
-// create tube mesh points
    Double_t z,dz,r;
    Int_t i,j, n;
    if (!points) return;
@@ -837,10 +864,11 @@ void TGeoHype::SetPoints(Double_t *points) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create tube mesh points
+
 void TGeoHype::SetPoints(Float_t *points) const
 {
-// create tube mesh points
    Double_t z,dz,r;
    Int_t i,j, n;
    if (!points) return;
@@ -884,10 +912,11 @@ void TGeoHype::SetPoints(Float_t *points) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns numbers of vertices, segments and polygons composing the shape mesh.
+
 void TGeoHype::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
-// Returns numbers of vertices, segments and polygons composing the shape mesh.
    Int_t n = gGeoManager->GetNsegments();
    Bool_t hasRmin = HasInner();
    nvert = (hasRmin)?(2*n*n):(n*n+2);
@@ -895,32 +924,35 @@ void TGeoHype::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
    npols = (hasRmin)?(2*n*n):(n*(n+1));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of vertices of the mesh representation
+
 Int_t TGeoHype::GetNmeshVertices() const
 {
-// Return number of vertices of the mesh representation
    Int_t n = gGeoManager->GetNsegments();
    Int_t numPoints = (HasRmin())?(2*n*n):(n*n+2);
    return numPoints;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////// fill size of this 3-D object
+////    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+////    if (!painter) return;
+////    Int_t n = gGeoManager->GetNsegments();
+////    Int_t numPoints = n*4;
+////    Int_t numSegs   = n*8;
+////    Int_t numPolys  = n*4;
+////    painter->AddSize3D(numPoints, numSegs, numPolys);
+
 void TGeoHype::Sizeof3D() const
 {
-///// fill size of this 3-D object
-///    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-///    if (!painter) return;
-///    Int_t n = gGeoManager->GetNsegments();
-///    Int_t numPoints = n*4;
-///    Int_t numSegs   = n*8;
-///    Int_t numPolys  = n*4;
-///    painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills a static 3D buffer and returns a reference.
+
 const TBuffer3D & TGeoHype::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
-// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
@@ -948,43 +980,48 @@ const TBuffer3D & TGeoHype::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    return buffer;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the inside status for each of the points in the array.
+/// Input: Array of point coordinates + vector size
+/// Output: Array of Booleans for the inside of each point
+
 void TGeoHype::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
 {
-// Check the inside status for each of the points in the array.
-// Input: Array of point coordinates + vector size
-// Output: Array of Booleans for the inside of each point
    for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the normal for an array o points so that norm.dot.dir is positive
+/// Input: Arrays of point coordinates and directions + vector size
+/// Output: Array of normal directions
+
 void TGeoHype::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
 {
-// Compute the normal for an array o points so that norm.dot.dir is positive
-// Input: Arrays of point coordinates and directions + vector size
-// Output: Array of normal directions
    for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoHype::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoHype::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe distance from each of the points in the input array.
+/// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+/// Output: Safety values
+
 void TGeoHype::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
 {
-// Compute safe distance from each of the points in the input array.
-// Input: Array of point coordinates, array of statuses for these points, size of the arrays
-// Output: Safety values
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }

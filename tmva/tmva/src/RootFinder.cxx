@@ -32,7 +32,9 @@
 
 ClassImp(TMVA::RootFinder)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::RootFinder::RootFinder( Double_t (*rootVal)( Double_t ),
                               Double_t rootMin, 
                               Double_t rootMax,
@@ -44,21 +46,22 @@ TMVA::RootFinder::RootFinder( Double_t (*rootVal)( Double_t ),
      fAbsTol ( absTolerance  ),
      fLogger ( new MsgLogger("RootFinder") )
 {
-   // constructor
    fGetRootVal = rootVal;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::RootFinder::~RootFinder( void )
 {
-   // destructor
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Root finding using Brents algorithm; taken from CERNLIB function RZERO
+
 Double_t TMVA::RootFinder::Root( Double_t refValue  )
 {
-   // Root finding using Brents algorithm; taken from CERNLIB function RZERO
    Double_t a  = fRootMin, b = fRootMax;
    Double_t fa = (*fGetRootVal)( a ) - refValue;
    Double_t fb = (*fGetRootVal)( b ) - refValue;

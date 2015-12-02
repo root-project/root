@@ -57,21 +57,21 @@ static const size_t DCAP_PREFIX_LEN = strlen(DCAP_PREFIX);
 
 ClassImp(TDCacheFile)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a dCache file object. A dCache file is the same as a TFile
+/// except that it is being accessed via a dCache server. The url
+/// argument must be of the form: dcache:/pnfs/<path>/<file>.root or
+/// dcap://<nodename.org>/<path>/<file>.root. If the file specified in the
+/// URL does not exist, is not accessable or can not be created the kZombie
+/// bit will be set in the TDCacheFile object. Use IsZombie() to see if the
+/// file is accessable. For a description of the option and other arguments
+/// see the TFile ctor. The preferred interface to this constructor is
+/// via TFile::Open().
+
 TDCacheFile::TDCacheFile(const char *path, Option_t *option,
                          const char *ftitle, Int_t compress):
    TFile(path, "NET", ftitle, compress)
 {
-   // Create a dCache file object. A dCache file is the same as a TFile
-   // except that it is being accessed via a dCache server. The url
-   // argument must be of the form: dcache:/pnfs/<path>/<file>.root or
-   // dcap://<nodename.org>/<path>/<file>.root. If the file specified in the
-   // URL does not exist, is not accessable or can not be created the kZombie
-   // bit will be set in the TDCacheFile object. Use IsZombie() to see if the
-   // file is accessable. For a description of the option and other arguments
-   // see the TFile ctor. The preferred interface to this constructor is
-   // via TFile::Open().
-
    TString pathString = GetDcapPath(path);
    path = pathString.Data();
 
@@ -196,20 +196,20 @@ zombie:
    gDirectory = gROOT;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close and cleanup dCache file.
+
 TDCacheFile::~TDCacheFile()
 {
-   // Close and cleanup dCache file.
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified byte range from remote file via dCache daemon.
+/// Returns kTRUE in case of error.
+
 Bool_t TDCacheFile::ReadBuffer(char *buf, Int_t len)
 {
-   // Read specified byte range from remote file via dCache daemon.
-   // Returns kTRUE in case of error.
-
    Int_t st;
    if ((st = ReadBufferViaCache(buf, len))) {
       if (st == 2)
@@ -220,12 +220,12 @@ Bool_t TDCacheFile::ReadBuffer(char *buf, Int_t len)
    return TFile::ReadBuffer(buf, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified byte range from remote file via dCache daemon.
+/// Returns kTRUE in case of error.
+
 Bool_t TDCacheFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
-   // Read specified byte range from remote file via dCache daemon.
-   // Returns kTRUE in case of error.
-
    SetOffset(pos);
    Int_t st;
    if ((st = ReadBufferViaCache(buf, len))) {
@@ -237,15 +237,15 @@ Bool_t TDCacheFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    return TFile::ReadBuffer(buf, pos, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the nbuf blocks described in arrays pos and len,
+/// where pos[i] is the seek position of block i of length len[i].
+/// Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer.
+/// This function is overloaded by TNetFile, TWebFile, etc.
+/// Returns kTRUE in case of failure.
+
 Bool_t TDCacheFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 {
-   // Read the nbuf blocks described in arrays pos and len,
-   // where pos[i] is the seek position of block i of length len[i].
-   // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer.
-   // This function is overloaded by TNetFile, TWebFile, etc.
-   // Returns kTRUE in case of failure.
-
 #ifdef _IOVEC2_
 
    iovec2 *vector;
@@ -316,12 +316,12 @@ Bool_t TDCacheFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write specified byte range to remote file via dCache daemon.
+/// Returns kTRUE in case of error.
+
 Bool_t TDCacheFile::WriteBuffer(const char *buf, Int_t len)
 {
-   // Write specified byte range to remote file via dCache daemon.
-   // Returns kTRUE in case of error.
-
    if (!IsOpen() || !fWritable) return kTRUE;
 
    Int_t st;
@@ -334,11 +334,11 @@ Bool_t TDCacheFile::WriteBuffer(const char *buf, Int_t len)
    return TFile::WriteBuffer(buf, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stage() returns kTRUE on success and kFALSE on failure.
+
 Bool_t TDCacheFile::Stage(const char *path, UInt_t after, const char *location)
 {
-   // Stage() returns kTRUE on success and kFALSE on failure.
-
    TString pathString = GetDcapPath(path);
    path = pathString.Data();
 
@@ -353,13 +353,13 @@ Bool_t TDCacheFile::Stage(const char *path, UInt_t after, const char *location)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CheckFile() returns kTRUE on success and kFALSE on failure.  In
+/// case the file exists but is not cached, CheckFile() returns
+/// kFALSE and errno is set to EAGAIN.
+
 Bool_t TDCacheFile::CheckFile(const char *path, const char *location)
 {
-   // CheckFile() returns kTRUE on success and kFALSE on failure.  In
-   // case the file exists but is not cached, CheckFile() returns
-   // kFALSE and errno is set to EAGAIN.
-
    TString pathString = GetDcapPath(path);
    path = pathString.Data();
 
@@ -374,43 +374,43 @@ Bool_t TDCacheFile::CheckFile(const char *path, const char *location)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set file open timeout.
+
 void TDCacheFile::SetOpenTimeout(UInt_t n)
 {
-   // Set file open timeout.
-
    dc_setOpenTimeout(n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set on error handler.
+
 void TDCacheFile::SetOnError(EOnErrorAction a)
 {
-   // Set on error handler.
-
    dc_setOnError(a);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set reply host name.
+
 void TDCacheFile::SetReplyHostName(const char *host_name)
 {
-   // Set reply host name.
-
    dc_setReplyHostName((char*)host_name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return dCache version string.
+
 const char *TDCacheFile::GetDcapVersion()
 {
-   // Return dCache version string.
-
    return getDcapVersion();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system open. All arguments like in POSIX open.
+
 Int_t TDCacheFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
-   // Interface to system open. All arguments like in POSIX open.
-
    // often there is a filewall on front of storage system.
    // let clients connect to the data servers
    // if it's an old dCache version, pool will try to connect to the client
@@ -430,11 +430,11 @@ Int_t TDCacheFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system close. All arguments like in POSIX close.
+
 Int_t TDCacheFile::SysClose(Int_t fd)
 {
-   // Interface to system close. All arguments like in POSIX close.
-
    dc_errno = 0;
 
    Int_t rc = dc_close(fd);
@@ -447,11 +447,11 @@ Int_t TDCacheFile::SysClose(Int_t fd)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system read. All arguments like in POSIX read.
+
 Int_t TDCacheFile::SysRead(Int_t fd, void *buf, Int_t len)
 {
-   // Interface to system read. All arguments like in POSIX read.
-
    dc_errno = 0;
 
    Int_t rc = dc_read(fd, buf, len);
@@ -464,11 +464,11 @@ Int_t TDCacheFile::SysRead(Int_t fd, void *buf, Int_t len)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system write. All arguments like in POSIX write.
+
 Int_t TDCacheFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 {
-   // Interface to system write. All arguments like in POSIX write.
-
    dc_errno = 0;
 
    Int_t rc =  dc_write(fd, (char *)buf, len);
@@ -481,11 +481,11 @@ Int_t TDCacheFile::SysWrite(Int_t fd, const void *buf, Int_t len)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system seek. All arguments like in POSIX lseek.
+
 Long64_t TDCacheFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 {
-   // Interface to system seek. All arguments like in POSIX lseek.
-
    dc_errno = 0;
 
    Long64_t rc = dc_lseek64(fd, offset, whence);
@@ -498,13 +498,13 @@ Long64_t TDCacheFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system sync. All arguments like in POSIX fsync.
+/// dCache always keep it's files sync'ed, so there's no need to
+/// sync() them manually.
+
 Int_t TDCacheFile::SysSync(Int_t fd)
 {
-   // Interface to system sync. All arguments like in POSIX fsync.
-   // dCache always keep it's files sync'ed, so there's no need to
-   // sync() them manually.
-
    Int_t rc;
    dc_errno = 0;
 
@@ -517,20 +517,20 @@ Int_t TDCacheFile::SysSync(Int_t fd)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file: id, size, flags, modification time.
+/// Id      is (statbuf.st_dev << 24) + statbuf.st_ino
+/// Size    is the file size
+/// Flags   is file type: 0 is regular file, bit 0 set executable,
+///                       bit 1 set directory, bit 2 set special file
+///                       (socket, fifo, pipe, etc.)
+/// Modtime is modification time.
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 Int_t TDCacheFile::SysStat(Int_t, Long_t *id, Long64_t *size,
                            Long_t *flags, Long_t *modtime)
 {
-   // Get info about a file: id, size, flags, modification time.
-   // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
-   // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
-   // Modtime is modification time.
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    // If in read mode, uses the cached file status, if available, to avoid
    // costly dc_stat() call.
 
@@ -571,22 +571,22 @@ Int_t TDCacheFile::SysStat(Int_t, Long_t *id, Long64_t *size,
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method resetting the dc_errno and errno.
+
 void TDCacheFile::ResetErrno() const
 {
-   // Method resetting the dc_errno and errno.
-
    dc_errno = 0;
    TSystem::ResetErrno();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transform the input path into a path usuable by the dcap C library,
+/// i.e either dcap://nodename.org/where/filename.root or
+/// /pnfs/where/filename.root
+
 TString TDCacheFile::GetDcapPath(const char *path)
 {
-   // Transform the input path into a path usuable by the dcap C library,
-   // i.e either dcap://nodename.org/where/filename.root or
-   // /pnfs/where/filename.root
-
    // eat all 'dcache:' prefixes
    while (!strncmp(path, DCACHE_PREFIX, DCACHE_PREFIX_LEN)) {
       path += DCACHE_PREFIX_LEN;
@@ -604,22 +604,22 @@ TString TDCacheFile::GetDcapPath(const char *path)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create helper class that allows directory access via dCache.
+
 TDCacheSystem::TDCacheSystem() : TSystem("-DCache", "DCache Helper System")
 {
-   // Create helper class that allows directory access via dCache.
-
    // name must start with '-' to bypass the TSystem singleton check
    SetName("DCache");
 
    fDirp = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a directory.
+
 int TDCacheSystem::MakeDirectory(const char *path)
 {
-   // Create a directory.
-
    Int_t rc;
    dc_errno = 0;
    TString pathString = TDCacheFile::GetDcapPath(path);
@@ -634,11 +634,11 @@ int TDCacheSystem::MakeDirectory(const char *path)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a directory.
+
 void *TDCacheSystem::OpenDirectory(const char *path)
 {
-   // Open a directory.
-
    dc_errno = 0;
    TString pathString = TDCacheFile::GetDcapPath(path);
    path = pathString.Data();
@@ -652,11 +652,11 @@ void *TDCacheSystem::OpenDirectory(const char *path)
    return fDirp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close a directory.
+
 void TDCacheSystem::FreeDirectory(void * dirp)
 {
-   // Close a directory.
-
    Int_t rc;
    dc_errno = 0;
 
@@ -670,11 +670,11 @@ void TDCacheSystem::FreeDirectory(void * dirp)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a directory entry.
+
 const char *TDCacheSystem::GetDirEntry(void * dirp)
 {
-   // Get a directory entry.
-
    struct dirent *ent;
    dc_errno = 0;
 
@@ -687,27 +687,27 @@ const char *TDCacheSystem::GetDirEntry(void * dirp)
    return !ent ? 0 : ent->d_name;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns FALSE if one can access a file using the specified access mode.
+/// Mode is the same as for the Unix access(2) function.
+/// Attention, bizarre convention of return value!!
+
 Bool_t TDCacheSystem::AccessPathName(const char *path, EAccessMode mode)
 {
-   // Returns FALSE if one can access a file using the specified access mode.
-   // Mode is the same as for the Unix access(2) function.
-   // Attention, bizarre convention of return value!!
-
    TString pathString = TDCacheFile::GetDcapPath(path);
    path = pathString.Data();
 
    return dc_access(path, mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file. Info is returned in the form of a FileStat_t
+/// structure (see TSystem.h).
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 int TDCacheSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file. Info is returned in the form of a FileStat_t
-   // structure (see TSystem.h).
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    TString pathString = TDCacheFile::GetDcapPath(path);
    path = pathString.Data();
 

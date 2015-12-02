@@ -46,40 +46,40 @@ ClassImp(TPRegexp)
 
 Bool_t TPRegexp::fgThrowAtCompileError = kFALSE;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TPRegexp::TPRegexp()
 {
-   // Default ctor.
-
    fPriv     = new PCREPriv_t;
    fPCREOpts = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create and initialize with pat.
+
 TPRegexp::TPRegexp(const TString &pat)
 {
-   // Create and initialize with pat.
-
    fPattern  = pat;
    fPriv     = new PCREPriv_t;
    fPCREOpts = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TPRegexp::TPRegexp(const TPRegexp &p)
 {
-   // Copy ctor.
-
    fPattern  = p.fPattern;
    fPriv     = new PCREPriv_t;
    fPCREOpts = p.fPCREOpts;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TPRegexp::~TPRegexp()
 {
-   // Cleanup.
-
    if (fPriv->fPCRE)
       pcre_free(fPriv->fPCRE);
    if (fPriv->fPCREExtra)
@@ -87,11 +87,11 @@ TPRegexp::~TPRegexp()
    delete fPriv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignement operator.
+
 TPRegexp &TPRegexp::operator=(const TPRegexp &p)
 {
-   // Assignement operator.
-
    if (this != &p) {
       fPattern = p.fPattern;
       if (fPriv->fPCRE)
@@ -105,36 +105,36 @@ TPRegexp &TPRegexp::operator=(const TPRegexp &p)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Translate Perl modifier flags into pcre flags.
+/// The supported modStr characters are: g, i, m, o, s, x, and the
+/// special d for debug. The meaning of the letters is:
+/// - m
+///   Treat string as multiple lines. That is, change "^" and "$" from
+///   matching the start or end of the string to matching the start or
+///   end of any line anywhere within the string.
+/// - s
+///   Treat string as single line. That is, change "." to match any
+///   character whatsoever, even a newline, which normally it would not match.
+///   Used together, as /ms, they let the "." match any character whatsoever,
+///   while still allowing "^" and "$" to match, respectively, just after and
+///   just before newlines within the string.
+/// - i
+///   Do case-insensitive pattern matching.
+/// - x
+///   Extend your pattern's legibility by permitting whitespace and comments.
+/// - p
+///   Preserve the string matched such that ${^PREMATCH}, ${^MATCH},
+///   and ${^POSTMATCH} are available for use after matching.
+/// - g and c
+///   Global matching, and keep the Current position after failed matching.
+///   Unlike i, m, s and x, these two flags affect the way the regex is used
+///   rather than the regex itself. See Using regular expressions in Perl in
+///   perlretut for further explanation of the g and c modifiers.
+/// For more detail see: http://perldoc.perl.org/perlre.html#Modifiers.
+
 UInt_t TPRegexp::ParseMods(const TString &modStr) const
 {
-   // Translate Perl modifier flags into pcre flags.
-   // The supported modStr characters are: g, i, m, o, s, x, and the
-   // special d for debug. The meaning of the letters is:
-   // - m
-   //   Treat string as multiple lines. That is, change "^" and "$" from
-   //   matching the start or end of the string to matching the start or
-   //   end of any line anywhere within the string.
-   // - s
-   //   Treat string as single line. That is, change "." to match any
-   //   character whatsoever, even a newline, which normally it would not match.
-   //   Used together, as /ms, they let the "." match any character whatsoever,
-   //   while still allowing "^" and "$" to match, respectively, just after and
-   //   just before newlines within the string.
-   // - i
-   //   Do case-insensitive pattern matching.
-   // - x
-   //   Extend your pattern's legibility by permitting whitespace and comments.
-   // - p
-   //   Preserve the string matched such that ${^PREMATCH}, ${^MATCH},
-   //   and ${^POSTMATCH} are available for use after matching.
-   // - g and c
-   //   Global matching, and keep the Current position after failed matching.
-   //   Unlike i, m, s and x, these two flags affect the way the regex is used
-   //   rather than the regex itself. See Using regular expressions in Perl in
-   //   perlretut for further explanation of the g and c modifiers.
-   // For more detail see: http://perldoc.perl.org/perlre.html#Modifiers.
-
    UInt_t opts = 0;
 
    if (modStr.Length() <= 0)
@@ -174,12 +174,12 @@ UInt_t TPRegexp::ParseMods(const TString &modStr) const
    return opts;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return PCRE modifier options as string.
+/// For meaning of mods see ParseMods().
+
 TString TPRegexp::GetModifiers() const
 {
-   // Return PCRE modifier options as string.
-   // For meaning of mods see ParseMods().
-
    TString ret;
 
    if (fPCREOpts & kPCRE_GLOBAL)     ret += 'g';
@@ -193,11 +193,11 @@ TString TPRegexp::GetModifiers() const
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compile the fPattern.
+
 void TPRegexp::Compile()
 {
-   // Compile the fPattern.
-
    if (fPriv->fPCRE)
       pcre_free(fPriv->fPCRE);
 
@@ -225,11 +225,11 @@ void TPRegexp::Compile()
       Optimize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send the pattern through the optimizer.
+
 void TPRegexp::Optimize()
 {
-   // Send the pattern through the optimizer.
-
    if (fPriv->fPCREExtra)
       pcre_free(fPriv->fPCREExtra);
 
@@ -246,13 +246,13 @@ void TPRegexp::Optimize()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of expanded '$' constructs.
+
 Int_t TPRegexp::ReplaceSubs(const TString &s, TString &final,
                             const TString &replacePattern,
                             Int_t *offVec, Int_t nrMatch) const
 {
-   // Returns the number of expanded '$' constructs.
-
    Int_t nrSubs = 0;
    const char *p = replacePattern;
 
@@ -302,12 +302,12 @@ Int_t TPRegexp::ReplaceSubs(const TString &s, TString &final,
    return nrSubs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the actual matching - protected method.
+
 Int_t TPRegexp::MatchInternal(const TString &s, Int_t start,
                               Int_t nMaxMatch, TArrayI *pos) const
 {
-   // Perform the actual matching - protected method.
-
    Int_t *offVec = new Int_t[3*nMaxMatch];
    // pcre_exec allows less options - see pcre_internal.h PUBLIC_EXEC_OPTIONS.
    Int_t nrMatch = pcre_exec(fPriv->fPCRE, fPriv->fPCREExtra, s.Data(),
@@ -329,17 +329,17 @@ Int_t TPRegexp::MatchInternal(const TString &s, Int_t start,
    return nrMatch;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The number of matches is returned, this equals the full match +
+/// sub-pattern matches.
+/// nMaxMatch is the maximum allowed number of matches.
+/// pos contains the string indices of the matches. Its usage is
+/// shown in the routine MatchS.
+/// For meaning of mods see ParseMods().
+
 Int_t TPRegexp::Match(const TString &s, const TString &mods, Int_t start,
                       Int_t nMaxMatch, TArrayI *pos)
 {
-   // The number of matches is returned, this equals the full match +
-   // sub-pattern matches.
-   // nMaxMatch is the maximum allowed number of matches.
-   // pos contains the string indices of the matches. Its usage is
-   // shown in the routine MatchS.
-   // For meaning of mods see ParseMods().
-
    UInt_t opts = ParseMods(mods);
 
    if (!fPriv->fPCRE || opts != fPCREOpts) {
@@ -351,25 +351,25 @@ Int_t TPRegexp::Match(const TString &s, const TString &mods, Int_t start,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a TObjArray of matched substrings as TObjString's.
+/// The TObjArray is owner of the objects and must be deleted by the user.
+/// The first entry is the full matched pattern, followed by the subpatterns.
+/// If a pattern was not matched, it will return an empty substring:
+///
+/// TObjArray *subStrL = TPRegexp("(a|(z))(bc)").MatchS("abc");
+/// for (Int_t i = 0; i < subStrL->GetLast()+1; i++) {
+///    const TString subStr = ((TObjString *)subStrL->At(i))->GetString();
+///    std::cout << "\"" << subStr << "\" ";
+/// }
+/// std::cout << subStr << std::endl;
+///
+/// produces:  "abc" "a" "" "bc"
+/// For meaning of mods see ParseMods().
+
 TObjArray *TPRegexp::MatchS(const TString &s, const TString &mods,
                             Int_t start, Int_t nMaxMatch)
 {
-   // Returns a TObjArray of matched substrings as TObjString's.
-   // The TObjArray is owner of the objects and must be deleted by the user.
-   // The first entry is the full matched pattern, followed by the subpatterns.
-   // If a pattern was not matched, it will return an empty substring:
-   //
-   // TObjArray *subStrL = TPRegexp("(a|(z))(bc)").MatchS("abc");
-   // for (Int_t i = 0; i < subStrL->GetLast()+1; i++) {
-   //    const TString subStr = ((TObjString *)subStrL->At(i))->GetString();
-   //    std::cout << "\"" << subStr << "\" ";
-   // }
-   // std::cout << subStr << std::endl;
-   //
-   // produces:  "abc" "a" "" "bc"
-   // For meaning of mods see ParseMods().
-
    TArrayI pos;
    Int_t nrMatch = Match(s, mods, start, nMaxMatch, &pos);
 
@@ -389,14 +389,14 @@ TObjArray *TPRegexp::MatchS(const TString &s, const TString &mods,
    return subStrL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform pattern substitution with optional back-ref replacement
+/// - protected method.
+
 Int_t TPRegexp::SubstituteInternal(TString &s, const TString &replacePattern,
                                    Int_t start, Int_t nMaxMatch,
                                    Bool_t doDollarSubst) const
 {
-   // Perform pattern substitution with optional back-ref replacement
-   // - protected method.
-
    Int_t *offVec = new Int_t[3*nMaxMatch];
 
    TString final;
@@ -456,21 +456,21 @@ Int_t TPRegexp::SubstituteInternal(TString &s, const TString &replacePattern,
    return nrSubs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Substitute replaces the string s by a new string in which matching
+/// patterns are replaced by the replacePattern string. The number of
+/// substitutions are returned.
+///
+/// TString s("aap noot mies");
+/// const Int_t nrSub = TPRegexp("(\\w*) noot (\\w*)").Substitute(s,"$2 noot $1");
+/// std::cout << nrSub << " \"" << s << "\"" <<std::endl;
+///
+/// produces: 2 "mies noot aap"
+/// For meaning of mods see ParseMods().
+
 Int_t TPRegexp::Substitute(TString &s, const TString &replacePattern,
                            const TString &mods, Int_t start, Int_t nMaxMatch)
 {
-   // Substitute replaces the string s by a new string in which matching
-   // patterns are replaced by the replacePattern string. The number of
-   // substitutions are returned.
-   //
-   // TString s("aap noot mies");
-   // const Int_t nrSub = TPRegexp("(\\w*) noot (\\w*)").Substitute(s,"$2 noot $1");
-   // std::cout << nrSub << " \"" << s << "\"" <<std::endl;
-   //
-   // produces: 2 "mies noot aap"
-   // For meaning of mods see ParseMods().
-
    UInt_t opts = ParseMods(mods);
 
    if (!fPriv->fPCRE || opts != fPCREOpts) {
@@ -482,30 +482,30 @@ Int_t TPRegexp::Substitute(TString &s, const TString &replacePattern,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if underlying PCRE structure has been successfully
+/// generated via regexp compilation.
+
 Bool_t TPRegexp::IsValid() const
 {
-   // Returns true if underlying PCRE structure has been successfully
-   // generated via regexp compilation.
-
    return fPriv->fPCRE != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get value of static flag controlling whether exception should be thrown upon an
+/// error during regular expression compilation by the PCRE engine.
+
 Bool_t TPRegexp::GetThrowAtCompileError()
 {
-   // Get value of static flag controlling whether exception should be thrown upon an
-   // error during regular expression compilation by the PCRE engine.
-
    return fgThrowAtCompileError;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set static flag controlling whether exception should be thrown upon an
+/// error during regular expression compilation by the PCRE engine.
+
 void TPRegexp::SetThrowAtCompileError(Bool_t throwp)
 {
-   // Set static flag controlling whether exception should be thrown upon an
-   // error during regular expression compilation by the PCRE engine.
-
    fgThrowAtCompileError = throwp;
 }
 
@@ -516,12 +516,12 @@ void TPRegexp::SetThrowAtCompileError(Bool_t throwp)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the first occurance of the regexp in string and return the position.
+/// Start is the offset at which the search should start.
+
 Ssiz_t TString::Index(TPRegexp& r, Ssiz_t start) const
 {
-   // Find the first occurance of the regexp in string and return the position.
-   // Start is the offset at which the search should start.
-
    TArrayI pos;
    Int_t nrMatch = r.Match(*this,"",start,10,&pos);
    if (nrMatch > 0)
@@ -530,13 +530,13 @@ Ssiz_t TString::Index(TPRegexp& r, Ssiz_t start) const
       return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the first occurance of the regexp in string and return the position.
+/// Extent is length of the matched string and start is the offset at which
+/// the matching should start.
+
 Ssiz_t TString::Index(TPRegexp& r, Ssiz_t* extent, Ssiz_t start) const
 {
-   // Find the first occurance of the regexp in string and return the position.
-   // Extent is length of the matched string and start is the offset at which
-   // the matching should start.
-
    TArrayI pos;
    const Int_t nrMatch = r.Match(*this,"",start,10,&pos);
    if (nrMatch > 0) {
@@ -548,21 +548,21 @@ Ssiz_t TString::Index(TPRegexp& r, Ssiz_t* extent, Ssiz_t start) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the substring found by applying the regexp starting at start.
+
 TSubString TString::operator()(TPRegexp& r, Ssiz_t start) const
 {
-   // Return the substring found by applying the regexp starting at start.
-
    Ssiz_t len;
    Ssiz_t begin = Index(r, &len, start);
    return TSubString(*this, begin, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the substring found by applying the regexp.
+
 TSubString TString::operator()(TPRegexp& r) const
 {
-   // Return the substring found by applying the regexp.
-
    return (*this)(r, 0);
 }
 
@@ -584,7 +584,9 @@ TSubString TString::operator()(TPRegexp& r) const
 
 ClassImp(TPMERegexp);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor. This regexp will match an empty string.
+
 TPMERegexp::TPMERegexp() :
    TPRegexp(),
    fNMaxMatches(10),
@@ -592,12 +594,14 @@ TPMERegexp::TPMERegexp() :
    fAddressOfLastString(0),
    fLastGlobalPosition(0)
 {
-   // Default constructor. This regexp will match an empty string.
-
    Compile();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor:
+///  s    - string to compile into regular expression
+///  opts - perl-style character flags to be set on TPME object
+
 TPMERegexp::TPMERegexp(const TString& s, const TString& opts, Int_t nMatchMax) :
    TPRegexp(s),
    fNMaxMatches(nMatchMax),
@@ -605,15 +609,15 @@ TPMERegexp::TPMERegexp(const TString& s, const TString& opts, Int_t nMatchMax) :
    fAddressOfLastString(0),
    fLastGlobalPosition(0)
 {
-   // Constructor:
-   //  s    - string to compile into regular expression
-   //  opts - perl-style character flags to be set on TPME object
-
    fPCREOpts = ParseMods(opts);
    Compile();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor:
+///  s    - string to copmile into regular expression
+///  opts - PCRE-style option flags to be set on TPME object
+
 TPMERegexp::TPMERegexp(const TString& s, UInt_t opts, Int_t nMatchMax) :
    TPRegexp(s),
    fNMaxMatches(nMatchMax),
@@ -621,15 +625,15 @@ TPMERegexp::TPMERegexp(const TString& s, UInt_t opts, Int_t nMatchMax) :
    fAddressOfLastString(0),
    fLastGlobalPosition(0)
 {
-   // Constructor:
-   //  s    - string to copmile into regular expression
-   //  opts - PCRE-style option flags to be set on TPME object
-
    fPCREOpts = opts;
    Compile();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+/// Only PCRE specifics are copied, not last-match or global-matech
+/// information.
+
 TPMERegexp::TPMERegexp(const TPMERegexp& r) :
    TPRegexp(r),
    fNMaxMatches(r.fNMaxMatches),
@@ -637,28 +641,24 @@ TPMERegexp::TPMERegexp(const TPMERegexp& r) :
    fAddressOfLastString(0),
    fLastGlobalPosition(0)
 {
-   // Copy constructor.
-   // Only PCRE specifics are copied, not last-match or global-matech
-   // information.
-
    Compile();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the patteren and options.
+/// If 'nMatchMax' other than -1 (the default) is passed, it is also set.
+
 void TPMERegexp::Reset(const TString& s, const TString& opts, Int_t nMatchMax)
 {
-   // Reset the patteren and options.
-   // If 'nMatchMax' other than -1 (the default) is passed, it is also set.
-
    Reset(s, ParseMods(opts), nMatchMax);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the patteren and options.
+/// If 'nMatchMax' other than -1 (the default) is passed, it is also set.
+
 void TPMERegexp::Reset(const TString& s, UInt_t opts, Int_t nMatchMax)
 {
-   // Reset the patteren and options.
-   // If 'nMatchMax' other than -1 (the default) is passed, it is also set.
-
    fPattern = s;
    fPCREOpts = opts;
    Compile();
@@ -669,43 +669,43 @@ void TPMERegexp::Reset(const TString& s, UInt_t opts, Int_t nMatchMax)
    fLastGlobalPosition = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy global-match state from 're; so that this regexp can continue
+/// parsing the string from where 're' left off.
+///
+/// Alternatively, GetGlobalPosition() get be used to retrieve the
+/// last match position so that it can passed to Match().
+///
+/// Ideally, as it is done in PERL, the last match position would be
+/// stored in the TString itself.
+
 void TPMERegexp::AssignGlobalState(const TPMERegexp& re)
 {
-   // Copy global-match state from 're; so that this regexp can continue
-   // parsing the string from where 're' left off.
-   //
-   // Alternatively, GetGlobalPosition() get be used to retrieve the
-   // last match position so that it can passed to Match().
-   //
-   // Ideally, as it is done in PERL, the last match position would be
-   // stored in the TString itself.
-
    fLastStringMatched  = re.fLastStringMatched;
    fLastGlobalPosition = re.fLastGlobalPosition;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset state of global match.
+/// This happens automatically when a new string is passed for matching.
+/// But be carefull, as the address of last TString object is used
+/// to make this decision.
+
 void TPMERegexp::ResetGlobalState()
 {
-   // Reset state of global match.
-   // This happens automatically when a new string is passed for matching.
-   // But be carefull, as the address of last TString object is used
-   // to make this decision.
-
    fLastGlobalPosition = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Runs a match on s against the regex 'this' was created with.
+///
+/// Args:
+///  s        - string to match against
+///  start    - offset at which to start matching
+/// Returns:  - number of matches found
+
 Int_t TPMERegexp::Match(const TString& s, UInt_t start)
 {
-   // Runs a match on s against the regex 'this' was created with.
-   //
-   // Args:
-   //  s        - string to match against
-   //  start    - offset at which to start matching
-   // Returns:  - number of matches found
-
    // If we got a new string, reset the global position counter.
    if (fAddressOfLastString != (void*) &s) {
       fLastGlobalPosition = 0;
@@ -739,31 +739,31 @@ Int_t TPMERegexp::Match(const TString& s, UInt_t start)
    return fNMatches;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Splits into at most maxfields. If maxfields is unspecified or
+/// 0, trailing empty matches are discarded. If maxfields is
+/// positive, no more than maxfields fields will be returned and
+/// trailing empty matches are preserved. If maxfields is empty,
+/// all fields (including trailing empty ones) are returned. This
+/// *should* be the same as the perl behaviour.
+///
+/// If pattern produces sub-matches, these are also stored in
+/// the result.
+///
+/// A pattern matching the null string will split the value of EXPR
+/// into separate characters at each point it matches that way.
+///
+/// Args:
+///  s         - string to split
+///  maxfields - maximum number of fields to be split out.  0 means
+///              split all fields, but discard any trailing empty bits.
+///              Negative means split all fields and keep trailing empty bits.
+///              Positive means keep up to N fields including any empty fields
+///              less than N. Anything remaining is in the last field.
+/// Returns:   - number of fields found
+
 Int_t TPMERegexp::Split(const TString& s, Int_t maxfields)
 {
-   // Splits into at most maxfields. If maxfields is unspecified or
-   // 0, trailing empty matches are discarded. If maxfields is
-   // positive, no more than maxfields fields will be returned and
-   // trailing empty matches are preserved. If maxfields is empty,
-   // all fields (including trailing empty ones) are returned. This
-   // *should* be the same as the perl behaviour.
-   //
-   // If pattern produces sub-matches, these are also stored in
-   // the result.
-   //
-   // A pattern matching the null string will split the value of EXPR
-   // into separate characters at each point it matches that way.
-   //
-   // Args:
-   //  s         - string to split
-   //  maxfields - maximum number of fields to be split out.  0 means
-   //              split all fields, but discard any trailing empty bits.
-   //              Negative means split all fields and keep trailing empty bits.
-   //              Positive means keep up to N fields including any empty fields
-   //              less than N. Anything remaining is in the last field.
-   // Returns:   - number of fields found
-
    typedef std::pair<int, int>   MarkerLoc_t;
    typedef std::vector<MarkerLoc_t> MarkerLocVec_t;
 
@@ -858,21 +858,21 @@ Int_t TPMERegexp::Split(const TString& s, Int_t maxfields)
    return fNMatches;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Substitute matching part of s with r, dollar back-ref
+/// substitution is performed if doDollarSubst is true (default).
+/// Returns the number of substitutions made.
+///
+/// After the substitution, another pass is made over the resulting
+/// string and the following special tokens are interpreted:
+/// \l - lowercase next char,
+/// \u - uppercase next char,
+/// \L - lowercase till \E,
+/// \U - uppercase till \E, and
+/// \E - end case modification.
+
 Int_t TPMERegexp::Substitute(TString& s, const TString& r, Bool_t doDollarSubst)
 {
-   // Substitute matching part of s with r, dollar back-ref
-   // substitution is performed if doDollarSubst is true (default).
-   // Returns the number of substitutions made.
-   //
-   // After the substitution, another pass is made over the resulting
-   // string and the following special tokens are interpreted:
-   // \l - lowercase next char,
-   // \u - uppercase next char,
-   // \L - lowercase till \E,
-   // \U - uppercase till \E, and
-   // \E - end case modification.
-
    Int_t cnt = SubstituteInternal(s, r, 0, fNMaxMatches, doDollarSubst);
 
    TString ret;
@@ -911,12 +911,12 @@ Int_t TPMERegexp::Substitute(TString& s, const TString& r, Bool_t doDollarSubst)
    return cnt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the sub-string from the internal fMarkers vector.
+/// Requires having run match or split first.
+
 TString TPMERegexp::operator[](int index)
 {
-   // Returns the sub-string from the internal fMarkers vector.
-   // Requires having run match or split first.
-
    if (index >= fNMatches)
       return "";
 
@@ -925,13 +925,13 @@ TString TPMERegexp::operator[](int index)
    return fLastStringMatched(begin, end-begin);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the regular expression and modifier options.
+/// If 'option' contains "all", prints also last string match and
+/// match results.
+
 void TPMERegexp::Print(Option_t* option)
 {
-   // Print the regular expression and modifier options.
-   // If 'option' contains "all", prints also last string match and
-   // match results.
-
    TString opt = option;
    opt.ToLower();
 
@@ -966,22 +966,23 @@ void TPMERegexp::Print(Option_t* option)
 
 ClassImp(TStringToken)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TStringToken::TStringToken(const TString& fullStr, const TString& splitRe, Bool_t retVoid) :
    fFullStr    (fullStr),
    fSplitRe    (splitRe),
    fReturnVoid (retVoid),
    fPos        (0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the next token, it is stored in this TString.
+/// Returns true if new token is available, false otherwise.
+
 Bool_t TStringToken::NextToken()
 {
-   // Get the next token, it is stored in this TString.
-   // Returns true if new token is available, false otherwise.
-
    TArrayI x;
    while (fPos < fFullStr.Length()) {
       if (fSplitRe.Match(fFullStr, "", fPos, 2, &x)) {

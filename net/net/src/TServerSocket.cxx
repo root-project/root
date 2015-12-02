@@ -40,12 +40,12 @@ TVirtualMutex *gSrvAuthenticateMutex = 0;
 
 ClassImp(TServerSocket)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Kind of macro to parse input options
+/// Modify opt according to modifier mod.
+
 static void SetAuthOpt(UChar_t &opt, UChar_t mod)
 {
-   // Kind of macro to parse input options
-   // Modify opt according to modifier mod.
-
    R__LOCKGUARD2(gSrvAuthenticateMutex);
 
    if (!mod) return;
@@ -54,28 +54,28 @@ static void SetAuthOpt(UChar_t &opt, UChar_t mod)
    if ((mod & kSrvNoAuth)) opt &= ~kSrvAuth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a server socket object for a named service. Set reuse to true
+/// to force reuse of the server socket (i.e. do not wait for the time
+/// out to pass). Using backlog one can set the desirable queue length
+/// for pending connections.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Use IsValid() to check the validity of the
+/// server socket. In case server socket is not valid use GetErrorCode()
+/// to obtain the specific error value. These values are:
+///  0 = no error (socket is valid)
+/// -1 = low level socket() call failed
+/// -2 = low level bind() call failed
+/// -3 = low level listen() call failed
+/// Every valid server socket is added to the TROOT sockets list which
+/// will make sure that any open sockets are properly closed on
+/// program termination.
+
 TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
                              Int_t tcpwindowsize)
 {
-   // Create a server socket object for a named service. Set reuse to true
-   // to force reuse of the server socket (i.e. do not wait for the time
-   // out to pass). Using backlog one can set the desirable queue length
-   // for pending connections.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Use IsValid() to check the validity of the
-   // server socket. In case server socket is not valid use GetErrorCode()
-   // to obtain the specific error value. These values are:
-   //  0 = no error (socket is valid)
-   // -1 = low level socket() call failed
-   // -2 = low level bind() call failed
-   // -3 = low level listen() call failed
-   // Every valid server socket is added to the TROOT sockets list which
-   // will make sure that any open sockets are properly closed on
-   // program termination.
-
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
@@ -116,29 +116,29 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a server socket object on a specified port. Set reuse to true
+/// to force reuse of the server socket (i.e. do not wait for the time
+/// out to pass). Using backlog one can set the desirable queue length
+/// for pending connections. If port is 0 a port scan will be done to
+/// find a free port. This option is mutual exlusive with the reuse option.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Use IsValid() to check the validity of the
+/// server socket. In case server socket is not valid use GetErrorCode()
+/// to obtain the specific error value. These values are:
+///  0 = no error (socket is valid)
+/// -1 = low level socket() call failed
+/// -2 = low level bind() call failed
+/// -3 = low level listen() call failed
+/// Every valid server socket is added to the TROOT sockets list which
+/// will make sure that any open sockets are properly closed on
+/// program termination.
+
 TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
                              Int_t tcpwindowsize)
 {
-   // Create a server socket object on a specified port. Set reuse to true
-   // to force reuse of the server socket (i.e. do not wait for the time
-   // out to pass). Using backlog one can set the desirable queue length
-   // for pending connections. If port is 0 a port scan will be done to
-   // find a free port. This option is mutual exlusive with the reuse option.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Use IsValid() to check the validity of the
-   // server socket. In case server socket is not valid use GetErrorCode()
-   // to obtain the specific error value. These values are:
-   //  0 = no error (socket is valid)
-   // -1 = low level socket() call failed
-   // -2 = low level bind() call failed
-   // -3 = low level listen() call failed
-   // Every valid server socket is added to the TROOT sockets list which
-   // will make sure that any open sockets are properly closed on
-   // program termination.
-
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
@@ -156,11 +156,11 @@ TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor: cleanup authentication stuff (if any) and close
+
 TServerSocket::~TServerSocket()
 {
-   // Destructor: cleanup authentication stuff (if any) and close
-
    R__LOCKGUARD2(gSrvAuthenticateMutex);
    if (fSecContexts) {
       if (fgSrvAuthClupHook) {
@@ -176,33 +176,33 @@ TServerSocket::~TServerSocket()
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Accept a connection on a server socket. Returns a full-duplex
+/// communication TSocket object. If no pending connections are
+/// present on the queue and nonblocking mode has not been enabled
+/// with SetOption(kNoBlock,1) the call blocks until a connection is
+/// present. The returned socket must be deleted by the user. The socket
+/// is also added to the TROOT sockets list which will make sure that
+/// any open sockets are properly closed on program termination.
+/// In case of error 0 is returned and in case non-blocking I/O is
+/// enabled and no connections are available -1 is returned.
+///
+/// The opt can be used to require client authentication; valid options are
+///
+///    kSrvAuth   =   require client authentication
+///    kSrvNoAuth =   force no client authentication
+///
+/// Example: use Opt = kSrvAuth to require client authentication.
+///
+/// Default options are taken from fgAcceptOpt and are initially
+/// equivalent to kSrvNoAuth; they can be changed with the static
+/// method TServerSocket::SetAcceptOptions(Opt).
+/// The active defaults can be visualized using the static method
+/// TServerSocket::ShowAcceptOptions().
+///
+
 TSocket *TServerSocket::Accept(UChar_t opt)
 {
-   // Accept a connection on a server socket. Returns a full-duplex
-   // communication TSocket object. If no pending connections are
-   // present on the queue and nonblocking mode has not been enabled
-   // with SetOption(kNoBlock,1) the call blocks until a connection is
-   // present. The returned socket must be deleted by the user. The socket
-   // is also added to the TROOT sockets list which will make sure that
-   // any open sockets are properly closed on program termination.
-   // In case of error 0 is returned and in case non-blocking I/O is
-   // enabled and no connections are available -1 is returned.
-   //
-   // The opt can be used to require client authentication; valid options are
-   //
-   //    kSrvAuth   =   require client authentication
-   //    kSrvNoAuth =   force no client authentication
-   //
-   // Example: use Opt = kSrvAuth to require client authentication.
-   //
-   // Default options are taken from fgAcceptOpt and are initially
-   // equivalent to kSrvNoAuth; they can be changed with the static
-   // method TServerSocket::SetAcceptOptions(Opt).
-   // The active defaults can be visualized using the static method
-   // TServerSocket::ShowAcceptOptions().
-   //
-
    if (fSocket == -1) { return 0; }
 
    TSocket *socket = new TSocket;
@@ -237,13 +237,13 @@ TSocket *TServerSocket::Accept(UChar_t opt)
    return socket;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return internet address of host to which the server socket is bound,
+/// i.e. the local host. In case of error TInetAddress::IsValid() returns
+/// kFALSE.
+
 TInetAddress TServerSocket::GetLocalInetAddress()
 {
-   // Return internet address of host to which the server socket is bound,
-   // i.e. the local host. In case of error TInetAddress::IsValid() returns
-   // kFALSE.
-
    if (fSocket != -1) {
       if (fAddress.GetPort() == -1)
          fAddress = gSystem->GetSockName(fSocket);
@@ -252,11 +252,11 @@ TInetAddress TServerSocket::GetLocalInetAddress()
    return TInetAddress();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get port # to which server socket is bound. In case of error returns -1.
+
 Int_t TServerSocket::GetLocalPort()
 {
-   // Get port # to which server socket is bound. In case of error returns -1.
-
    if (fSocket != -1) {
       if (fAddress.GetPort() == -1)
          fAddress = GetLocalInetAddress();
@@ -266,39 +266,39 @@ Int_t TServerSocket::GetLocalPort()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default options for Accept
+
 UChar_t TServerSocket::GetAcceptOptions()
 {
-   // Return default options for Accept
-
    return fgAcceptOpt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default options for Accept according to modifier 'mod'.
+/// Use:
+///   kSrvAuth                 require client authentication
+///   kSrvNoAuth               do not require client authentication
+
 void TServerSocket::SetAcceptOptions(UChar_t mod)
 {
-   // Set default options for Accept according to modifier 'mod'.
-   // Use:
-   //   kSrvAuth                 require client authentication
-   //   kSrvNoAuth               do not require client authentication
-
    SetAuthOpt(fgAcceptOpt, mod);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print default options for Accept.
+
 void TServerSocket::ShowAcceptOptions()
 {
-   // Print default options for Accept.
-
    ::Info("ShowAcceptOptions", "Use authentication: %s", (fgAcceptOpt & kSrvAuth) ? "yes" : "no");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check authentication request from the client on new
+/// open connection
+
 Bool_t TServerSocket::Authenticate(TSocket *sock)
 {
-   // Check authentication request from the client on new
-   // open connection
-
    if (!fgSrvAuthHook) {
       R__LOCKGUARD2(gSrvAuthenticateMutex);
 

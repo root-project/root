@@ -42,14 +42,14 @@ const TGGC   *TGLabel::fgDefaultGC = 0;
 
 ClassImp(TGLabel)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a label GUI object. TGLabel will become the owner of the
+/// text and will delete it in its dtor.
+
 TGLabel::TGLabel(const TGWindow *p, TGString *text, GContext_t norm,
                  FontStruct_t font, UInt_t options, ULong_t back) :
     TGFrame(p, 1, 1, options, back)
 {
-   // Create a label GUI object. TGLabel will become the owner of the
-   // text and will delete it in its dtor.
-
    fText        = text;
    fTMode       = kTextCenterX | kTextCenterY;
    fTextChanged = kTRUE;
@@ -84,13 +84,13 @@ TGLabel::TGLabel(const TGWindow *p, TGString *text, GContext_t norm,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a label GUI object.
+
 TGLabel::TGLabel(const TGWindow *p, const char *text, GContext_t norm,
                  FontStruct_t font, UInt_t options, ULong_t back) :
     TGFrame(p, 1, 1, options, back)
 {
-   // Create a label GUI object.
-
    fText        = new TGString(!text && !p ? GetName() : text);
    fTMode       = kTextCenterX | kTextCenterY;
    fTextChanged = kTRUE;
@@ -125,11 +125,11 @@ TGLabel::TGLabel(const TGWindow *p, const char *text, GContext_t norm,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete label.
+
 TGLabel::~TGLabel()
 {
-   // Delete label.
-
    if (fText) {
       delete fText;
    }
@@ -147,11 +147,11 @@ TGLabel::~TGLabel()
    delete fTLayout;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout label.
+
 void TGLabel::Layout()
 {
-   // Layout label.
-
    delete fTLayout;
    fTLayout = fFont->ComputeTextLayout(fText->GetString(), fText->GetLength(),
                                        fWrapLength, kTextLeft, fTFlags,
@@ -159,23 +159,23 @@ void TGLabel::Layout()
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default size.
+
 TGDimension TGLabel::GetDefaultSize() const
 {
-   // Return default size.
-
    UInt_t w = GetOptions() & kFixedWidth ? fWidth : fTWidth + fMLeft + fMRight;
    UInt_t h = GetOptions() & kFixedHeight ? fHeight : fTHeight + fMTop + fMBottom + 1;
    return TGDimension(w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set new text in label. After calling this method one needs to call
+/// the parents frame's Layout() method to force updating of the label size.
+/// The new_text is adopted by the TGLabel and will be properly deleted.
+
 void TGLabel::SetText(TGString *new_text)
 {
-   // Set new text in label. After calling this method one needs to call
-   // the parents frame's Layout() method to force updating of the label size.
-   // The new_text is adopted by the TGLabel and will be properly deleted.
-
    if (fText) delete fText;
    fText        = new_text;
    fTextChanged = kTRUE;
@@ -183,20 +183,20 @@ void TGLabel::SetText(TGString *new_text)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text at position (x, y).
+
 void TGLabel::DrawText(GContext_t gc, Int_t x, Int_t y)
 {
-   // Draw text at position (x, y).
-
    fTLayout->DrawText(fId, gc, x, y, 0, -1);
    //fTLayout->UnderlineChar(fId, gc, x, y, fText->GetHotPos());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw label widget.
+
 void TGLabel::DoRedraw()
 {
-   // Redraw label widget.
-
    int x, y;
 
    TGFrame::DoRedraw();
@@ -282,12 +282,12 @@ void TGLabel::DoRedraw()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text font.
+/// If global is true font is changed globally - otherwise locally.
+
 void TGLabel::SetTextFont(FontStruct_t fontStruct, Bool_t global)
 {
-   // Changes text font.
-   // If global is true font is changed globally - otherwise locally.
-
    TGFont *font = fClient->GetFontPool()->GetFont(fontStruct);
 
    if (!font) {
@@ -298,12 +298,12 @@ void TGLabel::SetTextFont(FontStruct_t fontStruct, Bool_t global)
    SetTextFont(font, global);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text font specified by name.
+/// If global is true font is changed globally - otherwise locally.
+
 void TGLabel::SetTextFont(const char *fontName, Bool_t global)
 {
-   // Changes text font specified by name.
-   // If global is true font is changed globally - otherwise locally.
-
    TGFont *font = fClient->GetFont(fontName);
 
    if (!font) {
@@ -314,12 +314,12 @@ void TGLabel::SetTextFont(const char *fontName, Bool_t global)
    SetTextFont(font, global);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text font specified by pointer to TGFont object.
+/// If global is true font is changed globally - otherwise locally.
+
 void TGLabel::SetTextFont(TGFont *font, Bool_t global)
 {
-   // Changes text font specified by pointer to TGFont object.
-   // If global is true font is changed globally - otherwise locally.
-
    if (!font) {
       //error
       return;
@@ -352,12 +352,12 @@ void TGLabel::SetTextFont(TGFont *font, Bool_t global)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text color.
+/// If global is true color is changed globally - otherwise locally.
+
 void TGLabel::SetTextColor(Pixel_t color, Bool_t global)
 {
-   // Changes text color.
-   // If global is true color is changed globally - otherwise locally.
-
    TGGCPool *pool = fClient->GetResourcePool()->GetGCPool();
    TGGC *gc = pool->FindGC(fNormGC);
 
@@ -374,24 +374,24 @@ void TGLabel::SetTextColor(Pixel_t color, Bool_t global)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text color.
+/// If global is true color is changed globally - otherwise locally.
+
 void TGLabel::SetTextColor(TColor *color, Bool_t global)
 {
-   // Changes text color.
-   // If global is true color is changed globally - otherwise locally.
-
    if (color) {
       SetTextColor(color->GetPixel(), global);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text justification. Mode is an OR of the bits:
+/// kTextTop, kTextBottom, kTextLeft, kTextRight, kTextCenterX and
+/// kTextCenterY.
+
 void TGLabel::SetTextJustify(Int_t mode)
 {
-   // Set text justification. Mode is an OR of the bits:
-   // kTextTop, kTextBottom, kTextLeft, kTextRight, kTextCenterX and
-   // kTextCenterY.
-
    fTextChanged = kTRUE;
    fTMode = mode;
 
@@ -441,20 +441,20 @@ void TGLabel::SetTextJustify(Int_t mode)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if text attributes are unique.
+/// Returns kFALSE if text attributes are shared (global).
+
 Bool_t TGLabel::HasOwnFont() const
 {
-   // Returns kTRUE if text attributes are unique.
-   // Returns kFALSE if text attributes are shared (global).
-
    return fHasOwnFont;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a label widget as a C++ statement(s) on output stream out.
+
 void TGLabel::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a label widget as a C++ statement(s) on output stream out.
-
    char quote = '"';
 
    // font + GC
@@ -516,22 +516,22 @@ void TGLabel::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static returning label default font struct.
+
 FontStruct_t TGLabel::GetDefaultFontStruct()
 {
-   // Static returning label default font struct.
-
    if (!fgDefaultFont) {
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    }
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static returning label default graphics context.
+
 const TGGC &TGLabel::GetDefaultGC()
 {
-   // Static returning label default graphics context.
-
    if (!fgDefaultGC) {
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    }

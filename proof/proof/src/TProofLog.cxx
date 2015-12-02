@@ -26,12 +26,12 @@
 
 ClassImp(TProofLog)
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TProofLog::TProofLog(const char *stag, const char *url, TProofMgr *mgr)
           : TNamed(stag, url)
 {
-   // Constructor.
-
    SetLogToBox();
    fFILE = 0;
    fElem = new TList;
@@ -54,40 +54,40 @@ TProofLog::TProofLog(const char *stag, const char *url, TProofMgr *mgr)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TProofLog::~TProofLog()
 {
-   // Destructor.
-
    SafeDelete(fElem);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add new entry to the list of elements.
+
 TProofLogElem *TProofLog::Add(const char *ord, const char *url)
 {
-   // Add new entry to the list of elements.
-
    TProofLogElem *ple = new TProofLogElem(ord, url, this);
    fElem->Add(ple);
    // Done
    return ple;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the content of the log file associated with worker 'ord'.
+/// If 'ord' is "*" (default), all the workers are retrieved. If 'all'
+/// is true, the whole files are retrieved; else a max of
+/// fgMaxTransferSize (about 1000 lines) per file is read, starting from
+/// the end (i.e. the last ~1000 lines).
+/// The received buffer is added to the file fname, if the latter is defined.
+/// If opt == TProofLog::kGrep only the lines containing 'pattern' are
+/// retrieved (remote grep functionality); to filter out a pattern 'pat' use
+/// pattern = "-v pat".
+/// Return 0 on success, -1 in case of any error.
+
 Int_t TProofLog::Retrieve(const char *ord, TProofLog::ERetrieveOpt opt,
                           const char *fname, const char *pattern)
 {
-   // Retrieve the content of the log file associated with worker 'ord'.
-   // If 'ord' is "*" (default), all the workers are retrieved. If 'all'
-   // is true, the whole files are retrieved; else a max of
-   // fgMaxTransferSize (about 1000 lines) per file is read, starting from
-   // the end (i.e. the last ~1000 lines).
-   // The received buffer is added to the file fname, if the latter is defined.
-   // If opt == TProofLog::kGrep only the lines containing 'pattern' are
-   // retrieved (remote grep functionality); to filter out a pattern 'pat' use
-   // pattern = "-v pat".
-   // Return 0 on success, -1 in case of any error.
-
    // Validate inputs
    if (opt == TProofLog::kGrep && (!pattern || strlen(pattern) <= 0)) {
       Error("Retrieve", "option 'Grep' requires a pattern");
@@ -122,15 +122,15 @@ Int_t TProofLog::Retrieve(const char *ord, TProofLog::ERetrieveOpt opt,
    return 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display the content associated with worker 'ord' from line 'from'
+/// to line 'to' inclusive. A negative value
+/// for 'from' indicates lines counted from the end (tail action); 'to'
+/// is ignored in such a case.
+/// If 'ord' is "*" (default), all the workers are displayed.
+
 void TProofLog::Display(const char *ord, Int_t from, Int_t to)
 {
-   // Display the content associated with worker 'ord' from line 'from'
-   // to line 'to' inclusive. A negative value
-   // for 'from' indicates lines counted from the end (tail action); 'to'
-   // is ignored in such a case.
-   // If 'ord' is "*" (default), all the workers are displayed.
-
    TString msg;
    if (ord[0] == '*') {
       Int_t nel = (fElem) ? fElem->GetSize() : 0;
@@ -153,11 +153,11 @@ void TProofLog::Display(const char *ord, Int_t from, Int_t to)
       Prt("// --------- End of PROOF Session logs ---------\n");
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print head info about the content
+
 void TProofLog::Print(Option_t *opt) const
 {
-   // Print head info about the content
-
    Int_t nel = (fElem) ? fElem->GetSize() : 0;
    // Write global header
    fprintf(stderr, "// --------- PROOF Session logs object --------\n");
@@ -176,11 +176,11 @@ void TProofLog::Print(Option_t *opt) const
    fprintf(stderr, "// --------------------------------------------\n");
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Special printing procedure
+
 void TProofLog::Prt(const char *what, Bool_t newline)
 {
-   // Special printing procedure
-
    if (what) {
       if (LogToBox()) {
          // Send to log box:
@@ -193,14 +193,14 @@ void TProofLog::Prt(const char *what, Bool_t newline)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the content associated with worker 'ord' to finel 'fname'.
+/// If 'ord' is "*" (default), the log from all the workers is saved.
+/// If 'opt' is "a" the file is open in append mode; otherwise the file
+/// is truncated.
+
 Int_t TProofLog::Save(const char *ord, const char *fname, Option_t *opt)
 {
-   // Save the content associated with worker 'ord' to finel 'fname'.
-   // If 'ord' is "*" (default), the log from all the workers is saved.
-   // If 'opt' is "a" the file is open in append mode; otherwise the file
-   // is truncated.
-
    // Make sure we got a file name
    if (!fname) {
       Warning("Save", "filename undefined - do nothing");
@@ -255,12 +255,12 @@ Int_t TProofLog::Save(const char *ord, const char *fname, Option_t *opt)
    return 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search lines containing 'txt', starting from line 'from'.
+/// Print the lines where this happens.
+
 Int_t TProofLog::Grep(const char *txt, Int_t from)
 {
-   // Search lines containing 'txt', starting from line 'from'.
-   // Print the lines where this happens.
-
    if (!txt || strlen(txt) <= 0) {
       Warning("Grep", "text to be searched for is undefined - do nothing");
       return -1;
@@ -299,11 +299,11 @@ Int_t TProofLog::Grep(const char *txt, Int_t from)
    return 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set max transfer size.
+
 void TProofLog::SetMaxTransferSize(Long64_t maxsz)
 {
-   // Set max transfer size.
-
    TProofLogElem::SetMaxTransferSize(maxsz);
 }
 
@@ -313,13 +313,13 @@ void TProofLog::SetMaxTransferSize(Long64_t maxsz)
 
 Long64_t TProofLogElem::fgMaxTransferSize = 100000; // about 1000 lines
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TProofLogElem::TProofLogElem(const char *ord, const char *url,
                              TProofLog *logger)
               : TNamed(ord, url)
 {
-   // Constructor.
-
    fLogger = logger;
    fMacro = new TMacro;
    fSize = -1;
@@ -338,42 +338,42 @@ TProofLogElem::TProofLogElem(const char *ord, const char *url,
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TProofLogElem::~TProofLogElem()
 {
-   // Destructor.
-
    SafeDelete(fMacro);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get max transfer size.
+
 Long64_t TProofLogElem::GetMaxTransferSize()
 {
-   // Get max transfer size.
-
    return fgMaxTransferSize;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set max transfer size.
+
 void TProofLogElem::SetMaxTransferSize(Long64_t maxsz)
 {
-   // Set max transfer size.
-
    fgMaxTransferSize = maxsz;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the content of the associated file. The approximate number
+/// of lines to be retrieved is given by 'lines', with the convention that
+/// 0 means 'all', a positive number means the first 'lines' and a negative
+/// number means the last '-lines'. Default is -1000.
+/// If opt == TProofLog::kGrep only the lines containing 'pattern' are
+/// retrieved (remote grep functionality); to filter out a pattern 'pat' use
+/// pattern = "-v pat".
+/// Return 0 on success, -1 in case of any error.
+
 Int_t TProofLogElem::Retrieve(TProofLog::ERetrieveOpt opt, const char *pattern)
 {
-   // Retrieve the content of the associated file. The approximate number
-   // of lines to be retrieved is given by 'lines', with the convention that
-   // 0 means 'all', a positive number means the first 'lines' and a negative
-   // number means the last '-lines'. Default is -1000.
-   // If opt == TProofLog::kGrep only the lines containing 'pattern' are
-   // retrieved (remote grep functionality); to filter out a pattern 'pat' use
-   // pattern = "-v pat".
-   // Return 0 on success, -1 in case of any error.
-
    // Make sure we have a reference manager
    if (!fLogger->fMgr || !fLogger->fMgr->IsValid()) {
       Warning("Retrieve", "No reference manager: corruption?");
@@ -456,17 +456,17 @@ Int_t TProofLogElem::Retrieve(TProofLog::ERetrieveOpt opt, const char *pattern)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display the current content starting from line 'from' to line 'to'
+/// inclusive.
+/// A negative value for 'from' indicates lines counted from the end
+/// (tail action); 'to' is ignored in such a case.
+/// TProofLog::Prt is called to display: the location (screen, file, box)
+/// is defined there.
+/// Return 0 on success, -1 in case of any error.
+
 void TProofLogElem::Display(Int_t from, Int_t to)
 {
-   // Display the current content starting from line 'from' to line 'to'
-   // inclusive.
-   // A negative value for 'from' indicates lines counted from the end
-   // (tail action); 'to' is ignored in such a case.
-   // TProofLog::Prt is called to display: the location (screen, file, box)
-   // is defined there.
-   // Return 0 on success, -1 in case of any error.
-
    Int_t nls = (fMacro->GetListOfLines()) ?
                 fMacro->GetListOfLines()->GetSize() : 0;
 
@@ -531,11 +531,11 @@ void TProofLogElem::Display(Int_t from, Int_t to)
    Prt("// --------- End of element log -------------------\n\n");
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print a line with the relevant info.
+
 void TProofLogElem::Print(Option_t *) const
 {
-   // Print a line with the relevant info.
-
    Int_t nls = (fMacro->GetListOfLines()) ?
                 fMacro->GetListOfLines()->GetSize() : 0;
    const char *role = (strstr(GetTitle(), "worker-")) ? "worker" : "master";
@@ -543,22 +543,22 @@ void TProofLogElem::Print(Option_t *) const
    fprintf(stderr, "Ord: %s Host: Role: %s lines: %d\n", GetName(), role, nls);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Special printing procedure.
+
 void TProofLogElem::Prt(const char *what)
 {
-   // Special printing procedure.
-
    if (fLogger)
       fLogger->Prt(what);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search lines containing 'txt', starting from line 'from'. Return
+/// their blanck-separated list into 'res'.
+/// Return the number of lines found, or -1 in case of error.
+
 Int_t TProofLogElem::Grep(const char *txt, TString &res, Int_t from)
 {
-   // Search lines containing 'txt', starting from line 'from'. Return
-   // their blanck-separated list into 'res'.
-   // Return the number of lines found, or -1 in case of error.
-
    Int_t nls = (fMacro->GetListOfLines()) ?
                 fMacro->GetListOfLines()->GetSize() : 0;
 

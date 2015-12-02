@@ -61,11 +61,12 @@ typedef XrdSecService *(*XrdSecServLoader_t)(XrdSysLogger *, const char *cfn);
 //
 // Client manager thread
 //
-//--------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// This is an endless loop to check the system periodically or when
+/// triggered via a message in a dedicated pipe
+
 void *XrdProofdClientCron(void *p)
 {
-   // This is an endless loop to check the system periodically or when
-   // triggered via a message in a dedicated pipe
    XPDLOC(CMGR, "ClientCron")
 
    XpdManagerCron_t *mc = (XpdManagerCron_t *)p;
@@ -117,12 +118,13 @@ void *XrdProofdClientCron(void *p)
    return (void *)0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 XrdProofdClientMgr::XrdProofdClientMgr(XrdProofdManager *mgr,
                                        XrdProtocol_Config *pi, XrdSysError *e)
                   : XrdProofdConfig(pi->ConfigFN, e), fSecPlugin(0)
 {
-   // Constructor
    XPDLOC(CMGR, "XrdProofdClientMgr")
 
    fMutex = new XrdSysRecMutex;
@@ -144,11 +146,11 @@ XrdProofdClientMgr::XrdProofdClientMgr(XrdProofdManager *mgr,
    RegisterDirectives();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register directives for configuration
+
 void XrdProofdClientMgr::RegisterDirectives()
 {
-   // Register directives for configuration
-
    Register("clientmgr", new XrdProofdDirective("clientmgr", this, &DoDirectiveClass));
    Register("seclib", new XrdProofdDirective("seclib",
                                    (void *)&fSecLib, &DoDirectiveString, 0));
@@ -156,11 +158,12 @@ void XrdProofdClientMgr::RegisterDirectives()
                                (void *)&fReconnectTimeOut, &DoDirectiveInt));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the priorities of the active sessions.
+
 int XrdProofdClientMgr::DoDirective(XrdProofdDirective *d,
                                     char *val, XrdOucStream *cfg, bool rcf)
 {
-   // Update the priorities of the active sessions.
    XPDLOC(SMGR, "ClientMgr::DoDirective")
 
    if (!d)
@@ -174,11 +177,12 @@ int XrdProofdClientMgr::DoDirective(XrdProofdDirective *d,
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'clientmgr' directive
+/// eg: xpd.clientmgr checkfq:120 activityto:600
+
 int XrdProofdClientMgr::DoDirectiveClientMgr(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'clientmgr' directive
-   // eg: xpd.clientmgr checkfq:120 activityto:600
    XPDLOC(SMGR, "ClientMgr::DoDirectiveClientMgr")
 
    if (!val || !cfg)
@@ -217,11 +221,12 @@ int XrdProofdClientMgr::DoDirectiveClientMgr(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run configuration and parse the entered config directives.
+/// Return 0 on success, -1 on error
+
 int XrdProofdClientMgr::Config(bool rcf)
 {
-   // Run configuration and parse the entered config directives.
-   // Return 0 on success, -1 on error
    XPDLOC(CMGR, "ClientMgr::Config")
 
    // Run first the configurator
@@ -293,10 +298,11 @@ int XrdProofdClientMgr::Config(bool rcf)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a login request
+
 int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
 {
-   // Process a login request
    XPDLOC(CMGR, "ClientMgr::Login")
 
    int rc = 0;
@@ -510,13 +516,14 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
    return MapClient(p, 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform checks on the client username. In case authentication is required
+/// this is called afetr authentication.
+/// Return 0 on success; on error, return -1 .
+
 int XrdProofdClientMgr::CheckClient(XrdProofdProtocol *p,
                                     const char *user, XrdOucString &emsg)
 {
-   // Perform checks on the client username. In case authentication is required
-   // this is called afetr authentication.
-   // Return 0 on success; on error, return -1 .
    XPDLOC(CMGR, "ClientMgr::CheckClient")
 
    if (!p) {
@@ -598,10 +605,11 @@ int XrdProofdClientMgr::CheckClient(XrdProofdProtocol *p,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a login request
+
 int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
 {
-   // Process a login request
    XPDLOC(CMGR, "ClientMgr::MapClient")
 
    int rc = 0;
@@ -735,12 +743,12 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the client directory in the admin path
+
 int XrdProofdClientMgr::CreateAdminPath(XrdProofdProtocol *p,
                                         XrdOucString &cpath, XrdOucString &emsg)
 {
-   // Create the client directory in the admin path
-
    if (!p || !p->Link()) {
       XPDFORM(emsg, "invalid inputs (p: %p)", p);
       return -1;
@@ -772,13 +780,13 @@ int XrdProofdClientMgr::CreateAdminPath(XrdProofdProtocol *p,
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the old-clients admin for an existing entry for this client and
+/// read the client ID;
+
 int XrdProofdClientMgr::CheckAdminPath(XrdProofdProtocol *p,
                                        XrdOucString &cidpath, XrdOucString &emsg)
 {
-   // Check the old-clients admin for an existing entry for this client and
-   // read the client ID;
-
    emsg = "";
    if (!p) {
       XPDFORM(emsg, "CheckAdminPath: invalid inputs (p: %p)", p);
@@ -823,10 +831,11 @@ int XrdProofdClientMgr::CheckAdminPath(XrdProofdProtocol *p,
    return XrdProofdAux::GetIDFromPath(cidpath.c_str(), emsg);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Client entries for the clients still connected when the daemon terminated
+
 int XrdProofdClientMgr::ParsePreviousClients(XrdOucString &emsg)
 {
-   // Client entries for the clients still connected when the daemon terminated
    XPDLOC(CMGR, "ClientMgr::ParsePreviousClients")
 
    emsg = "";
@@ -933,10 +942,11 @@ int XrdProofdClientMgr::ParsePreviousClients(XrdOucString &emsg)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Regular checks of the client admin path; run by the cron job
+
 int XrdProofdClientMgr::CheckClients()
 {
-   // Regular checks of the client admin path; run by the cron job
    XPDLOC(CMGR, "ClientMgr::CheckClients")
 
    // Open dir
@@ -1060,10 +1070,11 @@ int XrdProofdClientMgr::CheckClients()
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Analyse client authentication info
+
 int XrdProofdClientMgr::Auth(XrdProofdProtocol *p)
 {
-   // Analyse client authentication info
    XPDLOC(CMGR, "ClientMgr::Auth")
 
    XrdSecCredentials cred;
@@ -1189,10 +1200,11 @@ int XrdProofdClientMgr::Auth(XrdProofdProtocol *p)
    return -EACCES;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load security framework and plugins, if not already done
+
 XrdSecService *XrdProofdClientMgr::LoadSecurity()
 {
-   // Load security framework and plugins, if not already done
    XPDLOC(CMGR, "ClientMgr::LoadSecurity")
 
    TRACE(REQ, "LoadSecurity");
@@ -1255,17 +1267,18 @@ XrdSecService *XrdProofdClientMgr::LoadSecurity()
    return cia;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Grep directives of the form "xpd.sec...", "sec.protparm" and
+/// "sec.protocol" from file 'cfn' and save them in a temporary file,
+/// stripping off the prefix "xpd." when needed.
+/// If any such directory is found, the full path of the temporary file
+/// is returned, with the number of directives found in 'nd'.
+/// Otherwise 0 is returned and '-errno' specified in nd.
+/// The caller has the responsability to unlink the temporary file and
+/// to release the memory allocated for the path.
+
 char *XrdProofdClientMgr::FilterSecConfig(int &nd)
 {
-   // Grep directives of the form "xpd.sec...", "sec.protparm" and
-   // "sec.protocol" from file 'cfn' and save them in a temporary file,
-   // stripping off the prefix "xpd." when needed.
-   // If any such directory is found, the full path of the temporary file
-   // is returned, with the number of directives found in 'nd'.
-   // Otherwise 0 is returned and '-errno' specified in nd.
-   // The caller has the responsability to unlink the temporary file and
-   // to release the memory allocated for the path.
    XPDLOC(CMGR, "ClientMgr::FilterSecConfig")
 
    static const char *pfx[] = { "xpd.sec.", "sec.protparm", "sec.protocol", "set" };
@@ -1327,13 +1340,14 @@ char *XrdProofdClientMgr::FilterSecConfig(int &nd)
    return rcfn;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for localizing a client instance for {usr, grp} from the list.
+/// Create a new instance, if required; for new instances, use the path at 'sock'
+/// for the unix socket, or generate a new one, if sock = 0.
+
 XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
                                                bool create)
 {
-   // Handle request for localizing a client instance for {usr, grp} from the list.
-   // Create a new instance, if required; for new instances, use the path at 'sock'
-   // for the unix socket, or generate a new one, if sock = 0.
    XPDLOC(CMGR, "ClientMgr::GetClient")
 
    TRACE(DBG, "usr: "<< (usr ? usr : "undef")<<", grp:"<<(grp ? grp : "undef"));
@@ -1427,12 +1441,12 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
    return c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast message 'msg' to the connected instances of client 'clnt' or to all
+/// connected instances if clnt == 0.
+
 void XrdProofdClientMgr::Broadcast(XrdProofdClient *clnt, const char *msg)
 {
-   // Broadcast message 'msg' to the connected instances of client 'clnt' or to all
-   // connected instances if clnt == 0.
-
    // The clients to notified
    std::list<XrdProofdClient *> *clnts;
    if (!clnt) {
@@ -1456,12 +1470,13 @@ void XrdProofdClientMgr::Broadcast(XrdProofdClient *clnt, const char *msg)
    if (clnt) delete clnts;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminate sessions of client 'clnt' or to of all clients if clnt == 0.
+/// The list of process IDs having been signalled is returned.
+
 void XrdProofdClientMgr::TerminateSessions(XrdProofdClient *clnt, const char *msg,
                                            int srvtype)
 {
-   // Terminate sessions of client 'clnt' or to of all clients if clnt == 0.
-   // The list of process IDs having been signalled is returned.
    XPDLOC(CMGR, "ClientMgr::TerminateSessions")
 
    // The clients to notified

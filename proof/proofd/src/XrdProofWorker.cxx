@@ -33,12 +33,12 @@
 // Tracing utilities
 #include "XrdProofdTrace.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a config file-like string
+
 XrdProofWorker::XrdProofWorker(const char *str)
    : fExport(256), fType('W'), fPort(-1), fPerfIdx(100), fNwrks(1), fActive(1)
 {
-   // Constructor from a config file-like string
-
    fMutex = new XrdSysRecMutex;
 
    // Make sure we got something to parse
@@ -48,19 +48,19 @@ XrdProofWorker::XrdProofWorker(const char *str)
    // The actual work is done by Reset()
    Reset(str);
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 XrdProofWorker::~XrdProofWorker()
 {
-   // Destructor
-
    SafeDel(fMutex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 XrdProofWorker::XrdProofWorker(const XrdProofWorker &w)
 {
-   // Copy constructor
-
    fMutex = new XrdSysRecMutex;
    fExport = w.fExport;
    fType = w.fType;
@@ -76,10 +76,11 @@ XrdProofWorker::XrdProofWorker(const XrdProofWorker &w)
    fActive = 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set content from a config file-like string
+
 void XrdProofWorker::Reset(const char *str)
 {
-   // Set content from a config file-like string
    XPDLOC(NMGR, "Worker::Reset")
 
 
@@ -160,20 +161,20 @@ void XrdProofWorker::Reset(const char *str)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check compatibility of host with this instance.
+/// return 1 if compatible.
+
 bool XrdProofWorker::Matches(const char *host)
 {
-   // Check compatibility of host with this instance.
-   // return 1 if compatible.
-
    return ((fHost.matches(host)) ? 1 : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set content from a config file-like string
+
 bool XrdProofWorker::Matches(XrdProofWorker *wrk)
 {
-   // Set content from a config file-like string
-
    // Check if 'wrk' is on the same node that 'this'; used to find the unique
    // worker nodes.
    // return 1 if the node is the same.
@@ -193,12 +194,13 @@ bool XrdProofWorker::Matches(XrdProofWorker *wrk)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Export current content in a form understood by parsing algorithms
+/// inside the PROOF session, i.e.
+/// <type>|<user@host>|<port>|<ord>|-|<perfidx>|<img>|<workdir>|<msd>
+
 const char *XrdProofWorker::Export(const char *ord)
 {
-   // Export current content in a form understood by parsing algorithms
-   // inside the PROOF session, i.e.
-   // <type>|<user@host>|<port>|<ord>|-|<perfidx>|<img>|<workdir>|<msd>
    XPDLOC(NMGR, "Worker::Export")
 
    fExport = fType;
@@ -268,14 +270,14 @@ const char *XrdProofWorker::Export(const char *ord)
    return fExport.c_str();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the number of workers existing on this node which are
+/// currently running.
+/// TODO: optimally, one could contact the packetizer and count the
+/// opened files.
+
 int XrdProofWorker::GetNActiveSessions()
 {
-   // Calculate the number of workers existing on this node which are
-   // currently running.
-   // TODO: optimally, one could contact the packetizer and count the
-   // opened files.
-
    int myRunning = 0;
    std::list<XrdProofdProofServ *>::iterator iter;
    XrdSysMutexHelper mhp(fMutex);
@@ -288,13 +290,13 @@ int XrdProofWorker::GetNActiveSessions()
    return myRunning;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge session objects from the other worker object in order to merge all
+/// the objects in only one. This was added to support hybrid satatically and
+/// dinamically Bonjour workers discovery.
+
 void XrdProofWorker::MergeProofServs(const XrdProofWorker &other)
 {
-   // Merge session objects from the other worker object in order to merge all
-   // the objects in only one. This was added to support hybrid satatically and
-   // dinamically Bonjour workers discovery.
-
    std::list<XrdProofdProofServ *>::const_iterator iter;
    XrdSysMutexHelper mhp(fMutex);
    for (iter = other.fProofServs.begin(); iter != other.fProofServs.end(); ++iter) {
@@ -302,15 +304,15 @@ void XrdProofWorker::MergeProofServs(const XrdProofWorker &other)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort ascendingly the list according to the comparing algorithm defined
+/// by 'f'; 'f' should return 'true' if 'rhs' > 'lhs'.
+/// This is implemented because on Solaris where std::list::sort() does not
+/// support an alternative comparison algorithm.
+
 void XrdProofWorker::Sort(std::list<XrdProofWorker *> *lst,
                           bool (*f)(XrdProofWorker *&lhs, XrdProofWorker *&rhs))
 {
-   // Sort ascendingly the list according to the comparing algorithm defined
-   // by 'f'; 'f' should return 'true' if 'rhs' > 'lhs'.
-   // This is implemented because on Solaris where std::list::sort() does not
-   // support an alternative comparison algorithm.
-
    // Check argument
    if (!lst)
       return;

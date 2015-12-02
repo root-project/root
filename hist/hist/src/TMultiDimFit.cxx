@@ -1761,10 +1761,12 @@
 #define PARAM_MAXTERMS 4
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static void mdfHelper(int&, double*, double&, double*, int);
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TMultiDimFit);
 
 //____________________________________________________________________
@@ -1772,10 +1774,11 @@ ClassImp(TMultiDimFit);
 TMultiDimFit* TMultiDimFit::fgInstance = 0;
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Empty CTOR. Do not use
+
 TMultiDimFit::TMultiDimFit()
 {
-   // Empty CTOR. Do not use
    fMeanQuantity           = 0;
    fMaxQuantity            = 0;
    fMinQuantity            = 0;
@@ -1834,7 +1837,21 @@ TMultiDimFit::TMultiDimFit()
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+/// Second argument is the type of polynomials to use in
+/// parameterisation, one of:
+///      TMultiDimFit::kMonomials
+///      TMultiDimFit::kChebyshev
+///      TMultiDimFit::kLegendre
+///
+/// Options:
+///   K      Compute (k)correlation matrix
+///   V      Be verbose
+///
+/// Default is no options.
+///
+
 TMultiDimFit::TMultiDimFit(Int_t dimension,
                            EMDFPolyType type,
                            Option_t *option)
@@ -1846,20 +1863,6 @@ fMeanVariables(dimension),
 fMaxVariables(dimension),
 fMinVariables(dimension)
 {
-   // Constructor
-   // Second argument is the type of polynomials to use in
-   // parameterisation, one of:
-   //      TMultiDimFit::kMonomials
-   //      TMultiDimFit::kChebyshev
-   //      TMultiDimFit::kLegendre
-   //
-   // Options:
-   //   K      Compute (k)correlation matrix
-   //   V      Be verbose
-   //
-   // Default is no options.
-   //
-
    fgInstance = this;
 
    fMeanQuantity           = 0;
@@ -1924,10 +1927,11 @@ fMinVariables(dimension)
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TMultiDimFit::~TMultiDimFit()
 {
-   // Destructor
    delete [] fPowers;
    delete [] fMaxPowers;
    delete [] fMaxPowersFinal;
@@ -1938,20 +1942,21 @@ TMultiDimFit::~TMultiDimFit()
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a row consisting of fNVariables independent variables, the
+/// known, dependent quantity, and optionally, the square error in
+/// the dependent quantity, to the training sample to be used for the
+/// parameterization.
+/// The mean of the variables and quantity is calculated on the fly,
+/// as outlined in TPrincipal::AddRow.
+/// This sample should be representive of the problem at hand.
+/// Please note, that if no error is given Poisson statistics is
+/// assumed and the square error is set to the value of dependent
+/// quantity.  See also the
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 void TMultiDimFit::AddRow(const Double_t *x, Double_t D, Double_t E)
 {
-   // Add a row consisting of fNVariables independent variables, the
-   // known, dependent quantity, and optionally, the square error in
-   // the dependent quantity, to the training sample to be used for the
-   // parameterization.
-   // The mean of the variables and quantity is calculated on the fly,
-   // as outlined in TPrincipal::AddRow.
-   // This sample should be representive of the problem at hand.
-   // Please note, that if no error is given Poisson statistics is
-   // assumed and the square error is set to the value of dependent
-   // quantity.  See also the
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
    if (!x)
       return;
 
@@ -2018,18 +2023,19 @@ void TMultiDimFit::AddRow(const Double_t *x, Double_t D, Double_t E)
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a row consisting of fNVariables independent variables, the
+/// known, dependent quantity, and optionally, the square error in
+/// the dependent quantity, to the test sample to be used for the
+/// test of the parameterization.
+/// This sample needn't be representive of the problem at hand.
+/// Please note, that if no error is given Poisson statistics is
+/// assumed and the square error is set to the value of dependent
+/// quantity.  See also the
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 void TMultiDimFit::AddTestRow(const Double_t *x, Double_t D, Double_t E)
 {
-   // Add a row consisting of fNVariables independent variables, the
-   // known, dependent quantity, and optionally, the square error in
-   // the dependent quantity, to the test sample to be used for the
-   // test of the parameterization.
-   // This sample needn't be representive of the problem at hand.
-   // Please note, that if no error is given Poisson statistics is
-   // assumed and the square error is set to the value of dependent
-   // quantity.  See also the
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
    if (fTestSampleSize++ == 0) {
       fTestQuantity.ResizeTo(fNVariables);
       fTestSqError.ResizeTo(fNVariables);
@@ -2072,10 +2078,11 @@ void TMultiDimFit::AddTestRow(const Double_t *x, Double_t D, Double_t E)
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse the TMultiDimFit object in the TBrowser.
+
 void TMultiDimFit::Browse(TBrowser* b)
 {
-   // Browse the TMultiDimFit object in the TBrowser.
    if (fHistograms) {
       TIter next(fHistograms);
       TH1* h = 0;
@@ -2123,10 +2130,11 @@ void TMultiDimFit::Browse(TBrowser* b)
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear internal structures and variables
+
 void TMultiDimFit::Clear(Option_t *option)
 {
-   // Clear internal structures and variables
    Int_t i, j, n = fNVariables, m = fMaxFunctions;
 
    // Training sample, dependent quantity
@@ -2207,12 +2215,13 @@ void TMultiDimFit::Clear(Option_t *option)
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate parameterization at point x. Optional argument coeff is
+/// a vector of coefficients for the parameterisation, fNCoefficients
+/// elements long.
+
 Double_t TMultiDimFit::Eval(const Double_t *x, const Double_t* coeff) const
 {
-   // Evaluate parameterization at point x. Optional argument coeff is
-   // a vector of coefficients for the parameterisation, fNCoefficients
-   // elements long.
    Double_t returnValue = fMeanQuantity;
    Double_t term        = 0;
    Int_t    i, j;
@@ -2234,12 +2243,13 @@ Double_t TMultiDimFit::Eval(const Double_t *x, const Double_t* coeff) const
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate parameterization error at point x. Optional argument coeff is
+/// a vector of coefficients for the parameterisation, fNCoefficients
+/// elements long.
+
 Double_t TMultiDimFit::EvalError(const Double_t *x, const Double_t* coeff) const
 {
-   // Evaluate parameterization error at point x. Optional argument coeff is
-   // a vector of coefficients for the parameterisation, fNCoefficients
-   // elements long.
    Double_t returnValue = 0;
    Double_t term        = 0;
    Int_t    i, j;
@@ -2267,11 +2277,12 @@ Double_t TMultiDimFit::EvalError(const Double_t *x, const Double_t* coeff) const
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE METHOD:
+/// Calculate the control parameter from the passed powers
+
 Double_t TMultiDimFit::EvalControl(const Int_t *iv) const
 {
-   // PRIVATE METHOD:
-   // Calculate the control parameter from the passed powers
    Double_t s = 0;
    Double_t epsilon = 1e-6; // a small number
    for (Int_t i = 0; i < fNVariables; i++) {
@@ -2281,11 +2292,12 @@ Double_t TMultiDimFit::EvalControl(const Int_t *iv) const
    return s;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE METHOD:
+/// Evaluate function with power p at variable value x
+
 Double_t TMultiDimFit::EvalFactor(Int_t p, Double_t x) const
 {
-   // PRIVATE METHOD:
-   // Evaluate function with power p at variable value x
    Int_t    i   = 0;
    Double_t p1  = 1;
    Double_t p2  = 0;
@@ -2317,16 +2329,17 @@ Double_t TMultiDimFit::EvalFactor(Int_t p, Double_t x) const
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the parameterization
+///
+/// Options:
+///     None so far
+///
+/// For detailed description of what this entails, please refer to the
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 void TMultiDimFit::FindParameterization(Option_t *)
 {
-   // Find the parameterization
-   //
-   // Options:
-   //     None so far
-   //
-   // For detailed description of what this entails, please refer to the
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
    MakeNormalized();
    MakeCandidates();
    MakeParameterization();
@@ -2335,16 +2348,17 @@ void TMultiDimFit::FindParameterization(Option_t *)
    MakeCorrelation();
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try to fit the found parameterisation to the test sample.
+///
+/// Options
+///     M     use Minuit to improve coefficients
+///
+/// Also, refer to
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 void TMultiDimFit::Fit(Option_t *option)
 {
-   // Try to fit the found parameterisation to the test sample.
-   //
-   // Options
-   //     M     use Minuit to improve coefficients
-   //
-   // Also, refer to
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
    Int_t i, j;
    Double_t*      x    = new Double_t[fNVariables];
    Double_t  sumSqD    = 0;
@@ -2421,20 +2435,22 @@ void TMultiDimFit::Fit(Option_t *option)
    delete [] x;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the static instance.
+
 TMultiDimFit* TMultiDimFit::Instance()
 {
-   // Return the static instance.
    return fgInstance;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE METHOD:
+/// Create list of candidate functions for the parameterisation. See
+/// also
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 void TMultiDimFit::MakeCandidates()
 {
-   // PRIVATE METHOD:
-   // Create list of candidate functions for the parameterisation. See
-   // also
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
    Int_t i = 0;
    Int_t j = 0;
    Int_t k = 0;
@@ -2561,14 +2577,15 @@ void TMultiDimFit::MakeCandidates()
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate Chi square over either the test sample. The optional
+/// argument coeff is a vector of coefficients to use in the
+/// evaluation of the parameterisation. If coeff == 0, then the found
+/// coefficients is used.
+/// Used my MINUIT for fit (see TMultDimFit::Fit)
+
 Double_t TMultiDimFit::MakeChi2(const Double_t* coeff)
 {
-   // Calculate Chi square over either the test sample. The optional
-   // argument coeff is a vector of coefficients to use in the
-   // evaluation of the parameterisation. If coeff == 0, then the found
-   // coefficients is used.
-   // Used my MINUIT for fit (see TMultDimFit::Fit)
    fChi2 = 0;
    Int_t i, j;
    Double_t* x = new Double_t[fNVariables];
@@ -2592,33 +2609,33 @@ Double_t TMultiDimFit::MakeChi2(const Double_t* coeff)
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate the file <filename> with .C appended if argument doesn't
+/// end in .cxx or .C. The contains the implementation of the
+/// function:
+///
+///   Double_t <funcname>(Double_t *x)
+///
+/// which does the same as TMultiDimFit::Eval. Please refer to this
+/// method.
+///
+/// Further, the static variables:
+///
+///     Int_t    gNVariables
+///     Int_t    gNCoefficients
+///     Double_t gDMean
+///     Double_t gXMean[]
+///     Double_t gXMin[]
+///     Double_t gXMax[]
+///     Double_t gCoefficient[]
+///     Int_t    gPower[]
+///
+/// are initialized. The only ROOT header file needed is Rtypes.h
+///
+/// See TMultiDimFit::MakeRealCode for a list of options
+
 void TMultiDimFit::MakeCode(const char* filename, Option_t *option)
 {
-   // Generate the file <filename> with .C appended if argument doesn't
-   // end in .cxx or .C. The contains the implementation of the
-   // function:
-   //
-   //   Double_t <funcname>(Double_t *x)
-   //
-   // which does the same as TMultiDimFit::Eval. Please refer to this
-   // method.
-   //
-   // Further, the static variables:
-   //
-   //     Int_t    gNVariables
-   //     Int_t    gNCoefficients
-   //     Double_t gDMean
-   //     Double_t gXMean[]
-   //     Double_t gXMin[]
-   //     Double_t gXMax[]
-   //     Double_t gCoefficient[]
-   //     Int_t    gPower[]
-   //
-   // are initialized. The only ROOT header file needed is Rtypes.h
-   //
-   // See TMultiDimFit::MakeRealCode for a list of options
-
 
    TString outName(filename);
    if (!outName.EndsWith(".C") && !outName.EndsWith(".cxx"))
@@ -2629,12 +2646,13 @@ void TMultiDimFit::MakeCode(const char* filename, Option_t *option)
 
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE METHOD:
+/// Compute the errors on the coefficients. For this to be done, the
+/// curvature matrix of the non-orthogonal functions, is computed.
+
 void TMultiDimFit::MakeCoefficientErrors()
 {
-   // PRIVATE METHOD:
-   // Compute the errors on the coefficients. For this to be done, the
-   // curvature matrix of the non-orthogonal functions, is computed.
    Int_t    i = 0;
    Int_t    j = 0;
    Int_t    k = 0;
@@ -2682,17 +2700,17 @@ void TMultiDimFit::MakeCoefficientErrors()
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE METHOD:
+/// Invert the model matrix B, and compute final coefficients. For a
+/// more thorough discussion of what this means, please refer to the
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+///
+/// First we invert the lower triangle matrix fOrthCurvatureMatrix
+/// and store the inverted matrix in the upper triangle.
+
 void TMultiDimFit::MakeCoefficients()
 {
-   // PRIVATE METHOD:
-   // Invert the model matrix B, and compute final coefficients. For a
-   // more thorough discussion of what this means, please refer to the
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
-   //
-   // First we invert the lower triangle matrix fOrthCurvatureMatrix
-   // and store the inverted matrix in the upper triangle.
-
    Int_t i = 0, j = 0;
    Int_t col = 0, row = 0;
 
@@ -2767,11 +2785,12 @@ void TMultiDimFit::MakeCoefficients()
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE METHOD:
+/// Compute the correlation matrix
+
 void TMultiDimFit::MakeCorrelation()
 {
-   // PRIVATE METHOD:
-   // Compute the correlation matrix
    if (!fShowCorrelation)
       return;
 
@@ -2822,15 +2841,15 @@ void TMultiDimFit::MakeCorrelation()
 
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE METHOD:
+/// Make Gram-Schmidt orthogonalisation. The class description gives
+/// a thorough account of this algorithm, as well as
+/// references. Please refer to the
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
 {
-   // PRIVATE METHOD:
-   // Make Gram-Schmidt orthogonalisation. The class description gives
-   // a thorough account of this algorithm, as well as
-   // references. Please refer to the
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
-
 
    // calculate w_i, that is, evaluate the current function at data
    // point i
@@ -2903,26 +2922,27 @@ Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make histograms of the result of the analysis. This message
+/// should be sent after having read all data points, but before
+/// finding the parameterization
+///
+/// Options:
+///     A         All the below
+///     X         Original independent variables
+///     D         Original dependent variables
+///     N         Normalised independent variables
+///     S         Shifted dependent variables
+///     R1        Residuals versus normalised independent variables
+///     R2        Residuals versus dependent variable
+///     R3        Residuals computed on training sample
+///     R4        Residuals computed on test sample
+///
+/// For a description of these quantities, refer to
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 void TMultiDimFit::MakeHistograms(Option_t *option)
 {
-   // Make histograms of the result of the analysis. This message
-   // should be sent after having read all data points, but before
-   // finding the parameterization
-   //
-   // Options:
-   //     A         All the below
-   //     X         Original independent variables
-   //     D         Original dependent variables
-   //     N         Normalised independent variables
-   //     S         Shifted dependent variables
-   //     R1        Residuals versus normalised independent variables
-   //     R2        Residuals versus dependent variable
-   //     R3        Residuals computed on training sample
-   //     R4        Residuals computed on test sample
-   //
-   // For a description of these quantities, refer to
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
    TString opt(option);
    opt.ToLower();
 
@@ -3021,65 +3041,65 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate the file <classname>MDF.cxx which contains the
+/// implementation of the method:
+///
+///   Double_t <classname>::MDF(Double_t *x)
+///
+/// which does the same as  TMultiDimFit::Eval. Please refer to this
+/// method.
+///
+/// Further, the public static members:
+///
+///   Int_t    <classname>::fgNVariables
+///   Int_t    <classname>::fgNCoefficients
+///   Double_t <classname>::fgDMean
+///   Double_t <classname>::fgXMean[]       //[fgNVariables]
+///   Double_t <classname>::fgXMin[]        //[fgNVariables]
+///   Double_t <classname>::fgXMax[]        //[fgNVariables]
+///   Double_t <classname>::fgCoefficient[] //[fgNCoeffficents]
+///   Int_t    <classname>::fgPower[]       //[fgNCoeffficents*fgNVariables]
+///
+/// are initialized, and assumed to exist. The class declaration is
+/// assumed to be in <classname>.h and assumed to be provided by the
+/// user.
+///
+/// See TMultiDimFit::MakeRealCode for a list of options
+///
+/// The minimal class definition is:
+///
+///   class <classname> {
+///   public:
+///     Int_t    <classname>::fgNVariables;     // Number of variables
+///     Int_t    <classname>::fgNCoefficients;  // Number of terms
+///     Double_t <classname>::fgDMean;          // Mean from training sample
+///     Double_t <classname>::fgXMean[];        // Mean from training sample
+///     Double_t <classname>::fgXMin[];         // Min from training sample
+///     Double_t <classname>::fgXMax[];         // Max from training sample
+///     Double_t <classname>::fgCoefficient[];  // Coefficients
+///     Int_t    <classname>::fgPower[];        // Function powers
+///
+///     Double_t Eval(Double_t *x);
+///   };
+///
+/// Whether the method <classname>::Eval should be static or not, is
+/// up to the user.
+
 void TMultiDimFit::MakeMethod(const Char_t* classname, Option_t* option)
 {
-   // Generate the file <classname>MDF.cxx which contains the
-   // implementation of the method:
-   //
-   //   Double_t <classname>::MDF(Double_t *x)
-   //
-   // which does the same as  TMultiDimFit::Eval. Please refer to this
-   // method.
-   //
-   // Further, the public static members:
-   //
-   //   Int_t    <classname>::fgNVariables
-   //   Int_t    <classname>::fgNCoefficients
-   //   Double_t <classname>::fgDMean
-   //   Double_t <classname>::fgXMean[]       //[fgNVariables]
-   //   Double_t <classname>::fgXMin[]        //[fgNVariables]
-   //   Double_t <classname>::fgXMax[]        //[fgNVariables]
-   //   Double_t <classname>::fgCoefficient[] //[fgNCoeffficents]
-   //   Int_t    <classname>::fgPower[]       //[fgNCoeffficents*fgNVariables]
-   //
-   // are initialized, and assumed to exist. The class declaration is
-   // assumed to be in <classname>.h and assumed to be provided by the
-   // user.
-   //
-   // See TMultiDimFit::MakeRealCode for a list of options
-   //
-   // The minimal class definition is:
-   //
-   //   class <classname> {
-   //   public:
-   //     Int_t    <classname>::fgNVariables;     // Number of variables
-   //     Int_t    <classname>::fgNCoefficients;  // Number of terms
-   //     Double_t <classname>::fgDMean;          // Mean from training sample
-   //     Double_t <classname>::fgXMean[];        // Mean from training sample
-   //     Double_t <classname>::fgXMin[];         // Min from training sample
-   //     Double_t <classname>::fgXMax[];         // Max from training sample
-   //     Double_t <classname>::fgCoefficient[];  // Coefficients
-   //     Int_t    <classname>::fgPower[];        // Function powers
-   //
-   //     Double_t Eval(Double_t *x);
-   //   };
-   //
-   // Whether the method <classname>::Eval should be static or not, is
-   // up to the user.
-
    MakeRealCode(Form("%sMDF.cxx", classname), classname, option);
 }
 
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE METHOD:
+/// Normalize data to the interval [-1;1]. This is needed for the
+/// classes method to work.
+
 void TMultiDimFit::MakeNormalized()
 {
-   // PRIVATE METHOD:
-   // Normalize data to the interval [-1;1]. This is needed for the
-   // classes method to work.
-
    Int_t i = 0;
    Int_t j = 0;
    Int_t k = 0;
@@ -3126,14 +3146,14 @@ void TMultiDimFit::MakeNormalized()
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE METHOD:
+/// Find the parameterization over the training sample. A full account
+/// of the algorithm is given in the
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 void TMultiDimFit::MakeParameterization()
 {
-   // PRIVATE METHOD:
-   // Find the parameterization over the training sample. A full account
-   // of the algorithm is given in the
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
-
    Int_t     i              = -1;
    Int_t     j              = 0;
    Int_t     k              = 0;
@@ -3277,17 +3297,18 @@ void TMultiDimFit::MakeParameterization()
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE METHOD:
+/// This is the method that actually generates the code for the
+/// evaluation the parameterization on some point.
+/// It's called by TMultiDimFit::MakeCode and TMultiDimFit::MakeMethod.
+///
+/// The options are: NONE so far
+
 void TMultiDimFit::MakeRealCode(const char *filename,
                                 const char *classname,
                                 Option_t *)
 {
-   // PRIVATE METHOD:
-   // This is the method that actually generates the code for the
-   // evaluation the parameterization on some point.
-   // It's called by TMultiDimFit::MakeCode and TMultiDimFit::MakeMethod.
-   //
-   // The options are: NONE so far
    Int_t i, j;
 
    Bool_t  isMethod     = (classname[0] == '\0' ? kFALSE : kTRUE);
@@ -3465,19 +3486,20 @@ void TMultiDimFit::MakeRealCode(const char *filename,
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print statistics etc.
+/// Options are
+///   P        Parameters
+///   S        Statistics
+///   C        Coefficients
+///   R        Result of parameterisation
+///   F        Result of fit
+///   K        Correlation Matrix
+///   M        Pretty print formula
+///
+
 void TMultiDimFit::Print(Option_t *option) const
 {
-   // Print statistics etc.
-   // Options are
-   //   P        Parameters
-   //   S        Statistics
-   //   C        Coefficients
-   //   R        Result of parameterisation
-   //   F        Result of fit
-   //   K        Correlation Matrix
-   //   M        Pretty print formula
-   //
    Int_t i = 0;
    Int_t j = 0;
 
@@ -3672,29 +3694,31 @@ void TMultiDimFit::Print(Option_t *option) const
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Selection method. User can override this method for specialized
+/// selection of acceptable functions in fit. Default is to select
+/// all. This message is sent during the build-up of the function
+/// candidates table once for each set of powers in
+/// variables. Notice, that the argument array contains the powers
+/// PLUS ONE. For example, to De select the function
+///     f = x1^2 * x2^4 * x3^5,
+/// this method should return kFALSE if given the argument
+///     { 3, 4, 6 }
+
 Bool_t TMultiDimFit::Select(const Int_t *)
 {
-   // Selection method. User can override this method for specialized
-   // selection of acceptable functions in fit. Default is to select
-   // all. This message is sent during the build-up of the function
-   // candidates table once for each set of powers in
-   // variables. Notice, that the argument array contains the powers
-   // PLUS ONE. For example, to De select the function
-   //     f = x1^2 * x2^4 * x3^5,
-   // this method should return kFALSE if given the argument
-   //     { 3, 4, 6 }
    return kTRUE;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the max angle (in degrees) between the initial data vector to
+/// be fitted, and the new candidate function to be included in the
+/// fit.  By default it is 0, which automatically chooses another
+/// selection criteria. See also
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 void TMultiDimFit::SetMaxAngle(Double_t ang)
 {
-   // Set the max angle (in degrees) between the initial data vector to
-   // be fitted, and the new candidate function to be included in the
-   // fit.  By default it is 0, which automatically chooses another
-   // selection criteria. See also
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
    if (ang >= 90 || ang < 0) {
       Warning("SetMaxAngle", "angle must be in [0,90)");
       return;
@@ -3703,13 +3727,14 @@ void TMultiDimFit::SetMaxAngle(Double_t ang)
    fMaxAngle = ang;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the min angle (in degrees) between a new candidate function
+/// and the subspace spanned by the previously accepted
+/// functions. See also
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 void TMultiDimFit::SetMinAngle(Double_t ang)
 {
-   // Set the min angle (in degrees) between a new candidate function
-   // and the subspace spanned by the previously accepted
-   // functions. See also
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
    if (ang > 90 || ang <= 0) {
       Warning("SetMinAngle", "angle must be in [0,90)");
       return;
@@ -3720,15 +3745,16 @@ void TMultiDimFit::SetMinAngle(Double_t ang)
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define a user function. The input array must be of the form
+/// (p11, ..., p1N, ... ,pL1, ..., pLN)
+/// Where N is the dimension of the data sample, L is the number of
+/// terms (given in terms) and the first number, labels the term, the
+/// second the variable.  More information is given in the
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 void TMultiDimFit::SetPowers(const Int_t* powers, Int_t terms)
 {
-   // Define a user function. The input array must be of the form
-   // (p11, ..., p1N, ... ,pL1, ..., pLN)
-   // Where N is the dimension of the data sample, L is the number of
-   // terms (given in terms) and the first number, labels the term, the
-   // second the variable.  More information is given in the
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
    fIsUserFunction = kTRUE;
    fMaxFunctions   = terms;
    fMaxTerms       = terms;
@@ -3741,22 +3767,24 @@ void TMultiDimFit::SetPowers(const Int_t* powers, Int_t terms)
          fPowers[i * fNVariables + j] = powers[i * fNVariables + j]  + 1;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the user parameter for the function selection. The bigger the
+/// limit, the more functions are used. The meaning of this variable
+/// is defined in the
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 void TMultiDimFit::SetPowerLimit(Double_t limit)
 {
-   // Set the user parameter for the function selection. The bigger the
-   // limit, the more functions are used. The meaning of this variable
-   // is defined in the
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
    fPowerLimit = limit;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the maximum power to be considered in the fit for each
+/// variable. See also
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 void TMultiDimFit::SetMaxPowers(const Int_t* powers)
 {
-   // Set the maximum power to be considered in the fit for each
-   // variable. See also
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
    if (!powers)
       return;
 
@@ -3764,26 +3792,27 @@ void TMultiDimFit::SetMaxPowers(const Int_t* powers)
       fMaxPowers[i] = powers[i]+1;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the acceptable relative error for when sum of square
+/// residuals is considered minimized. For a full account, refer to
+/// the
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 void TMultiDimFit::SetMinRelativeError(Double_t error)
 {
-   // Set the acceptable relative error for when sum of square
-   // residuals is considered minimized. For a full account, refer to
-   // the
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
    fMinRelativeError = error;
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE METHOD:
+/// Test whether the currently considered function contributes to the
+/// fit. See also
+/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+
 Bool_t TMultiDimFit::TestFunction(Double_t squareResidual,
                                   Double_t dResidur)
 {
-   // PRIVATE METHOD:
-   // Test whether the currently considered function contributes to the
-   // fit. See also
-   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
-
    if (fNCoefficients != 0) {
       // Now for the second test:
       if (fMaxAngle == 0) {
@@ -3807,12 +3836,12 @@ Bool_t TMultiDimFit::TestFunction(Double_t squareResidual,
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper function for doing the minimisation of Chi2 using Minuit
+
 void mdfHelper(int& /*npar*/, double* /*divs*/, double& chi2,
                double* coeffs, int /*flag*/)
 {
-   // Helper function for doing the minimisation of Chi2 using Minuit
-
    // Get pointer  to current TMultiDimFit object.
    TMultiDimFit* mdf = TMultiDimFit::Instance();
    chi2     = mdf->MakeChi2(coeffs);

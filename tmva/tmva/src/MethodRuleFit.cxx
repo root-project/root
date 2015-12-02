@@ -57,7 +57,9 @@ REGISTER_METHOD(RuleFit)
 
 ClassImp(TMVA::MethodRuleFit)
  
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor
+
 TMVA::MethodRuleFit::MethodRuleFit( const TString& jobName,
                                     const TString& methodTitle,
                                     DataSetInfo& theData, 
@@ -103,10 +105,11 @@ TMVA::MethodRuleFit::MethodRuleFit( const TString& jobName,
    , fRuleMinDist(0)
    , fLinQuantile(0)
 {
-   // standard constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from weight file
+
 TMVA::MethodRuleFit::MethodRuleFit( DataSetInfo& theData,
                                     const TString& theWeightFile,
                                     TDirectory* theTargetDir ) :
@@ -150,71 +153,73 @@ TMVA::MethodRuleFit::MethodRuleFit( DataSetInfo& theData,
    , fRuleMinDist(0)
    , fLinQuantile(0)
 {
-   // constructor from weight file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodRuleFit::~MethodRuleFit( void )
 {
-   // destructor
    for (UInt_t i=0; i<fEventSample.size(); i++) delete fEventSample[i];
    for (UInt_t i=0; i<fForest.size(); i++)      delete fForest[i];
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// RuleFit can handle classification with 2 classes 
+
 Bool_t TMVA::MethodRuleFit::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
 {
-   // RuleFit can handle classification with 2 classes 
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    return kFALSE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define the options (their key words) that can be set in the option string 
+/// know options.
+///---------
+/// general
+///---------
+/// RuleFitModule  <string>     
+///    available values are:    RFTMVA      - use TMVA implementation
+///                             RFFriedman  - use Friedmans original implementation
+///----------------------
+/// Path search (fitting)
+///----------------------
+/// GDTau          <float>      gradient-directed path: fit threshhold, default
+/// GDTauPrec      <float>      gradient-directed path: precision of estimated tau
+/// GDStep         <float>      gradient-directed path: step size       
+/// GDNSteps       <float>      gradient-directed path: number of steps 
+/// GDErrScale     <float>      stop scan when error>scale*errmin       
+///-----------------
+/// Tree generation
+///-----------------
+/// fEventsMin     <float>      minimum fraction of events in a splittable node
+/// fEventsMax     <float>      maximum fraction of events in a splittable node
+/// nTrees         <float>      number of trees in forest.
+/// ForestType     <string>
+///    available values are:    Random    - create forest using random subsample and only random variables subset at each node
+///                             AdaBoost  - create forest with boosted events
+///
+///-----------------
+/// Model creation
+///-----------------
+/// RuleMinDist    <float>      min distance allowed between rules
+/// MinImp         <float>      minimum rule importance accepted        
+/// Model          <string>     model to be used
+///    available values are:    ModRuleLinear <default>
+///                             ModRule
+///                             ModLinear
+///
+///-----------------
+/// Friedmans module
+///-----------------
+/// RFWorkDir      <string>     directory where Friedmans module (rf_go.exe) is installed
+/// RFNrules       <int>        maximum number of rules allowed
+/// RFNendnodes    <int>        average number of end nodes in the forest of trees
+///
+
 void TMVA::MethodRuleFit::DeclareOptions() 
 {
-   // define the options (their key words) that can be set in the option string 
-   // know options.
-   //---------
-   // general
-   //---------
-   // RuleFitModule  <string>     
-   //    available values are:    RFTMVA      - use TMVA implementation
-   //                             RFFriedman  - use Friedmans original implementation
-   //----------------------
-   // Path search (fitting)
-   //----------------------
-   // GDTau          <float>      gradient-directed path: fit threshhold, default
-   // GDTauPrec      <float>      gradient-directed path: precision of estimated tau
-   // GDStep         <float>      gradient-directed path: step size       
-   // GDNSteps       <float>      gradient-directed path: number of steps 
-   // GDErrScale     <float>      stop scan when error>scale*errmin       
-   //-----------------
-   // Tree generation
-   //-----------------
-   // fEventsMin     <float>      minimum fraction of events in a splittable node
-   // fEventsMax     <float>      maximum fraction of events in a splittable node
-   // nTrees         <float>      number of trees in forest.
-   // ForestType     <string>
-   //    available values are:    Random    - create forest using random subsample and only random variables subset at each node
-   //                             AdaBoost  - create forest with boosted events
-   //
-   //-----------------
-   // Model creation
-   //-----------------
-   // RuleMinDist    <float>      min distance allowed between rules
-   // MinImp         <float>      minimum rule importance accepted        
-   // Model          <string>     model to be used
-   //    available values are:    ModRuleLinear <default>
-   //                             ModRule
-   //                             ModLinear
-   //
-   //-----------------
-   // Friedmans module
-   //-----------------
-   // RFWorkDir      <string>     directory where Friedmans module (rf_go.exe) is installed
-   // RFNrules       <int>        maximum number of rules allowed
-   // RFNendnodes    <int>        average number of end nodes in the forest of trees
-   //
    DeclareOptionRef(fGDTau=-1,             "GDTau",          "Gradient-directed (GD) path: default fit cut-off");
    DeclareOptionRef(fGDTauPrec=0.01,       "GDTauPrec",      "GD path: precision of tau");
    DeclareOptionRef(fGDPathStep=0.01,      "GDStep",         "GD path: step size");
@@ -248,11 +253,11 @@ void TMVA::MethodRuleFit::DeclareOptions()
    DeclareOptionRef(fRFNendnodes=4,         "RFNendnodes",  "RFF: Average number of end nodes");
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// process the options specified by the user   
+
 void TMVA::MethodRuleFit::ProcessOptions() 
 {
-   // process the options specified by the user   
-
    if (IgnoreEventsWithNegWeightsInTraining()) {
       Log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
             << GetMethodTypeName() 
@@ -357,10 +362,11 @@ void TMVA::MethodRuleFit::ProcessOptions()
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialize the monitoring ntuple
+
 void TMVA::MethodRuleFit::InitMonitorNtuple()
 {
-   // initialize the monitoring ntuple
    BaseDir()->cd();
    fMonitorNtuple= new TTree("MonitorNtuple_RuleFit","RuleFit variables");
    fMonitorNtuple->Branch("importance",&fNTImportance,"importance/D");
@@ -377,11 +383,11 @@ void TMVA::MethodRuleFit::InitMonitorNtuple()
    fMonitorNtuple->Branch("soversb",&fNTSSB,"soversb/D");
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default initialization
+
 void TMVA::MethodRuleFit::Init()
 {
-   // default initialization
-
    // the minimum requirement to declare an event signal-like
    SetSignalReferenceCut( 0.0 );
 
@@ -399,13 +405,14 @@ void TMVA::MethodRuleFit::Init()
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write all Events from the Tree into a vector of Events, that are
+/// more easily manipulated.
+/// This method should never be called without existing trainingTree, as it
+/// the vector of events from the ROOT training tree
+
 void TMVA::MethodRuleFit::InitEventSample( void )
 {
-   // write all Events from the Tree into a vector of Events, that are
-   // more easily manipulated.
-   // This method should never be called without existing trainingTree, as it
-   // the vector of events from the ROOT training tree
    if (Data()->GetNEvents()==0) Log() << kFATAL << "<Init> Data().TrainingTree() is zero pointer" << Endl;
 
    Int_t nevents = Data()->GetNEvents();
@@ -424,7 +431,8 @@ void TMVA::MethodRuleFit::InitEventSample( void )
    Log() << kDEBUG << "Set sub-sample fraction to " << fTreeEveFrac << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodRuleFit::Train( void )
 {
    TMVA::DecisionTreeNode::fgIsTraining=true;
@@ -445,11 +453,11 @@ void TMVA::MethodRuleFit::Train( void )
    TMVA::DecisionTreeNode::fgIsTraining=false;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// training of rules using TMVA implementation
+
 void TMVA::MethodRuleFit::TrainTMVARuleFit( void )
 {
-   // training of rules using TMVA implementation
-
    if (IsNormalised()) Log() << kFATAL << "\"Normalise\" option cannot be used with RuleFit; " 
                                << "please remove the optoin from the configuration string, or "
                                << "use \"!Normalise\""
@@ -510,11 +518,11 @@ void TMVA::MethodRuleFit::TrainTMVARuleFit( void )
    fRuleFit.MakeDebugHists();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// training of rules using Jerome Friedmans implementation
+
 void TMVA::MethodRuleFit::TrainJFRuleFit( void )
 {
-   // training of rules using Jerome Friedmans implementation
-
    fRuleFit.InitPtrs( this );
    Data()->SetCurrentType(Types::kTraining);
    UInt_t nevents = Data()->GetNTrainingEvents();
@@ -553,11 +561,11 @@ void TMVA::MethodRuleFit::TrainJFRuleFit( void )
    Log() << kDEBUG << "done training" << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes ranking of input variables
+
 const TMVA::Ranking* TMVA::MethodRuleFit::CreateRanking() 
 {
-   // computes ranking of input variables
-
    // create the ranking object
    fRanking = new Ranking( GetName(), "Importance" );
 
@@ -568,52 +576,56 @@ const TMVA::Ranking* TMVA::MethodRuleFit::CreateRanking()
    return fRanking;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add the rules to XML node
+
 void TMVA::MethodRuleFit::AddWeightsXMLTo( void* parent ) const 
 {
-   // add the rules to XML node
    fRuleFit.GetRuleEnsemble().AddXMLTo( parent );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read rules from an std::istream
+
 void TMVA::MethodRuleFit::ReadWeightsFromStream( std::istream & istr )
 {
-   // read rules from an std::istream
-
    fRuleFit.GetRuleEnsemblePtr()->ReadRaw( istr );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read rules from XML node
+
 void TMVA::MethodRuleFit::ReadWeightsFromXML( void* wghtnode )
 {
-   // read rules from XML node
    fRuleFit.GetRuleEnsemblePtr()->ReadFromXML( wghtnode );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns MVA value for given event
+
 Double_t TMVA::MethodRuleFit::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // returns MVA value for given event
-
    // cannot determine error
    NoErrorCalc(err, errUpper);
 
    return fRuleFit.EvalEvent( *GetEvent() );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write special monitoring histograms to file (here ntuple)
+
 void  TMVA::MethodRuleFit::WriteMonitoringHistosToFile( void ) const
 {
-   // write special monitoring histograms to file (here ntuple)
    BaseDir()->cd();
    Log() << kINFO << "Write monitoring ntuple to file: " << BaseDir()->GetPath() << Endl;
    fMonitorNtuple->Write();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write specific classifier response
+
 void TMVA::MethodRuleFit::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
-   // write specific classifier response
    Int_t dp = fout.precision();
    fout << "   // not implemented for class: \"" << className << "\"" << std::endl;
    fout << "};" << std::endl;
@@ -628,10 +640,11 @@ void TMVA::MethodRuleFit::MakeClassSpecific( std::ostream& fout, const TString& 
    fout << std::setprecision(dp);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print out the rule cuts
+
 void TMVA::MethodRuleFit::MakeClassRuleCuts( std::ostream& fout ) const
 {
-   // print out the rule cuts
    Int_t dp = fout.precision();
    if (!fRuleFit.GetRuleEnsemble().DoRules()) {
       fout << "   //" << std::endl;
@@ -685,10 +698,11 @@ void TMVA::MethodRuleFit::MakeClassRuleCuts( std::ostream& fout ) const
    fout << std::setprecision(dp);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print out the linear terms
+
 void TMVA::MethodRuleFit::MakeClassLinear( std::ostream& fout ) const
 {
-   // print out the linear terms
    if (!fRuleFit.GetRuleEnsemble().DoLinear()) {
       fout << "   //" << std::endl;
       fout << "   // ==> MODEL CONTAINS NO LINEAR TERMS <==" << std::endl;
@@ -717,13 +731,14 @@ void TMVA::MethodRuleFit::MakeClassLinear( std::ostream& fout ) const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get help message text
+///
+/// typical length of text line: 
+///         "|--------------------------------------------------------------|"
+
 void TMVA::MethodRuleFit::GetHelpMessage() const
 {
-   // get help message text
-   //
-   // typical length of text line: 
-   //         "|--------------------------------------------------------------|"
    TString col    = gConfig().WriteOptionsReference() ? TString() : gTools().Color("bold");
    TString colres = gConfig().WriteOptionsReference() ? TString() : gTools().Color("reset");
    TString brk    = gConfig().WriteOptionsReference() ? "<br>" : "";

@@ -82,14 +82,14 @@ enum RootShowerSettingsTypes {
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a dialog window. A dialog window pops up with respect to its
+/// "main" window.
+
 SettingsDialog::SettingsDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
                        UInt_t h, UInt_t options)
     : TGTransientFrame(p, main, w, h, options)
 {
-   // Create a dialog window. A dialog window pops up with respect to its
-   // "main" window.
-
    Int_t i;
    Char_t tmp[20];
    UInt_t wh1 = (UInt_t)(0.6 * h);
@@ -198,11 +198,11 @@ SettingsDialog::SettingsDialog(const TGWindow *p, const TGWindow *main, UInt_t w
    fClient->WaitFor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete test dialog widgets.
+
 SettingsDialog::~SettingsDialog()
 {
-   // Delete test dialog widgets.
-
    delete fOkButton;
    delete fCancelButton;
    delete fHelpButton;
@@ -218,19 +218,19 @@ SettingsDialog::~SettingsDialog()
    delete fL1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when window is closed via the window manager.
+
 void SettingsDialog::CloseWindow()
 {
-   // Called when window is closed via the window manager.
-
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process messages coming from widgets associated with the dialog.
+
 Bool_t SettingsDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process messages coming from widgets associated with the dialog.
-
    Int_t Selection;
    Int_t retval;
    TRootHelpDialog* hd;

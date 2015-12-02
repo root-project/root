@@ -48,12 +48,13 @@ enum ETGeoMixtureWid {
    kMIX_ELEM, kMIX_CHK1, kMIX_FRAC, kMIX_CHK2, kMIX_NATOMS, kMIX_ADDELEM
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for material editor.
+
 TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for material editor.
    fMaterial   = 0;
    fAi = fZi = 0;
    fDensityi = 0.0;
@@ -178,10 +179,11 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoMaterialEditor::~TGeoMaterialEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -191,10 +193,11 @@ TGeoMaterialEditor::~TGeoMaterialEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoMaterialEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoMaterialEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoMaterialEditor", this, "DoUndo()");
    fMaterialName->Connect("TextChanged(const char *)", "TGeoMaterialEditor", this, "DoName()");
@@ -209,10 +212,11 @@ void TGeoMaterialEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected material.
+
 void TGeoMaterialEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected material.
    if (obj == 0 || !(obj->InheritsFrom(TGeoMaterial::Class()))) {
       SetActive(kFALSE);
       return;                 
@@ -241,17 +245,19 @@ void TGeoMaterialEditor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform name change.
+
 void TGeoMaterialEditor::DoName()
 {
-// Perform name change.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for atomic mass.
+
 void TGeoMaterialEditor::DoA()
 {
-// Slot for atomic mass.
    if (fMaterial->IsMixture()) {
       fMatA->SetNumber(fMaterial->GetA());
       return;
@@ -259,10 +265,11 @@ void TGeoMaterialEditor::DoA()
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for charge.
+
 void TGeoMaterialEditor::DoZ()
 {
-// Slot for charge.
    if (fMaterial->IsMixture()) {
       fMatZ->SetNumber(fMaterial->GetZ());
       return;
@@ -280,48 +287,54 @@ void TGeoMaterialEditor::DoZ()
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for material state.
+
 void TGeoMaterialEditor::DoState(Int_t /*state*/)
 {
-// Slot for material state.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for material temperature.
+
 void TGeoMaterialEditor::DoTemperature()
 {
-// Slot for material temperature.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for material pressure.
+
 void TGeoMaterialEditor::DoPressure()
 {
-// Slot for material pressure.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for density.
+///   fMatDensity->SetNumber(fDensityi);
+
 void TGeoMaterialEditor::DoDensity()
 {
-// Slot for density.
-//   fMatDensity->SetNumber(fDensityi);
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for radiation/absorbtion length. 
+
 void TGeoMaterialEditor::DoRadAbs()
 {
-// Slot for radiation/absorbtion length. 
    fMatRadLen->SetNumber(fMaterial->GetRadLen());
    fMatAbsLen->SetNumber(fMaterial->GetIntLen());
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoMaterialEditor::DoApply()
 {
-// Slot for applying modifications.
    const char *name = fMaterialName->GetText();
    fMaterial->SetName(name);
    
@@ -338,10 +351,11 @@ void TGeoMaterialEditor::DoApply()
    fApply->SetEnabled(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for cancelling current modifications.
+
 void TGeoMaterialEditor::DoUndo()
 {
-// Slot for cancelling current modifications.
    fMaterialName->SetText(fNamei.Data());
    fMaterial->SetName(fNamei.Data());
    fMatA->SetNumber(fAi);
@@ -362,21 +376,23 @@ void TGeoMaterialEditor::DoUndo()
    fUndo->SetEnabled(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for signaling modifications.
+
 void TGeoMaterialEditor::DoModified()
 {
-// Slot for signaling modifications.
    fApply->SetEnabled();
 }
 
 ClassImp(TGeoMixtureEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for mixture editor.
+
 TGeoMixtureEditor::TGeoMixtureEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoMaterialEditor(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for mixture editor.
    fMixture = 0;
    TGCompositeFrame *compxyz=0, *f1=0;
    TGTextEntry *nef;
@@ -454,10 +470,11 @@ TGeoMixtureEditor::TGeoMixtureEditor(const TGWindow *p, Int_t width,
    TGeoTabManager::MoveFrame(f23, this);
 }   
    
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoMixtureEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoMixtureEditor", this, "DoApply1()");
    fUndo->Connect("Clicked()", "TGeoMixtureEditor", this, "DoUndo1()");
    fChkFraction->Connect("Clicked()", "TGeoMixtureEditor", this, "DoChkFraction()");
@@ -478,10 +495,11 @@ void TGeoMixtureEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
       
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected mixture.
+
 void TGeoMixtureEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected mixture.
    if (obj == 0 || !(obj->InheritsFrom(TGeoMixture::Class()))) {
       SetActive(kFALSE);
       return;                 
@@ -491,10 +509,11 @@ void TGeoMixtureEditor::SetModel(TObject* obj)
    UpdateElements();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check button state changed for fraction.
+
 void TGeoMixtureEditor::DoChkFraction()
 {
-// Check button state changed for fraction.
    if (fMixture->GetNelements() && fMixture->GetNmixt()) {
       fChkFraction->SetDown(kFALSE);
       fChkNatoms->SetDown(kTRUE);
@@ -504,10 +523,11 @@ void TGeoMixtureEditor::DoChkFraction()
    fChkNatoms->SetDown(!isDown);
 }   
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check button state changed for natoms.
+
 void TGeoMixtureEditor::DoChkNatoms()
 {
-// Check button state changed for natoms.
    if (fMixture->GetNelements() && !fMixture->GetNmixt()) {
       fChkFraction->SetDown(kTRUE);
       fChkNatoms->SetDown(kFALSE);
@@ -517,28 +537,31 @@ void TGeoMixtureEditor::DoChkNatoms()
    fChkFraction->SetDown(!isDown);
 }   
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fraction changed.
+
 void TGeoMixtureEditor::DoFraction()
 {
-// Fraction changed.
    if (fMixture->GetNelements() && fMixture->GetNmixt()) return;
    fChkFraction->SetDown(kTRUE);
    fChkNatoms->SetDown(kFALSE);
 }   
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Natoms changed.
+
 void TGeoMixtureEditor::DoNatoms()
 {
-// Natoms changed.
    if (fMixture->GetNelements() && !fMixture->GetNmixt()) return;
    fChkFraction->SetDown(kFALSE);
    fChkNatoms->SetDown(kTRUE);
 }   
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for selecting an element.
+
 void TGeoMixtureEditor::DoSelectElement(Int_t ielem)
 {
-// Slot for selecting an element.
    TGeoElement *el = gGeoManager->GetElementTable()->GetElement(ielem);
    if (!el) {
       Error("DoSelectElement", "No element at index %d", ielem);
@@ -550,10 +573,11 @@ void TGeoMixtureEditor::DoSelectElement(Int_t ielem)
    fZelem->SetText(z.Data());
 }   
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for adding an element. No undo.
+
 void TGeoMixtureEditor::DoAddElem()
 {
-// Slot for adding an element. No undo.
    Bool_t byfraction = fChkFraction->IsDown();   
    Int_t natoms = (Int_t)fNENatoms->GetNumber();
    if (!byfraction && natoms<=0) return;
@@ -566,10 +590,11 @@ void TGeoMixtureEditor::DoAddElem()
    fTabMgr->GetMaterialEditor(fMixture);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoMixtureEditor::DoApply1()
 {
-// Slot for applying modifications.
    const char *name = fMaterialName->GetText();
    fMaterial->SetName(name);
    
@@ -584,10 +609,11 @@ void TGeoMixtureEditor::DoApply1()
    fApply->SetEnabled(kFALSE);
 }   
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing all changes.
+
 void TGeoMixtureEditor::DoUndo1()
 {
-// Slot for undoing all changes.
    fMaterialName->SetText(fNamei.Data());
    fMaterial->SetName(fNamei.Data());
    fMatState->Select(fStatei);
@@ -604,10 +630,11 @@ void TGeoMixtureEditor::DoUndo1()
    fUndo->SetEnabled(kFALSE);
 }   
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the list of elements in the TGCanvas.
+
 void TGeoMixtureEditor::UpdateElements()
 {
-// Update the list of elements in the TGCanvas.
    fComps->RemoveAll();
    Int_t nelem = fMixture->GetNelements();
    for (Int_t i=0; i<nelem; i++) {

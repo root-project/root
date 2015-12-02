@@ -23,40 +23,41 @@
 
 ClassImp(TEveArrowGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveArrowGL::TEveArrowGL() :
    TGLObject(), fM(0)
 {
-   // Constructor.
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEveArrowGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEveArrow>(obj);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding box.
+
 void TEveArrowGL::SetBBox()
 {
-   // Set bounding box.
-
    // !! This ok if master sub-classed from TAttBBox
    SetAxisAlignedBBox(((TEveArrow*)fExternalObj)->AssertBBox());
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render with OpenGL.
+
 void TEveArrowGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 {
-   // Render with OpenGL.
-
    static TGLQuadric quad;
 
    glPushMatrix();

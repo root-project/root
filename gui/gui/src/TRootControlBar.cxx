@@ -27,12 +27,12 @@
 
 ClassImp(TRootControlBar)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a ROOT native GUI controlbar.
+
 TRootControlBar::TRootControlBar(TControlBar *c, const char *title, Int_t x, Int_t y)
    : TGMainFrame(gClient->GetRoot(), 10, 10), TControlBarImp(c)
 {
-   // Create a ROOT native GUI controlbar.
-
    fWidgets = 0;
    fXpos    = x;
    fYpos    = y;
@@ -51,21 +51,21 @@ TRootControlBar::TRootControlBar(TControlBar *c, const char *title, Int_t x, Int
    SetIconName(title);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the control bar implementation.
+
 TRootControlBar::~TRootControlBar()
 {
-   // Delete the control bar implementation.
-
    delete fWidgets;
    fWidgets = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the control bar. Loop over all buttons defined in the
+/// TControlBar and create the buttons.
+
 void TRootControlBar::Create()
 {
-   // Create the control bar. Loop over all buttons defined in the
-   // TControlBar and create the buttons.
-
    fWidgets = new TList;
    TGButton *b = 0;
 
@@ -115,29 +115,29 @@ void TRootControlBar::Create()
       SetWMSize(fBwidth, GetHeight());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show controlbar. If not yet created create it first.
+
 void TRootControlBar::Show()
 {
-   // Show controlbar. If not yet created create it first.
-
    if (!fWidgets) Create();
 
    MapRaised();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hide controlbar.
+
 void TRootControlBar::Hide()
 {
-   // Hide controlbar.
-
    UnmapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle controlbar button messages.
+
 Bool_t TRootControlBar::ProcessMessage(Long_t, Long_t, Long_t parm2)
 {
-   // Handle controlbar button messages.
-
    TControlBarButton *button = (TControlBarButton *) parm2;
 
    if (button) {
@@ -147,27 +147,27 @@ Bool_t TRootControlBar::ProcessMessage(Long_t, Long_t, Long_t parm2)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Really delete the control bar and the this GUI.
+
 void TRootControlBar::ReallyDelete()
 {
-   // Really delete the control bar and the this GUI.
-
    delete fControlBar;    // will in turn delete this object
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when closed via window manager action.
+
 void TRootControlBar::CloseWindow()
 {
-   // Called when closed via window manager action.
-
    DeleteWindow();        // but do it slightly delayed here
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// sets new font for control bar buttons
+
 void TRootControlBar::SetFont(const char *fontName)
 {
-   // sets new font for control bar buttons
-
    TIter next(fWidgets);
 
    TObject *obj;
@@ -180,11 +180,11 @@ void TRootControlBar::SetFont(const char *fontName)
    Resize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// sets new font for control bar buttons
+
 void TRootControlBar::SetButtonState(const char *label, Int_t state)
 {
-   // sets new font for control bar buttons
-
    TIter next(fWidgets);
 
    TObject *obj;
@@ -220,13 +220,13 @@ void TRootControlBar::SetButtonState(const char *label, Int_t state)
    Resize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// sets text color for control bar buttons, e.g.:
+/// root > .x tutorials/demos.C
+/// root > bar->SetTextColor("red")
+
 void TRootControlBar::SetTextColor(const char *colorName)
 {
-   // sets text color for control bar buttons, e.g.:
-   // root > .x tutorials/demos.C
-   // root > bar->SetTextColor("red")
-
    Pixel_t color;
    gClient->GetColorByName(colorName, color);
 
@@ -244,10 +244,10 @@ void TRootControlBar::SetTextColor(const char *colorName)
    Resize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set button width in pixels.
+
 void TRootControlBar::SetButtonWidth(UInt_t width)
 {
-   // Set button width in pixels.
-
    fBwidth = width;
 }

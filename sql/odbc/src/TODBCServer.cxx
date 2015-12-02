@@ -28,59 +28,59 @@
 
 ClassImp(TODBCServer)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a connection to a ODBC server. The db arguments can be:
+/// 1. Form "odbc://[user[:passwd]@]<host>[:<port>][/<database>][?Driver]",
+///    e.g.: "odbc://pcroot.cern.ch:3306/test?MySQL".
+///    Driver argument specifies ODBC driver, which should be used for
+///    connection. By default, MyODBC driver name is used.
+///    The uid is the username and pw the password that should be used
+///    for the connection.
+///    If uid and pw are not specified (==0), user and passwd arguments from
+///    URL will be used. Works only with MySQL ODBC, probably with PostrSQL
+///    ODBC.
+/// 2. Form "odbcd://DRIVER={MyODBC};SERVER=pcroot.cern.ch;DATABASE=test;USER=user;PASSWORD=pass;OPTION=3;PORT=3306;"
+///    This is a form, which is accepted by SQLDriverConnect function of ODBC.
+///    Here some other arguments can be specified, which are not included
+///    in standard URL format.
+/// 3. Form "odbcn://MySpecialConfig", where MySpecialConfig is entry,
+///    defined in user DSN (user data source). Here uid and pw should be
+///    always specified.
+///
+///    Configuring unixODBC under Linux: http://www.unixodbc.org/odbcinst.html
+///    Remarks: for variants 1 & 2 it is enough to create/configure
+///    odbcinst.ini file. For variant 3 file odbc.ini should be created.
+///    Path to this files can be specified in environmental variables like
+///      export ODBCINI=/home/my/unixODBC/etc/odbc.ini
+///      export ODBCSYSINI=/home/my/unixODBC/etc
+///
+///    Configuring MySQL ODBC under Windows.
+///    Installing ODBC driver for MySQL is enough to use it under Windows.
+///    Afer odbcd:// variant can be used with DRIVER={MySQL ODBC 3.51 Driver};
+///    To configure User DSN, go into Start menu -> Settings ->
+///    Control panel -> Administrative tools-> Data Sources (ODBC).
+///
+///    To install Oracle ODBC driver for Windows, one should download
+///    and install either complete Oracle client (~500 MB), or so-called
+///    Instant Client Basic and Instant Client ODBC (~20 MB together).
+///    Some remark about Instant Client:
+///       1) Two additional DLLs are required: mfc71.dll & msver71.dll
+///          They can be found either in MS VC++ 7.1 Free Toolkit or
+///          downloaded from other Internet sites
+///       2) ORACLE_HOME environment variable should be specified and point to
+///           location, where Instant Client files are extracted
+///       3) Run odbc_install.exe from account with administrative rights
+///       3) In $ORACLE_HOME/network/admin/ directory appropriate *.ora files
+///          like ldap.ora, sqlnet.ora, tnsnames.ora should be installed.
+///          Contact your Oracle administrator to get these files.
+///    After Oracle ODBC driver is installed, appropriate entry in ODBC drivers
+///    list like "Oracle in instantclient10_2" should appiar. Connection
+///    string example:
+///     "odbcd://DRIVER={Oracle in instantclient10_2};DBQ=db-test;UID=user_name;PWD=user_pass;";
+
 TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
    TSQLServer()
 {
-   // Open a connection to a ODBC server. The db arguments can be:
-   // 1. Form "odbc://[user[:passwd]@]<host>[:<port>][/<database>][?Driver]",
-   //    e.g.: "odbc://pcroot.cern.ch:3306/test?MySQL".
-   //    Driver argument specifies ODBC driver, which should be used for
-   //    connection. By default, MyODBC driver name is used.
-   //    The uid is the username and pw the password that should be used
-   //    for the connection.
-   //    If uid and pw are not specified (==0), user and passwd arguments from
-   //    URL will be used. Works only with MySQL ODBC, probably with PostrSQL
-   //    ODBC.
-   // 2. Form "odbcd://DRIVER={MyODBC};SERVER=pcroot.cern.ch;DATABASE=test;USER=user;PASSWORD=pass;OPTION=3;PORT=3306;"
-   //    This is a form, which is accepted by SQLDriverConnect function of ODBC.
-   //    Here some other arguments can be specified, which are not included
-   //    in standard URL format.
-   // 3. Form "odbcn://MySpecialConfig", where MySpecialConfig is entry,
-   //    defined in user DSN (user data source). Here uid and pw should be
-   //    always specified.
-   //
-   //    Configuring unixODBC under Linux: http://www.unixodbc.org/odbcinst.html
-   //    Remarks: for variants 1 & 2 it is enough to create/configure
-   //    odbcinst.ini file. For variant 3 file odbc.ini should be created.
-   //    Path to this files can be specified in environmental variables like
-   //      export ODBCINI=/home/my/unixODBC/etc/odbc.ini
-   //      export ODBCSYSINI=/home/my/unixODBC/etc
-   //
-   //    Configuring MySQL ODBC under Windows.
-   //    Installing ODBC driver for MySQL is enough to use it under Windows.
-   //    Afer odbcd:// variant can be used with DRIVER={MySQL ODBC 3.51 Driver};
-   //    To configure User DSN, go into Start menu -> Settings ->
-   //    Control panel -> Administrative tools-> Data Sources (ODBC).
-   //
-   //    To install Oracle ODBC driver for Windows, one should download
-   //    and install either complete Oracle client (~500 MB), or so-called
-   //    Instant Client Basic and Instant Client ODBC (~20 MB together).
-   //    Some remark about Instant Client:
-   //       1) Two additional DLLs are required: mfc71.dll & msver71.dll
-   //          They can be found either in MS VC++ 7.1 Free Toolkit or
-   //          downloaded from other Internet sites
-   //       2) ORACLE_HOME environment variable should be specified and point to
-   //           location, where Instant Client files are extracted
-   //       3) Run odbc_install.exe from account with administrative rights
-   //       3) In $ORACLE_HOME/network/admin/ directory appropriate *.ora files
-   //          like ldap.ora, sqlnet.ora, tnsnames.ora should be installed.
-   //          Contact your Oracle administrator to get these files.
-   //    After Oracle ODBC driver is installed, appropriate entry in ODBC drivers
-   //    list like "Oracle in instantclient10_2" should appiar. Connection
-   //    string example:
-   //     "odbcd://DRIVER={Oracle in instantclient10_2};DBQ=db-test;UID=user_name;PWD=user_pass;";
-
    TString connstr;
    Bool_t simpleconnect = kTRUE;
 
@@ -221,21 +221,21 @@ zombie:
    MakeZombie();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection to MySQL DB server.
+
 TODBCServer::~TODBCServer()
 {
-   // Close connection to MySQL DB server.
-
    if (IsConnected())
       Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce TList object with list of available
+/// ODBC drivers (isdrivers = kTRUE) or data sources (isdrivers = kFALSE)
+
 TList* TODBCServer::ListData(Bool_t isdrivers)
 {
-   // Produce TList object with list of available
-   // ODBC drivers (isdrivers = kTRUE) or data sources (isdrivers = kFALSE)
-
    SQLHENV   henv;
    SQLRETURN retcode;
 
@@ -282,23 +282,23 @@ TList* TODBCServer::ListData(Bool_t isdrivers)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce TList object with list of available ODBC drivers
+/// User must delete TList object aftewards
+/// Name of driver can be used in connecting to data base in form
+/// TSQLServer::Connect("odbcd://DRIVER={<drivername>};DBQ=<dbname>;UID=user;PWD=pass;", 0, 0);
+
 TList* TODBCServer::GetDrivers()
 {
-   // Produce TList object with list of available ODBC drivers
-   // User must delete TList object aftewards
-   // Name of driver can be used in connecting to data base in form
-   // TSQLServer::Connect("odbcd://DRIVER={<drivername>};DBQ=<dbname>;UID=user;PWD=pass;", 0, 0);
-
    return ListData(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print list of ODBC drivers in form:
+///   <name> : <options list>
+
 void TODBCServer::PrintDrivers()
 {
-   // Print list of ODBC drivers in form:
-   //   <name> : <options list>
-
    TList* lst = GetDrivers();
    std::cout << "List of ODBC drivers:" << std::endl;
    TIter iter(lst);
@@ -308,23 +308,23 @@ void TODBCServer::PrintDrivers()
    delete lst;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce TList object with list of available ODBC data sources
+/// User must delete TList object aftewards
+/// Name of data source can be used later for connection:
+/// TSQLServer::Connect("odbcn://<data_source_name>", "user", "pass");
+
 TList* TODBCServer::GetDataSources()
 {
-   // Produce TList object with list of available ODBC data sources
-   // User must delete TList object aftewards
-   // Name of data source can be used later for connection:
-   // TSQLServer::Connect("odbcn://<data_source_name>", "user", "pass");
-
    return ListData(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print list of ODBC data sources in form:
+///   <name> : <options list>
+
 void TODBCServer::PrintDataSources()
 {
-   // Print list of ODBC data sources in form:
-   //   <name> : <options list>
-
    TList* lst = GetDataSources();
    std::cout << "List of ODBC data sources:" << std::endl;
    TIter iter(lst);
@@ -334,11 +334,11 @@ void TODBCServer::PrintDataSources()
    delete lst;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extract errors, produced by last ODBC function call
+
 Bool_t TODBCServer::ExtractErrors(SQLRETURN retcode, const char* method)
 {
-   // Extract errors, produced by last ODBC function call
-
    if ((retcode==SQL_SUCCESS) || (retcode==SQL_SUCCESS_WITH_INFO)) return kFALSE;
 
    SQLINTEGER i = 0;
@@ -372,24 +372,24 @@ Bool_t TODBCServer::ExtractErrors(SQLRETURN retcode, const char* method)
       }                                                 \
    }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection to MySQL DB server.
+
 void TODBCServer::Close(Option_t *)
 {
-   // Close connection to MySQL DB server.
-
    SQLDisconnect(fHdbc);
    SQLFreeHandle(SQL_HANDLE_DBC, fHdbc);
    SQLFreeHandle(SQL_HANDLE_ENV, fHenv);
    fPort = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute SQL command. Result object must be deleted by the user.
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TODBCServer::Query(const char *sql)
 {
-   // Execute SQL command. Result object must be deleted by the user.
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    CheckConnect("Query", 0);
 
    SQLRETURN    retcode;
@@ -406,12 +406,12 @@ TSQLResult *TODBCServer::Query(const char *sql)
    return new TODBCResult(hstmt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Executes query which does not produce any results set
+/// Return kTRUE if successfull
+
 Bool_t TODBCServer::Exec(const char* sql)
 {
-   // Executes query which does not produce any results set
-   // Return kTRUE if successfull
-
    CheckConnect("Exec", 0);
 
    SQLRETURN    retcode;
@@ -428,13 +428,13 @@ Bool_t TODBCServer::Exec(const char* sql)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select a database. Returns 0 if successful, non-zero otherwise.
+/// Not all RDBMS support selecting of database (catalog) after connecting
+/// Normally user should specify database name at time of connection
+
 Int_t TODBCServer::SelectDataBase(const char *db)
 {
-   // Select a database. Returns 0 if successful, non-zero otherwise.
-   // Not all RDBMS support selecting of database (catalog) after connecting
-   // Normally user should specify database name at time of connection
-
    CheckConnect("SelectDataBase", -1);
 
    SQLRETURN retcode = SQLSetConnectAttr(fHdbc, SQL_ATTR_CURRENT_CATALOG, (SQLCHAR*) db, SQL_NTS);
@@ -445,27 +445,27 @@ Int_t TODBCServer::SelectDataBase(const char *db)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all available databases. Wild is for wildcarding "t%" list all
+/// databases starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TODBCServer::GetDataBases(const char *)
 {
-   // List all available databases. Wild is for wildcarding "t%" list all
-   // databases starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    CheckConnect("GetDataBases", 0);
 
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all tables in the specified database. Wild is for wildcarding
+/// "t%" list all tables starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TODBCServer::GetTables(const char*, const char* wild)
 {
-   // List all tables in the specified database. Wild is for wildcarding
-   // "t%" list all tables starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    CheckConnect("GetTables", 0);
 
    SQLRETURN    retcode;
@@ -506,12 +506,12 @@ TSQLResult *TODBCServer::GetTables(const char*, const char* wild)
    return new TODBCResult(hstmt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list of tables in database
+/// See TSQLServer::GetTablesList() for details.
+
 TList* TODBCServer::GetTablesList(const char* wild)
 {
-   // Return list of tables in database
-   // See TSQLServer::GetTablesList() for details.
-
    CheckConnect("GetTablesList", 0);
 
    TSQLResult* res = GetTables(0, wild);
@@ -540,12 +540,12 @@ TList* TODBCServer::GetTablesList(const char* wild)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produces SQL table info
+/// Object must be deleted by user
+
 TSQLTableInfo* TODBCServer::GetTableInfo(const char* tablename)
 {
-   // Produces SQL table info
-   // Object must be deleted by user
-
    CheckConnect("GetTableInfo", 0);
 
    #define STR_LEN 128+1
@@ -681,14 +681,14 @@ TSQLTableInfo* TODBCServer::GetTableInfo(const char* tablename)
    return new TSQLTableInfo(tablename, lst);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all columns in specified table in the specified database.
+/// Wild is for wildcarding "t%" list all columns starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TODBCServer::GetColumns(const char*, const char *table, const char*)
 {
-   // List all columns in specified table in the specified database.
-   // Wild is for wildcarding "t%" list all columns starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    CheckConnect("GetColumns", 0);
 
    SQLRETURN    retcode;
@@ -705,11 +705,11 @@ TSQLResult *TODBCServer::GetColumns(const char*, const char *table, const char*)
    return new TODBCResult(hstmt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns maximum allowed length of identifier (table name, column name, index name)
+
 Int_t TODBCServer::GetMaxIdentifierLength()
 {
-   // returns maximum allowed length of identifier (table name, column name, index name)
-
    CheckConnect("GetMaxIdentifierLength", 20);
 
    SQLUINTEGER info = 0;
@@ -722,65 +722,65 @@ Int_t TODBCServer::GetMaxIdentifierLength()
    return info;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a database. Returns 0 if successful, non-zero otherwise.
+
 Int_t TODBCServer::CreateDataBase(const char*)
 {
-   // Create a database. Returns 0 if successful, non-zero otherwise.
-
    CheckConnect("CreateDataBase", -1);
 
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drop (i.e. delete) a database. Returns 0 if successful, non-zero
+/// otherwise.
+
 Int_t TODBCServer::DropDataBase(const char*)
 {
-   // Drop (i.e. delete) a database. Returns 0 if successful, non-zero
-   // otherwise.
-
    CheckConnect("DropDataBase", -1);
 
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reload permission tables. Returns 0 if successful, non-zero
+/// otherwise. User must have reload permissions.
+
 Int_t TODBCServer::Reload()
 {
-   // Reload permission tables. Returns 0 if successful, non-zero
-   // otherwise. User must have reload permissions.
-
    CheckConnect("Reload", -1);
 
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shutdown the database server. Returns 0 if successful, non-zero
+/// otherwise. User must have shutdown permissions.
+
 Int_t TODBCServer::Shutdown()
 {
-   // Shutdown the database server. Returns 0 if successful, non-zero
-   // otherwise. User must have shutdown permissions.
-
    CheckConnect("Shutdown", -1);
 
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return server info.
+
 const char *TODBCServer::ServerInfo()
 {
-   // Return server info.
-
    CheckConnect("ServerInfo", 0);
 
    return fServerInfo;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates ODBC statement for provided query.
+/// See TSQLStatement class for more details.
+
 TSQLStatement *TODBCServer::Statement(const char *sql, Int_t bufsize)
 {
-   // Creates ODBC statement for provided query.
-   // See TSQLStatement class for more details.
-
    CheckConnect("Statement", 0);
 
    if (!sql || !*sql) {
@@ -810,13 +810,13 @@ TSQLStatement *TODBCServer::Statement(const char *sql, Int_t bufsize)
    return new TODBCStatement(hstmt, bufsize, fErrorOut);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Starts transaction.
+/// Check for transaction support.
+/// Switch off autocommitment mode.
+
 Bool_t TODBCServer::StartTransaction()
 {
-   // Starts transaction.
-   // Check for transaction support.
-   // Switch off autocommitment mode.
-
    CheckConnect("StartTransaction", kFALSE);
 
    SQLUINTEGER info = 0;
@@ -838,12 +838,12 @@ Bool_t TODBCServer::StartTransaction()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Complete current transaction (commit = kTRUE) or rollback
+/// Switches on autocommit mode of ODBC driver
+
 Bool_t TODBCServer::EndTransaction(Bool_t commit)
 {
-   // Complete current transaction (commit = kTRUE) or rollback
-   // Switches on autocommit mode of ODBC driver
-
    const char* method = commit ? "Commit" : "Rollback";
 
    CheckConnect(method, kFALSE);
@@ -856,18 +856,18 @@ Bool_t TODBCServer::EndTransaction(Bool_t commit)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Commit transaction
+
 Bool_t TODBCServer::Commit()
 {
-   // Commit transaction
-
    return EndTransaction(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rollback transaction
+
 Bool_t TODBCServer::Rollback()
 {
-   // Rollback transaction
-
    return EndTransaction(kFALSE);
 }

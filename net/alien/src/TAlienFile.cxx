@@ -50,41 +50,41 @@ ClassImp(TAlienFile)
 
 #define MAX_FILE_IMAGES 16
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an Alien File Object. An AliEn File is the same as a TFile
+/// except that its real tranfer URL is resolved via an Alien service. The url
+/// argument must be of the form: alien:/[machine]/path/file.root
+/// Using the option access, another access protocol (PFN) can be
+/// specified for an LFN e.g.:
+///     "alien:///alice/test.root"
+/// If you want to write a file on specific storage element use the syntax
+///     "alien:///alice/test.root?&se=Alice::CERN::Storage"
+/// The default SE is specified by the environment variable alien_CLOSE_SE
+///
+/// If you read a file, the closest file image to alien_CLOSE_SE is taken.
+/// If the file cannot opened from the closest image, the next image is tried,
+/// until there is no image location left to be tried.
+///
+/// If the file specified in the URL does not exist, is not accessable
+/// or can not be created the kZombie bit will be set in the TAlienFile
+/// object. Use IsZombie() to see if the file is accessable.
+/// For a description of the option and other arguments see the TFile ctor.
+/// The preferred interface to this constructor is via TFile::Open().
+///
+/// Warning: TAlienFile objects should only be created through the factory functions:
+///    TFile::Open("alien://...");
+/// or
+///    TAlienFile::Open("alien://...");
+///
+/// Don't use "new TAlienFile" directly unless you know, what you are doing
+///
+
 TAlienFile::TAlienFile(const char *purl, Option_t *option,
                        const char *ftitle, Int_t compress,
                        Bool_t parallelopen, const char *lurl,
                        const char *authz) :
    TXNetFile(purl, option, ftitle, compress, 0, parallelopen, lurl)
 {
-   // Create an Alien File Object. An AliEn File is the same as a TFile
-   // except that its real tranfer URL is resolved via an Alien service. The url
-   // argument must be of the form: alien:/[machine]/path/file.root
-   // Using the option access, another access protocol (PFN) can be
-   // specified for an LFN e.g.:
-   //     "alien:///alice/test.root"
-   // If you want to write a file on specific storage element use the syntax
-   //     "alien:///alice/test.root?&se=Alice::CERN::Storage"
-   // The default SE is specified by the environment variable alien_CLOSE_SE
-   //
-   // If you read a file, the closest file image to alien_CLOSE_SE is taken.
-   // If the file cannot opened from the closest image, the next image is tried,
-   // until there is no image location left to be tried.
-   //
-   // If the file specified in the URL does not exist, is not accessable
-   // or can not be created the kZombie bit will be set in the TAlienFile
-   // object. Use IsZombie() to see if the file is accessable.
-   // For a description of the option and other arguments see the TFile ctor.
-   // The preferred interface to this constructor is via TFile::Open().
-   //
-   // Warning: TAlienFile objects should only be created through the factory functions:
-   //    TFile::Open("alien://...");
-   // or
-   //    TAlienFile::Open("alien://...");
-   //
-   // Don't use "new TAlienFile" directly unless you know, what you are doing
-   //
-
    TUrl logicalurl(lurl);
    fLfn = logicalurl.GetFile();
    fAuthz = authz;
@@ -97,14 +97,14 @@ TAlienFile::TAlienFile(const char *purl, Option_t *option,
    fOpenedAt = time(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method used to create a TAlienFile object. For options see
+/// TAlienFile ctor.
+
 TAlienFile *TAlienFile::Open(const char *url, Option_t *option,
                              const char *ftitle, Int_t compress,
                              Bool_t parallelopen)
 {
-   // Static method used to create a TAlienFile object. For options see
-   // TAlienFile ctor.
-
    if (!gGrid) {
       ::Error("TAlienFileAccess", "No GRID connection available!");
       return 0;
@@ -528,11 +528,11 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t *option,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TAlienFile file dtor.
+
 TAlienFile::~TAlienFile()
 {
-   // TAlienFile file dtor.
-
    if (IsOpen()) {
       Close();
    }
@@ -540,11 +540,11 @@ TAlienFile::~TAlienFile()
       Info("~TAlienFile", "dtor called for %s", GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the file.
+
 void TAlienFile::Close(Option_t * option)
 {
-   // Close the file.
-
    if (!IsOpen()) return;
 
 
@@ -606,11 +606,11 @@ void TAlienFile::Close(Option_t * option)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get surl from lfn by asking AliEn catalog.
+
 TString TAlienFile::SUrl(const char *lfn)
 {
-   // Get surl from lfn by asking AliEn catalog.
-
    TString command;
    TString surl;
 

@@ -46,77 +46,84 @@ ClassImp(RooStats::ConfidenceBelt) ;
 using namespace RooStats;
 using namespace std;
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 ConfidenceBelt::ConfidenceBelt() : 
    TNamed(), fParameterPoints(0)
 {
-   // Default constructor
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Alternate constructor
+
 ConfidenceBelt::ConfidenceBelt(const char* name) :
   TNamed(name,name), fParameterPoints(0)
 {
-   // Alternate constructor
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Alternate constructor
+
 ConfidenceBelt::ConfidenceBelt(const char* name, const char* title) :
    TNamed(name,title), fParameterPoints(0)
 {
-   // Alternate constructor
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Alternate constructor
+
 ConfidenceBelt::ConfidenceBelt(const char* name, RooAbsData& data) :
   TNamed(name,name), fParameterPoints((RooAbsData*)data.Clone("PointsToTestForBelt"))
 {
-   // Alternate constructor
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Alternate constructor
+
 ConfidenceBelt::ConfidenceBelt(const char* name, const char* title, RooAbsData& data) :
    TNamed(name,title), fParameterPoints((RooAbsData*)data.Clone("PointsToTestForBelt"))
 {
-   // Alternate constructor
 }
 
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 ConfidenceBelt::~ConfidenceBelt()
 {
-   // Destructor
-
 }
 
 
-//____________________________________________________________________
-Double_t ConfidenceBelt::GetAcceptanceRegionMin(RooArgSet& parameterPoint, Double_t cl, Double_t leftside) {
+////////////////////////////////////////////////////////////////////////////////
 
+Double_t ConfidenceBelt::GetAcceptanceRegionMin(RooArgSet& parameterPoint, Double_t cl, Double_t leftside) {
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
   AcceptanceRegion * region = GetAcceptanceRegion(parameterPoint, cl,leftside); 
   return (region) ? region->GetLowerLimit() : TMath::QuietNaN();
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t ConfidenceBelt::GetAcceptanceRegionMax(RooArgSet& parameterPoint, Double_t cl, Double_t leftside) {
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
   AcceptanceRegion * region = GetAcceptanceRegion(parameterPoint, cl,leftside); 
   return (region) ? region->GetUpperLimit() : TMath::QuietNaN();
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 vector<Double_t> ConfidenceBelt::ConfidenceLevels() const {
   vector<Double_t> levels;
   return levels;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsIndex,
 					 Double_t lower, Double_t upper,
 					 Double_t cl, Double_t leftside){
-  
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
 
   RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPoints );
@@ -170,10 +177,10 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsInde
   }
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, AcceptanceRegion region, 
 					 Double_t cl, Double_t leftside){
-  
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
 
   RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPoints );
@@ -208,11 +215,11 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, AcceptanceRe
   }
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method to determine if a parameter point is in the interval
+
 AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint, Double_t cl, Double_t leftside) 
 {  
-   // Method to determine if a parameter point is in the interval
-
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
 
   RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPoints );
@@ -260,17 +267,18 @@ AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint,
   
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns list of parameters
+
 RooArgSet* ConfidenceBelt::GetParameters() const
 {  
-   // returns list of parameters
    return new RooArgSet(*(fParameterPoints->get()));
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t ConfidenceBelt::CheckParameters(RooArgSet &parameterPoint) const
 {  
-
    if (parameterPoint.getSize() != fParameterPoints->get()->getSize() ) {
       std::cout << "size is wrong, parameters don't match" << std::endl;
       return false;

@@ -46,12 +46,13 @@ enum ETGeoEltuWid {
    kELTU_APPLY, kELTU_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for para editor
+
 TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for para editor
    fShape   = 0;
    fAi = fBi = fDzi = 0.0;
    fNamei = "";
@@ -122,10 +123,11 @@ TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoEltuEditor::~TGeoEltuEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -135,10 +137,11 @@ TGeoEltuEditor::~TGeoEltuEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoEltuEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoEltuEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoEltuEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoEltuEditor", this, "DoModified()");
@@ -151,10 +154,11 @@ void TGeoEltuEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoEltuEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoEltu::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -179,24 +183,27 @@ void TGeoEltuEditor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for name.
+
 void TGeoEltuEditor::DoName()
 {
-// Slot for name.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shape drawing is delayed.
+
 Bool_t TGeoEltuEditor::IsDelayed() const
 {
-// Check if shape drawing is delayed.
    return (fDelayed->GetState() == kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying current settings.
+
 void TGeoEltuEditor::DoApply()
 {
-// Slot for applying current settings.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t a = fEA->GetNumber();
@@ -225,17 +232,19 @@ void TGeoEltuEditor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for notifying modifications.
+
 void TGeoEltuEditor::DoModified()
 {
-// Slot for notifying modifications.
    fApply->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoEltuEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fEA->SetNumber(fAi);
    fEB->SetNumber(fBi);
    fEDz->SetNumber(fDzi);
@@ -244,10 +253,11 @@ void TGeoEltuEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
    
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for A.
+
 void TGeoEltuEditor::DoA()
 {
-// Slot for A.
    Double_t a = fEA->GetNumber();
    if (a <= 0) {
       a = 0.1;
@@ -257,10 +267,11 @@ void TGeoEltuEditor::DoA()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for B.
+
 void TGeoEltuEditor::DoB()
 {
-// Slot for B.
    Double_t b = fEB->GetNumber();
    if (b <= 0) {
       b = 0.1;
@@ -270,10 +281,11 @@ void TGeoEltuEditor::DoB()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Z.
+
 void TGeoEltuEditor::DoDz()
 {
-// Slot for Z.
    Double_t z = fEDz->GetNumber();
    if (z <= 0) {
       z = 0.1;

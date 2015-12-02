@@ -50,16 +50,16 @@ ClassImp(RooDataProjBinding)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of a data weighted average function binding with
+/// variables 'vars' for function 'real' and dataset 'data' with
+/// weights.
+
 RooDataProjBinding::RooDataProjBinding(const RooAbsReal &real, const RooAbsData& data, 
 				       const RooArgSet &vars, const RooArgSet* nset) :
   RooRealBinding(real,vars,0), _first(kTRUE), _real(&real), _data(&data), _nset(nset), 
   _superCat(0), _catTable(0)
 {  
-  // Constructor of a data weighted average function binding with
-  // variables 'vars' for function 'real' and dataset 'data' with
-  // weights.
-
   // Determine if dataset contains only categories
   TIterator* iter = data.get()->createIterator() ;
   Bool_t allCat(kTRUE) ;
@@ -78,21 +78,22 @@ RooDataProjBinding::RooDataProjBinding(const RooAbsReal &real, const RooAbsData&
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor, delete owned objects
+
 RooDataProjBinding::~RooDataProjBinding() 
 {
-  // Destructor, delete owned objects
   if (_superCat) delete _superCat ;
   if (_catTable) delete _catTable ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate data-projected values of the bound real function.
+
 Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const 
 {
-  // Evaluate data-projected values of the bound real function.
-
   assert(isValid());
   loadValues(xvector);    
 

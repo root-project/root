@@ -353,7 +353,8 @@ static KeySymbolMap_t gKeyMap[] = {
 
 
 /////////////////////static auxilary functions /////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static Int_t _lookup_string(Event_t * event, char *buf, Int_t buflen)
 {
    int i;
@@ -372,7 +373,8 @@ static Int_t _lookup_string(Event_t * event, char *buf, Int_t buflen)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline void SplitLong(Long_t ll, Long_t & i1, Long_t & i2)
 {
    union {
@@ -389,7 +391,8 @@ inline void SplitLong(Long_t ll, Long_t & i1, Long_t & i2)
    i2 = conv.i[1];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline void AsmLong(Long_t i1, Long_t i2, Long_t & ll)
 {
    union {
@@ -402,11 +405,11 @@ inline void AsmLong(Long_t i1, Long_t i2, Long_t & ll)
    ll = conv.l;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure the child window is visible.
+
 static BOOL CALLBACK EnumChildProc(HWND hwndChild, LPARAM lParam)
 {
-   // Make sure the child window is visible.
-
    ::ShowWindow(hwndChild, SW_SHOWNORMAL);
    GdkWindow *child = gdk_window_lookup(hwndChild);
    if (child)
@@ -414,7 +417,8 @@ static BOOL CALLBACK EnumChildProc(HWND hwndChild, LPARAM lParam)
    return TRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static void _ChangeProperty(HWND w, char *np, char *dp, int n, Atom_t type)
 {
    HGLOBAL hMem;
@@ -433,13 +437,13 @@ static void _ChangeProperty(HWND w, char *np, char *dp, int n, Atom_t type)
    ::GlobalFree(hMem);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 static void W32ChangeProperty(HWND w, Atom_t property, Atom_t type,
                        int format, int mode, const unsigned char *data,
                        int nelements)
 {
-   //
-
    char *atomName;
    char buffer[256];
    int len;
@@ -458,15 +462,15 @@ static void W32ChangeProperty(HWND w, Atom_t property, Atom_t type,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 static int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offset,
                        Long_t long_length, Bool_t delete_it, Atom_t req_type,
                        Atom_t * actual_type_return,
                        Int_t * actual_format_return, ULong_t * nitems_return,
                        ULong_t * bytes_after_return, UChar_t ** prop_return)
 {
-   //
-
    if (!id) return 0;
 
    char *data, *destPtr;
@@ -504,11 +508,11 @@ static int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offse
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 static ULong_t GetPixelImage(Drawable_t id, Int_t x, Int_t y)
 {
-   //
-
    if (!id) return 0;
 
    GdkImage *image = (GdkImage *)id;
@@ -537,12 +541,12 @@ static ULong_t GetPixelImage(Drawable_t id, Int_t x, Int_t y)
    return pixel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Collect in orgcolors all different original image colors.
+
 static void CollectImageColors(ULong_t pixel, ULong_t * &orgcolors,
                                  Int_t & ncolors, Int_t & maxcolors)
 {
-   // Collect in orgcolors all different original image colors.
-
    if (maxcolors == 0) {
       ncolors = 0;
       maxcolors = 100;
@@ -563,11 +567,11 @@ static void CollectImageColors(ULong_t pixel, ULong_t * &orgcolors,
    orgcolors[ncolors++] = pixel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// debug function for printing event mask
+
 static char *EventMask2String(UInt_t evmask)
 {
-   // debug function for printing event mask
-
    static char bfr[500];
    char *p = bfr;
 
@@ -611,11 +615,11 @@ LPCRITICAL_SECTION TGWin32MainThread::fCritSec = 0;
 LPCRITICAL_SECTION TGWin32MainThread::fMessageMutex = 0;
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dtor
+
 TGWin32MainThread::~TGWin32MainThread()
 {
-   // dtor
-
    if (fCritSec) {
       ::LeaveCriticalSection(fCritSec);
       ::DeleteCriticalSection(fCritSec);
@@ -637,19 +641,19 @@ TGWin32MainThread::~TGWin32MainThread()
    fHandle = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// lock message queue
+
 void TGWin32MainThread::LockMSG()
 {
-   // lock message queue
-
    if (fMessageMutex) ::EnterCriticalSection(fMessageMutex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// unlock message queue
+
 void TGWin32MainThread::UnlockMSG()
 {
-   // unlock message queue
-
    if (fMessageMutex) ::LeaveCriticalSection(fMessageMutex);
 }
 
@@ -675,11 +679,11 @@ public:
    }
 };
 /*
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// thread for processing windows messages (aka Main/Server thread)
+
 static DWORD WINAPI MessageProcessingLoop(void *p)
 {
-   // thread for processing windows messages (aka Main/Server thread)
-
    MSG msg;
    Int_t erret;
    Bool_t endLoop = kFALSE;
@@ -727,11 +731,11 @@ Bool_t GUIThreadMessageWrapper(MSG* msg)
    return ((TGWin32*)gVirtualX)->GUIThreadMessageFunc(msg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGWin32MainThread::TGWin32MainThread()
 {
-   // constructor
-
    fCritSec = new CRITICAL_SECTION;
    ::InitializeCriticalSection(fCritSec);
    fMessageMutex = new CRITICAL_SECTION;
@@ -746,21 +750,21 @@ TGWin32MainThread::TGWin32MainThread()
 ///////////////////////// TGWin32 implementation ///////////////////////////////
 ClassImp(TGWin32)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TGWin32::TGWin32(): fRefreshTimer(0)
 {
-   // Default constructor.
-
    fScreenNumber = 0;
    fWindows      = 0;
    fColors       = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal Constructor.
+
 TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), fRefreshTimer(0)
 {
-   // Normal Constructor.
-
    fScreenNumber = 0;
    fHasTTFonts = kFALSE;
    fUseSysPointers = kFALSE;
@@ -806,11 +810,11 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), f
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor.
+
 TGWin32::~TGWin32()
 {
-   // destructor.
-
    CloseDisplay();
    if (fRefreshTimer)
       delete fRefreshTimer;
@@ -824,22 +828,22 @@ TGWin32::~TGWin32()
    delete fColors;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Windows timer handling events while moving/resizing windows
+
 VOID CALLBACK MyTimerProc(HWND hwnd, UINT message, UINT idTimer, DWORD dwTime)
 {
-   // Windows timer handling events while moving/resizing windows
-
    gSystem->ProcessEvents();
    //gVirtualX->UpdateWindow(1); // cause problems with OpenGL in pad...
 } 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Message processing function for the GUI thread.
+/// Kicks in once TGWin32 becomes active, and "replaces" the dummy one
+/// in TWinNTSystem; see TWinNTSystem.cxx's GUIThreadMessageProcessingLoop().
+
 Bool_t TGWin32::GUIThreadMessageFunc(MSG* msg)
 {
-   // Message processing function for the GUI thread.
-   // Kicks in once TGWin32 becomes active, and "replaces" the dummy one
-   // in TWinNTSystem; see TWinNTSystem.cxx's GUIThreadMessageProcessingLoop().
-
    Bool_t ret = kFALSE;
    static Int_t m_timer = 0;
 
@@ -876,11 +880,11 @@ Bool_t TGWin32::GUIThreadMessageFunc(MSG* msg)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns kTRUE if we are inside cmd/server thread
+
 Bool_t TGWin32::IsCmdThread() const
 {
-   // returns kTRUE if we are inside cmd/server thread
-
 #ifdef OLD_THREAD_IMPLEMENTATION
    return ((::GetCurrentThreadId() == TGWin32ProxyBase::fgMainThreadId) ||
            (::GetCurrentThreadId() == TGWin32ProxyBase::fgUserThreadId));
@@ -889,11 +893,11 @@ Bool_t TGWin32::IsCmdThread() const
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// close display (terminate server/gMainThread thread)
+
 void TGWin32::CloseDisplay()
 {
-   // close display (terminate server/gMainThread thread)
-
    // disable any processing while exiting
    TGWin32ProxyBase::GlobalLock();
 
@@ -935,27 +939,27 @@ void TGWin32::CloseDisplay()
    gROOT->SetBatch(kTRUE); // no GUI is possible
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void  TGWin32::Lock()
 {
-   //
-
    if (gMainThread && gMainThread->fCritSec) ::EnterCriticalSection(gMainThread->fCritSec);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32::Unlock()
 {
-   //
-
    if (gMainThread && gMainThread->fCritSec) ::LeaveCriticalSection(gMainThread->fCritSec);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize Win32 system. Returns kFALSE in case of failure.
+
 Bool_t TGWin32::Init(void *display)
 {
-   // Initialize Win32 system. Returns kFALSE in case of failure.
-
    if (!gdk_initialized) {
       if (!gdk_init_check(NULL, NULL)) return kFALSE;
       gdk_initialized = true;
@@ -968,11 +972,11 @@ Bool_t TGWin32::Init(void *display)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open the display. Return -1 if the opening fails, 0 when ok.
+
 Int_t TGWin32::OpenDisplay(const char *dpyName)
 {
-   // Open the display. Return -1 if the opening fails, 0 when ok.
-
    GdkPixmap *pixmp1, *pixmp2;
    GdkColor fore, back;
    GdkColor color;
@@ -1139,24 +1143,24 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate color in colormap. If we are on an <= 8 plane machine
+/// we will use XAllocColor. If we are on a >= 15 (15, 16 or 24) plane
+/// true color machine we will calculate the pixel value using:
+/// for 15 and 16 bit true colors have 6 bits precision per color however
+/// only the 5 most significant bits are used in the color index.
+/// Except for 16 bits where green uses all 6 bits. I.e.:
+///   15 bits = rrrrrgggggbbbbb
+///   16 bits = rrrrrggggggbbbbb
+/// for 24 bits each r, g and b are represented by 8 bits.
+///
+/// Since all colors are set with a max of 65535 (16 bits) per r, g, b
+/// we just right shift them by 10, 11 and 10 bits for 16 planes, and
+/// (10, 10, 10 for 15 planes) and by 8 bits for 24 planes.
+/// Returns kFALSE in case color allocation failed.
+
 Bool_t TGWin32::AllocColor(GdkColormap *cmap, GdkColor *color)
 {
-   // Allocate color in colormap. If we are on an <= 8 plane machine
-   // we will use XAllocColor. If we are on a >= 15 (15, 16 or 24) plane
-   // true color machine we will calculate the pixel value using:
-   // for 15 and 16 bit true colors have 6 bits precision per color however
-   // only the 5 most significant bits are used in the color index.
-   // Except for 16 bits where green uses all 6 bits. I.e.:
-   //   15 bits = rrrrrgggggbbbbb
-   //   16 bits = rrrrrggggggbbbbb
-   // for 24 bits each r, g and b are represented by 8 bits.
-   //
-   // Since all colors are set with a max of 65535 (16 bits) per r, g, b
-   // we just right shift them by 10, 11 and 10 bits for 16 planes, and
-   // (10, 10, 10 for 15 planes) and by 8 bits for 24 planes.
-   // Returns kFALSE in case color allocation failed.
-
    if (fRedDiv == -1) {
       if ( gdk_color_alloc((GdkColormap *)cmap, (GdkColor *)color) ) return kTRUE;
    } else {
@@ -1169,11 +1173,11 @@ Bool_t TGWin32::AllocColor(GdkColormap *cmap, GdkColor *color)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the current RGB value for the pixel in the XColor structure.
+
 void TGWin32::QueryColors(GdkColormap *cmap, GdkColor *color, Int_t ncolors)
 {
-   // Returns the current RGB value for the pixel in the XColor structure.
-
    ULong_t r, g, b;
 
    if (fRedDiv == -1) {
@@ -1194,13 +1198,13 @@ void TGWin32::QueryColors(GdkColormap *cmap, GdkColor *color, Int_t ncolors)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute alignment variables. The alignment is done on the horizontal string
+/// then the rotation is applied on the alignment variables.
+/// SetRotation and LayoutGlyphs should have been called before.
+
 void TGWin32::Align(void)
 {
-   // Compute alignment variables. The alignment is done on the horizontal string
-   // then the rotation is applied on the alignment variables.
-   // SetRotation and LayoutGlyphs should have been called before.
-
    EAlign align = (EAlign) fTextAlign;
 
    // vertical alignment
@@ -1225,13 +1229,13 @@ void TGWin32::Align(void)
    fAlign.y = fAlign.y >> 6;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw FT_Bitmap bitmap to xim image at position bx,by using specified
+/// foreground color.
+
 void TGWin32::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
                          GdkImage *xim, Int_t bx, Int_t by)
 {
-   // Draw FT_Bitmap bitmap to xim image at position bx,by using specified
-   // foreground color.
-
    UChar_t d = 0, *s = source->buffer;
 
    if (TTF::GetSmoothing()) {
@@ -1345,13 +1349,13 @@ void TGWin32::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text using TrueType fonts. If TrueType fonts are not available the
+/// text is drawn with TGWin32::DrawText.
+
 void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                        const char *text, ETextMode mode)
 {
-   // Draw text using TrueType fonts. If TrueType fonts are not available the
-   // text is drawn with TGWin32::DrawText.
-
    if (!TTF::IsInitialized()) TTF::Init();
    TTF::SetRotationMatrix(angle);
    TTF::PrepareString(text);
@@ -1360,13 +1364,13 @@ void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
    RenderString(x, y, mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text using TrueType fonts. If TrueType fonts are not available the
+/// text is drawn with TGWin32::DrawText.
+
 void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                        const wchar_t *text, ETextMode mode)
 {
-   // Draw text using TrueType fonts. If TrueType fonts are not available the
-   // text is drawn with TGWin32::DrawText.
-
    if (!TTF::IsInitialized()) TTF::Init();
    TTF::SetRotationMatrix(angle);
    TTF::PrepareString(text);
@@ -1375,11 +1379,11 @@ void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
    RenderString(x, y, mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the background of the current window in an XImage.
+
 GdkImage *TGWin32::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Get the background of the current window in an XImage.
-
    Window_t cws = GetCurrentWindow();
    UInt_t width;
    UInt_t height;
@@ -1401,11 +1405,11 @@ GdkImage *TGWin32::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
    return gdk_image_get((GdkDrawable*)cws, x, y, w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test if there is really something to render
+
 Bool_t TGWin32::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Test if there is really something to render
-
    Window_t cws = GetCurrentWindow();
    UInt_t width;
    UInt_t height;
@@ -1422,12 +1426,12 @@ Bool_t TGWin32::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the string rendering in the pad.
+/// LayoutGlyphs should have been called before.
+
 void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
 {
-   // Perform the string rendering in the pad.
-   // LayoutGlyphs should have been called before.
-
    TTGlyph* glyph = TTF::GetGlyphs();
    GdkGCValues gcvals;
 
@@ -1529,44 +1533,44 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
    gdk_image_unref(xim);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set specified font.
+
 void TGWin32::SetTextFont(Font_t fontnumber)
 {
-   // Set specified font.
-
    fTextFont = fontnumber;
    TTF::SetTextFont(fontnumber);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text font to specified name.
+/// mode       : loading flag
+/// mode=0     : search if the font exist (kCheck)
+/// mode=1     : search the font and load it if it exists (kLoad)
+/// font       : font name
+///
+/// Set text font to specified name. This function returns 0 if
+/// the specified font is found, 1 if not.
+
 Int_t TGWin32::SetTextFont(char *fontname, ETextSetMode mode)
 {
-   // Set text font to specified name.
-   // mode       : loading flag
-   // mode=0     : search if the font exist (kCheck)
-   // mode=1     : search the font and load it if it exists (kLoad)
-   // font       : font name
-   //
-   // Set text font to specified name. This function returns 0 if
-   // the specified font is found, 1 if not.
-
    return TTF::SetTextFont(fontname);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current text size.
+
 void TGWin32::SetTextSize(Float_t textsize)
 {
-   // Set current text size.
-
    fTextSize = textsize;
    TTF::SetTextSize(textsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear current window.
+
 void TGWin32::ClearWindow()
 {
-   // Clear current window.
-
    if (!fWindows) return;
 
    if (!gCws->ispixmap && !gCws->double_buffer) {
@@ -1581,27 +1585,27 @@ void TGWin32::ClearWindow()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete current pixmap.
+
 void TGWin32::ClosePixmap()
 {
-   // Delete current pixmap.
-
    CloseWindow1();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete current window.
+
 void TGWin32::CloseWindow()
 {
-   // Delete current window.
-
    CloseWindow1();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete current window.
+
 void TGWin32::CloseWindow1()
 {
-   // Delete current window.
-
    int wid;
 
    if (gCws->ispixmap) {
@@ -1636,11 +1640,11 @@ void TGWin32::CloseWindow1()
    gCws = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the pixmap wid at the position xpos, ypos in the current window.
+
 void TGWin32::CopyPixmap(int wid, int xpos, int ypos)
 {
-   // Copy the pixmap wid at the position xpos, ypos in the current window.
-
    if (!fWindows) return;
 
    gTws = &fWindows[wid];
@@ -1649,13 +1653,13 @@ void TGWin32::CopyPixmap(int wid, int xpos, int ypos)
    GdiFlush();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a box.
+/// mode=0 hollow  (kHollow)
+/// mode=1 solid   (kSolid)
+
 void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 {
-   // Draw a box.
-   // mode=0 hollow  (kHollow)
-   // mode=1 solid   (kSolid)
-
    if (!fWindows) return;
 
    Int_t x = TMath::Min(x1, x2);
@@ -1682,20 +1686,20 @@ void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a cell array.
+/// x1,y1        : left down corner
+/// x2,y2        : right up corner
+/// nx,ny        : array size
+/// ic           : array
+///
+/// Draw a cell array. The drawing is done with the pixel presicion
+/// if (X2-X1)/NX (or Y) is not a exact pixel number the position of
+/// the top rigth corner may be wrong.
+
 void TGWin32::DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
                             Int_t nx, Int_t ny, Int_t *ic)
 {
-   // Draw a cell array.
-   // x1,y1        : left down corner
-   // x2,y2        : right up corner
-   // nx,ny        : array size
-   // ic           : array
-   //
-   // Draw a cell array. The drawing is done with the pixel presicion
-   // if (X2-X1)/NX (or Y) is not a exact pixel number the position of
-   // the top rigth corner may be wrong.
-
    int i, j, icol, ix, iy, w, h, current_icol;
 
    if (!fWindows) return;
@@ -1724,13 +1728,13 @@ void TGWin32::DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill area described by polygon.
+/// n         : number of points
+/// xy(2,n)   : list of points
+
 void TGWin32::DrawFillArea(int n, TPoint *xyt)
 {
-   // Fill area described by polygon.
-   // n         : number of points
-   // xy(2,n)   : list of points
-
    int i;
    static int lastn = 0;
    static GdkPoint *xy = 0;
@@ -1757,13 +1761,13 @@ void TGWin32::DrawFillArea(int n, TPoint *xyt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a line.
+/// x1,y1        : begin of line
+/// x2,y2        : end of line
+
 void TGWin32::DrawLine(int x1, int y1, int x2, int y2)
 {
-   // Draw a line.
-   // x1,y1        : begin of line
-   // x2,y2        : end of line
-
    if (!fWindows) return;
 
    if (fLineColorModified) UpdateLineColor();
@@ -1785,13 +1789,13 @@ void TGWin32::DrawLine(int x1, int y1, int x2, int y2)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a line through all points.
+/// n         : number of points
+/// xy        : list of points
+
 void TGWin32::DrawPolyLine(int n, TPoint * xyt)
 {
-   // Draw a line through all points.
-   // n         : number of points
-   // xy        : list of points
-
    int i;
 
    if (!fWindows) return;
@@ -1841,13 +1845,13 @@ void TGWin32::DrawPolyLine(int n, TPoint * xyt)
    delete [] xy;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw n markers with the current attributes at position x, y.
+/// n    : number of markers to draw
+/// xy   : x,y coordinates of markers
+
 void TGWin32::DrawPolyMarker(int n, TPoint *xyt)
 {
-   // Draw n markers with the current attributes at position x, y.
-   // n    : number of markers to draw
-   // xy   : x,y coordinates of markers
-
    int i;
    static int lastn = 0;
    static GdkPoint *xy = 0;
@@ -1921,21 +1925,21 @@ void TGWin32::DrawPolyMarker(int n, TPoint *xyt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return character up vector.
+
 void TGWin32::GetCharacterUp(Float_t & chupx, Float_t & chupy)
 {
-   // Return character up vector.
-
    chupx = fCharacterUpX;
    chupy = fCharacterUpY;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return reference to internal color structure associated
+/// to color index cid.
+
 XColor_t &TGWin32::GetColor(Int_t cid)
 {
-   // Return reference to internal color structure associated
-   // to color index cid.
-
    XColor_t *col = (XColor_t*) fColors->GetValue(cid);
    if (!col) {
       col = new XColor_t;
@@ -1944,20 +1948,20 @@ XColor_t &TGWin32::GetColor(Int_t cid)
    return *col;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return current window pointer. Protected method used by TGWin32TTF.
+
 Window_t TGWin32::GetCurrentWindow() const
 {
-   // Return current window pointer. Protected method used by TGWin32TTF.
-
    return (Window_t)(gCws ? gCws->drawing : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return desired Graphics Context ("which" maps directly on gGCList[]).
+/// Protected method used by TGWin32TTF.
+
 GdkGC *TGWin32::GetGC(Int_t which) const
 {
-   // Return desired Graphics Context ("which" maps directly on gGCList[]).
-   // Protected method used by TGWin32TTF.
-
    if (which >= kMAXGC || which < 0) {
       Error("GetGC", "trying to get illegal GdkGC (which = %d)", which);
       return 0;
@@ -1966,11 +1970,11 @@ GdkGC *TGWin32::GetGC(Int_t which) const
    return gGClist[which];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Query the double buffer value for the window wid.
+
 Int_t TGWin32::GetDoubleBuffer(int wid)
 {
-   // Query the double buffer value for the window wid.
-
    if (!fWindows) return 0;
 
    gTws = &fWindows[wid];
@@ -1982,16 +1986,16 @@ Int_t TGWin32::GetDoubleBuffer(int wid)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return position and size of window wid.
+/// wid        : window identifier
+/// x,y        : window position (output)
+/// w,h        : window size (output)
+/// if wid < 0 the size of the display is returned
+
 void TGWin32::GetGeometry(int wid, int &x, int &y, unsigned int &w,
                           unsigned int &h)
 {
-   // Return position and size of window wid.
-   // wid        : window identifier
-   // x,y        : window position (output)
-   // w,h        : window size (output)
-   // if wid < 0 the size of the display is returned
-
    if (!fWindows) return;
 
    if (wid < 0) {
@@ -2019,27 +2023,27 @@ void TGWin32::GetGeometry(int wid, int &x, int &y, unsigned int &w,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return hostname on which the display is opened.
+
 const char *TGWin32::DisplayName(const char *dpyName)
 {
-   // Return hostname on which the display is opened.
-
    return "localhost";          //return gdk_get_display();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get maximum number of planes.
+
 void TGWin32::GetPlanes(int &nplanes)
 {
-   // Get maximum number of planes.
-
    nplanes = gdk_visual_get_best_depth();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get rgb values for color "index".
+
 void TGWin32::GetRGB(int index, float &r, float &g, float &b)
 {
-   // Get rgb values for color "index".
-
    if (index == 0) {
       r = g = b = 1.0;
    } else if (index == 1) {
@@ -2052,37 +2056,37 @@ void TGWin32::GetRGB(int index, float &r, float &g, float &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the size of a character string.
+/// iw          : text width
+/// ih          : text height
+/// mess        : message
+
 void TGWin32::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
 {
-   // Return the size of a character string.
-   // iw          : text width
-   // ih          : text height
-   // mess        : message
-
    TTF::SetTextFont(gTextFont);
    TTF::SetTextSize(fTextSize);
    TTF::GetTextExtent(w, h, mess);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the X11 window identifier.
+/// wid      : Workstation identifier (input)
+
 Window_t TGWin32::GetWindowID(int wid)
 {
-   // Return the X11 window identifier.
-   // wid      : Workstation identifier (input)
-
    if (!fWindows) return 0;
    return (Window_t) fWindows[wid].window;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move the window wid.
+/// wid  : GdkWindow identifier.
+/// x    : x new window position
+/// y    : y new window position
+
 void TGWin32::MoveWindow(int wid, int x, int y)
 {
-   // Move the window wid.
-   // wid  : GdkWindow identifier.
-   // x    : x new window position
-   // y    : y new window position
-
    if (!fWindows) return;
 
    gTws = &fWindows[wid];
@@ -2091,12 +2095,12 @@ void TGWin32::MoveWindow(int wid, int x, int y)
    gdk_window_move((GdkDrawable *) gTws->window, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a new pixmap.
+/// w,h : Width and height of the pixmap.
+
 Int_t TGWin32::OpenPixmap(unsigned int w, unsigned int h)
 {
-   // Open a new pixmap.
-   // w,h : Width and height of the pixmap.
-
    int wval, hval;
    int i, wid;
    int ww, hh, depth;
@@ -2150,12 +2154,12 @@ Int_t TGWin32::OpenPixmap(unsigned int w, unsigned int h)
    return wid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open window and return window number.
+/// Return -1 if window initialization fails.
+
 Int_t TGWin32::InitWindow(ULong_t win)
 {
-   // Open window and return window number.
-   // Return -1 if window initialization fails.
-
    GdkWindowAttr attributes;
    unsigned long attr_mask = 0;
    int wid;
@@ -2252,14 +2256,14 @@ Int_t TGWin32::InitWindow(ULong_t win)
    return wid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Query pointer position.
+/// ix       : X coordinate of pointer
+/// iy       : Y coordinate of pointer
+/// (both coordinates are relative to the origin of the root window)
+
 void TGWin32::QueryPointer(int &ix, int &iy)
 {
-   // Query pointer position.
-   // ix       : X coordinate of pointer
-   // iy       : Y coordinate of pointer
-   // (both coordinates are relative to the origin of the root window)
-
    //GdkModifierType mask;
    //GdkWindow *retw = gdk_window_get_pointer((GdkWindow *) gCws->window,
    //                                          &ix, &iy, &mask);
@@ -2269,42 +2273,42 @@ void TGWin32::QueryPointer(int &ix, int &iy)
    iy = cpt.y;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the pixmap pix.
+
 void TGWin32::RemovePixmap(GdkDrawable *pix)
 {
-   // Remove the pixmap pix.
-
    gdk_pixmap_unref((GdkPixmap *)pix);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Request Locator position.
+/// x,y       : cursor position at moment of button press (output)
+/// ctyp      : cursor type (input)
+///   ctyp=1 tracking cross
+///   ctyp=2 cross-hair
+///   ctyp=3 rubber circle
+///   ctyp=4 rubber band
+///   ctyp=5 rubber rectangle
+///
+/// mode      : input mode
+///   mode=0 request
+///   mode=1 sample
+///
+/// Request locator:
+/// return button number  1 = left is pressed
+///                       2 = middle is pressed
+///                       3 = right is pressed
+///        in sample mode:
+///                      11 = left is released
+///                      12 = middle is released
+///                      13 = right is released
+///                      -1 = nothing is pressed or released
+///                      -2 = leave the window
+///                    else = keycode (keyboard is pressed)
+
 Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
 {
-   // Request Locator position.
-   // x,y       : cursor position at moment of button press (output)
-   // ctyp      : cursor type (input)
-   //   ctyp=1 tracking cross
-   //   ctyp=2 cross-hair
-   //   ctyp=3 rubber circle
-   //   ctyp=4 rubber band
-   //   ctyp=5 rubber rectangle
-   //
-   // mode      : input mode
-   //   mode=0 request
-   //   mode=1 sample
-   //
-   // Request locator:
-   // return button number  1 = left is pressed
-   //                       2 = middle is pressed
-   //                       3 = right is pressed
-   //        in sample mode:
-   //                      11 = left is released
-   //                      12 = middle is released
-   //                      13 = right is released
-   //                      -1 = nothing is pressed or released
-   //                      -2 = leave the window
-   //                    else = keycode (keyboard is pressed)
-
    static int xloc = 0;
    static int yloc = 0;
    static int xlocp = 0;
@@ -2449,17 +2453,17 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
    return button_press;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Request a string.
+/// x,y         : position where text is displayed
+/// text        : text displayed (input), edited text (output)
+///
+/// Request string:
+/// text is displayed and can be edited with Emacs-like keybinding
+/// return termination code (0 for ESC, 1 for RETURN)
+
 Int_t TGWin32::RequestString(int x, int y, char *text)
 {
-   // Request a string.
-   // x,y         : position where text is displayed
-   // text        : text displayed (input), edited text (output)
-   //
-   // Request string:
-   // text is displayed and can be edited with Emacs-like keybinding
-   // return termination code (0 for ESC, 1 for RETURN)
-
    static GdkCursor *cursor = NULL;
    static int percent = 0;      // bell volume
    static GdkWindow *CurWnd;
@@ -2688,14 +2692,14 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
    return key;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rescale the window wid.
+/// wid  : GdkWindow identifier
+/// w    : Width
+/// h    : Heigth
+
 void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
 {
-   // Rescale the window wid.
-   // wid  : GdkWindow identifier
-   // w    : Width
-   // h    : Heigth
-
     int i;
 
    if (!fWindows) return;
@@ -2730,13 +2734,13 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
    gTws->height = h;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize a pixmap.
+/// wid : pixmap to be resized
+/// w,h : Width and height of the pixmap
+
 int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
 {
-   // Resize a pixmap.
-   // wid : pixmap to be resized
-   // w,h : Width and height of the pixmap
-
    int wval, hval;
    int i;
    int ww, hh, depth;
@@ -2780,11 +2784,11 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the current window if necessary.
+
 void TGWin32::ResizeWindow(int wid)
 {
-   // Resize the current window if necessary.
-
    int i;
    int xval = 0, yval = 0;
    GdkWindow *win, *root = NULL;
@@ -2829,11 +2833,11 @@ void TGWin32::ResizeWindow(int wid)
    gTws->height = hval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select window to which subsequent output is directed.
+
 void TGWin32::SelectWindow(int wid)
 {
-   // Select window to which subsequent output is directed.
-
    int i;
    GdkRectangle rect;
 
@@ -2859,11 +2863,11 @@ void TGWin32::SelectWindow(int wid)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set character up vector.
+
 void TGWin32::SetCharacterUp(Float_t chupx, Float_t chupy)
 {
-   // Set character up vector.
-
    if (chupx == fCharacterUpX && chupy == fCharacterUpY) return;
 
    if (chupx == 0 && chupy == 0) {
@@ -2888,11 +2892,11 @@ void TGWin32::SetCharacterUp(Float_t chupx, Float_t chupy)
    fCharacterUpY = chupy;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Turn off the clipping for the window wid.
+
 void TGWin32::SetClipOFF(int wid)
 {
-   // Turn off the clipping for the window wid.
-
    if (!fWindows) return;
 
    gTws = &fWindows[wid];
@@ -2903,15 +2907,15 @@ void TGWin32::SetClipOFF(int wid)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set clipping region for the window wid.
+/// wid        : GdkWindow indentifier
+/// x,y        : origin of clipping rectangle
+/// w,h        : size of clipping rectangle;
+
 void TGWin32::SetClipRegion(int wid, int x, int y, unsigned int w,
                             unsigned int h)
 {
-   // Set clipping region for the window wid.
-   // wid        : GdkWindow indentifier
-   // x,y        : origin of clipping rectangle
-   // w,h        : size of clipping rectangle;
-
    if (!fWindows) return;
 
    gTws = &fWindows[wid];
@@ -2934,11 +2938,11 @@ void TGWin32::SetClipRegion(int wid, int x, int y, unsigned int w,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pixel value associated to specified ROOT color number.
+
 ULong_t TGWin32::GetPixel(Color_t ci)
 {
-   // Return pixel value associated to specified ROOT color number.
-
    TColor *color = gROOT->GetColor(ci);
    if (color)
       SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
@@ -2946,11 +2950,11 @@ ULong_t TGWin32::GetPixel(Color_t ci)
    return col.color.pixel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the foreground color in GdkGC.
+
 void TGWin32::SetColor(GdkGC *gc, int ci)
 {
-   // Set the foreground color in GdkGC.
-
    GdkGCValues gcvals;
    GdkColor color;
 
@@ -2988,22 +2992,22 @@ void TGWin32::SetColor(GdkGC *gc, int ci)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the cursor.
+
 void TGWin32::SetCursor(int wid, ECursor cursor)
 {
-   // Set the cursor.
-
    if (!fWindows) return;
 
    gTws = &fWindows[wid];
    gdk_window_set_cursor((GdkWindow *)gTws->window, (GdkCursor *)fCursors[cursor]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the specified cursor.
+
 void TGWin32::SetCursor(Window_t id, Cursor_t curid)
 {
-   // Set the specified cursor.
-
    if (!id) return;
 
    static GdkWindow *lid = 0;
@@ -3016,15 +3020,15 @@ void TGWin32::SetCursor(Window_t id, Cursor_t curid)
    gdk_window_set_cursor((GdkWindow *) id, (GdkCursor *)curid);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the double buffer on/off on window wid.
+/// wid  : GdkWindow identifier.
+///        999 means all the opened windows.
+/// mode : 1 double buffer is on
+///        0 double buffer is off
+
 void TGWin32::SetDoubleBuffer(int wid, int mode)
 {
-   // Set the double buffer on/off on window wid.
-   // wid  : GdkWindow identifier.
-   //        999 means all the opened windows.
-   // mode : 1 double buffer is on
-   //        0 double buffer is off
-
    if (!fWindows) return;
 
    if (wid == 999) {
@@ -3056,21 +3060,21 @@ void TGWin32::SetDoubleBuffer(int wid, int mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Turn double buffer mode off.
+
 void TGWin32::SetDoubleBufferOFF()
 {
-   // Turn double buffer mode off.
-
    if (!gTws->double_buffer) return;
    gTws->double_buffer = 0;
    gTws->drawing = gTws->window;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Turn double buffer mode on.
+
 void TGWin32::SetDoubleBufferON()
 {
-   // Turn double buffer mode on.
-
    if (!fWindows || gTws->double_buffer || gTws->ispixmap) return;
 
    if (!gTws->buffer) {
@@ -3089,17 +3093,17 @@ void TGWin32::SetDoubleBufferON()
    gTws->drawing = gTws->buffer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the drawing mode.
+/// mode : drawing mode
+///   mode=1 copy
+///   mode=2 xor
+///   mode=3 invert
+///   mode=4 set the suitable mode for cursor echo according to
+///          the vendor
+
 void TGWin32::SetDrawMode(EDrawMode mode)
 {
-   // Set the drawing mode.
-   // mode : drawing mode
-   //   mode=1 copy
-   //   mode=2 xor
-   //   mode=3 invert
-   //   mode=4 set the suitable mode for cursor echo according to
-   //          the vendor
-
    int i;
 
    switch (mode) {
@@ -3124,11 +3128,11 @@ void TGWin32::SetDrawMode(EDrawMode mode)
    fDrawMode = mode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color index for fill areas.
+
 void TGWin32::SetFillColor(Color_t cindex)
 {
-   // Set color index for fill areas.
-
    Int_t indx = Int_t(cindex);
 
    if (!gStyle->GetFillColor() && cindex > 1) {
@@ -3139,11 +3143,11 @@ void TGWin32::SetFillColor(Color_t cindex)
    fFillColorModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32::UpdateFillColor()
 {
-   //
-
    if (fFillColor >= 0) {
       SetColor(gGCfill, fFillColor);
    }
@@ -3156,24 +3160,24 @@ void TGWin32::UpdateFillColor()
    fFillColorModified = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set fill area style.
+/// fstyle   : compound fill area interior style
+///    fstyle = 1000*interiorstyle + styleindex
+
 void TGWin32::SetFillStyle(Style_t fstyle)
 {
-   // Set fill area style.
-   // fstyle   : compound fill area interior style
-   //    fstyle = 1000*interiorstyle + styleindex
-
    if (fFillStyle==fstyle) return;
 
    fFillStyle = fstyle;
    fFillStyleModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set fill area style index.
+
 void TGWin32::UpdateFillStyle()
 {
-   // Set fill area style index.
-
    static int current_fasi = 0;
 
    Int_t style = fFillStyle / 1000;
@@ -3214,47 +3218,47 @@ void TGWin32::UpdateFillStyle()
    fFillStyleModified = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set input on or off.
+
 void TGWin32::SetInput(int inp)
 {
-   // Set input on or off.
-
    EnableWindow((HWND) GDK_DRAWABLE_XID(gCws->window), inp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color index for lines.
+
 void TGWin32::SetLineColor(Color_t cindex)
 {
-   // Set color index for lines.
-
    if ((cindex < 0) || (cindex==fLineColor)) return;
 
    fLineColor =  cindex;
    fLineColorModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32::UpdateLineColor()
 {
-   //
-
    SetColor(gGCline, Int_t(fLineColor));
    SetColor(gGCdash, Int_t(fLineColor));
    fLineColorModified = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line type.
+/// n         : length of dash list
+/// dash(n)   : dash segment lengths
+///
+/// if n <= 0 use solid lines
+/// if n >  0 use dashed lines described by DASH(N)
+///    e.g. N=4,DASH=(6,3,1,3) gives a dashed-dotted line with dash length 6
+///    and a gap of 7 between dashes
+
 void TGWin32::SetLineType(int n, int *dash)
 {
-   // Set line type.
-   // n         : length of dash list
-   // dash(n)   : dash segment lengths
-   //
-   // if n <= 0 use solid lines
-   // if n >  0 use dashed lines described by DASH(N)
-   //    e.g. N=4,DASH=(6,3,1,3) gives a dashed-dotted line with dash length 6
-   //    and a gap of 7 between dashes
-
    if (n <= 0) {
       gLineStyle = GDK_LINE_SOLID;
       gdk_gc_set_line_attributes(gGCline, fLineWidth,
@@ -3279,22 +3283,22 @@ void TGWin32::SetLineType(int n, int *dash)
    fPenModified = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line style.
+
 void TGWin32::SetLineStyle(Style_t lstyle)
 {
-   // Set line style.
-
    if (fLineStyle == lstyle) return;
 
    fLineStyle = lstyle;
    fPenModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update line style
+
 void TGWin32::UpdateLineStyle()
 {
-   // Update line style
-
    static Int_t dashed[2] = { 3, 3 };
    static Int_t dotted[2] = { 1, 2 };
    static Int_t dasheddotted[4] = { 3, 4, 1, 4 };
@@ -3325,12 +3329,12 @@ void TGWin32::UpdateLineStyle()
    fPenModified = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line width.
+/// width   : line width in pixels
+
 void TGWin32::SetLineWidth(Width_t width)
 {
-   // Set line width.
-   // width   : line width in pixels
-
    if ((fLineWidth==width) || (width<0)) return;
 
    if (width == 1) {
@@ -3342,53 +3346,53 @@ void TGWin32::SetLineWidth(Width_t width)
    fPenModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color index for markers.
+
 void TGWin32::SetMarkerColor(Color_t cindex)
 {
-   // Set color index for markers.
-
    if ((cindex<0) || (cindex==fMarkerColor)) return;
    fMarkerColor = cindex;
    fMarkerColorModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32::UpdateMarkerColor()
 {
-   //
-
    SetColor(gGCmark, Int_t(fMarkerColor));
    fMarkerColorModified = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker size index.
+/// msize  : marker scale factor
+
 void TGWin32::SetMarkerSize(Float_t msize)
 {
-   // Set marker size index.
-   // msize  : marker scale factor
-
    if ((msize==fMarkerSize) || (msize<0)) return;
 
    fMarkerSize = msize;
    SetMarkerStyle(-fMarkerStyle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker type.
+/// type      : marker type
+/// n         : length of marker description
+/// xy        : list of points describing marker shape
+///
+/// if n == 0 marker is a single point
+/// if TYPE == 0 marker is hollow circle of diameter N
+/// if TYPE == 1 marker is filled circle of diameter N
+/// if TYPE == 2 marker is a hollow polygon describe by line XY
+/// if TYPE == 3 marker is a filled polygon describe by line XY
+/// if TYPE == 4 marker is described by segmented line XY
+///   e.g. TYPE=4,N=4,XY=(-3,0,3,0,0,-3,0,3) sets a plus shape of 7x7 pixels
+
 void TGWin32::SetMarkerType(int type, int n, GdkPoint * xy)
 {
-   // Set marker type.
-   // type      : marker type
-   // n         : length of marker description
-   // xy        : list of points describing marker shape
-   //
-   // if n == 0 marker is a single point
-   // if TYPE == 0 marker is hollow circle of diameter N
-   // if TYPE == 1 marker is filled circle of diameter N
-   // if TYPE == 2 marker is a hollow polygon describe by line XY
-   // if TYPE == 3 marker is a filled polygon describe by line XY
-   // if TYPE == 4 marker is described by segmented line XY
-   //   e.g. TYPE=4,N=4,XY=(-3,0,3,0,0,-3,0,3) sets a plus shape of 7x7 pixels
-
    gMarker.type = type;
    gMarker.n = n < kMAXMK ? n : kMAXMK;
    if (gMarker.type >= 2) {
@@ -3398,21 +3402,21 @@ void TGWin32::SetMarkerType(int type, int n, GdkPoint * xy)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker style.
+
 void TGWin32::SetMarkerStyle(Style_t markerstyle)
 {
-   // Set marker style.
-
    if ((fMarkerStyle==markerstyle) || (markerstyle >= 35)) return;
    fMarkerStyle = TMath::Abs(markerstyle);
    fMarkerStyleModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32::UpdateMarkerStyle()
 {
-   //
-
    static GdkPoint shape[15];
 
    Int_t im = Int_t(4 * fMarkerSize + 0.5);
@@ -3693,15 +3697,15 @@ void TGWin32::UpdateMarkerStyle()
    fMarkerStyleModified = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set opacity of a window. This image manipulation routine works
+/// by adding to a percent amount of neutral to each pixels RGB.
+/// Since it requires quite some additional color map entries is it
+/// only supported on displays with more than > 8 color planes (> 256
+/// colors)
+
 void TGWin32::SetOpacity(Int_t percent)
 {
-   // Set opacity of a window. This image manipulation routine works
-   // by adding to a percent amount of neutral to each pixels RGB.
-   // Since it requires quite some additional color map entries is it
-   // only supported on displays with more than > 8 color planes (> 256
-   // colors)
-
    Int_t depth = gdk_visual_get_best_depth();
 
    if (depth <= 8) return;
@@ -3759,12 +3763,12 @@ void TGWin32::SetOpacity(Int_t percent)
    ::operator delete(orgcolors);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get RGB values for orgcolors, add percent neutral to the RGB and
+/// allocate new_colors.
+
 void TGWin32::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
 {
-   // Get RGB values for orgcolors, add percent neutral to the RGB and
-   // allocate new_colors.
-
    Int_t ret;
    if (ncolors <= 0) return;
    GdkColor *xcol = new GdkColor[ncolors];
@@ -3820,11 +3824,11 @@ void TGWin32::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
    delete []xcol;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns index in orgcolors (and new_colors) for pixel.
+
 Int_t TGWin32::FindColor(ULong_t pixel, ULong_t * orgcolors, Int_t ncolors)
 {
-   // Returns index in orgcolors (and new_colors) for pixel.
-
    for (int i = 0; i < ncolors; i++) {
       if (pixel == orgcolors[i]) return i;
    }
@@ -3833,13 +3837,13 @@ Int_t TGWin32::FindColor(ULong_t pixel, ULong_t * orgcolors, Int_t ncolors)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color intensities for given color index.
+/// cindex     : color index
+/// r,g,b      : red, green, blue intensities between 0.0 and 1.0
+
 void TGWin32::SetRGB(int cindex, float r, float g, float b)
 {
-   // Set color intensities for given color index.
-   // cindex     : color index
-   // r,g,b      : red, green, blue intensities between 0.0 and 1.0
-
    GdkColor xcol;
 
    if (fColormap && cindex >= 0) {
@@ -3870,13 +3874,13 @@ void TGWin32::SetRGB(int cindex, float r, float g, float b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text alignment.
+/// txalh   : horizontal text alignment
+/// txalv   : vertical text alignment
+
 void TGWin32::SetTextAlign(Short_t talign)
 {
-   // Set text alignment.
-   // txalh   : horizontal text alignment
-   // txalv   : vertical text alignment
-
    static Short_t current = 0;
    if (talign==current) return;
    current = talign;
@@ -3932,11 +3936,11 @@ void TGWin32::SetTextAlign(Short_t talign)
    TAttText::SetTextAlign(fTextAlign);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color index for text.
+
 void TGWin32::SetTextColor(Color_t cindex)
 {
-   // Set color index for text.
-
    static Int_t current = 0;
    GdkGCValues values;
    if ((cindex < 0) || (Int_t(cindex)==current)) return;
@@ -3949,22 +3953,23 @@ void TGWin32::SetTextColor(Color_t cindex)
    current = Int_t(cindex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGWin32::Sync(int mode)
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update display.
+/// mode : (1) update
+///        (0) sync
+///
+/// Synchronise client and server once (not permanent).
+/// Copy the pixmap gCws->drawing on the window gCws->window
+/// if the double buffer is on.
+
 void TGWin32::UpdateWindow(int mode)
 {
-   // Update display.
-   // mode : (1) update
-   //        (0) sync
-   //
-   // Synchronise client and server once (not permanent).
-   // Copy the pixmap gCws->drawing on the window gCws->window
-   // if the double buffer is on.
-
    if (gCws && gCws->double_buffer) {
       gdk_window_copy_area(gCws->window, gGCpxmp, 0, 0,
                            gCws->drawing, 0, 0, gCws->width, gCws->height);
@@ -3972,15 +3977,15 @@ void TGWin32::UpdateWindow(int mode)
    Update(mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pointer position.
+/// ix       : New X coordinate of pointer
+/// iy       : New Y coordinate of pointer
+/// Coordinates are relative to the origin of the window id
+/// or to the origin of the current window if id == 0.
+
 void TGWin32::Warp(int ix, int iy, Window_t id)
 {
-   // Set pointer position.
-   // ix       : New X coordinate of pointer
-   // iy       : New Y coordinate of pointer
-   // Coordinates are relative to the origin of the window id
-   // or to the origin of the current window if id == 0.
-
    if (!id) return;
 
    POINT cpt, tmp;
@@ -3996,16 +4001,16 @@ void TGWin32::Warp(int ix, int iy, Window_t id)
    SetCursorPos(tmp.x, tmp.y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the pixmap wid in the bitmap file pxname.
+/// wid         : Pixmap address
+/// w,h         : Width and height of the pixmap.
+/// lenname     : pixmap name length
+/// pxname      : pixmap name
+
 void TGWin32::WritePixmap(int wid, unsigned int w, unsigned int h,
                           char *pxname)
 {
-   // Write the pixmap wid in the bitmap file pxname.
-   // wid         : Pixmap address
-   // w,h         : Width and height of the pixmap.
-   // lenname     : pixmap name length
-   // pxname      : pixmap name
-
    int wval, hval;
    wval = w;
    hval = h;
@@ -4037,36 +4042,36 @@ extern "C" {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get pixels in line y and put in array scline.
+
 static void GetPixel(int y, int width, Byte_t * scline)
 {
-   // Get pixels in line y and put in array scline.
-
    for (int i = 0; i < width; i++) {
        scline[i] = Byte_t(GetPixelImage((Drawable_t)gGifImage, i, y));
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Put byte b in output stream.
+
 static void PutByte(Byte_t b)
 {
-   // Put byte b in output stream.
-
    if (ferror(gGifFile) == 0) fputc(b, gGifFile);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns in R G B the ncol colors of the palette used by the image.
+/// The image pixels are changed to index values in these R G B arrays.
+/// This produces a colormap with only the used colors (so even on displays
+/// with more than 8 planes we will be able to create GIF's when the image
+/// contains no more than 256 different colors). If it does contain more
+/// colors we will have to use GIFquantize to reduce the number of colors.
+/// The R G B arrays must be deleted by the caller.
+
 void TGWin32::ImgPickPalette(GdkImage * image, Int_t & ncol, Int_t * &R,
                              Int_t * &G, Int_t * &B)
 {
-   // Returns in R G B the ncol colors of the palette used by the image.
-   // The image pixels are changed to index values in these R G B arrays.
-   // This produces a colormap with only the used colors (so even on displays
-   // with more than 8 planes we will be able to create GIF's when the image
-   // contains no more than 256 different colors). If it does contain more
-   // colors we will have to use GIFquantize to reduce the number of colors.
-   // The R G B arrays must be deleted by the caller.
-
    ULong_t *orgcolors = 0;
    Int_t maxcolors = 0, ncolors;
 
@@ -4123,11 +4128,11 @@ void TGWin32::ImgPickPalette(GdkImage * image, Int_t & ncol, Int_t * &R,
    ::operator delete(orgcolors);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Writes the current window into GIF file.
+
 Int_t TGWin32::WriteGIF(char *name)
 {
-   // Writes the current window into GIF file.
-
    Byte_t scline[2000], r[256], b[256], g[256];
    Int_t *R, *G, *B;
    Int_t ncol, maxcol, i;
@@ -4186,13 +4191,13 @@ Int_t TGWin32::WriteGIF(char *name)
    return i;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw image.
+
 void TGWin32::PutImage(int offset, int itran, int x0, int y0, int nx,
                        int ny, int xmin, int ymin, int xmax, int ymax,
                        unsigned char *image, Drawable_t wid)
 {
-   // Draw image.
-
    const int MAX_SEGMENT = 20;
    int i, n, x, y, xcur, x1, x2, y1, y2;
    unsigned char *jimg, *jbase, icol;
@@ -4260,12 +4265,12 @@ void TGWin32::PutImage(int offset, int itran, int x0, int y0, int nx,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If id is NULL - loads the specified gif file at position [x0,y0] in the
+/// current window. Otherwise creates pixmap from gif file
+
 Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
 {
-   // If id is NULL - loads the specified gif file at position [x0,y0] in the
-   // current window. Otherwise creates pixmap from gif file
-
    FILE *fd;
    Seek_t filesize;
    unsigned char *GIFarr, *PIXarr, R[256], G[256], B[256], *j1, *j2, icol;
@@ -4343,11 +4348,11 @@ Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
 }
 
 //////////////////////////// GWin32Gui //////////////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map window on screen.
+
 void TGWin32::MapWindow(Window_t id)
 {
-   // Map window on screen.
-
    if (!id) return;
 
    gdk_window_show((GdkWindow *)id);
@@ -4358,22 +4363,22 @@ void TGWin32::MapWindow(Window_t id)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32::MapSubwindows(Window_t id)
 {
-   //
-
    if (!id) return;
 
    EnumChildWindows((HWND)GDK_DRAWABLE_XID((GdkWindow *)id),
                     EnumChildProc, (LPARAM) NULL);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map window on screen and put on top of all windows.
+
 void TGWin32::MapRaised(Window_t id)
 {
-   // Map window on screen and put on top of all windows.
-
    if (!id) return;
 
    HWND hwnd = ::GetForegroundWindow();
@@ -4396,21 +4401,21 @@ void TGWin32::MapRaised(Window_t id)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unmap window from screen.
+
 void TGWin32::UnmapWindow(Window_t id)
 {
-   // Unmap window from screen.
-
    if (!id) return;
 
    gdk_window_hide((GdkWindow *) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy window.
+
 void TGWin32::DestroyWindow(Window_t id)
 {
-   // Destroy window.
-
    if (!id) return;
 
    // we need to unmap the window before to destroy it, in order to properly 
@@ -4419,21 +4424,21 @@ void TGWin32::DestroyWindow(Window_t id)
    gdk_window_destroy((GdkDrawable *) id, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy all internal subwindows
+
 void TGWin32::DestroySubwindows(Window_t id)
 {
-   // Destroy all internal subwindows
-
    if (!id) return;
 
    gdk_window_destroy((GdkDrawable *) id, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Put window on top of window stack.
+
 void TGWin32::RaiseWindow(Window_t id)
 {
-   // Put window on top of window stack.
-
    if (!id) return;
 
    HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
@@ -4448,11 +4453,11 @@ void TGWin32::RaiseWindow(Window_t id)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lower window so it lays below all its siblings.
+
 void TGWin32::LowerWindow(Window_t id)
 {
-   // Lower window so it lays below all its siblings.
-
    if (!id) return;
 
    HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
@@ -4460,32 +4465,32 @@ void TGWin32::LowerWindow(Window_t id)
                   SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move a window.
+
 void TGWin32::MoveWindow(Window_t id, Int_t x, Int_t y)
 {
-   // Move a window.
-
    if (!id) return;
 
    gdk_window_move((GdkDrawable *) id, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move and resize a window.
+
 void TGWin32::MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w,
                                UInt_t h)
 {
-   // Move and resize a window.
-
    if (!id) return;
 
    gdk_window_move_resize((GdkWindow *) id, x, y, w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the window.
+
 void TGWin32::ResizeWindow(Window_t id, UInt_t w, UInt_t h)
 {
-   // Resize the window.
-
    if (!id) return;
 
    // protect against potential negative values
@@ -4494,33 +4499,33 @@ void TGWin32::ResizeWindow(Window_t id, UInt_t w, UInt_t h)
    gdk_window_resize((GdkWindow *) id, w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Iconify the window.
+
 void TGWin32::IconifyWindow(Window_t id)
 {
-   // Iconify the window.
-
    if (!id) return;
 
    gdk_window_lower((GdkWindow *) id);
    ::CloseWindow((HWND)GDK_DRAWABLE_XID((GdkWindow *)id));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reparent window, make pid the new parent and position the window at
+/// position (x,y) in new parent.
+
 void TGWin32::ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y)
 {
-   // Reparent window, make pid the new parent and position the window at
-   // position (x,y) in new parent.
-
    if (!id) return;
 
    gdk_window_reparent((GdkWindow *)id, (GdkWindow *)pid, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the window background color.
+
 void TGWin32::SetWindowBackground(Window_t id, ULong_t color)
 {
-   // Set the window background color.
-
    if (!id) return;
 
    GdkColor back;
@@ -4532,25 +4537,25 @@ void TGWin32::SetWindowBackground(Window_t id, ULong_t color)
    gdk_window_set_background((GdkWindow *) id, &back);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pixmap as window background.
+
 void TGWin32::SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm)
 {
-   // Set pixmap as window background.
-
    if (!id) return;
 
    gdk_window_set_back_pixmap((GdkWindow *) id, (GdkPixmap *) pxm, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return handle to newly created gdk window.
+
 Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
                                UInt_t w, UInt_t h, UInt_t border,
                                Int_t depth, UInt_t clss,
                                void *visual, SetWindowAttributes_t * attr,
                                UInt_t wtype)
 {
-   // Return handle to newly created gdk window.
-
    GdkWindowAttr xattr;
    GdkWindow *newWin;
    GdkColor background_color;
@@ -4647,11 +4652,11 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
    return (Window_t) newWin;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map event mask to or from gdk.
+
 void TGWin32::MapEventMask(UInt_t & emask, UInt_t & xemask, Bool_t tox)
 {
-   // Map event mask to or from gdk.
-
    if (tox) {
       Long_t lxemask = 0L;
       if ((emask & kKeyPressMask)) {
@@ -4726,13 +4731,13 @@ void TGWin32::MapEventMask(UInt_t & emask, UInt_t & xemask, Bool_t tox)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map a SetWindowAttributes_t to a GdkWindowAttr structure.
+
 void TGWin32::MapSetWindowAttributes(SetWindowAttributes_t * attr,
                                      ULong_t & xmask,
                                      GdkWindowAttr & xattr)
 {
-   // Map a SetWindowAttributes_t to a GdkWindowAttr structure.
-
    Mask_t mask = attr->fMask;
    xmask = 0;
 
@@ -4758,13 +4763,13 @@ void TGWin32::MapSetWindowAttributes(SetWindowAttributes_t * attr,
    xattr.wclass = GDK_INPUT_OUTPUT;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map a GCValues_t to a XCGValues structure if tox is true. Map
+/// the other way in case tox is false.
+
 void TGWin32::MapGCValues(GCValues_t & gval,
                           ULong_t & xmask, GdkGCValues & xgval, Bool_t tox)
 {
-   // Map a GCValues_t to a XCGValues structure if tox is true. Map
-   // the other way in case tox is false.
-
    if (tox) {
       // map GCValues_t to XGCValues
       Mask_t mask = gval.fMask;
@@ -5028,11 +5033,11 @@ void TGWin32::MapGCValues(GCValues_t & gval,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get window attributes and return filled in attributes structure.
+
 void TGWin32::GetWindowAttributes(Window_t id, WindowAttributes_t & attr)
 {
-   // Get window attributes and return filled in attributes structure.
-
    if (!id) return;
 
    RECT rcClient, rcWind;
@@ -5069,61 +5074,61 @@ void TGWin32::GetWindowAttributes(Window_t id, WindowAttributes_t & attr)
    attr.fYourEventMask = evmask;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 Display_t TGWin32::GetDisplay() const
 {
-   //
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get maximum number of planes.
+
 Int_t TGWin32::GetDepth() const
 {
-   // Get maximum number of planes.
-
    return gdk_visual_get_best_depth();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return atom handle for atom_name. If it does not exist
+/// create it if only_if_exist is false. Atoms are used to communicate
+/// between different programs (i.e. window manager) via the X server.
+
 Atom_t TGWin32::InternAtom(const char *atom_name, Bool_t only_if_exist)
 {
-   // Return atom handle for atom_name. If it does not exist
-   // create it if only_if_exist is false. Atoms are used to communicate
-   // between different programs (i.e. window manager) via the X server.
-
    GdkAtom a = gdk_atom_intern((const gchar *) atom_name, only_if_exist);
 
    if (a == None) return kNone;
    return (Atom_t) a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return handle to the default root window created when calling
+/// XOpenDisplay().
+
 Window_t TGWin32::GetDefaultRootWindow() const
 {
-   // Return handle to the default root window created when calling
-   // XOpenDisplay().
-
    return (Window_t) GDK_ROOT_PARENT();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the parent of the window.
+
 Window_t TGWin32::GetParent(Window_t id) const
 {
-   // Return the parent of the window.
-
    if (!id) return (Window_t)0;
 
    return (Window_t)gdk_window_get_parent((GdkWindow *) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load font and query font. If font is not found 0 is returned,
+/// otherwise an opaque pointer to the FontStruct_t.
+/// Free the loaded font using DeleteFont().
+
 FontStruct_t TGWin32::LoadQueryFont(const char *font_name)
 {
-   // Load font and query font. If font is not found 0 is returned,
-   // otherwise an opaque pointer to the FontStruct_t.
-   // Free the loaded font using DeleteFont().
-
    char  family[100], weight[32], slant[32], fontname[256];
    Int_t n1, pixel, numfields;
 
@@ -5143,31 +5148,31 @@ FontStruct_t TGWin32::LoadQueryFont(const char *font_name)
    return (FontStruct_t) gdk_font_load(fontname);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return handle to font described by font structure.
+
 FontH_t TGWin32::GetFontHandle(FontStruct_t fs)
 {
-   // Return handle to font described by font structure.
-
    if (fs) {
       return (FontH_t)gdk_font_ref((GdkFont *) fs);
    }
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitely delete font structure obtained with LoadQueryFont().
+
 void TGWin32::DeleteFont(FontStruct_t fs)
 {
-   // Explicitely delete font structure obtained with LoadQueryFont().
-
    gdk_font_unref((GdkFont *) fs);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a graphics context using the values set in gval (but only for
+/// those entries that are in the mask).
+
 GContext_t TGWin32::CreateGC(Drawable_t id, GCValues_t *gval)
 {
-   // Create a graphics context using the values set in gval (but only for
-   // those entries that are in the mask).
-
    if (!id) return (GContext_t)0;
 
    GdkGCValues xgval;
@@ -5182,11 +5187,11 @@ GContext_t TGWin32::CreateGC(Drawable_t id, GCValues_t *gval)
    return (GContext_t) gc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change entries in an existing graphics context, gc, by values from gval.
+
 void TGWin32::ChangeGC(GContext_t gc, GCValues_t * gval)
 {
-   // Change entries in an existing graphics context, gc, by values from gval.
-
    GdkGCValues xgval;
    ULong_t xmask = 0;
    Mask_t mask = 0;
@@ -5247,12 +5252,12 @@ void TGWin32::ChangeGC(GContext_t gc, GCValues_t * gval)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copies graphics context from org to dest. Only the values specified
+/// in mask are copied. Both org and dest must exist.
+
 void TGWin32::CopyGC(GContext_t org, GContext_t dest, Mask_t mask)
 {
-   // Copies graphics context from org to dest. Only the values specified
-   // in mask are copied. Both org and dest must exist.
-
    GCValues_t gval;
    GdkGCValues xgval;
    ULong_t xmask;
@@ -5268,43 +5273,43 @@ void TGWin32::CopyGC(GContext_t org, GContext_t dest, Mask_t mask)
    gdk_gc_copy((GdkGC *) dest, (GdkGC *) org);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitely delete a graphics context.
+
 void TGWin32::DeleteGC(GContext_t gc)
 {
-   // Explicitely delete a graphics context.
-
    gdk_gc_unref((GdkGC *) gc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create cursor handle (just return cursor from cursor pool fCursors).
+
 Cursor_t TGWin32::CreateCursor(ECursor cursor)
 {
-   // Create cursor handle (just return cursor from cursor pool fCursors).
-
    return (Cursor_t) fCursors[cursor];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a pixmap of the width and height you specified
+/// and returns a pixmap ID that identifies it.
+
 Pixmap_t TGWin32::CreatePixmap(Drawable_t id, UInt_t w, UInt_t h)
 {
-   // Creates a pixmap of the width and height you specified
-   // and returns a pixmap ID that identifies it.
-
    GdkWindow *wid = (GdkWindow *)id;
    if (!id) wid =  GDK_ROOT_PARENT();
 
    return (Pixmap_t) gdk_pixmap_new(wid, w, h, gdk_visual_get_best_depth());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a pixmap from bitmap data. Ones will get foreground color and
+/// zeroes background color.
+
 Pixmap_t TGWin32::CreatePixmap(Drawable_t id, const char *bitmap,
                                UInt_t width, UInt_t height,
                                ULong_t forecolor, ULong_t backcolor,
                                Int_t depth)
 {
-   // Create a pixmap from bitmap data. Ones will get foreground color and
-   // zeroes background color.
-
    GdkColor fore, back;
    fore.pixel = forecolor;
    fore.red = GetRValue(forecolor);
@@ -5323,12 +5328,12 @@ Pixmap_t TGWin32::CreatePixmap(Drawable_t id, const char *bitmap,
                                                  height, depth, &fore, &back);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a bitmap (i.e. pixmap with depth 1) from the bitmap data.
+
 Pixmap_t TGWin32::CreateBitmap(Drawable_t id, const char *bitmap,
                                UInt_t width, UInt_t height)
 {
-   // Create a bitmap (i.e. pixmap with depth 1) from the bitmap data.
-
    GdkWindow *wid = (GdkWindow *)id;
    if (!id) wid =  GDK_ROOT_PARENT();
 
@@ -5337,24 +5342,24 @@ Pixmap_t TGWin32::CreateBitmap(Drawable_t id, const char *bitmap,
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitely delete pixmap resource.
+
 void TGWin32::DeletePixmap(Pixmap_t pmap)
 {
-   // Explicitely delete pixmap resource.
-
    gdk_pixmap_unref((GdkPixmap *) pmap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a picture pixmap from data on file. The picture attributes
+/// are used for input and output. Returns kTRUE in case of success,
+/// kFALSE otherwise. If mask does not exist it is set to kNone.
+
 Bool_t TGWin32::CreatePictureFromFile(Drawable_t id, const char *filename,
                                       Pixmap_t & pict,
                                       Pixmap_t & pict_mask,
                                       PictureAttributes_t & attr)
 {
-   // Create a picture pixmap from data on file. The picture attributes
-   // are used for input and output. Returns kTRUE in case of success,
-   // kFALSE otherwise. If mask does not exist it is set to kNone.
-
    GdkBitmap *gdk_pixmap_mask;
    if (strstr(filename, ".xpm") || strstr(filename, ".XPM")) {
       GdkWindow *wid = (GdkWindow *)id;
@@ -5379,16 +5384,16 @@ Bool_t TGWin32::CreatePictureFromFile(Drawable_t id, const char *filename,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a pixture pixmap from data. The picture attributes
+/// are used for input and output. Returns kTRUE in case of success,
+/// kFALSE otherwise. If mask does not exist it is set to kNone.
+
 Bool_t TGWin32::CreatePictureFromData(Drawable_t id, char **data,
                                       Pixmap_t & pict,
                                       Pixmap_t & pict_mask,
                                       PictureAttributes_t & attr)
 {
-   // Create a pixture pixmap from data. The picture attributes
-   // are used for input and output. Returns kTRUE in case of success,
-   // kFALSE otherwise. If mask does not exist it is set to kNone.
-
    GdkBitmap *gdk_pixmap_mask;
    GdkWindow *wid = (GdkWindow *)id;
    if (!id) wid =  GDK_ROOT_PARENT();
@@ -5406,12 +5411,12 @@ Bool_t TGWin32::CreatePictureFromData(Drawable_t id, char **data,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read picture data from file and store in ret_data. Returns kTRUE in
+/// case of success, kFALSE otherwise.
+
 Bool_t TGWin32::ReadPictureDataFromFile(const char *filename, char ***ret_data)
 {
-   // Read picture data from file and store in ret_data. Returns kTRUE in
-   // case of success, kFALSE otherwise.
-
    Bool_t ret = kFALSE;
    GdkPixmap *pxm = gdk_pixmap_create_from_xpm(NULL, NULL, NULL, filename);
    ret_data = 0;
@@ -5427,22 +5432,22 @@ Bool_t TGWin32::ReadPictureDataFromFile(const char *filename, char ***ret_data)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete picture data created by the function ReadPictureDataFromFile.
+
 void TGWin32::DeletePictureData(void *data)
 {
-   // Delete picture data created by the function ReadPictureDataFromFile.
-
    free(data);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specify a dash pattertn. Offset defines the phase of the pattern.
+/// Each element in the dash_list array specifies the length (in pixels)
+/// of a segment of the pattern. N defines the length of the list.
+
 void TGWin32::SetDashes(GContext_t gc, Int_t offset, const char *dash_list,
                         Int_t n)
 {
-   // Specify a dash pattertn. Offset defines the phase of the pattern.
-   // Each element in the dash_list array specifies the length (in pixels)
-   // of a segment of the pattern. N defines the length of the list.
-
    int i;
    gint8 dashes[32];
    for (i = 0; i < n; i++) {
@@ -5455,27 +5460,27 @@ void TGWin32::SetDashes(GContext_t gc, Int_t offset, const char *dash_list,
    gdk_gc_set_dashes((GdkGC *) gc, offset, dashes, n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map a ColorStruct_t to a XColor structure.
+
 void TGWin32::MapColorStruct(ColorStruct_t * color, GdkColor & xcolor)
 {
-   // Map a ColorStruct_t to a XColor structure.
-
    xcolor.pixel = color->fPixel;
    xcolor.red = color->fRed;
    xcolor.green = color->fGreen;
    xcolor.blue = color->fBlue;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse string cname containing color name, like "green" or "#00FF00".
+/// It returns a filled in ColorStruct_t. Returns kFALSE in case parsing
+/// failed, kTRUE in case of success. On success, the ColorStruct_t
+/// fRed, fGreen and fBlue fields are all filled in and the mask is set
+/// for all three colors, but fPixel is not set.
+
 Bool_t TGWin32::ParseColor(Colormap_t cmap, const char *cname,
                            ColorStruct_t & color)
 {
-   // Parse string cname containing color name, like "green" or "#00FF00".
-   // It returns a filled in ColorStruct_t. Returns kFALSE in case parsing
-   // failed, kTRUE in case of success. On success, the ColorStruct_t
-   // fRed, fGreen and fBlue fields are all filled in and the mask is set
-   // for all three colors, but fPixel is not set.
-
    GdkColor xc;
 
    if (gdk_color_parse((char *)cname, &xc)) {
@@ -5488,13 +5493,13 @@ Bool_t TGWin32::ParseColor(Colormap_t cmap, const char *cname,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find and allocate a color cell according to the color values specified
+/// in the ColorStruct_t. If no cell could be allocated it returns kFALSE,
+/// otherwise kTRUE.
+
 Bool_t TGWin32::AllocColor(Colormap_t cmap, ColorStruct_t & color)
 {
-   // Find and allocate a color cell according to the color values specified
-   // in the ColorStruct_t. If no cell could be allocated it returns kFALSE,
-   // otherwise kTRUE.
-
    int status;
    GdkColor xc;
 
@@ -5508,13 +5513,13 @@ Bool_t TGWin32::AllocColor(Colormap_t cmap, ColorStruct_t & color)
    return kTRUE;                // status != 0 ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill in the primary color components for a specific pixel value.
+/// On input fPixel should be set on return the fRed, fGreen and
+/// fBlue components will be set.
+
 void TGWin32::QueryColor(Colormap_t cmap, ColorStruct_t & color)
 {
-   // Fill in the primary color components for a specific pixel value.
-   // On input fPixel should be set on return the fRed, fGreen and
-   // fBlue components will be set.
-
    GdkColor xc;
    xc.pixel = color.fPixel;
 
@@ -5528,21 +5533,21 @@ void TGWin32::QueryColor(Colormap_t cmap, ColorStruct_t & color)
    color.fBlue = xc.blue;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free color cell with specified pixel value.
+
 void TGWin32::FreeColor(Colormap_t cmap, ULong_t pixel)
 {
-   // Free color cell with specified pixel value.
-
    // FIXME: to be implemented.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if there is for window "id" an event of type "type". If there
+/// is fill in the event structure and return true. If no such event
+/// return false.
+
 Bool_t TGWin32::CheckEvent(Window_t id, EGEventType type, Event_t & ev)
 {
-   // Check if there is for window "id" an event of type "type". If there
-   // is fill in the event structure and return true. If no such event
-   // return false.
-
    if (!id) return kFALSE;
 
    Event_t tev;
@@ -5572,11 +5577,11 @@ Bool_t TGWin32::CheckEvent(Window_t id, EGEventType type, Event_t & ev)
    return r ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send event ev to window id.
+
 void TGWin32::SendEvent(Window_t id, Event_t * ev)
 {
-   // Send event ev to window id.
-
    if (!ev || !id) return;
 
    TGWin32MainThread::LockMSG();
@@ -5586,11 +5591,11 @@ void TGWin32::SendEvent(Window_t id, Event_t * ev)
    TGWin32MainThread::UnlockMSG();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of pending events.
+
 Int_t TGWin32::EventsPending()
 {
-    // Returns number of pending events.
-
    Int_t ret;
 
    TGWin32MainThread::LockMSG();
@@ -5600,13 +5605,13 @@ Int_t TGWin32::EventsPending()
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copies first pending event from event queue to Event_t structure
+/// and removes event from queue. Not all of the event fields are valid
+/// for each event type, except fType and fWindow.
+
 void TGWin32::NextEvent(Event_t & event)
 {
-   // Copies first pending event from event queue to Event_t structure
-   // and removes event from queue. Not all of the event fields are valid
-   // for each event type, except fType and fWindow.
-
    TGWin32MainThread::LockMSG();
    GdkEvent *xev = gdk_event_unqueue();
 
@@ -5621,11 +5626,11 @@ void TGWin32::NextEvent(Event_t & event)
    TGWin32MainThread::UnlockMSG();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map modifier key state to or from X.
+
 void TGWin32::MapModifierState(UInt_t & state, UInt_t & xstate, Bool_t tox)
 {
-   // Map modifier key state to or from X.
-
    if (tox) {
       xstate = state;
       if (state & kAnyModifier) {
@@ -5676,12 +5681,12 @@ static void _set_event_time(GdkEvent &event, UInt_t time)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map Event_t structure to gdk_event structure. If tox is false
+/// map the other way.
+
 void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
 {
-   // Map Event_t structure to gdk_event structure. If tox is false
-   // map the other way.
-
    if (tox) {
       // map from Event_t to gdk_event
       xev.type = GDK_NOTHING;
@@ -6045,34 +6050,34 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32::Bell(Int_t percent)
 {
-   //
-
    gSystem->Beep();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a drawable (i.e. pixmap) to another drawable (pixmap, window).
+/// The graphics context gc will be used and the source will be copied
+/// from src_x,src_y,src_x+width,src_y+height to dest_x,dest_y.
+
 void TGWin32::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
                        Int_t src_x, Int_t src_y, UInt_t width,
                        UInt_t height, Int_t dest_x, Int_t dest_y)
 {
-   // Copy a drawable (i.e. pixmap) to another drawable (pixmap, window).
-   // The graphics context gc will be used and the source will be copied
-   // from src_x,src_y,src_x+width,src_y+height to dest_x,dest_y.
-
    if (!src || !dest) return;
 
    gdk_window_copy_area((GdkDrawable *) dest, (GdkGC *) gc, dest_x, dest_y,
                         (GdkDrawable *) src, src_x, src_y, width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change window attributes.
+
 void TGWin32::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t * attr)
 {
-   // Change window attributes.
-
    if (!id) return;
 
    GdkColor color;
@@ -6111,46 +6116,46 @@ void TGWin32::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t * attr)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function alters the property for the specified window and
+/// causes the X server to generate a PropertyNotify event on that
+/// window.
+
 void TGWin32::ChangeProperty(Window_t id, Atom_t property, Atom_t type,
                              UChar_t * data, Int_t len)
 {
-   // This function alters the property for the specified window and
-   // causes the X server to generate a PropertyNotify event on that
-   // window.
-
    if (!id) return;
 
    gdk_property_change((GdkWindow *) id, (GdkAtom) property,
                        (GdkAtom) type, 8, GDK_PROP_MODE_REPLACE, data,len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a line.
+
 void TGWin32::DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1,
                        Int_t x2, Int_t y2)
 {
-   // Draw a line.
-
    if (!id) return;
 
    gdk_draw_line((GdkDrawable *) id, (GdkGC *) gc, x1, y1, x2, y2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear a window area to the bakcground color.
+
 void TGWin32::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Clear a window area to the bakcground color.
-
    if (!id) return;
 
    gdk_window_clear_area((GdkWindow *) id, x, y, w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tell WM to send message when window is closed via WM.
+
 void TGWin32::WMDeleteNotify(Window_t id)
 {
-   // Tell WM to send message when window is closed via WM.
-
    if (!id) return;
 
    Atom prop;
@@ -6161,11 +6166,11 @@ void TGWin32::WMDeleteNotify(Window_t id)
                      (unsigned char *) &gWM_DELETE_WINDOW, 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Turn key auto repeat on or off.
+
 void TGWin32::SetKeyAutoRepeat(Bool_t on)
 {
-   // Turn key auto repeat on or off.
-
    if (on) {
       gdk_key_repeat_restore();
     } else {
@@ -6173,14 +6178,14 @@ void TGWin32::SetKeyAutoRepeat(Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Establish passive grab on a certain key. That is, when a certain key
+/// keycode is hit while certain modifier's (Shift, Control, Meta, Alt)
+/// are active then the keyboard will be grabed for window id.
+/// When grab is false, ungrab the keyboard for this key and modifier.
+
 void TGWin32::GrabKey(Window_t id, Int_t keycode, UInt_t modifier, Bool_t grab)
 {
-   // Establish passive grab on a certain key. That is, when a certain key
-   // keycode is hit while certain modifier's (Shift, Control, Meta, Alt)
-   // are active then the keyboard will be grabed for window id.
-   // When grab is false, ungrab the keyboard for this key and modifier.
-
    UInt_t xmod;
 
    MapModifierState(modifier, xmod);
@@ -6192,16 +6197,16 @@ void TGWin32::GrabKey(Window_t id, Int_t keycode, UInt_t modifier, Bool_t grab)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Establish passive grab on a certain mouse button. That is, when a
+/// certain mouse button is hit while certain modifier's (Shift, Control,
+/// Meta, Alt) are active then the mouse will be grabed for window id.
+/// When grab is false, ungrab the mouse button for this button and modifier.
+
 void TGWin32::GrabButton(Window_t id, EMouseButton button, UInt_t modifier,
                          UInt_t evmask, Window_t confine, Cursor_t cursor,
                          Bool_t grab)
 {
-   // Establish passive grab on a certain mouse button. That is, when a
-   // certain mouse button is hit while certain modifier's (Shift, Control,
-   // Meta, Alt) are active then the mouse will be grabed for window id.
-   // When grab is false, ungrab the mouse button for this button and modifier.
-
    UInt_t xevmask;
    UInt_t xmod;
 
@@ -6218,14 +6223,14 @@ void TGWin32::GrabButton(Window_t id, EMouseButton button, UInt_t modifier,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Establish an active pointer grab. While an active pointer grab is in
+/// effect, further pointer events are only reported to the grabbing
+/// client window.
+
 void TGWin32::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
                           Cursor_t cursor, Bool_t grab, Bool_t owner_events)
 {
-   // Establish an active pointer grab. While an active pointer grab is in
-   // effect, further pointer events are only reported to the grabbing
-   // client window.
-
    UInt_t xevmask;
    MapEventMask(evmask, xevmask);
 
@@ -6240,31 +6245,31 @@ void TGWin32::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set window name.
+
 void TGWin32::SetWindowName(Window_t id, char *name)
 {
-   // Set window name.
-
    if (!id) return;
 
    gdk_window_set_title((GdkWindow *) id, name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set window icon name.
+
 void TGWin32::SetIconName(Window_t id, char *name)
 {
-   // Set window icon name.
-
    if (!id) return;
 
    gdk_window_set_icon_name((GdkWindow *) id, name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pixmap the WM can use when the window is iconized.
+
 void TGWin32::SetIconPixmap(Window_t id, Pixmap_t pic)
 {
-   // Set pixmap the WM can use when the window is iconized.
-
    if (!id) return;
 
    gdk_window_set_icon((GdkWindow *)id, NULL, (GdkPixmap *)pic, (GdkPixmap *)pic);
@@ -6272,11 +6277,11 @@ void TGWin32::SetIconPixmap(Window_t id, Pixmap_t pic)
 
 #define safestrlen(s) ((s) ? strlen(s) : 0)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the windows class and resource name.
+
 void TGWin32::SetClassHints(Window_t id, char *className, char *resourceName)
 {
-   // Set the windows class and resource name.
-
    if (!id) return;
 
    char *class_string;
@@ -6311,46 +6316,46 @@ void TGWin32::SetClassHints(Window_t id, char *className, char *resourceName)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set decoration style for MWM-compatible wm (mwm, ncdwm, fvwm?).
+
 void TGWin32::SetMWMHints(Window_t id, UInt_t value, UInt_t funcs,
                           UInt_t input)
 {
-   // Set decoration style for MWM-compatible wm (mwm, ncdwm, fvwm?).
-
    if (!id) return;
 
    gdk_window_set_decorations((GdkDrawable *) id, (GdkWMDecoration) value);
    gdk_window_set_functions((GdkDrawable *) id, (GdkWMFunction) funcs);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32::SetWMPosition(Window_t id, Int_t x, Int_t y)
 {
-   //
-
    if (!id) return;
 
    gdk_window_move((GdkDrawable *) id, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32::SetWMSize(Window_t id, UInt_t w, UInt_t h)
 {
-   //
-
    if (!id) return;
 
    gdk_window_resize((GdkWindow *) id, w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Give the window manager minimum and maximum size hints. Also
+/// specify via winc and hinc the resize increments.
+
 void TGWin32::SetWMSizeHints(Window_t id, UInt_t wmin, UInt_t hmin,
                              UInt_t wmax, UInt_t hmax,
                              UInt_t winc, UInt_t hinc)
 {
-   // Give the window manager minimum and maximum size hints. Also
-   // specify via winc and hinc the resize increments.
-
    if (!id) return;
 
    GdkGeometry hints;
@@ -6369,11 +6374,11 @@ void TGWin32::SetWMSizeHints(Window_t id, UInt_t wmin, UInt_t hmin,
                                  (GdkWindowHints) flags);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the initial state of the window. Either kNormalState or kIconicState.
+
 void TGWin32::SetWMState(Window_t id, EInitialState state)
 {
-   // Set the initial state of the window. Either kNormalState or kIconicState.
-
    if (!id) return;
 
 #if 0
@@ -6392,22 +6397,22 @@ void TGWin32::SetWMState(Window_t id, EInitialState state)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tell window manager that window is a transient window of gdk_parent_root.
+
 void TGWin32::SetWMTransientHint(Window_t id, Window_t main_id)
 {
-   // Tell window manager that window is a transient window of gdk_parent_root.
-
    if (!id) return;
 
    gdk_window_set_transient_for((GdkWindow *) id, (GdkWindow *) main_id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a string using a specific graphics context in position (x,y).
+
 void TGWin32::DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
                          const char *s, Int_t len)
 {
-   // Draw a string using a specific graphics context in position (x,y).
-
    if (!id) return;
 
    GdkGCValues values;
@@ -6416,31 +6421,31 @@ void TGWin32::DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
                  (GdkGC *) gc, x, y, (const gchar *)s, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return length of string in pixels. Size depends on font.
+
 Int_t TGWin32::TextWidth(FontStruct_t font, const char *s, Int_t len)
 {
-   // Return length of string in pixels. Size depends on font.
-
    return gdk_text_width((GdkFont *)font, s, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return some font properties.
+
 void TGWin32::GetFontProperties(FontStruct_t font, Int_t & max_ascent,
                                 Int_t & max_descent)
 {
-   // Return some font properties.
-
    GdkFont *f = (GdkFont *) font;
    max_ascent = f->ascent;
    max_descent = f->descent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get current values from graphics context gc. Which values of the
+/// context to get is encoded in the GCValues::fMask member.
+
 void TGWin32::GetGCValues(GContext_t gc, GCValues_t & gval)
 {
-   // Get current values from graphics context gc. Which values of the
-   // context to get is encoded in the GCValues::fMask member.
-
    GdkGCValues xgval;
    ULong_t xmask;
 
@@ -6449,86 +6454,86 @@ void TGWin32::GetGCValues(GContext_t gc, GCValues_t & gval)
    MapGCValues(gval, xmask, xgval, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve associated font structure once we have the font handle.
+/// Free returned FontStruct_t using FreeFontStruct().
+
 FontStruct_t TGWin32::GetFontStruct(FontH_t fh)
 {
-   // Retrieve associated font structure once we have the font handle.
-   // Free returned FontStruct_t using FreeFontStruct().
-
    return (FontStruct_t) gdk_font_ref((GdkFont *) fh);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free font structure returned by GetFontStruct().
+
 void TGWin32::FreeFontStruct(FontStruct_t fs)
 {
-   // Free font structure returned by GetFontStruct().
-
    gdk_font_unref((GdkFont *) fs);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear window.
+
 void TGWin32::ClearWindow(Window_t id)
 {
-   // Clear window.
-
    if (!id) return;
 
    gdk_window_clear((GdkDrawable *) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a keysym to the appropriate keycode. For example keysym is
+/// a letter and keycode is the matching keyboard key (which is dependend
+/// on the current keyboard mapping).
+
 Int_t TGWin32::KeysymToKeycode(UInt_t keysym)
 {
-   // Convert a keysym to the appropriate keycode. For example keysym is
-   // a letter and keycode is the matching keyboard key (which is dependend
-   // on the current keyboard mapping).
-
    UInt_t xkeysym;
    MapKeySym(keysym, xkeysym);
    return xkeysym;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a filled rectangle. Filling is done according to the gc.
+
 void TGWin32::FillRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
                             UInt_t w, UInt_t h)
 {
-   // Draw a filled rectangle. Filling is done according to the gc.
-
    if (!id) return;
 
    gdk_win32_draw_rectangle((GdkDrawable *) id, (GdkGC *) gc, kTRUE, x, y, w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a rectangle outline.
+
 void TGWin32::DrawRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
                             UInt_t w, UInt_t h)
 {
-   // Draw a rectangle outline.
-
    if (!id) return;
 
    gdk_win32_draw_rectangle((GdkDrawable *) id, (GdkGC *) gc, kFALSE, x, y, w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draws multiple line segments. Each line is specified by a pair of points.
+
 void TGWin32::DrawSegments(Drawable_t id, GContext_t gc, Segment_t * seg,
                            Int_t nseg)
 {
-   // Draws multiple line segments. Each line is specified by a pair of points.
-
    if (!id) return;
 
    gdk_win32_draw_segments((GdkDrawable *) id, (GdkGC *) gc, (GdkSegment *)seg, nseg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Defines which input events the window is interested in. By default
+/// events are propageted up the window stack. This mask can also be
+/// set at window creation time via the SetWindowAttributes_t::fEventMask
+/// attribute.
+
 void TGWin32::SelectInput(Window_t id, UInt_t evmask)
 {
-   // Defines which input events the window is interested in. By default
-   // events are propageted up the window stack. This mask can also be
-   // set at window creation time via the SetWindowAttributes_t::fEventMask
-   // attribute.
-
    if (!id) return;
 
    UInt_t xevmask;
@@ -6536,86 +6541,86 @@ void TGWin32::SelectInput(Window_t id, UInt_t evmask)
    gdk_window_set_events((GdkWindow *) id, (GdkEventMask)xevmask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the window id of the window having the input focus.
+
 Window_t TGWin32::GetInputFocus()
 {
-   // Returns the window id of the window having the input focus.
-
    HWND hwnd = ::GetFocus();
    return (Window_t) gdk_xid_table_lookup(hwnd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set keyboard input focus to window id.
+
 void TGWin32::SetInputFocus(Window_t id)
 {
-   // Set keyboard input focus to window id.
-
    if (!id) return;
 
    HWND hwnd = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
    ::SetFocus(hwnd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the window id of the current owner of the primary selection.
+/// That is the window in which, for example some text is selected.
+
 Window_t TGWin32::GetPrimarySelectionOwner()
 {
-   // Returns the window id of the current owner of the primary selection.
-   // That is the window in which, for example some text is selected.
-
    return (Window_t)gdk_selection_owner_get(gClipboardAtom);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Makes the window id the current owner of the primary selection.
+/// That is the window in which, for example some text is selected.
+
 void TGWin32::SetPrimarySelectionOwner(Window_t id)
 {
-   // Makes the window id the current owner of the primary selection.
-   // That is the window in which, for example some text is selected.
-
    if (!id) return;
 
    gdk_selection_owner_set((GdkWindow *) id, gClipboardAtom, GDK_CURRENT_TIME, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// XConvertSelection() causes a SelectionRequest event to be sent to the
+/// current primary selection owner. This event specifies the selection
+/// property (primary selection), the format into which to convert that
+/// data before storing it (target = XA_STRING), the property in which
+/// the owner will place the information (sel_property), the window that
+/// wants the information (id), and the time of the conversion request
+/// (when).
+/// The selection owner responds by sending a SelectionNotify event, which
+/// confirms the selected atom and type.
+
 void TGWin32::ConvertPrimarySelection(Window_t id, Atom_t clipboard, Time_t when)
 {
-   // XConvertSelection() causes a SelectionRequest event to be sent to the
-   // current primary selection owner. This event specifies the selection
-   // property (primary selection), the format into which to convert that
-   // data before storing it (target = XA_STRING), the property in which
-   // the owner will place the information (sel_property), the window that
-   // wants the information (id), and the time of the conversion request
-   // (when).
-   // The selection owner responds by sending a SelectionNotify event, which
-   // confirms the selected atom and type.
-
    if (!id) return;
 
    gdk_selection_convert((GdkWindow *) id, clipboard,
                          gdk_atom_intern("GDK_TARGET_STRING", 0), when);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert the keycode from the event structure to a key symbol (according
+/// to the modifiers specified in the event structure and the current
+/// keyboard mapping). In buf a null terminated ASCII string is returned
+/// representing the string that is currently mapped to the key code.
+
 void TGWin32::LookupString(Event_t * event, char *buf, Int_t buflen,
                            UInt_t & keysym)
 {
-   // Convert the keycode from the event structure to a key symbol (according
-   // to the modifiers specified in the event structure and the current
-   // keyboard mapping). In buf a null terminated ASCII string is returned
-   // representing the string that is currently mapped to the key code.
-
    _lookup_string(event, buf, buflen);
    UInt_t ks, xks = (UInt_t) event->fCode;
    MapKeySym(ks, xks, kFALSE);
    keysym = (Int_t) ks;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map to and from X key symbols. Keysym are the values returned by
+/// XLookUpString.
+
 void TGWin32::MapKeySym(UInt_t & keysym, UInt_t & xkeysym, Bool_t tox)
 {
-   // Map to and from X key symbols. Keysym are the values returned by
-   // XLookUpString.
-
    if (tox) {
       xkeysym = GDK_VoidSymbol;
       if (keysym < 127) {
@@ -6650,13 +6655,13 @@ void TGWin32::MapKeySym(UInt_t & keysym, UInt_t & xkeysym, Bool_t tox)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get contents of paste buffer atom into string. If del is true delete
+/// the paste buffer afterwards.
+
 void TGWin32::GetPasteBuffer(Window_t id, Atom_t atom, TString & text,
                              Int_t & nchar, Bool_t del)
 {
-   // Get contents of paste buffer atom into string. If del is true delete
-   // the paste buffer afterwards.
-
    if (!id) return;
 
    char *data;
@@ -6680,17 +6685,17 @@ void TGWin32::GetPasteBuffer(Window_t id, Atom_t atom, TString & text,
                        gdk_atom_intern("GDK_SELECTION", FALSE));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TranslateCoordinates translates coordinates from the frame of
+/// reference of one window to another. If the point is contained
+/// in a mapped child of the destination, the id of that child is
+/// returned as well.
+
 void TGWin32::TranslateCoordinates(Window_t src, Window_t dest,
                                    Int_t src_x, Int_t src_y,
                                    Int_t &dest_x, Int_t &dest_y,
                                    Window_t &child)
 {
-   // TranslateCoordinates translates coordinates from the frame of
-   // reference of one window to another. If the point is contained
-   // in a mapped child of the destination, the id of that child is
-   // returned as well.
-
    if (!src || !dest) return;
 
    HWND sw, dw, ch = NULL;
@@ -6713,13 +6718,13 @@ void TGWin32::TranslateCoordinates(Window_t src, Window_t dest,
    dest_y = point.y;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return geometry of window (should be called GetGeometry but signature
+/// already used).
+
 void TGWin32::GetWindowSize(Drawable_t id, Int_t & x, Int_t & y,
                             UInt_t & w, UInt_t & h)
 {
-   // Return geometry of window (should be called GetGeometry but signature
-   // already used).
-
    if (!id) return;
 
    Int_t ddum;
@@ -6733,36 +6738,36 @@ void TGWin32::GetWindowSize(Drawable_t id, Int_t & x, Int_t & y,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// FillPolygon fills the region closed by the specified path.
+/// The path is closed automatically if the last point in the list does
+/// not coincide with the first point. All point coordinates are
+/// treated as relative to the origin. For every pair of points
+/// inside the polygon, the line segment connecting them does not
+/// intersect the path.
+
 void TGWin32::FillPolygon(Window_t id, GContext_t gc, Point_t * points,
                           Int_t npnt)
 {
-   // FillPolygon fills the region closed by the specified path.
-   // The path is closed automatically if the last point in the list does
-   // not coincide with the first point. All point coordinates are
-   // treated as relative to the origin. For every pair of points
-   // inside the polygon, the line segment connecting them does not
-   // intersect the path.
-
    if (!id) return;
 
    gdk_win32_draw_polygon((GdkWindow *) id, (GdkGC *) gc, 1, (GdkPoint *) points, npnt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the root window the pointer is logically on and the pointer
+/// coordinates relative to the root window's origin.
+/// The pointer coordinates returned to win_x and win_y are relative to
+/// the origin of the specified window. In this case, QueryPointer returns
+/// the child that contains the pointer, if any, or else kNone to
+/// childw. QueryPointer returns the current logical state of the
+/// keyboard buttons and the modifier keys in mask.
+
 void TGWin32::QueryPointer(Window_t id, Window_t &rootw,
                            Window_t &childw, Int_t &root_x,
                            Int_t &root_y, Int_t &win_x, Int_t &win_y,
                            UInt_t &mask)
 {
-   // Returns the root window the pointer is logically on and the pointer
-   // coordinates relative to the root window's origin.
-   // The pointer coordinates returned to win_x and win_y are relative to
-   // the origin of the specified window. In this case, QueryPointer returns
-   // the child that contains the pointer, if any, or else kNone to
-   // childw. QueryPointer returns the current logical state of the
-   // keyboard buttons and the modifier keys in mask.
-
    if (!id) return;
 
    POINT currPt;
@@ -6809,12 +6814,12 @@ void TGWin32::QueryPointer(Window_t id, Window_t &rootw,
    MapModifierState(mask, umask, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set foreground color in graphics context (shortcut for ChangeGC with
+/// only foreground mask set).
+
 void TGWin32::SetForeground(GContext_t gc, ULong_t foreground)
 {
-   // Set foreground color in graphics context (shortcut for ChangeGC with
-   // only foreground mask set).
-
    GdkColor fore;
    fore.pixel = foreground;
    fore.red = GetRValue(foreground);
@@ -6823,14 +6828,14 @@ void TGWin32::SetForeground(GContext_t gc, ULong_t foreground)
    gdk_gc_set_foreground((GdkGC *) gc, &fore);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set clipping rectangles in graphics context. X, Y specify the origin
+/// of the rectangles. Recs specifies an array of rectangles that define
+/// the clipping mask and n is the number of rectangles.
+
 void TGWin32::SetClipRectangles(GContext_t gc, Int_t x, Int_t y,
                                 Rectangle_t * recs, Int_t n)
 {
-   // Set clipping rectangles in graphics context. X, Y specify the origin
-   // of the rectangles. Recs specifies an array of rectangles that define
-   // the clipping mask and n is the number of rectangles.
-
    Int_t i;
    GdkRectangle *grects = new GdkRectangle[n];
 
@@ -6847,37 +6852,37 @@ void TGWin32::SetClipRectangles(GContext_t gc, Int_t x, Int_t y,
    delete [] grects;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Flush (mode = 0, default) or synchronize (mode = 1) X output buffer.
+/// Flush flushes output buffer. Sync flushes buffer and waits till all
+/// requests have been processed by X server.
+
 void TGWin32::Update(Int_t mode)
 {
-   // Flush (mode = 0, default) or synchronize (mode = 1) X output buffer.
-   // Flush flushes output buffer. Sync flushes buffer and waits till all
-   // requests have been processed by X server.
-
    GdiFlush();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new empty region.
+
 Region_t TGWin32::CreateRegion()
 {
-   // Create a new empty region.
-
    return (Region_t) gdk_region_new();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy region.
+
 void TGWin32::DestroyRegion(Region_t reg)
 {
-   // Destroy region.
-
    gdk_region_destroy((GdkRegion *) reg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Union of rectangle with a region.
+
 void TGWin32::UnionRectWithRegion(Rectangle_t * rect, Region_t src, Region_t dest)
 {
-   // Union of rectangle with a region.
-
    GdkRectangle r;
    r.x = rect->fX;
    r.y = rect->fY;
@@ -6886,81 +6891,81 @@ void TGWin32::UnionRectWithRegion(Rectangle_t * rect, Region_t src, Region_t des
    dest = (Region_t) gdk_region_union_with_rect((GdkRegion *) src, &r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create region for the polygon defined by the points array.
+/// If winding is true use WindingRule else EvenOddRule as fill rule.
+
 Region_t TGWin32::PolygonRegion(Point_t * points, Int_t np, Bool_t winding)
 {
-   // Create region for the polygon defined by the points array.
-   // If winding is true use WindingRule else EvenOddRule as fill rule.
-
    return (Region_t) gdk_region_polygon((GdkPoint*)points, np,
                                  winding ? GDK_WINDING_RULE : GDK_EVEN_ODD_RULE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the union of rega and regb and return result region.
+/// The output region may be the same result region.
+
 void TGWin32::UnionRegion(Region_t rega, Region_t regb, Region_t result)
 {
-   // Compute the union of rega and regb and return result region.
-   // The output region may be the same result region.
-
    result = (Region_t) gdk_regions_union((GdkRegion *) rega, (GdkRegion *) regb);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the intersection of rega and regb and return result region.
+/// The output region may be the same as the result region.
+
 void TGWin32::IntersectRegion(Region_t rega, Region_t regb,
                               Region_t result)
 {
-   // Compute the intersection of rega and regb and return result region.
-   // The output region may be the same as the result region.
-
    result = (Region_t) gdk_regions_intersect((GdkRegion *) rega,(GdkRegion *) regb);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Subtract rega from regb.
+
 void TGWin32::SubtractRegion(Region_t rega, Region_t regb, Region_t result)
 {
-   // Subtract rega from regb.
-
    result = (Region_t)gdk_regions_subtract((GdkRegion *) rega,(GdkRegion *) regb);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the difference between the union and intersection of
+/// two regions.
+
 void TGWin32::XorRegion(Region_t rega, Region_t regb, Region_t result)
 {
-   // Calculate the difference between the union and intersection of
-   // two regions.
-
    result = (Region_t) gdk_regions_xor((GdkRegion *) rega, (GdkRegion *) regb);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the region is empty.
+
 Bool_t TGWin32::EmptyRegion(Region_t reg)
 {
-   // Return true if the region is empty.
-
    return (Bool_t) gdk_region_empty((GdkRegion *) reg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if the point x,y is in the region.
+
 Bool_t TGWin32::PointInRegion(Int_t x, Int_t y, Region_t reg)
 {
-   // Returns true if the point x,y is in the region.
-
    return (Bool_t) gdk_region_point_in((GdkRegion *) reg, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if two regions are equal.
+
 Bool_t TGWin32::EqualRegion(Region_t rega, Region_t regb)
 {
-   // Returns true if two regions are equal.
-
    return (Bool_t) gdk_region_equal((GdkRegion *) rega, (GdkRegion *) regb);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return smallest enclosing rectangle.
+
 void TGWin32::GetRegionBox(Region_t reg, Rectangle_t * rect)
 {
-   // Return smallest enclosing rectangle.
-
    GdkRectangle r;
    gdk_region_get_clipbox((GdkRegion *) reg, &r);
    rect->fX = r.x;
@@ -6969,11 +6974,11 @@ void TGWin32::GetRegionBox(Region_t reg, Rectangle_t * rect)
    rect->fHeight = r.height;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list of font names matching "fontname".
+
 char **TGWin32::ListFonts(const char *fontname, Int_t /*max*/, Int_t &count)
 {
-   // Return list of font names matching "fontname".
-
    char  foundry[32], family[100], weight[32], slant[32], font_name[256];
    char  **fontlist;
    Int_t n1, fontcount = 0;
@@ -6993,37 +6998,37 @@ char **TGWin32::ListFonts(const char *fontname, Int_t /*max*/, Int_t &count)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32::FreeFontNames(char **fontlist)
 {
-   //
-
    gdk_font_list_free(fontlist);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 Drawable_t TGWin32::CreateImage(UInt_t width, UInt_t height)
 {
-   //
-
    return (Drawable_t) gdk_image_new(GDK_IMAGE_SHARED, gdk_visual_get_best(),
                                      width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32::GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height)
 {
-   //
-
    width  = ((GdkImage*)id)->width;
    height = ((GdkImage*)id)->height;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32::PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel)
 {
-   //
-
    if (!id) return;
 
    GdkImage *image = (GdkImage *)id;
@@ -7049,12 +7054,12 @@ void TGWin32::PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32::PutImage(Drawable_t id, GContext_t gc, Drawable_t img, Int_t dx,
                        Int_t dy, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   //
-
    if (!id) return;
 
    gdk_draw_image((GdkDrawable *) id, (GdkGC *)gc, (GdkImage *)img,
@@ -7062,27 +7067,27 @@ void TGWin32::PutImage(Drawable_t id, GContext_t gc, Drawable_t img, Int_t dx,
    ::GdiFlush();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32::DeleteImage(Drawable_t img)
 {
-   //
-
    gdk_image_unref((GdkImage *)img);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gets DIB bits
+/// x, y, width, height - position of bitmap
+/// returns a pointer on bitmap bits array
+/// in format:
+/// b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+///
+/// Pixels are numbered from left to right and from top to bottom.
+/// By default all pixels from the whole drawable are returned.
+
 unsigned char *TGWin32::GetColorBits(Drawable_t wid,  Int_t x, Int_t y,
                                      UInt_t width, UInt_t height)
 {
-   // Gets DIB bits
-   // x, y, width, height - position of bitmap
-   // returns a pointer on bitmap bits array
-   // in format:
-   // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
-   //
-   // Pixels are numbered from left to right and from top to bottom.
-   // By default all pixels from the whole drawable are returned.
-
    HDC hdc, memdc;
    BITMAPINFO bmi;
    HGDIOBJ oldbitmap1, oldbitmap2;
@@ -7134,15 +7139,15 @@ unsigned char *TGWin32::GetColorBits(Drawable_t wid,  Int_t x, Int_t y,
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create an image from RGB data. RGB data is in format :
+/// b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+///
+/// Pixels are numbered from left to right and from top to bottom.
+/// Note that data must be 32-bit aligned
+
 Pixmap_t TGWin32::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height)
 {
-   // create an image from RGB data. RGB data is in format :
-   // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
-   //
-   // Pixels are numbered from left to right and from top to bottom.
-   // Note that data must be 32-bit aligned
-
    BITMAPINFO bmp_info;
    bmp_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
    bmp_info.bmiHeader.biWidth = width;
@@ -7174,10 +7179,11 @@ Pixmap_t TGWin32::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t
    return (Pixmap_t)gdk_pixmap_foreign_new((guint32)hbitmap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///register pixmap created by TGWin32GLManager
+
 Int_t TGWin32::AddPixmap(ULong_t pix, UInt_t w, UInt_t h)
 {
-   //register pixmap created by TGWin32GLManager
    HBITMAP hBmp = reinterpret_cast<HBITMAP>(pix);
    SIZE sz = SIZE();
 
@@ -7216,11 +7222,11 @@ Int_t TGWin32::AddPixmap(ULong_t pix, UInt_t w, UInt_t h)
    return wid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register a window created by Qt as a ROOT window (like InitWindow()).
+
 Int_t TGWin32::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
 {
-   // Register a window created by Qt as a ROOT window (like InitWindow()).
-
    Int_t wid;
    // Select next free window number
 
@@ -7264,11 +7270,11 @@ Int_t TGWin32::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
    return wid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a window created by Qt (like CloseWindow1()).
+
 void TGWin32::RemoveWindow(ULong_t qwid)
 {
-   // Remove a window created by Qt (like CloseWindow1()).
-
    int wid;
 
    SelectWindow((int)qwid);
@@ -7299,31 +7305,31 @@ void TGWin32::RemoveWindow(ULong_t qwid)
    gCws = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Nonrectangular Window Shape Extension adds nonrectangular
+/// windows to the System.
+/// This allows for making shaped (partially transparent) windows
+
 void TGWin32::ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask)
 {
-   // The Nonrectangular Window Shape Extension adds nonrectangular
-   // windows to the System.
-   // This allows for making shaped (partially transparent) windows
-
    gdk_window_shape_combine_mask((GdkWindow *)id, (GdkBitmap *) mask, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the width of the screen in millimeters.
+
 UInt_t TGWin32::ScreenWidthMM() const
 {
-   // Returns the width of the screen in millimeters.
-
    return (UInt_t)gdk_screen_width_mm();
 }
 
 //------------------------------ Drag and Drop ---------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes the specified property on the specified window.
+
 void TGWin32::DeleteProperty(Window_t win, Atom_t& prop)
 {
-   // Deletes the specified property on the specified window.
-
    HWND hWnd = (HWND)GDK_DRAWABLE_XID((GdkWindow *)win);
    Atom_t atom = (Atom_t)GetProp(hWnd,(LPCTSTR)MAKELONG(prop,0));
    if (atom != 0) {
@@ -7332,15 +7338,15 @@ void TGWin32::DeleteProperty(Window_t win, Atom_t& prop)
    RemoveProp(hWnd,(LPCTSTR)MAKELONG(prop,0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the actual type of the property, the actual format of the property,
+/// and a pointer to the data actually returned.
+
 Int_t TGWin32::GetProperty(Window_t win, Atom_t prop, Long_t offset, Long_t len,
                          Bool_t del, Atom_t req_type, Atom_t *act_type,
                          Int_t *act_format, ULong_t *nitems, ULong_t *bytes,
                          unsigned char **prop_list)
 {
-   // Returns the actual type of the property, the actual format of the property,
-   // and a pointer to the data actually returned.
-   
    HGLOBAL hdata;
    UChar_t *ptr, *data;
    UInt_t i, n, length;
@@ -7381,11 +7387,11 @@ Int_t TGWin32::GetProperty(Window_t win, Atom_t prop, Long_t offset, Long_t len,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes the active cursor of the specified window.
+
 void TGWin32::ChangeActivePointerGrab(Window_t win, UInt_t mask, Cursor_t cur)
 {
-   // Changes the active cursor of the specified window.
-
    UInt_t xevmask;
    MapEventMask(mask, xevmask);
    if (cur == kNone)
@@ -7394,12 +7400,12 @@ void TGWin32::ChangeActivePointerGrab(Window_t win, UInt_t mask, Cursor_t cur)
       gdk_window_set_cursor((GdkWindow *) win, (GdkCursor *)cur);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get Clipboard data.
+
 void TGWin32::ConvertSelection(Window_t win, Atom_t &sel, Atom_t &target,
                              Atom_t &prop, Time_t &stamp)
 {
-   // Get Clipboard data.
-
    HGLOBAL hdata;
 
    static UINT gdk_selection_notify_msg = 
@@ -7418,11 +7424,11 @@ void TGWin32::ConvertSelection(Window_t win, Atom_t &sel, Atom_t &target,
    PostMessage(hWnd, gdk_selection_notify_msg, sel, target);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assigns owner of Clipboard.
+
 Bool_t TGWin32::SetSelectionOwner(Window_t owner, Atom_t &sel)
 {
-   // Assigns owner of Clipboard.
-
    static UINT gdk_selection_request_msg = 
       RegisterWindowMessage("gdk-selection-request");
    HWND hWnd = (HWND)GDK_DRAWABLE_XID((GdkWindow *)owner);
@@ -7435,12 +7441,12 @@ Bool_t TGWin32::SetSelectionOwner(Window_t owner, Atom_t &sel)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Put data into Clipboard.
+
 void TGWin32::ChangeProperties(Window_t id, Atom_t property, Atom_t type,
                                Int_t format, UChar_t *data, Int_t len)
 {
-   // Put data into Clipboard.
-
    HGLOBAL hdata;
    Int_t i;
    UChar_t *ptr;
@@ -7460,24 +7466,24 @@ void TGWin32::ChangeProperties(Window_t id, Atom_t property, Atom_t type,
    CloseClipboard();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the list of drag and drop types to the Window win.
+
 void TGWin32::SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist)
 {
-   // Add the list of drag and drop types to the Window win.
-
    SetProp((HWND)GDK_DRAWABLE_XID((GdkWindow *)win),
            (LPCTSTR)MAKELONG(prop,0),
            (HANDLE)typelist);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively search in the children of Window for a Window which is at 
+/// location x, y and is DND aware, with a maximum depth of maxd.
+/// Possibility to exclude dragwin and input.
+
 Window_t TGWin32::FindRWindow(Window_t root, Window_t dragwin, Window_t input, 
                               int x, int y, int maxd)
 {
-   // Recursively search in the children of Window for a Window which is at 
-   // location x, y and is DND aware, with a maximum depth of maxd.
-   // Possibility to exclude dragwin and input.
-
    POINT point;
    POINT cpt;
    RECT  rect;
@@ -7528,12 +7534,12 @@ Window_t TGWin32::FindRWindow(Window_t root, Window_t dragwin, Window_t input,
    return kNone;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if Window win is DND aware, and knows any of the DND formats
+/// passed in argument.
+
 Bool_t TGWin32::IsDNDAware(Window_t win, Atom_t *typelist)
 {
-   // Checks if Window win is DND aware, and knows any of the DND formats
-   // passed in argument.
-
    if (!win) return kFALSE;
 
    Atom_t version = 0;
@@ -7547,12 +7553,12 @@ Bool_t TGWin32::IsDNDAware(Window_t win, Atom_t *typelist)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add XdndAware property and the list of drag and drop types to the 
+/// Window win.
+
 void TGWin32::SetDNDAware(Window_t id, Atom_t *typelist)
 {
-   // Add XdndAware property and the list of drag and drop types to the 
-   // Window win.
-
    int n;
    if (!id) return;
 
@@ -7575,12 +7581,12 @@ void TGWin32::SetDNDAware(Window_t id, Atom_t *typelist)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set user thread id. This is used when an extra thread is created
+/// to process events.
+
 void TGWin32::SetUserThreadId(ULong_t id)
 {
-   // Set user thread id. This is used when an extra thread is created
-   // to process events.
-
    if (id == 0) {
       TGWin32ProxyBase::fgMainThreadId = ((TWinNTSystem*)gSystem)->GetGUIThreadId();
    }

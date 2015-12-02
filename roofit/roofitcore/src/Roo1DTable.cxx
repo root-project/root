@@ -37,15 +37,15 @@ using namespace std ;
 ClassImp(Roo1DTable)
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an empty table from abstract category. The number of table entries and 
+/// their names are taken from the category state labels at the time of construction,
+/// but not reference to the category is retained after the construction phase.
+/// Use fill() to fill the table.
+
 Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory& cat) : 
   RooTable(name,title), _total(0), _nOverflow(0)
 {
-  // Create an empty table from abstract category. The number of table entries and 
-  // their names are taken from the category state labels at the time of construction,
-  // but not reference to the category is retained after the construction phase.
-  // Use fill() to fill the table.
-
   //Take types from reference category
   Int_t nbin=0 ;
   TIterator* tIter = cat.typeIterator() ;
@@ -63,12 +63,12 @@ Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 Roo1DTable::Roo1DTable(const Roo1DTable& other) : 
   RooTable(other), _count(other._count), _total(other._total), _nOverflow(other._nOverflow)
 {  
-  // Copy constructor
-
   // Take types from reference category
 
   int i;
@@ -80,25 +80,25 @@ Roo1DTable::Roo1DTable(const Roo1DTable& other) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 Roo1DTable::~Roo1DTable()
 {
-  // Destructor
-
   // We own the contents of the object array
   _types.Delete() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment the counter of the table slot with the name
+/// corresponding to that of the current category state. If the
+/// current category state matches no table slot name, the table
+/// overflow counter is incremented.
+
 void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight) 
 {
-  // Increment the counter of the table slot with the name
-  // corresponding to that of the current category state. If the
-  // current category state matches no table slot name, the table
-  // overflow counter is incremented.
-
   if (weight==0) return ;
 
   _total += weight ;
@@ -120,37 +120,41 @@ void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the name of the table
+
 void Roo1DTable::printName(ostream& os) const 
 {
-  // Print the name of the table
   os << GetName() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the title of the table
+
 void Roo1DTable::printTitle(ostream& os) const 
 {
-  // Print the title of the table
   os << GetTitle() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the class name of the table
+
 void Roo1DTable::printClassName(ostream& os) const 
 {
-  // Print the class name of the table
   os << IsA()->GetName() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the table value, i.e. the contents, in 'inline' format
+
 void Roo1DTable::printValue(ostream& os) const 
 {
-  // Print the table value, i.e. the contents, in 'inline' format
   os << "(" ;
   for (Int_t i=0 ; i<_types.GetEntries() ; i++) {
     RooCatType* entry = (RooCatType*) _types.At(i) ;
@@ -167,20 +171,21 @@ void Roo1DTable::printValue(ostream& os) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define default contents to print
+
 Int_t Roo1DTable::defaultPrintContents(Option_t* /*opt*/) const 
 {
-  // Define default contents to print
   return kName|kClassName|kValue|kArgs ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the formatted table contents on the given stream
+
 void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const 
 {
-  // Print the formatted table contents on the given stream
-  
   os << indent << endl ;
   os << indent << "  Table " << GetName() << " : " << GetTitle() << endl ;
 
@@ -231,12 +236,12 @@ void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the table entry named 'label'. Zero is returned if given
+/// label doesn't occur in table.
+
 Double_t Roo1DTable::get(const char* label, Bool_t silent) const 
 {
-  // Return the table entry named 'label'. Zero is returned if given
-  // label doesn't occur in table.
-
 
   TObject* cat = _types.FindObject(label) ;
   if (!cat) {
@@ -250,12 +255,12 @@ Double_t Roo1DTable::get(const char* label, Bool_t silent) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the table entry named 'label'. Zero is returned if given
+/// label doesn't occur in table.
+
 Double_t Roo1DTable::get(const int index, Bool_t silent) const 
 {
-  // Return the table entry named 'label'. Zero is returned if given
-  // label doesn't occur in table.
-
   const RooCatType* cat = 0;
   int i = 0;
   for (; i < _types.GetEntries(); ++i) {
@@ -277,23 +282,23 @@ Double_t Roo1DTable::get(const int index, Bool_t silent) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of overflow entries in the table.
+
 Double_t Roo1DTable::getOverflow() const 
 {
-  // Return the number of overflow entries in the table.
-
   return _nOverflow ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the fraction of entries in the table contained in the slot named 'label'. 
+/// The normalization includes the number of overflows.
+/// Zero is returned if given label doesn't occur in table.   
+
 Double_t Roo1DTable::getFrac(const char* label, Bool_t silent) const 
 {
-  // Return the fraction of entries in the table contained in the slot named 'label'. 
-  // The normalization includes the number of overflows.
-  // Zero is returned if given label doesn't occur in table.   
-
   if (_total) {
     return get(label,silent) / _total ;
   } else {
@@ -304,13 +309,13 @@ Double_t Roo1DTable::getFrac(const char* label, Bool_t silent) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the fraction of entries in the table contained in the slot named 'label'. 
+/// The normalization includes the number of overflows.
+/// Zero is returned if given label doesn't occur in table.   
+
 Double_t Roo1DTable::getFrac(const int index, Bool_t silent) const 
 {
-  // Return the fraction of entries in the table contained in the slot named 'label'. 
-  // The normalization includes the number of overflows.
-  // Zero is returned if given label doesn't occur in table.   
-
   if (_total) {
     return get(index, silent) / _total ;
   } else {
@@ -321,11 +326,11 @@ Double_t Roo1DTable::getFrac(const int index, Bool_t silent) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if table is identical in contents to given reference table
+
 Bool_t Roo1DTable::isIdentical(const RooTable& other) 
 {
-  // Return true if table is identical in contents to given reference table
-
   const Roo1DTable* other1d = &dynamic_cast<const Roo1DTable&>(other) ;
 
   if (!other1d) {

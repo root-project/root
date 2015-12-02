@@ -32,7 +32,9 @@ ClassImp(RooPoisson)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor  
+
 RooPoisson::RooPoisson(const char *name, const char *title, 
 		       RooAbsReal& _x,
 		       RooAbsReal& _mean,
@@ -43,12 +45,13 @@ RooPoisson::RooPoisson(const char *name, const char *title,
   _noRounding(noRounding),
   _protectNegative(false)
 { 
-  // Constructor  
 } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
  RooPoisson::RooPoisson(const RooPoisson& other, const char* name) :  
    RooAbsPdf(other,name), 
    x("x",this,other.x),
@@ -56,17 +59,16 @@ RooPoisson::RooPoisson(const char *name, const char *title,
    _noRounding(other._noRounding),
    _protectNegative(other._protectNegative)
 { 
-   // Copy constructor
 } 
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implementation in terms of the TMath Poisson function
+
 Double_t RooPoisson::evaluate() const 
 { 
-  // Implementation in terms of the TMath Poisson function
-
   Double_t k = _noRounding ? x : floor(x);  
   if(_protectNegative && mean<0) 
     return 1e-3;
@@ -75,10 +77,11 @@ Double_t RooPoisson::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate and return the negative log-likelihood of the Poisson                                                                                                                                    
+
 Double_t RooPoisson::getLogVal(const RooArgSet* s) const 
 {
-  // calculate and return the negative log-likelihood of the Poisson                                                                                                                                    
   return RooAbsPdf::getLogVal(s) ;
 //   Double_t prob = getVal(s) ;
 //   return prob ;
@@ -122,7 +125,8 @@ Double_t RooPoisson::getLogVal(const RooArgSet* s) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooPoisson::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
@@ -132,7 +136,8 @@ Int_t RooPoisson::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   R__ASSERT(code == 1 || code == 2) ;
@@ -211,22 +216,22 @@ Double_t RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Advertise internal generator in x
+
 Int_t RooPoisson::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
-  // Advertise internal generator in x
-
   if (matchArgs(directVars,generateVars,x)) return 1 ;  
   return 0 ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement internal generator using TRandom::Poisson 
+
 void RooPoisson::generateEvent(Int_t code)
 {
-  // Implement internal generator using TRandom::Poisson 
-
   R__ASSERT(code==1) ;
   Double_t xgen ;
   while(1) {    

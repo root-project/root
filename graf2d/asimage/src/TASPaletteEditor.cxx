@@ -77,13 +77,13 @@ static UShort_t gBlueRainbow[12] = {
 
 ClassImp(TASPaletteEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Palette editor constructor.
+/// The palette editor aloows the editing of the color palette of the image.
+
 TASPaletteEditor::TASPaletteEditor(TAttImage *attImage, UInt_t w, UInt_t h)
    : TPaletteEditor(attImage, w, h), TGMainFrame(0, w, h)
 {
-   // Palette editor constructor.
-   // The palette editor aloows the editing of the color palette of the image.
-
    SetLayoutManager(new TGXYLayout(this));
    fHisto        = 0;
    fLimitLine[0] = 0;
@@ -255,11 +255,11 @@ TASPaletteEditor::TASPaletteEditor(TAttImage *attImage, UInt_t w, UInt_t h)
    UpdateScreen(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Palette editor destructor. Deletes all frames and their layout hints.
+
 TASPaletteEditor::~TASPaletteEditor()
 {
-   // Palette editor destructor. Deletes all frames and their layout hints.
-
    TGFrameElement *ptr;
 
    // delete all frames and layout hints
@@ -280,20 +280,20 @@ TASPaletteEditor::~TASPaletteEditor()
    delete fPaletteList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close editor.
+
 void TASPaletteEditor::CloseWindow()
 {
-   // Close editor.
-
    TPaletteEditor::CloseWindow();
    delete this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process all editor mouse events
+
 Bool_t TASPaletteEditor::ProcessMessage(Long_t msg, Long_t param1, Long_t param2)
 {
-   // Process all editor mouse events
-
    switch (GET_MSG(msg)) {
 
       case kC_COMMAND:
@@ -391,12 +391,12 @@ Bool_t TASPaletteEditor::ProcessMessage(Long_t msg, Long_t param1, Long_t param2
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The newPalette is inserted in the list of palettes (fPaletteList) and
+/// fPalette is set to the newPalette. Protected method,
+
 void TASPaletteEditor::InsertNewPalette(TImagePalette *newPalette)
 {
-   // The newPalette is inserted in the list of palettes (fPaletteList) and
-   // fPalette is set to the newPalette. Protected method,
-
    // first remove all palettes in the list which are behind the
    // current palette
    TObject *obj;
@@ -415,12 +415,12 @@ void TASPaletteEditor::InsertNewPalette(TImagePalette *newPalette)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Saves the current palette either into a ROOT file or in an ASCII file.
+/// It is called by the Save - button. Protected method.
+
 void TASPaletteEditor::Save()
 {
-   // Saves the current palette either into a ROOT file or in an ASCII file.
-   // It is called by the Save - button. Protected method.
-
    TGFileInfo fi;
    fi.fFileTypes = gFileTypes;
    static Bool_t overwr = kFALSE;
@@ -456,12 +456,12 @@ void TASPaletteEditor::Save()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Opens either a ROOT file or an ASCII file and reads a palette.
+/// It is called by the Open - button. Protected method.
+
 void TASPaletteEditor::Open()
 {
-   // Opens either a ROOT file or an ASCII file and reads a palette.
-   // It is called by the Open - button. Protected method.
-
    TGFileInfo fi;
    fi.fFileTypes = gFileTypes;
 
@@ -515,12 +515,12 @@ void TASPaletteEditor::Open()
    fComboBox->Select(5);  // empty entry
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// All widgeds of the screen are updated with the current palette.
+/// Protected method.
+
 void TASPaletteEditor::UpdateScreen(Bool_t histoUpdate)
 {
-   // All widgeds of the screen are updated with the current palette.
-   // Protected method.
-
    // update the color palette
    fPaletteCanvas->GetCanvas()->Modified();
    fPaletteCanvas->GetCanvas()->Update();
@@ -582,12 +582,12 @@ void TASPaletteEditor::UpdateScreen(Bool_t histoUpdate)
    fRamps[2]->SetState(fRampFactor == 4 ? kButtonDown : kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The anchor points are rescaled by a log operation.
+/// It is called by the log - button. Protected method.
+
 void TASPaletteEditor::LogPalette()
 {
-   // The anchor points are rescaled by a log operation.
-   // It is called by the log - button. Protected method.
-
    TImagePalette *newPalette = new TImagePalette(*fPalette);
 
    Double_t delta = fPalette->fPoints[fPalette->fNumPoints-2] - fPalette->fPoints[1];
@@ -601,12 +601,12 @@ void TASPaletteEditor::LogPalette()
    UpdateScreen(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The anchor points are rescaled by a exp operation.
+/// It is called by the exp - button. Protected method.
+
 void TASPaletteEditor::ExpPalette()
 {
-   // The anchor points are rescaled by a exp operation.
-   // It is called by the exp - button. Protected method.
-
    TImagePalette *newPalette = new TImagePalette(*fPalette);
 
    Double_t delta = fPalette->fPoints[fPalette->fNumPoints-2] - fPalette->fPoints[1];
@@ -620,12 +620,12 @@ void TASPaletteEditor::ExpPalette()
    UpdateScreen(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The anchor points are rescaled to be linar.
+/// It is called by the lin - button. Protected method.
+
 void TASPaletteEditor::LinPalette()
 {
-   // The anchor points are rescaled to be linar.
-   // It is called by the lin - button. Protected method.
-
    TImagePalette *newPalette = new TImagePalette(*fPalette);
 
    Double_t delta = fPalette->fPoints[fPalette->fNumPoints-2] - fPalette->fPoints[1];
@@ -645,12 +645,12 @@ void TASPaletteEditor::LinPalette()
    UpdateScreen(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The palette is inverted.
+/// It is called by the invert - button. Protected method.
+
 void TASPaletteEditor::InvertPalette()
 {
-   // The palette is inverted.
-   // It is called by the invert - button. Protected method.
-
    TImagePalette *newPalette = new TImagePalette(*fPalette);
 
    Int_t pt;
@@ -670,12 +670,12 @@ void TASPaletteEditor::InvertPalette()
    UpdateScreen(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A new palette is created, depending on the id.
+/// It is called by the combo box. Protected method.
+
 void TASPaletteEditor::NewPalette(Long_t id)
 {
-   // A new palette is created, depending on the id.
-   // It is called by the combo box. Protected method.
-
    if (id == 5) // empty entry
       return;
 
@@ -763,12 +763,12 @@ void TASPaletteEditor::NewPalette(Long_t id)
    UpdateScreen(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a step palette. This is called by the step - check button.
+/// Protected method.
+
 void TASPaletteEditor::SetStep()
 {
-   // Create a step palette. This is called by the step - check button.
-   // Protected method.
-
    TImagePalette *newPalette;
 
    if (fStepButton->GetState() == kButtonDown) {
@@ -814,12 +814,12 @@ void TASPaletteEditor::SetStep()
    UpdateScreen(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The palette is repeated up to 4 times.
+/// This is called by one of the ramp radio buttons. Protected method.
+
 void TASPaletteEditor::SetRamp(Long_t ramp)
 {
-   // The palette is repeated up to 4 times.
-   // This is called by one of the ramp radio buttons. Protected method.
-
    if (ramp == fRampFactor)
       return;
 
@@ -856,13 +856,13 @@ void TASPaletteEditor::SetRamp(Long_t ramp)
    UpdateScreen(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Updates the range of the palette.
+/// This is called after the blue limit lines were moved to define
+/// a new range.
+
 void TASPaletteEditor::UpdateRange()
 {
-   // Updates the range of the palette.
-   // This is called after the blue limit lines were moved to define
-   // a new range.
-
    if (fMaxValue == fMinValue)
       return;
 
@@ -893,11 +893,11 @@ void TASPaletteEditor::UpdateRange()
    UpdateScreen(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Actually paint the paletter.
+
 void TASPaletteEditor::PaintPalette::Paint(Option_t *)
 {
-   // Actually paint the paletter.
-
    // get geometry of pad
    Int_t to_w = TMath::Abs(gPad->XtoPixel(gPad->GetX2()) -
                            gPad->XtoPixel(gPad->GetX1()));
@@ -930,30 +930,31 @@ void TASPaletteEditor::PaintPalette::Paint(Option_t *)
    destroy_asimage(&grad_im);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The blue limit line in the pixel value histogram.
+
 TASPaletteEditor::LimitLine::LimitLine(Coord_t x, Coord_t y1, Coord_t y2,
                                        TASPaletteEditor *gui)
    : TLine(x, y1, x, y2)
 {
-   // The blue limit line in the pixel value histogram.
-
    fGui = gui;
    SetLineColor(4);
    SetLineWidth(2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the limit lines.
+
 void TASPaletteEditor::LimitLine::Paint(Option_t *option)
 {
-   // Paint the limit lines.
-
    fY1 = gPad->GetUymin();
    fY2 = gPad->GetUymax();
 
    TLine::Paint(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TASPaletteEditor::LimitLine::ExecuteEvent(Int_t event,
                                                Int_t px, Int_t /*py*/)
 {

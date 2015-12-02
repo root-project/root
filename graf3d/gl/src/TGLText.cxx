@@ -41,7 +41,8 @@
 #define FTGL_EXTRUDE 4
 #define FTGL_TEXTURE 5
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>GL Text</h2></center>
 To draw a 3D text in a GL window. This class uses uses FTGL to render text.
@@ -50,7 +51,8 @@ End_Html */
 
 ClassImp(TGLText)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLText::TGLText()
 {
    fX      = 0;
@@ -64,11 +66,11 @@ TGLText::TGLText()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGLext normal constructor.
+
 TGLText::TGLText(Double_t x, Double_t y, Double_t z, const char * /*text*/)
 {
-   // TGLext normal constructor.
-
    fX      = x;
    fY      = y;
    fZ      = z;
@@ -80,18 +82,19 @@ TGLText::TGLText(Double_t x, Double_t y, Double_t z, const char * /*text*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLText::~TGLText()
 {
    if (fGLTextFont) delete fGLTextFont;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text
+
 void TGLText::PaintGLText(Double_t x, Double_t y, Double_t z, const char *text)
 {
-   // Draw text
-
    if (!fGLTextFont) return;
 
    glPushMatrix();
@@ -135,7 +138,8 @@ void TGLText::PaintGLText(Double_t x, Double_t y, Double_t z, const char *text)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLText::PaintBBox(const char *text)
 {
    Float_t llx, lly, llz, urx, ury, urz;
@@ -148,27 +152,28 @@ void TGLText::PaintBBox(const char *text)
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate bounding-box for given string.
+
 void TGLText::BBox(const char* string, float& llx, float& lly, float& llz,
                                        float& urx, float& ury, float& urz)
 {
-   // Calculate bounding-box for given string.
-
    fGLTextFont->BBox(string, llx, lly, llz, urx, ury, urz);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the text rotation angles.
+
 void TGLText::SetGLTextAngles(Double_t a1, Double_t a2, Double_t a3)
 {
-   // Set the text rotation angles.
-
    fAngle1 = a1;
    fAngle2 = a2;
    fAngle3 = a3;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLText::SetGLTextFont(Font_t fontnumber)
 {
    int fontid = fontnumber / 10;

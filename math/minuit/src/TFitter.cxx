@@ -30,12 +30,12 @@ extern void F3Fit(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t fl
 
 ClassImp(TFitter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ===================
+
 TFitter::TFitter(Int_t maxpar)
 {
-//*-*-*-*-*-*-*-*-*-*-*default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===================
-
    fMinuit = new TMinuit(maxpar);
    fNlog = 0;
    fSumLog = 0;
@@ -43,32 +43,32 @@ TFitter::TFitter(Int_t maxpar)
    SetName("MinuitFitter");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ==================
+
 TFitter::~TFitter()
 {
-//*-*-*-*-*-*-*-*-*-*-*default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==================
-
    if (fCovar)  delete [] fCovar;
    if (fSumLog) delete [] fSumLog;
    delete fMinuit;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return a chisquare equivalent
+
 Double_t TFitter::Chisquare(Int_t npar, Double_t *params) const
 {
-   // return a chisquare equivalent
-
    Double_t amin = 0;
    H1FitChisquare(npar,params,amin,params,1);
    return amin;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reset the fitter environment
+
 void TFitter::Clear(Option_t *)
 {
-   // reset the fitter environment
-
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
    fMinuit->mncler();
 
@@ -78,41 +78,41 @@ void TFitter::Clear(Option_t *)
    fMinuit->mnrn15(val,inseed);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute a fitter command;
+///   command : command string
+///   args    : list of nargs command arguments
+
 Int_t TFitter::ExecuteCommand(const char *command, Double_t *args, Int_t nargs)
 {
-   // Execute a fitter command;
-   //   command : command string
-   //   args    : list of nargs command arguments
-
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
    Int_t ierr = 0;
    fMinuit->mnexcm(command,args,nargs,ierr);
    return ierr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fix parameter ipar.
+
 void TFitter::FixParameter(Int_t ipar)
 {
-   // Fix parameter ipar.
-
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
    fMinuit->FixParameter(ipar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Computes point-by-point confidence intervals for the fitted function
+///Parameters:
+///n - number of points
+///ndim - dimensions of points
+///x - points, at which to compute the intervals, for ndim > 1
+///    should be in order: (x0,y0, x1, y1, ... xn, yn)
+///ci - computed intervals are returned in this array
+///cl - confidence level, default=0.95
+///NOTE, that the intervals are approximate for nonlinear(in parameters) models
+
 void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl)
 {
-//Computes point-by-point confidence intervals for the fitted function
-//Parameters:
-//n - number of points
-//ndim - dimensions of points
-//x - points, at which to compute the intervals, for ndim > 1
-//    should be in order: (x0,y0, x1, y1, ... xn, yn)
-//ci - computed intervals are returned in this array
-//cl - confidence level, default=0.95
-//NOTE, that the intervals are approximate for nonlinear(in parameters) models
-
    TF1 *f = (TF1*)fUserFunc;
    Int_t npar = f->GetNumberFreeParameters();
    Int_t npar_real = f->GetNpar();
@@ -191,30 +191,30 @@ void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Dou
       delete [] fixed;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Computes confidence intervals at level cl. Default is 0.95
+///The TObject parameter can be a TGraphErrors, a TGraph2DErrors or a TH1,2,3.
+///For Graphs, confidence intervals are computed for each point,
+///the value of the graph at that point is set to the function value at that
+///point, and the graph y-errors (or z-errors) are set to the value of
+///the confidence interval at that point.
+///For Histograms, confidence intervals are computed for each bin center
+///The bin content of this bin is then set to the function value at the bin
+///center, and the bin error is set to the confidence interval value.
+///NOTE: confidence intervals are approximate for nonlinear models!
+///
+///Allowed combinations:
+///Fitted object               Passed object
+///TGraph                      TGraphErrors, TH1
+///TGraphErrors, AsymmErrors   TGraphErrors, TH1
+///TH1                         TGraphErrors, TH1
+///TGraph2D                    TGraph2DErrors, TH2
+///TGraph2DErrors              TGraph2DErrors, TH2
+///TH2                         TGraph2DErrors, TH2
+///TH3                         TH3
+
 void TFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
 {
-//Computes confidence intervals at level cl. Default is 0.95
-//The TObject parameter can be a TGraphErrors, a TGraph2DErrors or a TH1,2,3.
-//For Graphs, confidence intervals are computed for each point,
-//the value of the graph at that point is set to the function value at that
-//point, and the graph y-errors (or z-errors) are set to the value of
-//the confidence interval at that point.
-//For Histograms, confidence intervals are computed for each bin center
-//The bin content of this bin is then set to the function value at the bin
-//center, and the bin error is set to the confidence interval value.
-//NOTE: confidence intervals are approximate for nonlinear models!
-//
-//Allowed combinations:
-//Fitted object               Passed object
-//TGraph                      TGraphErrors, TH1
-//TGraphErrors, AsymmErrors   TGraphErrors, TH1
-//TH1                         TGraphErrors, TH1
-//TGraph2D                    TGraph2DErrors, TH2
-//TGraph2DErrors              TGraph2DErrors, TH2
-//TH2                         TGraph2DErrors, TH2
-//TH3                         TH3
-
    if (obj->InheritsFrom(TGraph::Class())) {
       TGraph *gr = (TGraph*)obj;
       if (!gr->GetEY()){
@@ -360,11 +360,11 @@ void TFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return a pointer to the covariance matrix
+
 Double_t *TFitter::GetCovarianceMatrix() const
 {
-   // return a pointer to the covariance matrix
-
    if (fCovar) return fCovar;
    Int_t npars = fMinuit->GetNumPars();
    ((TFitter*)this)->fCovar = new Double_t[npars*npars];
@@ -372,11 +372,11 @@ Double_t *TFitter::GetCovarianceMatrix() const
    return fCovar;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return element i,j from the covariance matrix
+
 Double_t TFitter::GetCovarianceMatrixElement(Int_t i, Int_t j) const
 {
-   // return element i,j from the covariance matrix
-
    GetCovarianceMatrix();
    Int_t npars = fMinuit->GetNumPars();
    if (i < 0 || i >= npars || j < 0 || j >= npars) {
@@ -386,16 +386,16 @@ Double_t TFitter::GetCovarianceMatrixElement(Int_t i, Int_t j) const
    return fCovar[j+npars*i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return current errors for a parameter
+///   ipar     : parameter number
+///   eplus    : upper error
+///   eminus   : lower error
+///   eparab   : parabolic error
+///   globcc   : global correlation coefficient
+
 Int_t TFitter::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const
 {
-   // return current errors for a parameter
-   //   ipar     : parameter number
-   //   eplus    : upper error
-   //   eminus   : lower error
-   //   eparab   : parabolic error
-   //   globcc   : global correlation coefficient
-
 
    Int_t ierr = 0;
    fMinuit->mnerrs(ipar, eplus,eminus,eparab,globcc);
@@ -403,28 +403,28 @@ Int_t TFitter::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the total number of parameters (free + fixed)
+
 Int_t TFitter::GetNumberTotalParameters() const
 {
-   // return the total number of parameters (free + fixed)
-
    return fMinuit->fNpar + fMinuit->fNpfix;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the number of free parameters
+
 Int_t TFitter::GetNumberFreeParameters() const
 {
-   // return the number of free parameters
-
    return fMinuit->fNpar;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return error of parameter ipar
+
 Double_t TFitter::GetParError(Int_t ipar) const
 {
-   // return error of parameter ipar
-
    Int_t ierr = 0;
    TString pname;
    Double_t value,verr,vlow,vhigh;
@@ -434,11 +434,11 @@ Double_t TFitter::GetParError(Int_t ipar) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return current value of parameter ipar
+
 Double_t TFitter::GetParameter(Int_t ipar) const
 {
-   // return current value of parameter ipar
-
    Int_t ierr = 0;
    TString pname;
    Double_t value,verr,vlow,vhigh;
@@ -447,18 +447,18 @@ Double_t TFitter::GetParameter(Int_t ipar) const
    return value;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return current values for a parameter
+///   ipar     : parameter number
+///   parname  : parameter name
+///   value    : initial parameter value
+///   verr     : initial error for this parameter
+///   vlow     : lower value for the parameter
+///   vhigh    : upper value for the parameter
+///  WARNING! parname must be suitably dimensionned in the calling function.
+
 Int_t TFitter::GetParameter(Int_t ipar, char *parname,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const
 {
-   // return current values for a parameter
-   //   ipar     : parameter number
-   //   parname  : parameter name
-   //   value    : initial parameter value
-   //   verr     : initial error for this parameter
-   //   vlow     : lower value for the parameter
-   //   vhigh    : upper value for the parameter
-   //  WARNING! parname must be suitably dimensionned in the calling function.
-
    Int_t ierr = 0;
    TString pname;
    fMinuit->mnpout(ipar, pname,value,verr,vlow,vhigh,ierr);
@@ -466,36 +466,36 @@ Int_t TFitter::GetParameter(Int_t ipar, char *parname,Double_t &value,Double_t &
    return ierr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return name of parameter ipar
+
 const char *TFitter::GetParName(Int_t ipar) const
 {
-   // return name of parameter ipar
-
    if (!fMinuit || ipar < 0 || ipar > fMinuit->fNu) return "";
    return fMinuit->fCpnam[ipar];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return global fit parameters
+///   amin     : chisquare
+///   edm      : estimated distance to minimum
+///   errdef
+///   nvpar    : number of variable parameters
+///   nparx    : total number of parameters
+
 Int_t TFitter::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const
 {
-   // return global fit parameters
-   //   amin     : chisquare
-   //   edm      : estimated distance to minimum
-   //   errdef
-   //   nvpar    : number of variable parameters
-   //   nparx    : total number of parameters
-
    Int_t ierr = 0;
    fMinuit->mnstat(amin,edm,errdef,nvpar,nparx,ierr);
    return ierr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return Sum(log(i) i=0,n
+/// used by log likelihood fits
+
 Double_t TFitter::GetSumLog(Int_t n)
 {
-   // return Sum(log(i) i=0,n
-   // used by log likelihood fits
-
    if (n < 0) return 0;
    if (n > fNlog) {
       if (fSumLog) delete [] fSumLog;
@@ -512,59 +512,59 @@ Double_t TFitter::GetSumLog(Int_t n)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return kTRUE if parameter ipar is fixed, kFALSE othersise)
+
 Bool_t TFitter::IsFixed(Int_t ipar) const
 {
-   //return kTRUE if parameter ipar is fixed, kFALSE othersise)
-
    if (fMinuit->fNiofex[ipar] == 0 ) return kTRUE;
    return kFALSE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print fit results
+
 void  TFitter::PrintResults(Int_t level, Double_t amin) const
 {
-   // Print fit results
-
    fMinuit->mnprin(level,amin);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release parameter ipar.
+
 void TFitter::ReleaseParameter(Int_t ipar)
 {
-   // Release parameter ipar.
-
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
    fMinuit->Release(ipar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specify the address of the fitting algorithm (from the interpreter)
+
 void TFitter::SetFCN(void *fcn)
 {
-   // Specify the address of the fitting algorithm (from the interpreter)
-
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
    TVirtualFitter::SetFCN(fcn);
    fMinuit->SetFCN(fcn);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specify the address of the fitting algorithm
+
 void TFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t))
 {
-   // Specify the address of the fitting algorithm
-
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
    TVirtualFitter::SetFCN(fcn);
    fMinuit->SetFCN(fcn);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ret fit method (chisquare or loglikelihood)
+
 void TFitter::SetFitMethod(const char *name)
 {
-   // ret fit method (chisquare or loglikelihood)
-
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
    if (!strcmp(name,"H1FitChisquare"))    SetFCN(H1FitChisquare);
    if (!strcmp(name,"H1FitLikelihood"))   SetFCN(H1FitLikelihood);
@@ -575,33 +575,33 @@ void TFitter::SetFitMethod(const char *name)
    if (!strcmp(name,"F3Minimizer")) SetFCN(F3Fit);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set initial values for a parameter
+///   ipar     : parameter number
+///   parname  : parameter name
+///   value    : initial parameter value
+///   verr     : initial error for this parameter
+///   vlow     : lower value for the parameter
+///   vhigh    : upper value for the parameter
+
 Int_t TFitter::SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh)
 {
-   // set initial values for a parameter
-   //   ipar     : parameter number
-   //   parname  : parameter name
-   //   value    : initial parameter value
-   //   verr     : initial error for this parameter
-   //   vlow     : lower value for the parameter
-   //   vhigh    : upper value for the parameter
-
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
    Int_t ierr = 0;
    fMinuit->mnparm(ipar,parname,value,verr,vlow,vhigh,ierr);
    return ierr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Minimization function for H1s using a Chisquare method
+///  Default method (function evaluated at center of bin)
+///  for each point the cache contains the following info
+///    -1D : bc,e, xc  (bin content, error, x of center of bin)
+///    -2D : bc,e, xc,yc
+///    -3D : bc,e, xc,yc,zc
+
 void TFitter::FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
-   //  Minimization function for H1s using a Chisquare method
-   //  Default method (function evaluated at center of bin)
-   //  for each point the cache contains the following info
-   //    -1D : bc,e, xc  (bin content, error, x of center of bin)
-   //    -2D : bc,e, xc,yc
-   //    -3D : bc,e, xc,yc,zc
-
    Foption_t fitOption = GetFitOption();
    if (fitOption.Integral) {
       FitChisquareI(npar,gin,f,u,flag);
@@ -645,16 +645,16 @@ void TFitter::FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
    f1->SetNumberFitPoints(npfit);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Minimization function for H1s using a Chisquare method
+///  The "I"ntegral method is used
+///  for each point the cache contains the following info
+///    -1D : bc,e, xc,xw  (bin content, error, x of center of bin, x bin width of bin)
+///    -2D : bc,e, xc,xw,yc,yw
+///    -3D : bc,e, xc,xw,yc,yw,zc,zw
+
 void TFitter::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
-   //  Minimization function for H1s using a Chisquare method
-   //  The "I"ntegral method is used
-   //  for each point the cache contains the following info
-   //    -1D : bc,e, xc,xw  (bin content, error, x of center of bin, x bin width of bin)
-   //    -2D : bc,e, xc,xw,yc,yw
-   //    -3D : bc,e, xc,xw,yc,yw,zc,zw
-
    Double_t cu,eu,fu,fsum;
    Double_t dersum[100], grad[100];
    memset(grad,0,800);
@@ -698,20 +698,20 @@ void TFitter::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Minimization function for H1s using a Likelihood method*-*-*-*-*-*
+///     Basically, it forms the likelihood by determining the Poisson
+///     probability that given a number of entries in a particular bin,
+///     the fit would predict it's value.  This is then done for each bin,
+///     and the sum of the logs is taken as the likelihood.
+///  Default method (function evaluated at center of bin)
+///  for each point the cache contains the following info
+///    -1D : bc,e, xc  (bin content, error, x of center of bin)
+///    -2D : bc,e, xc,yc
+///    -3D : bc,e, xc,yc,zc
+
 void TFitter::FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
-   //  Minimization function for H1s using a Likelihood method*-*-*-*-*-*
-   //     Basically, it forms the likelihood by determining the Poisson
-   //     probability that given a number of entries in a particular bin,
-   //     the fit would predict it's value.  This is then done for each bin,
-   //     and the sum of the logs is taken as the likelihood.
-   //  Default method (function evaluated at center of bin)
-   //  for each point the cache contains the following info
-   //    -1D : bc,e, xc  (bin content, error, x of center of bin)
-   //    -2D : bc,e, xc,yc
-   //    -3D : bc,e, xc,yc,zc
-
    Foption_t fitOption = GetFitOption();
    if (fitOption.Integral) {
       FitLikelihoodI(npar,gin,f,u,flag);
@@ -768,20 +768,20 @@ void TFitter::FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Minimization function for H1s using a Likelihood method*-*-*-*-*-*
+///     Basically, it forms the likelihood by determining the Poisson
+///     probability that given a number of entries in a particular bin,
+///     the fit would predict it's value.  This is then done for each bin,
+///     and the sum of the logs is taken as the likelihood.
+///  The "I"ntegral method is used
+///  for each point the cache contains the following info
+///    -1D : bc,e, xc,xw  (bin content, error, x of center of bin, x bin width of bin)
+///    -2D : bc,e, xc,xw,yc,yw
+///    -3D : bc,e, xc,xw,yc,yw,zc,zw
+
 void TFitter::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
-   //  Minimization function for H1s using a Likelihood method*-*-*-*-*-*
-   //     Basically, it forms the likelihood by determining the Poisson
-   //     probability that given a number of entries in a particular bin,
-   //     the fit would predict it's value.  This is then done for each bin,
-   //     and the sum of the logs is taken as the likelihood.
-   //  The "I"ntegral method is used
-   //  for each point the cache contains the following info
-   //    -1D : bc,e, xc,xw  (bin content, error, x of center of bin, x bin width of bin)
-   //    -2D : bc,e, xc,xw,yc,yw
-   //    -3D : bc,e, xc,xw,yc,yw,zc,zw
-
    Double_t cu,fu,fobs,fsub;
    Double_t dersum[100];
    Double_t x[3];
@@ -842,70 +842,70 @@ void TFitter::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///           Minimization function for H1s using a Chisquare method
+///           ======================================================
+
 void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
-//           Minimization function for H1s using a Chisquare method
-//           ======================================================
-
    TFitter *hFitter = (TFitter*)TVirtualFitter::GetFitter();
    hFitter->FitChisquare(npar, gin, f, u, flag);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   -*-*-*-*Minimization function for H1s using a Likelihood method*-*-*-*-*-*
+///           =======================================================
+///     Basically, it forms the likelihood by determining the Poisson
+///     probability that given a number of entries in a particular bin,
+///     the fit would predict it's value.  This is then done for each bin,
+///     and the sum of the logs is taken as the likelihood.
+
 void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
-//   -*-*-*-*Minimization function for H1s using a Likelihood method*-*-*-*-*-*
-//           =======================================================
-//     Basically, it forms the likelihood by determining the Poisson
-//     probability that given a number of entries in a particular bin,
-//     the fit would predict it's value.  This is then done for each bin,
-//     and the sum of the logs is taken as the likelihood.
-
    TFitter *hFitter = (TFitter*)TVirtualFitter::GetFitter();
    hFitter->FitLikelihood(npar, gin, f, u, flag);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Minimization function for Graphs using a Chisquare method*-*-*-*-*
+///*-*        =========================================================
+///
+/// In case of a TGraphErrors object, ex, the error along x,  is projected
+/// along the y-direction by calculating the function at the points x-exlow and
+/// x+exhigh.
+///
+/// The chisquare is computed as the sum of the quantity below at each point:
+///
+///                     (y - f(x))**2
+///         -----------------------------------
+///         ey**2 + (0.5*(exl + exh)*f'(x))**2
+///
+/// where x and y are the point coordinates and f'(x) is the derivative of function f(x).
+/// This method to approximate the uncertainty in y because of the errors in x, is called
+/// "effective variance" method.
+/// The improvement, compared to the previously used  method (f(x+ exhigh) - f(x-exlow))/2
+/// is of (error of x)**2 order.
+///
+/// In case the function lies below (above) the data point, ey is ey_low (ey_high).
+///
+///  thanks to Andy Haas (haas@yahoo.com) for adding the case with TGraphAsymmErrors
+///            University of Washington
+///            February 3, 2004
+///
+///  NOTE:
+///  1) By using the "effective variance" method a simple linear regression
+///      becomes a non-linear case , which takes several iterations
+///      instead of 0 as in the linear case .
+///
+///  2) The effective variance technique assumes that there is no correlation
+///      between the x and y coordinate .
+///
+///    The book by Sigmund Brandt (Data  Analysis) contains an interesting
+///    section how to solve the problem when correclations do exist .
+
 void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
                        Double_t *u, Int_t /*flag*/)
 {
-//*-*-*-*-*-*Minimization function for Graphs using a Chisquare method*-*-*-*-*
-//*-*        =========================================================
-//
-// In case of a TGraphErrors object, ex, the error along x,  is projected
-// along the y-direction by calculating the function at the points x-exlow and
-// x+exhigh.
-//
-// The chisquare is computed as the sum of the quantity below at each point:
-//
-//                     (y - f(x))**2
-//         -----------------------------------
-//         ey**2 + (0.5*(exl + exh)*f'(x))**2
-//
-// where x and y are the point coordinates and f'(x) is the derivative of function f(x).
-// This method to approximate the uncertainty in y because of the errors in x, is called
-// "effective variance" method.
-// The improvement, compared to the previously used  method (f(x+ exhigh) - f(x-exlow))/2
-// is of (error of x)**2 order.
-//
-// In case the function lies below (above) the data point, ey is ey_low (ey_high).
-//
-//  thanks to Andy Haas (haas@yahoo.com) for adding the case with TGraphAsymmErrors
-//            University of Washington
-//            February 3, 2004
-//
-//  NOTE:
-//  1) By using the "effective variance" method a simple linear regression
-//      becomes a non-linear case , which takes several iterations
-//      instead of 0 as in the linear case .
-//
-//  2) The effective variance technique assumes that there is no correlation
-//      between the x and y coordinate .
-//
-//    The book by Sigmund Brandt (Data  Analysis) contains an interesting
-//    section how to solve the problem when correclations do exist .
-
    Double_t cu,eu,exh,exl,ey,eux,fu,fsum;
    Double_t x[1];
    //Double_t xm,xp;
@@ -971,13 +971,13 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*Minimization function for 2D Graphs using a Chisquare method*-*-*-*-*
+///*-*      ============================================================
+
 void Graph2DFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
                        Double_t *u, Int_t /*flag*/)
 {
-//*-*-*-*-*Minimization function for 2D Graphs using a Chisquare method*-*-*-*-*
-//*-*      ============================================================
-
    Double_t cu,eu,ex,ey,ez,eux,euy,fu,fsum,fm,fp;
    Double_t x[2];
    Double_t xm,xp,ym,yp;
@@ -1042,11 +1042,11 @@ void Graph2DFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    f2->SetNumberFitPoints(npfits);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void MultiGraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
                        Double_t *u, Int_t /*flag*/)
 {
-
    Double_t cu,eu,exh,exl,ey,eux,fu,fsum;
    Double_t x[1];
    //Double_t xm,xp;
@@ -1115,7 +1115,8 @@ void MultiGraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    f1->SetNumberFitPoints(npfits);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void F2Fit(Int_t &/*npar*/, Double_t * /*gin*/, Double_t &f,Double_t *u, Int_t /*flag*/)
 {
    TVirtualFitter *fitter = TVirtualFitter::GetFitter();
@@ -1124,7 +1125,8 @@ void F2Fit(Int_t &/*npar*/, Double_t * /*gin*/, Double_t &f,Double_t *u, Int_t /
    f = f2->EvalPar(u);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void F3Fit(Int_t &/*npar*/, Double_t * /*gin*/, Double_t &f,Double_t *u, Int_t /*flag*/)
 {
    TVirtualFitter *fitter = TVirtualFitter::GetFitter();

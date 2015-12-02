@@ -30,15 +30,16 @@
 
 ClassImp(TEnum)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Constructor for TEnum class.
+///It take the name of the TEnum type, specification if it is global
+///and interpreter info.
+///Constant List is owner if enum not on global scope (thus constants not
+///in TROOT::GetListOfGlobals).
+
 TEnum::TEnum(const char *name, void *info, TClass *cls)
    : fInfo(info), fClass(cls)
 {
-   //Constructor for TEnum class.
-   //It take the name of the TEnum type, specification if it is global
-   //and interpreter info.
-   //Constant List is owner if enum not on global scope (thus constants not
-   //in TROOT::GetListOfGlobals).
    SetName(name);
    if (cls) {
       fConstantList.SetOwner(kTRUE);
@@ -56,26 +57,28 @@ TEnum::TEnum(const char *name, void *info, TClass *cls)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Destructor
+
 TEnum::~TEnum()
 {
-   //Destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Add a EnumConstant to the list of constants of the Enum Type.
+
 void TEnum::AddConstant(TEnumConstant *constant)
 {
-   //Add a EnumConstant to the list of constants of the Enum Type.
    fConstantList.Add(constant);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if this enum object is pointing to a currently
+/// loaded enum.  If a enum is unloaded after the TEnum
+/// is created, the TEnum will be set to be invalid.
+
 Bool_t TEnum::IsValid()
 {
-   // Return true if this enum object is pointing to a currently
-   // loaded enum.  If a enum is unloaded after the TEnum
-   // is created, the TEnum will be set to be invalid.
-
    // Register the transaction when checking the validity of the object.
    if (!fInfo && UpdateInterpreterStateMarker()) {
       DeclId_t newId = gInterpreter->GetEnum(fClass, fName);
@@ -87,21 +90,23 @@ Bool_t TEnum::IsValid()
    return fInfo != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get property description word. For meaning of bits see EProperty.
+
 Long_t TEnum::Property() const
 {
-   // Get property description word. For meaning of bits see EProperty.
-
    return kIsEnum;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TEnum::Update(DeclId_t id)
 {
    fInfo = (void *)id;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEnum *TEnum::GetEnum(const std::type_info &ti, ESearchAction sa)
 {
    int errorCode = 0;
@@ -122,24 +127,24 @@ TEnum *TEnum::GetEnum(const std::type_info &ti, ESearchAction sa)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to retrieve enumerator from the ROOT's typesystem.
+/// It has no side effect, except when the load flag is true. In this case,
+/// the load of the library containing the scope of the enumerator is attempted.
+/// There are two top level code paths: the enumerator is scoped or isn't.
+/// If it is not, a lookup in the list of global enums is performed.
+/// If it is, two lookups are carried out for its scope: one in the list of
+/// classes and one in the list of protoclasses. If a scope with the desired name
+/// is found, the enum is searched. If the scope is not found, and the load flag is
+/// true, the aforementioned two steps are performed again after an autoload attempt
+/// with the name of the scope as key is tried out.
+/// If the interpreter lookup flag is false, the ListOfEnums objects are not treated
+/// as such, but rather as THashList objects. This prevents any flow of information
+/// from the interpreter into the ROOT's typesystem: a snapshot of the typesystem
+/// status is taken.
+
 TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
 {
-   // Static function to retrieve enumerator from the ROOT's typesystem.
-   // It has no side effect, except when the load flag is true. In this case,
-   // the load of the library containing the scope of the enumerator is attempted.
-   // There are two top level code paths: the enumerator is scoped or isn't.
-   // If it is not, a lookup in the list of global enums is performed.
-   // If it is, two lookups are carried out for its scope: one in the list of
-   // classes and one in the list of protoclasses. If a scope with the desired name
-   // is found, the enum is searched. If the scope is not found, and the load flag is
-   // true, the aforementioned two steps are performed again after an autoload attempt
-   // with the name of the scope as key is tried out.
-   // If the interpreter lookup flag is false, the ListOfEnums objects are not treated
-   // as such, but rather as THashList objects. This prevents any flow of information
-   // from the interpreter into the ROOT's typesystem: a snapshot of the typesystem
-   // status is taken.
-
    // Potential optimisation: reduce number of branches using partial specialisation of
    // helper functions.
 

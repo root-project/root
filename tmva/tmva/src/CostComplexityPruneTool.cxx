@@ -35,13 +35,13 @@
 using namespace TMVA;
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the constructor for the cost complexity prunig
+
 CostComplexityPruneTool::CostComplexityPruneTool( SeparationBase* qualityIndex ) : 
    IPruneTool(),
    fLogger(new MsgLogger("CostComplexityPruneTool") )
 {
-   // the constructor for the cost complexity prunig
-
    fOptimalK = -1;
 
    // !! changed from Dougs code. Now use the QualityIndex stored already
@@ -56,19 +56,20 @@ CostComplexityPruneTool::CostComplexityPruneTool( SeparationBase* qualityIndex )
    fLogger->SetMinType( kWARNING );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the destructor for the cost complexity prunig
+
 CostComplexityPruneTool::~CostComplexityPruneTool( ) {
-   // the destructor for the cost complexity prunig
    if(fQualityIndexTool != NULL) delete fQualityIndexTool;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PruningInfo*
 CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
                                                const IPruneTool::EventSample* validationSample,
                                                Bool_t isAutomatic )
 {
-
    // the routine that basically "steers" the pruning process. Call the calculation of
    // the pruning sequence, the tree quality and alike..
    
@@ -147,11 +148,11 @@ CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
    return info;
 }
 
-//_______________________________________________________________________
-void CostComplexityPruneTool::InitTreePruningMetaData( DecisionTreeNode* n ) {
-   // initialise "meta data" for the pruning, like the "costcomplexity", the
-   // critical alpha, the minimal alpha down the tree, etc...  for each node!!
+////////////////////////////////////////////////////////////////////////////////
+/// initialise "meta data" for the pruning, like the "costcomplexity", the
+/// critical alpha, the minimal alpha down the tree, etc...  for each node!!
 
+void CostComplexityPruneTool::InitTreePruningMetaData( DecisionTreeNode* n ) {
    if( n == NULL ) return;
 
    Double_t s = n->GetNSigEvents();
@@ -196,16 +197,16 @@ void CostComplexityPruneTool::InitTreePruningMetaData( DecisionTreeNode* n ) {
 }
 
 
-//_______________________________________________________________________
-void CostComplexityPruneTool::Optimize( DecisionTree* dt, Double_t weights ) {
-   // after the critical alpha values (at which the corresponding nodes would
-   // be pruned away) had been established in the "InitMetaData" we need now:
-   // automatic pruning:
-   //   find the value of "alpha" for which the test sample gives minimal error,
-   //   on the tree with all nodes pruned that have alpha_critital < alpha,
-   // fixed parameter pruning
-   //
+////////////////////////////////////////////////////////////////////////////////
+/// after the critical alpha values (at which the corresponding nodes would
+/// be pruned away) had been established in the "InitMetaData" we need now:
+/// automatic pruning:
+///   find the value of "alpha" for which the test sample gives minimal error,
+///   on the tree with all nodes pruned that have alpha_critital < alpha,
+/// fixed parameter pruning
+///
 
+void CostComplexityPruneTool::Optimize( DecisionTree* dt, Double_t weights ) {
    Int_t k = 1;
    Double_t alpha   = -1.0e10;
    Double_t epsilon = std::numeric_limits<double>::epsilon();

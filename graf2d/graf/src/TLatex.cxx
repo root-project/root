@@ -23,7 +23,8 @@ const Double_t kPI = TMath::Pi();
 ClassImp(TLatex)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>TLatex : to draw Mathematical Formula</h2></center>
 
@@ -309,11 +310,11 @@ End_Html
 */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TLatex::TLatex()
 {
-   // Default constructor.
-
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
    fError       = 0;
@@ -328,12 +329,12 @@ TLatex::TLatex()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+
 TLatex::TLatex(Double_t x, Double_t y, const char *text)
        :TText(x,y,text)
 {
-   // Normal constructor.
-
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
    fError       = 0;
@@ -348,18 +349,19 @@ TLatex::TLatex(Double_t x, Double_t y, const char *text)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TLatex::~TLatex()
 {
-   // Destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
 {
-   // Copy constructor.
-
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
    fError       = 0;
@@ -373,10 +375,11 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
    ((TLatex&)text).Copy(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TLatex& TLatex::operator=(const TLatex& lt)
 {
-   //assignment operator
    if(this!=&lt) {
       TText::operator=(lt);
       TAttLine::operator=(lt);
@@ -394,11 +397,11 @@ TLatex& TLatex::operator=(const TLatex& lt)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this TLatex object to another TLatex.
+
 void TLatex::Copy(TObject &obj) const
 {
-   // Copy this TLatex object to another TLatex.
-
    ((TLatex&)obj).fFactorSize  = fFactorSize;
    ((TLatex&)obj).fFactorPos   = fFactorPos;
    ((TLatex&)obj).fLimitFactorSize  = fLimitFactorSize;
@@ -414,40 +417,40 @@ void TLatex::Copy(TObject &obj) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Analyse function.
+
 TLatexFormSize TLatex::Anal1(TextSpec_t spec, const Char_t* t, Int_t length)
 {
-   // Analyse function.
-
    return Analyse(0,0,spec,t,length);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Analyse and paint the TLatex formula
+///
+///  It is called twice : first for calculating the size of
+///  each portion of the formula, then to paint the formula.
+///  When analyse finds an operator or separator, it calls
+///  itself recursively to analyse the arguments of the operator.
+///  when the argument is an atom (normal text), it calculates
+///  the size of it and return it as the result.
+///  for example : if the operator #frac{arg1}{arg2} is found :
+///  Analyse(arg1) return the size of arg1 (width, up, down)
+///  Analyse(arg2) return the size of arg2
+///  now, we know the size of #frac{arg1}{arg2}  :
+///  width = max(width_arg1, width_arg2)
+///  up = up_arg1 + down_arg1
+///  down = up_arg2 + down_arg2
+///  so, when the user wants to paint a fraction at position (x,y),
+///  the rect used for the formula is : (x,y-up,x+width,y+down)
+///
+/// return size of zone occupied by the text/formula
+/// t : chain to be analyzed
+/// length : number of chars in t.
+
 TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* t, Int_t length)
 {
-   //  Analyse and paint the TLatex formula
-   //
-   //  It is called twice : first for calculating the size of
-   //  each portion of the formula, then to paint the formula.
-   //  When analyse finds an operator or separator, it calls
-   //  itself recursively to analyse the arguments of the operator.
-   //  when the argument is an atom (normal text), it calculates
-   //  the size of it and return it as the result.
-   //  for example : if the operator #frac{arg1}{arg2} is found :
-   //  Analyse(arg1) return the size of arg1 (width, up, down)
-   //  Analyse(arg2) return the size of arg2
-   //  now, we know the size of #frac{arg1}{arg2}  :
-   //  width = max(width_arg1, width_arg2)
-   //  up = up_arg1 + down_arg1
-   //  down = up_arg2 + down_arg2
-   //  so, when the user wants to paint a fraction at position (x,y),
-   //  the rect used for the formula is : (x,y-up,x+width,y+down)
-   //
-   // return size of zone occupied by the text/formula
-   // t : chain to be analyzed
-   // length : number of chars in t.
-
    const char *tab[] = { "alpha","beta","chi","delta","varepsilon","phi","gamma","eta","iota","varphi","kappa","lambda",
                 "mu","nu","omicron","pi","theta","rho","sigma","tau","upsilon","varomega","omega","xi","psi","zeta",
                 "Alpha","Beta","Chi","Delta","Epsilon","Phi","Gamma","Eta","Iota","vartheta",
@@ -1823,12 +1826,12 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a copy of this object with the new parameters
+/// And copy object attributes
+
 TLatex *TLatex::DrawLatex(Double_t x, Double_t y, const char *text)
 {
-   // Make a copy of this object with the new parameters
-   // And copy object attributes
-
    TLatex *newtext = new TLatex(x, y, text);
    TAttText::Copy(*newtext);
    newtext->SetBit(kCanDelete);
@@ -1838,22 +1841,22 @@ TLatex *TLatex::DrawLatex(Double_t x, Double_t y, const char *text)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this TLatex with new coordinates in NDC.
+
 TLatex *TLatex::DrawLatexNDC(Double_t x, Double_t y, const char *text)
 {
-   // Draw this TLatex with new coordinates in NDC.
-
    TLatex *newtext = DrawLatex(x, y, text);
    newtext->SetNDC();
    return newtext;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a line in a Latex formula
+
 void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSpec_t spec)
 {
-   // Draw a line in a Latex formula
-
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
    Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
@@ -1870,11 +1873,11 @@ void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSp
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw an arc of ellipse in a Latex formula (right or left parenthesis)
+
 void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
 {
-   // Draw an arc of ellipse in a Latex formula (right or left parenthesis)
-
    if (r < 1) r = 1;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
@@ -1900,12 +1903,12 @@ void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw an arc of ellipse in a Latex formula (right or left parenthesis)
+
 void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
                      Double_t  phimin, Double_t  phimax, TextSpec_t spec )
 {
-   // Draw an arc of ellipse in a Latex formula (right or left parenthesis)
-
    if (r1 < 1) r1 = 1;
    if (r2 < 1) r2 = 1;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
@@ -1932,11 +1935,11 @@ void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint.
+
 void TLatex::Paint(Option_t *)
 {
-   // Paint.
-
    Double_t xsave = fX;
    Double_t ysave = fY;
    if (TestBit(kTextNDC)) {
@@ -1951,14 +1954,14 @@ void TLatex::Paint(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main drawing function
+///
+/// Warning: Unlike most others "XYZ::PaintXYZ" methods, PaintLatex modifies
+///          the TLatex data members.
+
 void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
 {
-   // Main drawing function
-   //
-   // Warning: Unlike most others "XYZ::PaintXYZ" methods, PaintLatex modifies
-   //          the TLatex data members.
-
    TAttText::Modify();  // Change text attributes only if necessary.
 
    TVirtualPS *saveps = gVirtualPS;
@@ -2045,11 +2048,11 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drawing function
+
 Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
 {
-   // Drawing function
-
    TString newText = text1;
    if( newText.Length() == 0) return 0;
    newText.ReplaceAll("#hbox","#mbox");
@@ -2151,11 +2154,11 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the Latex syntax is correct
+
 Int_t TLatex::CheckLatexSyntax(TString &text)
 {
-   // Check if the Latex syntax is correct
-
    const Char_t *kWord1[] = {"{}^{","{}_{","^{","_{","#scale{","#color{","#font{","#sqrt{","#[]{","#{}{","#||{",
                        "#bar{","#vec{","#dot{","#hat{","#ddot{","#acute{","#grave{","#check{","#tilde{","#slash{","#bf{","#it{","#mbox{",
                        "\\scale{","\\color{","\\font{","\\sqrt{","\\[]{","\\{}{","\\||{","#(){","\\(){",
@@ -2356,11 +2359,11 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// First parsing of the analyse sequence
+
 TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *text)
 {
-   // First parsing of the analyse sequence
-
    fError   = 0;
    fTabMax  = 100;
    fTabSize = new FormSize_t[fTabMax];
@@ -2401,11 +2404,11 @@ TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *t
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return height of current pad in pixels
+
 Double_t TLatex::GetHeight() const
 {
-   // Return height of current pad in pixels
-
    Double_t w = gPad->GetAbsWNDC()*Double_t(gPad->GetWw());
    Double_t h = gPad->GetAbsHNDC()*Double_t(gPad->GetWh());
    if (w < h)
@@ -2415,11 +2418,11 @@ Double_t TLatex::GetHeight() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return size of the formula along X in pad coordinates
+
 Double_t TLatex::GetXsize()
 {
-   // Return size of the formula along X in pad coordinates
-
    if (!gPad) return 0;
    TString newText = GetTitle();
    if( newText.Length() == 0) return 0;
@@ -2447,11 +2450,11 @@ Double_t TLatex::GetXsize()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return text size in pixels
+
 void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 {
-   // Return text size in pixels
-
    if (!gPad) return;
    TString newText = GetTitle();
    if( newText.Length() == 0) return;
@@ -2504,11 +2507,11 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return size of the formula along Y in pad coordinates
+
 Double_t TLatex::GetYsize()
 {
-   // Return size of the formula along Y in pad coordinates
-
    if (!gPad) return 0;
    TString newText = GetTitle();
    if( newText.Length() == 0) return 0;
@@ -2534,22 +2537,22 @@ Double_t TLatex::GetYsize()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read fs in fTabSize
+
 TLatexFormSize TLatex::Readfs()
 {
-   // Read fs in fTabSize
-
    fPos--;
    TLatexFormSize result(fTabSize[fPos].fWidth,fTabSize[fPos].fOver,fTabSize[fPos].fUnder);
    return result;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save fs values in array fTabSize
+
 void TLatex::Savefs(TLatexFormSize *fs)
 {
-   // Save fs values in array fTabSize
-
    fTabSize[fPos].fWidth  = fs->Width();
    fTabSize[fPos].fOver   = fs->Over();
    fTabSize[fPos].fUnder  = fs->Under();
@@ -2568,11 +2571,11 @@ void TLatex::Savefs(TLatexFormSize *fs)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TLatex::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    char quote = '"';
 
    if (gROOT->ClassSaved(TLatex::Class())) {
@@ -2595,19 +2598,19 @@ void TLatex::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set relative size of subscripts and superscripts
+
 void TLatex::SetIndiceSize(Double_t factorSize)
 {
-   // Set relative size of subscripts and superscripts
-
    fFactorSize = factorSize;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set limit for text resizing of subscipts and superscripts
+
 void TLatex::SetLimitIndiceSize(Int_t limitFactorSize)
 {
-   // Set limit for text resizing of subscipts and superscripts
-
    fLimitFactorSize = limitFactorSize;
 }

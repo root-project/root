@@ -181,12 +181,12 @@ void SearchCanvases(TSeqCollection* canvases, std::vector<TObject*>& objects);
 
 typedef std::multimap<TObject*, TF1*> FitFuncMap_t;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method looks among the functions stored by the fitpanel, the
+/// one that is currently selected in the fFuncList
+
 TF1* TFitEditor::FindFunction()
 {
-   // This method looks among the functions stored by the fitpanel, the
-   // one that is currently selected in the fFuncList
-
    // Get the list of functions from the system
    std::vector<TF1*>& funcList(fSystemFuncs);
 
@@ -222,13 +222,13 @@ TF1* TFitEditor::FindFunction()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Copies f into a new TF1 to be stored in the fitpanel with it's
+///own ownership. This is taken from Fit::StoreAndDrawFitFunction in
+///HFitImpl.cxx
+
 TF1* copyTF1(TF1* f)
 {
-   //Copies f into a new TF1 to be stored in the fitpanel with it's
-   //own ownership. This is taken from Fit::StoreAndDrawFitFunction in
-   //HFitImpl.cxx
-
    double xmin = 0, xmax = 0, ymin = 0, ymax = 0, zmin = 0, zmax = 0;
 
    // no need to use kNotGlobal bit. TF1::Copy does not add in the list by default
@@ -264,11 +264,11 @@ TF1* copyTF1(TF1* f)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stores the parameters of the given function into pars
+
 void GetParameters(TFitEditor::FuncParams_t & pars, TF1* func)
 {
-   // Stores the parameters of the given function into pars
-
    int npar = func->GetNpar();
    if (npar != (int) pars.size() ) pars.resize(npar);
    for ( Int_t i = 0; i < npar; ++i )
@@ -281,11 +281,11 @@ void GetParameters(TFitEditor::FuncParams_t & pars, TF1* func)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restore the parameters from pars into the function
+
 void SetParameters(TFitEditor::FuncParams_t & pars, TF1* func)
 {
-   // Restore the parameters from pars into the function
-
    int npar = func->GetNpar();
    if (npar > (int) pars.size() ) pars.resize(npar);
    for ( Int_t i = 0; i < npar; ++i )
@@ -295,12 +295,12 @@ void SetParameters(TFitEditor::FuncParams_t & pars, TF1* func)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parameter initialization for the function
+
 template<class FitObject>
 void InitParameters(TF1* func, FitObject * fitobj)
 {
-   // Parameter initialization for the function
-
    const int special = func->GetNumber();
    if (100 == special || 400 == special) {
       ROOT::Fit::BinData data;
@@ -314,12 +314,12 @@ void InitParameters(TF1* func, FitObject * fitobj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Splits the entry in fDataSet to get the selected variables and cuts
+/// from the text.
+
 void GetTreeVarsAndCuts(TGComboBox* dataSet, TString& variablesStr, TString& cutsStr)
 {
-   // Splits the entry in fDataSet to get the selected variables and cuts
-   // from the text.
-
    // Get the entry
    TGTextLBEntry* textEntry =
       static_cast<TGTextLBEntry*>( dataSet->GetListBox()->GetEntry( dataSet->GetSelected() ) );
@@ -337,11 +337,11 @@ ClassImp(TFitEditor)
 
 TFitEditor *TFitEditor::fgFitDialog = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method - opens the fit panel.
+
 TFitEditor * TFitEditor::GetInstance(TVirtualPad* pad, TObject *obj)
 {
-   // Static method - opens the fit panel.
-
    // Get the default pad if not provided.
    if (!pad)
    {
@@ -358,7 +358,10 @@ TFitEditor * TFitEditor::GetInstance(TVirtualPad* pad, TObject *obj)
    return fgFitDialog;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of fit editor. 'obj' is the object to be fitted and
+/// 'pad' where it is drawn.
+
 TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    TGMainFrame(gClient->GetRoot(), 20, 20),
    fParentPad   (0),
@@ -371,9 +374,6 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    fConvFunc    (0),
    fFuncPars    (0)
 {
-   // Constructor of fit editor. 'obj' is the object to be fitted and
-   // 'pad' where it is drawn.
-
    fType = kObjectHisto;
    SetCleanup(kDeepCleanup);
 
@@ -508,11 +508,11 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    SetWMSizeHints(size.fWidth, size.fHeight, size.fWidth, size.fHeight, 0, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fit editor destructor.
+
 TFitEditor::~TFitEditor()
 {
-   // Fit editor destructor.
-
    DisconnectSlots();
 
    // Disconnect all the slot that were no disconnected in DisconnecSlots
@@ -536,11 +536,12 @@ TFitEditor::~TFitEditor()
    fgFitDialog = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates the Frame that contains oll the information about the
+/// function.
+
 void TFitEditor::CreateFunctionGroup()
 {
-   // Creates the Frame that contains oll the information about the
-   // function.
    TGGroupFrame     *gf1 = new TGGroupFrame(this, "Fit Function", kFitWidth);
    TGCompositeFrame *tf0 = new TGCompositeFrame(gf1, 350, 26, kHorizontalFrame);
    TGLabel *label1       = new TGLabel(tf0,"Type:");
@@ -652,11 +653,11 @@ void TFitEditor::CreateFunctionGroup()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create 'General' tab.
+
 void TFitEditor::CreateGeneralTab()
 {
-   // Create 'General' tab.
-
    fTabContainer = fTab->AddTab("General");
    fGeneral = new TGCompositeFrame(fTabContainer, 10, 10, kVerticalFrame);
    fTabContainer->AddFrame(fGeneral, new TGLayoutHints(kLHintsTop |
@@ -891,11 +892,11 @@ void TFitEditor::CreateGeneralTab()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create 'Minimization' tab.
+
 void TFitEditor::CreateMinimizationTab()
 {
-   // Create 'Minimization' tab.
-
    fTabContainer = fTab->AddTab("Minimization");
    fMinimization = new TGCompositeFrame(fTabContainer, 10, 10, kVerticalFrame);
    fTabContainer->AddFrame(fMinimization, new TGLayoutHints(kLHintsTop |
@@ -1041,11 +1042,11 @@ void TFitEditor::CreateMinimizationTab()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect GUI signals to fit panel slots.
+
 void TFitEditor::ConnectSlots()
 {
-   // Connect GUI signals to fit panel slots.
-
    // list of data sets to fit
    fDataSet          -> Connect("Selected(Int_t)", "TFitEditor", this, "DoDataSet(Int_t)");
    // list of predefined functions
@@ -1116,11 +1117,11 @@ void TFitEditor::ConnectSlots()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnect GUI signals from fit panel slots.
+
 void TFitEditor::DisconnectSlots()
 {
-   // Disconnect GUI signals from fit panel slots.
-
    Disconnect("CloseWindow()");
 
    fFuncList    -> Disconnect("Selected(Int_t)");
@@ -1181,11 +1182,11 @@ void TFitEditor::DisconnectSlots()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to another canvas.
+
 void TFitEditor::SetCanvas(TCanvas * /*newcan*/)
 {
-   // Connect to another canvas.
-
    // The next line is commented because it is stablishing a
    // connection with the particular canvas, while right the following
    // line will connect all the canvas in a general way.
@@ -1203,11 +1204,11 @@ void TFitEditor::SetCanvas(TCanvas * /*newcan*/)
    TQObject::Connect("TCanvas", "Closed()", "TFitEditor", this, "DoNoSelection()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hide the fit panel and set it to non-active state.
+
 void TFitEditor::Hide()
 {
-   // Hide the fit panel and set it to non-active state.
-
    if (fgFitDialog) {
       fgFitDialog->UnmapWindow();
    }
@@ -1220,11 +1221,11 @@ void TFitEditor::Hide()
    gROOT->GetListOfCleanups()->Remove(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show the fit panel (possible only via context menu).
+
 void TFitEditor::Show(TVirtualPad* pad, TObject *obj)
 {
-   // Show the fit panel (possible only via context menu).
-
    if (!gROOT->GetListOfCleanups()->FindObject(this))
       gROOT->GetListOfCleanups()->Add(this);
 
@@ -1237,11 +1238,11 @@ void TFitEditor::Show(TVirtualPad* pad, TObject *obj)
    SetFitObject(pad, obj, kButton1Down);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close fit panel window.
+
 void TFitEditor::CloseWindow()
 {
-   // Close fit panel window.
-
    Hide();
 }
 
@@ -1252,21 +1253,21 @@ void TFitEditor::CloseWindow()
 //    return fgFitDialog;
 // }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Called to delete the fit panel.
+
 void TFitEditor::Terminate()
 {
-   //  Called to delete the fit panel.
-
    TQObject::Disconnect("TCanvas", "Closed()");
    delete fgFitDialog;
    fgFitDialog = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Set the fit panel GUI according to the selected object.
+
 void TFitEditor::UpdateGUI()
 {
-   //  Set the fit panel GUI according to the selected object.
-
    if (!fFitObject) return;
 
    DrawSelection(true);
@@ -1440,13 +1441,13 @@ void TFitEditor::UpdateGUI()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called when the user clicks on an object inside a canvas.
+/// Updates pointers to the parent pad and the selected object
+/// for fitting (if suitable).
+
 void TFitEditor::SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event)
 {
-   // Slot called when the user clicks on an object inside a canvas.
-   // Updates pointers to the parent pad and the selected object
-   // for fitting (if suitable).
-
    if (event != kButton1Down) return;
 
    if ( !obj ) {
@@ -1540,12 +1541,12 @@ void TFitEditor::SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event)
    DoLinearFit();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called when users close a TCanvas or when the user select
+/// no object.
+
 void TFitEditor::DoNoSelection()
 {
-   // Slot called when users close a TCanvas or when the user select
-   // no object.
-
    if (gROOT->GetListOfCanvases()->IsEmpty()) {
       Terminate();
       return;
@@ -1565,11 +1566,11 @@ void TFitEditor::DoNoSelection()
    fDrawAdvanced->SetState(kButtonDisabled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// When obj is deleted, clear fFitObject if fFitObject = obj.
+
 void TFitEditor::RecursiveRemove(TObject* obj)
 {
-   // When obj is deleted, clear fFitObject if fFitObject = obj.
-
    if (obj == fFitObject) {
       fFitObject = 0;
       DisconnectSlots();
@@ -1604,12 +1605,12 @@ void TFitEditor::RecursiveRemove(TObject* obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the list of functions depending on the type of fit
+/// selected.
+
 void TFitEditor::FillFunctionList(Int_t)
 {
-   // Fills the list of functions depending on the type of fit
-   // selected.
-
    fFuncList->RemoveAll();
    // Case when the user has selected predefined functions in 1D.
    if ( fTypeFit->GetSelected() == kFP_PRED1D && fDim <= 1 ) {
@@ -1724,12 +1725,12 @@ void TFitEditor::FillFunctionList(Int_t)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the list of methods depending on the minimization library
+/// selected.
+
 void TFitEditor::FillMinMethodList(Int_t)
 {
-   // Fills the list of methods depending on the minimization library
-   // selected.
-
    fMinMethodList->RemoveAll();
 
    if ( fLibMinuit->GetState() == kButtonDown )
@@ -1809,11 +1810,11 @@ void SearchCanvases(TSeqCollection* canvases, std::vector<TObject*>& objects)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a combo box with all the possible objects to be fitted.
+
 void TFitEditor::FillDataSetList()
 {
-   // Create a combo box with all the possible objects to be fitted.
-
    // Get the title of the entry selected, so that we can select it
    // again once the fDataSet has been refilled.
    TGTextLBEntry * entry = (TGTextLBEntry*) fDataSet->GetSelectedEntry();
@@ -1865,11 +1866,11 @@ void TFitEditor::FillDataSetList()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create method list in a combo box.
+
 TGComboBox* TFitEditor::BuildMethodList(TGFrame* parent, Int_t id)
 {
-   // Create method list in a combo box.
-
    TGComboBox *c = new TGComboBox(parent, id);
    c->AddEntry("Chi-square", kFP_MCHIS);
    c->AddEntry("Binned Likelihood", kFP_MBINL);
@@ -1879,28 +1880,28 @@ TGComboBox* TFitEditor::BuildMethodList(TGFrame* parent, Int_t id)
    return c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to advanced option button (opens a dialog).
+
 void TFitEditor::DoAdvancedOptions()
 {
-   // Slot connected to advanced option button (opens a dialog).
-
    new TAdvancedGraphicsDialog( fClient->GetRoot(), GetMainFrame());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to 'include emtry bins and forse all weights to 1' setting.
+
 void TFitEditor::DoEmptyBinsAllWeights1()
 {
-   // Slot connected to 'include emtry bins and forse all weights to 1' setting.
-
    if (fEmptyBinsWghts1->GetState() == kButtonDown)
       if (fAllWeights1->GetState() == kButtonDown)
          fAllWeights1->SetState(kButtonUp, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TFitEditor::DoUseFuncRange()
 {
-
    if ( fUseRange->GetState() == kButtonDown ) {
       if (fNone->GetState() == kButtonDown || fNone->GetState() == kButtonDisabled) {
          // Get the function
@@ -1933,37 +1934,38 @@ void TFitEditor::DoUseFuncRange()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to 'set all weights to 1' setting.
+
 void TFitEditor::DoAllWeights1()
 {
-   // Slot connected to 'set all weights to 1' setting.
-
    if (fAllWeights1->GetState() == kButtonDown)
       if (fEmptyBinsWghts1->GetState() == kButtonDown)
          fEmptyBinsWghts1->SetState(kButtonUp, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the fit panel.
+
 void TFitEditor::DoClose()
 {
-   // Close the fit panel.
-
    Hide();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Easy here!
+
 void TFitEditor::DoUpdate()
 {
-   // Easy here!
    GetFunctionsFromSystem();
    FillDataSetList();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a fit with current parameters' settings.
+
 void TFitEditor::DoFit()
 {
-   // Perform a fit with current parameters' settings.
-
    if (!fFitObject) return;
    //if (!fParentPad) return;
 
@@ -2212,10 +2214,11 @@ void TFitEditor::DoFit()
    fDrawAdvanced->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check entered function string.
+
 Int_t TFitEditor::CheckFunctionString(const char *fname)
 {
-   // Check entered function string.
    Int_t rvalue = 0;
    if ( fDim == 1 || fDim == 0 ) {
       TF1 form("tmpCheck", fname);
@@ -2234,13 +2237,13 @@ Int_t TFitEditor::CheckFunctionString(const char *fname)
    return rvalue;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to addition of predefined functions. It will
+/// insert the next selected function with a plus sign so that it
+/// doesn't override the current content of the formula.
+
 void TFitEditor::DoAddition(Bool_t on)
 {
-   // Slot connected to addition of predefined functions. It will
-   // insert the next selected function with a plus sign so that it
-   // doesn't override the current content of the formula.
-
    static Bool_t first = kFALSE;
    TString s = fEnteredFunc->GetText();
    if (on) {
@@ -2255,12 +2258,13 @@ void TFitEditor::DoAddition(Bool_t on)
       first = kFALSE;
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to addition of predefined functions. It will
+/// insert the next selected function with a plus sign so that it
+/// doesn't override the current content of the formula.
+
 void TFitEditor::DoNormAddition(Bool_t on)
 {
-   // Slot connected to addition of predefined functions. It will
-   // insert the next selected function with a plus sign so that it
-   // doesn't override the current content of the formula.
    /*
    static Bool_t first = kFALSE;
    TString s = fEnteredFunc->GetText();
@@ -2277,12 +2281,13 @@ void TFitEditor::DoNormAddition(Bool_t on)
    if (on) std::cout << "DoNormAddition" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to addition of predefined functions. It will
+/// insert the next selected function with a plus sign so that it
+/// doesn't override the current content of the formula.
+
 void TFitEditor::DoConvolution(Bool_t on)
 {
-   // Slot connected to addition of predefined functions. It will
-   // insert the next selected function with a plus sign so that it
-   // doesn't override the current content of the formula.
    /*
    static Bool_t first = kFALSE;
    TString s = fEnteredFunc->GetText();
@@ -2299,10 +2304,11 @@ void TFitEditor::DoConvolution(Bool_t on)
    if (on) std::cout << "DoConvolution" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Selects the data set to be fitted
+
 void TFitEditor::DoDataSet(Int_t selected)
 {
-   // Selects the data set to be fitted
    if ( selected == kFP_NOSEL ) {
       DoNoSelection();
       return;
@@ -2388,11 +2394,11 @@ void TFitEditor::ProcessTreeInput(TObject* objSelected, Int_t selected, TString 
    fDataSet->Select(newid);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to predefined fit function settings.
+
 void TFitEditor::DoFunction(Int_t selected)
 {
-   // Slot connected to predefined fit function settings.
-
    TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
 
    // check that selected passesd value is the correct one in the TextEntry
@@ -2519,11 +2525,11 @@ void TFitEditor::DoFunction(Int_t selected)
    if ( fitFunc ) delete fitFunc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to entered function in text entry.
+
 void TFitEditor::DoEnteredFunction()
 {
-   // Slot connected to entered function in text entry.
-
    if (!strcmp(fEnteredFunc->GetText(), "")) return;
 
    // Check if the function is well built
@@ -2542,11 +2548,11 @@ void TFitEditor::DoEnteredFunction()
    ((TGCompositeFrame *)fSelLabel->GetParent())->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to linear fit settings.
+
 void TFitEditor::DoLinearFit()
 {
-   // Slot connected to linear fit settings.
-
    if (fLinearFit->GetState() == kButtonDown) {
       //fSetParam->SetState(kButtonDisabled);
       fBestErrors->SetState(kButtonDisabled);
@@ -2563,39 +2569,40 @@ void TFitEditor::DoLinearFit()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to 'no chi2' option settings.
+
 void TFitEditor::DoNoChi2()
 {
-   // Slot connected to 'no chi2' option settings.
-
    //LM: no need to do  operations here
    // if (fLinearFit->GetState() == kButtonUp)
    //    fLinearFit->SetState(kButtonDown, kTRUE);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to 'robust fitting' option settings.
+
 void TFitEditor::DoRobustFit()
 {
-   // Slot connected to 'robust fitting' option settings.
-
    if (fEnableRobust->GetState() == kButtonDown)
       fRobustValue->SetState(kTRUE);
    else
       fRobustValue->SetState(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to 'no storing, no drawing' settings.
+
 void TFitEditor::DoNoStoreDrawing()
 {
-   // Slot connected to 'no storing, no drawing' settings.
    if (fNoDrawing->GetState() == kButtonUp)
       fNoDrawing->SetState(kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to print option settings.
+
 void TFitEditor::DoPrintOpt(Bool_t on)
 {
-   // Slot connected to print option settings.
-
    // Change the states of the buttons depending of which one is
    // selected.
    TGButton *btn = (TGButton *) gTQSender;
@@ -2629,11 +2636,11 @@ void TFitEditor::DoPrintOpt(Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset all fit parameters.
+
 void TFitEditor::DoReset()
 {
-   // Reset all fit parameters.
-
    if ( fParentPad ) {
       fParentPad->Modified();
       fParentPad->Update();
@@ -2692,11 +2699,11 @@ void TFitEditor::DoReset()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open set parameters dialog.
+
 void TFitEditor::DoSetParameters()
 {
-   // Open set parameters dialog.
-
    // Get the function.
    TF1* fitFunc = GetFitFunction();
 
@@ -2746,11 +2753,11 @@ void TFitEditor::DoSetParameters()
    if ( fNone->GetState() != kButtonDisabled ) delete fitFunc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to range settings on x-axis.
+
 void TFitEditor::DoSliderXMoved()
 {
-   // Slot connected to range settings on x-axis.
-
    if ( !fFitObject ) return;
 
    fSliderXMin->SetNumber( fXaxis->GetBinLowEdge( static_cast<Int_t>( fSliderX->GetMinPosition() ) ) );
@@ -2761,12 +2768,12 @@ void TFitEditor::DoSliderXMoved()
    DrawSelection();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draws the square around the object showing where the limits for
+/// fitting are.
+
 void TFitEditor::DrawSelection(bool restore)
 {
-   // Draws the square around the object showing where the limits for
-   // fitting are.
-
    static Int_t  px1old, py1old, px2old, py2old; // to remember the square drawn.
 
    if ( !fParentPad ) return;
@@ -2823,10 +2830,11 @@ void TFitEditor::DrawSelection(bool restore)
    if(save) gPad = save;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sincronize the numeric sliders with the graphical one.
+
 void TFitEditor::DoNumericSliderXChanged()
 {
-   // Sincronize the numeric sliders with the graphical one.
    if ( fSliderXMin->GetNumber() > fSliderXMax->GetNumber() ) {
       float xmin, xmax;
       fSliderX->GetPosition(xmin, xmax);
@@ -2843,11 +2851,11 @@ void TFitEditor::DoNumericSliderXChanged()
    DrawSelection();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to range settings on y-axis.
+
 void TFitEditor::DoSliderYMoved()
 {
-   // Slot connected to range settings on y-axis.
-
    if ( !fFitObject ) return;
 
    fSliderYMin->SetNumber( fYaxis->GetBinLowEdge( static_cast<Int_t>( fSliderY->GetMinPosition() ) ) );
@@ -2858,10 +2866,11 @@ void TFitEditor::DoSliderYMoved()
    DrawSelection();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///syncronize the numeric slider with the graphical one.
+
 void TFitEditor::DoNumericSliderYChanged()
 {
-   //syncronize the numeric slider with the graphical one.
    if ( fSliderYMin->GetNumber() > fSliderYMax->GetNumber() ) {
       float ymin, ymax;
       fSliderY->GetPosition(ymin, ymax);
@@ -2878,37 +2887,37 @@ void TFitEditor::DoNumericSliderYChanged()
    DrawSelection();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to range settings on z-axis.
+
 void TFitEditor::DoSliderZMoved()
 {
-   // Slot connected to range settings on z-axis.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a dialog for getting a user defined method.
+
 void TFitEditor::DoUserDialog()
 {
-   // Open a dialog for getting a user defined method.
-
    new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
                 "Info", "Dialog of user method is not implemented yet",
                 kMBIconAsterisk,kMBOk, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the function to be used in performed fit.
+
 void TFitEditor::SetFunction(const char *function)
 {
-   // Set the function to be used in performed fit.
-
    fEnteredFunc->SetText(function);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check whether the object suitable for fitting and set
+/// its type, dimension and method combo box accordingly.
+
 Bool_t TFitEditor::SetObjectType(TObject* obj)
 {
-   // Check whether the object suitable for fitting and set
-   // its type, dimension and method combo box accordingly.
-
    Bool_t set = kFALSE;
 
    // For each kind of object, set a different status in the fit
@@ -3003,11 +3012,11 @@ Bool_t TFitEditor::SetObjectType(TObject* obj)
    return set;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show object name on the top.
+
 void TFitEditor::ShowObjectName(TObject* obj)
 {
-   // Show object name on the top.
-
    TString name;
    bool isTree = false;
 
@@ -3061,11 +3070,11 @@ void TFitEditor::ShowObjectName(TObject* obj)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get draw options of the selected object.
+
 Option_t *TFitEditor::GetDrawOption() const
 {
-   // Get draw options of the selected object.
-
    if (!fParentPad) return "";
 
    TListIter next(fParentPad->GetListOfPrimitives());
@@ -3076,11 +3085,11 @@ Option_t *TFitEditor::GetDrawOption() const
    return "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set selected minimization library in use.
+
 void TFitEditor::DoLibrary(Bool_t on)
 {
-   // Set selected minimization library in use.
-
    TGButton *bt = (TGButton *)gTQSender;
    Int_t id = bt->WidgetId();
 
@@ -3166,11 +3175,11 @@ void TFitEditor::DoLibrary(Bool_t on)
    FillMinMethodList();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set selected minimization method in use.
+
 void TFitEditor::DoMinMethod(Int_t )
 {
-   // Set selected minimization method in use.
-
    if ( fMinMethodList->GetSelected() == kFP_MIGRAD )
       fStatusBar->SetText("MIGRAD",2);
    else if ( fMinMethodList->GetSelected() == kFP_FUMILI)
@@ -3201,20 +3210,20 @@ void TFitEditor::DoMinMethod(Int_t )
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the maximum number of iterations.
+
 void TFitEditor::DoMaxIterations()
 {
-   // Set the maximum number of iterations.
-
    Long_t itr = fIterations->GetIntNumber();
    fStatusBar->SetText(Form("Itr: %ld",itr),2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create section title in the GUI.
+
 void TFitEditor::MakeTitle(TGCompositeFrame *parent, const char *title)
 {
-   // Create section title in the GUI.
-
    TGCompositeFrame *ht = new TGCompositeFrame(parent, 350, 10,
                                                kFixedWidth | kHorizontalFrame);
    ht->AddFrame(new TGLabel(ht, title),
@@ -3224,12 +3233,12 @@ void TFitEditor::MakeTitle(TGCompositeFrame *parent, const char *title)
    parent->AddFrame(ht, new TGLayoutHints(kLHintsTop, 5, 0, 5, 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Look in the list of function for TF1. If a TF1 is
+/// found in the list of functions, it will be returned
+
 TF1* TFitEditor::HasFitFunction()
 {
-   // Look in the list of function for TF1. If a TF1 is
-   // found in the list of functions, it will be returned
-
    // Get the list of functions of the fit object
    TList *lf = GetFitObjectListOfFunctions();
    TF1* func = 0;
@@ -3288,11 +3297,11 @@ TF1* TFitEditor::HasFitFunction()
    return func;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the fitting options from all the widgets.
+
 void TFitEditor::RetrieveOptions(Foption_t& fitOpts, TString& drawOpts, ROOT::Math::MinimizerOptions& minOpts, Int_t npar)
 {
-   // Retrieve the fitting options from all the widgets.
-
    drawOpts = "";
 
    fitOpts.Range    = (fUseRange->GetState() == kButtonDown);

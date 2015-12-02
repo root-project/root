@@ -332,11 +332,11 @@ static bool gHaveGlobus = 1;
 static std::string gGlobusSubjName;
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// rand() implementation using /udev/random or /dev/random, if available
+
 static int rpd_rand()
 {
-   // rand() implementation using /udev/random or /dev/random, if available
-
 #ifndef WIN32
    int frnd = open("/dev/urandom", O_RDONLY);
    if (frnd < 0) frnd = open("/dev/random", O_RDONLY);
@@ -364,17 +364,17 @@ static int rpd_rand()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  reads in at most one less than len characters from open
+///  descriptor fd and stores them into the buffer pointed to by buf.
+///  Reading stops after an EOF or a newline. If a newline is
+///  read, it  is stored into the buffer.
+///  A '\0' is stored after the last character in the buffer.
+///  The number of characters read is returned (newline included).
+///  Returns < 0 in case of error.
+
 static int reads(int fd, char *buf, int len)
 {
-   //  reads in at most one less than len characters from open
-   //  descriptor fd and stores them into the buffer pointed to by buf.
-   //  Reading stops after an EOF or a newline. If a newline is
-   //  read, it  is stored into the buffer.
-   //  A '\0' is stored after the last character in the buffer.
-   //  The number of characters read is returned (newline included).
-   //  Returns < 0 in case of error.
-
    int k = 0;
    int nread = -1;
    int nr = read(fd,buf,1);
@@ -416,11 +416,11 @@ static int reads(int fd, char *buf, int len)
    return nread;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Case insensitive string compare of n characters.
+
 static int rpdstrncasecmp(const char *str1, const char *str2, int n)
 {
-   // Case insensitive string compare of n characters.
-
    while (n > 0) {
       int c1 = *str1;
       int c2 = *str2;
@@ -441,20 +441,21 @@ static int rpdstrncasecmp(const char *str1, const char *str2, int n)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Case insensitive string compare.
+
 static int rpdstrcasecmp(const char *str1, const char *str2)
 {
-   // Case insensitive string compare.
-
    return rpdstrncasecmp(str1, str2, strlen(str2) + 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// To avoid problems due to compiler optmization
+/// Taken from Viega&Messier, "Secure Programming Cookbook", O'Really, #13.2
+/// (see discussion there)
+
 static volatile void *rpdmemset(volatile void *dst, int c, int len)
 {
-   // To avoid problems due to compiler optmization
-   // Taken from Viega&Messier, "Secure Programming Cookbook", O'Really, #13.2
-   // (see discussion there)
    volatile char *buf;
 
    for (buf = (volatile char *)dst; len; (buf[--len] = c)) { }
@@ -462,14 +463,14 @@ static volatile void *rpdmemset(volatile void *dst, int c, int len)
 }
 
 #ifdef R__NOCRYPT
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This applies simple nor encryption with sa to the first 64 bytes
+/// pw. Returns the hex of the result (max length 128).
+/// This is foreseen for systms where crypt is not available
+/// (on windows ...), to provide some protection of tokens.
+
 char *rpdcrypt(const char *pw, const char *sa)
 {
-   // This applies simple nor encryption with sa to the first 64 bytes
-   // pw. Returns the hex of the result (max length 128).
-   // This is foreseen for systms where crypt is not available
-   // (on windows ...), to provide some protection of tokens.
-
    static char buf[129];
    char tbuf[64];
    int np = (strlen(pw) < 64) ? strlen(pw) : 64;
@@ -506,80 +507,85 @@ char *rpdcrypt(const char *pw, const char *sa)
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the value of the static gSysLog to syslog.
+/// Recognized values:
+///                       0      log to syslog (for root started daemons)
+///                       1      log to stderr (for user started daemons)
+
 void RpdSetSysLogFlag(int syslog)
 {
-   // Change the value of the static gSysLog to syslog.
-   // Recognized values:
-   //                       0      log to syslog (for root started daemons)
-   //                       1      log to stderr (for user started daemons)
-
    gSysLog = syslog;
    if (gDebug > 2)
       ErrorInfo("RpdSetSysLogFlag: gSysLog set to %d", gSysLog);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the value of the static gMethInit to methinit.
+/// Recognized values:
+///                       0      reset
+///                       1      initialized already
+
 void RpdSetMethInitFlag(int methinit)
 {
-   // Change the value of the static gMethInit to methinit.
-   // Recognized values:
-   //                       0      reset
-   //                       1      initialized already
-
    gMethInit = methinit;
    if (gDebug > 2)
       ErrorInfo("RpdSetMethInitFlag: gMethInit set to %d", gMethInit);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to the root string for key files
+/// Used by proofd.
+
 const char *RpdGetKeyRoot()
 {
-   // Return pointer to the root string for key files
-   // Used by proofd.
    return (const char *)gRpdKeyRoot.c_str();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return protocol version run by the client.
+/// Used by proofd.
+
 int RpdGetClientProtocol()
 {
-   // Return protocol version run by the client.
-   // Used by proofd.
    return gClientProtocol;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return authentication protocol used for the handshake.
+/// Used by proofd.
+
 int RpdGetAuthProtocol()
 {
-   // Return authentication protocol used for the handshake.
-   // Used by proofd.
    return gAuthProtocol;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return offset in the authtab file.
+/// Used by proofd.
+
 int RpdGetOffSet()
 {
-   // Return offset in the authtab file.
-   // Used by proofd.
    return gOffSet;
 }
 
 #ifdef R__KRB5
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the value of the static gKeytab to keytab.
+
 void RpdSetKeytabFile(const char *keytabfile)
 {
-   // Change the value of the static gKeytab to keytab.
    gKeytabFile = std::string(keytabfile);
    if (gDebug > 2)
       ErrorInfo("RpdSetKeytabFile: using keytab file %s", gKeytabFile.c_str());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free allocated quantities for Krb stuff
+
 void RpdFreeKrb5Vars(krb5_context context, krb5_principal principal,
                      krb5_ticket *ticket, krb5_auth_context auth_context,
                      krb5_creds **creds)
 {
-   // Free allocated quantities for Krb stuff
-
    if (context) {
       // free creds
       if (creds)
@@ -604,7 +610,8 @@ void RpdFreeKrb5Vars(krb5_context context, krb5_principal principal,
 
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int RpdGetAuthMethod(int kind)
 {
    int method = -1;
@@ -625,12 +632,13 @@ int RpdGetAuthMethod(int kind)
    return method;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete Public Key file
+/// Returns: 0 if ok
+///          1 if error unlinking (check errno);
+
 int RpdDeleteKeyFile(int ofs)
 {
-   // Delete Public Key file
-   // Returns: 0 if ok
-   //          1 if error unlinking (check errno);
    int retval = 0;
 
    std::string pukfile = gRpdKeyRoot;
@@ -654,20 +662,20 @@ int RpdDeleteKeyFile(int ofs)
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update tab file.
+/// If ilck <= 0 open and lock the file; if ilck > 0, use file
+/// descriptor ilck, which should correspond to an open and locked file.
+/// If opt = -1 : delete file (backup saved in <file>.bak);
+/// If opt =  0 : eliminate all inactive entries
+///               (if line="size" act only if size > gMAXTABSIZE)
+/// if opt =  1 : append 'line'.
+/// Returns -1 in case of error.
+/// Returns offset for 'line' and token for opt = 1.
+/// Returns new file size for opt = 0.
+
 int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
 {
-   // Update tab file.
-   // If ilck <= 0 open and lock the file; if ilck > 0, use file
-   // descriptor ilck, which should correspond to an open and locked file.
-   // If opt = -1 : delete file (backup saved in <file>.bak);
-   // If opt =  0 : eliminate all inactive entries
-   //               (if line="size" act only if size > gMAXTABSIZE)
-   // if opt =  1 : append 'line'.
-   // Returns -1 in case of error.
-   // Returns offset for 'line' and token for opt = 1.
-   // Returns new file size for opt = 0.
-
    int retval = -1;
    int itab = 0;
    char fbuf[kMAXPATHLEN];
@@ -947,16 +955,16 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// De-activates entry related to token with crypt crypttoken.
+/// Returns: 0 if successful
+///         -4 if entry not found or inactive
+///         -1 problems opening auth tab file
+///         -2 problems locking auth tab file
+///         -3 auth tab file does not exists
+
 int RpdCleanupAuthTab(const char *crypttoken)
 {
-   // De-activates entry related to token with crypt crypttoken.
-   // Returns: 0 if successful
-   //         -4 if entry not found or inactive
-   //         -1 problems opening auth tab file
-   //         -2 problems locking auth tab file
-   //         -3 auth tab file does not exists
-
    int retval = -4;
 
    if (gDebug > 2)
@@ -1094,14 +1102,14 @@ int RpdCleanupAuthTab(const char *crypttoken)
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// In tab file, cleanup (set inactive) entry at offset
+/// 'OffSet' from remote PiD 'RemId' at 'Host'.
+/// If Host="all" or RemId=0 discard all entries.
+/// Return number of entries not cleaned properly ...
+
 int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
 {
-   // In tab file, cleanup (set inactive) entry at offset
-   // 'OffSet' from remote PiD 'RemId' at 'Host'.
-   // If Host="all" or RemId=0 discard all entries.
-   // Return number of entries not cleaned properly ...
-
    int retval = 0;
 
    if (gDebug > 2)
@@ -1242,12 +1250,12 @@ int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check authentication entry in tab file.
+
 int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
                     int *OffSet)
 {
-   // Check authentication entry in tab file.
-
    int retval = 0;
    if (gDebug > 2)
       ErrorInfo("RpdCheckAuthTab: analyzing: %d %s %s %d %d", Sec, User,
@@ -1361,12 +1369,12 @@ int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check offset received from client entry in tab file.
+
 int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
                    int *OffSet, char **Token, int *ShmId, char **GlbsUser)
 {
-   // Check offset received from client entry in tab file.
-
    int retval = 0;
    bool goodOfs = 0;
    int ofs = *OffSet >= 0 ? *OffSet : 0;
@@ -1557,12 +1565,13 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
    return goodOfs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rename public file with new offset
+/// Returns: 0 if OK
+///          1 if problems renaming
+
 int RpdRenameKeyFile(int oldofs, int newofs)
 {
-   // Rename public file with new offset
-   // Returns: 0 if OK
-   //          1 if problems renaming
    int retval = 0;
 
    // Old name
@@ -1583,11 +1592,11 @@ int RpdRenameKeyFile(int oldofs, int newofs)
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check token validity.
+
 bool RpdCheckToken(char *token, char *tknref)
 {
-   // Check token validity.
-
    // Get rid of '\n'
    char *s = strchr(token, '\n');
    if (s)
@@ -1613,13 +1622,13 @@ bool RpdCheckToken(char *token, char *tknref)
       return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the requiring subject has already authenticated during this session
+/// and its 'ticket' is still valid.
+/// Not implemented for SRP and Krb5 (yet).
+
 int RpdReUseAuth(const char *sstr, int kind)
 {
-   // Check the requiring subject has already authenticated during this session
-   // and its 'ticket' is still valid.
-   // Not implemented for SRP and Krb5 (yet).
-
    int lenU, offset, opt;
    gOffSet = -1;
    gExistingAuth = 0;
@@ -1744,17 +1753,17 @@ int RpdReUseAuth(const char *sstr, int kind)
    return auth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if required auth method is allowed for 'Host'.
+/// If 'yes', returns 0, if 'no', returns 1, the number of allowed
+/// methods in NumAllow, and the codes of the allowed methods (in order
+/// of preference) in AllowMeth. Memory for AllowMeth must be allocated
+/// outside. Directives read from (in decreasing order of priority):
+/// $ROOTDAEMONRC, $HOME/.rootdaemonrc (privately startd daemons only)
+/// or $ROOTETCDIR/system.rootdaemonrc.
+
 int RpdCheckAuthAllow(int Sec, const char *Host)
 {
-   // Check if required auth method is allowed for 'Host'.
-   // If 'yes', returns 0, if 'no', returns 1, the number of allowed
-   // methods in NumAllow, and the codes of the allowed methods (in order
-   // of preference) in AllowMeth. Memory for AllowMeth must be allocated
-   // outside. Directives read from (in decreasing order of priority):
-   // $ROOTDAEMONRC, $HOME/.rootdaemonrc (privately startd daemons only)
-   // or $ROOTETCDIR/system.rootdaemonrc.
-
    int retval = 1, found = 0;
 
 #ifdef R__GBLS
@@ -2110,13 +2119,13 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if 'host' is compatible with 'Host' taking into account
+/// wild cards in the host name
+/// Returns 1 if successful, 0 otherwise ...
+
 int RpdCheckHost(const char *Host, const char *host)
 {
-   // Checks if 'host' is compatible with 'Host' taking into account
-   // wild cards in the host name
-   // Returns 1 if successful, 0 otherwise ...
-
    int rc = 1;
 
    // Strings must be both defined
@@ -2196,12 +2205,12 @@ int RpdCheckHost(const char *Host, const char *host)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get IP address of 'host' as a string. String must be deleted by
+/// the user.
+
 char *RpdGetIP(const char *host)
 {
-   // Get IP address of 'host' as a string. String must be deleted by
-   // the user.
-
    struct hostent *h;
    unsigned long ip;
    unsigned char ip_fld[4];
@@ -2227,11 +2236,11 @@ char *RpdGetIP(const char *host)
    return output;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send list of authentication methods not yet tried.
+
 void RpdSendAuthList()
 {
-   // Send list of authentication methods not yet tried.
-
    if (gDebug > 2)
       ErrorInfo("RpdSendAuthList: analyzing (gNumLeft: %d)", gNumLeft);
 
@@ -2257,11 +2266,11 @@ void RpdSendAuthList()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Authenitcation via ssh.
+
 int RpdSshAuth(const char *sstr)
 {
-   // Authenitcation via ssh.
-
    int auth = 0;
 
    if (gDebug > 2)
@@ -2777,11 +2786,11 @@ int RpdSshAuth(const char *sstr)
    return auth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Authenticate via Kerberos.
+
 int RpdKrb5Auth(const char *sstr)
 {
-   // Authenticate via Kerberos.
-
    int auth = 0;
 
 #ifdef R__KRB5
@@ -3177,12 +3186,12 @@ int RpdKrb5Auth(const char *sstr)
    return auth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use Secure Remote Password protocol.
+/// Check user id in $HOME/.srootdpass file.
+
 int RpdSRPUser(const char *sstr)
 {
-   // Use Secure Remote Password protocol.
-   // Check user id in $HOME/.srootdpass file.
-
    int auth = 0;
 
    if (!*sstr) {
@@ -3426,36 +3435,36 @@ int RpdSRPUser(const char *sstr)
    return auth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the requesting {host,user} can be granted immediate
+/// login on the base of the information found in /etc/hosts.equiv
+/// and/or $HOME/.rhosts. The two files must be trustable, i.e. owned
+/// and modifiable only by 'root' and by 'user', respectively (0600).
+/// Returns 1 in case access can be granted, 0 in any other case
+/// (errout contains a code for error logging on the client side)
+///
+/// NB: entries granting access in one of the two files cannot be
+///     overriden in the other file; so, system admins cannot close
+///     access from a host and user cannot stop access to their
+///     account if the administrator has decided so; as an example,
+///     if this entry is found in /etc/hosts.equiv
+///
+///     remote.host.dom auser
+///
+///     (allowing user named 'auser' from host 'remote.host.dom' to
+///     login to any non-root local account without specifying a
+///     password) the following entries in $home/.rhosts are ignored
+///
+///     remote.host.dom -auser
+///     -remote.host.dom
+///
+///     and access to 'auser' is always granted. This is a "feature"
+///     of ruserok.
+///
+
 int RpdCheckHostsEquiv(const char *host, const char *ruser,
                        const char *user, int &errout)
 {
-   // Check if the requesting {host,user} can be granted immediate
-   // login on the base of the information found in /etc/hosts.equiv
-   // and/or $HOME/.rhosts. The two files must be trustable, i.e. owned
-   // and modifiable only by 'root' and by 'user', respectively (0600).
-   // Returns 1 in case access can be granted, 0 in any other case
-   // (errout contains a code for error logging on the client side)
-   //
-   // NB: entries granting access in one of the two files cannot be
-   //     overriden in the other file; so, system admins cannot close
-   //     access from a host and user cannot stop access to their
-   //     account if the administrator has decided so; as an example,
-   //     if this entry is found in /etc/hosts.equiv
-   //
-   //     remote.host.dom auser
-   //
-   //     (allowing user named 'auser' from host 'remote.host.dom' to
-   //     login to any non-root local account without specifying a
-   //     password) the following entries in $home/.rhosts are ignored
-   //
-   //     remote.host.dom -auser
-   //     -remote.host.dom
-   //
-   //     and access to 'auser' is always granted. This is a "feature"
-   //     of ruserok.
-   //
-
    int rc = 0;
 
    // Effective uid
@@ -3592,13 +3601,13 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check received user's password against password in $HOME/.rootdpass.
+/// The password is retrieved in RpdUser and temporarly saved in gPasswd.
+/// Returns 1 in case of success authentication, 0 otherwise.
+
 int RpdCheckSpecialPass(const char *passwd)
 {
-   // Check received user's password against password in $HOME/.rootdpass.
-   // The password is retrieved in RpdUser and temporarly saved in gPasswd.
-   // Returns 1 in case of success authentication, 0 otherwise.
-
    // Check inputs
    if (!passwd)
       return 0;
@@ -3643,11 +3652,11 @@ int RpdCheckSpecialPass(const char *passwd)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check user's password.
+
 int RpdPass(const char *pass, int errheq)
 {
-   // Check user's password.
-
    char passwd[128];
    char *passw;
    char *pass_crypt;
@@ -3843,12 +3852,12 @@ int RpdPass(const char *pass, int errheq)
    return auth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prepare for globus authentication: check hostcer.conf and get
+/// the credential handle. This is run once at daemon start-up
+
 int RpdGlobusInit()
 {
-   // Prepare for globus authentication: check hostcer.conf and get
-   // the credential handle. This is run once at daemon start-up
-
 #ifdef R__GLBS
    // Now we open the certificates and we check if we are able to
    // autheticate the client. In the affirmative case we initialize
@@ -3895,11 +3904,11 @@ int RpdGlobusInit()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Authenticate via Globus.
+
 int RpdGlobusAuth(const char *sstr)
 {
-   // Authenticate via Globus.
-
    int auth = 0;
 
 #ifndef R__GLBS
@@ -4163,13 +4172,13 @@ int RpdGlobusAuth(const char *sstr)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if user and group id specified in the request exist in the
+/// passwd file. If they do then grant access. Very insecure: to be used
+/// with care.
+
 int RpdRfioAuth(const char *sstr)
 {
-   // Check if user and group id specified in the request exist in the
-   // passwd file. If they do then grant access. Very insecure: to be used
-   // with care.
-
    int auth = 0;
 
    if (gDebug > 2)
@@ -4233,13 +4242,13 @@ int RpdRfioAuth(const char *sstr)
    return auth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminate correctly by cleaning up the auth table (and shared
+/// memories in case of Globus) and closing the file.
+/// Called upon receipt of a kROOTD_CLEANUP and on SIGPIPE.
+
 void RpdAuthCleanup(const char *sstr, int opt)
 {
-   // Terminate correctly by cleaning up the auth table (and shared
-   // memories in case of Globus) and closing the file.
-   // Called upon receipt of a kROOTD_CLEANUP and on SIGPIPE.
-
    int rpid = 0, sec = -1, offs = -1, nw = 0;
    char usr[64] = {0};
    if (sstr)
@@ -4277,10 +4286,10 @@ void RpdAuthCleanup(const char *sstr, int opt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RpdInitAuth()
 {
-
    // Size check done in RpdUpdateAuthTab(1,...)
 
    // Reset
@@ -4295,12 +4304,12 @@ void RpdInitAuth()
    RpdDefaultAuthAllow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check configuration options and running daemons to build a default list
+/// of secure methods.
+
 void RpdDefaultAuthAllow()
 {
-   // Check configuration options and running daemons to build a default list
-   // of secure methods.
-
    if (gDebug > 2)
       ErrorInfo("RpdDefaultAuthAllow: Enter");
 
@@ -4360,12 +4369,12 @@ void RpdDefaultAuthAllow()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the running of process 'daemon'.
+/// Info got from 'ps ax'.
+
 int RpdCheckDaemon(const char *daemon)
 {
-   // Check the running of process 'daemon'.
-   // Info got from 'ps ax'.
-
    char cmd[kMAXPATHLEN] = { 0 };
    int ch, i = 0, cnt = 0;
 
@@ -4409,12 +4418,12 @@ int RpdCheckDaemon(const char *daemon)
    return cnt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tries to connect to sshd daemon on its standard port (22)
+/// Used if RpdCheckDaemon returns a negative result
+
 int RpdCheckSshd(int opt)
 {
-   // Tries to connect to sshd daemon on its standard port (22)
-   // Used if RpdCheckDaemon returns a negative result
-
    if (gDebug > 2)
       ErrorInfo("RpdCheckSshd: Enter ... ");
 
@@ -4526,11 +4535,12 @@ int RpdCheckSshd(int opt)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check user id. If user id is not equal to rootd's effective uid, user
+/// will not be allowed access, unless effective uid = 0 (i.e. root).
+
 int RpdUser(const char *sstr)
 {
-   // Check user id. If user id is not equal to rootd's effective uid, user
-   // will not be allowed access, unless effective uid = 0 (i.e. root).
    const int kMaxBuf = 256;
    char recvbuf[kMaxBuf];
    EMessageTypes kind;
@@ -4873,12 +4883,12 @@ int RpdUser(const char *sstr)
    return auth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try a guess of the client protocol from what they sent over
+/// the net ...
+
 int RpdGuessClientProt(const char *buf, EMessageTypes kind)
 {
-   // Try a guess of the client protocol from what they sent over
-   // the net ...
-
    if (gDebug > 2)
       ErrorInfo("RpdGuessClientProt: Enter: buf: '%s', kind: %d", buf,
                 (int) kind);
@@ -4914,17 +4924,17 @@ int RpdGuessClientProt(const char *buf, EMessageTypes kind)
    return proto;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocates and Fills a NULL terminated buffer of length Len+1 with
+/// Len random characters.
+/// Return pointer to the buffer (to be deleted by the caller)
+/// Opt = 0      any non dangerous char
+///       1      letters and numbers  (upper and lower case)
+///       2      hex characters       (upper and lower case)
+///       3      crypt like           [a-zA-Z0-9./]
+
 char *RpdGetRandString(int Opt, int Len)
 {
-   // Allocates and Fills a NULL terminated buffer of length Len+1 with
-   // Len random characters.
-   // Return pointer to the buffer (to be deleted by the caller)
-   // Opt = 0      any non dangerous char
-   //       1      letters and numbers  (upper and lower case)
-   //       2      hex characters       (upper and lower case)
-   //       3      crypt like           [a-zA-Z0-9./]
-
    unsigned int iimx[4][4] = {
       { 0x0, 0xffffff08, 0xafffffff, 0x2ffffffe }, // Opt = 0
       { 0x0, 0x3ff0000,  0x7fffffe,  0x7fffffe },  // Opt = 1
@@ -4976,11 +4986,11 @@ char *RpdGetRandString(int Opt, int Len)
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get public key from file pubkey (Opt == 1) or string pubkey (Opt == 0).
+
 int RpdGetRSAKeys(const char *pubkey, int Opt)
 {
-   // Get public key from file pubkey (Opt == 1) or string pubkey (Opt == 0).
-
    char str[kMAXPATHLEN] = { 0 };
    int keytype = 0;
 
@@ -5110,15 +5120,15 @@ int RpdGetRSAKeys(const char *pubkey, int Opt)
    return keytype;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save RSA public key into file for later use by other rootd/proofd.
+/// Return: 0 if ok
+///         1 if not ok
+///         2 if not ok because file already exists and cannot be
+///           overwritten
+
 int RpdSavePubKey(const char *PubKey, int OffSet, char *user)
 {
-   // Save RSA public key into file for later use by other rootd/proofd.
-   // Return: 0 if ok
-   //         1 if not ok
-   //         2 if not ok because file already exists and cannot be
-   //           overwritten
-
    int retval = 0;
 
    if (gRSAKey == 0 || OffSet < 0)
@@ -5174,13 +5184,13 @@ int RpdSavePubKey(const char *PubKey, int OffSet, char *user)
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Encode null terminated str using the session private key indcated by Key
+/// and sends it over the network.
+/// Returns number of bytes sent.or -1 in case of error.
+
 int RpdSecureSend(char *str)
 {
-   // Encode null terminated str using the session private key indcated by Key
-   // and sends it over the network.
-   // Returns number of bytes sent.or -1 in case of error.
-
    char buftmp[kMAXSECBUF];
    char buflen[20];
 
@@ -5222,12 +5232,12 @@ int RpdSecureSend(char *str)
    return nsen;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive buffer and decode it in str using key indicated by Key type.
+/// Return number of received bytes or -1 in case of error.
+
 int RpdSecureRecv(char **str)
 {
-   // Receive buffer and decode it in str using key indicated by Key type.
-   // Return number of received bytes or -1 in case of error.
-
    char buftmp[kMAXSECBUF];
    char buflen[20];
 
@@ -5281,15 +5291,15 @@ int RpdSecureRecv(char **str)
    return nrec;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate a valid pair of private/public RSA keys to protect for
+/// authentication password and token exchange
+/// Returns 1 if a good key pair is not found after kMAXRSATRIES attempts
+/// Returns 0 if a good key pair is found
+/// If setrndinit = 1, no futher init of the random engine
+
 int RpdGenRSAKeys(int setrndinit)
 {
-   // Generate a valid pair of private/public RSA keys to protect for
-   // authentication password and token exchange
-   // Returns 1 if a good key pair is not found after kMAXRSATRIES attempts
-   // Returns 0 if a good key pair is found
-   // If setrndinit = 1, no futher init of the random engine
-
    if (gDebug > 2)
       ErrorInfo("RpdGenRSAKeys: enter");
 
@@ -5540,15 +5550,15 @@ int RpdGenRSAKeys(int setrndinit)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generates local public/private RSA key pair
+/// Send request for Client Public Key and Local public key
+/// Receive encoded Client Key
+/// Decode Client public key
+/// NB: key is not saved to file here
+
 int RpdRecvClientRSAKey()
 {
-   // Generates local public/private RSA key pair
-   // Send request for Client Public Key and Local public key
-   // Receive encoded Client Key
-   // Decode Client public key
-   // NB: key is not saved to file here
-
    if (gRSAInit == 0) {
       // Generate Local RSA keys for the session
       if (RpdGenRSAKeys(1)) {
@@ -5643,11 +5653,11 @@ int RpdRecvClientRSAKey()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init random machine.
+
 void RpdInitRand()
 {
-   // Init random machine.
-
    const char *randdev = "/dev/urandom";
 
    int fd;
@@ -5665,10 +5675,11 @@ void RpdInitRand()
    srand(seed);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle user authentication.
+
 int RpdAuthenticate()
 {
-   // Handle user authentication.
    char buf[kMAXRECVBUF];
    EMessageTypes kind;
 
@@ -5828,11 +5839,11 @@ next:
 
    return auth;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free space allocated for encryption keys
+
 void RpdFreeKeys()
 {
-   // Free space allocated for encryption keys
-
    if (gRSAPubExport[0].keys) delete[] gRSAPubExport[0].keys;
    if (gRSAPubExport[1].keys) delete[] gRSAPubExport[1].keys;
 #ifdef R__SSL
@@ -5840,14 +5851,14 @@ void RpdFreeKeys()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receives client protocol and returns daemon protocol.
+/// Returns:  0 if ok
+///          -1 if any error occured
+///          -2 if special action (e.g. cleanup): no need to continue
+
 int RpdProtocol(int ServType)
 {
-   // Receives client protocol and returns daemon protocol.
-   // Returns:  0 if ok
-   //          -1 if any error occured
-   //          -2 if special action (e.g. cleanup): no need to continue
-
    int rc = 0;
 
 //#define R__DEBUG
@@ -6048,11 +6059,11 @@ int RpdProtocol(int ServType)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Authentication was successful, set user environment.
+
 int RpdLogin(int ServType, int auth)
 {
-   // Authentication was successful, set user environment.
-
 //   if (gDebug > 2)
       ErrorInfo("RpdLogin: enter: Server: %d, gUser: %s, auth: %d",
                 ServType, gUser, auth);
@@ -6150,25 +6161,25 @@ int RpdLogin(int ServType, int auth)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the action needed to commence the new session:
+/// Version called by TServerSocket.
+///   - set debug flag
+///   - check authentication table
+///   - Inquire protocol
+///   - authenticate the client
+/// Returns logged-in user, the remote client procotol cproto,
+/// the authentication protocol (ROOT internal) number is returned
+/// in meth, type indicates the kind of authentication:
+///       0 = new authentication
+///       1 = existing authentication
+///       2 = existing authentication with updated offset
+/// and the crypted-token in ctoken (used later for cleaning).
+/// Called just after opening the connection
+
 int RpdInitSession(int servtype, std::string &user,
                    int &cproto, int &meth, int &type, std::string &ctoken)
 {
-   // Perform the action needed to commence the new session:
-   // Version called by TServerSocket.
-   //   - set debug flag
-   //   - check authentication table
-   //   - Inquire protocol
-   //   - authenticate the client
-   // Returns logged-in user, the remote client procotol cproto,
-   // the authentication protocol (ROOT internal) number is returned
-   // in meth, type indicates the kind of authentication:
-   //       0 = new authentication
-   //       1 = existing authentication
-   //       2 = existing authentication with updated offset
-   // and the crypted-token in ctoken (used later for cleaning).
-   // Called just after opening the connection
-
    std::string pwd;
    int auth = RpdInitSession(servtype,user,cproto,meth,pwd);
    if (auth == 1)
@@ -6182,23 +6193,23 @@ int RpdInitSession(int servtype, std::string &user,
 
    return auth;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the action needed to commence the new session:
+///   - set debug flag
+///   - check authentication table
+///   - Inquire protocol
+///   - authenticate the client
+///   - login the client
+/// Returns 1 for a PROOF master server, 0 otherwise
+/// Returns logged-in user, the remote client procotol cproto, the
+/// client kind of user anon and, if anonymous user, the client passwd.
+/// If TServerSocket (servtype==kSOCKD), the protocol number is returned
+/// in anon.
+/// Called just after opening the connection
+
 int RpdInitSession(int servtype, std::string &user,
                    int &cproto, int &anon, std::string &passwd)
 {
-   // Perform the action needed to commence the new session:
-   //   - set debug flag
-   //   - check authentication table
-   //   - Inquire protocol
-   //   - authenticate the client
-   //   - login the client
-   // Returns 1 for a PROOF master server, 0 otherwise
-   // Returns logged-in user, the remote client procotol cproto, the
-   // client kind of user anon and, if anonymous user, the client passwd.
-   // If TServerSocket (servtype==kSOCKD), the protocol number is returned
-   // in anon.
-   // Called just after opening the connection
-
    if (gDebug > 2)
       ErrorInfo("RpdInitSession: %s", gServName[servtype].c_str());
 
@@ -6286,19 +6297,19 @@ int RpdInitSession(int servtype, std::string &user,
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the action needed to commence the new session:
+///   - set debug flag
+///   - check authentication table
+///   - Inquire protocol
+///   - authenticate the client
+///   - login the client
+/// Returns 1 for a PROOF master server, 0 otherwise
+/// Returns logged-in user and remote process id in rid
+/// Called just after opening the connection
+
 int RpdInitSession(int servtype, std::string &user, int &rid)
 {
-   // Perform the action needed to commence the new session:
-   //   - set debug flag
-   //   - check authentication table
-   //   - Inquire protocol
-   //   - authenticate the client
-   //   - login the client
-   // Returns 1 for a PROOF master server, 0 otherwise
-   // Returns logged-in user and remote process id in rid
-   // Called just after opening the connection
-
    int dum1 = 0, dum2 = 0;
    std::string dum3;
    rid = gRemPid;
@@ -6307,13 +6318,13 @@ int RpdInitSession(int servtype, std::string &user, int &rid)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform entrance formalities in case of no authentication
+/// mode, i.e. get target user and check if authorized
+/// Don't return if something goes wrong
+
 int RpdNoAuth(int servtype)
 {
-   // Perform entrance formalities in case of no authentication
-   // mode, i.e. get target user and check if authorized
-   // Don't return if something goes wrong
-
    if (gDebug > 1)
       ErrorInfo("RpdNoAuth: no authentication required");
 
@@ -6381,11 +6392,11 @@ int RpdNoAuth(int servtype)
    return auth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change current user id to uid (and gid).
+
 int RpdSetUid(int uid)
 {
-   // Change current user id to uid (and gid).
-
    if (gDebug > 2)
       ErrorInfo("RpdSetUid: enter ...uid: %d", uid);
 
@@ -6421,12 +6432,12 @@ int RpdSetUid(int uid)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change defaults job control options.
+
 void RpdInit(EService serv, int pid, int sproto, unsigned int options,
              int rumsk, int sshp, const char *tmpd, const char *asrpp, int login)
 {
-   // Change defaults job control options.
-
    gService        = serv;
    gParentId       = pid;
    gServerProtocol = sproto;
@@ -6479,14 +6490,14 @@ void RpdInit(EService serv, int pid, int sproto, unsigned int options,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Acts like snprintf with some printout in case of error if required
+/// Returns number of  characters printed (excluding the trailing `\0').
+/// Returns 0 is buf or size are not defined or inconsistent.
+/// Returns -1 if the buffer is truncated.
+
 int SPrintf(char *buf, size_t size, const char *va_(fmt), ...)
 {
-   // Acts like snprintf with some printout in case of error if required
-   // Returns number of  characters printed (excluding the trailing `\0').
-   // Returns 0 is buf or size are not defined or inconsistent.
-   // Returns -1 if the buffer is truncated.
-
    // Check buf
    if (!buf) {
       if (gDebug > 0)
@@ -6514,12 +6525,13 @@ int SPrintf(char *buf, size_t size, const char *va_(fmt), ...)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to a static string containing the string
+/// version of integer 'i', up to a max of kMAXCHR (=30)
+/// characters; returns "-1" if more chars are needed.
+
 char *ItoA(int i)
 {
-   // Return pointer to a static string containing the string
-   // version of integer 'i', up to a max of kMAXCHR (=30)
-   // characters; returns "-1" if more chars are needed.
    const int kMAXCHR = 30;
    static char str[kMAXCHR];
 
@@ -6533,41 +6545,41 @@ char *ItoA(int i)
    return str;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set global pointers to error handler functions
+
 void RpdSetErrorHandler(ErrorHandler_t err, ErrorHandler_t sys, ErrorHandler_t fatal)
 {
-   // Set global pointers to error handler functions
-
    gErr      = err;
    gErrSys   = sys;
    gErrFatal = fatal;
 }
 
 #ifdef R__GLBS
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns shared memory id
+
 int RpdGetShmIdCred()
 {
-   // Returns shared memory id
-
    return gShmIdCred;
 }
 #endif
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve specific ROOT password from $HOME/fpw, if any.
+/// To avoid problems with NFS-root-squashing, if 'root' changes temporarly the
+/// uid/gid to those of the target user (usr).
+/// If OK, returns pass length and fill 'pass' with the password, null-terminated.
+/// ('pass' is allocated externally to contain max lpwmax bytes).
+/// If the file does not exists, return 0 and an empty pass.
+/// If any problems with the file occurs, return a negative
+/// code, -2 indicating wrong file permissions.
+/// If any problem with changing ugid's occurs, prints a warning trying anyhow
+/// to read the password hash.
+
 int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpwmax)
 {
-   // Retrieve specific ROOT password from $HOME/fpw, if any.
-   // To avoid problems with NFS-root-squashing, if 'root' changes temporarly the
-   // uid/gid to those of the target user (usr).
-   // If OK, returns pass length and fill 'pass' with the password, null-terminated.
-   // ('pass' is allocated externally to contain max lpwmax bytes).
-   // If the file does not exists, return 0 and an empty pass.
-   // If any problems with the file occurs, return a negative
-   // code, -2 indicating wrong file permissions.
-   // If any problem with changing ugid's occurs, prints a warning trying anyhow
-   // to read the password hash.
-
    int rc = -1;
    int len = 0, n = 0, fid = -1;
 

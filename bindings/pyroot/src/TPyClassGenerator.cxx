@@ -247,16 +247,18 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
    return klass;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Just forward; based on type name only.
+
 TClass* TPyClassGenerator::GetClass( const type_info& typeinfo, Bool_t load, Bool_t silent )
 {
-// Just forward; based on type name only.
    return GetClass( typeinfo.name(), load, silent );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Just forward; based on type name only
+
 TClass* TPyClassGenerator::GetClass( const type_info& typeinfo, Bool_t load )
 {
-// Just forward; based on type name only
    return GetClass( typeinfo.name(), load );
 }

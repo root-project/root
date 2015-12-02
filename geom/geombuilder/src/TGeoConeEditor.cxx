@@ -47,12 +47,13 @@ enum ETGeoConeWid {
    kCONE_APPLY, kCONE_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for volume editor
+
 TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for volume editor
    fShape   = 0;
    fRmini1 = fRmaxi1 = fRmini2 = fRmaxi2 = fDzi = 0.0;
    fNamei = "";
@@ -152,10 +153,11 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t width,
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoConeEditor::~TGeoConeEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -165,10 +167,11 @@ TGeoConeEditor::~TGeoConeEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoConeEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoConeEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoConeEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoConeEditor", this, "DoModified()");
@@ -186,10 +189,11 @@ void TGeoConeEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoConeEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoCone::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -214,24 +218,27 @@ void TGeoConeEditor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shape drawing is delayed.
+
 Bool_t TGeoConeEditor::IsDelayed() const
 {
-// Check if shape drawing is delayed.
    return (fDelayed->GetState() == kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for name.
+
 void TGeoConeEditor::DoName()
 {
-   // Slot for name.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Slot for applying current parameters.
+
 void TGeoConeEditor::DoApply()
 {
-   //Slot for applying current parameters.
    fApply->SetEnabled(kFALSE);
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
@@ -255,17 +262,19 @@ void TGeoConeEditor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Slot for modifing current parameters.
+
 void TGeoConeEditor::DoModified()
 {
-   //Slot for modifing current parameters.
    fApply->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing current operation.
+
 void TGeoConeEditor::DoUndo()
 {
-   // Slot for undoing current operation.
    fERmin1->SetNumber(fRmini1);
    fERmin2->SetNumber(fRmini2);
    fERmax1->SetNumber(fRmaxi1);
@@ -276,10 +285,11 @@ void TGeoConeEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
    
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Rmin1
+
 void TGeoConeEditor::DoRmin1()
 {
-   // Slot for Rmin1
    Double_t rmin1 = fERmin1->GetNumber();
    Double_t rmax1 = fERmax1->GetNumber();
    if (rmin1<0) {
@@ -294,10 +304,11 @@ void TGeoConeEditor::DoRmin1()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Rmax1
+
 void TGeoConeEditor::DoRmax1()
 {
-   // Slot for Rmax1
    Double_t rmin1 = fERmin1->GetNumber();
    Double_t rmax1 = fERmax1->GetNumber();
    if (rmax1<rmin1) {
@@ -308,10 +319,11 @@ void TGeoConeEditor::DoRmax1()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Rmin2
+
 void TGeoConeEditor::DoRmin2()
 {
-   // Slot for Rmin2
    Double_t rmin2 = fERmin2->GetNumber();
    Double_t rmax2 = fERmax2->GetNumber();
    if (rmin2<0) {
@@ -326,10 +338,11 @@ void TGeoConeEditor::DoRmin2()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for  Rmax2
+
 void TGeoConeEditor::DoRmax2()
 {
-   // Slot for  Rmax2
    Double_t rmin2 = fERmin2->GetNumber();
    Double_t rmax2 = fERmax2->GetNumber();
    if (rmax2<rmin2) {
@@ -340,10 +353,11 @@ void TGeoConeEditor::DoRmax2()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Dz
+
 void TGeoConeEditor::DoDz()
 {
-   // Slot for Dz
    Double_t dz = fEDz->GetNumber();
    if (dz<=0) {
       dz = 0.1;
@@ -375,12 +389,13 @@ enum ETGeoConeSegWid {
    kCONESEG_PHI1, kCONESEG_PHI2, kCONESEG_PHI
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for cone segment editor
+
 TGeoConeSegEditor::TGeoConeSegEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
                  : TGeoConeEditor(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for cone segment editor
    fLock = kFALSE;
    MakeTitle("Phi range");
    TGTextEntry *nef;
@@ -416,10 +431,11 @@ TGeoConeSegEditor::TGeoConeSegEditor(const TGWindow *p, Int_t width,
    TGeoTabManager::MoveFrame(fBFrame, this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoConeSegEditor::~TGeoConeSegEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -429,10 +445,11 @@ TGeoConeSegEditor::~TGeoConeSegEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoConeSegEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    TGeoConeEditor::ConnectSignals2Slots();
    Disconnect(fApply, "Clicked()",(TGeoConeEditor*)this, "DoApply()");
    Disconnect(fUndo, "Clicked()",(TGeoConeEditor*)this, "DoUndo()");
@@ -445,10 +462,11 @@ void TGeoConeSegEditor::ConnectSignals2Slots()
    fSPhi->Connect("PositionChanged()","TGeoConeSegEditor", this, "DoPhi()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoConeSegEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoConeSeg::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -478,10 +496,11 @@ void TGeoConeSegEditor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Slot for Phi1
+
 void TGeoConeSegEditor::DoPhi1()
 {
-   //Slot for Phi1
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
    if (phi1 > 360-1.e-10) {
@@ -500,10 +519,11 @@ void TGeoConeSegEditor::DoPhi1()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Phi2
+
 void TGeoConeSegEditor::DoPhi2()
 {
-   // Slot for Phi2
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
    if (phi2-phi1 > 360.) {
@@ -522,10 +542,11 @@ void TGeoConeSegEditor::DoPhi2()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Phi
+
 void TGeoConeSegEditor::DoPhi()
 {
-   // Slot for Phi
    if (!fLock) {
       DoModified();
       fLock = kTRUE;
@@ -536,10 +557,11 @@ void TGeoConeSegEditor::DoPhi()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying current parameters.
+
 void TGeoConeSegEditor::DoApply()
 {
-   // Slot for applying current parameters.
    fApply->SetEnabled(kFALSE);
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
@@ -572,10 +594,11 @@ void TGeoConeSegEditor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoConeSegEditor::DoUndo()
 {
-   // Slot for undoing last operation.
    fERmin1->SetNumber(fRmini1);
    fERmin2->SetNumber(fRmini2);
    fERmax1->SetNumber(fRmaxi1);

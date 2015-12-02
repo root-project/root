@@ -51,15 +51,17 @@ ClassImp(RooAbsMoment)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooAbsMoment::RooAbsMoment() : _order(1), _takeRoot(kFALSE)
 {
-  // Default constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooAbsMoment::RooAbsMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, Bool_t takeRoot) :
   RooAbsReal(name, title),
   _order(orderIn),
@@ -72,7 +74,8 @@ RooAbsMoment::RooAbsMoment(const char* name, const char* title, RooAbsReal& func
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooAbsMoment::RooAbsMoment(const RooAbsMoment& other, const char* name) :
   RooAbsReal(other, name), 
   _order(other._order),  
@@ -86,10 +89,11 @@ RooAbsMoment::RooAbsMoment(const RooAbsMoment& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooAbsMoment::~RooAbsMoment() 
 {
-  // Destructor
 }
 
 

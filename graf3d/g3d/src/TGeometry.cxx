@@ -80,11 +80,11 @@ ClassImp(TGeometry)
 //End_Html
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Geometry default constructor.
+
 TGeometry::TGeometry()
 {
-   // Geometry default constructor.
-
    fMaterials       = new THashList(100,3);
    fMatrices        = new THashList(100,3);
    fShapes          = new THashList(500,3);
@@ -102,11 +102,11 @@ TGeometry::TGeometry()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Geometry normal constructor.
+
 TGeometry::TGeometry(const char *name,const char *title ) : TNamed (name, title)
 {
-   // Geometry normal constructor.
-
    fMaterials       = new THashList(1000,3);
    fMatrices        = new THashList(1000,3);
    fShapes          = new THashList(5000,3);
@@ -124,7 +124,9 @@ TGeometry::TGeometry(const char *name,const char *title ) : TNamed (name, title)
    fIsReflection[fGeomLevel] = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TGeometry::TGeometry(const TGeometry& geo) :
   TNamed(geo),
   fMaterials(geo.fMaterials),
@@ -142,7 +144,6 @@ TGeometry::TGeometry(const TGeometry& geo) :
   fY(geo.fY),
   fZ(geo.fZ)
 {
-   //copy constructor
    for(Int_t i=0; i<kMAXLEVELS; i++) {
       for(Int_t j=0; j<kVectorSize; j++)
          fTranslation[i][j]=geo.fTranslation[i][j];
@@ -152,10 +153,11 @@ TGeometry::TGeometry(const TGeometry& geo) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignement operator
+
 TGeometry& TGeometry::operator=(const TGeometry& geo)
 {
-   //assignement operator
    if(this!=&geo) {
       TNamed::operator=(geo);
       fMaterials=geo.fMaterials;
@@ -183,11 +185,11 @@ TGeometry& TGeometry::operator=(const TGeometry& geo)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Geometry default destructor.
+
 TGeometry::~TGeometry()
 {
-   // Geometry default destructor.
-
    if (!fMaterials) return;
    fMaterials->Delete();
    fMatrices->Delete();
@@ -217,11 +219,11 @@ TGeometry::~TGeometry()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse.
+
 void TGeometry::Browse(TBrowser *b)
 {
-   // Browse.
-
    if( b ) {
       b->Add( fMaterials, "Materials" );
       b->Add( fMatrices, "Rotation Matrices" );
@@ -231,54 +233,54 @@ void TGeometry::Browse(TBrowser *b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change Current Geometry to this.
+
 void TGeometry::cd(const char *)
 {
-   // Change Current Geometry to this.
-
    gGeometry = this;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this Geometry.
+
 void TGeometry::Draw(Option_t *option)
 {
-   // Draw this Geometry.
-
    TNode *node1 = (TNode*)fNodes->First();
    if (node1) node1->Draw(option);
 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find object in a geometry node, material, etc
+
 TObject *TGeometry::FindObject(const TObject *) const
 {
-   // Find object in a geometry node, material, etc
-
    Error("FindObject","Not yet implemented");
    return 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search object identified by name in the geometry tree
+
 TObject *TGeometry::FindObject(const char *name) const
 {
-   // Search object identified by name in the geometry tree
-
    TObjArray *loc = TGeometry::Get(name);
    if (loc) return loc->At(0);
    return 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function called by TROOT to search name in the geometry.
+/// Returns a TObjArray containing a pointer to the found object
+/// and a pointer to the container where the object was found.
+
 TObjArray *TGeometry::Get(const char *name)
 {
-   // Static function called by TROOT to search name in the geometry.
-   // Returns a TObjArray containing a pointer to the found object
-   // and a pointer to the container where the object was found.
-
    static TObjArray *locs = 0;
    if (!locs) locs = new TObjArray(2);
    TObjArray &loc = *locs;
@@ -312,20 +314,20 @@ TObjArray *TGeometry::Get(const char *name)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to Material with name.
+
 TMaterial *TGeometry::GetMaterial(const char *name) const
 {
-   // Return pointer to Material with name.
-
    return (TMaterial*)fMaterials->FindObject(name);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to Material with number.
+
 TMaterial *TGeometry::GetMaterialByNumber(Int_t number) const
 {
-   // Return pointer to Material with number.
-
    TMaterial *mat;
    if (number < 0 || number >= fMaterials->GetSize()) return 0;
    if (fMaterialPointer)  return fMaterialPointer[number];
@@ -337,11 +339,11 @@ TMaterial *TGeometry::GetMaterialByNumber(Int_t number) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to node with name in the geometry tree.
+
 TNode *TGeometry::GetNode(const char *name) const
 {
-   // Return pointer to node with name in the geometry tree.
-
    TNode *node= (TNode*)GetListOfNodes()->First();
    if (!node) return 0;
    if (node->TestBit(kNotDeleted))  return node->GetNode(name);
@@ -349,20 +351,20 @@ TNode *TGeometry::GetNode(const char *name) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to RotMatrix with name.
+
 TRotMatrix *TGeometry::GetRotMatrix(const char *name) const
 {
-   // Return pointer to RotMatrix with name.
-
    return (TRotMatrix*)fMatrices->FindObject(name);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to RotMatrix with number.
+
 TRotMatrix *TGeometry::GetRotMatrixByNumber(Int_t number) const
 {
-   // Return pointer to RotMatrix with number.
-
    TRotMatrix *matrix;
    if (number < 0 || number >= fMatrices->GetSize()) return 0;
    if (fMatrixPointer)  return fMatrixPointer[number];
@@ -374,20 +376,20 @@ TRotMatrix *TGeometry::GetRotMatrixByNumber(Int_t number) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to Shape with name.
+
 TShape *TGeometry::GetShape(const char *name) const
 {
-   // Return pointer to Shape with name.
-
    return (TShape*)fShapes->FindObject(name);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to Shape with number.
+
 TShape *TGeometry::GetShapeByNumber(Int_t number) const
 {
-   // Return pointer to Shape with number.
-
    TShape *shape;
    if (number < 0 || number >= fShapes->GetSize()) return 0;
    if (fShapePointer)  return fShapePointer[number];
@@ -399,16 +401,16 @@ TShape *TGeometry::GetShapeByNumber(Int_t number) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert one point from local system to master reference system.
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TNode::UpdateMatrix should be called before.
+
 void TGeometry::Local2Master(Double_t *local, Double_t *master)
 {
-   // Convert one point from local system to master reference system.
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TNode::UpdateMatrix should be called before.
-
    if (GeomLevel()) {
       Double_t x,y,z;
       Double_t bomb = GetBomb();
@@ -434,16 +436,16 @@ void TGeometry::Local2Master(Double_t *local, Double_t *master)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert one point from local system to master reference system.
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TNode::UpdateMatrix should be called before.
+
 void TGeometry::Local2Master(Float_t *local, Float_t *master)
 {
-   // Convert one point from local system to master reference system.
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TNode::UpdateMatrix should be called before.
-
    if (GeomLevel()) {
       Float_t x,y,z;
       Float_t bomb = GetBomb();
@@ -472,11 +474,11 @@ void TGeometry::Local2Master(Float_t *local, Float_t *master)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List this geometry.
+
 void TGeometry::ls(Option_t *option) const
 {
-   // List this geometry.
-
    TString opt = option;
    opt.ToLower();
    if (opt.Contains("m")) {
@@ -498,16 +500,16 @@ void TGeometry::ls(Option_t *option) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert one point from master system to local reference system.
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TNode::UpdateMatrix should be called before.
+
 void TGeometry::Master2Local(Double_t *master, Double_t *local)
 {
-   // Convert one point from master system to local reference system.
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TNode::UpdateMatrix should be called before.
-
    if (GeomLevel()) {
       Double_t x,y,z;
       Double_t bomb = GetBomb();
@@ -528,16 +530,16 @@ void TGeometry::Master2Local(Double_t *master, Double_t *local)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert one point from master system to local reference system.
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TNode::UpdateMatrix should be called before.
+
 void TGeometry::Master2Local(Float_t *master, Float_t *local)
 {
-   // Convert one point from master system to local reference system.
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TNode::UpdateMatrix should be called before.
-
    if (GeomLevel()) {
       Float_t x,y,z;
       Float_t bomb = GetBomb();
@@ -559,29 +561,29 @@ void TGeometry::Master2Local(Float_t *master, Float_t *local)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a node to the current node in this geometry.
+
 void TGeometry::Node(const char *name, const char *title, const char *shapename, Double_t x, Double_t y, Double_t z, const char *matrixname, Option_t *option)
 {
-   // Add a node to the current node in this geometry.
-
    new TNode(name,title,shapename,x,y,z,matrixname,option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively remove object from a Geometry list.
+
 void TGeometry::RecursiveRemove(TObject *obj)
 {
-   // Recursively remove object from a Geometry list.
-
    if (fNodes) fNodes->RecursiveRemove(obj);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a class object.
+
 void TGeometry::Streamer(TBuffer &b)
 {
-   // Stream a class object.
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
@@ -639,12 +641,12 @@ void TGeometry::Streamer(TBuffer &b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update global rotation matrix/translation vector for this node
+/// this function must be called before invoking Local2Master
+
 void TGeometry::UpdateMatrix(TNode *node)
 {
-   // Update global rotation matrix/translation vector for this node
-   // this function must be called before invoking Local2Master
-
    TNode *nodes[kMAXLEVELS];
    for (Int_t i=0;i<kVectorSize;i++) fTranslation[0][i] = 0;
    for (Int_t i=0;i<kMatrixSize;i++) fRotMatrix[0][i] = 0;
@@ -667,11 +669,11 @@ void TGeometry::UpdateMatrix(TNode *node)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update temp matrix.
+
 void TGeometry::UpdateTempMatrix(Double_t x, Double_t y, Double_t z, TRotMatrix *rotMatrix)
 {
-   // Update temp matrix.
-
    Double_t *matrix = 0;
    Bool_t isReflection = kFALSE;
    if (rotMatrix && rotMatrix->GetType()) {
@@ -682,11 +684,11 @@ void TGeometry::UpdateTempMatrix(Double_t x, Double_t y, Double_t z, TRotMatrix 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update temp matrix.
+
 void TGeometry::UpdateTempMatrix(Double_t x, Double_t y, Double_t z, Double_t *matrix,Bool_t isReflection)
 {
-   // Update temp matrix.
-
    Int_t i=GeomLevel();
    if (i) {
       if(matrix) {
@@ -712,19 +714,19 @@ void TGeometry::UpdateTempMatrix(Double_t x, Double_t y, Double_t z, Double_t *m
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute new translation vector and global matrix.
+///
+///  dx      old translation vector
+///  rmat    old global matrix
+///  x,y,z   offset of new local system with respect to mother
+///  dxnew   new translation vector
+///  rmatnew new global rotation matrix
+
 void TGeometry::UpdateTempMatrix(Double_t *dx,Double_t *rmat
                          , Double_t x, Double_t y, Double_t z, Double_t *matrix
                          , Double_t *dxnew, Double_t *rmatnew)
 {
-   // Compute new translation vector and global matrix.
-   //
-   //  dx      old translation vector
-   //  rmat    old global matrix
-   //  x,y,z   offset of new local system with respect to mother
-   //  dxnew   new translation vector
-   //  rmatnew new global rotation matrix
-
    dxnew[0] = dx[0] + x*rmat[0] + y*rmat[3] + z*rmat[6];
    dxnew[1] = dx[1] + x*rmat[1] + y*rmat[4] + z*rmat[7];
    dxnew[2] = dx[2] + x*rmat[2] + y*rmat[5] + z*rmat[8];

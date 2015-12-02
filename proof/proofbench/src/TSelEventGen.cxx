@@ -40,13 +40,14 @@
 
 ClassImp(TSelEventGen)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TSelEventGen::TSelEventGen()
              : fBaseDir(""), fNEvents(100000), fNTracks(100), fNTracksMax(-1),
                fRegenerate(kFALSE), fTotalGen(0), fFilesGenerated(0),
                fGenerateFun(0), fChain(0)
 {
-   // Constructor
    if (gProofServ){
       fBaseDir=gProofServ->GetDataDir();
       // Two directories up
@@ -58,13 +59,13 @@ TSelEventGen::TSelEventGen()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Begin() function is called at the start of the query.
+/// When running with PROOF Begin() is only called on the client.
+/// The tree argument is deprecated (on PROOF 0 is passed).
+
 void TSelEventGen::Begin(TTree *)
 {
-   // The Begin() function is called at the start of the query.
-   // When running with PROOF Begin() is only called on the client.
-   // The tree argument is deprecated (on PROOF 0 is passed).
-
    TString option = GetOption();
    // Determine the test type
    TMap *filemap = dynamic_cast<TMap *>
@@ -82,13 +83,13 @@ void TSelEventGen::Begin(TTree *)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The SlaveBegin() function is called after the Begin() function.
+/// When running with PROOF SlaveBegin() is called on each slave server.
+/// The tree argument is deprecated (on PROOF 0 is passed).
+
 void TSelEventGen::SlaveBegin(TTree *tree)
 {
-   // The SlaveBegin() function is called after the Begin() function.
-   // When running with PROOF SlaveBegin() is called on each slave server.
-   // The tree argument is deprecated (on PROOF 0 is passed).
-
    Init(tree);
 
    TString option = GetOption();
@@ -241,22 +242,22 @@ void TSelEventGen::SlaveBegin(TTree *tree)
    fFilesGenerated->SetOwner(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Generate files for IO-bound run
+///Input parameters
+///   filename: The name of the file to be generated
+///   sizenevents: Either the number of events to generate when
+///                filetype==kPBFileBenchmark
+///                or the size of the file to generate when
+///                filetype==kPBFileCleanup
+///Returns
+///   Either Number of entries in the file when
+///   filetype==kPBFileBenchmark
+///   or bytes written when filetype==kPBFileCleanup
+///return 0 in case error
+
 Long64_t TSelEventGen::GenerateFiles(const char *filename, Long64_t sizenevents)
 {
-//Generate files for IO-bound run
-//Input parameters
-//   filename: The name of the file to be generated
-//   sizenevents: Either the number of events to generate when
-//                filetype==kPBFileBenchmark
-//                or the size of the file to generate when
-//                filetype==kPBFileCleanup
-//Returns
-//   Either Number of entries in the file when
-//   filetype==kPBFileBenchmark
-//   or bytes written when filetype==kPBFileCleanup
-//return 0 in case error
-
    Long64_t nentries=0;
    TDirectory* savedir = gDirectory;
    //printf("current dir=%s\n", gDirectory->GetPath());
@@ -311,21 +312,21 @@ Long64_t TSelEventGen::GenerateFiles(const char *filename, Long64_t sizenevents)
    return nentries;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Process() function is called for each entry in the tree (or possibly
+/// keyed object in the case of PROOF) to be processed. The entry argument
+/// specifies which entry in the currently loaded tree is to be processed.
+/// It can be passed to either TTree::GetEntry() or TBranch::GetEntry()
+/// to read either all or the required parts of the data. When processing
+/// keyed objects with PROOF, the object is already loaded and is available
+/// via the fObject pointer.
+///
+/// This function should contain the "body" of the analysis. It can contain
+/// simple or elaborate selection criteria, run algorithms on the data
+/// of the event and typically fill histograms.
+
 Bool_t TSelEventGen::Process(Long64_t entry)
 {
-   // The Process() function is called for each entry in the tree (or possibly
-   // keyed object in the case of PROOF) to be processed. The entry argument
-   // specifies which entry in the currently loaded tree is to be processed.
-   // It can be passed to either TTree::GetEntry() or TBranch::GetEntry()
-   // to read either all or the required parts of the data. When processing
-   // keyed objects with PROOF, the object is already loaded and is available
-   // via the fObject pointer.
-   //
-   // This function should contain the "body" of the analysis. It can contain
-   // simple or elaborate selection criteria, run algorithms on the data
-   // of the event and typically fill histograms.
-
    // WARNING when a selector is used with a TChain, you must use
    //  the pointer to the current TTree to call GetEntry(entry).
    //  The entry is always the local entry number in the current tree.
@@ -452,12 +453,13 @@ Bool_t TSelEventGen::Process(Long64_t entry)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The SlaveTerminate() function is called after all entries or objects
+/// have been processed. When running with PROOF SlaveTerminate() is called
+/// on each slave server
+
 void TSelEventGen::SlaveTerminate()
 {
-   // The SlaveTerminate() function is called after all entries or objects
-   // have been processed. When running with PROOF SlaveTerminate() is called
-   // on each slave server
    if (fFilesGenerated && fFilesGenerated->GetSize() > 0) {
       fOutput->Add(fFilesGenerated);
       Info("SlaveTerminate",
@@ -472,18 +474,19 @@ void TSelEventGen::SlaveTerminate()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Terminate() function is the last function to be called during
+/// a query. It always runs on the client, it can be used to present
+/// the results graphically or save the results to file.
+
 void TSelEventGen::Terminate()
 {
-   // The Terminate() function is the last function to be called during
-   // a query. It always runs on the client, it can be used to present
-   // the results graphically or save the results to file.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TSelEventGen::Print(Option_t *) const
 {
-
    Printf("fNEvents=%lld", fNEvents);
    Printf("fBaseDir=%s", fBaseDir.Data());
    Printf("fNTracks=%d", fNTracks);

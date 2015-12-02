@@ -36,15 +36,15 @@
 
 ClassImp(TEveTrackEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveTrackEditor::TEveTrackEditor(const TGWindow *p, Int_t width, Int_t height,
                                  UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM(0),
    fRSEditor(0)
 {
-   // Constructor.
-
    MakeTitle("TEveTrack");
 
    TGHorizontalFrame* f = new TGHorizontalFrame(this);
@@ -56,19 +56,19 @@ TEveTrackEditor::TEveTrackEditor(const TGWindow *p, Int_t width, Int_t height,
    AddFrame(f, new TGLayoutHints(kLHintsTop, 0,0,2,1));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveTrackEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveTrack*>(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for EditPropagator.
+
 void TEveTrackEditor::DoEditPropagator()
 {
-   // Slot for EditPropagator.
-
    fGedEditor->SetModel(fGedEditor->GetPad(), fM->GetPropagator(), kButton1Down);
 }
 
@@ -80,7 +80,8 @@ void TEveTrackEditor::DoEditPropagator()
 
 ClassImp(TEveTrackListEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p,
                                          Int_t width, Int_t height,
                                          UInt_t options, Pixel_t back) :
@@ -140,11 +141,11 @@ TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p,
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create tab for control of path-mark display.
+
 void TEveTrackListEditor::CreateRefsTab()
 {
-   // Create tab for control of path-mark display.
-
    fRefs = CreateEditorTabSubFrame("Refs");
 
    TGCompositeFrame *title1 = new TGCompositeFrame(fRefs, 145, 10,
@@ -166,11 +167,11 @@ void TEveTrackListEditor::CreateRefsTab()
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveTrackListEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fTC = dynamic_cast<TEveTrackList*>(obj);
    fRnrLine  ->SetState(fTC->GetRnrLine()   ? kButtonDown : kButtonUp);
    fRnrPoints->SetState(fTC->GetRnrPoints() ? kButtonDown : kButtonUp);
@@ -188,40 +189,40 @@ void TEveTrackListEditor::SetModel(TObject* obj)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrLine.
+
 void TEveTrackListEditor::DoRnrLine()
 {
-   // Slot for RnrLine.
-
    fTC->SetRnrLine(fRnrLine->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrPoints.
+
 void TEveTrackListEditor::DoRnrPoints()
 {
-   // Slot for RnrPoints.
-
    fTC->SetRnrPoints(fRnrPoints->IsOn());
    Update();
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for PtRange.
+
 void TEveTrackListEditor::DoPtRange()
 {
-   // Slot for PtRange.
-
    fTC->SelectByPt(fPtRange->GetMin(), fPtRange->GetMax());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for PRange.
+
 void TEveTrackListEditor::DoPRange()
 {
-   // Slot for PRange.
-
    fTC->SelectByP(fPRange->GetMin(), fPRange->GetMax());
    Update();
 }

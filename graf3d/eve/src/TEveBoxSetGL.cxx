@@ -29,20 +29,20 @@
 
 ClassImp(TEveBoxSetGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TEveBoxSetGL::TEveBoxSetGL() : TEveDigitSetGL(), fM(0), fBoxDL(0)
 {
-   // Default constructor.
-
    fDLCache = kFALSE; // Disable display list, used internally for boxes, cones.
    fMultiColor = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveBoxSetGL::~TEveBoxSetGL()
 {
-   // Destructor.
-
    DLCachePurge();
 }
 
@@ -50,20 +50,20 @@ TEveBoxSetGL::~TEveBoxSetGL()
 // Protected methods
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return GL primitive used to render the boxes, based on the
+/// render-mode specified in the model object.
+
 Int_t TEveBoxSetGL::PrimitiveType() const
 {
-   // Return GL primitive used to render the boxes, based on the
-   // render-mode specified in the model object.
-
    return (fM->fRenderMode != TEveDigitSet::kRM_Line) ? GL_QUADS : GL_LINE_LOOP;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill array p to represent a box (0,0,0) - (dx,dy,dz).
+
 void TEveBoxSetGL::MakeOriginBox(Float_t p[8][3], Float_t dx, Float_t dy, Float_t dz) const
 {
-   // Fill array p to represent a box (0,0,0) - (dx,dy,dz).
-
    // bottom
    p[0][0] = 0;  p[0][1] = dy; p[0][2] = 0;
    p[1][0] = dx; p[1][1] = dy; p[1][2] = 0;
@@ -76,12 +76,12 @@ void TEveBoxSetGL::MakeOriginBox(Float_t p[8][3], Float_t dx, Float_t dy, Float_
    p[7][0] = 0;  p[7][1] = 0;  p[7][2] = dz;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render a box specified by points in array p with standard
+/// axis-aligned normals.
+
 inline void TEveBoxSetGL::RenderBoxStdNorm(const Float_t p[8][3]) const
 {
-   // Render a box specified by points in array p with standard
-   // axis-aligned normals.
-
    // bottom: 0123
    glNormal3f(0, 0, -1);
    glVertex3fv(p[0]);  glVertex3fv(p[1]);
@@ -127,11 +127,11 @@ namespace
       }
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render box, calculate normals on the fly from first three points.
+
 void TEveBoxSetGL::RenderBoxAutoNorm(const Float_t p[8][3]) const
 {
-   // Render box, calculate normals on the fly from first three points.
-
    Float_t e[6][3], n[3];
    subtract_and_normalize(p[1], p[0], e[0]);
    subtract_and_normalize(p[3], p[0], e[1]);
@@ -166,14 +166,14 @@ void TEveBoxSetGL::RenderBoxAutoNorm(const Float_t p[8][3]) const
    glVertex3fv(p[6]); glVertex3fv(p[2]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a display-list for rendering a single box, based on the
+/// current box-type.
+/// Some box-types don't benefit from the display-list rendering and
+/// so display-list is not created.
+
 void TEveBoxSetGL::MakeDisplayList() const
 {
-   // Create a display-list for rendering a single box, based on the
-   // current box-type.
-   // Some box-types don't benefit from the display-list rendering and
-   // so display-list is not created.
-
    if (fM->fBoxType == TEveBoxSet::kBT_AABox         ||
        fM->fBoxType == TEveBoxSet::kBT_AABoxFixedDim ||
        fM->fBoxType == TEveBoxSet::kBT_Cone          ||
@@ -218,34 +218,34 @@ void TEveBoxSetGL::MakeDisplayList() const
 // Virtuals from base-classes
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determines if display-list will be used for rendering.
+/// Virtual from TGLLogicalShape.
+
 Bool_t TEveBoxSetGL::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
 {
-   // Determines if display-list will be used for rendering.
-   // Virtual from TGLLogicalShape.
-
    MakeDisplayList();
 
    return TEveDigitSetGL::ShouldDLCache(rnrCtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when display lists have been destroyed externally and the
+/// internal display-list data needs to be cleare.
+/// Virtual from TGLLogicalShape.
+
 void TEveBoxSetGL::DLCacheDrop()
 {
-   // Called when display lists have been destroyed externally and the
-   // internal display-list data needs to be cleare.
-   // Virtual from TGLLogicalShape.
-
    fBoxDL = 0;
    TGLObject::DLCacheDrop();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when display-lists need to be returned to the system.
+/// Virtual from TGLLogicalShape.
+
 void TEveBoxSetGL::DLCachePurge()
 {
-   // Called when display-lists need to be returned to the system.
-   // Virtual from TGLLogicalShape.
-
    if (fBoxDL != 0)
    {
       PurgeDLRange(fBoxDL, 1);
@@ -256,12 +256,12 @@ void TEveBoxSetGL::DLCachePurge()
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+/// Virtual from TGLObject.
+
 Bool_t TEveBoxSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-   // Virtual from TGLObject.
-
    fM = SetModelDynCast<TEveBoxSet>(obj);
    return kTRUE;
 }
@@ -281,11 +281,11 @@ namespace
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GL rendering for all box-types.
+
 void TEveBoxSetGL::RenderBoxes(TGLRnrCtx& rnrCtx) const
 {
-   // GL rendering for all box-types.
-
    static const TEveException eH("TEveBoxSetGL::RenderBoxes ");
 
    if (rnrCtx.SecSelection()) glPushName(0);
@@ -438,12 +438,12 @@ void TEveBoxSetGL::RenderBoxes(TGLRnrCtx& rnrCtx) const
    if (rnrCtx.SecSelection()) glPopName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Actual rendering code.
+/// Virtual from TGLLogicalShape.
+
 void TEveBoxSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 {
-   // Actual rendering code.
-   // Virtual from TGLLogicalShape.
-
    TEveBoxSet& mB = * fM;
    // printf("TEveBoxSetGL::DirectDraw N boxes %d\n", mB.fPlex.Size());
 
@@ -480,12 +480,12 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    DrawFrameIfNeeded(rnrCtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface for direct rendering from classes that include TEveBoxSet
+/// as a member.
+
 void TEveBoxSetGL::Render(TGLRnrCtx& rnrCtx)
 {
-   // Interface for direct rendering from classes that include TEveBoxSet
-   // as a member.
-
    MakeDisplayList();
    DirectDraw(rnrCtx);
    glDeleteLists(fBoxDL, 1);

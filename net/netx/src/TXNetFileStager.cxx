@@ -26,11 +26,11 @@
 #include "TStopwatch.h"
 #include "TFileInfo.h"
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. Init a TXNetSystem instance to the XRD system.
+
 TXNetFileStager::TXNetFileStager(const char *url) : TFileStager("xrd")
 {
-   // Constructor. Init a TXNetSystem instance to the XRD system.
-
    fSystem = 0;
    if (url && strlen(url) > 0) {
       GetPrefix(url, fPrefix);
@@ -39,22 +39,22 @@ TXNetFileStager::TXNetFileStager(const char *url) : TFileStager("xrd")
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TXNetFileStager::~TXNetFileStager()
 {
-   // Destructor
-
    if (fSystem)
       delete fSystem;
    fSystem = 0;
    fPrefix = "";
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the file defined by 'path' is ready to be used.
+
 Bool_t TXNetFileStager::IsStaged(const char *path)
 {
-   // Check if the file defined by 'path' is ready to be used.
-
    if (!IsValid()) {
       GetPrefix(path, fPrefix);
       fSystem = new TXNetSystem(path);
@@ -72,13 +72,13 @@ Bool_t TXNetFileStager::IsStaged(const char *path)
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Issue a stage request for file defined by 'path'. The string 'opt'
+/// defines 'option' and 'priority' for 'Prepare': the format is
+///    opt = "option=o priority=p".
+
 Bool_t TXNetFileStager::Stage(TCollection *paths, Option_t *opt)
 {
-   // Issue a stage request for file defined by 'path'. The string 'opt'
-   // defines 'option' and 'priority' for 'Prepare': the format is
-   //    opt = "option=o priority=p".
-
    if (IsValid()) {
       UChar_t o = 8;
       UChar_t p = 0;
@@ -115,13 +115,13 @@ Bool_t TXNetFileStager::Stage(TCollection *paths, Option_t *opt)
 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Issue a stage request for file defined by 'path'. The string 'opt'
+/// defines 'option' and 'priority' for 'Prepare': the format is
+///                opt = "option=o priority=p".
+
 Bool_t TXNetFileStager::Stage(const char *path, Option_t *opt)
 {
-   // Issue a stage request for file defined by 'path'. The string 'opt'
-   // defines 'option' and 'priority' for 'Prepare': the format is
-   //                opt = "option=o priority=p".
-
    if (!IsValid()) {
       GetPrefix(path, fPrefix);
       fSystem = new TXNetSystem(path);
@@ -163,11 +163,11 @@ Bool_t TXNetFileStager::Stage(const char *path, Option_t *opt)
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Isolate prefix in url
+
 void TXNetFileStager::GetPrefix(const char *url, TString &pfx)
 {
-   // Isolate prefix in url
-
    if (gDebug > 1)
       ::Info("TXNetFileStager::GetPrefix", "enter: %s", url);
 
@@ -184,20 +184,20 @@ void TXNetFileStager::GetPrefix(const char *url, TString &pfx)
       ::Info("TXNetFileStager::GetPrefix", "found prefix: %s", pfx.Data());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print basic info about this stager
+
 void TXNetFileStager::Print(Option_t *) const
 {
-   // Print basic info about this stager
-
    Printf("+++ stager: %s  %s", GetName(), fPrefix.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get actual end-point url for a path
+/// Returns 0 in case of success and 1 if any error occured
+
 Int_t TXNetFileStager::Locate(const char *path, TString &eurl)
 {
-   // Get actual end-point url for a path
-   // Returns 0 in case of success and 1 if any error occured
-
    if (!IsValid()) {
       GetPrefix(path, fPrefix);
       fSystem = new TXNetSystem(path);
@@ -210,26 +210,26 @@ Int_t TXNetFileStager::Locate(const char *path, TString &eurl)
    return -1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bulk locate request for a collection of files. A noop prepare command is
+/// issued beforehand to fill redirector's cache, then Locate() is issued on
+/// each file. Results are saved back to the input collection: when a file is
+/// found, the staged bit is set to on, and its endpoint URL is added, if
+/// different from the redirector's URL. If a file is not found, the staged
+/// bit is set to off.
+/// If addDummyUrl is kTRUE, in case file is not staged or redirector is
+/// identical to endpoint URL, a dummy URL is prepended, respectively:
+/// "noop://redir" and "noop://none".
+/// If the collection contains URLs with "anchors" (i.e., #fileName.root),
+/// they are ignored by xrootd.
+/// The Locate() command preserves anchors, but needs single paths to be full
+/// URLs beginning with root://.
+/// Returns < 0 in case of errors, and the number of files processed in case
+/// of success.
+
 Int_t TXNetFileStager::LocateCollection(TFileCollection *fc,
    Bool_t addDummyUrl)
 {
-   // Bulk locate request for a collection of files. A noop prepare command is
-   // issued beforehand to fill redirector's cache, then Locate() is issued on
-   // each file. Results are saved back to the input collection: when a file is
-   // found, the staged bit is set to on, and its endpoint URL is added, if
-   // different from the redirector's URL. If a file is not found, the staged
-   // bit is set to off.
-   // If addDummyUrl is kTRUE, in case file is not staged or redirector is
-   // identical to endpoint URL, a dummy URL is prepended, respectively:
-   // "noop://redir" and "noop://none".
-   // If the collection contains URLs with "anchors" (i.e., #fileName.root),
-   // they are ignored by xrootd.
-   // The Locate() command preserves anchors, but needs single paths to be full
-   // URLs beginning with root://.
-   // Returns < 0 in case of errors, and the number of files processed in case
-   // of success.
-
    if (!fc) {
       Error("Locate", "No input collection given!");
       return -1;
@@ -312,12 +312,12 @@ Int_t TXNetFileStager::LocateCollection(TFileCollection *fc,
    return count;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if stager 's' is compatible with current stager.
+/// Avoids multiple instantiations of the potentially the same TXNetSystem.
+
 Bool_t TXNetFileStager::Matches(const char *s)
 {
-   // Returns kTRUE if stager 's' is compatible with current stager.
-   // Avoids multiple instantiations of the potentially the same TXNetSystem.
-
    if (IsValid()) {
       TString pfx;
       GetPrefix(s, pfx);

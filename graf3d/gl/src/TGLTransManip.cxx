@@ -26,32 +26,36 @@
 
 ClassImp(TGLTransManip)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct translation manipulator not bound to any physical shape.
+
 TGLTransManip::TGLTransManip()
 {
-   // Construct translation manipulator not bound to any physical shape.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct translation manipulator, attached to supplied TGLViewer
+/// 'viewer', bound to TGLPhysicalShape 'shape'.
+
 TGLTransManip::TGLTransManip(TGLPhysicalShape * shape) :
    TGLManip(shape)
 {
-   // Construct translation manipulator, attached to supplied TGLViewer
-   // 'viewer', bound to TGLPhysicalShape 'shape'.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destory the translation manipulator
+
 TGLTransManip::~TGLTransManip()
 {
-   // Destory the translation manipulator
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw translation manipulator - tubes with arrow heads, in local axes of
+/// attached shape, in red(X), green(Y) and blue(Z), with white center sphere.
+/// If selected widget (mouse over) this is drawn in active colour (yellow).
+
 void TGLTransManip::Draw(const TGLCamera & camera) const
 {
-   // Draw translation manipulator - tubes with arrow heads, in local axes of
-   // attached shape, in red(X), green(Y) and blue(Z), with white center sphere.
-   // If selected widget (mouse over) this is drawn in active colour (yellow).
    if (!fShape) {
       return;
    }
@@ -106,14 +110,15 @@ void TGLTransManip::Draw(const TGLCamera & camera) const
    glDisable(GL_BLEND);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion over manipulator - if active (selected
+/// widget) translate physical along selected widget (axis) of the
+/// manipulator, so it tracks mouse action. Returns kTRUE if redraw
+/// required kFALSE otherwise.
+
 Bool_t TGLTransManip::HandleMotion(const Event_t        & event,
                                    const TGLCamera      & camera)
 {
-   // Handle mouse motion over manipulator - if active (selected
-   // widget) translate physical along selected widget (axis) of the
-   // manipulator, so it tracks mouse action. Returns kTRUE if redraw
-   // required kFALSE otherwise.
    if (fActive) {
       // Find mouse delta projected into world at attached object center
       TGLVector3 shift =

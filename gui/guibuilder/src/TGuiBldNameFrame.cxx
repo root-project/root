@@ -36,12 +36,12 @@
 
 ClassImp(TGuiBldNameFrame)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGuiBldNameFrame::TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor) :
                   TGCompositeFrame(p, 1, 1)
 {
-   // Constructor.
-
    fEditor = editor;
    fBuilder = (TRootGuiBuilder*)TRootGuiBuilder::Instance();
    fManager = fBuilder->GetManager();
@@ -104,31 +104,31 @@ TGuiBldNameFrame::TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor) :
                       this, "SelectFrameByItem(TGListTreeItem*, Int_t)");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw frame (just a prototype).
+
 void TGuiBldNameFrame::DoRedraw()
 {
-   // Redraw frame (just a prototype).
-
    //TColor *col = gROOT->GetColor(29);
    //TRootGuiBuilder::SetBgndColor(fTitleFrame, col->GetPixel());
    TGCompositeFrame::DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset name frame.
+
 void TGuiBldNameFrame::Reset()
 {
-   // Reset name frame.
-
    fFrameName->SetText("");
    fLabel->SetText("");
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change selected frame.
+
 void TGuiBldNameFrame::ChangeSelected(TGFrame *frame)
 {
-   // Change selected frame.
-
    fFrameName->Disconnect();
 
    if (!frame) {
@@ -175,11 +175,11 @@ void TGuiBldNameFrame::ChangeSelected(TGFrame *frame)
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set new name of frame, if it doesn't already exist in the same MDI frame.
+
 void TGuiBldNameFrame::UpdateName()
 {
-   // Set new name of frame, if it doesn't already exist in the same MDI frame.
-
    TGFrame *frame = fEditor->GetSelected();
    TString ch = fFrameName->GetText();
 
@@ -218,11 +218,11 @@ void TGuiBldNameFrame::UpdateName()
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the parent mdi frame
+
 TGCompositeFrame *TGuiBldNameFrame::GetMdi(TGFrame *frame)
 {
-   // Find the parent mdi frame
-
    TGFrame *p = frame;
 
    while (p && (p != fClient->GetDefaultRoot()) ) {
@@ -237,11 +237,11 @@ TGCompositeFrame *TGuiBldNameFrame::GetMdi(TGFrame *frame)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map all the frames and subframes in mdi frame to the list tree.
+
 void TGuiBldNameFrame::MapItems(TGCompositeFrame *main)
 {
-   // Map all the frames and subframes in mdi frame to the list tree.
-
    if (!main) {
      return;
    }
@@ -286,11 +286,11 @@ void TGuiBldNameFrame::MapItems(TGCompositeFrame *main)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if items are in the list tree and at the same place.
+
 Bool_t TGuiBldNameFrame::CheckItems(TGCompositeFrame *main)
 {
-   // Check if items are in the list tree and at the same place.
-
    TList *list = main->GetList(); //list of all elements in the frame
 
    TGFrameElement *el = 0;
@@ -330,11 +330,11 @@ Bool_t TGuiBldNameFrame::CheckItems(TGCompositeFrame *main)
    return kFALSE; //treelist remains the same
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a frame.
+
 void TGuiBldNameFrame::RemoveFrame(TGFrame *frame)
 {
-   // Remove a frame.
-
    TGListTreeItem *item;
    item = fListTree->FindItemByObj(fListTree->GetFirstItem(), frame);
    if (item) {
@@ -342,13 +342,13 @@ void TGuiBldNameFrame::RemoveFrame(TGFrame *frame)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find item with GetText == name. Search tree downwards starting at item.
+
 TGListTreeItem *TGuiBldNameFrame::FindItemByName(TGListTree *tree,
                                                  const char* name,
                                                  TGListTreeItem *item)
 {
-   // Find item with GetText == name. Search tree downwards starting at item.
-
    TGListTreeItem *fitem;
    if (item && name) {
       if (!strcmp(item->GetText(), name)) { //if names are equal
@@ -365,11 +365,11 @@ TGListTreeItem *TGuiBldNameFrame::FindItemByName(TGListTree *tree,
    return 0;
 }
 
-//________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// When list tree item is clicked, frame with that name is selected.
+
 void TGuiBldNameFrame::SelectFrameByItem(TGListTreeItem* item, Int_t)
 {
-   // When list tree item is clicked, frame with that name is selected.
-
    TGFrame *frame = (TGFrame*)item->GetUserData();
    if (frame) {
       ((TGFrame*)frame->GetParent())->SetEditable(kTRUE);

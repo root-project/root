@@ -31,19 +31,20 @@
 
 ClassImp(TEveGeoPolyShape);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveGeoPolyShape::TEveGeoPolyShape() :
    TGeoBBox(),
    fNbPols(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static constructor from a composite shape.
+
 TEveGeoPolyShape* TEveGeoPolyShape::Construct(TGeoCompositeShape *cshape, Int_t n_seg)
 {
-   // Static constructor from a composite shape.
-
    TEvePad       pad;
    TEvePadHolder gpad(kFALSE, &pad);
    TGLScenePad   scene_pad(&pad);
@@ -101,21 +102,21 @@ TEveGeoPolyShape* TEveGeoPolyShape::Construct(TGeoCompositeShape *cshape, Int_t 
    return egps;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set data-members from a face-set.
+
 void TEveGeoPolyShape::SetFromFaceSet(TGLFaceSet* fs)
 {
-   // Set data-members from a face-set.
-
    fVertices = fs->GetVertices();
    fPolyDesc = fs->GetPolyDesc();
    fNbPols   = fs->GetNbPols();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the passed buffer 3D.
+
 void TEveGeoPolyShape::FillBuffer3D(TBuffer3D& b, Int_t reqSections, Bool_t) const
 {
-   // Fill the passed buffer 3D.
-
    if (reqSections & TBuffer3D::kCore)
    {
       // If writing core section all others will be invalid
@@ -186,11 +187,11 @@ void TEveGeoPolyShape::FillBuffer3D(TBuffer3D& b, Int_t reqSections, Bool_t) con
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill static buffer 3D.
+
 const TBuffer3D& TEveGeoPolyShape::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
-   // Fill static buffer 3D.
-
    static TBuffer3D buf(TBuffer3DTypes::kGeneric);
 
    FillBuffer3D(buf, reqSections, localFrame);
@@ -198,11 +199,11 @@ const TBuffer3D& TEveGeoPolyShape::GetBuffer3D(Int_t reqSections, Bool_t localFr
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create buffer 3D and fill it with point/segment/poly data.
+
 TBuffer3D* TEveGeoPolyShape::MakeBuffer3D() const
 {
-   // Create buffer 3D and fill it with point/segment/poly data.
-
    TBuffer3D* buf = new TBuffer3D(TBuffer3DTypes::kGeneric);
 
    FillBuffer3D(*buf, TBuffer3D::kCore | TBuffer3D::kRawSizes | TBuffer3D::kRaw, kFALSE);

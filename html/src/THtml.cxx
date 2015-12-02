@@ -53,22 +53,24 @@ namespace {
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper's destructor.
+/// Check that no THtml object is attached to the helper - it might still need it!
+
 THtml::THelperBase::~THelperBase()
 {
-   // Helper's destructor.
-   // Check that no THtml object is attached to the helper - it might still need it!
    if (fHtml) {
       fHtml->HelperDeleted(this);
    }
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the THtml object owning this object; if it's already set to
+/// a different THtml object than issue an error message and signal to
+/// the currently set object that we are not belonging to it anymore.
+
 void THtml::THelperBase::SetOwner(THtml* html) {
-   // Set the THtml object owning this object; if it's already set to
-   // a different THtml object than issue an error message and signal to
-   // the currently set object that we are not belonging to it anymore.
    if (fHtml && html && html != fHtml) {
       Error("SetOwner()", "Object already owned by an THtml instance!");
       fHtml->HelperDeleted(this);
@@ -77,30 +79,30 @@ void THtml::THelperBase::SetOwner(THtml* html) {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set out_modulename to cl's module name; return true if it's valid.
+/// If applicable, the module contains super modules separated by "/".
+///
+/// ROOT takes the directory part of cl's implementation file name
+/// (or declaration file name, if the implementation file name is empty),
+/// removes the last subdirectory if it is "src/" or "inc/", and interprets
+/// the remaining path as the module hierarchy, converting it to upper case.
+/// hist/histpainter/src/THistPainter.cxx thus becomes the module
+/// HIST/HISTPAINTER. (Node: some ROOT packages get special treatment.)
+/// If the file cannot be mapped into this scheme, the class's library
+/// name (without directories, leading "lib" prefix or file extensions)
+/// ius taken as the module name. If the module cannot be determined it is
+/// set to "USER" and false is returned.
+///
+/// If your software cannot be mapped into this scheme then derive your
+/// own class from TModuleDefinition and pass it to THtml::SetModuleDefinition().
+///
+/// The fse parameter is used to determine the relevant part of the path, i.e.
+/// to not include parent directories of a TFileSysRoot.
+
 bool THtml::TModuleDefinition::GetModule(TClass* cl, TFileSysEntry* fse,
                                          TString& out_modulename) const
 {
-   // Set out_modulename to cl's module name; return true if it's valid.
-   // If applicable, the module contains super modules separated by "/".
-   //
-   // ROOT takes the directory part of cl's implementation file name
-   // (or declaration file name, if the implementation file name is empty),
-   // removes the last subdirectory if it is "src/" or "inc/", and interprets
-   // the remaining path as the module hierarchy, converting it to upper case.
-   // hist/histpainter/src/THistPainter.cxx thus becomes the module
-   // HIST/HISTPAINTER. (Node: some ROOT packages get special treatment.)
-   // If the file cannot be mapped into this scheme, the class's library
-   // name (without directories, leading "lib" prefix or file extensions)
-   // ius taken as the module name. If the module cannot be determined it is
-   // set to "USER" and false is returned.
-   //
-   // If your software cannot be mapped into this scheme then derive your
-   // own class from TModuleDefinition and pass it to THtml::SetModuleDefinition().
-   //
-   // The fse parameter is used to determine the relevant part of the path, i.e.
-   // to not include parent directories of a TFileSysRoot.
-
    out_modulename = "USER";
    if (!cl) return false;
 
@@ -195,12 +197,13 @@ bool THtml::TModuleDefinition::GetModule(TClass* cl, TFileSysEntry* fse,
    return true;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create all permutations of path and THtml's input path:
+/// path being PP/ and THtml's input being .:include/:src/ gives
+/// .:./PP/:include:include/PP/:src/:src/PP
+
 void THtml::TFileDefinition::ExpandSearchPath(TString& path) const
 {
-   // Create all permutations of path and THtml's input path:
-   // path being PP/ and THtml's input being .:include/:src/ gives
-   // .:./PP/:include:include/PP/:src/:src/PP
    THtml* owner = GetOwner();
    if (!owner) return;
 
@@ -223,12 +226,13 @@ void THtml::TFileDefinition::ExpandSearchPath(TString& path) const
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given a class name with a scope, split the class name into directory part
+/// and file name: A::B::C becomes module B, filename C.
+
 void THtml::TFileDefinition::SplitClassIntoDirFile(const TString& clname, TString& dir,
                                                    TString& filename) const
 {
-   // Given a class name with a scope, split the class name into directory part
-   // and file name: A::B::C becomes module B, filename C.
    TString token;
    Ssiz_t from = 0;
    filename = "";
@@ -243,45 +247,46 @@ void THtml::TFileDefinition::SplitClassIntoDirFile(const TString& clname, TStrin
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine cl's declaration file name. Usually it's just
+/// cl->GetDeclFileName(), but sometimes conversions need to be done
+/// like include/ to abc/cde/inc/. If no declaration file name is
+/// available, look for b/inc/C.h for class A::B::C. out_fsys will contain
+/// the file system's (i.e. local machine's) full path name to the file.
+/// The function returns false if the class's header file cannot be found.
+///
+/// If your software cannot be mapped into this scheme then derive your
+/// own class from TFileDefinition and pass it to THtml::SetFileDefinition().
+
 bool THtml::TFileDefinition::GetDeclFileName(const TClass* cl, TString& out_filename,
                                              TString& out_fsys, TFileSysEntry** fse) const
 {
-   // Determine cl's declaration file name. Usually it's just
-   // cl->GetDeclFileName(), but sometimes conversions need to be done
-   // like include/ to abc/cde/inc/. If no declaration file name is
-   // available, look for b/inc/C.h for class A::B::C. out_fsys will contain
-   // the file system's (i.e. local machine's) full path name to the file.
-   // The function returns false if the class's header file cannot be found.
-   //
-   // If your software cannot be mapped into this scheme then derive your
-   // own class from TFileDefinition and pass it to THtml::SetFileDefinition().
-
    return GetFileName(cl, true, out_filename, out_fsys, fse);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine cl's implementation file name. Usually it's just
+/// cl->GetImplFileName(), but sometimes conversions need to be done.
+/// If no implementation file name is available look for b/src/C.cxx for
+/// class A::B::C. out_fsys will contain the file system's (i.e. local
+/// machine's) full path name to the file.
+/// The function returns false if the class's source file cannot be found.
+///
+/// If your software cannot be mapped into this scheme then derive your
+/// own class from TFileDefinition and pass it to THtml::SetFileDefinition().
+
 bool THtml::TFileDefinition::GetImplFileName(const TClass* cl, TString& out_filename,
                                              TString& out_fsys, TFileSysEntry** fse) const
 {
-   // Determine cl's implementation file name. Usually it's just
-   // cl->GetImplFileName(), but sometimes conversions need to be done.
-   // If no implementation file name is available look for b/src/C.cxx for
-   // class A::B::C. out_fsys will contain the file system's (i.e. local
-   // machine's) full path name to the file.
-   // The function returns false if the class's source file cannot be found.
-   //
-   // If your software cannot be mapped into this scheme then derive your
-   // own class from TFileDefinition and pass it to THtml::SetFileDefinition().
-
    return GetFileName(cl, false, out_filename, out_fsys, fse);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove "/./" and collapse "/subdir/../" to "/"
+
 void THtml::TFileDefinition::NormalizePath(TString& filename) const
 {
-   // Remove "/./" and collapse "/subdir/../" to "/"
    static const char* delim[] = {"/", "\\\\"};
    for (int i = 0; i < 2; ++i) {
       const char* d = delim[i];
@@ -294,13 +299,13 @@ void THtml::TFileDefinition::NormalizePath(TString& filename) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find filename in the list of system files; return the system file name
+/// and change filename to the file name as included.
+/// filename must be normalized (no "/./" etc) before calling.
+
 TString THtml::TFileDefinition::MatchFileSysName(TString& filename, TFileSysEntry** fse) const
 {
-   // Find filename in the list of system files; return the system file name
-   // and change filename to the file name as included.
-   // filename must be normalized (no "/./" etc) before calling.
-
    TList* bucket = GetOwner()->GetLocalFiles()->GetEntries().GetListForObject(gSystem->BaseName(filename));
    TString filesysname;
    if (bucket) {
@@ -326,13 +331,13 @@ TString THtml::TFileDefinition::MatchFileSysName(TString& filename, TFileSysEntr
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Common implementation for GetDeclFileName(), GetImplFileName()
+
 bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl,
                                          TString& out_filename, TString& out_fsys,
                                          TFileSysEntry** fse) const
 {
-   // Common implementation for GetDeclFileName(), GetImplFileName()
-
    out_fsys = "";
 
    if (!cl) {
@@ -495,17 +500,17 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl,
    return false;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine the path to look for macros (see TDocMacroDirective) for
+/// classes from a given module. If the path was sucessfully determined return true.
+/// For ROOT, this directory is the "doc/macros" subdirectory of the module
+/// directory; the path returned is GetDocDir(module) + "/macros".
+///
+/// If your software cannot be mapped into this scheme then derive your
+/// own class from TPathDefinition and pass it to THtml::SetPathDefinition().
+
 bool THtml::TPathDefinition::GetMacroPath(const TString& module, TString& out_dir) const
 {
-   // Determine the path to look for macros (see TDocMacroDirective) for
-   // classes from a given module. If the path was sucessfully determined return true.
-   // For ROOT, this directory is the "doc/macros" subdirectory of the module
-   // directory; the path returned is GetDocDir(module) + "/macros".
-   //
-   // If your software cannot be mapped into this scheme then derive your
-   // own class from TPathDefinition and pass it to THtml::SetPathDefinition().
-
    TString moduledoc;
    if (!GetDocDir(module, moduledoc))
       return false;
@@ -523,18 +528,18 @@ bool THtml::TPathDefinition::GetMacroPath(const TString& module, TString& out_di
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine the module's documentation directory. If module is empty,
+/// set doc_dir to the product's documentation directory.
+/// If the path was sucessfuly determined return true.
+/// For ROOT, this directory is the subdir "doc/" in the
+/// module's path; the directory returned is module + "/doc".
+///
+/// If your software cannot be mapped into this scheme then derive your
+/// own class from TPathDefinition and pass it to THtml::SetPathDefinition().
+
 bool THtml::TPathDefinition::GetDocDir(const TString& module, TString& doc_dir) const
 {
-   // Determine the module's documentation directory. If module is empty,
-   // set doc_dir to the product's documentation directory.
-   // If the path was sucessfuly determined return true.
-   // For ROOT, this directory is the subdir "doc/" in the
-   // module's path; the directory returned is module + "/doc".
-   //
-   // If your software cannot be mapped into this scheme then derive your
-   // own class from TPathDefinition and pass it to THtml::SetPathDefinition().
-
    doc_dir = "";
    if (GetOwner()->GetProductName() == "ROOT") {
       doc_dir = "$ROOTSYS";
@@ -549,22 +554,22 @@ bool THtml::TPathDefinition::GetDocDir(const TString& module, TString& doc_dir) 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine the path and filename used in an include statement for the
+/// header file of the given class. E.g. the class ROOT::Math::Boost is
+/// meant to be included as "Math/Genvector/Boost.h" - which is what
+/// out_dir is set to. GetIncludeAs() returns whether the include
+/// statement's path was successfully determined.
+///
+/// Any leading directory part that is part of fIncludePath (see SetIncludePath)
+/// will be removed. For ROOT, leading "include/" is removed; everything after
+/// is the include path.
+///
+/// If your software cannot be mapped into this scheme then derive your
+/// own class from TPathDefinition and pass it to THtml::SetPathDefinition().
+
 bool THtml::TPathDefinition::GetIncludeAs(TClass* cl, TString& out_dir) const
 {
-   // Determine the path and filename used in an include statement for the
-   // header file of the given class. E.g. the class ROOT::Math::Boost is
-   // meant to be included as "Math/Genvector/Boost.h" - which is what
-   // out_dir is set to. GetIncludeAs() returns whether the include
-   // statement's path was successfully determined.
-   //
-   // Any leading directory part that is part of fIncludePath (see SetIncludePath)
-   // will be removed. For ROOT, leading "include/" is removed; everything after
-   // is the include path.
-   //
-   // If your software cannot be mapped into this scheme then derive your
-   // own class from TPathDefinition and pass it to THtml::SetPathDefinition().
-
    out_dir = "";
    if (!cl || !GetOwner()) return false;
 
@@ -602,18 +607,18 @@ bool THtml::TPathDefinition::GetIncludeAs(TClass* cl, TString& out_dir) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set out_fsname to the full pathname corresponding to a file
+/// included as "included". Return false if this file cannot be determined
+/// or found. For ROOT, out_fsname corresponds to included prepended with
+/// "include"; only THtml prefers to work on the original files, e.g.
+/// core/base/inc/TObject.h instead of include/TObject.h, so the
+/// default implementation searches the TFileSysDB for an entry with
+/// basename(included) and with matching directory part, setting out_fsname
+/// to the TFileSysEntry's path.
+
 bool THtml::TPathDefinition::GetFileNameFromInclude(const char* included, TString& out_fsname) const
 {
-   // Set out_fsname to the full pathname corresponding to a file
-   // included as "included". Return false if this file cannot be determined
-   // or found. For ROOT, out_fsname corresponds to included prepended with
-   // "include"; only THtml prefers to work on the original files, e.g.
-   // core/base/inc/TObject.h instead of include/TObject.h, so the
-   // default implementation searches the TFileSysDB for an entry with
-   // basename(included) and with matching directory part, setting out_fsname
-   // to the TFileSysEntry's path.
-
    if (!included) return false;
 
    out_fsname = included;
@@ -649,11 +654,11 @@ bool THtml::TPathDefinition::GetFileNameFromInclude(const char* included, TStrin
    return false;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively fill entries by parsing the contents of path.
+
 void THtml::TFileSysDir::Recurse(TFileSysDB* db, const char* path)
 {
-   // Recursively fill entries by parsing the contents of path.
-
    TString dir(path);
    if (gDebug > 0 || GetLevel() < 2)
       Info("Recurse", "scanning %s...", path);
@@ -697,12 +702,12 @@ void THtml::TFileSysDir::Recurse(TFileSysDB* db, const char* path)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively fill entries by parsing the path specified in GetName();
+/// can be a THtml::GetDirDelimiter() delimited list of paths.
+
 void THtml::TFileSysDB::Fill()
 {
-   // Recursively fill entries by parsing the path specified in GetName();
-   // can be a THtml::GetDirDelimiter() delimited list of paths.
-
    TString dir;
    Ssiz_t posPath = 0;
    while (fName.Tokenize(dir, posPath, THtml::GetDirDelimiter())) {
@@ -1199,7 +1204,11 @@ END_HTML */
 ////////////////////////////////////////////////////////////////////////////////
 
 ClassImp(THtml)
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a THtml object.
+/// In case output directory does not exist an error
+/// will be printed and gHtml stays 0 also zombie bit will be set.
+
 THtml::THtml():
    fCounterFormat("%12s %5s %s"),
    fProductName("(UNKNOWN PRODUCT)"),
@@ -1207,10 +1216,6 @@ THtml::THtml():
    fGClient(0), fPathDef(0), fModuleDef(0), fFileDef(0),
    fLocalFiles(0), fBatch(kFALSE)
 {
-   // Create a THtml object.
-   // In case output directory does not exist an error
-   // will be printed and gHtml stays 0 also zombie bit will be set.
-
    // check for source directory
    fPathInfo.fInputPath = gEnv->GetValue("Root.Html.SourceDir", "./:src/:include/");
 
@@ -1243,11 +1248,11 @@ THtml::THtml():
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default destructor
+
 THtml::~THtml()
 {
-// Default destructor
-
    fDocEntityInfo.fClasses.Clear();
    fDocEntityInfo.fModules.Clear();
    if (gHtml == this) {
@@ -1260,14 +1265,14 @@ THtml::~THtml()
    delete fLocalFiles;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add path to the directories to be searched for macro files
+/// that are to be executed via the TDocMacroDirective
+/// ("Begin_Macro"/"End_Macro"); relative to the source file
+/// that the directive is run on.
+
 void THtml::AddMacroPath(const char* path)
 {
-   // Add path to the directories to be searched for macro files
-   // that are to be executed via the TDocMacroDirective
-   // ("Begin_Macro"/"End_Macro"); relative to the source file
-   // that the directive is run on.
-
    const char pathDelimiter =
 #ifdef R__WIN32
       ';';
@@ -1279,21 +1284,23 @@ void THtml::AddMacroPath(const char* path)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy CSS, javascript file, etc to the output dir
+
 void THtml::CreateAuxiliaryFiles() const
 {
-   // copy CSS, javascript file, etc to the output dir
    CreateJavascript();
    CreateStyleSheet();
    CopyFileFromEtcDir("HELP.html");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the TModuleDefinition (or derived) object as set by
+/// SetModuleDefinition(); create and return a TModuleDefinition object
+/// if none was set.
+
 const THtml::TModuleDefinition& THtml::GetModuleDefinition() const
 {
-   // Return the TModuleDefinition (or derived) object as set by
-   // SetModuleDefinition(); create and return a TModuleDefinition object
-   // if none was set.
    if (!fModuleDef) {
       fModuleDef = new TModuleDefinition();
       fModuleDef->SetOwner(const_cast<THtml*>(this));
@@ -1301,12 +1308,13 @@ const THtml::TModuleDefinition& THtml::GetModuleDefinition() const
    return *fModuleDef;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the TFileDefinition (or derived) object as set by
+/// SetFileDefinition(); create and return a TFileDefinition object
+/// if none was set.
+
 const THtml::TFileDefinition& THtml::GetFileDefinition() const
 {
-   // Return the TFileDefinition (or derived) object as set by
-   // SetFileDefinition(); create and return a TFileDefinition object
-   // if none was set.
    if (!fFileDef) {
       fFileDef = new TFileDefinition();
       fFileDef->SetOwner(const_cast<THtml*>(this));
@@ -1314,12 +1322,13 @@ const THtml::TFileDefinition& THtml::GetFileDefinition() const
    return *fFileDef;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the TModuleDefinition (or derived) object as set by
+/// SetModuleDefinition(); create and return a TModuleDefinition object
+/// if none was set.
+
 const THtml::TPathDefinition& THtml::GetPathDefinition() const
 {
-   // Return the TModuleDefinition (or derived) object as set by
-   // SetModuleDefinition(); create and return a TModuleDefinition object
-   // if none was set.
    if (!fPathDef) {
       fPathDef = new TPathDefinition();
       fPathDef->SetOwner(const_cast<THtml*>(this));
@@ -1328,11 +1337,11 @@ const THtml::TPathDefinition& THtml::GetPathDefinition() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the directory containing THtml's auxiliary files ($ROOTSYS/etc/html)
+
 const char* THtml::GetEtcDir() const
 {
-// Get the directory containing THtml's auxiliary files ($ROOTSYS/etc/html)
-
    if (fPathInfo.fEtcDir.Length())
       return fPathInfo.fEtcDir;
 
@@ -1356,11 +1365,11 @@ const char* THtml::GetEtcDir() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the next class to be generated for MakeClassThreaded.
+
 TClassDocInfo *THtml::GetNextClass()
 {
-   // Return the next class to be generated for MakeClassThreaded.
-
    if (!fThreadedClassIter) return 0;
 
    R__LOCKGUARD(GetMakeClassMutex());
@@ -1380,13 +1389,13 @@ TClassDocInfo *THtml::GetNextClass()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the documentation URL for library lib.
+/// If lib == 0 or no documentation URL has been set for lib, return the ROOT
+/// documentation URL. The return value is always != 0.
+
 const char* THtml::GetURL(const char* lib /*=0*/) const
 {
-   // Get the documentation URL for library lib.
-   // If lib == 0 or no documentation URL has been set for lib, return the ROOT
-   // documentation URL. The return value is always != 0.
-
    R__LOCKGUARD(GetMakeClassMutex());
 
    if (lib && strlen(lib)) {
@@ -1397,12 +1406,12 @@ const char* THtml::GetURL(const char* lib /*=0*/) const
    return fLinkInfo.fROOTURL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check whether dot is available in $PATH or in the directory set
+/// by SetDotPath()
+
 Bool_t THtml::HaveDot()
 {
-   // Check whether dot is available in $PATH or in the directory set
-   // by SetDotPath()
-
    if (fPathInfo.fFoundDot != PathInfo_t::kDotUnknown)
       return (fPathInfo.fFoundDot == PathInfo_t::kDotFound);
 
@@ -1424,12 +1433,12 @@ Bool_t THtml::HaveDot()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Inform the THtml object that one of its helper objects was deleted.
+/// Called by THtml::HelperBase::~HelperBase().
+
 void THtml::HelperDeleted(THtml::THelperBase* who)
 {
-   // Inform the THtml object that one of its helper objects was deleted.
-   // Called by THtml::HelperBase::~HelperBase().
-
    THelperBase* helpers[3] = {fPathDef, fModuleDef, fFileDef};
    for (int i = 0; who && i < 3; ++i)
       if (who == helpers[i])
@@ -1437,34 +1446,34 @@ void THtml::HelperDeleted(THtml::THelperBase* who)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// It converts a single text file to HTML
+///
+///
+/// Input: filename - name of the file to convert
+///        title    - title which will be placed at the top of the HTML file
+///        dirname  - optional parameter, if it's not specified, output will
+///                   be placed in htmldoc/examples directory.
+///        relpath  - optional parameter pointing to the THtml generated doc
+///                   on the server, relative to the current page.
+///        includeOutput - if != kNoOutput, run the script passed as filename and
+///                   store all created canvases in PNG files that are
+///                   shown next to the converted source. Bitwise-ORing with
+///                   kForceOutput re-runs the script even if output PNGs exist
+///                   that are newer than the script. If kCompiledOutput is
+///                   passed, the script is run through ACLiC (.x filename+)
+///        context  - line shown verbatim at the top of the page; e.g. for links.
+///                   If context is non-empty it is expected to also print the
+///                   title.
+///
+///  NOTE: Output file name is the same as filename, but with extension .html
+///
+
 void THtml::Convert(const char *filename, const char *title,
                     const char *dirname /*= ""*/, const char *relpath /*= "../"*/,
                     Int_t includeOutput /* = kNoOutput */,
                     const char* context /* = "" */)
 {
-// It converts a single text file to HTML
-//
-//
-// Input: filename - name of the file to convert
-//        title    - title which will be placed at the top of the HTML file
-//        dirname  - optional parameter, if it's not specified, output will
-//                   be placed in htmldoc/examples directory.
-//        relpath  - optional parameter pointing to the THtml generated doc
-//                   on the server, relative to the current page.
-//        includeOutput - if != kNoOutput, run the script passed as filename and
-//                   store all created canvases in PNG files that are
-//                   shown next to the converted source. Bitwise-ORing with
-//                   kForceOutput re-runs the script even if output PNGs exist
-//                   that are newer than the script. If kCompiledOutput is
-//                   passed, the script is run through ACLiC (.x filename+)
-//        context  - line shown verbatim at the top of the page; e.g. for links.
-//                   If context is non-empty it is expected to also print the
-//                   title.
-//
-//  NOTE: Output file name is the same as filename, but with extension .html
-//
-
    gROOT->GetListOfGlobals(kTRUE);        // force update of this list
    CreateListOfClasses("*");
 
@@ -1524,12 +1533,12 @@ void THtml::Convert(const char *filename, const char *title,
    tmp1 = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the module name for a given class.
+/// Use the cached information from fDocEntityInfo.fClasses.
+
 void  THtml::GetModuleNameForClass(TString& module, TClass* cl) const
 {
-   // Return the module name for a given class.
-   // Use the cached information from fDocEntityInfo.fClasses.
-
    module = "(UNKNOWN)";
    if (!cl) return;
 
@@ -1540,11 +1549,11 @@ void  THtml::GetModuleNameForClass(TString& module, TClass* cl) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the list of all known classes
+
 void THtml::CreateListOfClasses(const char* filter)
 {
-// Create the list of all known classes
-
    if (fDocEntityInfo.fClasses.GetSize() && fDocEntityInfo.fClassFilter == filter)
       return;
 
@@ -1891,20 +1900,20 @@ void THtml::CreateListOfClasses(const char* filter)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create index of all data types and a page for each typedef-to-class
+
 void THtml::CreateListOfTypes()
 {
-// Create index of all data types and a page for each typedef-to-class
-
    TDocOutput output(*this);
    output.CreateTypeIndex();
    output.CreateClassTypeDefs();
 }
 
-//______________________________________________________________________________
-Bool_t THtml::CopyFileFromEtcDir(const char* filename) const {
-   // Copy a file from $ROOTSYS/etc/html into GetOutputDir()
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a file from $ROOTSYS/etc/html into GetOutputDir()
 
+Bool_t THtml::CopyFileFromEtcDir(const char* filename) const {
    R__LOCKGUARD(GetMakeClassMutex());
 
    TString outFile(filename);
@@ -1922,23 +1931,26 @@ Bool_t THtml::CopyFileFromEtcDir(const char* filename) const {
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the inheritance hierarchy diagram for all classes
+
 void THtml::CreateHierarchy()
 {
-   // Create the inheritance hierarchy diagram for all classes
    TDocOutput output(*this);
    output.CreateHierarchy();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the default ROOT style sheet.
+
 void THtml::CreateJavascript() const {
-   // Write the default ROOT style sheet.
    CopyFileFromEtcDir("ROOT.js");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the default ROOT style sheet.
+
 void THtml::CreateStyleSheet() const {
-   // Write the default ROOT style sheet.
    CopyFileFromEtcDir("ROOT.css");
    CopyFileFromEtcDir("shadowAlpha.png");
    CopyFileFromEtcDir("shadow.gif");
@@ -1946,12 +1958,12 @@ void THtml::CreateStyleSheet() const {
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// fill derived with all classes inheriting from cl and their inheritance
+/// distance to cl
+
 void THtml::GetDerivedClasses(TClass* cl, std::map<TClass*, Int_t>& derived) const
 {
-   // fill derived with all classes inheriting from cl and their inheritance
-   // distance to cl
-
    TIter iClass(&fDocEntityInfo.fClasses);
    TClassDocInfo* cdi = 0;
    while ((cdi = (TClassDocInfo*) iClass())) {
@@ -1978,17 +1990,17 @@ void THtml::GetDerivedClasses(TClass* cl, std::map<TClass*, Int_t>& derived) con
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return real HTML filename
+///
+///
+///  Input: classPtr - pointer to a class
+///         filename - string containing a full name
+///         of the corresponding HTML file after the function returns.
+///
+
 void THtml::GetHtmlFileName(TClass * classPtr, TString& filename) const
 {
-// Return real HTML filename
-//
-//
-//  Input: classPtr - pointer to a class
-//         filename - string containing a full name
-//         of the corresponding HTML file after the function returns.
-//
-
    filename.Remove(0);
    if (!classPtr) return;
 
@@ -2047,22 +2059,24 @@ void THtml::GetHtmlFileName(TClass * classPtr, TString& filename) const
    } else filename.Remove(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the html file name for a class named classname.
+/// Returns 0 if the class is not documented.
+
 const char* THtml::GetHtmlFileName(const char* classname) const
 {
-   // Get the html file name for a class named classname.
-   // Returns 0 if the class is not documented.
    TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(classname);
    if (cdi)
       return cdi->GetHtmlFileName();
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*      =================================
+
 TClass *THtml::GetClass(const char *name1) const
 {
-//*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*      =================================
    if(!name1 || !name1[0]) return 0;
    // no doc for internal classes
    if (strstr(name1,"ROOT::")==name1) {
@@ -2089,27 +2103,29 @@ TClass *THtml::GetClass(const char *name1) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return declaration file name; return the full path if filesys is true.
+
 bool THtml::GetDeclFileName(TClass * cl, Bool_t filesys, TString& out_name) const
 {
-   // Return declaration file name; return the full path if filesys is true.
    return GetDeclImplFileName(cl, filesys, true, out_name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return implementation file name
+
 bool THtml::GetImplFileName(TClass * cl, Bool_t filesys, TString& out_name) const
 {
-   // Return implementation file name
    return GetDeclImplFileName(cl, filesys, false, out_name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Combined implementation for GetDeclFileName(), GetImplFileName():
+/// Return declaration / implementation file name (depending on decl);
+/// return the full path if filesys is true.
+
 bool THtml::GetDeclImplFileName(TClass * cl, bool filesys, bool decl, TString& out_name) const
 {
-   // Combined implementation for GetDeclFileName(), GetImplFileName():
-   // Return declaration / implementation file name (depending on decl);
-   // return the full path if filesys is true.
-
    out_name = "";
 
    R__LOCKGUARD(GetMakeClassMutex());
@@ -2158,12 +2174,12 @@ bool THtml::GetDeclImplFileName(TClass * cl, bool filesys, bool decl, TString& o
    return true;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the output directory as set by SetOutputDir().
+/// Create it if it doesn't exist and if createDir is kTRUE.
+
 const TString& THtml::GetOutputDir(Bool_t createDir /*= kTRUE*/) const
 {
-   // Return the output directory as set by SetOutputDir().
-   // Create it if it doesn't exist and if createDir is kTRUE.
-
    if (createDir) {
       R__LOCKGUARD(GetMakeClassMutex());
 
@@ -2184,18 +2200,19 @@ const TString& THtml::GetOutputDir(Bool_t createDir /*= kTRUE*/) const
    return fPathInfo.fOutputDir;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check whether cl is a namespace
+
 Bool_t THtml::IsNamespace(const TClass*cl)
 {
-   // Check whether cl is a namespace
    return (cl->Property() & kIsNamespace);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load all libraries known to ROOT via the rootmap system.
+
 void THtml::LoadAllLibs()
 {
-   // Load all libraries known to ROOT via the rootmap system.
-
    TEnv* mapfile = gInterpreter->GetMapfile();
    if (!mapfile || !mapfile->GetTable()) return;
 
@@ -2232,18 +2249,18 @@ void THtml::LoadAllLibs()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce documentation for all the classes specified in the filter (by default "*")
+/// To process all classes having a name starting with XX, do:
+///        html.MakeAll(kFALSE,"XX*");
+/// If force=kFALSE (default), only the classes that have been modified since
+/// the previous call to this function will be generated.
+/// If force=kTRUE, all classes passing the filter will be processed.
+/// If numthreads is != -1, use numthreads threads, else decide automatically
+/// based on the number of CPUs.
+
 void THtml::MakeAll(Bool_t force, const char *filter, int numthreads /*= -1*/)
 {
-// Produce documentation for all the classes specified in the filter (by default "*")
-// To process all classes having a name starting with XX, do:
-//        html.MakeAll(kFALSE,"XX*");
-// If force=kFALSE (default), only the classes that have been modified since
-// the previous call to this function will be generated.
-// If force=kTRUE, all classes passing the filter will be processed.
-// If numthreads is != -1, use numthreads threads, else decide automatically
-// based on the number of CPUs.
-
    MakeIndex(filter);
 
    if (numthreads == 1) {
@@ -2301,14 +2318,15 @@ void THtml::MakeAll(Bool_t force, const char *filter, int numthreads /*= -1*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make HTML files for a single class
+///
+///
+/// Input: className - name of the class to process
+///
+
 void THtml::MakeClass(const char *className, Bool_t force)
 {
-// Make HTML files for a single class
-//
-//
-// Input: className - name of the class to process
-//
    CreateListOfClasses("*");
 
    TClassDocInfo* cdi = (TClassDocInfo*)fDocEntityInfo.fClasses.FindObject(className);
@@ -2321,14 +2339,15 @@ void THtml::MakeClass(const char *className, Bool_t force)
    MakeClass(cdi, force);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make HTML files for a single class
+///
+///
+/// Input: cdi - doc info for class to process
+///
+
 void THtml::MakeClass(void *cdi_void, Bool_t force)
 {
-// Make HTML files for a single class
-//
-//
-// Input: cdi - doc info for class to process
-//
    if (!fDocEntityInfo.fClasses.GetSize())
       CreateListOfClasses("*");
 
@@ -2361,13 +2380,13 @@ void THtml::MakeClass(void *cdi_void, Bool_t force)
 }
 
 
-//______________________________________________________________________________
-void* THtml::MakeClassThreaded(void* info) {
-   // Entry point of worker threads for multi-threaded MakeAll().
-   // info points to an (internal) THtmlThreadInfo object containing the current
-   // THtml object, and whether "force" was passed to MakeAll().
-   // The thread will poll GetNextClass() until no further class is available.
+////////////////////////////////////////////////////////////////////////////////
+/// Entry point of worker threads for multi-threaded MakeAll().
+/// info points to an (internal) THtmlThreadInfo object containing the current
+/// THtml object, and whether "force" was passed to MakeAll().
+/// The thread will poll GetNextClass() until no further class is available.
 
+void* THtml::MakeClassThreaded(void* info) {
    const THtmlThreadInfo* hti = (const THtmlThreadInfo*)info;
    if (!hti) return 0;
    TClassDocInfo* classinfo = 0;
@@ -2377,14 +2396,14 @@ void* THtml::MakeClassThreaded(void* info) {
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the index files for the product, modules, all types, etc.
+/// By default all classes are indexed (if filter="*");
+/// to generate an index for all classes starting with "XX", do
+///    html.MakeIndex("XX*");
+
 void THtml::MakeIndex(const char *filter)
 {
-   // Create the index files for the product, modules, all types, etc.
-   // By default all classes are indexed (if filter="*");
-   // to generate an index for all classes starting with "XX", do
-   //    html.MakeIndex("XX*");
-
    CreateListOfClasses(filter);
 
    TDocOutput output(*this);
@@ -2400,15 +2419,15 @@ void THtml::MakeIndex(const char *filter)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make an inheritance tree
+///
+///
+/// Input: className - name of the class to process
+///
+
 void THtml::MakeTree(const char *className, Bool_t force)
 {
-// Make an inheritance tree
-//
-//
-// Input: className - name of the class to process
-//
-
    // create canvas & set fill color
    TClass *classPtr = GetClass(className);
 
@@ -2421,65 +2440,70 @@ void THtml::MakeTree(const char *className, Bool_t force)
    cdo.MakeTree(force);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set whether "dot" (a GraphViz utility) is available
+
 void THtml::SetFoundDot(Bool_t found) {
-   // Set whether "dot" (a GraphViz utility) is available
    if (found) fPathInfo.fFoundDot = PathInfo_t::kDotFound;
    else fPathInfo.fFoundDot = PathInfo_t::kDotNotFound;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the files available in the file system below fPathInfo.fInputPath
+
 void THtml::SetLocalFiles() const
 {
-   // Fill the files available in the file system below fPathInfo.fInputPath
    if (fLocalFiles) delete fLocalFiles;
    fLocalFiles = new TFileSysDB(fPathInfo.fInputPath, fPathInfo.fIgnorePath + "|(\\b" + GetOutputDir(kFALSE) + "\\b)" , 6);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the module defining object to be used; can also be a user derived
+/// object (a la traits).
+
 void THtml::SetModuleDefinition(const TModuleDefinition& md)
 {
-   // Set the module defining object to be used; can also be a user derived
-   // object (a la traits).
    delete fModuleDef;
    fModuleDef = (TModuleDefinition*) md.Clone();
    fModuleDef->SetOwner(const_cast<THtml*>(this));
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the file defining object to be used; can also be a user derived
+/// object (a la traits).
+
 void THtml::SetFileDefinition(const TFileDefinition& md)
 {
-   // Set the file defining object to be used; can also be a user derived
-   // object (a la traits).
    delete fFileDef;
    fFileDef = (TFileDefinition*) md.Clone();
    fFileDef->SetOwner(const_cast<THtml*>(this));
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the path defining object to be used; can also be a user derived
+/// object (a la traits).
+
 void THtml::SetPathDefinition(const TPathDefinition& md)
 {
-   // Set the path defining object to be used; can also be a user derived
-   // object (a la traits).
    delete fPathDef;
    fPathDef = (TPathDefinition*) md.Clone();
    fPathDef->SetOwner(const_cast<THtml*>(this));
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the directory containing the source files.
+/// The source file for a class MyClass will be searched
+/// by prepending dir to the value of
+/// MyClass::Class()->GetImplFileName() - which can contain
+/// directory information!
+/// Also resets the class structure, in case new files can
+/// be found after this call.
+
 void THtml::SetInputDir(const char *dir)
 {
-   // Set the directory containing the source files.
-   // The source file for a class MyClass will be searched
-   // by prepending dir to the value of
-   // MyClass::Class()->GetImplFileName() - which can contain
-   // directory information!
-   // Also resets the class structure, in case new files can
-   // be found after this call.
-
    fPathInfo.fInputPath = dir;
    gSystem->ExpandPathName(fPathInfo.fInputPath);
 
@@ -2488,21 +2512,23 @@ void THtml::SetInputDir(const char *dir)
    fDocEntityInfo.fModules.Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the directory where the HTML pages shuold be written to.
+/// If the directory does not exist it will be created when needed.
+
 void THtml::SetOutputDir(const char *dir)
 {
-   // Set the directory where the HTML pages shuold be written to.
-   // If the directory does not exist it will be created when needed.
    fPathInfo.fOutputDir = dir;
 #ifdef R__WIN32
    fPathInfo.fOutputDir.ReplaceAll("/","\\");
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitly set a decl file name for TClass cl.
+
 void THtml::SetDeclFileName(TClass* cl, const char* filename)
 {
-   // Explicitly set a decl file name for TClass cl.
    TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(cl->GetName());
    if (!cdi) {
       cdi = new TClassDocInfo(cl, "" /*html*/, "" /*fsdecl*/, "" /*fsimpl*/, filename);
@@ -2511,10 +2537,11 @@ void THtml::SetDeclFileName(TClass* cl, const char* filename)
       cdi->SetDeclFileName(filename);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitly set a impl file name for TClass cl.
+
 void THtml::SetImplFileName(TClass* cl, const char* filename)
 {
-   // Explicitly set a impl file name for TClass cl.
    TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(cl->GetName());
    if (!cdi) {
       cdi = new TClassDocInfo(cl, "" /*html*/, "" /*fsdecl*/, "" /*fsimpl*/, 0 /*decl*/, filename);
@@ -2523,10 +2550,11 @@ void THtml::SetImplFileName(TClass* cl, const char* filename)
       cdi->SetImplFileName(filename);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get short type name, i.e. with default templates removed.
+
 const char* THtml::ShortType(const char* name) const
 {
-   // Get short type name, i.e. with default templates removed.
    const char* tmplt = strchr(name, '<');
    if (!tmplt) return name;
    tmplt = strrchr(tmplt, ':');

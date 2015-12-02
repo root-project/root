@@ -22,27 +22,27 @@
 #include "TProofDebug.h"
 #include "TProofMonSender.h"
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse send options from string 'sendopts'.
+/// Format is:
+///              "[-,+]S[n]|[-,+]D[m]|[-,+]F[j]"
+/// where:
+///   1. The big letter refers to the 'table' following
+///
+///           S      table with summary log
+///           D      table with dataset info
+///           F      table files info
+///
+///   2. The '-,+' in front disables/enables the related table; if
+///      absent '+' is assumed
+///
+///   3. The number after the letter is the version of the related
+///      table
+///
+/// Returns -1 if nothing is enabled; 0 otherwise
+
 Int_t TProofMonSender::SetSendOptions(const char *sendopts)
 {
-   // Parse send options from string 'sendopts'.
-   // Format is:
-   //              "[-,+]S[n]|[-,+]D[m]|[-,+]F[j]"
-   // where:
-   //   1. The big letter refers to the 'table' following
-   //
-   //           S      table with summary log
-   //           D      table with dataset info
-   //           F      table files info
-   //
-   //   2. The '-,+' in front disables/enables the related table; if
-   //      absent '+' is assumed
-   //
-   //   3. The number after the letter is the version of the related
-   //      table
-   //
-   // Returns -1 if nothing is enabled; 0 otherwise
-
 
    // Must have something to parse
    if (sendopts && strlen(sendopts) > 0) {

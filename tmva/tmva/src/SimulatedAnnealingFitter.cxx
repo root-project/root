@@ -37,25 +37,25 @@
 
 ClassImp(TMVA::SimulatedAnnealingFitter)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::SimulatedAnnealingFitter::SimulatedAnnealingFitter( IFitterTarget& target, 
                                                           const TString& name, 
                                                           const std::vector<Interval*>& ranges, 
                                                           const TString& theOption ) 
    : TMVA::FitterBase( target, name, ranges, theOption )
 {
-   // constructor
-
    // default parameters settings for Simulated Annealing algorithm
    DeclareOptions();
    ParseOptions();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// declare SA options
+
 void TMVA::SimulatedAnnealingFitter::DeclareOptions() 
 {
-   // declare SA options
-
    // MaxCalls                 <int>      maximum number of calls for simulated annealing
    // TemperatureGradient      <float>    temperature gradient for simulated annealing
    // UseAdaptiveTemperature   <bool>     use of adaptive temperature for simulated annealing
@@ -97,7 +97,9 @@ void TMVA::SimulatedAnnealingFitter::DeclareOptions()
    AddPreDefVal(TString("Geo"));
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set SA configuration parameters
+
 void TMVA::SimulatedAnnealingFitter::SetParameters( Int_t    maxCalls,
                                                     Double_t initialTemperature,
                                                     Double_t minTemperature,
@@ -108,7 +110,6 @@ void TMVA::SimulatedAnnealingFitter::SetParameters( Int_t    maxCalls,
                                                     Bool_t   useDefaultScale,
                                                     Bool_t   useDefaultTemperature)
 {
-   // set SA configuration parameters
    fMaxCalls                 = maxCalls;
    fInitialTemperature       = initialTemperature;
    fMinTemperature           = minTemperature; 
@@ -120,10 +121,11 @@ void TMVA::SimulatedAnnealingFitter::SetParameters( Int_t    maxCalls,
    fUseDefaultTemperature    = useDefaultTemperature;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute fitting
+
 Double_t TMVA::SimulatedAnnealingFitter::Run( std::vector<Double_t>& pars )
 {
-   // Execute fitting
    Log() << kINFO << "<SimulatedAnnealingFitter> Optimisation, please be patient ... " << Endl;
    Log() << kINFO << "(progress timing may be inaccurate for SA)" << Endl;
 

@@ -23,66 +23,66 @@
 
 ClassImp(TArrayD)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TArrayD ctor.
+
 TArrayD::TArrayD()
 {
-   // Default TArrayD ctor.
-
    fArray = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TArrayD object and set array size to n doubles.
+
 TArrayD::TArrayD(Int_t n)
 {
-   // Create TArrayD object and set array size to n doubles.
-
    fArray = 0;
    if (n > 0) Set(n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TArrayD object and initialize it with values of array.
+
 TArrayD::TArrayD(Int_t n, const Double_t *array)
 {
-   // Create TArrayD object and initialize it with values of array.
-
    fArray = 0;
    Set(n, array);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TArrayD::TArrayD(const TArrayD &array) : TArray(array)
 {
-   // Copy constructor.
-
    fArray = 0;
    Set(array.fN, array.fArray);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TArrayD assignment operator.
+
 TArrayD &TArrayD::operator=(const TArrayD &rhs)
 {
-   // TArrayD assignment operator.
-
    if (this != &rhs)
       Set(rhs.fN, rhs.fArray);
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete TArrayD object.
+
 TArrayD::~TArrayD()
 {
-   // Delete TArrayD object.
-
    delete [] fArray;
    fArray = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adopt array arr into TArrayD, i.e. don't copy arr but use it directly
+/// in TArrayD. User may not delete arr, TArrayD dtor will do it.
+
 void TArrayD::Adopt(Int_t n, Double_t *arr)
 {
-   // Adopt array arr into TArrayD, i.e. don't copy arr but use it directly
-   // in TArrayD. User may not delete arr, TArrayD dtor will do it.
-
    if (fArray)
       delete [] fArray;
 
@@ -90,23 +90,23 @@ void TArrayD::Adopt(Int_t n, Double_t *arr)
    fArray = arr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add double c at position i. Check for out of bounds.
+
 void TArrayD::AddAt(Double_t c, Int_t i)
 {
-   // Add double c at position i. Check for out of bounds.
-
    if (!BoundsOk("TArrayD::AddAt", i)) return;
    fArray[i] = c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of this array to n doubles.
+/// A new array is created, the old contents copied to the new array,
+/// then the old array is deleted.
+/// This function should not be called if the array was declared via Adopt.
+
 void TArrayD::Set(Int_t n)
 {
-   // Set size of this array to n doubles.
-   // A new array is created, the old contents copied to the new array,
-   // then the old array is deleted.
-   // This function should not be called if the array was declared via Adopt.
-
    if (n < 0) return;
    if (n != fN) {
       Double_t *temp = fArray;
@@ -125,12 +125,12 @@ void TArrayD::Set(Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of this array to n doubles and set the contents
+/// This function should not be called if the array was declared via Adopt.
+
 void TArrayD::Set(Int_t n, const Double_t *array)
 {
-   // Set size of this array to n doubles and set the contents
-   // This function should not be called if the array was declared via Adopt.
-
    if (fArray && fN != n) {
       delete [] fArray;
       fArray = 0;
@@ -142,11 +142,11 @@ void TArrayD::Set(Int_t n, const Double_t *array)
    memmove(fArray, array, n*sizeof(Double_t));
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a TArrayD object.
+
 void TArrayD::Streamer(TBuffer &b)
 {
-   // Stream a TArrayD object.
-
    if (b.IsReading()) {
       Int_t n;
       b >> n;

@@ -37,7 +37,8 @@ Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 ClassImp(TGraphPainter);
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>The graph painter class</h2></center>
 
@@ -557,7 +558,8 @@ Begin_Html
 End_Html */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGraphPainter::TGraphPainter()
 {
    /* Begin_Html
@@ -566,7 +568,8 @@ TGraphPainter::TGraphPainter()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGraphPainter::~TGraphPainter()
 {
    /* Begin_Html
@@ -575,7 +578,8 @@ TGraphPainter::~TGraphPainter()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::ComputeLogs(Int_t npoints, Int_t opt)
 {
    /* Begin_Html
@@ -608,7 +612,8 @@ void TGraphPainter::ComputeLogs(Int_t npoints, Int_t opt)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TGraphPainter::DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t py)
 {
    /* Begin_Html
@@ -695,7 +700,8 @@ Int_t TGraphPainter::DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::DrawPanelHelper(TGraph *theGraph)
 {
    /* Begin_html
@@ -713,7 +719,8 @@ void TGraphPainter::DrawPanelHelper(TGraph *theGraph)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, Int_t py)
 {
    /* Begin_Html
@@ -1003,14 +1010,16 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 char *TGraphPainter::GetObjectInfoHelper(TGraph * /*theGraph*/, Int_t /*px*/, Int_t /*py*/) const
 {
    return (char*)"";
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
 {
    /* Begin_Html
@@ -1038,7 +1047,8 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
 {
    /* Begin_Html
@@ -1427,7 +1437,8 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_t *x,
                                   const Double_t *y, Option_t *chopt)
 {
@@ -2210,7 +2221,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 {
    /* Begin_Html
@@ -2458,7 +2470,8 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 {
    /* Begin_Html
@@ -2715,7 +2728,8 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 {
    /* Begin_Html
@@ -2963,7 +2977,8 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
 {
    /* Begin_Html
@@ -3258,7 +3273,8 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::PaintGraphQQ(TGraph *theGraph, Option_t *option)
 {
    /* Begin_Html
@@ -3319,7 +3335,8 @@ void TGraphPainter::PaintGraphQQ(TGraph *theGraph, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
 {
    /* Begin_Html
@@ -3354,7 +3371,8 @@ void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double_t *x, const Double_t *y)
 {
    /* Begin_Html
@@ -3564,7 +3582,8 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
 {
    /* Begin_Html
@@ -3659,7 +3678,8 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype)
 {
    /* Begin_Html

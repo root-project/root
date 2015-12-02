@@ -79,23 +79,25 @@ ClassImp(TGedEditor)
 
 TGedEditor* TGedEditor::fgFrameCreator = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns TGedEditor that currently creates TGedFrames.
+
 TGedEditor* TGedEditor::GetFrameCreator()
 {
-   // Returns TGedEditor that currently creates TGedFrames.
-
    return fgFrameCreator;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the TGedEditor that currently creates TGedFrames.
+
 void TGedEditor::SetFrameCreator(TGedEditor* e)
 {
-   // Set the TGedEditor that currently creates TGedFrames.
-
    fgFrameCreator = e;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of graphics editor.
+
 TGedEditor::TGedEditor(TCanvas* canvas, UInt_t width, UInt_t height) :
    TGMainFrame(gClient->GetRoot(), width, height),
    fCan          (0),
@@ -107,8 +109,6 @@ TGedEditor::TGedEditor(TCanvas* canvas, UInt_t width, UInt_t height) :
    fClass        (0),
    fGlobal       (kTRUE)
 {
-   // Constructor of graphics editor.
-
    fCan = new TGCanvas(this, 170, 10, kFixedWidth);
    AddFrame(fCan, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
 
@@ -136,11 +136,11 @@ TGedEditor::TGedEditor(TCanvas* canvas, UInt_t width, UInt_t height) :
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Editor destructor.
+
 TGedEditor::~TGedEditor()
 {
-   // Editor destructor.
-
    Hide();
 
    if(fGlobal){
@@ -170,31 +170,31 @@ TGedEditor::~TGedEditor()
    delete fCan;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual method that is called on any change in the dependent frames.
+/// This implementation simply calls fPad Modified()/Update().
+
 void TGedEditor::Update(TGedFrame* /*frame*/)
 {
-   // Virtual method that is called on any change in the dependent frames.
-   // This implementation simply calls fPad Modified()/Update().
-
    if (fPad) {
       fPad->Modified();
       fPad->Update();
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find or create tab with name.
+
 TGCompositeFrame* TGedEditor::GetEditorTab(const char* name)
 {
-   // Find or create tab with name.
-
    return GetEditorTabInfo(name)->fContainer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find or create tab with name.
+
 TGedTabInfo* TGedEditor::GetEditorTabInfo(const char* name)
 {
-   // Find or create tab with name.
-
    // look in list of created tabs
    if ( ! fCreatedTabs.IsEmpty()) {
       TIter next(&fCreatedTabs);
@@ -227,21 +227,21 @@ TGedTabInfo* TGedEditor::GetEditorTabInfo(const char* name)
    return ti;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when closed via WM close button. Calls Hide().
+
 void TGedEditor::CloseWindow()
 {
-   // Called when closed via WM close button. Calls Hide().
-
    Hide();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clears windows in editor tab.
+/// Unmap and withdraw currently shown frames and thus prepare for
+/// construction of a new class layout or destruction.
+
 void TGedEditor::ReinitWorkspace()
 {
-   // Clears windows in editor tab.
-   // Unmap and withdraw currently shown frames and thus prepare for
-   // construction of a new class layout or destruction.
-
    TIter next(&fVisibleTabs);
    TGedTabInfo* ti;
    while ((ti = (TGedTabInfo*)next())) {
@@ -265,11 +265,11 @@ void TGedEditor::ReinitWorkspace()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set editor global.
+
 void TGedEditor::SetGlobal(Bool_t global)
 {
-   // Set editor global.
-
    fGlobal = global;
    if (fGlobal) {
       TQObject::Connect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)",
@@ -280,20 +280,20 @@ void TGedEditor::SetGlobal(Bool_t global)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete global editor if no canvas exists.
+
 void TGedEditor::GlobalClosed()
 {
-   // Delete global editor if no canvas exists.
-
    if (gROOT->GetListOfCanvases()->IsEmpty())
       TVirtualPadEditor::Terminate();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set canvas to global editor.
+
 void TGedEditor::GlobalSetModel(TVirtualPad *pad, TObject * obj, Int_t ev)
 {
-   // Set canvas to global editor.
-
    if ((ev != kButton1Down) || !IsMapped() ||
        (obj && obj->InheritsFrom("TColorWheel")))
       return;
@@ -307,29 +307,29 @@ void TGedEditor::GlobalSetModel(TVirtualPad *pad, TObject * obj, Int_t ev)
    Show();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect this editor to the Selected signal of canvas 'c'.
+
 void TGedEditor::ConnectToCanvas(TCanvas *c)
 {
-   // Connect this editor to the Selected signal of canvas 'c'.
-
    c->Connect("Selected(TVirtualPad*,TObject*,Int_t)", "TGedEditor",
               this, "SetModel(TVirtualPad*,TObject*,Int_t)");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnect this editor from the Selected signal of fCanvas.
+
 void TGedEditor::DisconnectFromCanvas()
 {
-   // Disconnect this editor from the Selected signal of fCanvas.
-
    if (fCanvas)
       Disconnect(fCanvas, "Selected(TVirtualPad*,TObject*,Int_t)", this, "SetModel(TVirtualPad*,TObject*,Int_t)");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change connection to another canvas.
+
 void TGedEditor::SetCanvas(TCanvas *newcan)
 {
-   // Change connection to another canvas.
-
    if (fCanvas == newcan) return;
 
    DisconnectFromCanvas();
@@ -343,11 +343,11 @@ void TGedEditor::SetCanvas(TCanvas *newcan)
    ConnectToCanvas(fCanvas);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate object editors according to the selected object.
+
 void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
 {
-   // Activate object editors according to the selected object.
-
    if ((event != kButton1Down) || (obj && obj->InheritsFrom("TColorWheel")))
       return;
 
@@ -418,11 +418,11 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kPointer));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show editor.
+
 void TGedEditor::Show()
 {
-   // Show editor.
-
    // gPad is setup properly in calling code for global and canvas editor.
    if (gPad) SetCanvas(gPad->GetCanvas());
 
@@ -464,11 +464,11 @@ void TGedEditor::Show()
       gROOT->GetListOfCleanups()->Add(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hide editor. The editor is put into non-active state.
+
 void TGedEditor::Hide()
 {
-   // Hide editor. The editor is put into non-active state.
-
    UnmapWindow();
    ReinitWorkspace();
    fModel = 0; fClass = 0;
@@ -477,12 +477,12 @@ void TGedEditor::Hide()
    gROOT->GetListOfCleanups()->Remove(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove references to fModel in case the fModel is being deleted.
+/// Deactivate attribute frames if they point to obj.
+
 void TGedEditor::RecursiveRemove(TObject* obj)
 {
-   // Remove references to fModel in case the fModel is being deleted.
-   // Deactivate attribute frames if they point to obj.
-
    if (obj == fPad) {
       // printf("TGedEditor::RecursiveRemove: %s - pad deleted.\n", locglob);
       SetModel(fCanvas, fCanvas, kButton1Down);
@@ -496,12 +496,12 @@ void TGedEditor::RecursiveRemove(TObject* obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Searches for GedFrames for given class. In recursive mode look for class
+/// editor in its list of bases.
+
 void TGedEditor::ActivateEditor(TClass* cl, Bool_t recurse)
 {
-   // Searches for GedFrames for given class. In recursive mode look for class
-   // editor in its list of bases.
-
    TPair     *pair = (TPair*) fFrameMap.FindObject(cl);
    TClass    *edClass = 0;
    TGedFrame *frame = 0;
@@ -558,11 +558,11 @@ void TGedEditor::ActivateEditor(TClass* cl, Bool_t recurse)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Searches GedFrames for classes in the given list.
+
 void TGedEditor::ActivateEditors(TList* bcl, Bool_t recurse)
 {
-   // Searches GedFrames for classes in the given list.
-
    TBaseClass *base;
    TIter next(bcl);
 
@@ -571,12 +571,12 @@ void TGedEditor::ActivateEditors(TList* bcl, Bool_t recurse)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exclude editor for class cl from current construction.
+/// If recurse is true the base-class editors of cl are also excluded.
+
 void  TGedEditor::ExcludeClassEditor(TClass* cl, Bool_t recurse)
 {
-   // Exclude editor for class cl from current construction.
-   // If recurse is true the base-class editors of cl are also excluded.
-
    TPair* pair = (TPair*) fExclMap.FindObject(cl);
    if (pair) {
       if (recurse && pair->Value() == 0)
@@ -586,11 +586,11 @@ void  TGedEditor::ExcludeClassEditor(TClass* cl, Bool_t recurse)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert GedFrame in fGedFrames list according to priorities.
+
 void TGedEditor::InsertGedFrame(TGedFrame* f)
 {
-   // Insert GedFrame in fGedFrames list according to priorities.
-
    // printf("%s %s  insert gedframe %s \n", fModel->GetName(), fModel->IsA()->GetName(),f->GetModelClass()->GetName());
    TObjLink* lnk = fGedFrames.FirstLink();
    if (lnk == 0) {
@@ -609,11 +609,11 @@ void TGedEditor::InsertGedFrame(TGedFrame* f)
    fGedFrames.Add(f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call SetModel in class editors.
+
 void TGedEditor::ConfigureGedFrames(Bool_t objChanged)
 {
-   // Call SetModel in class editors.
-
    TGFrameElement *el;
 
    // Call SetModel on TGedNameFrames (first in the container list)
@@ -653,19 +653,19 @@ void TGedEditor::ConfigureGedFrames(Bool_t objChanged)
    fTabContainer->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual function for creation of top name-frame in each tab.
+
 TGedFrame* TGedEditor::CreateNameFrame(const TGWindow* parent, const char* /*tab_name*/)
 {
-   // Virtual function for creation of top name-frame in each tab.
-
    return new TGedNameFrame(parent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print contents of fFrameMap.
+
 void TGedEditor::PrintFrameStat()
 {
-   // Print contents of fFrameMap.
-
    printf("TGedEditor::PrintFrameStat()\n");
    Int_t sum = 0;
    TIter next(fFrameMap.GetTable());

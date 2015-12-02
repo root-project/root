@@ -33,29 +33,29 @@ ClassImp(TWbox)
 //End_Html
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// wbox default constructor.
+
 TWbox::TWbox(): TBox()
 {
-   // wbox default constructor.
-
    fBorderSize  = 0;
    fBorderMode  = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// wbox normal constructor.
+///
+/// a WBOX is a box with a bordersize and a bordermode
+/// the bordersize is in pixels
+/// bordermode = -1 box looks as it is behind the screen
+/// bordermode = 0  no special effects
+/// bordermode = 1  box looks as it is in front of the screen
+
 TWbox::TWbox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
              Color_t color ,Short_t bordersize ,Short_t bordermode)
        :TBox(x1,y1,x2,y2)
 {
-   // wbox normal constructor.
-   //
-   // a WBOX is a box with a bordersize and a bordermode
-   // the bordersize is in pixels
-   // bordermode = -1 box looks as it is behind the screen
-   // bordermode = 0  no special effects
-   // bordermode = 1  box looks as it is in front of the screen
-
    fBorderSize  = bordersize;
    fBorderMode  = bordermode;
    SetFillColor(color);
@@ -63,82 +63,83 @@ TWbox::TWbox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// wbox default destructor.
+
 TWbox::~TWbox()
 {
-   // wbox default destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// wbox copy constructor.
+
 TWbox::TWbox(const TWbox &wbox) : TBox(wbox)
 {
-   // wbox copy constructor.
-
    fBorderSize  = 0;
    fBorderMode  = 0;
    ((TWbox&)wbox).Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this wbox to wbox.
+
 void TWbox::Copy(TObject &obj) const
 {
-   // Copy this wbox to wbox.
-
    TBox::Copy(obj);
    ((TWbox&)obj).fBorderSize  = fBorderSize;
    ((TWbox&)obj).fBorderMode  = fBorderMode;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this wbox with its current attributes.
+
 void TWbox::Draw(Option_t *option)
 {
-   // Draw this wbox with its current attributes.
-
    AppendPad(option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this wbox with new coordinates.
+
 void TWbox::DrawWbox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                      Color_t color ,Short_t bordersize ,Short_t bordermode)
 {
-   // Draw this wbox with new coordinates.
-
    TWbox *newwbox = new TWbox(x1,y1,x2,y2,color,bordersize,bordermode);
    newwbox->SetBit(kCanDelete);
    newwbox->AppendPad();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+///  This member function is called when a WBOX object is clicked.
+
 void TWbox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
-   //
-   //  This member function is called when a WBOX object is clicked.
-
    TBox::ExecuteEvent(event, px, py);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this wbox with its current attributes.
+
 void TWbox::Paint(Option_t *)
 {
-   // Paint this wbox with its current attributes.
-
    PaintWbox(fX1, fY1, fX2, fY2, GetFillColor(), fBorderSize, fBorderMode);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this wbox with new coordinates.
+
 void TWbox::PaintWbox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
                       Color_t color, Short_t bordersize, Short_t bordermode)
 {
-   // Draw this wbox with new coordinates.
-
    // Draw first wbox as a normal filled box
    TBox::PaintBox(x1, y1, x2, y2);
 
@@ -148,13 +149,13 @@ void TWbox::PaintWbox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a 3D frame around a box.
+
 void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                        Color_t color, Short_t bordersize, Short_t bordermode,
                        Bool_t tops)
 {
-   // Paint a 3D frame around a box.
-
    if (bordermode == 0) return;
    if (bordersize <= 0) bordersize = 2;
 
@@ -218,11 +219,11 @@ void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TWbox::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    if (gROOT->ClassSaved(TWbox::Class())) {
       out<<"   ";
    } else {

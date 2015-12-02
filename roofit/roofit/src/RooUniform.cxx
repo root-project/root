@@ -38,7 +38,8 @@ using namespace std;
 ClassImp(RooUniform)
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooUniform::RooUniform(const char *name, const char *title, const RooArgSet& _x) :
   RooAbsPdf(name,title),
   x("x","Observables",this,kTRUE,kFALSE)
@@ -48,7 +49,8 @@ RooUniform::RooUniform(const char *name, const char *title, const RooArgSet& _x)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooUniform::RooUniform(const RooUniform& other, const char* name) : 
   RooAbsPdf(other,name), x("x",this,other.x)
 {
@@ -56,7 +58,8 @@ RooUniform::RooUniform(const RooUniform& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooUniform::evaluate() const
 {
   return 1 ;
@@ -64,11 +67,11 @@ Double_t RooUniform::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Advertise analytical integral
+
 Int_t RooUniform::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
-  // Advertise analytical integral
-
   Int_t nx = x.getSize() ;
   if (nx>31) {
     // Warn that analytical integration is only provided for the first 31 observables
@@ -89,10 +92,11 @@ Int_t RooUniform::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement analytical integral
+
 Double_t RooUniform::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-  // Implement analytical integral
   Double_t ret(1) ;
   for (int i=0 ; i<32 ; i++) {
     if (code&(1<<i)) {
@@ -106,11 +110,11 @@ Double_t RooUniform::analyticalIntegral(Int_t code, const char* rangeName) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Advertise internal generator 
+
 Int_t RooUniform::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
-  // Advertise internal generator 
-
   Int_t nx = x.getSize() ;
   if (nx>31) {
     // Warn that analytical integration is only provided for the first 31 observables
@@ -132,11 +136,11 @@ Int_t RooUniform::getGenerator(const RooArgSet& directVars, RooArgSet &generateV
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement internal generator
+
 void RooUniform::generateEvent(Int_t code)
 {
-  // Implement internal generator
-
   // Fast-track handling of one-observable case
   if (code==1) {
     ((RooAbsRealLValue*)x.at(0))->randomize() ;

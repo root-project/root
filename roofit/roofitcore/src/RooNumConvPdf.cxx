@@ -86,7 +86,8 @@ ClassImp(RooNumConvPdf)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNumConvPdf::RooNumConvPdf() :
   _init(kFALSE),
   _conv(0)
@@ -117,7 +118,9 @@ RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& co
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
   RooAbsPdf(other,name), 
   _init(kFALSE),
@@ -125,8 +128,6 @@ RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
   _origPdf("!origPdf",this,other._origPdf),
   _origModel("!origModel",this,other._origModel)
 {
-  // Copy constructor
-
   // Make temporary clone of original convolution to preserve configuration information
   // This information will be propagated to a newly create convolution in a subsequent
   // call to initialize() 
@@ -139,10 +140,11 @@ RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooNumConvPdf::~RooNumConvPdf() 
 {
-  // Destructor
   if (_init) {
     delete _conv ;
   }
@@ -150,11 +152,11 @@ RooNumConvPdf::~RooNumConvPdf()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return value of p.d.f
+
 Double_t RooNumConvPdf::evaluate() const
 {
-  // Calculate and return value of p.d.f
-
   if (!_init) initialize() ;
 
   return _conv->evaluate() ;
@@ -162,11 +164,11 @@ Double_t RooNumConvPdf::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// One-time initialization of object
+
 void RooNumConvPdf::initialize() const
 {
-  // One-time initialization of object
-
   // Save pointer to any prototype convolution object (only present if this object is made through
   // a copy constructor) 
   RooNumConvolution* protoConv = _conv ;
@@ -184,15 +186,15 @@ void RooNumConvPdf::initialize() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return appropriate generator context for this convolved p.d.f. If both pdf and resolution
+/// model support internal generation return and optimization convolution generation context
+/// that uses a smearing algorithm. Otherwise return a standard accept/reject sampling
+/// context on the convoluted shape.
+
 RooAbsGenContext* RooNumConvPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					    const RooArgSet* auxProto, Bool_t verbose) const 
 {
-  // Return appropriate generator context for this convolved p.d.f. If both pdf and resolution
-  // model support internal generation return and optimization convolution generation context
-  // that uses a smearing algorithm. Otherwise return a standard accept/reject sampling
-  // context on the convoluted shape.
-
   if (!_init) initialize() ;
 
   // Check if physics PDF and resolution model can both directly generate the convolution variable
@@ -219,11 +221,11 @@ RooAbsGenContext* RooNumConvPdf::genContext(const RooArgSet &vars, const RooData
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Customized printing of arguments of a RooNumConvPdf to more intuitively reflect the contents of the
+/// product operator construction
+
 void RooNumConvPdf::printMetaArgs(ostream& os) const 
 {
-  // Customized printing of arguments of a RooNumConvPdf to more intuitively reflect the contents of the
-  // product operator construction
-
   os << _origPdf.arg().GetName() << "(" << _origVar.arg().GetName() << ") (*) " << _origModel.arg().GetName() << "(" << _origVar.arg().GetName() << ") " ;
 }

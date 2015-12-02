@@ -34,11 +34,11 @@
 
 ClassImp(TSpectrumFit)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///default constructor
+
 TSpectrumFit::TSpectrumFit() :TNamed("SpectrumFit", "Miroslav Morhac peak fitter")
 {
-   //default constructor
-
    fNPeaks = 0;
    fNumberIterations = 1;
    fXmin = 0;
@@ -89,13 +89,14 @@ TSpectrumFit::TSpectrumFit() :TNamed("SpectrumFit", "Miroslav Morhac peak fitter
    fFixA2 = true;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///numberPeaks: number of fitted peaks (must be greater than zero)
+///the constructor allocates arrays for all fitted parameters (peak positions, amplitudes etc) and sets the member
+///variables to their default values. One can change these variables by member functions (setters) of TSpectrumFit class.
+///Begin_Html <!--
+
 TSpectrumFit::TSpectrumFit(Int_t numberPeaks) :TNamed("SpectrumFit", "Miroslav Morhac peak fitter")
 {
-   //numberPeaks: number of fitted peaks (must be greater than zero)
-   //the constructor allocates arrays for all fitted parameters (peak positions, amplitudes etc) and sets the member
-   //variables to their default values. One can change these variables by member functions (setters) of TSpectrumFit class.
-//Begin_Html <!--
 /* -->
 <div class=Section1>
 
@@ -199,10 +200,11 @@ T, S and slope B).</p>
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TSpectrumFit::~TSpectrumFit()
 {
-   //destructor
    delete [] fPositionInit;
    delete [] fPositionCalc;
    delete [] fPositionErr;
@@ -243,15 +245,16 @@ Double_t TSpectrumFit::Erfc(Double_t x)
    return (c);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                      //
+///                                                                          //
+///   This function calculates derivative of error function of x.             //
+///                                                                          //
+///////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrumFit::Derfc(Double_t x)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                      //
-//                                                                          //
-//   This function calculates derivative of error function of x.             //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
    Double_t a, t, c, w;
    Double_t da1 = 0.1740121, da2 = -0.0479399, da3 = 0.3739278, dap = 0.47047;
    a = TMath::Abs(x);
@@ -269,23 +272,24 @@ Double_t TSpectrumFit::Derfc(Double_t x)
    return (c);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                      //
+///                                                                          //
+///   This function calculates derivative of peak shape function (see manual) //
+///   according to amplitude of peak.                                        //
+///      Function parameters:                                                //
+///              -i-channel                                                  //
+///              -i0-position of peak                                        //
+///              -sigma-sigma of peak                                        //
+///              -t, s-relative amplitudes                                   //
+///              -b-slope                                                    //
+///                                                                          //
+///////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrumFit::Deramp(Double_t i, Double_t i0, Double_t sigma, Double_t t,
                            Double_t s, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                      //
-//                                                                          //
-//   This function calculates derivative of peak shape function (see manual) //
-//   according to amplitude of peak.                                        //
-//      Function parameters:                                                //
-//              -i-channel                                                  //
-//              -i0-position of peak                                        //
-//              -sigma-sigma of peak                                        //
-//              -t, s-relative amplitudes                                   //
-//              -b-slope                                                    //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
    Double_t p, q, r, a;
    p = (i - i0) / sigma;
    if ((p * p) < 700)
@@ -309,24 +313,25 @@ Double_t TSpectrumFit::Deramp(Double_t i, Double_t i0, Double_t sigma, Double_t 
    return (q);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                      //
+///                                                                          //
+///   This function calculates derivative of peak shape function (see manual) //
+///   according to peak position.                                            //
+///      Function parameters:                                                //
+///              -i-channel                                                  //
+///              -amp-amplitude of peak                                      //
+///              -i0-position of peak                                        //
+///              -sigma-sigma of peak                                        //
+///              -t, s-relative amplitudes                                   //
+///              -b-slope                                                    //
+///                                                                          //
+///////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrumFit::Deri0(Double_t i, Double_t amp, Double_t i0, Double_t sigma,
                           Double_t t, Double_t s, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                      //
-//                                                                          //
-//   This function calculates derivative of peak shape function (see manual) //
-//   according to peak position.                                            //
-//      Function parameters:                                                //
-//              -i-channel                                                  //
-//              -amp-amplitude of peak                                      //
-//              -i0-position of peak                                        //
-//              -sigma-sigma of peak                                        //
-//              -t, s-relative amplitudes                                   //
-//              -b-slope                                                    //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
    Double_t p, r1, r2, r3, r4, c, d, e;
    p = (i - i0) / sigma;
    d = 2. * sigma;
@@ -352,22 +357,23 @@ Double_t TSpectrumFit::Deri0(Double_t i, Double_t amp, Double_t i0, Double_t sig
    return (r1);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                      //
+///                                                                          //
+///   This function calculates second derivative of peak shape function       //
+///   (see manual) according to peak position.                               //
+///      Function parameters:                                                //
+///              -i-channel                                                  //
+///              -amp-amplitude of peak                                      //
+///              -i0-position of peak                                        //
+///              -sigma-width of peak                                        //
+///                                                                          //
+///////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrumFit::Derderi0(Double_t i, Double_t amp, Double_t i0,
                              Double_t sigma)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                      //
-//                                                                          //
-//   This function calculates second derivative of peak shape function       //
-//   (see manual) according to peak position.                               //
-//      Function parameters:                                                //
-//              -i-channel                                                  //
-//              -amp-amplitude of peak                                      //
-//              -i0-position of peak                                        //
-//              -sigma-width of peak                                        //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
    Double_t p, r1, r2, r3, r4;
    p = (i - i0) / sigma;
    if ((p * p) < 700)
@@ -382,25 +388,26 @@ Double_t TSpectrumFit::Derderi0(Double_t i, Double_t amp, Double_t i0,
    return (r1);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to sigma of peaks.                                               //
+///      Function parameters:                                                    //
+///              -num_of_fitted_peaks-number of fitted peaks                     //
+///              -i-channel                                                      //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigma-sigma of peak                                            //
+///              -t, s-relative amplitudes                                       //
+///              -b-slope                                                        //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrumFit::Dersigma(Int_t num_of_fitted_peaks, Double_t i,
                              const Double_t *parameter, Double_t sigma,
                              Double_t t, Double_t s, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to sigma of peaks.                                               //
-//      Function parameters:                                                    //
-//              -num_of_fitted_peaks-number of fitted peaks                     //
-//              -i-channel                                                      //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigma-sigma of peak                                            //
-//              -t, s-relative amplitudes                                       //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t j;
    Double_t r, p, r1, r2, r3, r4, c, d, e;
    r = 0;
@@ -433,22 +440,23 @@ Double_t TSpectrumFit::Dersigma(Int_t num_of_fitted_peaks, Double_t i,
    return (r);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates second derivative of peaks shape function          //
+///   (see manual) according to sigma of peaks.                                  //
+///      Function parameters:                                                    //
+///              -num_of_fitted_peaks-number of fitted peaks                     //
+///              -i-channel                                                      //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigma-sigma of peak                                            //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrumFit::Derdersigma(Int_t num_of_fitted_peaks, Double_t i,
                                const Double_t *parameter, Double_t sigma)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates second derivative of peaks shape function          //
-//   (see manual) according to sigma of peaks.                                  //
-//      Function parameters:                                                    //
-//              -num_of_fitted_peaks-number of fitted peaks                     //
-//              -i-channel                                                      //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigma-sigma of peak                                            //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t j;
    Double_t r, p, r1, r2, r3, r4;
    r = 0;
@@ -469,23 +477,24 @@ Double_t TSpectrumFit::Derdersigma(Int_t num_of_fitted_peaks, Double_t i,
    return (r);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to relative amplitude t.                                         //
+///      Function parameters:                                                    //
+///              -num_of_fitted_peaks-number of fitted peaks                     //
+///              -i-channel                                                      //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigma-sigma of peak                                            //
+///              -b-slope                                                        //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrumFit::Dert(Int_t num_of_fitted_peaks, Double_t i,
                         const Double_t *parameter, Double_t sigma, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to relative amplitude t.                                         //
-//      Function parameters:                                                    //
-//              -num_of_fitted_peaks-number of fitted peaks                     //
-//              -i-channel                                                      //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigma-sigma of peak                                            //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t j;
    Double_t r, p, r1, c, e;
    r = 0;
@@ -502,22 +511,23 @@ Double_t TSpectrumFit::Dert(Int_t num_of_fitted_peaks, Double_t i,
    return (r);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to relative amplitude s.                                               //
+///      Function parameters:                                                    //
+///              -num_of_fitted_peaks-number of fitted peaks                     //
+///              -i-channel                                                      //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigma-sigma of peak                                            //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrumFit::Ders(Int_t num_of_fitted_peaks, Double_t i,
                         const Double_t *parameter, Double_t sigma)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to relative amplitude s.                                               //
-//      Function parameters:                                                    //
-//              -num_of_fitted_peaks-number of fitted peaks                     //
-//              -i-channel                                                      //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigma-sigma of peak                                            //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t j;
    Double_t r, p, r1;
    r = 0;
@@ -530,25 +540,26 @@ Double_t TSpectrumFit::Ders(Int_t num_of_fitted_peaks, Double_t i,
    return (r);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to slope b.                                                      //
+///      Function parameters:                                                    //
+///              -num_of_fitted_peaks-number of fitted peaks                     //
+///              -i-channel                                                      //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigma-sigma of peak                                            //
+///              -t-relative amplitude                                           //
+///              -b-slope                                                        //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrumFit::Derb(Int_t num_of_fitted_peaks, Double_t i,
                         const Double_t *parameter, Double_t sigma, Double_t t,
                         Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to slope b.                                                      //
-//      Function parameters:                                                    //
-//              -num_of_fitted_peaks-number of fitted peaks                     //
-//              -i-channel                                                      //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigma-sigma of peak                                            //
-//              -t-relative amplitude                                           //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t j;
    Double_t r, p, r1, c, e;
    r = 0;
@@ -571,40 +582,43 @@ Double_t TSpectrumFit::Derb(Int_t num_of_fitted_peaks, Double_t i,
    return (r);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///derivative of background according to a1
+
 Double_t TSpectrumFit::Dera1(Double_t i)
 {
-   //derivative of background according to a1
    return (i);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///derivative of background according to a2
+
 Double_t TSpectrumFit::Dera2(Double_t i)
 {
-   //derivative of background according to a2
    return (i * i);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates peaks shape function (see manual)                  //
+///      Function parameters:                                                    //
+///              -num_of_fitted_peaks-number of fitted peaks                     //
+///              -i-channel                                                      //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigma-sigma of peak                                            //
+///              -t, s-relative amplitudes                                       //
+///              -b-slope                                                        //
+///              -a0, a1, a2- background coefficients                            //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrumFit::Shape(Int_t num_of_fitted_peaks, Double_t i,
                          const Double_t *parameter, Double_t sigma, Double_t t,
                          Double_t s, Double_t b, Double_t a0, Double_t a1,
                          Double_t a2)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates peaks shape function (see manual)                  //
-//      Function parameters:                                                    //
-//              -num_of_fitted_peaks-number of fitted peaks                     //
-//              -i-channel                                                      //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigma-sigma of peak                                            //
-//              -t, s-relative amplitudes                                       //
-//              -b-slope                                                        //
-//              -a0, a1, a2- background coefficients                            //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t j;
    Double_t r, p, r1, r2, r3, c, e;
    r = 0;
@@ -645,20 +659,21 @@ Double_t TSpectrumFit::Shape(Int_t num_of_fitted_peaks, Double_t i,
    return (r);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates area of a peak                                     //
+///      Function parameters:                                                    //
+///              -a-amplitude of the peak                                        //
+///              -sigma-sigma of peak                                            //
+///              -t-relative amplitude                                           //
+///              -b-slope                                                        //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrumFit::Area(Double_t a, Double_t sigma, Double_t t, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates area of a peak                                     //
-//      Function parameters:                                                    //
-//              -a-amplitude of the peak                                        //
-//              -sigma-sigma of peak                                            //
-//              -t-relative amplitude                                           //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t odm_pi = 1.7724538, r = 0;
    if (b != 0)
       r = 0.5 / b;
@@ -672,20 +687,21 @@ Double_t TSpectrumFit::Area(Double_t a, Double_t sigma, Double_t t, Double_t b)
    return (r);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of the area of peak                     //
+///   according to its amplitude.                                                //
+///      Function parameters:                                                    //
+///              -sigma-sigma of peak                                            //
+///              -t-relative amplitudes                                          //
+///              -b-slope                                                        //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrumFit::Derpa(Double_t sigma, Double_t t, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of the area of peak                     //
-//   according to its amplitude.                                                //
-//      Function parameters:                                                    //
-//              -sigma-sigma of peak                                            //
-//              -t-relative amplitudes                                          //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t odm_pi = 1.7724538, r;
    r = 0.5 / b;
    r = (-1.) * r * r;
@@ -722,20 +738,21 @@ Double_t TSpectrumFit::Derpsigma(Double_t a, Double_t t, Double_t b)
    return (r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of the area of peak                     //
+///   according to t parameter.                                                  //
+///      Function parameters:                                                    //
+///              -sigma-sigma of peak                                            //
+///              -t-relative amplitudes                                          //
+///              -b-slope                                                        //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrumFit::Derpt(Double_t a, Double_t sigma, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of the area of peak                     //
-//   according to t parameter.                                                  //
-//      Function parameters:                                                    //
-//              -sigma-sigma of peak                                            //
-//              -t-relative amplitudes                                          //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t r;
    r = 0.5 / b;
    r = (-1.) * r * r;
@@ -748,20 +765,21 @@ Double_t TSpectrumFit::Derpt(Double_t a, Double_t sigma, Double_t b)
    return (r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of the area of peak                     //
+///   according to b parameter.                                                  //
+///      Function parameters:                                                    //
+///              -sigma-sigma of peak                                            //
+///              -t-relative amplitudes                                          //
+///              -b-slope                                                        //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrumFit::Derpb(Double_t a, Double_t sigma, Double_t t, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of the area of peak                     //
-//   according to b parameter.                                                  //
-//      Function parameters:                                                    //
-//              -sigma-sigma of peak                                            //
-//              -t-relative amplitudes                                          //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t r;
    r = (-1) * 0.25 / (b * b);
    if (TMath::Abs(r) < 700)
@@ -773,10 +791,11 @@ Double_t TSpectrumFit::Derpb(Double_t a, Double_t sigma, Double_t t, Double_t b)
    return (r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///power function
+
 Double_t TSpectrumFit::Ourpowl(Double_t a, Int_t pw)
 {
-   //power function
    Double_t c;
    Double_t a2 = a*a;
    c = 1;
@@ -793,24 +812,25 @@ Double_t TSpectrumFit::Ourpowl(Double_t a, Int_t pw)
 /////////////////END OF AUXILIARY FUNCTIONS USED BY FITTING FUNCTIONS FitAWMI, FitStiefel//////////////////////////
 /////////////////FITTING FUNCTION WITHOUT MATRIX INVERSION///////////////////////////////////////
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+///        ONE-DIMENSIONAL FIT FUNCTION
+///        ALGORITHM WITHOUT MATRIX INVERSION
+///        This function fits the source spectrum. The calling program should
+///        fill in input parameters of the TSpectrumFit class
+///        The fitted parameters are written into
+///        TSpectrumFit class output parameters and fitted data are written into
+///        source spectrum.
+///
+///        Function parameters:
+///        source-pointer to the vector of source spectrum
+///
+//////////////////////////////////////////////////////////////////////////////
+///
+///Begin_Html <!--
+
 void TSpectrumFit::FitAwmi(Double_t *source)
 {
-/////////////////////////////////////////////////////////////////////////////
-//        ONE-DIMENSIONAL FIT FUNCTION
-//        ALGORITHM WITHOUT MATRIX INVERSION
-//        This function fits the source spectrum. The calling program should
-//        fill in input parameters of the TSpectrumFit class
-//        The fitted parameters are written into
-//        TSpectrumFit class output parameters and fitted data are written into
-//        source spectrum.
-//
-//        Function parameters:
-//        source-pointer to the vector of source spectrum
-//
-/////////////////////////////////////////////////////////////////////////////
-//
-//Begin_Html <!--
 /* -->
 <div class=Section2>
 
@@ -2194,23 +2214,24 @@ pm-&gt;SetMarkerSize(1);   </span></p>
 
 /////////////////FITTING FUNCTION WITH MATRIX INVERSION///////////////////////////////////////
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates solution of the system of linear equations.        //
+///   The matrix a should have a dimension size*(size+4)                         //
+///   The calling function should fill in the matrix, the column size should     //
+///   contain vector y (right side of the system of equations). The result is    //
+///   placed into size+1 column of the matrix.                                   //
+///   according to sigma of peaks.                                               //
+///      Function parameters:                                                    //
+///              -a-matrix with dimension size*(size+4)                          //                                            //
+///              -size-number of rows of the matrix                              //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumFit::StiefelInversion(Double_t **a, Int_t size)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates solution of the system of linear equations.        //
-//   The matrix a should have a dimension size*(size+4)                         //
-//   The calling function should fill in the matrix, the column size should     //
-//   contain vector y (right side of the system of equations). The result is    //
-//   placed into size+1 column of the matrix.                                   //
-//   according to sigma of peaks.                                               //
-//      Function parameters:                                                    //
-//              -a-matrix with dimension size*(size+4)                          //                                            //
-//              -size-number of rows of the matrix                              //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t i, j, k = 0;
    Double_t sk = 0, b, lambdak, normk, normk_old = 0;
 
@@ -2257,23 +2278,24 @@ void TSpectrumFit::StiefelInversion(Double_t **a, Int_t size)
    return;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+///        ONE-DIMENSIONAL FIT FUNCTION
+///        ALGORITHM WITH MATRIX INVERSION (STIEFEL-HESTENS METHOD)
+///        This function fits the source spectrum. The calling program should
+///        fill in input parameters
+///        The fitted parameters are written into
+///        output parameters and fitted data are written into
+///        source spectrum.
+///
+///        Function parameters:
+///        source-pointer to the vector of source spectrum
+///
+//////////////////////////////////////////////////////////////////////////////
+///Begin_Html <!--
+
 void TSpectrumFit::FitStiefel(Double_t *source)
 {
-/////////////////////////////////////////////////////////////////////////////
-//        ONE-DIMENSIONAL FIT FUNCTION
-//        ALGORITHM WITH MATRIX INVERSION (STIEFEL-HESTENS METHOD)
-//        This function fits the source spectrum. The calling program should
-//        fill in input parameters
-//        The fitted parameters are written into
-//        output parameters and fitted data are written into
-//        source spectrum.
-//
-//        Function parameters:
-//        source-pointer to the vector of source spectrum
-//
-/////////////////////////////////////////////////////////////////////////////
-//Begin_Html <!--
 /* -->
 <div class=Section3>
 
@@ -3245,21 +3267,22 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
    return;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   SETTER FUNCTION
+///
+///   This function sets the following fitting parameters:
+///         -xmin, xmax - fitting region
+///         -numberIterations - # of desired iterations in the fit
+///         -alpha - convergence coefficient, it should be positive number and <=1, for details see references
+///         -statisticType - type of statistics, possible values kFitOptimChiCounts (chi square statistics with counts as weighting coefficients), kFitOptimChiFuncValues (chi square statistics with function values as weighting coefficients),kFitOptimMaxLikelihood
+///         -alphaOptim - optimization of convergence algorithm, possible values kFitAlphaHalving, kFitAlphaOptimal
+///         -power - possible values kFitPower2,4,6,8,10,12, for details see references. It applies only for Awmi fitting function.
+///         -fitTaylor - order of Taylor expansion, possible values kFitTaylorOrderFirst, kFitTaylorOrderSecond. It applies only for Awmi fitting function.
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumFit::SetFitParameters(Int_t xmin,Int_t xmax, Int_t numberIterations, Double_t alpha, Int_t statisticType, Int_t alphaOptim, Int_t power, Int_t fitTaylor)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION
-//
-//   This function sets the following fitting parameters:
-//         -xmin, xmax - fitting region
-//         -numberIterations - # of desired iterations in the fit
-//         -alpha - convergence coefficient, it should be positive number and <=1, for details see references
-//         -statisticType - type of statistics, possible values kFitOptimChiCounts (chi square statistics with counts as weighting coefficients), kFitOptimChiFuncValues (chi square statistics with function values as weighting coefficients),kFitOptimMaxLikelihood
-//         -alphaOptim - optimization of convergence algorithm, possible values kFitAlphaHalving, kFitAlphaOptimal
-//         -power - possible values kFitPower2,4,6,8,10,12, for details see references. It applies only for Awmi fitting function.
-//         -fitTaylor - order of Taylor expansion, possible values kFitTaylorOrderFirst, kFitTaylorOrderSecond. It applies only for Awmi fitting function.
-//////////////////////////////////////////////////////////////////////////////
    if(xmin<0 || xmax <= xmin){
       Error("SetFitParameters", "Wrong range");
       return;
@@ -3297,21 +3320,21 @@ void TSpectrumFit::SetFitParameters(Int_t xmin,Int_t xmax, Int_t numberIteration
    fXmin=xmin,fXmax=xmax,fNumberIterations=numberIterations,fAlpha=alpha,fStatisticType=statisticType,fAlphaOptim=alphaOptim,fPower=power,fFitTaylor=fitTaylor;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   SETTER FUNCTION
+///
+///   This function sets the following fitting parameters of peaks:
+///         -sigma - initial value of sigma parameter
+///         -fixSigma - logical value of sigma parameter, which allows to fix the parameter (not to fit)
+///         -positionInit - aray of initial values of peaks positions
+///         -fixPosition - array of logical values which allow to fix appropriate positions (not fit). However they are present in the estimated functional.
+///         -ampInit - aray of initial values of peaks amplitudes
+///         -fixAmp - aray of logical values which allow to fix appropriate amplitudes (not fit). However they are present in the estimated functional
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumFit::SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Double_t *positionInit, const Bool_t *fixPosition, const Double_t *ampInit, const Bool_t *fixAmp)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION
-//
-//   This function sets the following fitting parameters of peaks:
-//         -sigma - initial value of sigma parameter
-//         -fixSigma - logical value of sigma parameter, which allows to fix the parameter (not to fit)
-//         -positionInit - aray of initial values of peaks positions
-//         -fixPosition - array of logical values which allow to fix appropriate positions (not fit). However they are present in the estimated functional.
-//         -ampInit - aray of initial values of peaks amplitudes
-//         -fixAmp - aray of logical values which allow to fix appropriate amplitudes (not fit). However they are present in the estimated functional
-//////////////////////////////////////////////////////////////////////////////
-
    Int_t i;
    if (sigma <= 0){
       Error ("SetPeakParameters","Invalid sigma, must be > than 0");
@@ -3336,21 +3359,21 @@ void TSpectrumFit::SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Doub
    }
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   SETTER FUNCTION
+///
+///   This function sets the following fitting parameters of background:
+///         -a0Init - initial value of a0 parameter (backgroud is estimated as a0+a1*x+a2*x*x)
+///         -fixA0 - logical value of a0 parameter, which allows to fix the parameter (not to fit)
+///         -a1Init - initial value of a1 parameter
+///         -fixA1 - logical value of a1 parameter, which allows to fix the parameter (not to fit)
+///         -a2Init - initial value of a2 parameter
+///         -fixA2 - logical value of a2 parameter, which allows to fix the parameter (not to fit)
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumFit::SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Double_t a1Init, Bool_t fixA1, Double_t a2Init, Bool_t fixA2)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION
-//
-//   This function sets the following fitting parameters of background:
-//         -a0Init - initial value of a0 parameter (backgroud is estimated as a0+a1*x+a2*x*x)
-//         -fixA0 - logical value of a0 parameter, which allows to fix the parameter (not to fit)
-//         -a1Init - initial value of a1 parameter
-//         -fixA1 - logical value of a1 parameter, which allows to fix the parameter (not to fit)
-//         -a2Init - initial value of a2 parameter
-//         -fixA2 - logical value of a2 parameter, which allows to fix the parameter (not to fit)
-//////////////////////////////////////////////////////////////////////////////
-
    fA0Init = a0Init;
    fFixA0 = fixA0;
    fA1Init = a1Init;
@@ -3359,21 +3382,21 @@ void TSpectrumFit::SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Double
    fFixA2 = fixA2;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   SETTER FUNCTION
+///
+///   This function sets the following fitting parameters of tails of peaks
+///         -tInit - initial value of t parameter
+///         -fixT - logical value of t parameter, which allows to fix the parameter (not to fit)
+///         -bInit - initial value of b parameter
+///         -fixB - logical value of b parameter, which allows to fix the parameter (not to fit)
+///         -sInit - initial value of s parameter
+///         -fixS - logical value of s parameter, which allows to fix the parameter (not to fit)
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumFit::SetTailParameters(Double_t tInit, Bool_t fixT, Double_t bInit, Bool_t fixB, Double_t sInit, Bool_t fixS)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION
-//
-//   This function sets the following fitting parameters of tails of peaks
-//         -tInit - initial value of t parameter
-//         -fixT - logical value of t parameter, which allows to fix the parameter (not to fit)
-//         -bInit - initial value of b parameter
-//         -fixB - logical value of b parameter, which allows to fix the parameter (not to fit)
-//         -sInit - initial value of s parameter
-//         -fixS - logical value of s parameter, which allows to fix the parameter (not to fit)
-//////////////////////////////////////////////////////////////////////////////
-
    fTInit = tInit;
    fFixT = fixT;
    fBInit = bInit;
@@ -3382,34 +3405,36 @@ void TSpectrumFit::SetTailParameters(Double_t tInit, Bool_t fixT, Double_t bInit
    fFixS = fixS;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   GETTER FUNCTION
+///
+///   This function gets the sigma parameter and its error
+///         -sigma - gets the fitted value of sigma parameter
+///         -sigmaErr - gets error value of sigma parameter
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumFit::GetSigma(Double_t &sigma, Double_t &sigmaErr)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the sigma parameter and its error
-//         -sigma - gets the fitted value of sigma parameter
-//         -sigmaErr - gets error value of sigma parameter
-//////////////////////////////////////////////////////////////////////////////
    sigma=fSigmaCalc;
    sigmaErr=fSigmaErr;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   GETTER FUNCTION
+///
+///   This function gets the background parameters and their errors
+///         -a0 - gets the fitted value of a0 parameter
+///         -a0Err - gets error value of a0 parameter
+///         -a1 - gets the fitted value of a1 parameter
+///         -a1Err - gets error value of a1 parameter
+///         -a2 - gets the fitted value of a2 parameter
+///         -a2Err - gets error value of a2 parameter
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumFit::GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Double_t &a1, Double_t &a1Err, Double_t &a2, Double_t &a2Err)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the background parameters and their errors
-//         -a0 - gets the fitted value of a0 parameter
-//         -a0Err - gets error value of a0 parameter
-//         -a1 - gets the fitted value of a1 parameter
-//         -a1Err - gets error value of a1 parameter
-//         -a2 - gets the fitted value of a2 parameter
-//         -a2Err - gets error value of a2 parameter
-//////////////////////////////////////////////////////////////////////////////
    a0 = fA0Calc;
    a0Err = fA0Err;
    a1 = fA1Calc;
@@ -3418,20 +3443,21 @@ void TSpectrumFit::GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Double
    a2Err = fA2Err;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   GETTER FUNCTION
+///
+///   This function gets the tail parameters and their errors
+///         -t - gets the fitted value of t parameter
+///         -tErr - gets error value of t parameter
+///         -b - gets the fitted value of b parameter
+///         -bErr - gets error value of b parameter
+///         -s - gets the fitted value of s parameter
+///         -sErr - gets error value of s parameter
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumFit::GetTailParameters(Double_t &t, Double_t &tErr, Double_t &b, Double_t &bErr, Double_t &s, Double_t &sErr)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the tail parameters and their errors
-//         -t - gets the fitted value of t parameter
-//         -tErr - gets error value of t parameter
-//         -b - gets the fitted value of b parameter
-//         -bErr - gets error value of b parameter
-//         -s - gets the fitted value of s parameter
-//         -sErr - gets error value of s parameter
-//////////////////////////////////////////////////////////////////////////////
    t = fTCalc;
    tErr = fTErr;
    b = fBCalc;

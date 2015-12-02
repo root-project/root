@@ -49,31 +49,32 @@ namespace
 
 ClassImp(TEvePolygonSetProjected);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEvePolygonSetProjected::TEvePolygonSetProjected(const char* n, const char* t) :
    TEveShape(n, t),
    fBuff(0),
    fNPnts(0),
    fPnts(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEvePolygonSetProjected::~TEvePolygonSetProjected()
 {
-   // Destructor.
-
    fPols.clear();
    if (fPnts) delete [] fPnts;
    if (fBuff) delete fBuff;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override of virtual method from TAttBBox.
+
 void TEvePolygonSetProjected::ComputeBBox()
 {
-   // Override of virtual method from TAttBBox.
-
    if (fNPnts > 0) {
       BBoxInit();
       for (Int_t pi = 0; pi < fNPnts; ++pi)
@@ -86,12 +87,12 @@ void TEvePolygonSetProjected::ComputeBBox()
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is virtual method from base-class TEveProjected.
+
 void TEvePolygonSetProjected::SetProjection(TEveProjectionManager* mng,
                                             TEveProjectable* model)
 {
-   // This is virtual method from base-class TEveProjected.
-
    TEveProjected::SetProjection(mng, model);
 
    TEveGeoShape* gre = dynamic_cast<TEveGeoShape*>(model);
@@ -99,22 +100,22 @@ void TEvePolygonSetProjected::SetProjection(TEveProjectionManager* mng,
    CopyVizParams(gre);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set depth (z-coordinate) of the projected points.
+
 void TEvePolygonSetProjected::SetDepthLocal(Float_t d)
 {
-   // Set depth (z-coordinate) of the projected points.
-
    SetDepthCommon(d, this, fBBox);
 
    for (Int_t i = 0; i < fNPnts; ++i)
       fPnts[i].fZ = fDepth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is virtual method from base-class TEveProjected.
+
 void TEvePolygonSetProjected::UpdateProjection()
 {
-   // This is virtual method from base-class TEveProjected.
-
    if (fBuff == 0) return;
 
    // drop polygons and projected/reduced points
@@ -122,22 +123,22 @@ void TEvePolygonSetProjected::UpdateProjection()
    ProjectBuffer3D();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare the two segments and check if the first index of first segment is starting.
+
 Bool_t TEvePolygonSetProjected::IsFirstIdxHead(Int_t s0, Int_t s1)
 {
-   // Compare the two segments and check if the first index of first segment is starting.
-
    Int_t v0 = fBuff->fSegs[3*s0 + 1];
    Int_t v2 = fBuff->fSegs[3*s1 + 1];
    Int_t v3 = fBuff->fSegs[3*s1 + 2];
    return v0 != v2 && v0 != v3;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project and reduce buffer points.
+
 Int_t* TEvePolygonSetProjected::ProjectAndReducePoints()
 {
-   // Project and reduce buffer points.
-
    TEveProjection* projection = fManager->GetProjection();
 
    Int_t buffN = fBuff->NbPnts();
@@ -189,12 +190,12 @@ Int_t* TEvePolygonSetProjected::ProjectAndReducePoints()
    return idxMap;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if polygon has dimensions above TEveProjection::fgEps and add it
+/// to a list if it is not a duplicate.
+
 Float_t TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& pols)
 {
-   // Check if polygon has dimensions above TEveProjection::fgEps and add it
-   // to a list if it is not a duplicate.
-
    if (pp.size() <= 2) return 0;
 
    Float_t bbox[4] = { 1e6, -1e6, 1e6, -1e6 };
@@ -266,11 +267,11 @@ Float_t TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& p
    return (bbox[1]-bbox[0]) * (bbox[3]-bbox[2]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build polygons from list of buffer polygons.
+
 Float_t TEvePolygonSetProjected::MakePolygonsFromBP(Int_t* idxMap)
 {
-   // Build polygons from list of buffer polygons.
-
    TEveProjection* projection = fManager->GetProjection();
    Int_t   *bpols = fBuff->fPols;
    Float_t  surf  = 0; // surface of projected polygons
@@ -322,13 +323,13 @@ Float_t TEvePolygonSetProjected::MakePolygonsFromBP(Int_t* idxMap)
    return surf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build polygons from the set of buffer segments.
+/// First creates a segment pool according to reduced and projected points
+/// and then build polygons from the pool.
+
 Float_t TEvePolygonSetProjected::MakePolygonsFromBS(Int_t* idxMap)
 {
-   // Build polygons from the set of buffer segments.
-   // First creates a segment pool according to reduced and projected points
-   // and then build polygons from the pool.
-
    LSeg_t   segs;
    LSegIt_t it;
    Float_t  surf = 0; // surface of projected polygons
@@ -392,11 +393,11 @@ Float_t TEvePolygonSetProjected::MakePolygonsFromBS(Int_t* idxMap)
    return surf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project current buffer.
+
 void  TEvePolygonSetProjected::ProjectBuffer3D()
 {
-   // Project current buffer.
-
    // create map from original to projected and reduced point needed oly for geometry
    Int_t* idxMap = ProjectAndReducePoints();
 
@@ -439,11 +440,11 @@ void  TEvePolygonSetProjected::ProjectBuffer3D()
    ResetBBox();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate XY surface of a polygon.
+
 Float_t TEvePolygonSetProjected::PolygonSurfaceXY(const TEvePolygonSetProjected::Polygon_t& p) const
 {
-   // Calculate XY surface of a polygon.
-
    Float_t surf = 0;
    Int_t nPnts = p.fNPnts;
    for (Int_t i = 0; i < nPnts - 1; ++i)
@@ -455,11 +456,11 @@ Float_t TEvePolygonSetProjected::PolygonSurfaceXY(const TEvePolygonSetProjected:
    return 0.5f * TMath::Abs(surf);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump information about built polygons.
+
 void TEvePolygonSetProjected::DumpPolys() const
 {
-   // Dump information about built polygons.
-
    printf("TEvePolygonSetProjected %d polygons\n", (Int_t)fPols.size());
    Int_t cnt = 0;
    for (vpPolygon_ci i = fPols.begin(); i!= fPols.end(); i++)
@@ -474,11 +475,11 @@ void TEvePolygonSetProjected::DumpPolys() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump information about currenty projected buffer.
+
 void TEvePolygonSetProjected::DumpBuffer3D()
 {
-   // Dump information about currenty projected buffer.
-
    Int_t* bpols = fBuff->fPols;
 
    for (UInt_t pi = 0; pi< fBuff->NbPols(); ++pi)

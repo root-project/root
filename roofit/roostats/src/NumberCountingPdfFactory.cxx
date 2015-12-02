@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//___________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 BEGIN_HTML
 <p>
@@ -68,23 +69,24 @@ using namespace RooFit;
 using namespace std;
 
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 NumberCountingPdfFactory::NumberCountingPdfFactory() {
-   // constructor
-
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 NumberCountingPdfFactory::~NumberCountingPdfFactory(){
-   // destructor
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void NumberCountingPdfFactory::AddModel(Double_t* sig, 
 					Int_t nbins, 
 					RooWorkspace* ws, 
 					const char* pdfName, const char* muName) {
-  
 
 // This method produces a PDF for N channels with uncorrelated background 
 // uncertainty. It relates the signal in each channel to a master signal strength times the 
@@ -156,13 +158,13 @@ void NumberCountingPdfFactory::AddModel(Double_t* sig,
    RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void NumberCountingPdfFactory::AddExpData(Double_t* sig, 
 					  Double_t* back, 
 					  Double_t* back_syst, 
 					  Int_t nbins, 
 					  RooWorkspace* ws, const char* dsName) {
-
    // Arguements are an array of expected signal, expected background, and relative 
    // background uncertainty (eg. 0.1 for 10% uncertainty), and the number of channels.
 
@@ -175,13 +177,13 @@ void NumberCountingPdfFactory::AddExpData(Double_t* sig,
    return AddData(&mainMeas[0], back, back_syst, nbins, ws, dsName);
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void NumberCountingPdfFactory::AddExpDataWithSideband(Double_t* sigExp, 
                                                       Double_t* backExp, 
                                                       Double_t* tau, 
                                                       Int_t nbins, 
                                                       RooWorkspace* ws, const char* dsName) {
-
    // Arguements are an array of expected signal, expected background, and relative 
    // ratio of background expected in the sideband to that expected in signal region, and the number of channels.
 
@@ -195,21 +197,21 @@ void NumberCountingPdfFactory::AddExpDataWithSideband(Double_t* sigExp,
 
 }
 
-//_______________________________________________________
-RooRealVar* NumberCountingPdfFactory::SafeObservableCreation(RooWorkspace* ws, const char* varName, Double_t value) {
-   // need to be careful here that the range of observable in the dataset is consistent with the one in the workspace
-   // don't rescale unless necessary.  If it is necessary, then rescale by x10 or a defined maximum.
+////////////////////////////////////////////////////////////////////////////////
+/// need to be careful here that the range of observable in the dataset is consistent with the one in the workspace
+/// don't rescale unless necessary.  If it is necessary, then rescale by x10 or a defined maximum.
 
+RooRealVar* NumberCountingPdfFactory::SafeObservableCreation(RooWorkspace* ws, const char* varName, Double_t value) {
    return SafeObservableCreation(ws, varName, value, 10.*value);
 
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// need to be careful here that the range of observable in the dataset is consistent with the one in the workspace
+/// don't rescale unless necessary.  If it is necessary, then rescale by x10 or a defined maximum.
+
 RooRealVar* NumberCountingPdfFactory::SafeObservableCreation(RooWorkspace* ws, const char* varName, 
 							     Double_t value, Double_t maximum) {
-   // need to be careful here that the range of observable in the dataset is consistent with the one in the workspace
-   // don't rescale unless necessary.  If it is necessary, then rescale by x10 or a defined maximum.
-
    RooRealVar*   x = ws->var( varName );
    if( !x )
       x = new RooRealVar(varName, varName, value, 0, maximum );
@@ -221,13 +223,13 @@ RooRealVar* NumberCountingPdfFactory::SafeObservableCreation(RooWorkspace* ws, c
 }
 
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void NumberCountingPdfFactory::AddData(Double_t* mainMeas, 
                                        Double_t* back, 
                                        Double_t* back_syst, 
                                        Int_t nbins, 
                                        RooWorkspace* ws, const char* dsName) {
-
    // Arguments are an array of results from a main measurement, a measured background,
    //  and relative background uncertainty (eg. 0.1 for 10% uncertainty), and the number of channels.
 
@@ -301,13 +303,13 @@ void NumberCountingPdfFactory::AddData(Double_t* mainMeas,
 
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void NumberCountingPdfFactory::AddDataWithSideband(Double_t* mainMeas, 
                                                    Double_t* sideband, 
                                                    Double_t* tauForTree, 
                                                    Int_t nbins, 
                                                    RooWorkspace* ws, const char* dsName) {
-
    // Arguements are an array of expected signal, expected background, and relative 
    // background uncertainty (eg. 0.1 for 10% uncertainty), and the number of channels.
 

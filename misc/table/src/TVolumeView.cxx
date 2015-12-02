@@ -48,7 +48,8 @@
 
 ClassImp(TVolumeView)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TVolumeView::TVolumeView(TVolumeView *viewNode,TVolumePosition *nodePosition)
             : TObjectSet(viewNode->GetName(),(TObject *)nodePosition),fListOfShapes(0)
             //             ,fListOfAttributes(0)
@@ -79,7 +80,8 @@ TVolumeView::TVolumeView(TVolumeView *viewNode,TVolumePosition *nodePosition)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TVolumeView::TVolumeView(TVolumeView *viewNode,TVolumeView *topNode)
             : TObjectSet(viewNode->GetName(),(TObject *)0),fListOfShapes(0)
             //             ,fListOfAttributes(0)
@@ -115,7 +117,8 @@ TVolumeView::TVolumeView(TVolumeView *viewNode,TVolumeView *topNode)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TVolumeView::TVolumeView(TVolumeView *viewNode,const Char_t *nodeName1,const Char_t *nodeName2)
             : TObjectSet(viewNode->GetName(),(TObject *)0),fListOfShapes(0)
             //             ,fListOfAttributes(0)
@@ -163,7 +166,8 @@ TVolumeView::TVolumeView(TVolumeView *viewNode,const Char_t *nodeName1,const Cha
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TVolumeView::TVolumeView(TVolumeView *viewNode,const TVolumeView *node1,const TVolumeView *node2)
             : TObjectSet(viewNode->GetName(),(TObject *)0),fListOfShapes(0)
             //             ,fListOfAttributes(0)
@@ -212,25 +216,26 @@ TVolumeView::TVolumeView(TVolumeView *viewNode,const TVolumeView *node1,const TV
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Creates TVolumeView (view) with a topology similar with TVolume *pattern
+///
+///  Parameters:
+///  -----------
+///  pattern        - the pattern dataset
+///  iopt = kStruct - clone only my structural links
+///         kAll    - clone all links
+///         kRefs   - clone only refs
+///         kMarked - clone marked (not implemented yet) only
+///
+///   All new-created sets become the structural ones anyway.
+///
+///  std::cout << "ctor for " << GetName() << " - " << GetTitle() << std::endl;
+
 TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
              const TVolumePosition *nodePosition,EDataSetPass iopt, TVolumeView *rootVolume)
             : TObjectSet(pattern.GetName(),(TObject *)nodePosition),fListOfShapes(0)
 {
-  //
-  // Creates TVolumeView (view) with a topology similar with TVolume *pattern
-  //
-  //  Parameters:
-  //  -----------
-  //  pattern        - the pattern dataset
-  //  iopt = kStruct - clone only my structural links
-  //         kAll    - clone all links
-  //         kRefs   - clone only refs
-  //         kMarked - clone marked (not implemented yet) only
-  //
-  //   All new-created sets become the structural ones anyway.
-  //
-  //  std::cout << "ctor for " << GetName() << " - " << GetTitle() << std::endl;
    if (!gGeometry) new TGeometry;
    if (!nodePosition) {
       // Create the trivial position if any
@@ -310,19 +315,21 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
 
    }
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TVolumeView::TVolumeView(TVolumeView &viewNode):
              TObjectSet(viewNode.GetName(),(TObject *)viewNode.GetPosition())
             ,TAtt3D()
             ,fListOfShapes(viewNode.GetListOfShapes())
 {
-   //to be documented
    if (viewNode.IsOwner()) {
       viewNode.DoOwner(kFALSE); DoOwner();
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TVolumeView::TVolumeView(Double_t *translate, Double_t *rotate, UInt_t positionId, TVolume *topNode,
                          const Char_t *thisNodePath, const Char_t *matrixName, Int_t matrixType)
             // : fListOfAttributes(0)
@@ -365,30 +372,32 @@ TVolumeView::TVolumeView(Double_t *translate, Double_t *rotate, UInt_t positionI
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TVolumeView::TVolumeView(TVolume *thisNode,TVolumePosition *nodePosition)
             : TObjectSet(thisNode?thisNode->GetName():"",(TObject *)nodePosition),fListOfShapes(0)
 {
-   //to be documented
    if (!gGeometry) new TGeometry;
    SafeDelete(fListOfShapes);
    if (thisNode)
       SetTitle(thisNode->GetTitle());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default dtor (empty for this class)
+
 TVolumeView::~TVolumeView()
 {
-// default dtor (empty for this class)
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the TVolume in the Tnode data-structure refered
+/// by this TVolumeView object
+/// Return TVolume * the input TVolume * was attached to
+
 TVolume *TVolumeView::AddNode(TVolume *node)
 {
-  // Add the TVolume in the Tnode data-structure refered
-  // by this TVolumeView object
-  // Return TVolume * the input TVolume * was attached to
-
    TVolume *closedNode = 0;
    TVolumePosition *pos ;
    if ( node && (pos = GetPosition() )  && (closedNode = pos->GetNode()) )
@@ -396,10 +405,11 @@ TVolume *TVolumeView::AddNode(TVolume *node)
    return closedNode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolumeView::Add(TShape *shape, Bool_t IsMaster)
 {
-   //to be documented
    if (!shape) return;
    if (!fListOfShapes) fListOfShapes = new TList;
    if (IsMaster)
@@ -408,29 +418,30 @@ void TVolumeView::Add(TShape *shape, Bool_t IsMaster)
       fListOfShapes->Add(shape);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolumeView::Browse(TBrowser *b)
 {
-   //to be documented
    TObjectSet::Browse(b);
 //  TVolumePosition *pos = GetPosition();
 //  if (pos) pos->Browse(b);
 //    b->Add(pos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Compute distance from point px,py to a TVolumeView*-*-*-*-*-*
+///*-*                  ===========================================
+///*-*  Compute the closest distance of approach from point px,py to the position of
+///*-*  this node.
+///*-*  The distance is computed in pixels units.
+///*-*
+///*-*  It is restricted by 2 levels of TVolumes
+///*-*
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 Int_t TVolumeView::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*Compute distance from point px,py to a TVolumeView*-*-*-*-*-*
-//*-*                  ===========================================
-//*-*  Compute the closest distance of approach from point px,py to the position of
-//*-*  this node.
-//*-*  The distance is computed in pixels units.
-//*-*
-//*-*  It is restricted by 2 levels of TVolumes
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
    const Int_t big = 9999;
    const Int_t inaxis = 7;
    const Int_t maxdist = 5;
@@ -496,12 +507,12 @@ Int_t TVolumeView::DistancetoPrimitive(Int_t px, Int_t py)
       return dnode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*Draw Referenced node with current parameters*-*-*-*
+///*-*                   =============================================
+
 void TVolumeView::Draw(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Draw Referenced node with current parameters*-*-*-*
-//*-*                   =============================================
-
    TString opt = option;
    opt.ToLower();
 //*-*- Clear pad if option "same" not given
@@ -548,23 +559,25 @@ void TVolumeView::Draw(Option_t *option)
 #endif
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TVolume *TVolumeView::GetNode() const
 {
-   //to be documented
    TVolumePosition *pos = GetPosition();
    if (pos)
       return pos->GetNode();
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Calculate the position of the vertrex of the outlined cube in repect
+/// of the given TVolumeView object
+///
+
 Int_t TVolumeView::GetGlobalRange(const TVolumeView *rootNode,Float_t *globalMin,Float_t *globalMax)
 {
-   //
-   // Calculate the position of the vertrex of the outlined cube in repect
-   // of the given TVolumeView object
-   //
    if (rootNode) {
       SetTitle(rootNode->GetTitle());
       EDataSetPass mode = kContinue;
@@ -590,17 +603,17 @@ Int_t TVolumeView::GetGlobalRange(const TVolumeView *rootNode,Float_t *globalMin
    else return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  GetRange
+///
+///  Calculates the size of 3 box the node occupies.
+///  Return:
+///    two floating point arrays with the bound of box
+///     surroundind all shapes of this TModeView
+///
+
 void TVolumeView::GetLocalRange(Float_t *min, Float_t *max)
 {
-  //  GetRange
-  //
-  //  Calculates the size of 3 box the node occupies.
-  //  Return:
-  //    two floating point arrays with the bound of box
-  //     surroundind all shapes of this TModeView
-  //
-
    TVirtualPad *savePad = gPad;
    //  Create a dummy TPad;
    TCanvas dummyPad("--Dumm--","dum",1,1);
@@ -617,10 +630,11 @@ void TVolumeView::GetLocalRange(Float_t *min, Float_t *max)
    if (savePad) savePad->cd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 char *TVolumeView::GetObjectInfo(Int_t px, Int_t py) const
 {
-   //to be documented
    if (!gPad) return 0;
    static char info[512];
    Double_t x[3] = {0,0,0.5};
@@ -643,10 +657,11 @@ char *TVolumeView::GetObjectInfo(Int_t px, Int_t py) const
    return info;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TVolumePosition  *TVolumeView::Local2Master(const Char_t *localName, const Char_t *masterName)
 {
-   //to be documented
    TVolumeView *masterNode = this;
    TVolumePosition *position = 0;
    if (masterName && masterName[0]) masterNode = (TVolumeView *)Find(masterName);
@@ -657,10 +672,11 @@ TVolumePosition  *TVolumeView::Local2Master(const Char_t *localName, const Char_
    return position;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TVolumePosition *TVolumeView::Local2Master(const TVolumeView *localNode,const TVolumeView *masterNode)
 {
-   //to be documented
    TVolumePosition *position = 0;
    if (!masterNode) masterNode = this;
    if (masterNode && localNode) {
@@ -672,19 +688,20 @@ TVolumePosition *TVolumeView::Local2Master(const TVolumeView *localNode,const TV
    return position;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// calculate  transformation  master = (M-local->master )*local + (T-local->master )
+///  where
+///     M-local->master - rotation matrix 3 x 3 from the master node to the local node
+///     T-local->master - trasport vector 3 from the master node to the local node
+///
+/// returns a "master" pointer if transformation has been found
+///        otherwise 0;
+///
+
 Float_t *TVolumeView::Local2Master(const Float_t *local, Float_t *master,
                                    const Char_t *localName, const Char_t *masterName, Int_t nVector)
 {
-  //
-  // calculate  transformation  master = (M-local->master )*local + (T-local->master )
-  //  where
-  //     M-local->master - rotation matrix 3 x 3 from the master node to the local node
-  //     T-local->master - trasport vector 3 from the master node to the local node
-  //
-  // returns a "master" pointer if transformation has been found
-  //        otherwise 0;
-  //
    Float_t *trans = 0;
    TVolumePosition *position = 0;
    TVolumeView *masterNode = this;
@@ -697,20 +714,21 @@ Float_t *TVolumeView::Local2Master(const Float_t *local, Float_t *master,
    return trans;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// calculate  transformation  master = (M-local->master )*local + (T-local->master )
+///  where
+///     M-local->master - rotation matrix 3 x 3 from the master node to the local node
+///     T-local->master - trasport vector 3 from the master node to the local node
+///
+/// returns a "master" pointer if transformation has been found
+///        otherwise 0;
+///
+
 Float_t *TVolumeView::Local2Master(const Float_t *local, Float_t *master,
                                    const TVolumeView *localNode,
                                    const TVolumeView *masterNode, Int_t nVector)
 {
-  //
-  // calculate  transformation  master = (M-local->master )*local + (T-local->master )
-  //  where
-  //     M-local->master - rotation matrix 3 x 3 from the master node to the local node
-  //     T-local->master - trasport vector 3 from the master node to the local node
-  //
-  // returns a "master" pointer if transformation has been found
-  //        otherwise 0;
-  //
    Float_t *trans = 0;
    TVolumePosition *position = 0;
    if (!masterNode) masterNode = this;
@@ -724,23 +742,24 @@ Float_t *TVolumeView::Local2Master(const Float_t *local, Float_t *master,
    return trans;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*Paint Referenced node with current parameters*-*-*-*
+///*-*                   ==============================================
+///*-*
+///*-*  vis = 1  (default) shape is drawn
+///*-*  vis = 0  shape is not drawn but its sons may be not drawn
+///*-*  vis = -1 shape is not drawn. Its sons are not drawn
+///*-*  vis = -2 shape is drawn. Its sons are not drawn
+///*-*
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///
+/// It draw the TVolumeView layers from the iFirst one (form the zero) till
+/// iLast one reached.
+///
+/// restrict the levels for "range" option
+
 void TVolumeView::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Paint Referenced node with current parameters*-*-*-*
-//*-*                   ==============================================
-//*-*
-//*-*  vis = 1  (default) shape is drawn
-//*-*  vis = 0  shape is not drawn but its sons may be not drawn
-//*-*  vis = -1 shape is not drawn. Its sons are not drawn
-//*-*  vis = -2 shape is drawn. Its sons are not drawn
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//
-// It draw the TVolumeView layers from the iFirst one (form the zero) till
-// iLast one reached.
-//
-// restrict the levels for "range" option
    Int_t level = gGeometry->GeomLevel();
    if (!option) return;
    if (option[0]=='r' && level > 3 ) return;
@@ -793,11 +812,12 @@ void TVolumeView::Paint(Option_t *option)
    gGeometry->PopLevel();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint shape of the node
+/// To be called from the TObject::Paint method only
+
 void TVolumeView::PaintShape(Option_t *option)
 {
-   // Paint shape of the node
-   // To be called from the TObject::Paint method only
    Bool_t rangeView = option && option[0]=='r';
 
    TIter nextShape(fListOfShapes);
@@ -838,10 +858,11 @@ void TVolumeView::PaintShape(Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the full path of this data set
+
 TString TVolumeView::PathP() const
 {
-   // return the full path of this data set
    TString str;
    TVolumeView *parent = (TVolumeView *)GetParent();
    if (parent) {
@@ -858,10 +879,11 @@ TString TVolumeView::PathP() const
    return str;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolumeView::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   //to be documented
    const Char_t *sceleton[] = {
       "TVolumeView *CreateNodeView(TVolume *topNode) {"
      ,"  TString     thisNodePath   = "
@@ -926,28 +948,30 @@ void TVolumeView::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void  TVolumeView::SetLineAttributes()
 {
-   //to be documented
    TVolume *thisNode = GetNode();
    if (thisNode) thisNode->SetLineAttributes();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolumeView::SetVisibility(Int_t vis)
 {
-   //to be documented
    TVolume *node = GetNode();
    if (node) node->SetVisibility(TVolume::ENodeSEEN(vis));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*Return total size of this 3-D Node with its attributes*-*-*
+///*-*          ==========================================================
+
 void TVolumeView::Sizeof3D() const
 {
-//*-*-*-*-*-*-*Return total size of this 3-D Node with its attributes*-*-*
-//*-*          ==========================================================
-
    if (GetListOfShapes()) {
       TIter nextShape(GetListOfShapes());
       TShape *shape = 0;

@@ -299,7 +299,8 @@ static char *gEPrintCommand = 0;
 ClassImp(TGRootIDE)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGDocument::TGDocument(const char *fname, const char *title, Int_t tabid,
                      TGTab *tab, TGTabElement *tabel, TGTextEdit *edit,
                      TObjArray *doclist) :  TNamed(fname, title)
@@ -313,11 +314,11 @@ TGDocument::TGDocument(const char *fname, const char *title, Int_t tabid,
    Open(fname);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the current active document.
+
 Bool_t TGDocument::Close()
 {
-   // Close the current active document.
-
    Int_t ret;
    if (fModified) {
       // the current active document has been modified
@@ -371,12 +372,12 @@ Bool_t TGDocument::Close()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open file and create new document. If fname is NULL, create new Untitled
+/// document. Add a new tab element for this documment.
+
 Bool_t TGDocument::Open(const char *fname)
 {
-   // Open file and create new document. If fname is NULL, create new Untitled
-   // document. Add a new tab element for this documment.
-
    TGFileInfo fi;
    fi.fFileTypes = ed_filetypes;
    if (fname == 0) {
@@ -455,11 +456,11 @@ Bool_t TGDocument::Open(const char *fname)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save current document.
+
 Bool_t TGDocument::Save(const char *fname)
 {
-   // Save current document.
-
    TString sname;
    if (fname && strlen(fname) > 3) {
       sname = fname;
@@ -478,11 +479,11 @@ Bool_t TGDocument::Save(const char *fname)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle drop event.
+
 void TGDocument::DataDropped(char *fname)
 {
-   // Handle drop event.
-
    if (strstr(GetName(),"Untitled")) {
       if (!fModified) {
          fTabEl->SetText(new TGString(Form("*%s", fTabEl->GetString())));
@@ -497,12 +498,12 @@ void TGDocument::DataDropped(char *fname)
    fTab->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if current document has been modified, and add or remove
+/// a mark in front of tab name to indicate status.
+
 void TGDocument::DataChanged()
 {
-   // Check if current document has been modified, and add or remove
-   // a mark in front of tab name to indicate status.
-
    TList *hist = fEditor->GetHistory();
    if (hist->GetSize()) {
       if (!fModified) {
@@ -522,12 +523,12 @@ void TGDocument::DataChanged()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGRootIDE constructor with file name as first argument.
+
 TGRootIDE::TGRootIDE(const char *filename, const TGWindow *p, UInt_t w,
                            UInt_t h) : TGMainFrame(p, w, h)
 {
-   // TGRootIDE constructor with file name as first argument.
-
    Build();
    if (filename) {
       fTab->SetTab(fTab->GetNumberOfTabs()-1, kFALSE);
@@ -546,12 +547,12 @@ TGRootIDE::TGRootIDE(const char *filename, const TGWindow *p, UInt_t w,
    fContents->Sort(kSortByType);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGRootIDE constructor with pointer to a TMacro as first argument.
+
 TGRootIDE::TGRootIDE(TMacro *macro, const TGWindow *p, UInt_t w, UInt_t h) :
               TGMainFrame(p, w, h)
 {
-   // TGRootIDE constructor with pointer to a TMacro as first argument.
-
    Build();
    if (macro) {
       fTab->SetTab(fTab->GetNumberOfTabs()-1, kFALSE);
@@ -580,21 +581,21 @@ TGRootIDE::TGRootIDE(TMacro *macro, const TGWindow *p, UInt_t w, UInt_t h) :
    fContents->Sort(kSortByType);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGRootIDE destructor.
+
 TGRootIDE::~TGRootIDE()
 {
-   // TGRootIDE destructor.
-
    fDocList->Delete();
    delete fDocList;
    delete fTimer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build TGRootIDE widget.
+
 void TGRootIDE::Build()
 {
-   // Build TGRootIDE widget.
-
    fDocList = new TObjArray(100);
    fCurrent = 0;
    fNbDoc   = 0;
@@ -916,11 +917,11 @@ void TGRootIDE::Build()
    fTextChanged = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load a file into the editor. If fname is 0, a TGFileDialog will popup.
+
 void TGRootIDE::LoadFile(char *fname)
 {
-   // Load a file into the editor. If fname is 0, a TGFileDialog will popup.
-
    TGFileInfo fi;
    fi.fFileTypes = ed_filetypes;
    if (fname == 0) {
@@ -962,11 +963,11 @@ void TGRootIDE::LoadFile(char *fname)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the edited text in the file "fname".
+
 void TGRootIDE::SaveFile(const char *fname)
 {
-   // Save the edited text in the file "fname".
-
    char *p;
    if (!fCurrentDoc) return;
    fCurrentDoc->Save(fname);
@@ -981,12 +982,12 @@ void TGRootIDE::SaveFile(const char *fname)
    fTextChanged = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the edited text in a file selected with TGFileDialog.
+/// Shouldn't we create a backup file?
+
 Bool_t TGRootIDE::SaveFileAs()
 {
-   // Save the edited text in a file selected with TGFileDialog.
-   // Shouldn't we create a backup file?
-
    if (!fCurrentDoc) return kFALSE;
    static TString dir(".");
    static Bool_t overwr = kFALSE;
@@ -1004,11 +1005,11 @@ Bool_t TGRootIDE::SaveFileAs()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if file has to be saved in case of modifications.
+
 Int_t TGRootIDE::IsSaved()
 {
-   // Check if file has to be saved in case of modifications.
-
    Int_t ret;
    TGDocument *doc = 0;
    TIter next(fDocList);
@@ -1027,11 +1028,11 @@ Int_t TGRootIDE::IsSaved()
    return kMBNo; //ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open the print dialog and send current buffer to printer.
+
 void TGRootIDE::PrintText()
 {
-   // Open the print dialog and send current buffer to printer.
-
    Int_t ret = 0;
    if (!gEPrinter) {
       gEPrinter = StrDup("892_2_cor"); // use gEnv
@@ -1045,11 +1046,11 @@ void TGRootIDE::PrintText()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close TGRootIDE window.
+
 void TGRootIDE::CloseWindow()
 {
-   // Close TGRootIDE window.
-
    if (fExiting) {
       return;
    }
@@ -1071,11 +1072,11 @@ void TGRootIDE::CloseWindow()
    gApplication->Terminate(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Keyboard event handler.
+
 Bool_t TGRootIDE::HandleKey(Event_t *event)
 {
-   // Keyboard event handler.
-
    char   input[10];
    UInt_t keysym;
 
@@ -1137,11 +1138,11 @@ Bool_t TGRootIDE::HandleKey(Event_t *event)
    return TGMainFrame::HandleKey(event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear text edit widget.
+
 void TGRootIDE::ClearText()
 {
-   // Clear text edit widget.
-
    fTextEdit->Clear();
    fMacro = 0;
    fFilename = "Untitled";
@@ -1153,11 +1154,11 @@ void TGRootIDE::ClearText()
    fTab->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invokes search dialog, or just search previous string if again is true.
+
 void TGRootIDE::Search(Bool_t again)
 {
-   // Invokes search dialog, or just search previous string if again is true.
-
    if (again) {
       SendMessage(fTextEdit, MK_MSG(kC_COMMAND, kCM_MENU),
                   TGTextEdit::kM_SEARCH_FINDAGAIN, 0);
@@ -1167,11 +1168,11 @@ void TGRootIDE::Search(Bool_t again)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invokes goto dialog, and go to the specified line.
+
 void TGRootIDE::Goto()
 {
-   // Invokes goto dialog, and go to the specified line.
-
    Long_t ret;
 
    new TGGotoDialog(fClient->GetDefaultRoot(), this, 400, 150, &ret);
@@ -1180,11 +1181,11 @@ void TGRootIDE::Goto()
       fTextEdit->Goto(ret-1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the edited text in a temporary macro, then compile it.
+
 void TGRootIDE::CompileMacro()
 {
-   // Save the edited text in a temporary macro, then compile it.
-
    if (fTextEdit->ReturnLineCount() < 3)
       return;
    if ((fMacro) || (fFilename.Contains("Untitled"))) {
@@ -1207,12 +1208,12 @@ void TGRootIDE::CompileMacro()
       fTextView->SetVsbPosition(fTextView->ReturnLineCount());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the edited text in a temporary macro, execute it, and then delete
+/// the temporary file.
+
 void TGRootIDE::ExecuteMacro()
 {
-   // Save the edited text in a temporary macro, execute it, and then delete
-   // the temporary file.
-
    if (fTextEdit->ReturnLineCount() < 3)
       return;
    if (fMacro) {
@@ -1255,19 +1256,19 @@ void TGRootIDE::ExecuteMacro()
       fTextView->SetVsbPosition(fTextView->ReturnLineCount());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interrupt execution of a macro.
+
 void TGRootIDE::InterruptMacro()
 {
-   // Interrupt execution of a macro.
-
    gROOT->SetInterrupt(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display ROOT splash screen.
+
 void TGRootIDE::About()
 {
-   // Display ROOT splash screen.
-
 #ifdef R__UNIX
    TString rootx;
 # ifdef ROOTBINDIR
@@ -1291,11 +1292,11 @@ void TGRootIDE::About()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle timer event.
+
 Bool_t TGRootIDE::HandleTimer(TTimer *t)
 {
-   // Handle timer event.
-
    if (t != fTimer) return kTRUE;
    // check if some text is available in the clipboard
    if ((gVirtualX->InheritsFrom("TGX11")) &&
@@ -1338,11 +1339,11 @@ Bool_t TGRootIDE::HandleTimer(TTimer *t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle menu and other command generated by the user.
+
 Bool_t TGRootIDE::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Handle menu and other command generated by the user.
-
    TRootHelpDialog *hd;
 
    switch(GET_MSG(msg)) {
@@ -1530,11 +1531,11 @@ Bool_t TGRootIDE::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display content of ROOT file.
+
 void TGRootIDE::DisplayFile(const TString &fname)
 {
-   // Display content of ROOT file.
-
    TFile file(fname);
    fContents->RemoveAll();
    fContents->AddFile(gSystem->WorkingDirectory());
@@ -1558,11 +1559,11 @@ void TGRootIDE::DisplayFile(const TString &fname)
    Resize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display content of directory.
+
 void TGRootIDE::DisplayDirectory(const TString &fname)
 {
-   // Display content of directory.
-
    fContents->SetDefaultHeaders();
    gSystem->ChangeDirectory(fname);
    fContents->ChangeDirectory(fname);
@@ -1576,11 +1577,11 @@ void TGRootIDE::DisplayDirectory(const TString &fname)
                           fDirCombo->GetNumberOfEntries()+1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display object located in file.
+
 void TGRootIDE::DisplayObject(const TString& fname, const TString& name)
 {
-   // Display object located in file.
-
    TDirectory *sav = gDirectory;
 
    static TFile *file = 0;
@@ -1596,14 +1597,14 @@ void TGRootIDE::DisplayObject(const TString& fname, const TString& name)
    gDirectory = sav;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if given a text file
+/// Uses the specification given on p86 of the Camel book
+/// - Text files have no NULLs in the first block
+/// - and less than 30% of characters with high bit set
+
 static Bool_t IsTextFile(const char *candidate)
 {
-   // Returns true if given a text file
-   // Uses the specification given on p86 of the Camel book
-   // - Text files have no NULLs in the first block
-   // - and less than 30% of characters with high bit set
-
    Int_t i;
    Int_t nchars;
    Int_t weirdcount = 0;
@@ -1637,11 +1638,11 @@ static Bool_t IsTextFile(const char *candidate)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle double click in TGListView.
+
 void TGRootIDE::OnDoubleClick(TGLVEntry* f, Int_t btn)
 {
-   // Handle double click in TGListView.
-
    if (btn!=kButton1) return;
    gVirtualX->SetCursor(fContents->GetId(),gVirtualX->CreateCursor(kWatch));
 
@@ -1662,11 +1663,11 @@ void TGRootIDE::OnDoubleClick(TGLVEntry* f, Int_t btn)
    gVirtualX->SetCursor(fContents->GetId(),gVirtualX->CreateCursor(kPointer));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Tab navigation.
+
 void TGRootIDE::DoTab(Int_t id)
 {
-   // Handle Tab navigation.
-
    fCurrentDoc = 0;
    fFilename = "";
    //fTextEdit = 0;
@@ -1686,11 +1687,11 @@ void TGRootIDE::DoTab(Int_t id)
    fCurrent = id;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close tab "id".
+
 void TGRootIDE::CloseTab(Int_t id)
 {
-   // Close tab "id".
-
    if (fCurrentDoc) {
       fCurrentDoc->Close();
    }
@@ -1700,44 +1701,44 @@ void TGRootIDE::CloseTab(Int_t id)
    fTab->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply filter selected in combo box to the file list view.
+
 void TGRootIDE::ApplyFilter(Int_t id)
 {
-   // Apply filter selected in combo box to the file list view.
-
    fContents->SetFilter(filters[id]);
    fContents->DisplayDirectory();
    fContents->AddFile("..");        // up level directory
    fContents->Sort(kSortByType);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A directory has been selected in the navigation history.
+
 void TGRootIDE::DirSelected(const char *uri)
 {
-   // A directory has been selected in the navigation history.
-
    fDir->SetText(uri);
    if (!fDirCombo->FindEntry(uri))
       fDirCombo->AddEntry(uri, fDirCombo->GetNumberOfEntries()+1);
    DisplayDirectory(uri);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A directory has been typed in the text entry of the navigation history.
+
 void TGRootIDE::DirChanged()
 {
-   // A directory has been typed in the text entry of the navigation history.
-
    const char *string = fDir->GetText();
    if (string) {
       DirSelected(StrDup(string));
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Temporary function to read remote pictures
+
 static char *ReadRemote(const char *url)
 {
-   // Temporary function to read remote pictures
-
    static char *buf = 0;
    TUrl fUrl(url);
 
@@ -1768,12 +1769,12 @@ static char *ReadRemote(const char *url)
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A URL has been selected, either by a click on a link or by the
+/// navigation buttons, or by history combobox / text entry.
+
 void TGRootIDE::Selected(const char *uri)
 {
-   // A URL has been selected, either by a click on a link or by the
-   // navigation buttons, or by history combobox / text entry.
-
    char *buf = 0;
    FILE *f;
 
@@ -1848,22 +1849,22 @@ void TGRootIDE::Selected(const char *uri)
    fGuiHtml->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The text entry of navigation history has changed.
+
 void TGRootIDE::URLChanged()
 {
-   // The text entry of navigation history has changed.
-
    const char *string = fURL->GetText();
    if (string) {
       Selected(StrDup(gSystem->UnixPathName(string)));
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "Back" navigation button.
+
 void TGRootIDE::Back()
 {
-   // Handle "Back" navigation button.
-
    Int_t index = 0;
    const char *string = fURL->GetText();
    TGLBEntry * lbe1 = fComboBox->FindEntry(string);
@@ -1880,11 +1881,11 @@ void TGRootIDE::Back()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "Forward" navigation button.
+
 void TGRootIDE::Forward()
 {
-   // Handle "Forward" navigation button.
-
    Int_t index = 0;
    const char *string = fURL->GetText();
    TGLBEntry * lbe1 = fComboBox->FindEntry(string);
@@ -1901,45 +1902,45 @@ void TGRootIDE::Forward()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "Reload" navigation button.
+
 void TGRootIDE::Reload()
 {
-   // Handle "Reload" navigation button.
-
    const char *string = fURL->GetText();
    if (string)
       Selected(string);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "Stop Loading" navigation button.
+/// Not active for the time being.
+
 void TGRootIDE::Stop()
 {
-   // Handle "Stop Loading" navigation button.
-   // Not active for the time being.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle MouseOver signal from TGHtml widget.
+
 void TGRootIDE::MouseOver(char *url)
 {
-   // Handle MouseOver signal from TGHtml widget.
-
    fStatusBar->SetText(url, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle MouseDown signal from TGHtml widget.
+
 void TGRootIDE::MouseDown(char *url)
 {
-   // Handle MouseDown signal from TGHtml widget.
-
    Selected(url);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if actual ROOT session is a remote one or a local one.
+
 void TGRootIDE::CheckRemote(const char * /*str*/)
 {
-   // Check if actual ROOT session is a remote one or a local one.
-
    Pixel_t pxl;
    TString sPrompt = ((TRint*)gROOT->GetApplication())->GetPrompt();
    Int_t end = sPrompt.Index(":root [", 0);

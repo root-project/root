@@ -19,23 +19,25 @@
 
 ClassImp(TGLH2PolyPainter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Ctor.
+
 TGLH2PolyPainter::TGLH2PolyPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
                    : TGLPlotPainter(hist, camera, coord, kFALSE, kFALSE, kFALSE),
                      fZLog(kFALSE),
                      fZMin(0.)
 {
-   //Ctor.
    if(!dynamic_cast<TH2Poly *>(hist)) {
       Error("TGLH2PolyPainter::TGLH2PolyPainter", "bad histogram, must be a valid TH2Poly *");
       throw std::runtime_error("bad TH2Poly");
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Show number of bin and bin contents, if bin is under the cursor.
+
 char *TGLH2PolyPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 {
-   //Show number of bin and bin contents, if bin is under the cursor.
    fBinInfo = "";
    if (fSelectedPart) {
       if (fSelectedPart < fSelectionBase) {
@@ -54,14 +56,15 @@ char *TGLH2PolyPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
    return (Char_t *)fBinInfo.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Tesselate polygons, if not done yet.
+///All pointers are validated here (and in functions called from here).
+///If any pointer is invalid - zero, or has unexpected type (dynamic_cast fails) -
+///InitGeometry will return false and nothing will be painted later.
+///That's why there are no checks in other functions.
+
 Bool_t TGLH2PolyPainter::InitGeometry()
 {
-   //Tesselate polygons, if not done yet.
-   //All pointers are validated here (and in functions called from here).
-   //If any pointer is invalid - zero, or has unexpected type (dynamic_cast fails) -
-   //InitGeometry will return false and nothing will be painted later.
-   //That's why there are no checks in other functions.
    TH2Poly* hp = static_cast<TH2Poly *>(fHist);
    if (!fCoord->SetRanges(hp))
       return kFALSE;
@@ -90,20 +93,22 @@ Bool_t TGLH2PolyPainter::InitGeometry()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///User clicks on a lego with middle mouse button (middle for pad).
+
 void TGLH2PolyPainter::StartPan(Int_t px, Int_t py)
 {
-   //User clicks on a lego with middle mouse button (middle for pad).
    fMousePosition.fX = px;
    fMousePosition.fY = fCamera->GetHeight() - py;
    fCamera->StartPan(px, py);
    fBoxCut.StartMovement(px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Mouse events handler.
+
 void TGLH2PolyPainter::Pan(Int_t px, Int_t py)
 {
-      //Mouse events handler.
    if (fSelectedPart >= fSelectionBase) {//Pan camera.
       SaveModelviewMatrix();
       SaveProjectionMatrix();
@@ -138,22 +143,25 @@ void TGLH2PolyPainter::Pan(Int_t px, Int_t py)
    fUpdateSelection = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No additional options.
+
 void TGLH2PolyPainter::AddOption(const TString &/*stringOption*/)
 {
-   //No additional options.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No events.
+
 void TGLH2PolyPainter::ProcessEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
 {
-   //No events.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize some gl state variables.
+
 void TGLH2PolyPainter::InitGL()const
 {
-   //Initialize some gl state variables.
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
@@ -164,10 +172,11 @@ void TGLH2PolyPainter::InitGL()const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Return some gl states to original values.
+
 void TGLH2PolyPainter::DeInitGL()const
 {
-   //Return some gl states to original values.
    glDisable(GL_DEPTH_TEST);
    glDisable(GL_LIGHTING);
    glDisable(GL_LIGHT0);
@@ -182,11 +191,11 @@ Bool_t   IsPolygonCW(const Double_t *xs, const Double_t *ys, Int_t n);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw extruded polygons and plot's frame.
+
 void TGLH2PolyPainter::DrawPlot()const
 {
-   //Draw extruded polygons and plot's frame.
-
    //Shift plot to point of origin.
    const Rgl::PlotTranslation trGuard(this);
 
@@ -196,12 +205,13 @@ void TGLH2PolyPainter::DrawPlot()const
    DrawCaps();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Extruded part of bins.
+///GL_QUADS, GL_QUAD_STRIP - have the same time on my laptop, so I use
+///GL_QUADS and forgot about vertex arrays (can require more memory BTW).
+
 void TGLH2PolyPainter::DrawExtrusion()const
 {
-   //Extruded part of bins.
-   //GL_QUADS, GL_QUAD_STRIP - have the same time on my laptop, so I use
-   //GL_QUADS and forgot about vertex arrays (can require more memory BTW).
    TList *bins = static_cast<TH2Poly *>(fHist)->GetBins();
    Int_t binIndex = 0;
    for(TObjLink * link = bins->FirstLink(); link; link = link->Next(), ++binIndex) {
@@ -220,10 +230,11 @@ void TGLH2PolyPainter::DrawExtrusion()const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Extrude polygon, described by TGraph.
+
 void TGLH2PolyPainter::DrawExtrusion(const TGraph *poly, Double_t zMin, Double_t zMax, Int_t binIndex)const
 {
-   //Extrude polygon, described by TGraph.
    const Double_t *xs = poly->GetX();
    const Double_t *ys = poly->GetY();
 
@@ -278,19 +289,21 @@ void TGLH2PolyPainter::DrawExtrusion(const TGraph *poly, Double_t zMin, Double_t
       glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Multigraph contains a list of graphs, draw them.
+
 void TGLH2PolyPainter::DrawExtrusion(const TMultiGraph *mg, Double_t zMin, Double_t zMax, Int_t binIndex)const
 {
-   //Multigraph contains a list of graphs, draw them.
    const TList *graphs = mg->GetListOfGraphs();
    for (TObjLink *link = graphs->FirstLink(); link; link = link->Next())
       DrawExtrusion((TGraph *)(link->GetObject()), zMin, zMax, binIndex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Caps on bins.
+
 void TGLH2PolyPainter::DrawCaps()const
 {
-   //Caps on bins.
    glNormal3d(0., 0., 1.);
 
    Int_t binIndex = 0;
@@ -319,10 +332,11 @@ void TGLH2PolyPainter::DrawCaps()const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw a cap on top of a bin.
+
 void TGLH2PolyPainter::DrawCap(CIter_t cap, Int_t binIndex)const
 {
-   //Draw a cap on top of a bin.
    const Int_t binID = fSelectionBase + binIndex;
    if (fSelectionPass) {
       if (!fHighColor)
@@ -347,10 +361,11 @@ void TGLH2PolyPainter::DrawCap(CIter_t cap, Int_t binIndex)const
       glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Cache all data for TH2Poly object.
+
 Bool_t TGLH2PolyPainter::CacheGeometry()
 {
-   //Cache all data for TH2Poly object.
    TH2Poly *hp = static_cast<TH2Poly *>(fHist);
    TList *bins = hp->GetBins();
    if (!bins || !bins->GetEntries()) {
@@ -401,10 +416,11 @@ Bool_t TGLH2PolyPainter::CacheGeometry()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Tesselate a polygon described by TGraph.
+
 Bool_t TGLH2PolyPainter::BuildTesselation(Rgl::Pad::Tesselator &tess, const TGraph *g, Double_t z)
 {
-   //Tesselate a polygon described by TGraph.
    const Double_t *xs = g->GetX();
    const Double_t *ys = g->GetY();
 
@@ -438,10 +454,11 @@ Bool_t TGLH2PolyPainter::BuildTesselation(Rgl::Pad::Tesselator &tess, const TGra
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Iterate over multi graph contents and tesselate nested TGraphs.
+
 Bool_t TGLH2PolyPainter::BuildTesselation(Rgl::Pad::Tesselator &tess, const TMultiGraph *mg, Double_t z)
 {
-   //Iterate over multi graph contents and tesselate nested TGraphs.
    const TList *graphs = mg->GetListOfGraphs();
    if (!graphs) {
       Error("TGLH2PolyPainter::BuildTesselation", "null list of graphs in a multigraph");
@@ -463,13 +480,14 @@ Bool_t TGLH2PolyPainter::BuildTesselation(Rgl::Pad::Tesselator &tess, const TMul
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Update cap's z-coordinates for all caps.
+///Here no pointers are checked, this was already done
+///by InitGeometry. So, if histogram was broken somehow
+///- hehe, good luck.
+
 Bool_t TGLH2PolyPainter::UpdateGeometry()
 {
-   //Update cap's z-coordinates for all caps.
-   //Here no pointers are checked, this was already done
-   //by InitGeometry. So, if histogram was broken somehow
-   //- hehe, good luck.
    TH2Poly *hp = static_cast<TH2Poly *>(fHist);
    TList *bins = hp->GetBins();
 
@@ -511,10 +529,11 @@ Bool_t TGLH2PolyPainter::UpdateGeometry()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set bin's color.
+
 void TGLH2PolyPainter::SetBinColor(Int_t binIndex)const
 {
-   //Set bin's color.
    if (binIndex >= Int_t(fBinColors.size())) {
       Error("TGLH2PolyPainter::SetBinColor", "bin index is out of range %d, must be <= %d",
             binIndex, int(fBinColors.size()));
@@ -533,40 +552,46 @@ void TGLH2PolyPainter::SetBinColor(Int_t binIndex)const
    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 70.f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No sections.
+
 void TGLH2PolyPainter::DrawSectionXOZ()const
 {
-   //No sections.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No sections.
+
 void TGLH2PolyPainter::DrawSectionYOZ()const
 {
-   //No sections.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No sections.
+
 void TGLH2PolyPainter::DrawSectionXOY()const
 {
-   //No sections.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Not yet.
+
 void TGLH2PolyPainter::DrawPalette()const
 {
-   //Not yet.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Not yet.
+
 void TGLH2PolyPainter::DrawPaletteAxis()const
 {
-   //Not yet.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Since I probably have to re-orient polygon, I need a temporary polygon.
+
 void TGLH2PolyPainter::FillTemporaryPolygon(const Double_t *xs, const Double_t *ys, Double_t z, Int_t nV)const
 {
-   //Since I probably have to re-orient polygon, I need a temporary polygon.
    const Double_t xScale = fCoord->GetXScale();
    const Double_t yScale = fCoord->GetYScale();
 
@@ -581,10 +606,11 @@ void TGLH2PolyPainter::FillTemporaryPolygon(const Double_t *xs, const Double_t *
       MakePolygonCCW();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Code taken from the original TH2Poly.
+
 void TGLH2PolyPainter::MakePolygonCCW()const
 {
-   //Code taken from the original TH2Poly.
    const Int_t nV = Int_t(fPolygon.size() / 3);
    for (Int_t a = 0; a <= (nV / 2) - 1; a++) {
       const Int_t b = nV - 1 - a;
@@ -593,10 +619,11 @@ void TGLH2PolyPainter::MakePolygonCCW()const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Clamp z value.
+
 Bool_t TGLH2PolyPainter::ClampZ(Double_t &zVal)const
 {
-   //Clamp z value.
    if (fCoord->GetZLog()) {
       if (zVal <= 0.)
          return kFALSE;
@@ -618,20 +645,22 @@ Bool_t TGLH2PolyPainter::ClampZ(Double_t &zVal)const
 
 namespace {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 Double_t Distance(const Double_t *p1, const Double_t *p2)
 {
-   //
    return TMath::Sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) +
                       (p1[1] - p2[1]) * (p1[1] - p2[1]) +
                       (p1[2] - p2[2]) * (p1[2] - p2[2]));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Before, TH2Poly always produced good GL polygons - CCW. Now,
+///this code (by Deniz Gunceler) was deleted from TH2Poly.
+
 Bool_t IsPolygonCW(const Double_t *xs, const Double_t *ys, Int_t n)
 {
-   //Before, TH2Poly always produced good GL polygons - CCW. Now,
-   //this code (by Deniz Gunceler) was deleted from TH2Poly.
    Double_t signedArea = 0.;
 
    for (Int_t j = 0; j < n - 1; ++j)

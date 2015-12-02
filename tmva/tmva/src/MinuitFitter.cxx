@@ -35,7 +35,9 @@
 
 ClassImp(TMVA::MinuitFitter)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::MinuitFitter::MinuitFitter( IFitterTarget& target, 
                                   const TString& name, 
                                   std::vector<TMVA::Interval*>& ranges, 
@@ -43,8 +45,6 @@ TMVA::MinuitFitter::MinuitFitter( IFitterTarget& target,
    : TMVA::FitterBase( target, name, ranges, theOption ),
      TMVA::IFitterTarget( )
 {
-   // constructor
-
    // default parameters settings for Simulated Annealing algorithm
    DeclareOptions();
    ParseOptions();
@@ -52,18 +52,19 @@ TMVA::MinuitFitter::MinuitFitter( IFitterTarget& target,
    Init();  // initialise the TFitter
 }            
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MinuitFitter::~MinuitFitter( )
 {
-   // destructor
    delete fMinWrap;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// declare SA options
+
 void TMVA::MinuitFitter::DeclareOptions() 
 {
-   // declare SA options
-
    DeclareOptionRef(fErrorLevel    =  1,     "ErrorLevel",    "TMinuit: error level: 0.5=logL fit, 1=chi-squared fit" );
    DeclareOptionRef(fPrintLevel    = -1,     "PrintLevel",    "TMinuit: output level: -1=least, 0, +1=all garbage" );
    DeclareOptionRef(fFitStrategy   = 2,      "FitStrategy",   "TMinuit: fit strategy: 2=best" );
@@ -75,10 +76,11 @@ void TMVA::MinuitFitter::DeclareOptions()
    DeclareOptionRef(fTolerance     = 0.1,    "Tolerance",     "TMinuit: tolerance to the function value at the minimum" );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// minuit-specific settings
+
 void TMVA::MinuitFitter::Init()
 {
-   // minuit-specific settings
    Double_t args[10];
 
    // Execute fitting
@@ -115,11 +117,11 @@ void TMVA::MinuitFitter::Init()
    fMinWrap->ExecuteCommand( "SET STRATEGY", args, 1 );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// performs the fit
+
 Double_t TMVA::MinuitFitter::Run( std::vector<Double_t>& pars )
 {
-   // performs the fit
-
    // minuit-specific settings
    Double_t args[10];
 
@@ -197,10 +199,11 @@ Double_t TMVA::MinuitFitter::Run( std::vector<Double_t>& pars )
    return chi2;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// performs the fit by calliung Run(pars)
+
 Double_t TMVA::MinuitFitter::EstimatorFunction( std::vector<Double_t>& pars )
 { 
-   // performs the fit by calliung Run(pars)
    return Run( pars ); 
 }
 

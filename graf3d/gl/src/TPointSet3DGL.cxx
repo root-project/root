@@ -26,50 +26,50 @@
 
 ClassImp(TPointSet3DGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model.
+
 Bool_t TPointSet3DGL::SetModel(TObject* obj, const Option_t*)
 {
-   // Set model.
-
    return SetModelCheckClass(obj, TPointSet3D::Class());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding-box.
+
 void TPointSet3DGL::SetBBox()
 {
-   // Set bounding-box.
-
    SetAxisAlignedBBox(((TPointSet3D*)fExternalObj)->AssertBBox());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override from TGLLogicalShape.
+/// To account for large point-sizes we modify the projection matrix
+/// during selection and thus we need a direct draw.
+
 Bool_t TPointSet3DGL::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
 {
-   // Override from TGLLogicalShape.
-   // To account for large point-sizes we modify the projection matrix
-   // during selection and thus we need a direct draw.
-
    if (rnrCtx.Selection())
       return kFALSE;
    return TGLObject::ShouldDLCache(rnrCtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw function for TPointSet3D. Skips line-pass of outline mode.
+
 void TPointSet3DGL::Draw(TGLRnrCtx& rnrCtx) const
 {
-   // Draw function for TPointSet3D. Skips line-pass of outline mode.
-
    if (rnrCtx.IsDrawPassOutlineLine())
       return;
 
    TGLObject::Draw(rnrCtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Direct GL rendering for TPointSet3D.
+
 void TPointSet3DGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 {
-   // Direct GL rendering for TPointSet3D.
-
    //printf("TPointSet3DGL::DirectDraw Style %d, LOD %d\n", rnrCtx.Style(), rnrCtx.LOD());
    //printf("  sel=%d, secsel=%d\n", rnrCtx.Selection(), rnrCtx.SecSelection());
 
@@ -83,13 +83,13 @@ void TPointSet3DGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    TGLUtil::UnlockColor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Processes secondary selection from TGLViewer.
+/// Calls TPointSet3D::PointSelected(Int_t) with index of selected
+/// point as an argument.
+
 void TPointSet3DGL::ProcessSelection(TGLRnrCtx& /*rnrCtx*/, TGLSelectRecord& rec)
 {
-   // Processes secondary selection from TGLViewer.
-   // Calls TPointSet3D::PointSelected(Int_t) with index of selected
-   // point as an argument.
-
    if (rec.GetN() < 2) return;
    TPointSet3D& q = * (TPointSet3D*) fExternalObj;
    q.PointSelected(rec.GetItem(1));

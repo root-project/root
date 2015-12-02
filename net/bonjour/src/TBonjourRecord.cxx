@@ -23,28 +23,29 @@
 
 ClassImp(TBonjourRecord)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TBonjourRecord::AddTXTRecord(const char * record)
 {
    TString rec(record);
    AddTXTRecord(rec);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This methods adds the length before the data for compliance with the
+/// mDNS records standard.
+
 void TBonjourRecord::AddTXTRecord(const TString &record)
 {
-   // This methods adds the length before the data for compliance with the
-   // mDNS records standard.
-
    fTXTRecords.Append((char)record.Length());
    fTXTRecords.Append(record);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print TBonjourRecord.
+
 void TBonjourRecord::Print(Option_t *) const
 {
-   // Print TBonjourRecord.
-
    std::cout << "TBonjourRecord:"
         << "\n\tService name: #" << GetServiceName() << "#"
         << "\n\tRegistered type: #" << GetRegisteredType() << "#"

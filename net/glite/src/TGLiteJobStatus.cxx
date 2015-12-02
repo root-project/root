@@ -46,20 +46,21 @@ using namespace std;
 using namespace glite_api_wrapper;
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLiteJobStatus::TGLiteJobStatus(TString _jobID): m_sJobID(_jobID)
 {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The GetStat() method retrieves a gLite job status and
+/// translates it to a TGridJobStatus::EGridJobStatus type.
+/// RETURN:
+///      a TGridJobStatus::EGridJobStatus status value.
+
 TGridJobStatus::EGridJobStatus TGLiteJobStatus::GetStatus() const
 {
-   // The GetStat() method retrieves a gLite job status and
-   // translates it to a TGridJobStatus::EGridJobStatus type.
-   // RETURN:
-   //      a TGridJobStatus::EGridJobStatus status value.
-
    string sStatusName;
    string sStatusString;
    // Gets the status of the job reduced to the subset defined in TGridJobStatus.

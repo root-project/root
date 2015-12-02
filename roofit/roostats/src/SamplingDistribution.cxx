@@ -13,7 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 SamplingDistribution : 
 
@@ -41,12 +42,13 @@ ClassImp(RooStats::SamplingDistribution)
 
 using namespace RooStats;
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SamplingDistribution constructor
+
 SamplingDistribution::SamplingDistribution( const char *name, const char *title,
 					    std::vector<Double_t>& samplingDist, const char * varName) :
   TNamed(name,title)
 {
-  // SamplingDistribution constructor
   fSamplingDist = samplingDist;
   // need to check STL stuff here.  Will this = operator work as wanted, or do we need:
   //  std::copy(samplingDist.begin(), samplingDist.end(), fSamplingDist.begin());
@@ -57,12 +59,13 @@ SamplingDistribution::SamplingDistribution( const char *name, const char *title,
   fVarName = varName;
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SamplingDistribution constructor
+
 SamplingDistribution::SamplingDistribution( const char *name, const char *title,
 					    std::vector<Double_t>& samplingDist, std::vector<Double_t>& sampleWeights, const char * varName) :
   TNamed(name,title)
 {
-  // SamplingDistribution constructor
   fSamplingDist = samplingDist;
   fSampleWeights = sampleWeights;
   // need to check STL stuff here.  Will this = operator work as wanted, or do we need:
@@ -71,11 +74,12 @@ SamplingDistribution::SamplingDistribution( const char *name, const char *title,
   fVarName = varName;
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SamplingDistribution constructor (with name and title)
+
 SamplingDistribution::SamplingDistribution( const char *name, const char *title, const char * varName) :
   TNamed(name,title)
 {
-   // SamplingDistribution constructor (with name and title)
   fVarName = varName;
 }
 
@@ -127,30 +131,31 @@ SamplingDistribution::SamplingDistribution(
 }
 
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SamplingDistribution default constructor
+
 SamplingDistribution::SamplingDistribution( ) :
   TNamed("SamplingDistribution_DefaultName","SamplingDistribution")
 {
-   // SamplingDistribution default constructor
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SamplingDistribution destructor
+
 SamplingDistribution::~SamplingDistribution()
 {
-   // SamplingDistribution destructor
-
    fSamplingDist.clear();
    fSampleWeights.clear();
 }
 
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge SamplingDistributions (does nothing if NULL is given).
+/// If variable name was not set before, it is copied from the added
+/// SamplingDistribution.
+
 void SamplingDistribution::Add(const SamplingDistribution* other)
 {
-   // Merge SamplingDistributions (does nothing if NULL is given).
-   // If variable name was not set before, it is copied from the added
-   // SamplingDistribution.
-
    if(!other) return;
 
   std::vector<double> newSamplingDist = other->fSamplingDist;
@@ -181,19 +186,20 @@ void SamplingDistribution::Add(const SamplingDistribution* other)
 }
 
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the integral in the open/closed/mixed interval. Default is [low,high) interval.
+/// Normalization can be turned off.
+
 Double_t SamplingDistribution::Integral(Double_t low, Double_t high, Bool_t normalize, Bool_t lowClosed, Bool_t
                                         highClosed) const
 {
-   // Returns the integral in the open/closed/mixed interval. Default is [low,high) interval.
-   // Normalization can be turned off.
    double error = 0;
    return IntegralAndError(error, low,high, normalize, lowClosed, highClosed);
 }
 
-//___________________________________________________________________________
-void SamplingDistribution::SortValues() const { 
+////////////////////////////////////////////////////////////////////////////////
 
+void SamplingDistribution::SortValues() const { 
    // first need to sort the values and then compute the 
    // running sum of the weights and of the weight square 
    // needed later for computing the integral
@@ -229,14 +235,14 @@ void SamplingDistribution::SortValues() const {
 
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the integral in the open/closed/mixed interval. Default is [low,high) interval.
+/// Normalization can be turned off.
+/// compute also the error on the integral 
+
 Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, Double_t high, Bool_t normalize, Bool_t lowClosed, Bool_t
                                                 highClosed) const
 {
-   // Returns the integral in the open/closed/mixed interval. Default is [low,high) interval.
-   // Normalization can be turned off.
-   // compute also the error on the integral 
-
    int n = fSamplingDist.size();
    if( n == 0 ) {
       error = numeric_limits<Double_t>::infinity();
@@ -305,29 +311,30 @@ Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, 
 
 
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the closed integral [-inf,x]
+
 Double_t SamplingDistribution::CDF(Double_t x) const {
-   // returns the closed integral [-inf,x]
    return Integral(-RooNumber::infinity(), x, kTRUE, kTRUE, kTRUE);
 }
 
 
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the inverse of the cumulative distribution function
+
 Double_t SamplingDistribution::InverseCDF(Double_t pvalue)
 {
-   // returns the inverse of the cumulative distribution function
-
   Double_t dummy=0;
   return InverseCDF(pvalue,0,dummy);
 }
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the inverse of the cumulative distribution function, with variations depending on number of samples
+
 Double_t SamplingDistribution::InverseCDF(Double_t pvalue, 
 					  Double_t sigmaVariation, 
 					  Double_t& inverseWithVariation)
 {
-   // returns the inverse of the cumulative distribution function, with variations depending on number of samples
-
    if (fSumW.size() != fSamplingDist.size()) 
       SortValues();
 
@@ -401,10 +408,11 @@ Double_t SamplingDistribution::InverseCDF(Double_t pvalue,
 }
 
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the inverse of the cumulative distribution function
+
 Double_t SamplingDistribution::InverseCDFInterpolate(Double_t pvalue)
 {
-   // returns the inverse of the cumulative distribution function
    if (fSumW.size() != fSamplingDist.size()) 
       SortValues();
 

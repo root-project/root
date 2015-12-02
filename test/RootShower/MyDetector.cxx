@@ -23,23 +23,25 @@
 
 ClassImp(MyDetector)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 MyDetector::MyDetector()
 {
-   // Default constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 MyDetector::~MyDetector()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize detector with material and dimensions
+
 void MyDetector::Init()
 {
-   // Initialize detector with material and dimensions
-
    Int_t           i;
    Double_t        x;
    TGeoMaterial    *material;

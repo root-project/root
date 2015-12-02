@@ -37,7 +37,8 @@
 
 ClassImp(TEveCaloVizEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t height,
                                      UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
@@ -154,10 +155,10 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
    fDataFrame->AddFrame(fSliceFrame);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TEveCaloVizEditor::MakeSliceInfo()
 {
-
    // Create slice info gui.
 
    Int_t ns = fM->GetData()->GetNSlices();
@@ -228,11 +229,11 @@ void TEveCaloVizEditor::MakeSliceInfo()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveCaloVizEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveCaloViz*>(obj);
    if (fM->GetPlotEt())
    {
@@ -288,38 +289,38 @@ void TEveCaloVizEditor::SetModel(TObject* obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting max tower height.
+
 void TEveCaloVizEditor::DoMaxTowerH()
 {
-   // Slot for setting max tower height.
-
    fM->SetMaxTowerH(fMaxTowerH->GetValue());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for enabling/disabling absolute scale.
+
 void TEveCaloVizEditor::DoScaleAbs()
 {
-   // Slot for enabling/disabling absolute scale.
-
    fM->SetScaleAbs(fScaleAbs->IsOn());
    Update();
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting max E in for absolute scale.
+
 void TEveCaloVizEditor::DoMaxValAbs()
 {
-   // Slot for setting max E in for absolute scale.
-
    fM->SetMaxValAbs(fMaxValAbs->GetValue());
    Update();
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting E/Et plot.
+
 void TEveCaloVizEditor::DoPlot()
 {
-   // Slot for setting E/Et plot.
-
    TGButton *btn = (TGButton *) gTQSender;
    Int_t id = btn->WidgetId();
 
@@ -332,49 +333,49 @@ void TEveCaloVizEditor::DoPlot()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting eta range.
+
 void TEveCaloVizEditor::DoEtaRange()
 {
-   // Slot for setting eta range.
-
    fM->SetEta(fEtaRng->GetMin(), fEtaRng->GetMax());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting phi range.
+
 void TEveCaloVizEditor::DoPhi()
 {
-  // Slot for setting phi range.
-
    fM->SetPhiWithRng(fPhi->GetValue(), fPhiOffset->GetValue());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for SliceThreshold.
+
 void TEveCaloVizEditor::DoSliceThreshold()
 {
-   // Slot for SliceThreshold.
-
    TEveGValuator *st = (TEveGValuator *) gTQSender;
    fM->SetDataSliceThreshold(st->WidgetId(), st->GetValue());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for slice info Color.
+
 void TEveCaloVizEditor::DoSliceColor(Pixel_t pixel)
 {
-   // Slot for slice info Color.
-
    TGColorSelect *cs = (TGColorSelect *) gTQSender;
    fM->SetDataSliceColor(cs->WidgetId(), Color_t(TColor::GetColor(pixel)));
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for slice transparency.
+
 void TEveCaloVizEditor::DoSliceTransparency(Long_t t)
 {
-   // Slot for slice transparency.
-
    TGNumberEntry *cs = (TGNumberEntry*) gTQSender;
    fM->GetData()->SetSliceTransparency(cs->WidgetId(), t);
    Update();
@@ -389,15 +390,15 @@ void TEveCaloVizEditor::DoSliceTransparency(Long_t t)
 
 ClassImp(TEveCalo3DEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveCalo3DEditor::TEveCalo3DEditor(const TGWindow *p, Int_t width, Int_t height,
                                        UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM(0),
    fFrameTransparency(0)
 {
-   // Constructor.
-
    MakeTitle("TEveCalo3D");
 
    TGHorizontalFrame* f = new TGHorizontalFrame(this);
@@ -416,20 +417,20 @@ TEveCalo3DEditor::TEveCalo3DEditor(const TGWindow *p, Int_t width, Int_t height,
    AddFrame(f, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveCalo3DEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveCalo3D*>(obj);
    fFrameTransparency->SetNumber(fM->GetFrameTransparency());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for frame transparency.
+
 void TEveCalo3DEditor::DoFrameTransparency()
 {
-   // Slot for frame transparency.
-
    fM->SetFrameTransparency((Char_t)(fFrameTransparency->GetNumber()));
    Update();
 }

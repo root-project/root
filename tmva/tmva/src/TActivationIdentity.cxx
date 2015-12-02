@@ -27,10 +27,11 @@
 
 ClassImp(TMVA::TActivationIdentity)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// writes the identity function source code
+
 void TMVA::TActivationIdentity::MakeFunction( std::ostream& fout, const TString& fncName ) 
 {
-   // writes the identity function source code
    fout << "double " << fncName << "(double x) const {" << std::endl;
    fout << "   // identity" << std::endl;
    fout << "   return x;" << std::endl;

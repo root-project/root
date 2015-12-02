@@ -29,59 +29,61 @@ ClassImp(TPaveLabel)
 //
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pavelabel default constructor.
+
 TPaveLabel::TPaveLabel(): TPave(), TAttText()
 {
-   // Pavelabel default constructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pavelabel normal constructor.
+///
+/// a PaveLabel is a Pave with a label centered in the Pave
+/// The Pave is by default defined bith bordersize=5 and option ="br".
+/// The text size is automatically computed as a function of the pave size.
+
 TPaveLabel::TPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, const char *label, Option_t *option)
            :TPave(x1,y1,x2,y2,3,option), TAttText(22,0,1,gStyle->GetTextFont(),0.99)
 {
-   // Pavelabel normal constructor.
-   //
-   // a PaveLabel is a Pave with a label centered in the Pave
-   // The Pave is by default defined bith bordersize=5 and option ="br".
-   // The text size is automatically computed as a function of the pave size.
-
    fLabel  = label;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pavelabel default destructor.
+
 TPaveLabel::~TPaveLabel()
 {
-   // Pavelabel default destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pavelabel copy constructor.
+
 TPaveLabel::TPaveLabel(const TPaveLabel &pavelabel) : TPave(pavelabel), TAttText(pavelabel)
 {
-   // Pavelabel copy constructor.
-
    ((TPaveLabel&)pavelabel).Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this pavelabel to pavelabel.
+
 void TPaveLabel::Copy(TObject &obj) const
 {
-   // Copy this pavelabel to pavelabel.
-
    TPave::Copy(obj);
    TAttText::Copy(((TPaveLabel&)obj));
    ((TPaveLabel&)obj).fLabel      = fLabel;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this pavelabel with its current attributes.
+
 void TPaveLabel::Draw(Option_t *option)
 {
-   // Draw this pavelabel with its current attributes.
-
    Option_t *opt;
    if (option && strlen(option)) opt = option;
    else                          opt = GetOption();
@@ -90,22 +92,22 @@ void TPaveLabel::Draw(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this pavelabel with new coordinates.
+
 void TPaveLabel::DrawPaveLabel(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char *label, Option_t *option)
 {
-   // Draw this pavelabel with new coordinates.
-
    TPaveLabel *newpavelabel = new TPaveLabel(x1,y1,x2,y2,label,option);
    newpavelabel->SetBit(kCanDelete);
    newpavelabel->AppendPad();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this pavelabel with its current attributes.
+
 void TPaveLabel::Paint(Option_t *option)
 {
-   // Paint this pavelabel with its current attributes.
-
    // Convert from NDC to pad coordinates
    TPave::ConvertNDCtoPad();
 
@@ -113,12 +115,12 @@ void TPaveLabel::Paint(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this pavelabel with new coordinates.
+
 void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                       const char *label ,Option_t *option)
 {
-   // Draw this pavelabel with new coordinates.
-
    Int_t nch = strlen(label);
 
    // Draw the pave
@@ -191,11 +193,11 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TPaveLabel::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    char quote = '"';
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TPaveLabel::Class())) {

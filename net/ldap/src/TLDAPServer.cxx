@@ -17,25 +17,25 @@
 
 ClassImp(TLDAPServer)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// During construction TLDAPServer object tries to connect to the
+/// specified server and you should check the connection status by
+/// calling the IsConnected() member function immediately after
+/// creating that object.
+/// const char *host:     The name of host to connect. Default is "localhost".
+/// Int_t port:           Port number to connect. Default is LDAP_PORT (=389).
+/// const char *binddn:   Bind DN.
+/// const char *password: Password. Usually you have to specify bind DN and
+///                       password to have the write permissions. Default
+///                       values for bind DN and password are zero, that means
+///                       anonymous connection. Usually it is enough to read
+///                       the data from the server.
+///  Int_t version        Set LDAP protocol version: LDAP_VERSION1,
+///                       LDAP_VERSION2, LDAP_VERSION3
+
 TLDAPServer::TLDAPServer(const char *host, Int_t port, const char *binddn,
                          const char *password, Int_t version)
 {
-   // During construction TLDAPServer object tries to connect to the
-   // specified server and you should check the connection status by
-   // calling the IsConnected() member function immediately after
-   // creating that object.
-   // const char *host:     The name of host to connect. Default is "localhost".
-   // Int_t port:           Port number to connect. Default is LDAP_PORT (=389).
-   // const char *binddn:   Bind DN.
-   // const char *password: Password. Usually you have to specify bind DN and
-   //                       password to have the write permissions. Default
-   //                       values for bind DN and password are zero, that means
-   //                       anonymous connection. Usually it is enough to read
-   //                       the data from the server.
-   //  Int_t version        Set LDAP protocol version: LDAP_VERSION1,
-   //                       LDAP_VERSION2, LDAP_VERSION3
-
    fLd          = 0;
    fIsConnected = kFALSE;
    fBinddn      = binddn;
@@ -54,7 +54,9 @@ TLDAPServer::TLDAPServer(const char *host, Int_t port, const char *binddn,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TLDAPServer::TLDAPServer(const TLDAPServer& lds) :
    TObject(lds),
    fLd(lds.fLd),
@@ -62,13 +64,13 @@ TLDAPServer::TLDAPServer(const TLDAPServer& lds) :
    fPassword(lds.fPassword),
    fIsConnected(lds.fIsConnected)
 {
-   // Copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Equal operator
+
 TLDAPServer& TLDAPServer::operator=(const TLDAPServer& lds)
 {
-   // Equal operator
    if(this!=&lds) {
       TObject::operator=(lds);
       fLd=lds.fLd;
@@ -78,20 +80,20 @@ TLDAPServer& TLDAPServer::operator=(const TLDAPServer& lds)
    } return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If the object is connected to the server, it disconnects.
+
 TLDAPServer::~TLDAPServer()
 {
-   // If the object is connected to the server, it disconnects.
-
    Unbind();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Binds to the server with specified binddn and password.
+/// Return value: LDAP error code, 0 if successfully bound.
+
 Int_t TLDAPServer::Bind()
 {
-   // Binds to the server with specified binddn and password.
-   // Return value: LDAP error code, 0 if successfully bound.
-
    if (!IsConnected()) {
       Int_t result = ldap_simple_bind_s(fLd, fBinddn.Data(), fPassword.Data());
       if (result != LDAP_SUCCESS) {
@@ -116,24 +118,24 @@ Int_t TLDAPServer::Bind()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unbinds from the server with specified binddn and password.
+
 void TLDAPServer::Unbind()
 {
-   // Unbinds from the server with specified binddn and password.
-
    if (IsConnected()) {
       ldap_unbind(fLd);
       fIsConnected = kFALSE;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs an LDAPSearch with the attribute "namingContexts" to be
+/// returned with the result. The value of this attribute is
+/// extracted and returned as const char.
+
 const char *TLDAPServer::GetNamingContexts()
 {
-   // Performs an LDAPSearch with the attribute "namingContexts" to be
-   // returned with the result. The value of this attribute is
-   // extracted and returned as const char.
-
    TList *attrs = new TList;
    attrs->SetOwner();
    attrs->AddLast(new TObjString("namingContexts"));
@@ -156,13 +158,13 @@ const char *TLDAPServer::GetNamingContexts()
    return namingcontexts;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs an LDAPSearch with the attribute "subschemaSubentry" to
+/// be returned with the result. The value of this attribute is
+/// extracted and returned as const char.
+
 const char *TLDAPServer::GetSubschemaSubentry()
 {
-   // Performs an LDAPSearch with the attribute "subschemaSubentry" to
-   // be returned with the result. The value of this attribute is
-   // extracted and returned as const char.
-
    TList *attrs = new TList;
    attrs->SetOwner();
    attrs->AddLast(new TObjString("subschemaSubentry"));
@@ -185,13 +187,13 @@ const char *TLDAPServer::GetSubschemaSubentry()
    return subschema;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calls GetSubschemaSubentry() and performs and LDAPSearch with
+/// the attribute "objectClasses" to be returned with the result.
+/// The returned result object must be deleted by the user.
+
 TLDAPResult *TLDAPServer::GetObjectClasses()
 {
-   // Calls GetSubschemaSubentry() and performs and LDAPSearch with
-   // the attribute "objectClasses" to be returned with the result.
-   // The returned result object must be deleted by the user.
-
    const char *subschema = GetSubschemaSubentry();
 
    TList *attrs = new TList;
@@ -205,13 +207,13 @@ TLDAPResult *TLDAPServer::GetObjectClasses()
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calls GetSubschemaSubentry() and performs and LDAPSearch with the
+/// attribute "attributeTypes" to be returned with the result.
+/// The returned result object must be deleted by the user.
+
 TLDAPResult *TLDAPServer::GetAttributeTypes()
 {
-   // Calls GetSubschemaSubentry() and performs and LDAPSearch with the
-   // attribute "attributeTypes" to be returned with the result.
-   // The returned result object must be deleted by the user.
-
    const char *subschema = GetSubschemaSubentry();
 
    TList *attrs = new TList;
@@ -225,30 +227,30 @@ TLDAPResult *TLDAPServer::GetAttributeTypes()
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs searching at the LDAP directory.
+/// Return value:     a TLDAPResult object or 0 in case of error.
+///                   Result needs to be deleted by user.
+/// const char *base: Specifies the base object for the search operation
+/// Int_t scope:      Specifies the portion of the LDAP tree, relative to
+///                   the base object, to search.
+///                   Must be one of LDAP_SCOPE_BASE (==0),
+///                   LDAP_SCOPE_ONELEVEL (==1) or LDAP_SCOPE_SUBTREE (==2).
+/// char *filter:     The criteria during the search to determine which
+///                   entries to return, 0 means that the filter
+///                   "(objectclass=*)" will be applied
+/// TList *attrs:     The TList of attributes to be returned along with
+///                   each entry, 0 means that all available attributes
+///                   should be returned.
+/// Int_t attrsonly:  This parameter is a boolean specifying whether both
+///                   types and values should be returned with each
+///                   attribute (zero) or types only should be returned
+///                   (non-zero).
+
 TLDAPResult *TLDAPServer::Search(const char *base, Int_t scope,
                                  const char *filter, TList *attrs,
                                  Bool_t attrsonly)
 {
-   // Performs searching at the LDAP directory.
-   // Return value:     a TLDAPResult object or 0 in case of error.
-   //                   Result needs to be deleted by user.
-   // const char *base: Specifies the base object for the search operation
-   // Int_t scope:      Specifies the portion of the LDAP tree, relative to
-   //                   the base object, to search.
-   //                   Must be one of LDAP_SCOPE_BASE (==0),
-   //                   LDAP_SCOPE_ONELEVEL (==1) or LDAP_SCOPE_SUBTREE (==2).
-   // char *filter:     The criteria during the search to determine which
-   //                   entries to return, 0 means that the filter
-   //                   "(objectclass=*)" will be applied
-   // TList *attrs:     The TList of attributes to be returned along with
-   //                   each entry, 0 means that all available attributes
-   //                   should be returned.
-   // Int_t attrsonly:  This parameter is a boolean specifying whether both
-   //                   types and values should be returned with each
-   //                   attribute (zero) or types only should be returned
-   //                   (non-zero).
-
    Bind();
 
    Int_t errcode;
@@ -288,13 +290,13 @@ TLDAPResult *TLDAPServer::Search(const char *base, Int_t scope,
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds entry to the LDAP tree.
+/// Be sure that you are bound with write permissions.
+/// Return value: LDAP error code.
+
 Int_t TLDAPServer::AddEntry(TLDAPEntry &entry)
 {
-   // Adds entry to the LDAP tree.
-   // Be sure that you are bound with write permissions.
-   // Return value: LDAP error code.
-
    Bind();
 
    Int_t errcode;
@@ -311,21 +313,21 @@ Int_t TLDAPServer::AddEntry(TLDAPEntry &entry)
    return errcode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Modifies specified entry.
+/// Be sure that you are bound with write permissions.
+/// Return value:      LDAP error code, 0 = success.
+/// TLDAPEntry &entry: Entry to be modified.
+/// Int_t mode:        Modifying mode.
+///                    Should be one of LDAP_MOD_ADD (==0),
+///                    LDAP_MOD_DELETE (==1) or LDAP_MOD_REPLACE (==2)
+///                    Specifies what to do with all the entry's attributes
+///                    and its values - add to the corresponding entry on
+///                    the server, delete from it, or replace the
+///                    corresponding attributes with new values
+
 Int_t TLDAPServer::ModifyEntry(TLDAPEntry &entry, Int_t mode)
 {
-   // Modifies specified entry.
-   // Be sure that you are bound with write permissions.
-   // Return value:      LDAP error code, 0 = success.
-   // TLDAPEntry &entry: Entry to be modified.
-   // Int_t mode:        Modifying mode.
-   //                    Should be one of LDAP_MOD_ADD (==0),
-   //                    LDAP_MOD_DELETE (==1) or LDAP_MOD_REPLACE (==2)
-   //                    Specifies what to do with all the entry's attributes
-   //                    and its values - add to the corresponding entry on
-   //                    the server, delete from it, or replace the
-   //                    corresponding attributes with new values
-
    Bind();
 
    Int_t errcode;
@@ -342,13 +344,13 @@ Int_t TLDAPServer::ModifyEntry(TLDAPEntry &entry, Int_t mode)
    return errcode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes the entry with specified DN, the base entry must exist.
+/// Be sure that you are bound with write permissions.
+/// Return value: LDAP error code, 0 = succes.
+
 Int_t TLDAPServer::DeleteEntry(const char *dn)
 {
-   // Deletes the entry with specified DN, the base entry must exist.
-   // Be sure that you are bound with write permissions.
-   // Return value: LDAP error code, 0 = succes.
-
    Bind();
 
    Int_t errcode;
@@ -363,21 +365,21 @@ Int_t TLDAPServer::DeleteEntry(const char *dn)
    return errcode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Renames the entry with specified DN, the entry must be leaf
+/// Be sure that you are bound with the write permissions
+/// Return value:      LDAP error code, 0 = succes
+/// char *dn:          Distinguished name of entry to be renamed.
+///                    This entry must be a leaf in the LDAP directory tree.
+/// char *newrdn:      The new relative distinguished name to give the entry
+///                    being renamed.
+/// Bool_t removeattr: This parameter specifies whether or not the
+///                    attribute values in the old relative distinguished
+///                    name should be removed from the entry
+///                    or retained as non-distinguished attributes.
+
 Int_t TLDAPServer::RenameEntry(const char *dn, const char *newrdn, Bool_t removeattr)
 {
-   // Renames the entry with specified DN, the entry must be leaf
-   // Be sure that you are bound with the write permissions
-   // Return value:      LDAP error code, 0 = succes
-   // char *dn:          Distinguished name of entry to be renamed.
-   //                    This entry must be a leaf in the LDAP directory tree.
-   // char *newrdn:      The new relative distinguished name to give the entry
-   //                    being renamed.
-   // Bool_t removeattr: This parameter specifies whether or not the
-   //                    attribute values in the old relative distinguished
-   //                    name should be removed from the entry
-   //                    or retained as non-distinguished attributes.
-
    Int_t errcode;
    if (IsConnected()) {
       errcode = ldap_modrdn2_s(fLd, dn, newrdn, removeattr);
@@ -390,13 +392,13 @@ Int_t TLDAPServer::RenameEntry(const char *dn, const char *newrdn, Bool_t remove
    return errcode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes the array of LDAPMod structures and frees its memory.
+/// LDAPMod **mods: Pointer to the zero-terminated array of pointers
+///                 to LDAPMod structures
+
 void TLDAPServer::DeleteMods(LDAPMod **mods)
 {
-   // Deletes the array of LDAPMod structures and frees its memory.
-   // LDAPMod **mods: Pointer to the zero-terminated array of pointers
-   //                 to LDAPMod structures
-
 #if 1
    ldap_mods_free(mods, 1);
 #else

@@ -29,21 +29,21 @@ static TInterpreter *gInterpreterLocal = 0; // The real holder of the pointer.
 
 ClassImp(TInterpreter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TInterpreter ctor only called by derived classes.
+
 TInterpreter::TInterpreter(const char *name, const char *title)
     : TNamed(name, title)
 {
-   // TInterpreter ctor only called by derived classes.
-
    gInterpreterLocal = this;
    gCling            = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns gInterpreter global
+
 TInterpreter *TInterpreter::Instance()
 {
-   // returns gInterpreter global
-
    if (gInterpreterLocal == 0) {
       static TROOT *getROOT = ROOT::GetROOT(); // Make sure gInterpreterLocal is set
       if (!getROOT) {

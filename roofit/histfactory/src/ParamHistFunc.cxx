@@ -8,7 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 BEGIN_HTML
 <p>
@@ -83,14 +84,16 @@ ClassImp(ParamHistFunc);
  */
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ParamHistFunc::ParamHistFunc() : _numBins(0)
 {
   ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ParamHistFunc::ParamHistFunc(const char* name, const char* title, 
 			     const RooArgList& vars, const RooArgList& paramSet) :
   RooAbsReal(name, title),
@@ -99,7 +102,6 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _numBins(0),
   _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars)
 {
-  
   // Create a function which returns binewise-values
   // This class contains N RooRealVar's, one for each
   // bin from the given RooRealVar.
@@ -133,7 +135,8 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ParamHistFunc::ParamHistFunc(const char* name, const char* title, 
 			     const RooArgList& vars, const RooArgList& paramSet,
 			     const TH1* Hist ) :
@@ -196,7 +199,8 @@ Int_t ParamHistFunc::GetNumBins( const RooArgSet& vars ) {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ParamHistFunc::ParamHistFunc(const ParamHistFunc& other, const char* name) :
   RooAbsReal(other, name), 
   _dataVars("!dataVars", this, other._dataVars ),
@@ -211,16 +215,17 @@ ParamHistFunc::ParamHistFunc(const ParamHistFunc& other, const char* name) :
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ParamHistFunc::~ParamHistFunc() 
 {
   ;
 }
 
 
-//_____________________________________________________________________________
-Int_t ParamHistFunc::getCurrentBin() const {
+////////////////////////////////////////////////////////////////////////////////
 
+Int_t ParamHistFunc::getCurrentBin() const {
   // Get the index of the gamma parameter associated
   // with the current bin
   // This number is the "RooDataSet" style index
@@ -235,9 +240,9 @@ Int_t ParamHistFunc::getCurrentBin() const {
 }
 
 
-//_____________________________________________________________________________
-RooRealVar& ParamHistFunc::getParameter( Int_t index ) const {
+////////////////////////////////////////////////////////////////////////////////
 
+RooRealVar& ParamHistFunc::getParameter( Int_t index ) const {
   // Get the parameter associate with the the
   // input RooDataHist style index
   // It uses the binMap to convert the RooDataSet style index
@@ -258,7 +263,8 @@ RooRealVar& ParamHistFunc::getParameter( Int_t index ) const {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooRealVar& ParamHistFunc::getParameter() const {
   Int_t index = getCurrentBin();
   return getParameter( index );
@@ -278,9 +284,9 @@ void ParamHistFunc::setConstant( bool constant ) {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void ParamHistFunc::setShape( TH1* shape ) {
-  
   int num_hist_bins = shape->GetNbinsX()*shape->GetNbinsY()*shape->GetNbinsZ();
 
   if( num_hist_bins != numBins() ) {
@@ -308,10 +314,10 @@ void ParamHistFunc::setShape( TH1* shape ) {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Prefix, 
 					 const RooArgList& vars) {
-  
   // Create the list of RooRealVar
   // parameters which represent the
   // height of the histogram bins.
@@ -444,11 +450,11 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Prefix, 
 					 const RooArgList& vars, 
 					 Double_t gamma_min, Double_t gamma_max) {
-
   // Create the list of RooRealVar
   // parameters which represent the
   // height of the histogram bins.
@@ -484,10 +490,10 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBins, 
 					 Double_t gamma_min, Double_t gamma_max) {
-
   // Create the list of RooRealVar
   // parameters which represent the
   // height of the histogram bins.
@@ -538,9 +544,9 @@ RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBin
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
-  
   // return 0 for success
   // return 1 for failure
   
@@ -619,9 +625,9 @@ Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
-  
   // return 0 for success
   // return 1 for failure
 
@@ -666,10 +672,10 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t ParamHistFunc::evaluate() const 
 {
-
   // Find the bin cooresponding to the current
   // value of the RooRealVar:
 
@@ -680,13 +686,13 @@ Double_t ParamHistFunc::evaluate() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Advertise that all integrals can be handled internally.
+
 Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
 					     const RooArgSet* normSet, 
 					     const char* /*rangeName*/) const 
 {
-  // Advertise that all integrals can be handled internally.
-
   // Handle trivial no-integration scenario
   if (allVars.getSize()==0) return 0 ;
   if (_forceNumInt) return 0 ;
@@ -713,13 +719,13 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement analytical integrations by doing appropriate weighting from  component integrals
+/// functions to integrators of components
+
 Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*normSet2*/,
 					     const char* /*rangeName*/) const 
 {
-  // Implement analytical integrations by doing appropriate weighting from  component integrals
-  // functions to integrators of components
-
   Double_t value(0) ;
 
   // Simply loop over bins, 
@@ -761,14 +767,14 @@ Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return sampling hint for making curves of (projections) of this function
+/// as the recursive division strategy of RooCurve cannot deal efficiently
+/// with the vertical lines that occur in a non-interpolated histogram
+
 std::list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, 
 						Double_t /*xhi*/) const
 {
-  // Return sampling hint for making curves of (projections) of this function
-  // as the recursive division strategy of RooCurve cannot deal efficiently
-  // with the vertical lines that occur in a non-interpolated histogram
-
   return 0;
 
   /*
@@ -801,14 +807,14 @@ std::list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& /*obs*/, 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return sampling hint for making curves of (projections) of this function
+/// as the recursive division strategy of RooCurve cannot deal efficiently
+/// with the vertical lines that occur in a non-interpolated histogram
+
 std::list<Double_t>* ParamHistFunc::binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, 
 						  Double_t /*xhi*/) const 
 {
-  // Return sampling hint for making curves of (projections) of this function
-  // as the recursive division strategy of RooCurve cannot deal efficiently
-  // with the vertical lines that occur in a non-interpolated histogram
-
   return 0;
 
   /*

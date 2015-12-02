@@ -50,7 +50,9 @@
 
 ClassImp(TProofBenchRunCPU)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TProofBenchRunCPU::TProofBenchRunCPU(TPBHistType *histtype, Int_t nhists,
                                      TDirectory* dirproofbench, TProof* proof,
                                      TProofNodes* nodes, Long64_t nevents, Int_t ntries,
@@ -66,8 +68,6 @@ TProofBenchRunCPU::TProofBenchRunCPU(TPBHistType *histtype, Int_t nhists,
                     fProfile_queryresult_event(0), fNorm_queryresult_event(0), fProfile_cpu_eff(0),
                     fProfLegend(0), fNormLegend(0), fName(0)
 {
-   // Default constructor
-
    if (TestBit(kInvalidObject)) {
       Error("TProofBenchRunCPU", "problems validating PROOF session or enabling selector PAR");
       return;
@@ -85,10 +85,11 @@ TProofBenchRunCPU::TProofBenchRunCPU(TPBHistType *histtype, Int_t nhists,
    gStyle->SetOptStat(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TProofBenchRunCPU::~TProofBenchRunCPU()
 {
-   // Destructor
    fProof=0;
    fDirProofBench=0;
    SafeDelete(fListPerfPlots);
@@ -98,11 +99,11 @@ TProofBenchRunCPU::~TProofBenchRunCPU()
    SafeDelete(fNormLegend);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build histograms, profiles and graphs needed for this run
+
 void TProofBenchRunCPU::BuildHistos(Int_t start, Int_t stop, Int_t step, Bool_t nx)
 {
-   // Build histograms, profiles and graphs needed for this run
-
    TObject *o = 0;
    Int_t quotient = (stop - start) / step;
    Int_t ndiv = quotient + 1;
@@ -227,23 +228,23 @@ void TProofBenchRunCPU::BuildHistos(Int_t start, Int_t stop, Int_t step, Bool_t 
    fListPerfPlots->Add(fProfile_cpu_eff);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run benchmark
+/// Input parameters
+///   nevents:   Number of events to run per file. When it is -1, use data member fNEvents.
+///   start: Start scan with 'start' workers. When it is -1, use data member fStart.
+///          When 0, the same number of workers are activated on all nodes.
+///   stop: Stop scan at 'stop' workers. When it is -1 , use data member fStop.
+///   step: Scan every 'step' workers. When it is -1, use data member fStep.
+///   ntries: Number of repetitions.  When it is -1, use data member fNTries.
+///   debug: debug switch. When it is -1, use data member fDebug.
+///   draw: draw switch. When it is -1, use data member fDraw.
+/// Returns
+///    Nothing
+
 void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
                             Int_t step, Int_t ntries, Int_t debug, Int_t draw)
 {
-   // Run benchmark
-   // Input parameters
-   //   nevents:   Number of events to run per file. When it is -1, use data member fNEvents.
-   //   start: Start scan with 'start' workers. When it is -1, use data member fStart.
-   //          When 0, the same number of workers are activated on all nodes.
-   //   stop: Stop scan at 'stop' workers. When it is -1 , use data member fStop.
-   //   step: Scan every 'step' workers. When it is -1, use data member fStep.
-   //   ntries: Number of repetitions.  When it is -1, use data member fNTries.
-   //   debug: debug switch. When it is -1, use data member fDebug.
-   //   draw: draw switch. When it is -1, use data member fDraw.
-   // Returns
-   //    Nothing
-
    if (!fProof){
       Error("Run", "Proof not set");
       return;
@@ -543,10 +544,10 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TProofBenchRunCPU::FillPerfStatPerfPlots(TTree* t, Int_t nactive)
 {
-
    // Fill performance profiles using tree 't'(PROOF_PerfStats).
    // Input parameters
    //    t: Proof output tree (PROOF_PerfStat) containing performance statistics.
@@ -593,11 +594,11 @@ void TProofBenchRunCPU::FillPerfStatPerfPlots(TTree* t, Int_t nactive)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show settings
+
 void TProofBenchRunCPU::Print(Option_t* option) const
 {
-   // Show settings
-
    Printf("+++ TProofBenchRunCPU +++++++++++++++++++++++++++++++++++++++++");
    Printf("Name      = %s", fName.Data());
    if (fProof) fProof->Print(option);
@@ -620,11 +621,11 @@ void TProofBenchRunCPU::Print(Option_t* option) const
    Printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw Performance plots
+
 void TProofBenchRunCPU::DrawPerfPlots()
 {
-   // Draw Performance plots
-
    // Get canvas
    if (!fCanvas) fCanvas = new TCanvas("Canvas");
 
@@ -651,20 +652,20 @@ void TProofBenchRunCPU::DrawPerfPlots()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set histogram type
+
 void TProofBenchRunCPU::SetHistType(TPBHistType *histtype)
 {
-   // Set histogram type
-
    fHistType = histtype;
    fName.Form("%sCPU", GetNameStem().Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get name for this run
+
 TString TProofBenchRunCPU::GetNameStem() const
 {
-   // Get name for this run
-
    TString namestem("+++undef+++");
    if (fHistType) {
       switch (fHistType->GetType()) {
@@ -687,11 +688,11 @@ TString TProofBenchRunCPU::GetNameStem() const
    return namestem;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameters
+
 Int_t TProofBenchRunCPU::SetParameters()
 {
-   // Set parameters
-
    if (!fProof) {
       Error("SetParameters", "proof not set; Doing nothing");
       return 1;
@@ -704,10 +705,11 @@ Int_t TProofBenchRunCPU::SetParameters()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete parameters set for this run
+
 Int_t TProofBenchRunCPU::DeleteParameters()
 {
-   // Delete parameters set for this run
    if (!fProof){
       Error("DeleteParameters", "proof not set; Doing nothing");
       return 1;

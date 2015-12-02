@@ -26,17 +26,20 @@
 
 ClassImp(TSQLClassColumnInfo)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TSQLClassColumnInfo::TSQLClassColumnInfo() :
    TObject(),
    fName(),
    fSQLName(),
    fSQLType()
 {
-   // default constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// normal constructor
+
 TSQLClassColumnInfo::TSQLClassColumnInfo(const char* name,
                                          const char* sqlname,
                                          const char* sqltype) :
@@ -45,19 +48,21 @@ TSQLClassColumnInfo::TSQLClassColumnInfo(const char* name,
    fSQLName(sqlname),
    fSQLType(sqltype)
 {
-   // normal constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TSQLClassColumnInfo::~TSQLClassColumnInfo()
 {
-   // destructor
 }
 
 
 ClassImp(TSQLClassInfo)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TSQLClassInfo::TSQLClassInfo() :
    TObject(),
    fClassName(),
@@ -68,10 +73,12 @@ TSQLClassInfo::TSQLClassInfo() :
    fColumns(0),
    fRawtableExist(kFALSE)
 {
-// default constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// normal constructor of TSQLClassInfo class
+/// Sets names of tables, which are used for that version of class
+
 TSQLClassInfo::TSQLClassInfo(Long64_t classid,
                              const char* classname,
                              Int_t version) :
@@ -84,28 +91,26 @@ TSQLClassInfo::TSQLClassInfo(Long64_t classid,
    fColumns(0),
    fRawtableExist(kFALSE)
 {
-   // normal constructor of TSQLClassInfo class
-   // Sets names of tables, which are used for that version of class
    fClassTable.Form("%s_ver%d", classname, version);
    fRawTable.Form("%s_raw%d", classname, version);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TSQLClassInfo::~TSQLClassInfo()
 {
-// destructor
-
    if (fColumns!=0) {
       fColumns->Delete();
       delete fColumns;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assigns new list of columns
+
 void TSQLClassInfo::SetColumns(TObjArray* columns)
 {
-// assigns new list of columns
-
    if (fColumns!=0) {
       fColumns->Delete();
       delete fColumns;
@@ -113,23 +118,23 @@ void TSQLClassInfo::SetColumns(TObjArray* columns)
    fColumns = columns;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set current status of class tables
+
 void TSQLClassInfo::SetTableStatus(TObjArray* columns, Bool_t israwtable)
 {
-// set current status of class tables
-
    SetColumns(columns);
    fRawtableExist = israwtable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search for column of that name
+/// Can search either for full column name (sqlname = kFALSE, default)
+/// or for name, used as column name (sqlname = kTRUE)
+/// Return index of column in list (-1 if not found)
+
 Int_t TSQLClassInfo::FindColumn(const char* name, Bool_t sqlname)
 {
-   // Search for column of that name
-   // Can search either for full column name (sqlname = kFALSE, default)
-   // or for name, used as column name (sqlname = kTRUE)
-   // Return index of column in list (-1 if not found)
-
    if ((name==0) || (fColumns==0)) return -1;
 
    TIter next(fColumns);

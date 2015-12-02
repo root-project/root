@@ -41,7 +41,8 @@ using namespace std;
 ClassImp(RooMultiVarGaussian)
   ;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 					 const RooArgList& xvec, const RooArgList& mu, const TMatrixDSym& cov) :
   RooAbsPdf(name,title),
@@ -62,7 +63,8 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 					 const RooArgList& xvec, const RooFitResult& fr, Bool_t reduceToConditional) :
   RooAbsPdf(name,title),
@@ -98,7 +100,8 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 					 const RooArgList& xvec, const TVectorD& mu, const TMatrixDSym& cov) :
   RooAbsPdf(name,title),
@@ -120,7 +123,8 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
  _covI.Invert() ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 					 const RooArgList& xvec, const TMatrixDSym& cov) :
   RooAbsPdf(name,title),
@@ -130,7 +134,6 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
   _covI(cov),
   _z(4)
 {
-
  _x.add(xvec) ;
 
   for (Int_t i=0 ; i<xvec.getSize() ; i++) {
@@ -145,7 +148,8 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMultiVarGaussian::RooMultiVarGaussian(const RooMultiVarGaussian& other, const char* name) : 
   RooAbsPdf(other,name), _aicMap(other._aicMap), _x("x",this,other._x), _mu("mu",this,other._mu), 
   _cov(other._cov), _covI(other._covI), _det(other._det), _z(other._z)
@@ -154,7 +158,8 @@ RooMultiVarGaussian::RooMultiVarGaussian(const RooMultiVarGaussian& other, const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooMultiVarGaussian::syncMuVec() const 
 {
   _muVec.ResizeTo(_mu.getSize()) ;
@@ -164,10 +169,11 @@ void RooMultiVarGaussian::syncMuVec() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Represent observables as vector
+
 Double_t RooMultiVarGaussian::evaluate() const
 {
-  // Represent observables as vector
   TVectorD x(_x.getSize()) ;
   for (int i=0 ; i<_x.getSize() ; i++) {
     x[i] = ((RooAbsReal*)_x.at(i))->getVal() ;
@@ -183,7 +189,8 @@ Double_t RooMultiVarGaussian::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet& analVars, const char* rangeName) const 
 {
   RooArgSet allVars(allVarsIn) ;
@@ -275,10 +282,11 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle full integral here
+
 Double_t RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
 {
-  // Handle full integral here
   if (code==-1) {
     return pow(2*3.14159268,_x.getSize()/2.)*sqrt(fabs(_det)) ;
   }
@@ -303,10 +311,11 @@ Double_t RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*range
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if cache entry was previously created
+
 RooMultiVarGaussian::AnaIntData& RooMultiVarGaussian::anaIntData(Int_t code) const 
 {
-  // Check if cache entry was previously created
   map<int,AnaIntData>::iterator iter =  _anaIntCache.find(code) ;
   if (iter != _anaIntCache.end()) {
     return iter->second ;
@@ -356,10 +365,11 @@ RooMultiVarGaussian::AnaIntData& RooMultiVarGaussian::anaIntData(Int_t code) con
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Special case: generate all observables
+
 Int_t RooMultiVarGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
-  // Special case: generate all observables
   if (directVars.getSize()==_x.getSize()) {
     generateVars.add(directVars) ;
     return -1 ;
@@ -402,11 +412,12 @@ Int_t RooMultiVarGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the GenData cache as its content is not invariant under changes in
+/// the mu vector. 
+
 void RooMultiVarGaussian::initGenerator(Int_t /*code*/)
 {
-  // Clear the GenData cache as its content is not invariant under changes in
-  // the mu vector. 
   _genCache.clear() ;
   
 }
@@ -414,10 +425,11 @@ void RooMultiVarGaussian::initGenerator(Int_t /*code*/)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve generator config from cache
+
 void RooMultiVarGaussian::generateEvent(Int_t code)
 {
-  // Retrieve generator config from cache
   GenData& gd = genData(code) ;
   TMatrixD& TU = gd.UT ;
   Int_t nobs = TU.GetNcols() ;
@@ -480,11 +492,11 @@ void RooMultiVarGaussian::generateEvent(Int_t code)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// WVE -- CHECK THAT GENDATA IS VALID GIVEN CURRENT VALUES OF _MU
+
 RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const 
 {
-  // WVE -- CHECK THAT GENDATA IS VALID GIVEN CURRENT VALUES OF _MU
-
   // Check if cache entry was previously created
   map<int,GenData>::iterator iter =  _genCache.find(code) ;
   if (iter != _genCache.end()) {
@@ -574,11 +586,12 @@ RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decode analytical integration/generation code into index map of integrated/generated (map2)
+/// and non-integrated/generated observables (map1)
+
 void RooMultiVarGaussian::decodeCode(Int_t code, vector<int>& map1, vector<int>& map2) const
 {
-  // Decode analytical integration/generation code into index map of integrated/generated (map2)
-  // and non-integrated/generated observables (map1)
   if (code<0 || code> (Int_t)_aicMap.size()) {
     cout << "RooMultiVarGaussian::decodeCode(" << GetName() << ") ERROR don't have bit pattern for code " << code << endl ;
     throw string("RooMultiVarGaussian::decodeCode() ERROR don't have bit pattern for code") ;
@@ -597,11 +610,11 @@ void RooMultiVarGaussian::decodeCode(Int_t code, vector<int>& map1, vector<int>&
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Block decomposition of covI according to given maps of observables
+
 void RooMultiVarGaussian::blockDecompose(const TMatrixD& input, const vector<int>& map1, const vector<int>& map2, TMatrixDSym& S11, TMatrixD& S12, TMatrixD& S21, TMatrixDSym& S22)
 {
-  // Block decomposition of covI according to given maps of observables
-
   // Allocate and fill reordered covI matrix in 2x2 block structure
 
   S11.ResizeTo(map1.size(),map1.size()) ; 

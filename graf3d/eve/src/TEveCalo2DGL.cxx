@@ -28,52 +28,52 @@
 
 ClassImp(TEveCalo2DGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveCalo2DGL::TEveCalo2DGL() :
    TGLObject(),
    fM(0)
 {
-   // Constructor.
-
    // fDLCache = kFALSE; // Disable display list.
    fMultiColor = kTRUE;
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEveCalo2DGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEveCalo2D>(obj);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding box.
+
 void TEveCalo2DGL::SetBBox()
 {
-   // Set bounding box.
-
    SetAxisAlignedBBox(((TEveCalo2D*)fExternalObj)->AssertBBox());
 }
 
 /******************************************************************************/
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Is current projection type RPhi
+
 Bool_t TEveCalo2DGL::IsRPhi() const
 {
-   // Is current projection type RPhi
-
    return fM->fManager->GetProjection()->GetType() == TEveProjection::kPT_RPhi;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate vertices for the calorimeter cell in RPhi projection.
+/// Returns outside radius of the tower.
+
 void TEveCalo2DGL::MakeRPhiCell(Float_t phiMin, Float_t phiMax,
                                    Float_t towerH, Float_t offset) const
 {
-   // Calculate vertices for the calorimeter cell in RPhi projection.
-   // Returns outside radius of the tower.
-
    using namespace TMath;
 
    Float_t r1 = fM->fBarrelRadius + offset;
@@ -99,11 +99,11 @@ void TEveCalo2DGL::MakeRPhiCell(Float_t phiMin, Float_t phiMax,
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw calorimeter cells in RPhi projection.
+
 void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLists) const
 {
-   // Draw calorimeter cells in RPhi projection.
-
    TEveCaloData* data = fM->GetData();
    Int_t    nSlices  = data->GetNSlices();
    Float_t *sliceVal = new Float_t[nSlices];
@@ -147,11 +147,11 @@ void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
    delete [] sliceVal;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw selected calorimeter cells in RPhi projection.
+
 void TEveCalo2DGL::DrawRPhiHighlighted(std::vector<TEveCaloData::vCellId_t*>& cellLists) const
 {
-   // Draw selected calorimeter cells in RPhi projection.
-
    static const TEveException eh("TEveCalo2DGL::DrawRPhiHighlighted ");
 
    TEveCaloData* data = fM->fData;
@@ -206,12 +206,12 @@ void TEveCalo2DGL::DrawRPhiHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
 /*******************************************************************************/
 /*******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw cell in RhoZ projection.
+
 void TEveCalo2DGL::MakeRhoZCell(Float_t thetaMin, Float_t thetaMax,
                                 Float_t& offset, Bool_t isBarrel,  Bool_t phiPlus, Float_t towerH) const
 {
-   // Draw cell in RhoZ projection.
-
    using namespace TMath;
 
    Float_t pnts[8];
@@ -261,11 +261,11 @@ void TEveCalo2DGL::MakeRhoZCell(Float_t thetaMin, Float_t thetaMax,
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw calorimeter in RhoZ projection.
+
 void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLists) const
 {
-   // Draw calorimeter in RhoZ projection.
-
    TEveCaloData* data = fM->GetData();
    Int_t nSlices = data->GetNSlices();
 
@@ -344,11 +344,11 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
    delete [] sliceValsLow;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw selected calorimeter cells in RhoZ projection.
+
 void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& cellLists) const
 {
-   // Draw selected calorimeter cells in RhoZ projection.
-
    static const TEveException eh("TEveCalo2DGL::DrawRhoZHighlighted ");
 
    TEveCaloData* data = fM->GetData();
@@ -435,11 +435,11 @@ void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
    delete [] sliceValsLowRef;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render with OpenGL.
+
 void TEveCalo2DGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Render with OpenGL.
-
    TGLCapabilitySwitch light_off(GL_LIGHTING,  kFALSE);
    TGLCapabilitySwitch cull_off (GL_CULL_FACE, kFALSE);
 
@@ -461,11 +461,11 @@ void TEveCalo2DGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    glPopAttrib();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw towers in highlight mode.
+
 void TEveCalo2DGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*pshp*/, Int_t /*lvl*/) const
 {
-   // Draw towers in highlight mode.
-
    static const TEveException eh("TEveCalo2DGL::DrawHighlight ");
 
    if (fM->fData->GetCellsSelected().empty() && fM->fData->GetCellsHighlighted().empty())
@@ -504,12 +504,12 @@ void TEveCalo2DGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*ps
    TGLUtil::UnlockColor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Processes tower selection in eta bin or phi bin.
+/// Virtual function from TGLogicalShape. Called from TGLViewer.
+
 void TEveCalo2DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec)
 {
-   // Processes tower selection in eta bin or phi bin.
-   // Virtual function from TGLogicalShape. Called from TGLViewer.
-
    TEveCaloData::vCellId_t sel;
    if (rec.GetN() > 2)
    {

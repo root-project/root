@@ -28,12 +28,12 @@
 ClassImp(TAlienJob)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Queries the job for its status and returns a TGridJobStatus object.
+/// Returns 0 in case of failure.
+
 TGridJobStatus *TAlienJob::GetJobStatus() const
 {
-   // Queries the job for its status and returns a TGridJobStatus object.
-   // Returns 0 in case of failure.
-
    TString jobID;
    jobID = fJobID;
 
@@ -61,12 +61,12 @@ TGridJobStatus *TAlienJob::GetJobStatus() const
    return status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cancels a job e.g. sends a kill command.
+/// Returns kFALSE in case of failure, otherwise kTRUE.
+
 Bool_t TAlienJob::Cancel()
 {
-   // Cancels a job e.g. sends a kill command.
-   // Returns kFALSE in case of failure, otherwise kTRUE.
-
    if (gGrid) {
       return gGrid->Kill((TGridJob*)this);
    }
@@ -74,12 +74,12 @@ Bool_t TAlienJob::Cancel()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resubmits a job.
+/// Returns kFALSE in case of failure, otherwise kTRUE.
+
 Bool_t TAlienJob::Resubmit()
 {
-   // Resubmits a job.
-   // Returns kFALSE in case of failure, otherwise kTRUE.
-
    if (gGrid) {
       return gGrid->Resubmit((TGridJob*)this);
    }

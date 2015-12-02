@@ -82,18 +82,19 @@ public:
 };
 static TGClientInit gClientInit;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns global gClient (initialize graphics first, if not already done)
+
 TGClient *TGClient::Instance()
 {
-   // Returns global gClient (initialize graphics first, if not already done)
-
    if (!gClientGlobal && gApplication)
       gApplication->InitializeGraphics();
    return gClientGlobal;
 }
 
 //----- Graphics Input handler -------------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TGInputHandler : public TFileHandler {
 private:
    TGClient  *fClient;   // connection to display server
@@ -103,24 +104,24 @@ public:
    // Important: don't override ReadNotify()
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notify input from the display server.
+
 Bool_t TGInputHandler::Notify()
 {
-   // Notify input from the display server.
-
    return fClient->HandleInput();
 }
 
 
 ClassImp(TGClient)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a connection with the display sever on host dpyName and setup
+/// the complete GUI system, i.e., graphics contexts, fonts, etc. for all
+/// widgets.
+
 TGClient::TGClient(const char *dpyName)
 {
-   // Create a connection with the display sever on host dpyName and setup
-   // the complete GUI system, i.e., graphics contexts, fonts, etc. for all
-   // widgets.
-
    fRoot         = 0;
    fPicturePool  = 0;
    fMimeTypeList = 0;
@@ -212,51 +213,51 @@ TGClient::TGClient(const char *dpyName)
    gClientGlobal = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns current root (i.e. base) window. By changing the root
+/// window one can change the window hierarchy, e.g. a top level
+/// frame (TGMainFrame) can be embedded in another window.
+
 const TGWindow *TGClient::GetRoot() const
 {
-   // Returns current root (i.e. base) window. By changing the root
-   // window one can change the window hierarchy, e.g. a top level
-   // frame (TGMainFrame) can be embedded in another window.
-
    return fRoot;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the root (i.e. desktop) window. Should only be used as parent
+/// for frames that will never be embedded, like popups, message boxes,
+/// etc. (like TGToolTips, TGMessageBox, etc.).
+
 const TGWindow *TGClient::GetDefaultRoot() const
 {
-   // Returns the root (i.e. desktop) window. Should only be used as parent
-   // for frames that will never be embedded, like popups, message boxes,
-   // etc. (like TGToolTips, TGMessageBox, etc.).
-
    return fDefaultRoot;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the current root (i.e. base) window. By changing the root
+/// window one can change the window hierarchy, e.g. a top level
+/// frame (TGMainFrame) can be embedded in another window.
+
 void TGClient::SetRoot(TGWindow *root)
 {
-   // Sets the current root (i.e. base) window. By changing the root
-   // window one can change the window hierarchy, e.g. a top level
-   // frame (TGMainFrame) can be embedded in another window.
-
    fRoot = root ? root : fDefaultRoot;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the button style (modern or classic).
+
 void TGClient::SetStyle(const char *style)
 {
-   // Set the button style (modern or classic).
-
    fStyle = 0;
    if (style && strstr(style, "modern"))
       fStyle = 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get display width.
+
 UInt_t TGClient::GetDisplayWidth() const
 {
-   // Get display width.
-
    Int_t  x, y;
    UInt_t w, h;
 
@@ -265,11 +266,11 @@ UInt_t TGClient::GetDisplayWidth() const
    return w;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get display height.
+
 UInt_t TGClient::GetDisplayHeight() const
 {
-   // Get display height.
-
    Int_t  x, y;
    UInt_t w, h;
 
@@ -278,94 +279,95 @@ UInt_t TGClient::GetDisplayHeight() const
    return h;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get picture from the picture pool. Picture must be freed using
+/// TGClient::FreePicture(). If picture is not found 0 is returned.
+
 const TGPicture *TGClient::GetPicture(const char *name)
 {
-   // Get picture from the picture pool. Picture must be freed using
-   // TGClient::FreePicture(). If picture is not found 0 is returned.
-
    return fPicturePool->GetPicture(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get picture with specified size from pool (picture will be scaled if
+/// necessary). Picture must be freed using TGClient::FreePicture(). If
+/// picture is not found 0 is returned.
+
 const TGPicture *TGClient::GetPicture(const char *name,
                                       UInt_t new_width, UInt_t new_height)
 {
-   // Get picture with specified size from pool (picture will be scaled if
-   // necessary). Picture must be freed using TGClient::FreePicture(). If
-   // picture is not found 0 is returned.
-
    return fPicturePool->GetPicture(name, new_width, new_height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free picture resource.
+
 void TGClient::FreePicture(const TGPicture *pic)
 {
-   // Free picture resource.
-
    if (pic) fPicturePool->FreePicture(pic);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get graphics context from the gc pool. Context must be freed via
+/// TGClient::FreeGC(). If rw is true a new read/write-able GC
+/// is returned, otherwise a shared read-only context is returned.
+/// For historical reasons it is also possible to create directly a
+/// TGGC object, but it is advised to use this new interface only.
+
 TGGC *TGClient::GetGC(GCValues_t *values, Bool_t rw)
 {
-   // Get graphics context from the gc pool. Context must be freed via
-   // TGClient::FreeGC(). If rw is true a new read/write-able GC
-   // is returned, otherwise a shared read-only context is returned.
-   // For historical reasons it is also possible to create directly a
-   // TGGC object, but it is advised to use this new interface only.
-
    return fGCPool->GetGC(values, rw);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free a graphics context.
+
 void TGClient::FreeGC(const TGGC *gc)
 {
-   // Free a graphics context.
-
    fGCPool->FreeGC(gc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free a graphics context.
+
 void TGClient::FreeGC(GContext_t gc)
 {
-   // Free a graphics context.
-
    fGCPool->FreeGC(gc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a font from the font pool. Fonts must be freed via
+/// TGClient::FreeFont(). Returns 0 in case of error or if font
+/// does not exist. If fixedDefault is false the "fixed" font
+/// will not be substituted as fallback when the asked for font
+/// does not exist.
+
 TGFont *TGClient::GetFont(const char *font, Bool_t fixedDefault)
 {
-   // Get a font from the font pool. Fonts must be freed via
-   // TGClient::FreeFont(). Returns 0 in case of error or if font
-   // does not exist. If fixedDefault is false the "fixed" font
-   // will not be substituted as fallback when the asked for font
-   // does not exist.
-
    return fFontPool->GetFont(font, fixedDefault);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get again specified font. Will increase its usage count.
+
 TGFont *TGClient::GetFont(const TGFont *font)
 {
-   // Get again specified font. Will increase its usage count.
-
    return fFontPool->GetFont(font);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free a font.
+
 void TGClient::FreeFont(const TGFont *font)
 {
-   // Free a font.
-
    fFontPool->FreeFont(font);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set redraw flags.
+
 void TGClient::NeedRedraw(TGWindow *w, Bool_t force)
 {
-   // Set redraw flags.
    if (gVirtualX->NeedRedraw((ULong_t)w,force)) return;
    if (force) {
       w->DoRedraw();
@@ -375,18 +377,19 @@ void TGClient::NeedRedraw(TGWindow *w, Bool_t force)
    fGlobalNeedRedraw = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGClient::CancelRedraw(TGWindow *w)
 {
    w->fNeedRedraw = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a color by name. If color is found return kTRUE and pixel is
+/// set to the color's pixel value, kFALSE otherwise.
+
 Bool_t TGClient::GetColorByName(const char *name, Pixel_t &pixel) const
 {
-   // Get a color by name. If color is found return kTRUE and pixel is
-   // set to the color's pixel value, kFALSE otherwise.
-
    ColorStruct_t      color;
    WindowAttributes_t attributes = WindowAttributes_t();
    Bool_t             status = kTRUE;
@@ -408,15 +411,15 @@ Bool_t TGClient::GetColorByName(const char *name, Pixel_t &pixel) const
    return status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a font by name. If font is not found, fixed font is returned,
+/// if fixed font also does not exist return 0 and print error.
+/// The loaded font needs to be freed using TVirtualX::DeleteFont().
+/// If fixedDefault is false the "fixed" font will not be substituted
+/// as fallback when the asked for font does not exist.
+
 FontStruct_t TGClient::GetFontByName(const char *name, Bool_t fixedDefault) const
 {
-   // Get a font by name. If font is not found, fixed font is returned,
-   // if fixed font also does not exist return 0 and print error.
-   // The loaded font needs to be freed using TVirtualX::DeleteFont().
-   // If fixedDefault is false the "fixed" font will not be substituted
-   // as fallback when the asked for font does not exist.
-
    if (gROOT->IsBatch())
       return (FontStruct_t) -1;
 
@@ -437,11 +440,11 @@ FontStruct_t TGClient::GetFontByName(const char *name, Bool_t fixedDefault) cons
    return font;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pixel value of hilite color based on base_color.
+
 Pixel_t TGClient::GetHilite(Pixel_t base_color) const
 {
-   // Return pixel value of hilite color based on base_color.
-
    ColorStruct_t      color, white_p;
    WindowAttributes_t attributes = WindowAttributes_t();
 
@@ -467,12 +470,12 @@ Pixel_t TGClient::GetHilite(Pixel_t base_color) const
    return color.fPixel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pixel value of shadow color based on base_color.
+/// Shadow is 60% of base_color intensity.
+
 Pixel_t TGClient::GetShadow(Pixel_t base_color) const
 {
-   // Return pixel value of shadow color based on base_color.
-   // Shadow is 60% of base_color intensity.
-
    ColorStruct_t      color;
    WindowAttributes_t attributes = WindowAttributes_t();
 
@@ -491,59 +494,59 @@ Pixel_t TGClient::GetShadow(Pixel_t base_color) const
    return color.fPixel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free color.
+
 void TGClient::FreeColor(Pixel_t color) const
 {
-   // Free color.
-
    gVirtualX->FreeColor(fDefaultColormap, color);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a TGWindow to the clients list of windows.
+
 void TGClient::RegisterWindow(TGWindow *w)
 {
-   // Add a TGWindow to the clients list of windows.
-
    fWlist->Add(w);
 
    // Emits signal
    RegisteredWindow(w->GetId());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a TGWindow from the list of windows.
+
 void TGClient::UnregisterWindow(TGWindow *w)
 {
-   // Remove a TGWindow from the list of windows.
-
    fWlist->Remove(w);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a popup menu to the list of popups. This list is used to pass
+/// events to popup menus that are popped up over a transient window which
+/// is waited for (see WaitFor()).
+
 void TGClient::RegisterPopup(TGWindow *w)
 {
-   // Add a popup menu to the list of popups. This list is used to pass
-   // events to popup menus that are popped up over a transient window which
-   // is waited for (see WaitFor()).
-
    fPlist->Add(w);
 
    // Emits signal
    RegisteredWindow(w->GetId());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a popup menu from the list of popups.
+
 void TGClient::UnregisterPopup(TGWindow *w)
 {
-   // Remove a popup menu from the list of popups.
-
    fPlist->Remove(w);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add handler for unknown (i.e. unregistered) windows.
+
 void TGClient::AddUnknownWindowHandler(TGUnknownWindowHandler *h)
 {
-   // Add handler for unknown (i.e. unregistered) windows.
-
    if (!fUWHandlers) {
       fUWHandlers = new TList;
       fUWHandlers->SetOwner();
@@ -552,19 +555,19 @@ void TGClient::AddUnknownWindowHandler(TGUnknownWindowHandler *h)
    fUWHandlers->Add(h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove handler for unknown (i.e. unregistered) windows.
+
 void TGClient::RemoveUnknownWindowHandler(TGUnknownWindowHandler *h)
 {
-   // Remove handler for unknown (i.e. unregistered) windows.
-
    fUWHandlers->Remove(h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add handler for idle events.
+
 void TGClient::AddIdleHandler(TGIdleHandler *h)
 {
-   // Add handler for idle events.
-
    if (!fIdleHandlers) {
       fIdleHandlers = new TList;
       fIdleHandlers->SetOwner();
@@ -573,30 +576,30 @@ void TGClient::AddIdleHandler(TGIdleHandler *h)
    fIdleHandlers->Add(h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove handler for idle events.
+
 void TGClient::RemoveIdleHandler(TGIdleHandler *h)
 {
-   // Remove handler for idle events.
-
    fIdleHandlers->Remove(h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find a TGWindow via its handle. If window is not found return 0.
+
 TGWindow *TGClient::GetWindowById(Window_t wid) const
 {
-   // Find a TGWindow via its handle. If window is not found return 0.
-
    TGWindow  wt(wid);
 
    return (TGWindow *) fWlist->FindObject(&wt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find a TGWindow via its name (unique name used in TGWindow::SavePrimitive).
+/// If window is not found return 0.
+
 TGWindow *TGClient::GetWindowByName(const char *name) const
 {
-   // Find a TGWindow via its name (unique name used in TGWindow::SavePrimitive).
-   // If window is not found return 0.
-
    TIter next(fWlist);
 
    TObject *obj;
@@ -609,11 +612,11 @@ TGWindow *TGClient::GetWindowByName(const char *name) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Closing down client: cleanup and close X connection.
+
 TGClient::~TGClient()
 {
-   // Closing down client: cleanup and close X connection.
-
    if (IsZombie())
       return;
 
@@ -629,15 +632,15 @@ TGClient::~TGClient()
                               // X allocated objects...
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process one event. This method should only be called when there is
+/// a GUI event ready to be processed. If event has been processed
+/// kTRUE is returned. If processing of a specific event type for a specific
+/// window was requested kFALSE is returned when specific event has been
+/// processed, kTRUE otherwise. If no more pending events return kFALSE.
+
 Bool_t TGClient::ProcessOneEvent()
 {
-   // Process one event. This method should only be called when there is
-   // a GUI event ready to be processed. If event has been processed
-   // kTRUE is returned. If processing of a specific event type for a specific
-   // window was requested kFALSE is returned when specific event has been
-   // processed, kTRUE otherwise. If no more pending events return kFALSE.
-
    Event_t event;
 
    if (!fRoot) return kFALSE;
@@ -667,11 +670,11 @@ Bool_t TGClient::ProcessOneEvent()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process one idle event.
+
 Bool_t TGClient::ProcessIdleEvent()
 {
-   // Process one idle event.
-
    if (fIdleHandlers) {
       TGIdleHandler *ih = (TGIdleHandler *) fIdleHandlers->First();
       if (ih) {
@@ -683,12 +686,12 @@ Bool_t TGClient::ProcessIdleEvent()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handles input from the display server. Returns kTRUE if one or more
+/// events have been processed, kFALSE otherwise.
+
 Bool_t TGClient::HandleInput()
 {
-   // Handles input from the display server. Returns kTRUE if one or more
-   // events have been processed, kFALSE otherwise.
-
    Bool_t handledevent = kFALSE;
 
    while (ProcessOneEvent())
@@ -696,11 +699,11 @@ Bool_t TGClient::HandleInput()
    return handledevent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wait for window to be destroyed.
+
 void TGClient::WaitFor(TGWindow *w)
 {
-   // Wait for window to be destroyed.
-
    Window_t wsave    = fWaitForWindow;
    EGEventType esave = fWaitForEvent;
 
@@ -724,11 +727,11 @@ void TGClient::WaitFor(TGWindow *w)
    fWaitForEvent  = esave;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wait for window to be unmapped.
+
 void TGClient::WaitForUnmap(TGWindow *w)
 {
-   // Wait for window to be unmapped.
-
    Window_t wsave    = fWaitForWindow;
    EGEventType esave = fWaitForEvent;
 
@@ -750,21 +753,21 @@ void TGClient::WaitForUnmap(TGWindow *w)
    fWaitForEvent  = esave;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reset waiting
+
 void TGClient::ResetWaitFor(TGWindow *w)
 {
-   // reset waiting
-
    if (fWaitForWindow == w->GetId()) fWaitForWindow = kNone;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Like gSystem->ProcessEvents() but then only allow events for w to
+/// be processed. For example to interrupt the processing and destroy
+/// the window, call gROOT->SetInterrupt() before destroying the window.
+
 Bool_t TGClient::ProcessEventsFor(TGWindow *w)
 {
-   // Like gSystem->ProcessEvents() but then only allow events for w to
-   // be processed. For example to interrupt the processing and destroy
-   // the window, call gROOT->SetInterrupt() before destroying the window.
-
    Window_t wsave    = fWaitForWindow;
    EGEventType esave = fWaitForEvent;
 
@@ -779,14 +782,14 @@ Bool_t TGClient::ProcessEventsFor(TGWindow *w)
    return intr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw all windows that need redrawing. Returns kFALSE if no redraw
+/// was needed, kTRUE otherwise.
+/// Only redraw the application's windows when the event queue
+/// does not contain expose event anymore.
+
 Bool_t TGClient::DoRedraw()
 {
-   // Redraw all windows that need redrawing. Returns kFALSE if no redraw
-   // was needed, kTRUE otherwise.
-   // Only redraw the application's windows when the event queue
-   // does not contain expose event anymore.
-
    if (!fGlobalNeedRedraw) return kFALSE;
 
    TGWindow *w;
@@ -806,11 +809,11 @@ Bool_t TGClient::DoRedraw()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle a GUI event.
+
 Bool_t TGClient::HandleEvent(Event_t *event)
 {
-   // Handle a GUI event.
-
    TGWindow *w;
 
    // Emit signal for event recorder(s)
@@ -839,15 +842,15 @@ Bool_t TGClient::HandleEvent(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle masked events only if window wid is the window for which the
+/// event was reported or if wid is a parent of the event window. The not
+/// masked event are handled directly. The masked events are:
+/// kButtonPress, kButtonRelease, kKeyPress, kKeyRelease, kEnterNotify,
+/// kLeaveNotify, kMotionNotify.
+
 Bool_t TGClient::HandleMaskEvent(Event_t *event, Window_t wid)
 {
-   // Handle masked events only if window wid is the window for which the
-   // event was reported or if wid is a parent of the event window. The not
-   // masked event are handled directly. The masked events are:
-   // kButtonPress, kButtonRelease, kKeyPress, kKeyRelease, kEnterNotify,
-   // kLeaveNotify, kMotionNotify.
-
    TGWindow *w, *ptr, *pop;
 
    if ((w = GetWindowById(event->fWindow)) == 0) return kFALSE;
@@ -898,14 +901,14 @@ Bool_t TGClient::HandleMaskEvent(Event_t *event, Window_t wid)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute string "cmd" via the interpreter. Before executing replace
+/// in the command string the token $MSG, $PARM1 and $PARM2 by msg,
+/// parm1 and parm2, respectively. The function in cmd string must accept
+/// these as longs.
+
 void TGClient::ProcessLine(TString cmd, Long_t msg, Long_t parm1, Long_t parm2)
 {
-   // Execute string "cmd" via the interpreter. Before executing replace
-   // in the command string the token $MSG, $PARM1 and $PARM2 by msg,
-   // parm1 and parm2, respectively. The function in cmd string must accept
-   // these as longs.
-
    if (cmd.IsNull()) return;
 
    char s[32];
@@ -922,28 +925,28 @@ void TGClient::ProcessLine(TString cmd, Long_t msg, Long_t parm1, Long_t parm2)
    gROOT->ProcessLine(cmd.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if edit/guibuilding is forbidden.
+
 Bool_t TGClient::IsEditDisabled() const
 {
-   // Returns kTRUE if edit/guibuilding is forbidden.
-
    return (fDefaultRoot->GetEditDisabled() == 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If on is kTRUE editting/guibuilding is forbidden.
+
 void TGClient::SetEditDisabled(Bool_t on)
 {
-   // If on is kTRUE editting/guibuilding is forbidden.
-
    fDefaultRoot->SetEditDisabled(on);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emits a signal when an event has been processed.
+/// Used in TRecorder.
+
 void TGClient::ProcessedEvent(Event_t *event, Window_t wid)
 {
-   // Emits a signal when an event has been processed.
-   // Used in TRecorder.
-
    Long_t args[2];
    args[0] = (Long_t) event;
    args[1] = (Long_t) wid;
@@ -951,11 +954,11 @@ void TGClient::ProcessedEvent(Event_t *event, Window_t wid)
    Emit("ProcessedEvent(Event_t*, Window_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emits a signal when a Window has been registered in TGClient.
+/// Used in TRecorder.
+
 void TGClient::RegisteredWindow(Window_t w)
 {
-   // Emits a signal when a Window has been registered in TGClient.
-   // Used in TRecorder.
-
    Emit("RegisteredWindow(Window_t)", w);
 }

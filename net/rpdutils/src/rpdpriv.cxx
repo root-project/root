@@ -101,12 +101,12 @@ extern "C" {
 
 bool rpdpriv::debug = 0; // debug switch
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restore the 'saved' (saved = TRUE) or 'real' entity as effective.
+/// Return 0 on success, < 0 (== -errno) if any error occurs.
+
 int rpdpriv::restore(bool saved)
 {
-   // Restore the 'saved' (saved = TRUE) or 'real' entity as effective.
-   // Return 0 on success, < 0 (== -errno) if any error occurs.
-
 #if !defined(WINDOWS)
    // Get the UIDs
    uid_t ruid = 0, euid = 0, suid = 0;
@@ -153,14 +153,14 @@ int rpdpriv::restore(bool saved)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change effective to entity newuid. Current entity is saved.
+/// Real entity is not touched. Use RestoreSaved to go back to
+/// previous settings.
+/// Return 0 on success, < 0 (== -errno) if any error occurs.
+
 int rpdpriv::changeto(uid_t newuid, gid_t newgid)
 {
-   // Change effective to entity newuid. Current entity is saved.
-   // Real entity is not touched. Use RestoreSaved to go back to
-   // previous settings.
-   // Return 0 on success, < 0 (== -errno) if any error occurs.
-
 #if !defined(WINDOWS)
    // Current UGID
    uid_t oeuid = geteuid();
@@ -209,13 +209,13 @@ int rpdpriv::changeto(uid_t newuid, gid_t newgid)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change permanently to entity newuid. Requires super-userprivileges.
+/// Provides a way to drop permanently su privileges.
+/// Return 0 on success, < 0 (== -errno) if any error occurs.
+
 int rpdpriv::changeperm(uid_t newuid, gid_t newgid)
 {
-   // Change permanently to entity newuid. Requires super-userprivileges.
-   // Provides a way to drop permanently su privileges.
-   // Return 0 on success, < 0 (== -errno) if any error occurs.
-
    // Atomic action
 #if !defined(WINDOWS)
    // Get UIDs
@@ -274,11 +274,11 @@ int rpdpriv::changeperm(uid_t newuid, gid_t newgid)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump current entity
+
 void rpdpriv::dumpugid(const char *msg)
 {
-   // Dump current entity
-
 #if !defined(WINDOWS)
    // Get the UIDs
    uid_t ruid = 0, euid = 0, suid = 0;
@@ -302,24 +302,24 @@ void rpdpriv::dumpugid(const char *msg)
 
 //
 // Guard class
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. Create a guard object for temporarly change to privileges
+/// of {'uid', 'gid'}
+
 rpdprivguard::rpdprivguard(uid_t uid, gid_t gid)
 {
-   // Constructor. Create a guard object for temporarly change to privileges
-   // of {'uid', 'gid'}
-
    dum = 1;
    valid = 0;
 
    init(uid, gid);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. Create a guard object for temporarly change to privileges
+/// of 'usr'
+
 rpdprivguard::rpdprivguard(const char *usr)
 {
-   // Constructor. Create a guard object for temporarly change to privileges
-   // of 'usr'
-
    dum = 1;
    valid = 0;
 
@@ -334,22 +334,22 @@ rpdprivguard::rpdprivguard(const char *usr)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Restore state and unlock the global mutex.
+
 rpdprivguard::~rpdprivguard()
 {
-   // Destructor. Restore state and unlock the global mutex.
-
    if (!dum) {
       rpdpriv::restore();
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init a change of privileges guard. Act only if superuser.
+/// The result of initialization can be tested with the Valid() method.
+
 void rpdprivguard::init(uid_t uid, gid_t gid)
 {
-   // Init a change of privileges guard. Act only if superuser.
-   // The result of initialization can be tested with the Valid() method.
-
    dum = 1;
    valid = 1;
 

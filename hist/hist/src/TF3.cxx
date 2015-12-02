@@ -30,30 +30,30 @@ ClassImp(TF3)
 // a 3-Dim function with parameters
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*F3 default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ======================
+
 TF3::TF3(): TF2()
 {
-//*-*-*-*-*-*-*-*-*-*-*F3 default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ======================
-
    fNpz  = 0;
    fZmin = 0;
    fZmax = 1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*F3 constructor using a formula definition*-*-*-*-*-*-*-*-*-*-*
+///*-*          =========================================
+///*-*
+///*-*  See TFormula constructor for explanation of the formula syntax.
+///*-*
+///*-*
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax)
       :TF2(name,formula,xmin,xmax,ymax,ymin)
 {
-//*-*-*-*-*-*-*F3 constructor using a formula definition*-*-*-*-*-*-*-*-*-*-*
-//*-*          =========================================
-//*-*
-//*-*  See TFormula constructor for explanation of the formula syntax.
-//*-*
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
    fZmin   = zmin;
    fZmax   = zmax;
    fNpz    = 30;
@@ -64,131 +64,131 @@ TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*F3 constructor using a pointer to real function*-*-*-*-*-*-*-*
+///*-*          ===============================================
+///*-*
+///*-*   npar is the number of free parameters used by the function
+///*-*
+///*-*  For example, for a 3-dim function with 3 parameters, the user function
+///*-*      looks like:
+///*-*    Double_t fun1(Double_t *x, Double_t *par)
+///*-*        return par[0]*x[2] + par[1]*exp(par[2]*x[0]*x[1]);
+///*-*
+///*-* WARNING! A function created with this constructor cannot be Cloned.
+///*-*
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,Int_t ndim)
       :TF2(name,fcn,xmin,xmax,ymin,ymax,npar,ndim)
 {
-//*-*-*-*-*-*-*F3 constructor using a pointer to real function*-*-*-*-*-*-*-*
-//*-*          ===============================================
-//*-*
-//*-*   npar is the number of free parameters used by the function
-//*-*
-//*-*  For example, for a 3-dim function with 3 parameters, the user function
-//*-*      looks like:
-//*-*    Double_t fun1(Double_t *x, Double_t *par)
-//*-*        return par[0]*x[2] + par[1]*exp(par[2]*x[0]*x[1]);
-//*-*
-//*-* WARNING! A function created with this constructor cannot be Cloned.
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
    fZmin   = zmin;
    fZmax   = zmax;
    fNpz    = 30;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*F3 constructor using a pointer to real function*-*-*-*-*-*-*-*
+///*-*          ===============================================
+///*-*
+///*-*   npar is the number of free parameters used by the function
+///*-*
+///*-*  For example, for a 3-dim function with 3 parameters, the user function
+///*-*      looks like:
+///*-*    Double_t fun1(Double_t *x, Double_t *par)
+///*-*        return par[0]*x[2] + par[1]*exp(par[2]*x[0]*x[1]);
+///*-*
+///*-* WARNING! A function created with this constructor cannot be Cloned.
+///*-*
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 TF3::TF3(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, Int_t ndim)
    : TF2(name,fcn,xmin,xmax,ymin,ymax,npar,ndim),
    fZmin(zmin), 
    fZmax(zmax), 
    fNpz(30) 
 {
-//*-*-*-*-*-*-*F3 constructor using a pointer to real function*-*-*-*-*-*-*-*
-//*-*          ===============================================
-//*-*
-//*-*   npar is the number of free parameters used by the function
-//*-*
-//*-*  For example, for a 3-dim function with 3 parameters, the user function
-//*-*      looks like:
-//*-*    Double_t fun1(Double_t *x, Double_t *par)
-//*-*        return par[0]*x[2] + par[1]*exp(par[2]*x[0]*x[1]);
-//*-*
-//*-* WARNING! A function created with this constructor cannot be Cloned.
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*F3 constructor using a ParamFunctor, 
+///*-*          a functor class implementing operator() (double *, double *)  
+///*-*
+///*-*   npar is the number of free parameters used by the function
+///*-*
+///*-* WARNING! A function created with this constructor cannot be Cloned.
+///*-*
+
 TF3::TF3(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, Int_t ndim)
    : TF2(name, f, xmin, xmax, ymin, ymax,  npar, ndim), 
    fZmin(zmin), 
    fZmax(zmax), 
    fNpz(30) 
 {
-//*-*-*-*-*-*-*F3 constructor using a ParamFunctor, 
-//*-*          a functor class implementing operator() (double *, double *)  
-//*-*
-//*-*   npar is the number of free parameters used by the function
-//*-*
-//*-* WARNING! A function created with this constructor cannot be Cloned.
-//*-*
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator =
+
 TF3& TF3::operator=(const TF3 &rhs) 
 {
-   // Operator =
-
    if (this != &rhs) {
       rhs.Copy(*this);
    }
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*F3 default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  =====================
+
 TF3::~TF3()
 {
-//*-*-*-*-*-*-*-*-*-*-*F3 default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =====================
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TF3::TF3(const TF3 &f3) : TF2()
 {
-   // Copy constructor.
-
    ((TF3&)f3).Copy(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Copy this F3 to a new F3*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ========================
+
 void TF3::Copy(TObject &obj) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Copy this F3 to a new F3*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
-
    TF2::Copy(obj);
    ((TF3&)obj).fZmin = fZmin;
    ((TF3&)obj).fZmax = fZmax;
    ((TF3&)obj).fNpz  = fNpz;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a function*-*-*-*-*
+///*-*                  ===============================================
+///*-*  Compute the closest distance of approach from point px,py to this function.
+///*-*  The distance is computed in pixels units.
+///*-*
+///*-*  Algorithm:
+///*-*
+///*-*
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 Int_t TF3::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a function*-*-*-*-*
-//*-*                  ===============================================
-//*-*  Compute the closest distance of approach from point px,py to this function.
-//*-*  The distance is computed in pixels units.
-//*-*
-//*-*  Algorithm:
-//*-*
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
    return TF1::DistancetoPrimitive(px, py);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Draw this function with its current attributes*-*-*-*-*
+///*-*                  ==============================================
+
 void TF3::Draw(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this function with its current attributes*-*-*-*-*
-//*-*                  ==============================================
-
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -197,34 +197,34 @@ void TF3::Draw(Option_t *option)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
+///*-*                  =========================================
+///*-*  This member function is called when a F3 is clicked with the locator
+///*-*
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 void TF3::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//*-*  This member function is called when a F3 is clicked with the locator
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
    TF1::ExecuteEvent(event, px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return minimum/maximum value of the function
+/// To find the minimum on a range, first set this range via the SetRange function
+/// If a vector x of coordinate is passed it will be used as starting point for the minimum. 
+/// In addition on exit x will contain the coordinate values at the minimuma
+/// If x is NULL or x is inifinity or NaN, first, a grid search is performed to find the initial estimate of the 
+/// minimum location. The range of the function is divided into fNpx and fNpy
+/// sub-ranges. If the function is "good" (or "bad"), these values can be changed
+/// by SetNpx and SetNpy functions
+/// Then, a minimization is used with starting values found by the grid search
+/// The minimizer algorithm used (by default Minuit) can be changed by callinga
+///  ROOT::Math::Minimizer::SetDefaultMinimizerType("..")
+/// Other option for the minimizer can be set using the static method of the MinimizerOptions class
+
 Double_t TF3::FindMinMax(Double_t *x, Bool_t findmax) const
 {
-// return minimum/maximum value of the function
-// To find the minimum on a range, first set this range via the SetRange function
-// If a vector x of coordinate is passed it will be used as starting point for the minimum. 
-// In addition on exit x will contain the coordinate values at the minimuma
-// If x is NULL or x is inifinity or NaN, first, a grid search is performed to find the initial estimate of the 
-// minimum location. The range of the function is divided into fNpx and fNpy
-// sub-ranges. If the function is "good" (or "bad"), these values can be changed
-// by SetNpx and SetNpy functions
-// Then, a minimization is used with starting values found by the grid search
-// The minimizer algorithm used (by default Minuit) can be changed by callinga
-//  ROOT::Math::Minimizer::SetDefaultMinimizerType("..")
-// Other option for the minimizer can be set using the static method of the MinimizerOptions class
-
    //First do a grid search with step size fNpx and fNpy
 
    Double_t xx[3]; 
@@ -275,21 +275,21 @@ Double_t TF3::FindMinMax(Double_t *x, Bool_t findmax) const
    return ttmin;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the X, Y and Z values corresponding to the minimum value of the function
+/// on its range. Return the function value at the minimum
+/// To find the minimum on a subrange, use the SetRange() function first.
+/// Method:
+///   First, a grid search is performed to find the initial estimate of the 
+///   minimum location. The range of the function is divided 
+///   into fNpx,fNpy and fNpz sub-ranges. If the function is "good" (or "bad"), 
+///   these values can be changed by SetNpx(), SetNpy() and SetNpz() functions.
+///   Then, Minuit minimization is used with starting values found by the grid search
+///
+///   Note that this method will always do first a grid search in contrast to GetMinimum
+
 Double_t TF3::GetMinimumXYZ(Double_t &x, Double_t &y, Double_t &z)
 {
-// Compute the X, Y and Z values corresponding to the minimum value of the function
-// on its range. Return the function value at the minimum
-// To find the minimum on a subrange, use the SetRange() function first.
-// Method:
-//   First, a grid search is performed to find the initial estimate of the 
-//   minimum location. The range of the function is divided 
-//   into fNpx,fNpy and fNpz sub-ranges. If the function is "good" (or "bad"), 
-//   these values can be changed by SetNpx(), SetNpy() and SetNpz() functions.
-//   Then, Minuit minimization is used with starting values found by the grid search
-//
-//   Note that this method will always do first a grid search in contrast to GetMinimum
-
    double xx[3] = { 0,0,0 };
    xx[0] = TMath::QuietNaN();  // to force to do grid search in TF3::FindMinMax
    double fmin = FindMinMax(xx, false);
@@ -298,13 +298,13 @@ Double_t TF3::GetMinimumXYZ(Double_t &x, Double_t &y, Double_t &z)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the X, Y and Z values corresponding to the maximum value of the function
+/// on its range. Return the function value at the maximum
+/// See TF3::GetMinimumXYZ
+
 Double_t TF3::GetMaximumXYZ(Double_t &x, Double_t &y, Double_t &z)
 {
-// Compute the X, Y and Z values corresponding to the maximum value of the function
-// on its range. Return the function value at the maximum
-// See TF3::GetMinimumXYZ
-
    double xx[3] = { 0,0,0 };
    xx[0] = TMath::QuietNaN();  // to force to do grid search in TF3::FindMinMax
    double fmax = FindMinMax(xx, true);
@@ -313,27 +313,27 @@ Double_t TF3::GetMaximumXYZ(Double_t &x, Double_t &y, Double_t &z)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Return 3 random numbers following this function shape*-*-*-*-*-*
+///*-*        =====================================================
+///*-*
+///*-*   The distribution contained in this TF3 function is integrated
+///*-*   over the cell contents.
+///*-*   It is normalized to 1.
+///*-*   Getting the three random numbers implies:
+///*-*     - Generating a random number between 0 and 1 (say r1)
+///*-*     - Look in which cell in the normalized integral r1 corresponds to
+///*-*     - make a linear interpolation in the returned cell
+///*-*
+///*-*
+///*-*  IMPORTANT NOTE
+///*-*  The integral of the function is computed at fNpx * fNpy * fNpz points. 
+///*-*  If the function has sharp peaks, you should increase the number of 
+///*-*  points (SetNpx, SetNpy, SetNpz) such that the peak is correctly tabulated 
+///*-*  at several points.
+
 void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom)
 {
-//*-*-*-*-*-*Return 3 random numbers following this function shape*-*-*-*-*-*
-//*-*        =====================================================
-//*-*
-//*-*   The distribution contained in this TF3 function is integrated
-//*-*   over the cell contents.
-//*-*   It is normalized to 1.
-//*-*   Getting the three random numbers implies:
-//*-*     - Generating a random number between 0 and 1 (say r1)
-//*-*     - Look in which cell in the normalized integral r1 corresponds to
-//*-*     - make a linear interpolation in the returned cell
-//*-*
-//*-*
-//*-*  IMPORTANT NOTE
-//*-*  The integral of the function is computed at fNpx * fNpy * fNpz points. 
-//*-*  If the function has sharp peaks, you should increase the number of 
-//*-*  points (SetNpx, SetNpy, SetNpz) such that the peak is correctly tabulated 
-//*-*  at several points.
-
    //  Check if integral array must be build
    Int_t i,j,k,cell;
    Double_t dx   = (fXmax-fXmin)/fNpx;
@@ -387,12 +387,12 @@ void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom)
    zrandom = fZmin +dz*k +dz*gRandom->Rndm();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Return range of function*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ========================
+
 void TF3::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Return range of function*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
-
    xmin = fXmin;
    xmax = fXmax;
    ymin = fYmin;
@@ -402,11 +402,11 @@ void TF3::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xma
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get value corresponding to X in array of fSave values
+
 Double_t TF3::GetSave(const Double_t *xx)
 {
-    // Get value corresponding to X in array of fSave values
-
    //if (fNsave <= 0) return 0;
    if (fSave.empty()) return 0;
    Int_t np = fSave.size() - 9;
@@ -455,13 +455,14 @@ Double_t TF3::GetSave(const Double_t *xx)
    return r;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return Integral of a 3d function in range [ax,bx],[ay,by],[az,bz]
+/// with a desired relative accuracy. 
+///
+///
+
 Double_t TF3::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsrel)
 {
-// Return Integral of a 3d function in range [ax,bx],[ay,by],[az,bz]
-// with a desired relative accuracy. 
-//
-//
    Double_t a[3], b[3];
    a[0] = ax;
    b[0] = bx;
@@ -480,22 +481,22 @@ Double_t TF3::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Doubl
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE is the point is inside the function range
+
 Bool_t TF3::IsInside(const Double_t *x) const
 {
-// Return kTRUE is the point is inside the function range
-   
    if (x[0] < fXmin || x[0] > fXmax) return kFALSE;
    if (x[1] < fYmin || x[1] > fYmax) return kFALSE;
    if (x[2] < fZmin || x[2] > fZmax) return kFALSE;
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a histogram for axis range.
+
 TH1* TF3::CreateHistogram()
 {
-// Create a histogram for axis range.
-
    TH1* h = new TH3F("R__TF3",(char*)GetTitle(),fNpx,fXmin,fXmax
                          ,fNpy,fYmin,fYmax
                          ,fNpz,fZmin,fZmax);
@@ -503,12 +504,12 @@ TH1* TF3::CreateHistogram()
    return h;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Paint this 3-D function with its current attributes*-*-*-*-*
+///*-*              ===================================================
+
 void TF3::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*Paint this 3-D function with its current attributes*-*-*-*-*
-//*-*              ===================================================
-
 
    TString opt = option;
    opt.ToLower();
@@ -530,11 +531,11 @@ void TF3::Paint(Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the function clipping box (for drawing) "off".
+
 void TF3::SetClippingBoxOff()
 {
-   // Set the function clipping box (for drawing) "off".
-
    if (!fHistogram) {
       fHistogram = new TH3F("R__TF3",(char*)GetTitle(),fNpx,fXmin,fXmax
                                                     ,fNpy,fYmin,fYmax
@@ -544,11 +545,11 @@ void TF3::SetClippingBoxOff()
    fHistogram->GetPainter()->ProcessMessage("SetF3ClippingBoxOff",0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save values of function in array fSave
+
 void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax)
 {
-    // Save values of function in array fSave
-
    if (!fSave.empty()) fSave.clear(); 
    Int_t nsave = (fNpx+1)*(fNpy+1)*(fNpz+1);
    Int_t fNsave = nsave+9;
@@ -599,11 +600,11 @@ void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
    fSave[nsave+8] = fNpz;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save primitive as a C++ statement(s) on output stream out
-
    char quote = '"';
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TF3::Class())) {
@@ -648,13 +649,13 @@ void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       <<quote<<option<<quote<<");"<<std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the function clipping box (for drawing) "on" and define the clipping box.
+/// xclip, yclip and zclip is a point within the function range. All the
+/// function values having x<=xclip and y<=yclip and z>=zclip are clipped.
+
 void TF3::SetClippingBoxOn(Double_t xclip, Double_t yclip, Double_t zclip)
 {
-   // Set the function clipping box (for drawing) "on" and define the clipping box.
-   // xclip, yclip and zclip is a point within the function range. All the
-   // function values having x<=xclip and y<=yclip and z>=zclip are clipped.
-   
    if (!fHistogram) {
       fHistogram = new TH3F("R__TF3",(char*)GetTitle(),fNpx,fXmin,fXmax
                                                     ,fNpy,fYmin,fYmax
@@ -669,16 +670,16 @@ void TF3::SetClippingBoxOn(Double_t xclip, Double_t yclip, Double_t zclip)
    fHistogram->GetPainter()->ProcessMessage("SetF3ClippingBoxOn",&v);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the number of points used to draw the function
+///
+/// The default number of points along x is 30 for 2-d/3-d functions.
+/// You can increase this value to get a better resolution when drawing
+/// pictures with sharp peaks or to get a better result when using TF3::GetRandom2   
+/// the minimum number of points is 4, the maximum is 10000 for 2-d/3-d functions
+
 void TF3::SetNpz(Int_t npz)
 {
-// Set the number of points used to draw the function
-//
-// The default number of points along x is 30 for 2-d/3-d functions.
-// You can increase this value to get a better resolution when drawing
-// pictures with sharp peaks or to get a better result when using TF3::GetRandom2   
-// the minimum number of points is 4, the maximum is 10000 for 2-d/3-d functions
-
    if (npz < 4) {
       Warning("SetNpz","Number of points must be >=4 && <= 10000, fNpz set to 4");
       fNpz = 4;
@@ -691,12 +692,12 @@ void TF3::SetNpz(Int_t npz)
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Initialize the upper and lower bounds to draw the function*-*-*-*
+///*-*        ==========================================================
+
 void TF3::SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, Double_t ymax, Double_t zmax)
 {
-//*-*-*-*-*-*Initialize the upper and lower bounds to draw the function*-*-*-*
-//*-*        ==========================================================
-
    fXmin = xmin;
    fXmax = xmax;
    fYmin = ymin;
@@ -706,11 +707,11 @@ void TF3::SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, D
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TF3.
+
 void TF3::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TF3.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -729,12 +730,12 @@ void TF3::Streamer(TBuffer &R__b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return x^nx * y^ny * z^nz moment of a 3d function in range [ax,bx],[ay,by],[az,bz]
+///   Author: Gene Van Buren <gene@bnl.gov>
+
 Double_t TF3::Moment3(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t nz, Double_t az, Double_t bz, Double_t epsilon)
 {
-// Return x^nx * y^ny * z^nz moment of a 3d function in range [ax,bx],[ay,by],[az,bz]
-//   Author: Gene Van Buren <gene@bnl.gov>
-
    Double_t norm = Integral(ax,bx,ay,by,az,bz,epsilon);
    if (norm == 0) {
       Error("Moment3", "Integral zero over range");
@@ -745,12 +746,12 @@ Double_t TF3::Moment3(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double
    return fnc.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return x^nx * y^ny * z^nz central moment of a 3d function in range [ax,bx],[ay,by],[az,bz]
+///   Author: Gene Van Buren <gene@bnl.gov>
+
 Double_t TF3::CentralMoment3(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t nz, Double_t az, Double_t bz, Double_t epsilon)
 {
-// Return x^nx * y^ny * z^nz central moment of a 3d function in range [ax,bx],[ay,by],[az,bz]
-//   Author: Gene Van Buren <gene@bnl.gov>
-   
    Double_t norm = Integral(ax,bx,ay,by,az,bz,epsilon);
    if (norm == 0) {
       Error("CentralMoment3", "Integral zero over range");

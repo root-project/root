@@ -76,16 +76,17 @@ End_Html */
 
 ClassImp(TMVA::Interval)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// defines minimum and maximum of an interval
+/// when nbins > 0, interval describes a discrete distribution (equally distributed in the interval)
+/// when nbins == 0, interval describes a continous interval
+///
+
 TMVA::Interval::Interval( Double_t min, Double_t max, Int_t nbins ) :
    fMin(min),
    fMax(max),
    fNbins(nbins)
 {
-   // defines minimum and maximum of an interval
-   // when nbins > 0, interval describes a discrete distribution (equally distributed in the interval)
-   // when nbins == 0, interval describes a continous interval
-   //
    if (fMax - fMin < 0) Log() << kFATAL << "maximum lower than minimum" << Endl;
    if (nbins < 0) {
       Log() << kFATAL << "nbins < 0" << Endl;
@@ -104,19 +105,21 @@ TMVA::Interval::Interval( const Interval& other ) :
 {
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::Interval::~Interval()
 {
-   // destructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculates the value of the "number" bin in a discrete interval.
+/// Parameters:
+///        Double_t position
+///
+
 Double_t TMVA::Interval::GetElement( Int_t bin ) const
 {
-   // calculates the value of the "number" bin in a discrete interval.
-   // Parameters:
-   //        Double_t position
-   //
    if (fNbins <= 0) {
       Log() << kFATAL << "GetElement only defined for discrete value Intervals" << Endl;
       return 0.0;
@@ -128,10 +131,11 @@ Double_t TMVA::Interval::GetElement( Int_t bin ) const
       return fMin + ( (Double_t(bin)/(fNbins-1)) *(fMax - fMin) );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// retuns the step size between the numbers of a "discrete Interval"
+
 Double_t TMVA::Interval::GetStepSize( Int_t iBin )  const
 {
-   // retuns the step size between the numbers of a "discrete Interval"
    if (fNbins <= 0) {
       Log() << kFATAL << "GetElement only defined for discrete value Intervals" << Endl;
    }
@@ -142,10 +146,11 @@ Double_t TMVA::Interval::GetStepSize( Int_t iBin )  const
    return (fMax-fMin)/(Double_t)(fNbins-1);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get uniformely distributed number within interval
+
 Double_t TMVA::Interval::GetRndm( TRandom3& rnd )  const
 {
-   // get uniformely distributed number within interval
    return rnd.Rndm()*(fMax - fMin) + fMin;
 }
 

@@ -20,17 +20,19 @@
 ClassImp(TResponseTable)
 TableClassStreamerImp(TResponseTable)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TResponseTable::TResponseTable():TGenericTable(), fResponseLocation(-1)
 {
-   //to be documented
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set an empty descriptor
+
 TResponseTable::TResponseTable(const char *name,const char *volumePath, const char *responseDefinition, Int_t /*allocSize*/)
  :  TGenericTable(), fResponseLocation(-1)
 {
-   // Set an empty descriptor
    SetDescriptorPointer(new TTableDescriptor(name));
 
    // The first element is always "int TRACK;"
@@ -41,10 +43,11 @@ TResponseTable::TResponseTable(const char *name,const char *volumePath, const ch
    fResponseLocation = FindResponseLocation(*GetDescriptorPointer());
    SetType("DetectorResponse");
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TResponseTable::AddVolumePath(const char *path)
 {
-   //to be documented
    Int_t counter = 0;
    const Int_t maxResponseCounter = 15;
    const char *next = &path[0];
@@ -56,10 +59,11 @@ void TResponseTable::AddVolumePath(const char *path)
       counter++;
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TResponseTable::AddResponse(const char *chit)
 {
-   //to be documented
    Int_t counter = 0;
    const Int_t maxResponseCounter = 15;
    const char *next = &chit[0];
@@ -71,10 +75,11 @@ void TResponseTable::AddResponse(const char *chit)
       counter++;
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TResponseTable::AddElement(const char *path,EColumnType type)
 {
-   //to be documented
    assert( (type == kInt || type == kFloat ) );
 
    TTableDescriptor  &dsc = *GetTableDescriptors();
@@ -95,11 +100,12 @@ void TResponseTable::AddElement(const char *path,EColumnType type)
    dsc.AddAt(&row);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add one extra his/digit to the table
+/// Reallocate the table if needed
+
 void TResponseTable::SetResponse(int track, int *nvl, float *response)
 {
-   // Add one extra his/digit to the table
-   // Reallocate the table if needed
    char    *charBuffer     = new char[GetRowSize()];
    Int_t   *nvlBuffer      = (Int_t *)charBuffer;
    Float_t *responseBuffer = (Float_t *)charBuffer;
@@ -122,21 +128,21 @@ void TResponseTable::SetResponse(int track, int *nvl, float *response)
    delete [] charBuffer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Look up the table descriptor to find the
+/// first respnse value location
+/// TResponsetable layout:
+///  offset
+///   +0    int TRACK
+///   +1
+///   ...   int <volume path description>
+///  +nVl.
+///  +nVl+1  <----  fResponseLocation
+///   ...   response values
+///  RowSize
+
 Int_t TResponseTable::FindResponseLocation(TTableDescriptor  &dsc)
 {
- // Look up the table descriptor to find the
- // first respnse value location
- // TResponsetable layout:
- //  offset
- //   +0    int TRACK
- //   +1
- //   ...   int <volume path description>
- //  +nVl.
- //  +nVl+1  <----  fResponseLocation
- //   ...   response values
- //  RowSize
-
    // responseLocation is an offset of the first float data-member
    Int_t responseLocation = -1;
    Int_t nRow = dsc.GetNRows();

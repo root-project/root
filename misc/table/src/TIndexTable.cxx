@@ -74,19 +74,21 @@ void TIndexTable::Dictionary()
 #endif
    TableClassStreamerImp(TIndexTable)
 
-//___________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TIndexTable::TIndexTable(const TTable *table):TTable("Index",-1), fRefTable(table)
 {
-   //to be documented
    if (!fgColDescriptors)    CreateDescriptor();
    fSize = fgColDescriptors->Sizeof();
    // Add refered table to this index.
    // yf  if (table) Add((TDataSet *)table);
 }
-//___________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TTableDescriptor *TIndexTable::CreateDescriptor()
 {
-   //to be documented
    if (!fgColDescriptors) {
       // Set an empty descriptor
       fgColDescriptors= new TTableDescriptor("int");
@@ -107,25 +109,28 @@ TTableDescriptor *TIndexTable::CreateDescriptor()
    return fgColDescriptors;
 }
 
-//___________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return column descriptor
+
 TTableDescriptor *TIndexTable::GetDescriptorPointer() const
 {
-   //return column descriptor
    return fgColDescriptors;
 }
 
-//___________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set table descriptor
+
 void TIndexTable::SetDescriptorPointer(TTableDescriptor *list)
 {
-   //set table descriptor
    fgColDescriptors = list;
 }
 
 //___________________________________________________________________
 
-//___________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 const TTable *TIndexTable::Table() const
 {
-   //to be documented
    return fRefTable;
 }

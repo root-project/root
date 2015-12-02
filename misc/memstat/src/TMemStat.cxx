@@ -94,15 +94,15 @@ using namespace Memstat;
 
 _INIT_TOP_STACK;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Supported options:
+///    "gnubuiltin" - if declared, then MemStat will use gcc build-in function,
+///                      otherwise glibc backtrace will be used
+///
+/// Note: Currently MemStat uses a hard-coded output file name (for writing) = "memstat.root";
+
 TMemStat::TMemStat(Option_t* option, Int_t buffersize, Int_t maxcalls): fIsActive(kFALSE)
 {
-   // Supported options:
-   //    "gnubuiltin" - if declared, then MemStat will use gcc build-in function,
-   //                      otherwise glibc backtrace will be used
-   //
-   // Note: Currently MemStat uses a hard-coded output file name (for writing) = "memstat.root";
-
    // It marks the highest used stack address.
    _GET_CALLER_FRAME_ADDR;
 
@@ -128,41 +128,46 @@ TMemStat::TMemStat(Option_t* option, Int_t buffersize, Int_t maxcalls): fIsActiv
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TMemStat::~TMemStat()
 {
-   //destructor
    if (fIsActive) {
       TMemStatMng::GetInstance()->Disable();
       TMemStatMng::GetInstance()->Close();
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///close the TMemStat manager
+
 void TMemStat::Close()
 {
-   //close the TMemStat manager
    TMemStatMng::Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Disable memory statistics
+
 void TMemStat::Disable()
 {
-   //Disable memory statistics
    TMemStatMng::GetInstance()->Disable();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Enable memory statistics
+
 void TMemStat::Enable()
 {
-   //Enable memory statistics
    TMemStatMng::GetInstance()->Enable();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Show results
+
 void TMemStat::Show(Double_t update, Int_t nbigleaks, const char* fname)
 {
-   //Show results
    TString action = TString::Format("TMemStatShow::Show(%g,%d,\"%s\");",update,nbigleaks,fname);
    gROOT->ProcessLine(action);
 }

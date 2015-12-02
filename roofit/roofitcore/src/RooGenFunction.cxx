@@ -41,34 +41,39 @@ using namespace std;
 ClassImp(RooGenFunction)
 ;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGenFunction::RooGenFunction(const RooAbsReal& func, const RooArgList& observables, const RooArgList& parameters) :
   _ftor(func,observables,parameters,observables)
 {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGenFunction::RooGenFunction(const RooAbsReal& func, const RooArgList& observables, const RooArgList& parameters, const RooArgSet& nset) :
   _ftor(func,observables,parameters,nset)
 {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGenFunction::RooGenFunction(const RooGenFunction& other) :
   ROOT::Math::IGenFunction(other), _ftor(other._ftor)
 {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGenFunction::~RooGenFunction() 
 {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 double RooGenFunction::DoEval(double x) const 
 {
   return _ftor(x) ;

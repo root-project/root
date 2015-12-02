@@ -113,12 +113,12 @@ const char *HtmlError[] = {
 0
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGHtmlBrowser constructor.
+
 TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, UInt_t h)
              : TGMainFrame(p, w, h)
 {
-   // TGHtmlBrowser constructor.
-
    SetCleanup(kDeepCleanup);
    fNbFavorites = 1000;
    fMenuBar = new TGMenuBar(this, 35, 50, kHorizontalFrame);
@@ -236,11 +236,11 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
       Selected(filename);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read (open) remote files.
+
 Ssiz_t ReadSize(const char *url)
 {
-   // Read (open) remote files.
-
    char buf[4096];
    TUrl fUrl(url);
 
@@ -279,11 +279,11 @@ Ssiz_t ReadSize(const char *url)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read (open) remote files.
+
 static char *ReadRemote(const char *url)
 {
-   // Read (open) remote files.
-
    static char *buf = 0;
    TUrl fUrl(url);
 
@@ -316,11 +316,11 @@ static char *ReadRemote(const char *url)
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open (browse) selected URL.
+
 void TGHtmlBrowser::Selected(const char *uri)
 {
-   // Open (browse) selected URL.
-
    char *buf = 0;
    FILE *f;
 
@@ -435,22 +435,22 @@ void TGHtmlBrowser::Selected(const char *uri)
    SetWindowName(Form("%s - RHTML",surl.Data()));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// URL combobox has changed.
+
 void TGHtmlBrowser::URLChanged()
 {
-   // URL combobox has changed.
-
    const char *string = fURL->GetText();
    if (string) {
       Selected(gSystem->UnixPathName(string));
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "Back" navigation button.
+
 void TGHtmlBrowser::Back()
 {
-   // Handle "Back" navigation button.
-
    Int_t index = 0;
    const char *string = fURL->GetText();
    TGLBEntry * lbe1 = fComboBox->FindEntry(string);
@@ -467,12 +467,12 @@ void TGHtmlBrowser::Back()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if we just change position in the page (using anchor)
+/// and return kTRUE if any anchor has been found and followed.
+
 Bool_t TGHtmlBrowser::CheckAnchors(const char *uri)
 {
-   // Check if we just change position in the page (using anchor)
-   // and return kTRUE if any anchor has been found and followed.
-
    TString surl(gSystem->UnixPathName(uri));
 
    if (!fHtml->GetBaseUri())
@@ -507,11 +507,11 @@ Bool_t TGHtmlBrowser::CheckAnchors(const char *uri)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "Forward" navigation button.
+
 void TGHtmlBrowser::Forward()
 {
-   // Handle "Forward" navigation button.
-
    Int_t index = 0;
    const char *string = fURL->GetText();
    TGLBEntry * lbe1 = fComboBox->FindEntry(string);
@@ -528,44 +528,44 @@ void TGHtmlBrowser::Forward()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "Reload" navigation button.
+
 void TGHtmlBrowser::Reload()
 {
-   // Handle "Reload" navigation button.
-
    const char *string = fURL->GetText();
    if (string)
       Selected(string);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "Reload" navigation button.
+
 void TGHtmlBrowser::Stop()
 {
-   // Handle "Reload" navigation button.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "MouseOver" TGHtml signal.
+
 void TGHtmlBrowser::MouseOver(const char *url)
 {
-   // Handle "MouseOver" TGHtml signal.
-
    fStatusBar->SetText(url, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "MouseDown" TGHtml signal.
+
 void TGHtmlBrowser::MouseDown(const char *url)
 {
-   // Handle "MouseDown" TGHtml signal.
-
    Selected(url);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process Events.
+
 Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process Events.
-
    switch (GET_MSG(msg)) {
    case kC_COMMAND:
       {

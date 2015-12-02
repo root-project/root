@@ -36,10 +36,11 @@
 
 ClassImp(TGeoParaboloid)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy constructor
+
 TGeoParaboloid::TGeoParaboloid()
 {
-// Dummy constructor
    fRlo = 0;
    fRhi = 0;
    fDz  = 0;
@@ -48,11 +49,12 @@ TGeoParaboloid::TGeoParaboloid()
    SetShapeBit(TGeoShape::kGeoParaboloid);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor specifying X and Y semiaxis length
+
 TGeoParaboloid::TGeoParaboloid(Double_t rlo, Double_t rhi, Double_t dz)
            :TGeoBBox(0,0,0)
 {
-// Default constructor specifying X and Y semiaxis length
    fRlo = 0;
    fRhi = 0;
    fDz  = 0;
@@ -63,11 +65,12 @@ TGeoParaboloid::TGeoParaboloid(Double_t rlo, Double_t rhi, Double_t dz)
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor specifying X and Y semiaxis length
+
 TGeoParaboloid::TGeoParaboloid(const char *name, Double_t rlo, Double_t rhi, Double_t dz)
            :TGeoBBox(name, 0, 0, 0)
 {
-// Default constructor specifying X and Y semiaxis length
    fRlo = 0;
    fRhi = 0;
    fDz  = 0;
@@ -78,45 +81,50 @@ TGeoParaboloid::TGeoParaboloid(const char *name, Double_t rlo, Double_t rhi, Dou
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor specifying minimum and maximum radius
+/// param[0] =  rlo
+/// param[1] =  rhi
+/// param[2] = dz
+
 TGeoParaboloid::TGeoParaboloid(Double_t *param)
 {
-// Default constructor specifying minimum and maximum radius
-// param[0] =  rlo
-// param[1] =  rhi
-// param[2] = dz
    SetShapeBit(TGeoShape::kGeoParaboloid);
    SetDimensions(param);
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoParaboloid::~TGeoParaboloid()
 {
-// destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes capacity of the shape in [length^3]
+
 Double_t TGeoParaboloid::Capacity() const
 {
-// Computes capacity of the shape in [length^3]
    Double_t capacity = TMath::Pi()*fDz*(fRlo*fRlo+fRhi*fRhi);
    return capacity;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute bounding box of the tube
+
 void TGeoParaboloid::ComputeBBox()
 {
-// compute bounding box of the tube
    fDX = TMath::Max(fRlo, fRhi);
    fDY = fDX;
    fDZ = fDz;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute normal to closest surface from POINT.
+
 void TGeoParaboloid::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT.
    norm[0] = norm[1] = 0.0;
    if (TMath::Abs(point[2]) > fDz) {
       norm[2] = TMath::Sign(1., dir[2]);
@@ -145,10 +153,11 @@ void TGeoParaboloid::ComputeNormal(const Double_t *point, const Double_t *dir, D
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if point is inside the elliptical tube
+
 Bool_t TGeoParaboloid::Contains(const Double_t *point) const
 {
-// test if point is inside the elliptical tube
    if (TMath::Abs(point[2])>fDz) return kFALSE;
    Double_t aa = fA*(point[2]-fB);
    if (aa < 0) return kFALSE;
@@ -157,20 +166,22 @@ Bool_t TGeoParaboloid::Contains(const Double_t *point) const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute closest distance from point px,py to each vertex
+
 Int_t TGeoParaboloid::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// compute closest distance from point px,py to each vertex
    Int_t n = gGeoManager->GetNsegments();
    const Int_t numPoints=n*(n+1)+2;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from a point to the parabola given by:
+///  z = a*rsq + b;   rsq = x*x+y*y
+
 Double_t TGeoParaboloid::DistToParaboloid(const Double_t *point, const Double_t *dir, Bool_t in) const
 {
-// Compute distance from a point to the parabola given by:
-//  z = a*rsq + b;   rsq = x*x+y*y
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t a = fA * (dir[0]*dir[0] + dir[1]*dir[1]);
    Double_t b = 2.*fA*(point[0]*dir[0]+point[1]*dir[1])-dir[2];
@@ -205,10 +216,11 @@ Double_t TGeoParaboloid::DistToParaboloid(const Double_t *point, const Double_t 
    return TGeoShape::Big();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute distance from inside point to surface of the paraboloid
+
 Double_t TGeoParaboloid::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from inside point to surface of the paraboloid
    if (iact<3 && safe) {
    // compute safe distance
       *safe = Safety(point, kTRUE);
@@ -226,10 +238,11 @@ Double_t TGeoParaboloid::DistFromInside(const Double_t *point, const Double_t *d
    return TMath::Min(dz, dpara);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute distance from outside point to surface of the paraboloid and safe distance
+
 Double_t TGeoParaboloid::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from outside point to surface of the paraboloid and safe distance
    Double_t snxt = TGeoShape::Big();
    if (iact<3 && safe) {
    // compute safe distance
@@ -260,20 +273,22 @@ Double_t TGeoParaboloid::DistFromOutside(const Double_t *point, const Double_t *
    return TGeoShape::Big();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divide the paraboloid along one axis.
+
 TGeoVolume *TGeoParaboloid::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
                              Double_t /*start*/, Double_t /*step*/)
 {
-// Divide the paraboloid along one axis.
    Error("Divide", "Paraboloid divisions not implemented");
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// is the following : Rmin, Rmax, Phi1, Phi2
+
 void TGeoParaboloid::GetBoundingCylinder(Double_t *param) const
 {
-//--- Fill vector param[4] with the bounding cylinder parameters. The order
-// is the following : Rmin, Rmax, Phi1, Phi2
    param[0] = 0.;                  // Rmin
    param[1] = fDX;                 // Rmax
    param[1] *= param[1];
@@ -281,18 +296,20 @@ void TGeoParaboloid::GetBoundingCylinder(Double_t *param) const
    param[3] = 360.;                // Phi2
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// in case shape has some negative parameters, these has to be computed
+/// in order to fit the mother
+
 TGeoShape *TGeoParaboloid::GetMakeRuntimeShape(TGeoShape *, TGeoMatrix *) const
 {
-// in case shape has some negative parameters, these has to be computed
-// in order to fit the mother
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print shape parameters
+
 void TGeoParaboloid::InspectShape() const
 {
-// print shape parameters
    printf("*** Shape %s: TGeoParaboloid ***\n", GetName());
    printf("    rlo    = %11.5f\n", fRlo);
    printf("    rhi    = %11.5f\n", fRhi);
@@ -301,12 +318,12 @@ void TGeoParaboloid::InspectShape() const
    TGeoBBox::InspectShape();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a TBuffer3D describing *this* shape.
+/// Coordinates are in local reference frame.
+
 TBuffer3D *TGeoParaboloid::MakeBuffer3D() const
 {
-   // Creates a TBuffer3D describing *this* shape.
-   // Coordinates are in local reference frame.
-
    Int_t n = gGeoManager->GetNsegments();
    Int_t nbPnts = n*(n+1)+2;
    Int_t nbSegs = n*(2*n+3);
@@ -324,10 +341,11 @@ TBuffer3D *TGeoParaboloid::MakeBuffer3D() const
    return buff;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill TBuffer3D structure for segments and polygons.
+
 void TGeoParaboloid::SetSegsAndPols(TBuffer3D &buff) const
 {
-// Fill TBuffer3D structure for segments and polygons.
    Int_t indx, i, j;
    Int_t n = gGeoManager->GetNsegments();
 
@@ -396,10 +414,11 @@ void TGeoParaboloid::SetSegsAndPols(TBuffer3D &buff) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes the closest distance from given point to this shape.
+
 Double_t TGeoParaboloid::Safety(const Double_t *point, Bool_t in) const
 {
-// Computes the closest distance from given point to this shape.
    Double_t safz = fDz-TMath::Abs(point[2]);
    if (!in) safz = -safz;
    Double_t safr = TGeoShape::Big();
@@ -425,10 +444,11 @@ Double_t TGeoParaboloid::Safety(const Double_t *point, Bool_t in) const
    return TMath::Max(safr,safz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set paraboloid dimensions.
+
 void TGeoParaboloid::SetParaboloidDimensions(Double_t rlo, Double_t rhi, Double_t dz)
 {
-// Set paraboloid dimensions.
    if ((rlo<0) || (rlo<0) || (dz<=0) || TMath::Abs(rlo-rhi)<TGeoShape::Tolerance()) {
       SetShapeBit(kGeoRunTimeShape);
       Error("SetParaboloidDimensions", "Dimensions of %s invalid: check (rlo>=0) (rhi>=0) (rlo!=rhi) dz>0",GetName());
@@ -442,34 +462,36 @@ void TGeoParaboloid::SetParaboloidDimensions(Double_t rlo, Double_t rhi, Double_
    fB = - fDz * (fRlo*fRlo + fRhi*fRhi)*dd;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set paraboloid dimensions starting from an array.
+
 void TGeoParaboloid::SetDimensions(Double_t *param)
 {
-// Set paraboloid dimensions starting from an array.
    Double_t rlo    = param[0];
    Double_t rhi    = param[1];
    Double_t dz     = param[2];
    SetParaboloidDimensions(rlo, rhi, dz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create paraboloid mesh points.
+/// Npoints = n*(n+1) + 2
+///   ifirst = 0
+///   ipoint(i,j) = 1+i*n+j;                              i=[0,n]  j=[0,n-1]
+///   ilast = 1+n*(n+1)
+/// Nsegments = n*(2*n+3)
+///   lower: (0, j+1);                                    j=[0,n-1]
+///   circle(i): (n*i+1+j, n*i+1+(j+1)%n);                i=[0,n]  j=[0,n-1]
+///   generator(i): (n*i+1+j, n*(i+1)+1+j);               i,j=[0,n-1]
+///   upper: (n*n+1+j, (n+1)*n+1)                           j=[0,n-1]
+/// Npolygons = n*(n+2)
+///   lower: (n+j, (j+1)%n, j)                              j=[0,n-1]
+///   lateral(i): ((2*i+1)*n+j, 2*(i+1)*n+j, (2*i+3)*n+j, 2*(i+1)*n+(j+1)%n)
+///                                                      i,j = [0,n-1]
+///   upper: ((2n+1)*n+j, 2*n*(n+1)+(j+1)%n, 2*n*(n+1)+j)   j=[0,n-1]
+
 void TGeoParaboloid::SetPoints(Double_t *points) const
 {
-// Create paraboloid mesh points.
-// Npoints = n*(n+1) + 2
-//   ifirst = 0
-//   ipoint(i,j) = 1+i*n+j;                              i=[0,n]  j=[0,n-1]
-//   ilast = 1+n*(n+1)
-// Nsegments = n*(2*n+3)
-//   lower: (0, j+1);                                    j=[0,n-1]
-//   circle(i): (n*i+1+j, n*i+1+(j+1)%n);                i=[0,n]  j=[0,n-1]
-//   generator(i): (n*i+1+j, n*(i+1)+1+j);               i,j=[0,n-1]
-//   upper: (n*n+1+j, (n+1)*n+1)                           j=[0,n-1]
-// Npolygons = n*(n+2)
-//   lower: (n+j, (j+1)%n, j)                              j=[0,n-1]
-//   lateral(i): ((2*i+1)*n+j, 2*(i+1)*n+j, (2*i+3)*n+j, 2*(i+1)*n+(j+1)%n)
-//                                                      i,j = [0,n-1]
-//   upper: ((2n+1)*n+j, 2*n*(n+1)+(j+1)%n, 2*n*(n+1)+j)   j=[0,n-1]
    if (!points) return;
    Double_t ttmin, ttmax;
    ttmin = TMath::ATan2(-fDz, fRlo);
@@ -513,28 +535,31 @@ void TGeoParaboloid::SetPoints(Double_t *points) const
    points[indx++] = fDz;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns numbers of vertices, segments and polygons composing the shape mesh.
+
 void TGeoParaboloid::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
-// Returns numbers of vertices, segments and polygons composing the shape mesh.
    Int_t n = gGeoManager->GetNsegments();
    nvert = n*(n+1)+2;
    nsegs = n*(2*n+3);
    npols = n*(n+2);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of vertices on the paraboloid mesh.
+
 Int_t TGeoParaboloid::GetNmeshVertices() const
 {
-// Returns number of vertices on the paraboloid mesh.
    Int_t n = gGeoManager->GetNsegments();
    return (n*(n+1)+2);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoParaboloid::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
    out << "   rlo = " << fRlo << ";" << std::endl;
@@ -544,10 +569,11 @@ void TGeoParaboloid::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= 
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create paraboloid mesh points.
+
 void TGeoParaboloid::SetPoints(Float_t *points) const
 {
-// Create paraboloid mesh points.
    if (!points) return;
    Double_t ttmin, ttmax;
    ttmin = TMath::ATan2(-fDz, fRlo);
@@ -591,18 +617,20 @@ void TGeoParaboloid::SetPoints(Float_t *points) const
    points[indx++] = fDz;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////   Int_t n = gGeoManager->GetNsegments();
+////   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+////   if (painter) painter->AddSize3D(n*(n+1)+2, n*(2*n+3), n*(n+2));
+
 void TGeoParaboloid::Sizeof3D() const
 {
-///   Int_t n = gGeoManager->GetNsegments();
-///   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-///   if (painter) painter->AddSize3D(n*(n+1)+2, n*(2*n+3), n*(n+2));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills a static 3D buffer and returns a reference.
+
 const TBuffer3D & TGeoParaboloid::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
-// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
 
@@ -627,43 +655,48 @@ const TBuffer3D & TGeoParaboloid::GetBuffer3D(Int_t reqSections, Bool_t localFra
    return buffer;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the inside status for each of the points in the array.
+/// Input: Array of point coordinates + vector size
+/// Output: Array of Booleans for the inside of each point
+
 void TGeoParaboloid::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
 {
-// Check the inside status for each of the points in the array.
-// Input: Array of point coordinates + vector size
-// Output: Array of Booleans for the inside of each point
    for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the normal for an array o points so that norm.dot.dir is positive
+/// Input: Arrays of point coordinates and directions + vector size
+/// Output: Array of normal directions
+
 void TGeoParaboloid::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
 {
-// Compute the normal for an array o points so that norm.dot.dir is positive
-// Input: Arrays of point coordinates and directions + vector size
-// Output: Array of normal directions
    for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoParaboloid::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoParaboloid::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe distance from each of the points in the input array.
+/// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+/// Output: Safety values
+
 void TGeoParaboloid::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
 {
-// Compute safe distance from each of the points in the input array.
-// Input: Array of point coordinates, array of statuses for these points, size of the arrays
-// Output: Safety values
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }

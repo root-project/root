@@ -27,14 +27,14 @@
 
 ClassImp(TSelectorList)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If the class of obj has the SetDirectory(TDirectory*) method
+/// call it to unset the directory assiciation. The objects in the
+/// selector list or owned by the list and not by the directory that
+/// was active when they were created. Returns true in case of success.
+
 Bool_t TSelectorList::UnsetDirectory(TObject *obj)
 {
-   // If the class of obj has the SetDirectory(TDirectory*) method
-   // call it to unset the directory assiciation. The objects in the
-   // selector list or owned by the list and not by the directory that
-   // was active when they were created. Returns true in case of success.
-
    if (!obj || !obj->IsA())
       return kFALSE;
 
@@ -49,14 +49,14 @@ Bool_t TSelectorList::UnsetDirectory(TObject *obj)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check for duplicate object names in the list. If an object with
+/// the same name is added then the merge function will fail that will
+/// look up objects in different output lists by name. Returns true
+/// in case name is unique.
+
 Bool_t TSelectorList::CheckDuplicateName(TObject *obj)
 {
-   // Check for duplicate object names in the list. If an object with
-   // the same name is added then the merge function will fail that will
-   // look up objects in different output lists by name. Returns true
-   // in case name is unique.
-
    if (!obj)
       return kFALSE;
 
@@ -74,91 +74,91 @@ Bool_t TSelectorList::CheckDuplicateName(TObject *obj)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add at the start of the list
+
 void TSelectorList::AddFirst(TObject *obj)
 {
-   // Add at the start of the list
-
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
       THashList::AddFirst(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add at the start of the list
+
 void TSelectorList::AddFirst(TObject *obj, Option_t *opt)
 {
-   // Add at the start of the list
-
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
       THashList::AddFirst(obj, opt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add at the end of the list
+
 void TSelectorList::AddLast(TObject *obj)
 {
-   // Add at the end of the list
-
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
       THashList::AddLast(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add at the end of the list
+
 void TSelectorList::AddLast(TObject *obj, Option_t *opt)
 {
-   // Add at the end of the list
-
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
       THashList::AddLast(obj, opt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to the list.
+
 void TSelectorList::AddAt(TObject *obj, Int_t idx)
 {
-   // Add to the list.
-
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
       THashList::AddAt(obj, idx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to the list.
+
 void TSelectorList::AddAfter(const TObject *after, TObject *obj)
 {
-   // Add to the list.
-
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
       THashList::AddAfter(after, obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to the list.
+
 void TSelectorList::AddAfter(TObjLink *after, TObject *obj)
 {
-   // Add to the list.
-
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
       THashList::AddAfter(after, obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to the list.
+
 void TSelectorList::AddBefore(const TObject *before, TObject *obj)
 {
-   // Add to the list.
-
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
       THashList::AddBefore(before, obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to the list.
+
 void TSelectorList::AddBefore(TObjLink *before, TObject *obj)
 {
-   // Add to the list.
-
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
       THashList::AddBefore(before, obj);

@@ -38,49 +38,53 @@ ClassImp(RooCategoryProxy)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with owner and proxied category object
+
 RooCategoryProxy::RooCategoryProxy(const char* Name, const char* desc, RooAbsArg* owner,
 				   Bool_t valueServer, Bool_t shapeServer, Bool_t ownArg) : 
   RooArgProxy(Name, desc, owner, valueServer, shapeServer, ownArg)
 {
-  // Constructor with owner and proxied category object
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with owner and proxied category object
+
 RooCategoryProxy::RooCategoryProxy(const char* Name, const char* desc, RooAbsArg* owner, RooAbsCategory& ref,
 				   Bool_t valueServer, Bool_t shapeServer, Bool_t ownArg) : 
   RooArgProxy(Name, desc, owner, ref, valueServer, shapeServer, ownArg)
 {
-  // Constructor with owner and proxied category object
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooCategoryProxy::RooCategoryProxy(const char* Name, RooAbsArg* owner, const RooCategoryProxy& other) : 
   RooArgProxy(Name, owner, other) 
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooCategoryProxy::~RooCategoryProxy() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return RooAbsCategoryLValye pointer of contained object if
+/// it is indeed an lvalue
+
 RooAbsCategoryLValue* RooCategoryProxy::lvptr() const 
 {
-  // Return RooAbsCategoryLValye pointer of contained object if
-  // it is indeed an lvalue
-
   // Assert that the held arg is an LValue
   RooAbsCategoryLValue* Lvptr = dynamic_cast<RooAbsCategoryLValue*>(_arg) ;
   if (!Lvptr) {
@@ -92,10 +96,11 @@ RooAbsCategoryLValue* RooCategoryProxy::lvptr() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change object held in proxy into newRef
+
 Bool_t RooCategoryProxy::setArg(RooAbsCategory& newRef) 
 {
-  // Change object held in proxy into newRef
   if (absArg()) {
     if (TString(arg().GetName()!=newRef.GetName())) {
       newRef.setAttribute(Form("ORIGNAME:%s",arg().GetName())) ;

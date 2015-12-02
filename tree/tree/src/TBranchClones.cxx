@@ -33,7 +33,9 @@
 
 ClassImp(TBranchClones)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Default and i/o constructor.
+
 TBranchClones::TBranchClones()
 : TBranch()
 , fList(0)
@@ -42,11 +44,11 @@ TBranchClones::TBranchClones()
 , fNdataMax(0)
 , fBranchCount(0)
 {
-   // -- Default and i/o constructor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Constructor.
+
 TBranchClones::TBranchClones(TTree *tree, const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
 : TBranch()
 , fList(0)
@@ -55,12 +57,12 @@ TBranchClones::TBranchClones(TTree *tree, const char* name, void* pointer, Int_t
 , fNdataMax(0)
 , fBranchCount(0)
 {
-   // -- Constructor.
-
    Init(tree,0,name,pointer,basketsize,compress,splitlevel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Constructor.
+
 TBranchClones::TBranchClones(TBranch *parent, const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
 : TBranch()
 , fList(0)
@@ -69,16 +71,14 @@ TBranchClones::TBranchClones(TBranch *parent, const char* name, void* pointer, I
 , fNdataMax(0)
 , fBranchCount(0)
 {
-   // -- Constructor.
-
    Init(0,parent,name,pointer,basketsize,compress,splitlevel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization (non-virtual, to be called from constructor).
+
 void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
 {
-   // Initialization (non-virtual, to be called from constructor).
-
    if (tree==0 && parent!=0) tree = parent->GetTree();
    fTree   = tree;
    fMother = parent ? parent->GetMother() : this;
@@ -198,11 +198,11 @@ void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* p
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Destructor.
+
 TBranchClones::~TBranchClones()
 {
-   // -- Destructor.
-
    delete fBranchCount;
    fBranchCount = 0;
    fBranches.Delete();
@@ -210,19 +210,19 @@ TBranchClones::~TBranchClones()
    fList = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Browse this branch.
+
 void TBranchClones::Browse(TBrowser* b)
 {
-   // -- Browse this branch.
-
    fBranches.Browse(b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Loop on all branches and fill Basket buffer.
+
 Int_t TBranchClones::Fill()
 {
-   // -- Loop on all branches and fill Basket buffer.
-
    Int_t i = 0;
    Int_t nbytes = 0;
    Int_t nbranches = fBranches.GetEntriesFast();
@@ -257,11 +257,11 @@ Int_t TBranchClones::Fill()
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Read all branches and return total number of bytes read.
+
 Int_t TBranchClones::GetEntry(Long64_t entry, Int_t getall)
 {
-   // -- Read all branches and return total number of bytes read.
-
    if (TestBit(kDoNotProcess) && !getall) {
       return 0;
    }
@@ -296,11 +296,11 @@ Int_t TBranchClones::GetEntry(Long64_t entry, Int_t getall)
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Print branch parameters.
+
 void TBranchClones::Print(Option_t *option) const
 {
-   // -- Print branch parameters.
-
    fBranchCount->Print(option);
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nbranches; i++) {
@@ -309,15 +309,15 @@ void TBranchClones::Print(Option_t *option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Reset branch.
+///
+///    Existing buffers are deleted
+///    Entries, max and min are reset
+///
+
 void TBranchClones::Reset(Option_t* option)
 {
-   // -- Reset branch.
-   //
-   //    Existing buffers are deleted
-   //    Entries, max and min are reset
-   //
-
    fEntries = 0;
    fTotBytes = 0;
    fZipBytes = 0;
@@ -329,15 +329,15 @@ void TBranchClones::Reset(Option_t* option)
    fBranchCount->Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Reset branch after a merge.
+///
+///    Existing buffers are deleted
+///    Entries, max and min are reset
+///
+
 void TBranchClones::ResetAfterMerge(TFileMergeInfo *info)
 {
-   // -- Reset branch after a merge.
-   //
-   //    Existing buffers are deleted
-   //    Entries, max and min are reset
-   //
-
    fEntries  = 0;
    fTotBytes = 0;
    fZipBytes = 0;
@@ -349,11 +349,11 @@ void TBranchClones::ResetAfterMerge(TFileMergeInfo *info)
    fBranchCount->ResetAfterMerge(info);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Set address of this branch.
+
 void TBranchClones::SetAddress(void* addr)
 {
-   // -- Set address of this branch.
-
    fReadEntry = -1;
    fAddress = (char*) addr;
    char** pp= (char**) fAddress;
@@ -368,11 +368,11 @@ void TBranchClones::SetAddress(void* addr)
    fBranchCount->SetAddress(&fN);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Reset basket size for all sub-branches.
+
 void TBranchClones::SetBasketSize(Int_t buffsize)
 {
-   // -- Reset basket size for all sub-branches.
-
    TBranch::SetBasketSize(buffsize);
 
    Int_t nbranches = fBranches.GetEntriesFast();
@@ -382,10 +382,11 @@ void TBranchClones::SetBasketSize(Int_t buffsize)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Serialize/Deserialize from a buffer.
+
 void TBranchClones::Streamer(TBuffer& b)
 {
-   // -- Serialize/Deserialize from a buffer.
    UInt_t R__s, R__c;
    if (b.IsReading()) {
       b.ReadVersion(&R__s, &R__c);
@@ -467,13 +468,13 @@ void TBranchClones::Streamer(TBuffer& b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refresh the value of fDirectory (i.e. where this branch writes/reads its buffers)
+/// with the current value of fTree->GetCurrentFile unless this branch has been
+/// redirected to a different file.  Also update the sub-branches.
+
 void TBranchClones::UpdateFile()
 {
-   // Refresh the value of fDirectory (i.e. where this branch writes/reads its buffers)
-   // with the current value of fTree->GetCurrentFile unless this branch has been
-   // redirected to a different file.  Also update the sub-branches.
-
    fBranchCount->UpdateFile();
    TBranch::UpdateFile();
 }

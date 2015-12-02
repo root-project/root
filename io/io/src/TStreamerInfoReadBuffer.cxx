@@ -38,11 +38,12 @@ static TStreamerElement* &CurrentElement()
    return fgElement;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///static function returning a pointer to the current TStreamerElement
+///fgElement points to the current TStreamerElement being read in ReadBuffer
+
 TStreamerElement *TStreamerInfo::GetCurrentElement()
 {
-   //static function returning a pointer to the current TStreamerElement
-   //fgElement points to the current TStreamerElement being read in ReadBuffer
    return CurrentElement();
 }
 
@@ -173,13 +174,14 @@ TStreamerElement *TStreamerInfo::GetCurrentElement()
       break;                                                              \
    }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Skip an element.
+
 template <class T>
 Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *compinfo, Int_t kase,
                                     TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 {
-   // Skip an element.
    TStreamerInfo* thisVar = this;
 
    //  Skip elements in a TClonesArray
@@ -516,14 +518,14 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *c
       } break;                                                            \
    }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Artificial StreamerElement
+
 template <class T>
 Int_t TStreamerInfo::ReadBufferArtificial(TBuffer &b, const T &arr,
                                           TStreamerElement *aElement, Int_t narr,
                                           Int_t eoffset)
 {
-   // Handle Artificial StreamerElement
-
    TStreamerArtificial *artElement = (TStreamerArtificial*)aElement;
    ROOT::TSchemaRule::ReadRawFuncPtr_t rawfunc = artElement->GetReadRawFunc();
 
@@ -557,14 +559,14 @@ Int_t TStreamerInfo::ReadBufferArtificial(TBuffer &b, const T &arr,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Convert elements of a TClonesArray
+
 template <class T>
 Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  const TCompInfo *compinfo, Int_t kase,
                                     TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 {
-   //  Convert elements of a TClonesArray
-
    Int_t ioffset = eoffset+compinfo->fOffset;
 
    switch (kase) {
@@ -736,19 +738,19 @@ namespace {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Deserialize information from buffer b into object at pointer
+///  if (arrayMode & 1) ptr is a pointer to array of pointers to the objects
+///  otherwise it is a pointer to a pointer to a single object.
+///  This also means that T is of a type such that arr[i] is a pointer to an
+///  object.  Currently the only anticipated instantiation are for T==char**
+///  and T==TVirtualCollectionProxy
+
 template <class T>
 Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                                 TCompInfo *const*const compinfo, Int_t first, Int_t last,
                                 Int_t narr, Int_t eoffset, Int_t arrayMode)
 {
-   //  Deserialize information from buffer b into object at pointer
-   //  if (arrayMode & 1) ptr is a pointer to array of pointers to the objects
-   //  otherwise it is a pointer to a pointer to a single object.
-   //  This also means that T is of a type such that arr[i] is a pointer to an
-   //  object.  Currently the only anticipated instantiation are for T==char**
-   //  and T==TVirtualCollectionProxy
-
    TStreamerInfo *thisVar = this;
    Bool_t needIncrement = !( arrayMode & 2 );
    arrayMode = arrayMode & (~2);
@@ -1727,24 +1729,24 @@ template Int_t TStreamerInfo::ReadBuffer<TVirtualArray>(TBuffer &b, const TVirtu
                                                         TCompInfo *const*const compinfo, Int_t first, Int_t last,
                                                         Int_t narr, Int_t eoffset, Int_t arrayMode);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  The STL vector/list is deserialized from the buffer b
+
 Int_t TStreamerInfo::ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont,
                                    Int_t nc, Int_t eoffset, Bool_t v7 /* = kTRUE */)
 {
-   //  The STL vector/list is deserialized from the buffer b
-
    if (!nc && v7) return 0; // in version 6 of TStreamerInfo and below, we were calling ReadBuffer for empty collection.
    int ret = ReadBuffer(b, *cont,fCompFull,0,fNfulldata,nc,eoffset,1);
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read for TClonesArray.
+/// Note: This is no longer used.
+
 Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones,
                                       Int_t nc, Int_t first, Int_t eoffset)
 {
-   // Read for TClonesArray.
-   // Note: This is no longer used.
-
    char **arr = (char **)clones->GetObjectRef(0);
    return ReadBuffer(b,arr,fCompFull,first==-1?0:first,first==-1?fNfulldata:first+1,nc,eoffset,1);
 }

@@ -23,11 +23,11 @@
 
 ClassImp(TPosixMutex)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a posix mutex lock.
+
 TPosixMutex::TPosixMutex(Bool_t recursive) : TMutexImp()
 {
-   // Create a posix mutex lock.
-
    if (recursive) {
 
       int rc;
@@ -57,36 +57,36 @@ TPosixMutex::TPosixMutex(Bool_t recursive) : TMutexImp()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TMutex dtor.
+
 TPosixMutex::~TPosixMutex()
 {
-   // TMutex dtor.
-
    int rc = pthread_mutex_destroy(&fMutex);
    if (rc)
       SysError("~TPosixMutex", "pthread_mutex_destroy error");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lock the mutex.
+
 Int_t TPosixMutex::Lock()
 {
-   // Lock the mutex.
-
    return pthread_mutex_lock(&fMutex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try locking the mutex. Returns 0 if mutex can be locked.
+
 Int_t TPosixMutex::TryLock()
 {
-   // Try locking the mutex. Returns 0 if mutex can be locked.
-
    return pthread_mutex_trylock(&fMutex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlock the mutex.
+
 Int_t TPosixMutex::UnLock(void)
 {
-   // Unlock the mutex.
-
    return pthread_mutex_unlock(&fMutex);
 }

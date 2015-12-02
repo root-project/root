@@ -126,10 +126,11 @@ void  *TMapFile::fgMmallocDesc = 0;
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//// Constructor.
+
 TMapRec::TMapRec(const char *name, const TObject *obj, Int_t size, void *buf)
 {
-   /// Constructor.
    fName      = StrDup(name);
    fClassName = 0;
    fObject    = (TObject*)obj;
@@ -138,21 +139,22 @@ TMapRec::TMapRec(const char *name, const TObject *obj, Int_t size, void *buf)
    fNext      = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TMapRec::~TMapRec()
 {
-   // Destructor.
    delete [] fName;
    delete [] fClassName;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method returns a pointer to the original object. NOTE: this pointer
+/// is only valid in the process that produces the shared memory file. In a
+/// consumer process this pointer is illegal! Be careful.
+
 TObject *TMapRec::GetObject() const
 {
-   // This method returns a pointer to the original object. NOTE: this pointer
-   // is only valid in the process that produces the shared memory file. In a
-   // consumer process this pointer is illegal! Be careful.
-
    return fObject;
 }
 
@@ -161,11 +163,11 @@ TObject *TMapRec::GetObject() const
 
 ClassImp(TMapFile)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor. Does not much except setting some basic values.
+
 TMapFile::TMapFile()
 {
-   // Default ctor. Does not much except setting some basic values.
-
    fFd          = -1;
    fVersion     = 0;
    fName        = 0;
@@ -188,17 +190,17 @@ TMapFile::TMapFile()
    fSum2Buffer  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a memory mapped file. This opens a file (to which the
+/// memory will be mapped) and attaches a memory region to it.
+/// Option can be either: "NEW", "CREATE", "RECREATE", "UPDATE" or
+/// "READ" (see TFile). The default open mode is "READ". The size
+/// argument specifies the maximum size of shared memory file in bytes.
+/// This protected ctor is called via the static Create() method.
+
 TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
                    Int_t size, TMapFile *&newMapFile)
 {
-   // Create a memory mapped file. This opens a file (to which the
-   // memory will be mapped) and attaches a memory region to it.
-   // Option can be either: "NEW", "CREATE", "RECREATE", "UPDATE" or
-   // "READ" (see TFile). The default open mode is "READ". The size
-   // argument specifies the maximum size of shared memory file in bytes.
-   // This protected ctor is called via the static Create() method.
-
 #ifndef WIN32
    fFd          = -1;
    fSemaphore   = -1;
@@ -472,13 +474,13 @@ zombie:
    gMmallocDesc = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Private copy ctor. Used by the the ctor to create a new version
+/// of TMapFile in the memory mapped heap. It's main purpose is to
+/// correctly create the string data members.
+
 TMapFile::TMapFile(const TMapFile &f, Long_t offset) : TObject(f)
 {
-   // Private copy ctor. Used by the the ctor to create a new version
-   // of TMapFile in the memory mapped heap. It's main purpose is to
-   // correctly create the string data members.
-
    fFd          = f.fFd;
    fVersion     = f.fVersion;
    fName        = StrDup((char *)((Long_t)f.fName + offset));
@@ -505,14 +507,14 @@ TMapFile::TMapFile(const TMapFile &f, Long_t offset) : TObject(f)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TMapFiles may not be deleted, since we want to keep the complete
+/// TMapFile object in the mapped file for later re-use. To enforce this
+/// the delete operator has been made private. Use Close() to properly
+/// terminate a TMapFile (also done via the TROOT dtor).
+
 TMapFile::~TMapFile()
 {
-   // TMapFiles may not be deleted, since we want to keep the complete
-   // TMapFile object in the mapped file for later re-use. To enforce this
-   // the delete operator has been made private. Use Close() to properly
-   // terminate a TMapFile (also done via the TROOT dtor).
-
    if (fDirectory == gDirectory) gDirectory = gROOT;
    delete fDirectory; fDirectory = 0;
    if (fBrowseList) fBrowseList->Delete();
@@ -533,11 +535,11 @@ TMapFile::~TMapFile()
    fgMmallocDesc = fMmallocDesc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the directory associated to this mapfile
+
 void TMapFile::InitDirectory()
 {
-   // Create the directory associated to this mapfile
-
    gDirectory = 0;
    fDirectory = new TDirectoryFile();
    fDirectory->SetName(GetName());
@@ -547,12 +549,12 @@ void TMapFile::InitDirectory()
    gDirectory = fDirectory;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an object to the list of objects to be stored in shared memory.
+/// To place the object actually into shared memory call Update().
+
 void TMapFile::Add(const TObject *obj, const char *name)
 {
-   // Add an object to the list of objects to be stored in shared memory.
-   // To place the object actually into shared memory call Update().
-
    if (!fWritable || !fMmallocDesc) return;
 
    Bool_t lock = fGetting != obj ? kTRUE : kFALSE;
@@ -587,11 +589,11 @@ void TMapFile::Add(const TObject *obj, const char *name)
       ReleaseSemaphore();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update an object (or all objects, if obj == 0) in shared memory.
+
 void TMapFile::Update(TObject *obj)
 {
-   // Update an object (or all objects, if obj == 0) in shared memory.
-
    if (!fWritable || !fMmallocDesc) return;
 
    AcquireSemaphore();
@@ -625,12 +627,12 @@ void TMapFile::Update(TObject *obj)
    ReleaseSemaphore();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from shared memory. Returns pointer to removed
+/// object if successful, 0 otherwise.
+
 TObject *TMapFile::Remove(TObject *obj, Bool_t lock)
 {
-   // Remove object from shared memory. Returns pointer to removed
-   // object if successful, 0 otherwise.
-
    if (!fWritable || !fMmallocDesc) return 0;
 
    if (lock)
@@ -663,12 +665,12 @@ TObject *TMapFile::Remove(TObject *obj, Bool_t lock)
    return retObj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object by name from shared memory. Returns pointer to removed
+/// object if successful, 0 otherwise.
+
 TObject *TMapFile::Remove(const char *name, Bool_t lock)
 {
-   // Remove object by name from shared memory. Returns pointer to removed
-   // object if successful, 0 otherwise.
-
    if (!fWritable || !fMmallocDesc) return 0;
 
    if (lock)
@@ -701,11 +703,11 @@ TObject *TMapFile::Remove(const char *name, Bool_t lock)
    return retObj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all objects from shared memory.
+
 void TMapFile::RemoveAll()
 {
-   // Remove all objects from shared memory.
-
    if (!fWritable || !fMmallocDesc) return;
 
    AcquireSemaphore();
@@ -721,14 +723,14 @@ void TMapFile::RemoveAll()
    ReleaseSemaphore();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to object retrieved from shared memory. The object must
+/// be deleted after use. If delObj is a pointer to a previously allocated
+/// object it will be deleted. Returns 0 in case object with the given
+/// name does not exist.
+
 TObject *TMapFile::Get(const char *name, TObject *delObj)
 {
-   // Return pointer to object retrieved from shared memory. The object must
-   // be deleted after use. If delObj is a pointer to a previously allocated
-   // object it will be deleted. Returns 0 in case object with the given
-   // name does not exist.
-
    if (!fMmallocDesc) return 0;
 
    AcquireSemaphore();
@@ -770,15 +772,15 @@ release:
    return obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create semaphore used for synchronizing access to shared memory.
+
 #ifndef WIN32
 void TMapFile::CreateSemaphore(int)
 #else
 void TMapFile::CreateSemaphore(int pid)
 #endif
 {
-   // Create semaphore used for synchronizing access to shared memory.
-
 #ifdef HAVE_SEMOP
 #ifndef WIN32
    // create semaphore to synchronize access (should use read/write lock)
@@ -801,11 +803,11 @@ void TMapFile::CreateSemaphore(int pid)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the semaphore.
+
 void TMapFile::DeleteSemaphore()
 {
-   // Delete the semaphore.
-
 #ifdef HAVE_SEMOP
    // remove semaphore
 #ifndef WIN32
@@ -826,11 +828,11 @@ void TMapFile::DeleteSemaphore()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Acquire semaphore. Returns 0 if OK, -1 on error.
+
 Int_t TMapFile::AcquireSemaphore()
 {
-   // Acquire semaphore. Returns 0 if OK, -1 on error.
-
 #ifdef HAVE_SEMOP
 #ifndef WIN32
    if (fSemaphore != -1) {
@@ -871,11 +873,11 @@ again:
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release semaphore. Returns 0 if OK, -1 on error.
+
 Int_t TMapFile::ReleaseSemaphore()
 {
-   // Release semaphore. Returns 0 if OK, -1 on error.
-
 #ifdef HAVE_SEMOP
 #ifndef WIN32
    if (fSemaphore != -1) {
@@ -897,15 +899,15 @@ Int_t TMapFile::ReleaseSemaphore()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close a mapped file. First detach mapped memory then close file.
+/// No member functions of a TMapFile that was opened in write mode
+/// may be called after Close() (this includes, of course, "delete" which
+/// would call the dtors). The option="dtor" is only used when called
+/// via the ~TMapFile.
+
 void TMapFile::Close(Option_t *option)
 {
-   // Close a mapped file. First detach mapped memory then close file.
-   // No member functions of a TMapFile that was opened in write mode
-   // may be called after Close() (this includes, of course, "delete" which
-   // would call the dtors). The option="dtor" is only used when called
-   // via the ~TMapFile.
-
    if (!fMmallocDesc) return;
 
    TMapFile *shadow = FindShadowMapFile();
@@ -946,11 +948,11 @@ void TMapFile::Close(Option_t *option)
    delete shadow;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns shadow map file.
+
 TMapFile *TMapFile::FindShadowMapFile()
 {
-   // Returns shadow map file.
-
    R__LOCKGUARD2(gROOTMutex);
    TObjLink *lnk = ((TList *)gROOT->GetListOfMappedFiles())->LastLink();
    while (lnk) {
@@ -962,11 +964,11 @@ TMapFile *TMapFile::FindShadowMapFile()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print some info about the mapped file.
+
 void TMapFile::Print(Option_t *) const
 {
-   // Print some info about the mapped file.
-
    Printf("Memory mapped file:   %s", fName);
    Printf("Title:                %s", fTitle);
    if (fMmallocDesc) {
@@ -979,20 +981,20 @@ void TMapFile::Print(Option_t *) const
       Printf("Option:               file closed");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE in case object is a folder (i.e. contains browsable lists).
+
 Bool_t TMapFile::IsFolder() const
 {
-   // Returns kTRUE in case object is a folder (i.e. contains browsable lists).
-
    if (fMmallocDesc && fVersion > 0) return kTRUE;
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse contents of TMapFile.
+
 void TMapFile::Browse(TBrowser *b)
 {
-   // Browse contents of TMapFile.
-
    if (b && fMmallocDesc) {
 
       AcquireSemaphore();
@@ -1015,21 +1017,21 @@ void TMapFile::Browse(TBrowser *b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cd to associated directory,
+
 Bool_t TMapFile::cd(const char *path)
 {
-   // Cd to associated directory,
-
    if (fDirectory)
       return fDirectory->cd(path);
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List contents of TMapFile.
+
 void TMapFile::ls(Option_t *) const
 {
-   // List contents of TMapFile.
-
    if (fMmallocDesc) {
 
       ((TMapFile*)this)->AcquireSemaphore();
@@ -1050,25 +1052,25 @@ void TMapFile::ls(Option_t *) const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment statistics for buffer sizes of objects in this file.
+
 void TMapFile::SumBuffer(Int_t bufsize)
 {
-   // Increment statistics for buffer sizes of objects in this file.
-
    fWritten++;
    fSumBuffer  += bufsize;
    fSum2Buffer += bufsize*bufsize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the best buffer size for objects in this file.
+///
+/// The best buffer size is estimated based on the current mean value
+/// and standard deviation of all objects written so far to this file.
+/// Returns mean value + one standard deviation.
+
 Int_t TMapFile::GetBestBuffer()
 {
-   // Return the best buffer size for objects in this file.
-   //
-   // The best buffer size is estimated based on the current mean value
-   // and standard deviation of all objects written so far to this file.
-   // Returns mean value + one standard deviation.
-
    if (!fWritten) return TBuffer::kMinimalSize;
    Double_t mean = fSumBuffer/fWritten;
    Double_t rms2 = TMath::Abs(fSum2Buffer/fSumBuffer - mean*mean);
@@ -1076,79 +1078,79 @@ Int_t TMapFile::GetBestBuffer()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a memory mapped file. This opens a file (to which the
+/// memory will be mapped) and attaches a memory region to it.
+/// Option can be either: "NEW", "CREATE", "RECREATE", "UPDATE"
+/// or "READ" (see TFile). The default open mode is "READ". The size
+/// argument specifies the maximum size of shared memory file in bytes.
+/// TMapFile's can only be created via this method. Create() enforces that
+/// a TMapFile is always on the memory mapped heap (when "NEW", "CREATE"
+/// or "RECREATE" are used).
+
 TMapFile *TMapFile::Create(const char *name, Option_t *option, Int_t size,
                            const char *title)
 {
-   // Create a memory mapped file. This opens a file (to which the
-   // memory will be mapped) and attaches a memory region to it.
-   // Option can be either: "NEW", "CREATE", "RECREATE", "UPDATE"
-   // or "READ" (see TFile). The default open mode is "READ". The size
-   // argument specifies the maximum size of shared memory file in bytes.
-   // TMapFile's can only be created via this method. Create() enforces that
-   // a TMapFile is always on the memory mapped heap (when "NEW", "CREATE"
-   // or "RECREATE" are used).
-
    TMapFile *newMapFile;
    new TMapFile(name, title, option, size, newMapFile);
 
    return newMapFile;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set preferred map address. Find out preferred map address as follows:
+/// 1) Run consumer program to find the preferred map address:
+///       $ root
+///       root [0] m = TMapFile::Create("dummy.map", "recreate", 10000000);
+///       root [1] m.Print()
+///       Memory mapped file:   dummy.map
+///       Title:
+///       Option:               CREATE
+///       Mapped Memory region: 0x40b4c000 - 0x40d95f00 (2.29 MB)
+///       Current breakval:     0x40b53000
+///       root [2] .q
+///       $ rm dummy.map
+///    Remember begin of mapped region, i.e. 0x40b4c000
+///
+/// 2) Add to producer program, just before creating the TMapFile:
+///       TMapFile::SetMapAddress(0x40b4c000);
+///
+/// Repeat this if more than one map file is being used.
+///
+/// The above procedure allow programs using, e.g., different number of
+/// shared libraries (that cause the default mapping address to be
+/// different) to create shared memory regions in the same location
+/// without overwriting a shared library. The above assumes the consumer
+/// program is larger (i.e. has more shared memory occupied) than the
+/// producer. If this is not true inverse the procedure.
+
 void TMapFile::SetMapAddress(Long_t addr)
 {
-   // Set preferred map address. Find out preferred map address as follows:
-   // 1) Run consumer program to find the preferred map address:
-   //       $ root
-   //       root [0] m = TMapFile::Create("dummy.map", "recreate", 10000000);
-   //       root [1] m.Print()
-   //       Memory mapped file:   dummy.map
-   //       Title:
-   //       Option:               CREATE
-   //       Mapped Memory region: 0x40b4c000 - 0x40d95f00 (2.29 MB)
-   //       Current breakval:     0x40b53000
-   //       root [2] .q
-   //       $ rm dummy.map
-   //    Remember begin of mapped region, i.e. 0x40b4c000
-   //
-   // 2) Add to producer program, just before creating the TMapFile:
-   //       TMapFile::SetMapAddress(0x40b4c000);
-   //
-   // Repeat this if more than one map file is being used.
-   //
-   // The above procedure allow programs using, e.g., different number of
-   // shared libraries (that cause the default mapping address to be
-   // different) to create shared memory regions in the same location
-   // without overwriting a shared library. The above assumes the consumer
-   // program is larger (i.e. has more shared memory occupied) than the
-   // producer. If this is not true inverse the procedure.
-
    fgMapAddress = addr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the base address at which we would like the next TMapFile's
+/// mapped data to start.
+///
+/// For now, we let the system decide (start address 0). There are
+/// a lot of issues to deal with here to make this work reasonably,
+/// including:
+///
+/// - Avoid memory collisions with existing mapped address spaces
+///
+/// - Reclaim address spaces when their mmalloc heaps are unmapped
+///
+/// - When mmalloc heaps are shared between processes they have to be
+///   mapped at the same addresses in each
+///
+/// Once created, a mmalloc heap that is to be mapped back in must be
+/// mapped at the original address.  I.E. each TMapFile will expect
+/// to be remapped at it's original address. This becomes a problem if
+/// the desired address is already in use.
+
 void *TMapFile::MapToAddress()
 {
-   // Return the base address at which we would like the next TMapFile's
-   // mapped data to start.
-   //
-   // For now, we let the system decide (start address 0). There are
-   // a lot of issues to deal with here to make this work reasonably,
-   // including:
-   //
-   // - Avoid memory collisions with existing mapped address spaces
-   //
-   // - Reclaim address spaces when their mmalloc heaps are unmapped
-   //
-   // - When mmalloc heaps are shared between processes they have to be
-   //   mapped at the same addresses in each
-   //
-   // Once created, a mmalloc heap that is to be mapped back in must be
-   // mapped at the original address.  I.E. each TMapFile will expect
-   // to be remapped at it's original address. This becomes a problem if
-   // the desired address is already in use.
-
 #ifdef R__HAVE_MMAP
    if (TStorage::HasCustomNewDelete())
       return (void *)fgMapAddress;
@@ -1159,12 +1161,12 @@ void *TMapFile::MapToAddress()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Need special "operator delete" in which we close the shared memory.
+/// This has to be done after the dtor chain has been finished.
+
 void TMapFile::operator delete(void *ptr)
 {
-   // Need special "operator delete" in which we close the shared memory.
-   // This has to be done after the dtor chain has been finished.
-
    mmalloc_detach(fgMmallocDesc);
    fgMmallocDesc = 0;
 

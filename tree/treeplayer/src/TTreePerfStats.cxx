@@ -98,11 +98,11 @@
 
 ClassImp(TTreePerfStats)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor (used when reading an object only)
+
 TTreePerfStats::TTreePerfStats() : TVirtualPerfStats()
 {
-   // default constructor (used when reading an object only)
-
    fName      = "";
    fHostInfo  = "";
    fTree      = 0;
@@ -127,11 +127,11 @@ TTreePerfStats::TTreePerfStats() : TVirtualPerfStats()
    fHostInfoText  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TTree I/O perf stats object.
+
 TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
 {
-   // Create a TTree I/O perf stats object.
-
    fName   = name;
    fTree   = T;
    T->SetPerfStats(this);
@@ -175,11 +175,11 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    gPerfStats = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TTreePerfStats::~TTreePerfStats()
 {
-   // Destructor
-
    fTree = 0;
    fFile = 0;
    delete fGraphIO;
@@ -195,20 +195,20 @@ TTreePerfStats::~TTreePerfStats()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse
+
 void TTreePerfStats::Browse(TBrowser * /*b*/)
 {
-   // Browse
-
    Draw();
    gPad->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return distance to one of the objects in the TTreePerfStats
+
 Int_t TTreePerfStats::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Return distance to one of the objects in the TTreePerfStats
-
    const Int_t kMaxDiff = 7;
    Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
    Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
@@ -234,14 +234,14 @@ Int_t TTreePerfStats::DistancetoPrimitive(Int_t px, Int_t py)
    return 999;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the TTree I/O perf graph.
+/// by default the graph is drawn with option "al"
+/// Specify option ="ap" to show only the read blocks and not the line
+/// connecting the blocks
+
 void TTreePerfStats::Draw(Option_t *option)
 {
-   // Draw the TTree I/O perf graph.
-   // by default the graph is drawn with option "al"
-   // Specify option ="ap" to show only the read blocks and not the line
-   // connecting the blocks
-
    Finish();
 
    TString opt = option;
@@ -264,20 +264,20 @@ void TTreePerfStats::Draw(Option_t *option)
    AppendPad(opt.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return distance to one of the objects in the TTreePerfStats
+
 void TTreePerfStats::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
 {
-   // Return distance to one of the objects in the TTreePerfStats
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Record TTree file read event.
+/// start is the TimeStamp before reading
+/// len is the number of bytes read
+
 void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
 {
-   // Record TTree file read event.
-   // start is the TimeStamp before reading
-   // len is the number of bytes read
-
    if (file == this->fFile){
       Long64_t offset = file->GetRelOffset();
       Int_t np = fGraphIO->GetN();
@@ -295,15 +295,15 @@ void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Record TTree unzip event.
+/// start is the TimeStamp before unzip
+/// pos is where in the file the compressed buffer came from
+/// complen is the length of the compressed buffer
+/// objlen is the length of the de-compressed buffer
+
 void TTreePerfStats::UnzipEvent(TObject * tree, Long64_t /* pos */, Double_t start, Int_t /* complen */, Int_t /* objlen */)
 {
-   // Record TTree unzip event.
-   // start is the TimeStamp before unzip
-   // pos is where in the file the compressed buffer came from
-   // complen is the length of the compressed buffer
-   // objlen is the length of the de-compressed buffer
-
    if (tree == this->fTree){
       Double_t tnow = TTimeStamp();
       Double_t dtime = tnow-start;
@@ -311,13 +311,13 @@ void TTreePerfStats::UnzipEvent(TObject * tree, Long64_t /* pos */, Double_t sta
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// When the run is finished this function must be called
+/// to save the current parameters in the file and Tree in this object
+/// the function is automatically called by Draw and Print
+
 void TTreePerfStats::Finish()
 {
-   // When the run is finished this function must be called
-   // to save the current parameters in the file and Tree in this object
-   // the function is automatically called by Draw and Print
-
    if (fRealNorm)   return;  //has already been called
    if (!fFile)      return;
    if (!fTree)      return;
@@ -339,11 +339,11 @@ void TTreePerfStats::Finish()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the TTree I/O perf graph.
+
 void TTreePerfStats::Paint(Option_t *option)
 {
-   // Draw the TTree I/O perf graph.
-
    Int_t npoints  = fGraphIO->GetN();
    if (!npoints) return;
    Double_t iomax = fGraphIO->GetY()[npoints-1];
@@ -421,11 +421,11 @@ void TTreePerfStats::Paint(Option_t *option)
    fHostInfoText->Paint();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the TTree I/O perf stats.
+
 void TTreePerfStats::Print(Option_t * option) const
 {
-   // Print the TTree I/O perf stats.
-
    TString opts(option);
    opts.ToLower();
    Bool_t unzip = opts.Contains("unzip");
@@ -459,21 +459,21 @@ void TTreePerfStats::Print(Option_t * option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save this object to filename
+
 void TTreePerfStats::SaveAs(const char *filename, Option_t * /*option*/) const
 {
-   // Save this object to filename
-
    TTreePerfStats *ps = (TTreePerfStats*)this;
    ps->Finish();
    ps->TObject::SaveAs(filename);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TTreePerfStats::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save primitive as a C++ statement(s) on output stream out
-
    char quote = '"';
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TTreePerfStats::Class())) {

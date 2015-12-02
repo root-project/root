@@ -43,7 +43,8 @@ ClassImp(RooNovosibirsk)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNovosibirsk::RooNovosibirsk(const char *name, const char *title,
 			     RooAbsReal& _x,     RooAbsReal& _peak,
 			     RooAbsReal& _width, RooAbsReal& _tail) :
@@ -59,7 +60,8 @@ RooNovosibirsk::RooNovosibirsk(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNovosibirsk::RooNovosibirsk(const RooNovosibirsk& other, const char *name):
   RooAbsPdf(other,name),
   x("x",this,other.x),
@@ -71,10 +73,11 @@ RooNovosibirsk::RooNovosibirsk(const RooNovosibirsk& other, const char *name):
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///If tail=eta=0 the Belle distribution becomes gaussian
+
 Double_t RooNovosibirsk::evaluate() const
 { 
-  //If tail=eta=0 the Belle distribution becomes gaussian
   if (TMath::Abs(tail) < 1.e-7) {
     return TMath::Exp( -0.5 * TMath::Power( ( (x - peak) / width ), 2 ));
   }
@@ -99,7 +102,8 @@ Double_t RooNovosibirsk::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooNovosibirsk::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* ) const
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
@@ -112,7 +116,8 @@ Int_t RooNovosibirsk::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analV
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooNovosibirsk::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   assert(code==1 || code==2) ;

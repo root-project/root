@@ -75,7 +75,9 @@ Int_t TBranch::fgCount = 0;
 
 ClassImp(TBranch)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.  Used for I/O by default.
+
 TBranch::TBranch()
 : TNamed()
 , TAttFill(0, 1001)
@@ -116,12 +118,68 @@ TBranch::TBranch()
 , fReadLeaves(&TBranch::ReadLeavesImpl)
 , fFillLeaves(&TBranch::FillLeavesImpl)
 {
-   // Default constructor.  Used for I/O by default.
-
    SetBit(TBranch::kDoNotUseBufferMap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a Branch as a child of a Tree
+///
+///       * address is the address of the first item of a structure
+///         or the address of a pointer to an object (see example in TTree.cxx).
+///       * leaflist is the concatenation of all the variable names and types
+///         separated by a colon character :
+///         The variable name and the variable type are separated by a
+///         slash (/). The variable type must be 1 character. (Characters
+///         after the first are legal and will be appended to the visible
+///         name of the leaf, but have no effect.) If no type is given, the
+///         type of the variable is assumed to be the same as the previous
+///         variable. If the first variable does not have a type, it is
+///         assumed of type F by default. The list of currently supported
+///         types is given below:
+///            - C : a character string terminated by the 0 character
+///            - B : an 8 bit signed integer (Char_t)
+///            - b : an 8 bit unsigned integer (UChar_t)
+///            - S : a 16 bit signed integer (Short_t)
+///            - s : a 16 bit unsigned integer (UShort_t)
+///            - I : a 32 bit signed integer (Int_t)
+///            - i : a 32 bit unsigned integer (UInt_t)
+///            - F : a 32 bit floating point (Float_t)
+///            - D : a 64 bit floating point (Double_t)
+///            - L : a 64 bit signed integer (Long64_t)
+///            - l : a 64 bit unsigned integer (ULong64_t)
+///            - O : [the letter 'o', not a zero] a boolean (Bool_t)
+///
+///         Arrays of values are supported with the following syntax:
+///         If leaf name has the form var[nelem], where nelem is alphanumeric, then
+///            if nelem is a leaf name, it is used as the variable size of the array,
+///            otherwise return 0.
+///            The leaf referred to by nelem **MUST** be an int (/I),
+///         If leaf name has the form var[nelem], where nelem is a non-negative integers, then
+///            it is used as the fixed size of the array.
+///         If leaf name has the form of a multi dimension array (e.g. var[nelem][nelem2])
+///            where nelem and nelem2 are non-negative integers) then
+///            it is used as a 2 dimensional array of fixed size.
+///         Any of other form is not supported.
+///
+///    Note that the TTree will assume that all the item are contiguous in memory.
+///    On some platform, this is not always true of the member of a struct or a class,
+///    due to padding and alignment.  Sorting your data member in order of decreasing
+///    sizeof usually leads to their being contiguous in memory.
+///
+///       * bufsize is the buffer size in bytes for this branch
+///         The default value is 32000 bytes and should be ok for most cases.
+///         You can specify a larger value (e.g. 256000) if your Tree is not split
+///         and each entry is large (Megabytes)
+///         A small value for bufsize is optimum if you intend to access
+///         the entries in the Tree randomly and your Tree is in split mode.
+///
+///   See an example of a Branch definition in the TTree constructor.
+///
+///   Note that in case the data type is an object, this branch can contain
+///   only this object.
+///
+///    Note that this function is invoked by TTree::Branch
+
 TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leaflist, Int_t basketsize, Int_t compress)
 : TNamed(name, leaflist)
 , TAttFill(0, 1001)
@@ -162,68 +220,15 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
 , fReadLeaves(&TBranch::ReadLeavesImpl)
 , fFillLeaves(&TBranch::FillLeavesImpl)
 {
-   // Create a Branch as a child of a Tree
-   //
-   //       * address is the address of the first item of a structure
-   //         or the address of a pointer to an object (see example in TTree.cxx).
-   //       * leaflist is the concatenation of all the variable names and types
-   //         separated by a colon character :
-   //         The variable name and the variable type are separated by a
-   //         slash (/). The variable type must be 1 character. (Characters
-   //         after the first are legal and will be appended to the visible
-   //         name of the leaf, but have no effect.) If no type is given, the
-   //         type of the variable is assumed to be the same as the previous
-   //         variable. If the first variable does not have a type, it is
-   //         assumed of type F by default. The list of currently supported
-   //         types is given below:
-   //            - C : a character string terminated by the 0 character
-   //            - B : an 8 bit signed integer (Char_t)
-   //            - b : an 8 bit unsigned integer (UChar_t)
-   //            - S : a 16 bit signed integer (Short_t)
-   //            - s : a 16 bit unsigned integer (UShort_t)
-   //            - I : a 32 bit signed integer (Int_t)
-   //            - i : a 32 bit unsigned integer (UInt_t)
-   //            - F : a 32 bit floating point (Float_t)
-   //            - D : a 64 bit floating point (Double_t)
-   //            - L : a 64 bit signed integer (Long64_t)
-   //            - l : a 64 bit unsigned integer (ULong64_t)
-   //            - O : [the letter 'o', not a zero] a boolean (Bool_t)
-   //
-   //         Arrays of values are supported with the following syntax:
-   //         If leaf name has the form var[nelem], where nelem is alphanumeric, then
-   //            if nelem is a leaf name, it is used as the variable size of the array,
-   //            otherwise return 0.
-   //            The leaf referred to by nelem **MUST** be an int (/I),
-   //         If leaf name has the form var[nelem], where nelem is a non-negative integers, then
-   //            it is used as the fixed size of the array.
-   //         If leaf name has the form of a multi dimension array (e.g. var[nelem][nelem2])
-   //            where nelem and nelem2 are non-negative integers) then
-   //            it is used as a 2 dimensional array of fixed size.
-   //         Any of other form is not supported.
-   //
-   //    Note that the TTree will assume that all the item are contiguous in memory.
-   //    On some platform, this is not always true of the member of a struct or a class,
-   //    due to padding and alignment.  Sorting your data member in order of decreasing
-   //    sizeof usually leads to their being contiguous in memory.
-   //
-   //       * bufsize is the buffer size in bytes for this branch
-   //         The default value is 32000 bytes and should be ok for most cases.
-   //         You can specify a larger value (e.g. 256000) if your Tree is not split
-   //         and each entry is large (Megabytes)
-   //         A small value for bufsize is optimum if you intend to access
-   //         the entries in the Tree randomly and your Tree is in split mode.
-   //
-   //   See an example of a Branch definition in the TTree constructor.
-   //
-   //   Note that in case the data type is an object, this branch can contain
-   //   only this object.
-   //
-   //    Note that this function is invoked by TTree::Branch
-
    Init(name,leaflist,compress);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a Branch as a child of another Branch
+///
+/// See documentation for
+/// TBranch::TBranch(TTree *, const char *, void *, const char *, Int_t, Int_t)
+
 TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* leaflist, Int_t basketsize, Int_t compress)
 : TNamed(name, leaflist)
 , TAttFill(0, 1001)
@@ -264,11 +269,6 @@ TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* l
 , fReadLeaves(&TBranch::ReadLeavesImpl)
 , fFillLeaves(&TBranch::FillLeavesImpl)
 {
-   // Create a Branch as a child of another Branch
-   //
-   // See documentation for
-   // TBranch::TBranch(TTree *, const char *, void *, const char *, Int_t, Int_t)
-
    Init(name,leaflist,compress);
 }
 
@@ -405,11 +405,11 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TBranch::~TBranch()
 {
-   // Destructor.
-
    delete fBrowsables;
    fBrowsables = 0;
 
@@ -471,11 +471,11 @@ TBranch::~TBranch()
    fDirectory = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the basket to this branch.
+
 void TBranch::AddBasket(TBasket& b, Bool_t ondisk, Long64_t startEntry)
 {
-   // Add the basket to this branch.
-
    // Warning: if the basket are not 'flushed/copied' in the same
    // order as they were created, this will induce a slow down in
    // the insert (since we'll need to move all the record that are
@@ -544,11 +544,11 @@ void TBranch::AddBasket(TBasket& b, Bool_t ondisk, Long64_t startEntry)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the start entry of the write basket (not yet created)
+
 void TBranch::AddLastBasket(Long64_t startEntry)
 {
-   // Add the start entry of the write basket (not yet created)
-
    if (fWriteBasket >= fMaxBaskets) {
       ExpandBasketArrays();
    }
@@ -564,11 +564,11 @@ void TBranch::AddLastBasket(Long64_t startEntry)
    fBaskets.AddAtAndExpand(0,fWriteBasket);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browser interface.
+
 void TBranch::Browse(TBrowser* b)
 {
-   // Browser interface.
-
    if (fNleaves > 1) {
       fLeaves.Browse(b);
    } else {
@@ -583,18 +583,18 @@ void TBranch::Browse(TBrowser* b)
    }
 }
 
- //______________________________________________________________________________
+ ///////////////////////////////////////////////////////////////////////////////
+ /// Loop on all branch baskets. If the file where branch buffers reside is
+ /// writable, free the disk space associated to the baskets of the branch,
+ /// then call Reset(). If the option contains "all", delete also the baskets
+ /// for the subbranches.
+ /// The branch is reset.
+ /// NOTE that this function must be used with extreme care. Deleting branch baskets
+ /// fragments the file and may introduce inefficiencies when adding new entries
+ /// in the Tree or later on when reading the Tree.
+
 void TBranch::DeleteBaskets(Option_t* option)
 {
-   // Loop on all branch baskets. If the file where branch buffers reside is
-   // writable, free the disk space associated to the baskets of the branch,
-   // then call Reset(). If the option contains "all", delete also the baskets
-   // for the subbranches.
-   // The branch is reset.
-   // NOTE that this function must be used with extreme care. Deleting branch baskets
-   // fragments the file and may introduce inefficiencies when adding new entries
-   // in the Tree or later on when reading the Tree.
-
    TString opt = option;
    opt.ToLower();
    TFile *file = GetFile(0);
@@ -618,14 +618,14 @@ void TBranch::DeleteBaskets(Option_t* option)
    Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop on all branch baskets. Drop all baskets from memory except readbasket.
+/// If the option contains "all", drop all baskets including
+/// read- and write-baskets (unless they are not stored individually on disk).
+/// The option "all" also lead to DropBaskets being called on the sub-branches.
+
 void TBranch::DropBaskets(Option_t* options)
 {
-   // Loop on all branch baskets. Drop all baskets from memory except readbasket.
-   // If the option contains "all", drop all baskets including
-   // read- and write-baskets (unless they are not stored individually on disk).
-   // The option "all" also lead to DropBaskets being called on the sub-branches.
-
    Bool_t all = kFALSE;
    if (options && options[0]) {
       TString opt = options;
@@ -688,12 +688,12 @@ void TBranch::DropBaskets(Option_t* options)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increase BasketEntry buffer of a minimum of 10 locations
+/// and a maximum of 50 per cent of current size.
+
 void TBranch::ExpandBasketArrays()
 {
-   // Increase BasketEntry buffer of a minimum of 10 locations
-   // and a maximum of 50 per cent of current size.
-
    Int_t newsize = TMath::Max(10,Int_t(1.5*fMaxBaskets));
    fBasketBytes  = TStorage::ReAllocInt(fBasketBytes, newsize, fMaxBaskets);
    fBasketEntry  = (Long64_t*)TStorage::ReAlloc(fBasketEntry,
@@ -712,17 +712,17 @@ void TBranch::ExpandBasketArrays()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop on all leaves of this branch to fill Basket buffer.
+///
+/// The function returns the number of bytes committed to the memory basket.
+/// If a write error occurs, the number of bytes returned is -1.
+/// If no data are written, because e.g. the branch is disabled,
+/// the number of bytes returned is 0.
+///
+
 Int_t TBranch::Fill()
 {
-   // Loop on all leaves of this branch to fill Basket buffer.
-   //
-   // The function returns the number of bytes committed to the memory basket.
-   // If a write error occurs, the number of bytes returned is -1.
-   // If no data are written, because e.g. the branch is disabled,
-   // the number of bytes returned is 0.
-   //
-
    if (TestBit(kDoNotProcess)) {
       return 0;
    }
@@ -789,11 +789,11 @@ Int_t TBranch::Fill()
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the data from fEntryBuffer into the current basket.
+
 Int_t TBranch::FillEntryBuffer(TBasket* basket, TBuffer* buf, Int_t& lnew)
 {
-   // Copy the data from fEntryBuffer into the current basket.
-
    Int_t nbytes = 0;
    Int_t objectStart = 0;
    Int_t last = 0;
@@ -888,11 +888,11 @@ Int_t TBranch::FillEntryBuffer(TBasket* basket, TBuffer* buf, Int_t& lnew)
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Find the immediate sub-branch with passed name.
+
 TBranch* TBranch::FindBranch(const char* name)
 {
-   // -- Find the immediate sub-branch with passed name.
-
    // We allow the user to pass only the last dotted component of the name.
    std::string longnm;
    longnm.reserve(fName.Length()+strlen(name)+3);
@@ -934,11 +934,11 @@ TBranch* TBranch::FindBranch(const char* name)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Find the leaf corresponding to the name 'searchname'.
+
 TLeaf* TBranch::FindLeaf(const char* searchname)
 {
-   // -- Find the leaf corresponding to the name 'searchname'.
-
    TString leafname;
    TString leaftitle;
    TString longname;
@@ -989,12 +989,12 @@ TLeaf* TBranch::FindLeaf(const char* searchname)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Flush to disk all the baskets of this branch and any of subbranches.
+/// Return the number of bytes written or -1 in case of write error.
+
 Int_t TBranch::FlushBaskets()
 {
-   // Flush to disk all the baskets of this branch and any of subbranches.
-   // Return the number of bytes written or -1 in case of write error.
-
    UInt_t nerror = 0;
    Int_t nbytes = 0;
 
@@ -1034,13 +1034,13 @@ Int_t TBranch::FlushBaskets()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If we have a write basket in memory and it contains some entries and
+/// has not yet been written to disk, we write it and delete it from memory.
+/// Return the number of bytes written;
+
 Int_t TBranch::FlushOneBasket(UInt_t ibasket)
 {
-   // If we have a write basket in memory and it contains some entries and
-   // has not yet been written to disk, we write it and delete it from memory.
-   // Return the number of bytes written;
-
    Int_t nbytes = 0;
    if (fDirectory && fBaskets.GetEntries()) {
       TBasket *basket = (TBasket*)fBaskets.UncheckedAt(ibasket);
@@ -1077,11 +1077,11 @@ Int_t TBranch::FlushOneBasket(UInt_t ibasket)
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///         Return pointer to basket basketnumber in this Branch
+
 TBasket* TBranch::GetBasket(Int_t basketnumber)
 {
-   //         Return pointer to basket basketnumber in this Branch
-
    // This counter in the sequential case collects errors coming also from
    // different files (suppose to have a program reading f1.root, f2.root ...)
    // In the mt case, it is made atomic: it safely collects errors from
@@ -1139,66 +1139,67 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    return basket;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///         Return address of basket in the file
+
 Long64_t TBranch::GetBasketSeek(Int_t basketnumber) const
 {
-   //         Return address of basket in the file
-
    if (basketnumber <0 || basketnumber > fWriteBasket) return 0;
    return fBasketSeek[basketnumber];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns (and, if 0, creates) browsable objects for this branch
+/// See TVirtualBranchBrowsable::FillListOfBrowsables.
+
 TList* TBranch::GetBrowsables() {
-   // Returns (and, if 0, creates) browsable objects for this branch
-   // See TVirtualBranchBrowsable::FillListOfBrowsables.
    if (fBrowsables) return fBrowsables;
    fBrowsables=new TList();
    TVirtualBranchBrowsable::FillListOfBrowsables(*fBrowsables, this);
    return fBrowsables;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the name of the user class whose content is stored in this branch,
+/// if any.  If this branch was created using the 'leaflist' technique, this
+/// function returns an empty string.
+
 const char * TBranch::GetClassName() const
 {
-   // Return the name of the user class whose content is stored in this branch,
-   // if any.  If this branch was created using the 'leaflist' technique, this
-   // function returns an empty string.
-
    return "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return icon name depending on type of branch.
+
 const char* TBranch::GetIconName() const
 {
-   // Return icon name depending on type of branch.
-
    if (IsFolder())
       return "TBranchElement-folder";
    else
       return "TBranchElement-leaf";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read all leaves of entry and return total number of bytes read.
+///
+/// The input argument "entry" is the entry number in the current tree.
+/// In case of a TChain, the entry number in the current Tree must be found
+/// before calling this function. For example:
+///
+///     TChain* chain = ...;
+///     Long64_t localEntry = chain->LoadTree(entry);
+///     branch->GetEntry(localEntry);
+///
+/// The function returns the number of bytes read from the input buffer.
+/// If entry does not exist, the function returns 0.
+/// If an I/O error occurs, the function returns -1.
+///
+/// See IMPORTANT REMARKS in TTree::GetEntry.
+///
+
 Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
 {
-   // Read all leaves of entry and return total number of bytes read.
-   //
-   // The input argument "entry" is the entry number in the current tree.
-   // In case of a TChain, the entry number in the current Tree must be found
-   // before calling this function. For example:
-   //
-   //     TChain* chain = ...;
-   //     Long64_t localEntry = chain->LoadTree(entry);
-   //     branch->GetEntry(localEntry);
-   //
-   // The function returns the number of bytes read from the input buffer.
-   // If entry does not exist, the function returns 0.
-   // If an I/O error occurs, the function returns -1.
-   //
-   // See IMPORTANT REMARKS in TTree::GetEntry.
-   //
-
    // Remember which entry we are reading.
    fReadEntry = entry;
 
@@ -1284,13 +1285,13 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    return buf->Length() - bufbegin;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read all leaves of an entry and export buffers to real objects in a TClonesArray list.
+///
+/// Returns total number of bytes read.
+
 Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/, TClonesArray* li, Int_t nentries)
 {
-   // Read all leaves of an entry and export buffers to real objects in a TClonesArray list.
-   //
-   // Returns total number of bytes read.
-
    // Remember which entry we are reading.
    fReadEntry = entry;
 
@@ -1355,14 +1356,14 @@ Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/, TClonesArray* li
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill expectedClass and expectedType with information on the data type of the
+/// object/values contained in this branch (and thus the type of pointers
+/// expected to be passed to Set[Branch]Address
+/// return 0 in case of success and > 0 in case of failure.
+
 Int_t TBranch::GetExpectedType(TClass *&expectedClass,EDataType &expectedType)
 {
-   // Fill expectedClass and expectedType with information on the data type of the
-   // object/values contained in this branch (and thus the type of pointers
-   // expected to be passed to Set[Branch]Address
-   // return 0 in case of success and > 0 in case of failure.
-
    expectedClass = 0;
    expectedType = kOther_t;
    TLeaf* l = (TLeaf*) GetListOfLeaves()->At(0);
@@ -1375,13 +1376,13 @@ Int_t TBranch::GetExpectedType(TClass *&expectedClass,EDataType &expectedType)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to the file where branch buffers reside, returns 0
+/// in case branch buffers reside in the same file as tree header.
+/// If mode is 1 the branch buffer file is recreated.
+
 TFile* TBranch::GetFile(Int_t mode)
 {
-   // Return pointer to the file where branch buffers reside, returns 0
-   // in case branch buffers reside in the same file as tree header.
-   // If mode is 1 the branch buffer file is recreated.
-
    if (fDirectory) return fDirectory->GetFile();
 
    // check if a file with this name is in the list of Root files
@@ -1411,12 +1412,12 @@ TFile* TBranch::GetFile(Int_t mode)
    return file;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a fresh basket by either resusing an existing basket that needs
+/// to be drop (according to TTree::MemoryFull) or create a new one.
+
 TBasket* TBranch::GetFreshBasket()
 {
-   // Return a fresh basket by either resusing an existing basket that needs
-   // to be drop (according to TTree::MemoryFull) or create a new one.
-
    TBasket *basket = 0;
    if (GetTree()->MemoryFull(0)) {
       if (fNBaskets==1) {
@@ -1455,11 +1456,11 @@ TBasket* TBranch::GetFreshBasket()
    return basket;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///           Return pointer to the 1st Leaf named name in thisBranch
+
 TLeaf* TBranch::GetLeaf(const char* name) const
 {
-   //           Return pointer to the 1st Leaf named name in thisBranch
-
    Int_t i;
    for (i=0;i<fNleaves;i++) {
       TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
@@ -1468,7 +1469,8 @@ TLeaf* TBranch::GetLeaf(const char* name) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TString TBranch::GetRealFileName() const
 {
    if (fFileName.Length()==0) {
@@ -1506,31 +1508,31 @@ TString TBranch::GetRealFileName() const
    return bFileName;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return all elements of one row unpacked in internal array fValues
+/// [Actually just returns 1 (?)]
+
 Int_t TBranch::GetRow(Int_t)
 {
-   // Return all elements of one row unpacked in internal array fValues
-   // [Actually just returns 1 (?)]
-
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return whether this branch is in a mode where the object are decomposed
+/// or not (Also known as MakeClass mode).
+
 Bool_t TBranch::GetMakeClass() const
 {
-   // Return whether this branch is in a mode where the object are decomposed
-   // or not (Also known as MakeClass mode).
-
    // Regular TBranch and TBrancObject can not be in makeClass mode
 
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get our top-level parent branch in the tree.
+
 TBranch* TBranch::GetMother() const
 {
-   // Get our top-level parent branch in the tree.
-
    if (fMother) return fMother;
 
    const TObjArray* array = fTree->GetListOfBranches();
@@ -1546,12 +1548,12 @@ TBranch* TBranch::GetMother() const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the parent branch of child.
+/// Return 0 if child is not in this branch hierarchy.
+
 TBranch* TBranch::GetSubBranch(const TBranch* child) const
 {
-   // Find the parent branch of child.
-   // Return 0 if child is not in this branch hierarchy.
-
    // Handle error condition, if the parameter is us, we cannot find the parent.
    if (this == child) {
       // Note: We cast away any const-ness of "this".
@@ -1585,11 +1587,11 @@ TBranch* TBranch::GetSubBranch(const TBranch* child) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return total number of bytes in the branch (including current buffer)
+
 Long64_t TBranch::GetTotalSize(Option_t * /*option*/) const
 {
-   // Return total number of bytes in the branch (including current buffer)
-
    TObjArray &baskets( const_cast<TObjArray&>(fBaskets) );
    TBasket *writebasket = 0;
    if (fNBaskets == 1) {
@@ -1610,12 +1612,12 @@ Long64_t TBranch::GetTotalSize(Option_t * /*option*/) const
    return totbytes + b.Length();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return total number of bytes in the branch (excluding current buffer)
+/// if option ="*" includes all sub-branches of this branch too
+
 Long64_t TBranch::GetTotBytes(Option_t *option) const
 {
-   // Return total number of bytes in the branch (excluding current buffer)
-   // if option ="*" includes all sub-branches of this branch too
-
    Long64_t totbytes = fTotBytes;
    if (!option) return totbytes;
    if (option[0] != '*') return totbytes;
@@ -1628,12 +1630,12 @@ Long64_t TBranch::GetTotBytes(Option_t *option) const
    return totbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return total number of zip bytes in the branch
+/// if option ="*" includes all sub-branches of this branch too
+
 Long64_t TBranch::GetZipBytes(Option_t *option) const
 {
-   // Return total number of zip bytes in the branch
-   // if option ="*" includes all sub-branches of this branch too
-
    Long64_t zipbytes = fZipBytes;
    if (!option) return zipbytes;
    if (option[0] != '*') return zipbytes;
@@ -1646,17 +1648,19 @@ Long64_t TBranch::GetZipBytes(Option_t *option) const
    return zipbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if an existing object in a TBranchObject must be deleted.
+
 Bool_t TBranch::IsAutoDelete() const
 {
-   // Return kTRUE if an existing object in a TBranchObject must be deleted.
    return TestBit(kAutoDelete);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if more than one leaf or browsables, kFALSE otherwise.
+
 Bool_t TBranch::IsFolder() const
 {
-   // Return kTRUE if more than one leaf or browsables, kFALSE otherwise.
    if (fNleaves > 1) {
       return kTRUE;
    }
@@ -1664,11 +1668,11 @@ Bool_t TBranch::IsFolder() const
    return browsables && browsables->GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// keep a maximum of fMaxEntries in memory
+
 void TBranch::KeepCircular(Long64_t maxEntries)
 {
-   // keep a maximum of fMaxEntries in memory
-
    Int_t dentries = (Int_t) (fEntries - maxEntries);
    TBasket* basket = (TBasket*) fBaskets.UncheckedAt(0);
    if (basket) basket->MoveEntries(dentries);
@@ -1682,18 +1686,18 @@ void TBranch::KeepCircular(Long64_t maxEntries)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Baskets associated to this branch are forced to be in memory.
+///  You can call TTree::SetMaxVirtualSize(maxmemory) to instruct
+///  the system that the total size of the imported baskets does not
+///  exceed maxmemory bytes.
+///  The function returns the number of baskets that have been put in memory.
+///  This method may be called to force all baskets of one or more branches
+///  in memory when random access to entries in this branch is required.
+///  See also TTree::LoadBaskets to load all baskets of all branches in memory.
+
 Int_t TBranch::LoadBaskets()
 {
-   //  Baskets associated to this branch are forced to be in memory.
-   //  You can call TTree::SetMaxVirtualSize(maxmemory) to instruct
-   //  the system that the total size of the imported baskets does not
-   //  exceed maxmemory bytes.
-   //  The function returns the number of baskets that have been put in memory.
-   //  This method may be called to force all baskets of one or more branches
-   //  in memory when random access to entries in this branch is required.
-   //  See also TTree::LoadBaskets to load all baskets of all branches in memory.
-
    Int_t nimported = 0;
    Int_t nbaskets = fWriteBasket;
    TFile *file = GetFile(0);
@@ -1718,11 +1722,11 @@ Int_t TBranch::LoadBaskets()
    return nimported;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print TBranch parameters
+
 void TBranch::Print(Option_t*) const
 {
-   // Print TBranch parameters
-
    const int kLINEND = 77;
    Float_t cx = 1;
 
@@ -1811,66 +1815,66 @@ void TBranch::Print(Option_t*) const
    fgCount++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop on all leaves of this branch to read Basket buffer.
+
 void TBranch::ReadBasket(TBuffer&)
 {
-   // Loop on all leaves of this branch to read Basket buffer.
-
    //   fLeaves->ReadBasket(basket);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop on all leaves of this branch to read Basket buffer.
+
 void TBranch::ReadLeavesImpl(TBuffer& b)
 {
-   // Loop on all leaves of this branch to read Basket buffer.
-
    for (Int_t i = 0; i < fNleaves; ++i) {
       TLeaf* leaf = (TLeaf*) fLeaves.UncheckedAt(i);
       leaf->ReadBasket(b);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read zero leaves without the overhead of a loop.
+
 void TBranch::ReadLeaves0Impl(TBuffer&)
 {
-   // Read zero leaves without the overhead of a loop.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read one leaf without the overhead of a loop.
+
 void TBranch::ReadLeaves1Impl(TBuffer& b)
 {
-   // Read one leaf without the overhead of a loop.
-
    ((TLeaf*) fLeaves.UncheckedAt(0))->ReadBasket(b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read two leaves without the overhead of a loop.
+
 void TBranch::ReadLeaves2Impl(TBuffer& b)
 {
-   // Read two leaves without the overhead of a loop.
-
    ((TLeaf*) fLeaves.UncheckedAt(0))->ReadBasket(b);
    ((TLeaf*) fLeaves.UncheckedAt(1))->ReadBasket(b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop on all leaves of this branch to fill Basket buffer.
+
 void TBranch::FillLeavesImpl(TBuffer& b)
 {
-   // Loop on all leaves of this branch to fill Basket buffer.
-
    for (Int_t i = 0; i < fNleaves; ++i) {
       TLeaf* leaf = (TLeaf*) fLeaves.UncheckedAt(i);
       leaf->FillBasket(b);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  refresh this branch using new information in b
+///  This function is called by TTree::Refresh
+
 void TBranch::Refresh(TBranch* b)
 {
-   //  refresh this branch using new information in b
-   //  This function is called by TTree::Refresh
-
    if (b==0) return;
 
    fEntryOffsetLen = b->fEntryOffsetLen;
@@ -1912,15 +1916,15 @@ void TBranch::Refresh(TBranch* b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset a Branch.
+///
+/// Existing buffers are deleted.
+/// Entries, max and min are reset.
+///
+
 void TBranch::Reset(Option_t*)
 {
-   // Reset a Branch.
-   //
-   // Existing buffers are deleted.
-   // Entries, max and min are reset.
-   //
-
    fReadBasket = 0;
    fReadEntry = -1;
    fFirstBasketEntry = -1;
@@ -1955,15 +1959,15 @@ void TBranch::Reset(Option_t*)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset a Branch.
+///
+/// Existing buffers are deleted.
+/// Entries, max and min are reset.
+///
+
 void TBranch::ResetAfterMerge(TFileMergeInfo *)
 {
-   // Reset a Branch.
-   //
-   // Existing buffers are deleted.
-   // Entries, max and min are reset.
-   //
-
    fReadBasket       = 0;
    fReadEntry        = -1;
    fFirstBasketEntry = -1;
@@ -2012,11 +2016,11 @@ void TBranch::ResetAfterMerge(TFileMergeInfo *)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the address of the branch.
+
 void TBranch::ResetAddress()
 {
-   // Reset the address of the branch.
-
    fAddress = 0;
 
    //  Reset last read entry number, we have will had new user object now.
@@ -2035,17 +2039,19 @@ void TBranch::ResetAddress()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function resetting fgCount
+
 void TBranch::ResetCount()
 {
-   // Static function resetting fgCount
    fgCount = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set address of this branch.
+
 void TBranch::SetAddress(void* addr)
 {
-   // Set address of this branch.
    if (TestBit(kDoNotProcess)) {
       return;
    }
@@ -2064,22 +2070,22 @@ void TBranch::SetAddress(void* addr)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the automatic delete bit.
+///
+/// This bit is used by TBranchObject::ReadBasket to decide if an object
+/// referenced by a TBranchObject must be deleted or not before reading
+/// a new entry.
+///
+/// If autodel is kTRUE, this existing object will be deleted, a new object
+/// created by the default constructor, then read from disk by the streamer.
+///
+/// If autodel is kFALSE, the existing object is not deleted.  Root assumes
+/// that the user is taking care of deleting any internal object or array
+/// (this can be done in the streamer).
+
 void TBranch::SetAutoDelete(Bool_t autodel)
 {
-   // Set the automatic delete bit.
-   //
-   // This bit is used by TBranchObject::ReadBasket to decide if an object
-   // referenced by a TBranchObject must be deleted or not before reading
-   // a new entry.
-   //
-   // If autodel is kTRUE, this existing object will be deleted, a new object
-   // created by the default constructor, then read from disk by the streamer.
-   //
-   // If autodel is kFALSE, the existing object is not deleted.  Root assumes
-   // that the user is taking care of deleting any internal object or array
-   // (this can be done in the streamer).
-
    if (autodel) {
       SetBit(kAutoDelete, 1);
    } else {
@@ -2087,12 +2093,12 @@ void TBranch::SetAutoDelete(Bool_t autodel)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the basket size
+/// The function makes sure that the basket size is greater than fEntryOffsetlen
+
 void TBranch::SetBasketSize(Int_t buffsize)
 {
-   // Set the basket size
-   // The function makes sure that the basket size is greater than fEntryOffsetlen
-
    Int_t minsize = 100 + fName.Length();
    if (buffsize < minsize+fEntryOffsetLen) buffsize = minsize+fEntryOffsetLen;
    fBasketSize = buffsize;
@@ -2102,14 +2108,14 @@ void TBranch::SetBasketSize(Int_t buffsize)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Set address of this branch directly from a TBuffer to avoid streaming.
+///
+/// Note: We do not take ownership of the buffer.
+///
+
 void TBranch::SetBufferAddress(TBuffer* buf)
 {
-   // -- Set address of this branch directly from a TBuffer to avoid streaming.
-   //
-   // Note: We do not take ownership of the buffer.
-   //
-
    // Check this is possible
    if ( (fNleaves != 1)
        || (strcmp("TLeafObject",fLeaves.UncheckedAt(0)->ClassName())!=0) ) {
@@ -2123,7 +2129,8 @@ void TBranch::SetBufferAddress(TBuffer* buf)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TBranch::SetCompressionAlgorithm(Int_t algorithm)
 {
    if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
@@ -2141,7 +2148,8 @@ void TBranch::SetCompressionAlgorithm(Int_t algorithm)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TBranch::SetCompressionLevel(Int_t level)
 {
    if (level < 0) level = 0;
@@ -2161,7 +2169,8 @@ void TBranch::SetCompressionLevel(Int_t level)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TBranch::SetCompressionSettings(Int_t settings)
 {
    fCompress = settings;
@@ -2173,13 +2182,13 @@ void TBranch::SetCompressionSettings(Int_t settings)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the default value for the branch's fEntryOffsetLen if and only if
+/// it was already non zero (and the new value is not zero)
+/// If updateExisting is true, also update all the existing branches.
+
 void TBranch::SetEntryOffsetLen(Int_t newdefault, Bool_t updateExisting)
 {
-   // Update the default value for the branch's fEntryOffsetLen if and only if
-   // it was already non zero (and the new value is not zero)
-   // If updateExisting is true, also update all the existing branches.
-
    if (fEntryOffsetLen && newdefault) {
       fEntryOffsetLen = newdefault;
    }
@@ -2192,36 +2201,36 @@ void TBranch::SetEntryOffsetLen(Int_t newdefault, Bool_t updateExisting)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the number of entries in this branch.
+
 void TBranch::SetEntries(Long64_t entries)
 {
-   // Set the number of entries in this branch.
-
    fEntries = entries;
    fEntryNumber = entries;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set file where this branch writes/reads its buffers.
+/// By default the branch buffers reside in the file where the
+/// Tree was created.
+/// If the file name where the tree was created is an absolute
+/// path name or an URL (e.g. /castor/... or root://host/...)
+/// and if the fname is not an absolute path name or an URL then
+/// the path of the tree file is prepended to fname to make the
+/// branch file relative to the tree file. In this case one can
+/// move the tree + all branch files to a different location in
+/// the file system and still access the branch files.
+/// The ROOT file will be connected only when necessary.
+/// If called by TBranch::Fill (via TBasket::WriteFile), the file
+/// will be created with the option "recreate".
+/// If called by TBranch::GetEntry (via TBranch::GetBasket), the file
+/// will be opened in read mode.
+/// To open a file in "update" mode or with a certain compression
+/// level, use TBranch::SetFile(TFile *file).
+
 void TBranch::SetFile(TFile* file)
 {
-   // Set file where this branch writes/reads its buffers.
-   // By default the branch buffers reside in the file where the
-   // Tree was created.
-   // If the file name where the tree was created is an absolute
-   // path name or an URL (e.g. /castor/... or root://host/...)
-   // and if the fname is not an absolute path name or an URL then
-   // the path of the tree file is prepended to fname to make the
-   // branch file relative to the tree file. In this case one can
-   // move the tree + all branch files to a different location in
-   // the file system and still access the branch files.
-   // The ROOT file will be connected only when necessary.
-   // If called by TBranch::Fill (via TBasket::WriteFile), the file
-   // will be created with the option "recreate".
-   // If called by TBranch::GetEntry (via TBranch::GetBasket), the file
-   // will be opened in read mode.
-   // To open a file in "update" mode or with a certain compression
-   // level, use TBranch::SetFile(TFile *file).
-
    if (file == 0) file = fTree->GetCurrentFile();
    fDirectory = (TDirectory*)file;
    if (file == fTree->GetCurrentFile()) fFileName = "";
@@ -2246,27 +2255,27 @@ void TBranch::SetFile(TFile* file)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set file where this branch writes/reads its buffers.
+/// By default the branch buffers reside in the file where the
+/// Tree was created.
+/// If the file name where the tree was created is an absolute
+/// path name or an URL (e.g. /castor/... or root://host/...)
+/// and if the fname is not an absolute path name or an URL then
+/// the path of the tree file is prepended to fname to make the
+/// branch file relative to the tree file. In this case one can
+/// move the tree + all branch files to a different location in
+/// the file system and still access the branch files.
+/// The ROOT file will be connected only when necessary.
+/// If called by TBranch::Fill (via TBasket::WriteFile), the file
+/// will be created with the option "recreate".
+/// If called by TBranch::GetEntry (via TBranch::GetBasket), the file
+/// will be opened in read mode.
+/// To open a file in "update" mode or with a certain compression
+/// level, use TBranch::SetFile(TFile *file).
+
 void TBranch::SetFile(const char* fname)
 {
-   // Set file where this branch writes/reads its buffers.
-   // By default the branch buffers reside in the file where the
-   // Tree was created.
-   // If the file name where the tree was created is an absolute
-   // path name or an URL (e.g. /castor/... or root://host/...)
-   // and if the fname is not an absolute path name or an URL then
-   // the path of the tree file is prepended to fname to make the
-   // branch file relative to the tree file. In this case one can
-   // move the tree + all branch files to a different location in
-   // the file system and still access the branch files.
-   // The ROOT file will be connected only when necessary.
-   // If called by TBranch::Fill (via TBasket::WriteFile), the file
-   // will be created with the option "recreate".
-   // If called by TBranch::GetEntry (via TBranch::GetBasket), the file
-   // will be opened in read mode.
-   // To open a file in "update" mode or with a certain compression
-   // level, use TBranch::SetFile(TFile *file).
-
    fFileName  = fname;
    fDirectory = 0;
 
@@ -2278,43 +2287,43 @@ void TBranch::SetFile(const char* fname)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the branch in a mode where the object are decomposed
+/// (Also known as MakeClass mode).
+/// Return whether the setting was possible (it is not possible for
+/// TBranch and TBranchObject).
+
 Bool_t TBranch::SetMakeClass(Bool_t /* decomposeObj */)
 {
-   // Set the branch in a mode where the object are decomposed
-   // (Also known as MakeClass mode).
-   // Return whether the setting was possible (it is not possible for
-   // TBranch and TBranchObject).
-
    // Regular TBranch and TBrancObject can not be in makeClass mode
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set object this branch is pointing to.
+
 void TBranch::SetObject(void * /* obj */)
 {
-   // Set object this branch is pointing to.
-
    if (TestBit(kDoNotProcess)) {
       return;
    }
    Warning("SetObject","is not supported in TBranch objects");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set branch status to Process or DoNotProcess.
+
 void TBranch::SetStatus(Bool_t status)
 {
-   // Set branch status to Process or DoNotProcess.
-
    if (status) ResetBit(kDoNotProcess);
    else        SetBit(kDoNotProcess);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a class object
+
 void TBranch::Streamer(TBuffer& b)
 {
-   // Stream a class object
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       fTree = 0; // Will be set by TTree::Streamer
@@ -2544,12 +2553,12 @@ void TBranch::Streamer(TBuffer& b)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the current basket to disk and return the number of bytes
+/// written to the file.
+
 Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
 {
-   // Write the current basket to disk and return the number of bytes
-   // written to the file.
-
    Int_t nevbuf = basket->GetNevBuf();
    if (fEntryOffsetLen > 10 &&  (4*nevbuf) < fEntryOffsetLen ) {
       // Make sure that the fEntryOffset array does not stay large unnecessarily.
@@ -2606,10 +2615,11 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
    return nout;
 }
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+///set the first entry number (case of TBranchSTL)
+
 void TBranch::SetFirstEntry(Long64_t entry)
 {
-   //set the first entry number (case of TBranchSTL)
    fFirstEntry = entry;
    fEntries = 0;
    fEntryNumber = entry;
@@ -2619,22 +2629,22 @@ void TBranch::SetFirstEntry(Long64_t entry)
       ((TBranch*)fBranches[i])->SetFirstEntry( entry );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- If the branch address is not set,  we set all addresses starting with
+/// the top level parent branch.
+
 void TBranch::SetupAddresses()
 {
-   // -- If the branch address is not set,  we set all addresses starting with
-   // the top level parent branch.
-
    // Nothing to do for regular branch, the TLeaf already did it.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refresh the value of fDirectory (i.e. where this branch writes/reads its buffers)
+/// with the current value of fTree->GetCurrentFile unless this branch has been
+/// redirected to a different file.  Also update the sub-branches.
+
 void TBranch::UpdateFile()
 {
-   // Refresh the value of fDirectory (i.e. where this branch writes/reads its buffers)
-   // with the current value of fTree->GetCurrentFile unless this branch has been
-   // redirected to a different file.  Also update the sub-branches.
-
    TFile *file = fTree->GetCurrentFile();
    if (fFileName.Length() == 0) {
       fDirectory = file;

@@ -104,71 +104,72 @@
    TableClassStreamerImp(TGenericTable)
 
 // Create TGenericTable by TTableDescriptor pointer
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+///
+///   Create TGenericTable by TTableDescriptor pointer:
+///
+///   dsc   - Pointer to the table descriptor
+///   name  - The name of this object
+///
+////////////////////////////////////////////////////////////
+
 TGenericTable::TGenericTable(const TTableDescriptor &dsc, const char *name) : TTable(name,dsc.Sizeof()),fColDescriptors(0)
 {
-  ///////////////////////////////////////////////////////////
-  //
-  //   Create TGenericTable by TTableDescriptor pointer:
-  //
-  //   dsc   - Pointer to the table descriptor
-  //   name  - The name of this object
-  //
-  ///////////////////////////////////////////////////////////
-
    // Create a private copy of the descriptor provided;
    SetDescriptorPointer(new TTableDescriptor(dsc));
    SetGenericType();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+///
+///   Create TGenericTable by TTableDescriptor pointer:
+///
+///   dsc   - Pointer to the table descriptor
+///   name  - "TGenericTable"
+///   n     - The initial number of allocated rows
+///
+////////////////////////////////////////////////////////////
+
 TGenericTable::TGenericTable(const TTableDescriptor &dsc, Int_t n) : TTable("TGenericTable",n,dsc.Sizeof()),fColDescriptors(0)
 {
-  ///////////////////////////////////////////////////////////
-  //
-  //   Create TGenericTable by TTableDescriptor pointer:
-  //
-  //   dsc   - Pointer to the table descriptor
-  //   name  - "TGenericTable"
-  //   n     - The initial number of allocated rows
-  //
-  ///////////////////////////////////////////////////////////
-
   // Create a provate copy of the descriptor provided;
    SetDescriptorPointer(new TTableDescriptor(dsc));
    SetGenericType();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+///
+///   Create TGenericTable by TTableDescriptor pointer:
+///
+///   dsc   - Pointer to the table descriptor
+///   name  - The name of this object
+///   n     - The initial number of allocated rows
+///
+////////////////////////////////////////////////////////////
+
 TGenericTable::TGenericTable(const TTableDescriptor &dsc,const char *name,Int_t n) : TTable(name,n,dsc.Sizeof()),fColDescriptors(0)
 {
-  ///////////////////////////////////////////////////////////
-  //
-  //   Create TGenericTable by TTableDescriptor pointer:
-  //
-  //   dsc   - Pointer to the table descriptor
-  //   name  - The name of this object
-  //   n     - The initial number of allocated rows
-  //
-  ///////////////////////////////////////////////////////////
-
   // Create a provate copy of the descriptor provided;
    SetDescriptorPointer(new TTableDescriptor(dsc));
    SetGenericType();
 }
 
 // Create TGenericTable by C structure name provided
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+///
+///  Create TGenericTable by C structure name provided:
+///
+///   dsc   - Pointer to the table descriptor
+///   name  - The name of this object
+///   n     - The initial number of allocated rows
+///
+////////////////////////////////////////////////////////////
+
 TGenericTable::TGenericTable(const char *structName, const char *name) : TTable(name,-1),fColDescriptors(0)
 {
-  ///////////////////////////////////////////////////////////
-  //
-  //  Create TGenericTable by C structure name provided:
-  //
-  //   dsc   - Pointer to the table descriptor
-  //   name  - The name of this object
-  //   n     - The initial number of allocated rows
-  //
-  ///////////////////////////////////////////////////////////
    TTableDescriptor *dsc = TTableDescriptor::MakeDescriptor(structName);
    if (dsc) {
       SetDescriptorPointer(dsc);
@@ -177,19 +178,19 @@ TGenericTable::TGenericTable(const char *structName, const char *name) : TTable(
    if ( !dsc || !fSize) Warning("TGenericTable","Wrong table format");
    SetGenericType();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+///
+///  Create TGenericTable by C structure name provided:
+///
+///   dsc   - Pointer to the table descriptor
+///   name  - The name of this object
+///   n     - The initial number of allocated rows
+///
+////////////////////////////////////////////////////////////
+
 TGenericTable::TGenericTable(const char *structName, Int_t n) : TTable("TGenericTable",-1),fColDescriptors(0)
 {
-  ///////////////////////////////////////////////////////////
-  //
-  //  Create TGenericTable by C structure name provided:
-  //
-  //   dsc   - Pointer to the table descriptor
-  //   name  - The name of this object
-  //   n     - The initial number of allocated rows
-  //
-  ///////////////////////////////////////////////////////////
-
    TTableDescriptor *dsc = TTableDescriptor::MakeDescriptor(structName);
    if (dsc) {
       SetDescriptorPointer(dsc);
@@ -199,19 +200,19 @@ TGenericTable::TGenericTable(const char *structName, Int_t n) : TTable("TGeneric
    if (n > 0) Set(n);
    SetGenericType();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+///
+///   Create TGenericTable by C structure name provided:
+///
+///   dsc   - Pointer to the table descriptor
+///   name  - The name of this object
+///   n     - The initial number of allocated rows
+///
+////////////////////////////////////////////////////////////
+
 TGenericTable::TGenericTable(const char *structName, const char *name,Int_t n) : TTable(name,-1),fColDescriptors(0)
 {
-  ///////////////////////////////////////////////////////////
-  //
-  //   Create TGenericTable by C structure name provided:
-  //
-  //   dsc   - Pointer to the table descriptor
-  //   name  - The name of this object
-  //   n     - The initial number of allocated rows
-  //
-  ///////////////////////////////////////////////////////////
-
    TTableDescriptor *dsc = TTableDescriptor::MakeDescriptor(structName);
    if (dsc) {
       SetDescriptorPointer(dsc);
@@ -222,9 +223,10 @@ TGenericTable::TGenericTable(const char *structName, const char *name,Int_t n) :
    SetGenericType();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TGenericTable::~TGenericTable()
 {
-   //destructor
    delete fColDescriptors;
 }

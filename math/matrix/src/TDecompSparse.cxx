@@ -24,22 +24,22 @@ ClassImp(TDecompSparse)
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TDecompSparse::TDecompSparse()
 {
-// Default constructor
-
    fVerbose = 0;
    InitParam();
    memset(fInfo,0,21*sizeof(Int_t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for a matrix with nrows and unspecified number of columns .
+/// nr_nonZeros is the total number of non-zero entries in the matrix .
+
 TDecompSparse::TDecompSparse(Int_t nRows,Int_t nr_nonZeros,Int_t verbose)
 {
-// Constructor for a matrix with nrows and unspecified number of columns .
-// nr_nonZeros is the total number of non-zero entries in the matrix .
-
    fVerbose = verbose;
    InitParam();
 
@@ -60,12 +60,12 @@ TDecompSparse::TDecompSparse(Int_t nRows,Int_t nr_nonZeros,Int_t verbose)
    fMaxfrt = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for a matrix with row range, [row_lwb..row_upb] and unspecified column
+/// range . nr_nonZeros is the total number of non-zero entries in the matrix .
+
 TDecompSparse::TDecompSparse(Int_t row_lwb,Int_t row_upb,Int_t nr_nonZeros,Int_t verbose)
 {
-// Constructor for a matrix with row range, [row_lwb..row_upb] and unspecified column
-// range . nr_nonZeros is the total number of non-zero entries in the matrix .
-
    fVerbose = verbose;
    InitParam();
 
@@ -88,11 +88,11 @@ TDecompSparse::TDecompSparse(Int_t row_lwb,Int_t row_upb,Int_t nr_nonZeros,Int_t
    fMaxfrt = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for matrix A .
+
 TDecompSparse::TDecompSparse(const TMatrixDSparse &a,Int_t verbose)
 {
-// Constructor for matrix A .
-
    fVerbose = verbose;
 
    InitParam();
@@ -101,19 +101,19 @@ TDecompSparse::TDecompSparse(const TMatrixDSparse &a,Int_t verbose)
    memset(fInfo,0,21*sizeof(Int_t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TDecompSparse::TDecompSparse(const TDecompSparse &another) : TDecompBase(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function, returning the number of non-zero entries in the upper triangular matrix .
+
 Int_t TDecompSparse::NonZerosUpperTriang(const TMatrixDSparse &a)
 {
-// Static function, returning the number of non-zero entries in the upper triangular matrix .
-
    const Int_t  rowLwb   = a.GetRowLwb();
    const Int_t  colLwb   = a.GetColLwb();
    const Int_t  nrows    = a.GetNrows();;
@@ -132,12 +132,12 @@ Int_t TDecompSparse::NonZerosUpperTriang(const TMatrixDSparse &a)
    return nr_nonzeros;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function, copying the non-zero entries in the upper triangle to
+/// array b . User should allocate enough memory for array b .
+
 void TDecompSparse::CopyUpperTriang(const TMatrixDSparse &a,Double_t *b)
 {
-// Static function, copying the non-zero entries in the upper triangle to
-// array b . User should allocate enough memory for array b .
-
    const Int_t     rowLwb    = a.GetRowLwb();
    const Int_t     colLwb    = a.GetColLwb();
    const Int_t     nrows     = a.GetNrows();;
@@ -155,11 +155,11 @@ void TDecompSparse::CopyUpperTriang(const TMatrixDSparse &a,Double_t *b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set matrix to be decomposed .
+
 void TDecompSparse::SetMatrix(const TMatrixDSparse &a)
 {
-// Set matrix to be decomposed .
-
    ResetStatus();
 
    fA.Use(*const_cast<TMatrixDSparse *>(&a));
@@ -227,12 +227,12 @@ void TDecompSparse::SetMatrix(const TMatrixDSparse &a)
    SetBit(kMatrixSet);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decomposition engine .
+/// If the decomposition succeeds, bit kDecomposed is set .
+
 Bool_t TDecompSparse::Decompose()
 {
-// Decomposition engine .
-// If the decomposition succeeds, bit kDecomposed is set .
-
    if (TestBit(kDecomposed)) return kTRUE;
 
    if ( !TestBit(kMatrixSet) ) {
@@ -335,11 +335,11 @@ Bool_t TDecompSparse::Decompose()
    return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve Ax=b . Solution returned in b.
+
 Bool_t TDecompSparse::Solve(TVectorD &b)
 {
-// Solve Ax=b . Solution returned in b.
-
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
       Error("Solve()","Matrix is singular");
@@ -407,11 +407,11 @@ Bool_t TDecompSparse::Solve(TVectorD &b)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initializing control parameters
+
 void TDecompSparse::InitParam()
 {
-// initializing control parameters
-
    fPrecision  = kInitPrecision;
    fIPessimism = 1.2;
    fRPessimism = 1.2;
@@ -464,14 +464,14 @@ void TDecompSparse::InitParam()
    fNnonZeros = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup Pivoting variables
+
 void TDecompSparse::InitPivot(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI &Aicn,
                               TArrayI &Aiw,TArrayI &Aikeep,TArrayI &Aiw1,Int_t &nsteps,
                               const Int_t iflag,Int_t *icntl,Double_t *cntl,Int_t *info,
                               Double_t &ops)
 {
-// Setup Pivoting variables
-
    Int_t i,iwfr,k,l1,l2,lliw;
 
    Int_t *irn      = Airn.GetArray();
@@ -575,13 +575,13 @@ void TDecompSparse::InitPivot(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Factorization routine, the workhorse for the decompostion step
+
 void TDecompSparse::Factor(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI &Aicn,TArrayD &Aa,
                            TArrayI &Aiw,TArrayI &Aikeep,const Int_t nsteps,Int_t &maxfrt,
                            TArrayI &Aiw1,Int_t *icntl,Double_t *cntl,Int_t *info)
 {
-// Factorization routine, the workhorse for the decompostion step
-
    Int_t i,iapos,iblk,ipos,irows,j1,j2,jj,k,kblk,kz,len,ncols,nrows,nz1;
 
    Int_t    *irn   = Airn.GetArray();
@@ -732,13 +732,13 @@ void TDecompSparse::Factor(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI &A
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main routine for solving Ax=b
+
 void TDecompSparse::Solve(const Int_t n,TArrayD &Aa,TArrayI &Aiw,
                           TArrayD &Aw,const Int_t maxfrt,TVectorD &b,TArrayI &Aiw1,
                           const Int_t nsteps,Int_t *icntl,Int_t *info)
 {
-// Main routine for solving Ax=b
-
    Int_t i,iapos,iblk,ipos,irows,j1,j2,jj,k,kblk,latop,len,nblk,ncols,nrows;
 
    Double_t *a   = Aa.GetArray();
@@ -830,13 +830,13 @@ void TDecompSparse::Solve(const Int_t n,TArrayD &Aa,TArrayI &Aiw,
    delete [] rhs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Help routine for pivoting setup
+
 void TDecompSparse::InitPivot_sub1(const Int_t n,const Int_t nz,Int_t *irn,Int_t *icn,
                                    Int_t *iw,Int_t *ipe,Int_t *iq,Int_t *flag,
                                    Int_t &iwfr,Int_t *icntl,Int_t *info)
 {
-// Help routine for pivoting setup
-
    Int_t i,id,j,jn,k,k1,k2,l,last,lr,n1,ndup;
 
    info[2] = 0;
@@ -969,14 +969,14 @@ void TDecompSparse::InitPivot_sub1(const Int_t n,const Int_t nz,Int_t *irn,Int_t
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Help routine for pivoting setup
+
 void TDecompSparse::InitPivot_sub2(const Int_t n,Int_t *ipe,Int_t *iw,const Int_t lw,
                                    Int_t &iwfr,Int_t *nv,Int_t *nxt,Int_t *lst,Int_t *ipd,
                                    Int_t *flag,const Int_t iovflo,Int_t &ncmpa,
                                    const Double_t fratio)
 {
-// Help routine for pivoting setup
-
    Int_t i,id,idl,idn,ie,ip,is,jp,jp1,jp2,js,k,k1,k2,ke,kp,kp0,kp1,
          kp2,ks,l,len,limit,ln,ls,lwfr,md,me,ml,ms,nel,nflg,np,
          np0,ns,nvpiv,nvroot,root;
@@ -1299,12 +1299,12 @@ void TDecompSparse::InitPivot_sub2(const Int_t n,Int_t *ipe,Int_t *iw,const Int_
    if (nvroot> 0) nv[root] = nvroot;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Help routine for pivoting setup
+
 void TDecompSparse::InitPivot_sub2a(const Int_t n,Int_t *ipe,Int_t *iw,const Int_t lw,
                                     Int_t &iwfr,Int_t &ncmpa)
 {
-// Help routine for pivoting setup
-
    Int_t i,ir,k,k1,k2,lwfr;
 
    ncmpa = ncmpa+1;
@@ -1343,13 +1343,13 @@ void TDecompSparse::InitPivot_sub2a(const Int_t n,Int_t *ipe,Int_t *iw,const Int
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Help routine for pivoting setup
+
 void TDecompSparse::InitPivot_sub3(const Int_t n,const Int_t nz,Int_t *irn,Int_t *icn,
                                    Int_t *perm,Int_t *iw,Int_t *ipe,Int_t *iq,
                                    Int_t *flag,Int_t &iwfr,Int_t *icntl,Int_t *info)
 {
-// Help routine for pivoting setup
-
    Int_t i,id,in,j,jdummy,k,k1,k2,l,lbig,len;
 
    info[1] = 0;
@@ -1465,13 +1465,13 @@ void TDecompSparse::InitPivot_sub3(const Int_t n,const Int_t nz,Int_t *irn,Int_t
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Help routine for pivoting setup
+
 void TDecompSparse::InitPivot_sub4(const Int_t n,Int_t *ipe,Int_t *iw,const Int_t lw,
                                    Int_t &iwfr,Int_t *ips,Int_t *ipv,Int_t *nv,Int_t *flag,
                                    Int_t &ncmpa)
 {
-// Help routine for pivoting setup
-
    Int_t i,ie,ip,j,je,jp,jp1,jp2,js,kdummy,ln,lwfr,me,minjs,ml,ms;
 
    for (i = 1; i < n+1; i++) {
@@ -1542,12 +1542,12 @@ void TDecompSparse::InitPivot_sub4(const Int_t n,Int_t *ipe,Int_t *iw,const Int_
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Help routine for pivoting setup
+
 void TDecompSparse::InitPivot_sub5(const Int_t n,Int_t *ipe,Int_t *nv,Int_t *ips,Int_t *ne,
                                    Int_t *na,Int_t *nd,Int_t &nsteps,const Int_t nemin)
 {
-// Help routine for pivoting setup
-
    Int_t i,ib,iff,il,is,ison,k,l,nr;
 
    il = 0;
@@ -1631,13 +1631,13 @@ void TDecompSparse::InitPivot_sub5(const Int_t n,Int_t *ipe,Int_t *nv,Int_t *ips
    nsteps = is-1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Help routine for pivoting setup
+
 void TDecompSparse::InitPivot_sub6(const Int_t n,const Int_t nz,Int_t *irn,Int_t *icn,
                                    Int_t *perm,Int_t *na,Int_t *ne,Int_t *nd,const Int_t nsteps,
                                    Int_t *lstki,Int_t *lstkr,Int_t *iw,Int_t *info,Double_t &ops)
 {
-// Help routine for pivoting setup
-
    Int_t i,inew,iold,iorg,irow,istki,istkr,itop,itree,jold,jorg,k,lstk,nassr,nelim,nfr,nstk,
          numorg,nz1,nz2,nrladu,niradu,nirtot,nrltot,nirnec,nrlnec;
    Double_t delim;
@@ -1735,13 +1735,13 @@ void TDecompSparse::InitPivot_sub6(const Int_t n,const Int_t nz,Int_t *irn,Int_t
    info[8] = niradu;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Help routine for factorization
+
 void TDecompSparse::Factor_sub1(const Int_t n,const Int_t nz,Int_t &nz1,Double_t *a,
                                 const Int_t la,Int_t *irn,Int_t *icn,Int_t *iw,const Int_t liw,
                                 Int_t *perm,Int_t *iw2,Int_t *icntl,Int_t *info)
 {
-// Help routine for factorization
-
    Int_t i,ia,ich,ii,iiw,inew,iold,ipos,j1,j2,jj,jnew,jold,jpos,k;
    Double_t anext,anow;
 
@@ -1877,14 +1877,14 @@ void TDecompSparse::Factor_sub1(const Int_t n,const Int_t nz,Int_t &nz1,Double_t
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Help routine for factorization
+
 void TDecompSparse::Factor_sub2(const Int_t n,const Int_t nz,Double_t *a,const Int_t la,
                                 Int_t *iw,const Int_t liw,Int_t *perm,Int_t *nstk,
                                 const Int_t nsteps,Int_t &maxfrt,Int_t *nelim,Int_t *iw2,
                                 Int_t *icntl,Double_t *cntl,Int_t *info)
 {
-// Help routine for factorization
-
    Double_t amax,amult,amult1,amult2,detpiv,rmax,swop,thresh,tmax,uu;
    Int_t ainput,apos,apos1,apos2,apos3,astk,astk2,azero,i,iass;
    Int_t ibeg,idummy,iell,iend,iexch,ifr,iinput,ioldps,iorg,ipiv;
@@ -2383,12 +2383,12 @@ finish:
    info[15] = neig;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Help routine for factorization
+
 void TDecompSparse::Factor_sub3(Double_t *a,Int_t *iw,Int_t &j1,Int_t &j2,const Int_t itop,
                                 const Int_t ireal,Int_t &ncmpbr,Int_t &ncmpbi)
 {
-// Help routine for factorization
-
    Int_t ipos,jj,jjj;
 
    ipos = itop-1;
@@ -2417,13 +2417,13 @@ void TDecompSparse::Factor_sub3(Double_t *a,Int_t *iw,Int_t &j1,Int_t &j2,const 
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Help routine for solving
+
 void TDecompSparse::Solve_sub1(const Int_t n,Double_t *a,Int_t *iw,Double_t *w,
                                Double_t *rhs,Int_t *iw2,const Int_t nblk,Int_t &latop,
                                Int_t *icntl)
 {
-// Help routine for solving
-
    Int_t apos,iblk,ifr,ilvl,ipiv,ipos,irhs,irow,ist,j,j1=0,j2,j3,jj,jpiv,k,k1,k2,k3,liell,npiv;
    Double_t w1,w2;
 
@@ -2547,13 +2547,13 @@ hack:
    latop = apos-1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Help routine for solving
+
 void TDecompSparse::Solve_sub2(const Int_t n,Double_t *a,Int_t *iw,Double_t *w,
                                Double_t *rhs,Int_t *iw2,const Int_t nblk,
                                const Int_t latop,Int_t *icntl)
 {
-// Help routine for solving
-
    Int_t apos,apos2,i1rhs,i2rhs,iblk,ifr,iipiv,iirhs,ilvl,ipiv,ipos,irhs,ist,
          j,j1=0,j2=0,jj,jj1,jj2,jpiv,jpos=0,k,liell,loop,npiv;
    Double_t w1,w2;
@@ -2680,11 +2680,11 @@ hack:
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print class members
+
 void TDecompSparse::Print(Option_t *opt) const
 {
-// Print class members
-
    TDecompBase::Print(opt);
 
    printf("fPrecision  = %.3f\n",fPrecision);
@@ -2696,11 +2696,11 @@ void TDecompSparse::Print(Option_t *opt) const
    fact.Print("fFact");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TDecompSparse &TDecompSparse::operator=(const TDecompSparse &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TDecompBase::operator=(source);
       memcpy(fIcntl,source.fIcntl,31*sizeof(Int_t));

@@ -65,10 +65,11 @@ static const char gLevName[gMaxLevel]=" mnpqrs";
 
 ClassImp(TGeoElement)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoElement::TGeoElement()
 {
-// Default constructor
    SetDefined(kFALSE);
    SetUsed(kFALSE);
    fZ = 0;
@@ -79,11 +80,12 @@ TGeoElement::TGeoElement()
    fAbundances = NULL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Obsolete constructor
+
 TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Double_t a)
             :TNamed(name, title)
 {
-// Obsolete constructor
    SetDefined(kFALSE);
    SetUsed(kFALSE);
    fZ = z;
@@ -94,11 +96,12 @@ TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Double_t 
    fAbundances = NULL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Element having isotopes.
+
 TGeoElement::TGeoElement(const char *name, const char *title, Int_t nisotopes)
             :TNamed(name, title)
 {
-// Element having isotopes.
    SetDefined(kFALSE);
    SetUsed(kFALSE);
    fZ = 0;
@@ -109,11 +112,12 @@ TGeoElement::TGeoElement(const char *name, const char *title, Int_t nisotopes)
    fAbundances = new Double_t[nisotopes];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Int_t n, Double_t a)
             :TNamed(name, title)
 {
-// Constructor
    SetDefined(kFALSE);
    SetUsed(kFALSE);
    fZ = z;
@@ -124,10 +128,11 @@ TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Int_t n, 
    fAbundances = NULL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print this isotope
+
 void TGeoElement::Print(Option_t *option) const
 {
-// Print this isotope
    printf("Element: %s      Z=%d   N=%f   A=%f [g/mole]\n", GetName(), fZ,Neff(),fA);
    if (HasIsotopes()) {
       for (Int_t i=0; i<fNisotopes; i++) {
@@ -138,10 +143,11 @@ void TGeoElement::Print(Option_t *option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns pointer to the table.
+
 TGeoElementTable *TGeoElement::GetElementTable()
 {
-// Returns pointer to the table.
    if (!gGeoManager) {
       ::Error("TGeoElementTable::GetElementTable", "Create a geometry manager first");
       return NULL;
@@ -149,10 +155,11 @@ TGeoElementTable *TGeoElement::GetElementTable()
    return gGeoManager->GetElementTable();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an isotope for this element. All isotopes have to be isotopes of the same element.
+
 void TGeoElement::AddIsotope(TGeoIsotope *isotope, Double_t relativeAbundance)
 {
-// Add an isotope for this element. All isotopes have to be isotopes of the same element.
    if (!fIsotopes) {
       Fatal("AddIsotope", "Cannot add isotopes to normal elements. Use constructor with number of isotopes.");
       return;
@@ -192,10 +199,11 @@ void TGeoElement::AddIsotope(TGeoIsotope *isotope, Double_t relativeAbundance)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns effective number of nucleons.
+
 Double_t TGeoElement::Neff() const
 {
-// Returns effective number of nucleons.
    if (!fNisotopes) return fN;
    TGeoIsotope *isocrt;
    Double_t weight = 0.0;
@@ -209,71 +217,78 @@ Double_t TGeoElement::Neff() const
    return neff;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return i-th isotope in the element.
+
 TGeoIsotope *TGeoElement::GetIsotope(Int_t i) const
 {
-// Return i-th isotope in the element.
    if (i>=0 && i<fNisotopes) {
       return (TGeoIsotope*)fIsotopes->At(i);
    }
    return NULL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return relative abundance of i-th isotope in this element.
+
 Double_t TGeoElement::GetRelativeAbundance(Int_t i) const
 {
-// Return relative abundance of i-th isotope in this element.
    if (i>=0 && i<fNisotopes) return fAbundances[i];
    return 0.0;
 }
 
 ClassImp(TGeoIsotope)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy I/O constructor
+
 TGeoIsotope::TGeoIsotope()
             :TNamed(),
              fZ(0),
              fN(0),
              fA(0)
 {
-// Dummy I/O constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TGeoIsotope::TGeoIsotope(const char *name, Int_t z, Int_t n, Double_t a)
             :TNamed(name,""),
              fZ(z),
              fN(n),
              fA(a)
 {
-// Constructor
    if (z<1) Fatal("ctor", "Not allowed Z=%d (<1) for isotope: %s", z,name);
    if (n<z) Fatal("ctor", "Not allowed Z=%d < N=%d for isotope: %s", z,n,name);
    TGeoElement::GetElementTable()->AddIsotope(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find existing isotope by name.
+
 TGeoIsotope *TGeoIsotope::FindIsotope(const char *name)
 {
-// Find existing isotope by name.
    TGeoElementTable *elTable = TGeoElement::GetElementTable();
    if (!elTable) return 0;
    return elTable->FindIsotope(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print this isotope
+
 void TGeoIsotope::Print(Option_t *) const
 {
-// Print this isotope
    printf("Isotope: %s     Z=%d   N=%d   A=%f [g/mole]\n", GetName(), fZ,fN,fA);
 }
 
 ClassImp(TGeoElementRN)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoElementRN::TGeoElementRN()
 {
-// Default constructor
    TObject::SetBit(kElementChecked,kFALSE);
    fENDFcode = 0;
    fIso      = 0;
@@ -290,14 +305,15 @@ TGeoElementRN::TGeoElementRN()
    fDecays   = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGeoElementRN::TGeoElementRN(Int_t aa, Int_t zz, Int_t iso, Double_t level,
                Double_t deltaM, Double_t halfLife, const char* JP,
                Double_t natAbun, Double_t th_f, Double_t tg_f, Double_t th_s,
                Double_t tg_s, Int_t status)
               :TGeoElement("", JP, zz, aa)
 {
-// Constructor.
    TObject::SetBit(kElementChecked,kFALSE);
    fENDFcode = ENDF(aa,zz,iso);
    fIso      = iso;
@@ -318,10 +334,11 @@ TGeoElementRN::TGeoElementRN(Int_t aa, Int_t zz, Int_t iso, Double_t level,
    if ((TMath::Abs(fHalfLife)<1.e-30) || fHalfLife<-1) Warning("ctor","Element %s has T1/2=%g [s]", fName.Data(), fHalfLife);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoElementRN::~TGeoElementRN()
 {
-// Destructor.
    if (fDecays) {
       fDecays->Delete();
       delete fDecays;
@@ -329,10 +346,11 @@ TGeoElementRN::~TGeoElementRN()
    if (fRatio) delete fRatio;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a decay mode for this element.
+
 void TGeoElementRN::AddDecay(Int_t decay, Int_t diso, Double_t branchingRatio, Double_t qValue)
 {
-// Adds a decay mode for this element.
    if (branchingRatio<1E-20) {
       TString decayName;
       TGeoDecayChannel::DecayName(decay, decayName);
@@ -345,36 +363,40 @@ void TGeoElementRN::AddDecay(Int_t decay, Int_t diso, Double_t branchingRatio, D
    fDecays->Add(dc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a decay channel to the list of decays.
+
 void TGeoElementRN::AddDecay(TGeoDecayChannel *dc)
 {
-// Adds a decay channel to the list of decays.
    dc->SetParent(this);
    if (!fDecays) fDecays = new TObjArray(5);
    fDecays->Add(dc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of decay chanels of this element.
+
 Int_t TGeoElementRN::GetNdecays() const
 {
-// Get number of decay chanels of this element.
    if (!fDecays) return 0;
    return fDecays->GetEntriesFast();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the activity in Bq of a gram of material made from this element.
+
 Double_t TGeoElementRN::GetSpecificActivity() const
 {
-// Get the activity in Bq of a gram of material made from this element.
    static const Double_t ln2 = TMath::Log(2.);
    Double_t sa = (fHalfLife>0 && fA>0)?(ln2*TMath::Na()/fHalfLife/fA):0.;
    return sa;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if all decay chain of the element is OK.
+
 Bool_t TGeoElementRN::CheckDecays() const
 {
-// Check if all decay chain of the element is OK.
    if (TObject::TestBit(kElementChecked)) return kTRUE;
    TObject *oelem = (TObject*)this;
    TGeoDecayChannel *dc;
@@ -415,25 +437,27 @@ Bool_t TGeoElementRN::CheckDecays() const
    return resultOK;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns ENDF code of decay result.
+
 Int_t TGeoElementRN::DecayResult(TGeoDecayChannel *dc) const
 {
-// Returns ENDF code of decay result.
    Int_t da, dz, diso;
    dc->DecayShift(da, dz, diso);
    if (da == -99 || dz == -99) return 0;
    return ENDF(Int_t(fA)+da,fZ+dz,fIso+diso);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the input array with the set of RN elements resulting from the decay of
+/// this one. All element in the list will contain the time evolution of their
+/// proportion by number with respect to this element. The proportion can be
+/// retrieved via the method TGeoElementRN::Ratio().
+/// The precision represent the minimum cumulative branching ratio for
+/// which decay products are still taken into account.
+
 void TGeoElementRN::FillPopulation(TObjArray *population, Double_t precision, Double_t factor)
 {
-// Fills the input array with the set of RN elements resulting from the decay of
-// this one. All element in the list will contain the time evolution of their
-// proportion by number with respect to this element. The proportion can be
-// retrieved via the method TGeoElementRN::Ratio().
-// The precision represent the minimum cumulative branching ratio for
-// which decay products are still taken into account.
    TGeoElementRN *elem;
    TGeoElemIter next(this, precision);
    TGeoBatemanSol s(this);
@@ -448,10 +472,11 @@ void TGeoElementRN::FillPopulation(TObjArray *population, Double_t precision, Do
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate a default name for the element.
+
 void TGeoElementRN::MakeName(Int_t a, Int_t z, Int_t iso)
 {
-// Generate a default name for the element.
    fName = "";
    if (z==0 && a==1) {
       fName = "neutron";
@@ -465,10 +490,11 @@ void TGeoElementRN::MakeName(Int_t a, Int_t z, Int_t iso)
    fName.ReplaceAll(" ","");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print info about the element;
+
 void TGeoElementRN::Print(Option_t *option) const
 {
-// Print info about the element;
    printf("\n%-12s ",fName.Data());
    printf("ENDF=%d; ",fENDFcode);
    printf("A=%d; ",(Int_t)fA);
@@ -491,10 +517,11 @@ void TGeoElementRN::Print(Option_t *option) const
    while ((dc=(TGeoDecayChannel*)next())) dc->Print(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create element from line record.
+
 TGeoElementRN *TGeoElementRN::ReadElementRN(const char *line, Int_t &ndecays)
 {
-// Create element from line record.
    Int_t a,z,iso,status;
    Double_t level, deltaM, halfLife, natAbun, th_f, tg_f, th_s, tg_s;
    char name[20],jp[20];
@@ -505,10 +532,11 @@ TGeoElementRN *TGeoElementRN::ReadElementRN(const char *line, Int_t &ndecays)
    return elem;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive for RN elements.
+
 void TGeoElementRN::SavePrimitive(std::ostream &out, Option_t *option)
 {
-// Save primitive for RN elements.
    if (!strcmp(option,"h")) {
       // print a header if requested
       out << "#====================================================================================================================================" << std::endl;
@@ -540,18 +568,20 @@ void TGeoElementRN::SavePrimitive(std::ostream &out, Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a proportion ratio to the existing one.
+
 void TGeoElementRN::AddRatio(TGeoBatemanSol &ratio)
 {
-// Adds a proportion ratio to the existing one.
    if (!fRatio) fRatio = new TGeoBatemanSol(ratio);
    else         *fRatio += ratio;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clears the existing ratio.
+
 void TGeoElementRN::ResetRatio()
 {
-// Clears the existing ratio.
    if (fRatio) {
       delete fRatio;
       fRatio = 0;
@@ -560,11 +590,12 @@ void TGeoElementRN::ResetRatio()
 
 ClassImp(TGeoDecayChannel)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment.
+///assignment operator
+
 TGeoDecayChannel& TGeoDecayChannel::operator=(const TGeoDecayChannel& dc)
 {
-// Assignment.
-   //assignment operator
    if(this!=&dc) {
       TObject::operator=(dc);
       fDecay          = dc.fDecay;
@@ -577,10 +608,11 @@ TGeoDecayChannel& TGeoDecayChannel::operator=(const TGeoDecayChannel& dc)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns name of decay.
+
 const char *TGeoDecayChannel::GetName() const
 {
-// Returns name of decay.
    static TString name = "";
    name = "";
    if (!fDecay) return gDecayName[gMaxDecay];
@@ -593,10 +625,11 @@ const char *TGeoDecayChannel::GetName() const
    return name.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns decay name.
+
 void TGeoDecayChannel::DecayName(UInt_t decay, TString &name)
 {
-// Returns decay name.
    if (!decay) {
       name = gDecayName[gMaxDecay];
       return;
@@ -610,26 +643,29 @@ void TGeoDecayChannel::DecayName(UInt_t decay, TString &name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get index of this channel in the list of decays of the parent nuclide.
+
 Int_t TGeoDecayChannel::GetIndex() const
 {
-// Get index of this channel in the list of decays of the parent nuclide.
    return fParent->Decays()->IndexOf(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints decay info.
+
 void TGeoDecayChannel::Print(Option_t *) const
 {
-// Prints decay info.
    TString name;
    DecayName(fDecay, name);
    printf("%-20s Diso: %3d BR: %9.3f%% Qval: %g\n", name.Data(),fDiso,fBranchingRatio,fQvalue);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create element from line record.
+
 TGeoDecayChannel *TGeoDecayChannel::ReadDecay(const char *line)
 {
-// Create element from line record.
    char name[80];
    Int_t decay,diso;
    Double_t branchingRatio, qValue;
@@ -638,10 +674,11 @@ TGeoDecayChannel *TGeoDecayChannel::ReadDecay(const char *line)
    return dc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive for decays.
+
 void TGeoDecayChannel::SavePrimitive(std::ostream &out, Option_t *)
 {
-// Save primitive for decays.
    TString decayName;
    DecayName(fDecay, decayName);
    out << std::setw(50) << decayName.Data();
@@ -652,10 +689,11 @@ void TGeoDecayChannel::SavePrimitive(std::ostream &out, Option_t *)
    out << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns variation in A, Z and Iso after decay.
+
 void TGeoDecayChannel::DecayShift(Int_t &dA, Int_t &dZ, Int_t &dI) const
 {
-// Returns variation in A, Z and Iso after decay.
    dA=dZ=0;
    dI=fDiso;
    for(Int_t i=0; i<gMaxDecay; ++i) {
@@ -672,15 +710,18 @@ void TGeoDecayChannel::DecayShift(Int_t &dA, Int_t &dZ, Int_t &dI) const
 
 ClassImp(TGeoElemIter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TGeoElemIter::TGeoElemIter(TGeoElementRN *top, Double_t limit)
           : fTop(top), fElem(top), fBranch(0), fLevel(0), fLimitRatio(limit), fRatio(1.)
 {
-// Default constructor.
    fBranch = new TObjArray(10);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TGeoElemIter::TGeoElemIter(const TGeoElemIter &iter)
              :fTop(iter.fTop),
               fElem(iter.fElem),
@@ -689,24 +730,25 @@ TGeoElemIter::TGeoElemIter(const TGeoElemIter &iter)
               fLimitRatio(iter.fLimitRatio),
               fRatio(iter.fRatio)
 {
-// Copy ctor.
    if (iter.fBranch) {
       fBranch = new TObjArray(10);
       for (Int_t i=0; i<fLevel; i++) fBranch->Add(iter.fBranch->At(i));
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoElemIter::~TGeoElemIter()
 {
-// Destructor.
    if (fBranch) delete fBranch;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment.
+
 TGeoElemIter &TGeoElemIter::operator=(const TGeoElemIter &iter)
 {
-// Assignment.
    if (&iter == this) return *this;
    fTop   = iter.fTop;
    fElem  = iter.fElem;
@@ -720,17 +762,19 @@ TGeoElemIter &TGeoElemIter::operator=(const TGeoElemIter &iter)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// () operator.
+
 TGeoElementRN *TGeoElemIter::operator()()
 {
-// () operator.
    return Next();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go upwards from the current location until the next branching, then down.
+
 TGeoElementRN *TGeoElemIter::Up()
 {
-// Go upwards from the current location until the next branching, then down.
    TGeoDecayChannel *dc;
    Int_t ind, nd;
    while (fLevel) {
@@ -750,11 +794,12 @@ TGeoElementRN *TGeoElemIter::Up()
    return NULL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go downwards from current level via ibranch as low in the tree as possible.
+/// Return value flags if the operation was successful.
+
 TGeoElementRN *TGeoElemIter::Down(Int_t ibranch)
 {
-// Go downwards from current level via ibranch as low in the tree as possible.
-// Return value flags if the operation was successful.
    TGeoDecayChannel *dc = (TGeoDecayChannel*)fElem->Decays()->At(ibranch);
    if (!dc->Daughter()) return NULL;
    Double_t br = 0.01*fRatio*dc->BranchingRatio();
@@ -766,10 +811,11 @@ TGeoElementRN *TGeoElemIter::Down(Int_t ibranch)
    return (TGeoElementRN*)fElem;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return next element.
+
 TGeoElementRN *TGeoElemIter::Next()
 {
-// Return next element.
    if (!fElem) return NULL;
    // Check if this is the first iteration.
    Int_t nd = fElem->GetNdecays();
@@ -777,10 +823,11 @@ TGeoElementRN *TGeoElemIter::Next()
    return Up();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print info about the current decay branch.
+
 void TGeoElemIter::Print(Option_t * /*option*/) const
 {
-// Print info about the current decay branch.
    TGeoElementRN *elem;
    TGeoDecayChannel *dc;
    TString indent = "";
@@ -799,10 +846,11 @@ void TGeoElemIter::Print(Option_t * /*option*/) const
 
 ClassImp(TGeoElementTable)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TGeoElementTable::TGeoElementTable()
 {
-// default constructor
    fNelements = 0;
    fNelementsRN = 0;
    fNisotopes = 0;
@@ -811,10 +859,11 @@ TGeoElementTable::TGeoElementTable()
    fIsotopes = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGeoElementTable::TGeoElementTable(Int_t /*nelements*/)
 {
-// constructor
    fNelements = 0;
    fNelementsRN = 0;
    fNisotopes = 0;
@@ -825,7 +874,9 @@ TGeoElementTable::TGeoElementTable(Int_t /*nelements*/)
 //   BuildElementsRN();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TGeoElementTable::TGeoElementTable(const TGeoElementTable& get) :
   TObject(get),
   fNelements(get.fNelements),
@@ -835,13 +886,13 @@ TGeoElementTable::TGeoElementTable(const TGeoElementTable& get) :
   fListRN(get.fListRN),
   fIsotopes(0)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGeoElementTable& TGeoElementTable::operator=(const TGeoElementTable& get)
 {
-   //assignment operator
    if(this!=&get) {
       TObject::operator=(get);
       fNelements=get.fNelements;
@@ -854,10 +905,11 @@ TGeoElementTable& TGeoElementTable::operator=(const TGeoElementTable& get)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoElementTable::~TGeoElementTable()
 {
-// destructor
    if (fList) {
       fList->Delete();
       delete fList;
@@ -872,26 +924,29 @@ TGeoElementTable::~TGeoElementTable()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an element to the table. Obsolete.
+
 void TGeoElementTable::AddElement(const char *name, const char *title, Int_t z, Double_t a)
 {
-// Add an element to the table. Obsolete.
    if (!fList) fList = new TObjArray(128);
    fList->AddAtAndExpand(new TGeoElement(name,title,z,a), fNelements++);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an element to the table.
+
 void TGeoElementTable::AddElement(const char *name, const char *title, Int_t z, Int_t n, Double_t a)
 {
-// Add an element to the table.
    if (!fList) fList = new TObjArray(128);
    fList->AddAtAndExpand(new TGeoElement(name,title,z,n,a), fNelements++);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a custom element to the table.
+
 void TGeoElementTable::AddElement(TGeoElement *elem)
 {
-// Add a custom element to the table.
    if (!fList) fList = new TObjArray(128);
    TGeoElement *orig = FindElement(elem->GetName());
    if (orig) {
@@ -902,10 +957,11 @@ void TGeoElementTable::AddElement(TGeoElement *elem)
    fList->AddAtAndExpand(elem, fNelements++);
 }   
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a radionuclide to the table and map it.
+
 void TGeoElementTable::AddElementRN(TGeoElementRN *elem)
 {
-// Add a radionuclide to the table and map it.
    if (!fListRN) fListRN = new TObjArray(3600);
    if (HasRNElements() && GetElementRN(elem->ENDFCode())) return;
 //   elem->Print();
@@ -914,10 +970,11 @@ void TGeoElementTable::AddElementRN(TGeoElementRN *elem)
    fElementsRN.insert(ElementRNMap_t::value_type(elem->ENDFCode(), elem));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add isotope to the table.
+
 void TGeoElementTable::AddIsotope(TGeoIsotope *isotope)
 {
-// Add isotope to the table.
    if (FindIsotope(isotope->GetName())) {
       Error("AddIsotope", "Isotope with the same name: %s already in table. Not adding.",isotope->GetName());
       return;
@@ -926,10 +983,11 @@ void TGeoElementTable::AddIsotope(TGeoIsotope *isotope)
    fIsotopes->Add(isotope);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates the default element table
+
 void TGeoElementTable::BuildDefaultElements()
 {
-// Creates the default element table
    if (HasDefaultElements()) return;
    AddElement("VACUUM","VACUUM"   ,0,   0, 0.0);
    AddElement("H"   ,"HYDROGEN"   ,1,   1, 1.00794);
@@ -1048,10 +1106,11 @@ void TGeoElementTable::BuildDefaultElements()
    TObject::SetBit(kETDefaultElements,kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates the list of radionuclides.
+
 void TGeoElementTable::ImportElementsRN()
 {
-// Creates the list of radionuclides.
    if (HasRNElements()) return;
    TGeoElementRN *elem;
    TString rnf;
@@ -1088,10 +1147,11 @@ void TGeoElementTable::ImportElementsRN()
    fclose(fp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks status of element table.
+
 Bool_t TGeoElementTable::CheckTable() const
 {
-// Checks status of element table.
    if (!HasRNElements()) return HasDefaultElements();
    TGeoElementRN *elem;
    Bool_t result = kTRUE;
@@ -1102,10 +1162,11 @@ Bool_t TGeoElementTable::CheckTable() const
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Export radionuclides in a file.
+
 void TGeoElementTable::ExportElementsRN(const char *filename)
 {
-// Export radionuclides in a file.
    if (!HasRNElements()) return;
    TString sname = filename;
    if (!sname.Length()) sname = "RadioNuclides.txt";
@@ -1127,11 +1188,12 @@ void TGeoElementTable::ExportElementsRN(const char *filename)
    out.close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search an element by symbol or full name
+/// Exact matching
+
 TGeoElement *TGeoElementTable::FindElement(const char *name) const
 {
-// Search an element by symbol or full name
-   // Exact matching
    TGeoElement *elem;
    elem = (TGeoElement*)fList->FindObject(name);
    if (elem) return elem;
@@ -1148,18 +1210,20 @@ TGeoElement *TGeoElementTable::FindElement(const char *name) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find existing isotope by name. Not optimized for a big number of isotopes.
+
 TGeoIsotope *TGeoElementTable::FindIsotope(const char *name) const
 {
-// Find existing isotope by name. Not optimized for a big number of isotopes.
    if (!fIsotopes) return NULL;
    return (TGeoIsotope*)fIsotopes->FindObject(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retreive a radionuclide by ENDF code.
+
 TGeoElementRN *TGeoElementTable::GetElementRN(Int_t ENDFcode) const
 {
-// Retreive a radionuclide by ENDF code.
    if (!HasRNElements()) {
       TGeoElementTable *table = (TGeoElementTable*)this;
       table->ImportElementsRN();
@@ -1170,22 +1234,24 @@ TGeoElementRN *TGeoElementTable::GetElementRN(Int_t ENDFcode) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retreive a radionuclide by a, z, and isomeric state.
+
 TGeoElementRN *TGeoElementTable::GetElementRN(Int_t a, Int_t z, Int_t iso) const
 {
-// Retreive a radionuclide by a, z, and isomeric state.
    return GetElementRN(TGeoElementRN::ENDF(a,z,iso));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print table of elements. The accepted options are:
+///  ""  - prints everything by default
+///  "D" - prints default elements only
+///  "I" - prints isotopes
+///  "R" - prints radio-nuclides only if imported
+///  "U" - prints user-defined elements only
+
 void TGeoElementTable::Print(Option_t *option) const
 {
-// Print table of elements. The accepted options are:
-//  ""  - prints everything by default
-//  "D" - prints default elements only
-//  "I" - prints isotopes
-//  "R" - prints radio-nuclides only if imported
-//  "U" - prints user-defined elements only
    TString opt(option);
    opt.ToUpper();
    Int_t induser = HasDefaultElements() ? 113 : 0;
@@ -1217,7 +1283,9 @@ void TGeoElementTable::Print(Option_t *option) const
 
 ClassImp(TGeoBatemanSol)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TGeoBatemanSol::TGeoBatemanSol(TGeoElementRN *elem)
                :TObject(), TAttLine(), TAttFill(), TAttMarker(),
                 fElem(elem),
@@ -1229,7 +1297,6 @@ TGeoBatemanSol::TGeoBatemanSol(TGeoElementRN *elem)
                 fTmax(0.),
                 fCoeff(NULL)
 {
-// Default ctor.
    fCoeff = new BtCoef_t[fCsize];
    fNcoeff = 1;
    fCoeff[0].cn = 1.;
@@ -1239,7 +1306,9 @@ TGeoBatemanSol::TGeoBatemanSol(TGeoElementRN *elem)
    else                fCoeff[0].lambda = TMath::Log(2.)/t12;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TGeoBatemanSol::TGeoBatemanSol(const TObjArray *chain)
                :TObject(), TAttLine(), TAttFill(), TAttMarker(),
                 fElem(NULL),
@@ -1251,7 +1320,6 @@ TGeoBatemanSol::TGeoBatemanSol(const TObjArray *chain)
                 fTmax(0.),
                 fCoeff(NULL)
 {
-// Default ctor.
    TGeoDecayChannel *dc = (TGeoDecayChannel*)chain->At(0);
    if (dc) fElemTop = dc->Parent();
    dc = (TGeoDecayChannel*)chain->At(chain->GetEntriesFast()-1);
@@ -1263,7 +1331,9 @@ TGeoBatemanSol::TGeoBatemanSol(const TObjArray *chain)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TGeoBatemanSol::TGeoBatemanSol(const TGeoBatemanSol& other)
                :TObject(other), TAttLine(other), TAttFill(other), TAttMarker(other),
                 fElem(other.fElem),
@@ -1275,7 +1345,6 @@ TGeoBatemanSol::TGeoBatemanSol(const TGeoBatemanSol& other)
                 fTmax(other.fTmax),
                 fCoeff(NULL)
 {
-// Copy constructor.
    if (fCsize) {
       fCoeff = new BtCoef_t[fCsize];
       for (Int_t i=0; i<fNcoeff; i++) {
@@ -1285,17 +1354,19 @@ TGeoBatemanSol::TGeoBatemanSol(const TGeoBatemanSol& other)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoBatemanSol::~TGeoBatemanSol()
 {
-// Destructor.
    if (fCoeff) delete [] fCoeff;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment.
+
 TGeoBatemanSol& TGeoBatemanSol::operator=(const TGeoBatemanSol& other)
 {
-// Assignment.
    if (this == &other) return *this;
    TObject::operator=(other);
    TAttLine::operator=(other);
@@ -1320,10 +1391,11 @@ TGeoBatemanSol& TGeoBatemanSol::operator=(const TGeoBatemanSol& other)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Addition of other solution.
+
 TGeoBatemanSol& TGeoBatemanSol::operator+=(const TGeoBatemanSol& other)
 {
-// Addition of other solution.
    if (other.GetElement() != fElem) {
       Error("operator+=", "Cannot add 2 solutions for different elements");
       return *this;
@@ -1358,36 +1430,39 @@ TGeoBatemanSol& TGeoBatemanSol::operator+=(const TGeoBatemanSol& other)
    fNcoeff = ncoeff;
    return *this;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find concentration of the element at a given time.
+
 Double_t TGeoBatemanSol::Concentration(Double_t time) const
 {
-// Find concentration of the element at a given time.
    Double_t conc = 0.;
    for (Int_t i=0; i<fNcoeff; i++)
       conc += fCoeff[i].cn * TMath::Exp(-fCoeff[i].lambda * time);
    return conc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the solution of Bateman equation versus time.
+
 void TGeoBatemanSol::Draw(Option_t *option)
 {
-// Draw the solution of Bateman equation versus time.
    if (!gGeoManager) return;
    gGeoManager->GetGeomPainter()->DrawBatemanSol(this, option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the solution for the Bateman equations corresponding to the decay
+/// chain described by an array ending with element X.
+/// A->B->...->X
+/// Cn = SUM [Ain * exp(-LMBDi*t)];
+///      Cn    - concentration Nx/Na
+///      n     - order of X in chain (A->B->X => n=3)
+///      LMBDi - decay constant for element of order i in the chain
+///      Ain = LMBD1*...*LMBD(n-1) * br1*...*br(n-1)/(LMBD1-LMBDi)...(LMBDn-LMBDi)
+///      bri   - branching ratio for decay Ei->Ei+1
+
 void TGeoBatemanSol::FindSolution(const TObjArray *array)
 {
-// Find the solution for the Bateman equations corresponding to the decay
-// chain described by an array ending with element X.
-// A->B->...->X
-// Cn = SUM [Ain * exp(-LMBDi*t)];
-//      Cn    - concentration Nx/Na
-//      n     - order of X in chain (A->B->X => n=3)
-//      LMBDi - decay constant for element of order i in the chain
-//      Ain = LMBD1*...*LMBD(n-1) * br1*...*br(n-1)/(LMBD1-LMBDi)...(LMBDn-LMBDi)
-//      bri   - branching ratio for decay Ei->Ei+1
    fNcoeff = 0;
    if (!array || !array->GetEntriesFast()) return;
    Int_t n = array->GetEntriesFast();
@@ -1459,17 +1534,19 @@ void TGeoBatemanSol::FindSolution(const TObjArray *array)
    delete [] br;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normalize all coefficients with a given factor.
+
 void TGeoBatemanSol::Normalize(Double_t factor)
 {
-// Normalize all coefficients with a given factor.
    for (Int_t i=0; i<fNcoeff; i++) fCoeff[i].cn *= factor;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print concentration evolution.
+
 void TGeoBatemanSol::Print(Option_t * /*option*/) const
 {
-// Print concentration evolution.
    TString formula;
    formula.Form("N[%s]/N[%s] = ", fElem->GetName(), fElemTop->GetName());
    for (Int_t i=0; i<fNcoeff; i++) {

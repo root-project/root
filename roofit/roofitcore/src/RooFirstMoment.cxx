@@ -52,15 +52,17 @@ ClassImp(RooFirstMoment)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooFirstMoment::RooFirstMoment() 
 {
-  // Default constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x) :
   RooAbsMoment(name, title,func,x,1,kFALSE),
   _xf("!xf","xf",this,kFALSE,kFALSE),
@@ -89,7 +91,8 @@ RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& 
   addOwnedComponents(RooArgSet(*XF,*intXF,*intF)) ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Bool_t intNSet) :
   RooAbsMoment(name, title,func,x,1,kFALSE),
   _xf("!xf","xf",this,kFALSE,kFALSE),
@@ -129,7 +132,8 @@ RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooFirstMoment::RooFirstMoment(const RooFirstMoment& other, const char* name) :
   RooAbsMoment(other, name), 
   _xf("xf",this,other._xf),
@@ -140,18 +144,20 @@ RooFirstMoment::RooFirstMoment(const RooFirstMoment& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooFirstMoment::~RooFirstMoment() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate value  
+
 Double_t RooFirstMoment::evaluate() const 
 {
-  // Calculate value  
   Double_t ratio = _ixf / _if ;
   //cout << "\nRooFirstMoment::eval(" << GetName() << ") val = " << ratio << endl ;
   return ratio ;

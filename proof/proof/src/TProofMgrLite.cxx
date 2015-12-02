@@ -36,22 +36,22 @@
 
 ClassImp(TProofMgrLite)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a PROOF manager for the Lite environment.
+
 TProofMgrLite::TProofMgrLite(const char *url, Int_t dbg, const char *alias)
           : TProofMgr(url, dbg, alias)
 {
-   // Create a PROOF manager for the Lite environment.
-
    // Set the correct servert type
    fServType = kProofLite;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new session
+
 TProof *TProofMgrLite::CreateSession(const char *cfg,
                                      const char *, Int_t loglevel)
 {
-   // Create a new session
-
    TString c(fUrl.GetOptions());
    if (!c.Contains("workers=") && cfg && strstr(cfg, "workers=")) c = cfg;
    Int_t nwrk = TProofLite::GetNumberOfWorkers(c);
@@ -109,27 +109,27 @@ TProof *TProofMgrLite::CreateSession(const char *cfg,
    return p;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get logs or log tails from last session associated with this manager
+/// instance.
+/// The arguments allow to specify a session different from the last one:
+///      isess   specifies a position relative to the last one, i.e. 1
+///              for the next to last session; the absolute value is taken
+///              so -1 and 1 are equivalent.
+///      stag    specifies the unique tag of the wanted session
+/// The special value stag = "NR" allows to just initialize the TProofLog
+/// object w/o retrieving the files; this may be useful when the number
+/// of workers is large and only a subset of logs is required.
+/// If 'stag' is specified 'isess' is ignored (unless stag = "NR").
+/// If 'pattern' is specified only the lines containing it are retrieved
+/// (remote grep functionality); to filter out a pattern 'pat' use
+/// pattern = "-v pat".
+/// Returns a TProofLog object (to be deleted by the caller) on success,
+/// 0 if something wrong happened.
+
 TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess, const char *stag,
                                          const char *pattern, Bool_t)
 {
-   // Get logs or log tails from last session associated with this manager
-   // instance.
-   // The arguments allow to specify a session different from the last one:
-   //      isess   specifies a position relative to the last one, i.e. 1
-   //              for the next to last session; the absolute value is taken
-   //              so -1 and 1 are equivalent.
-   //      stag    specifies the unique tag of the wanted session
-   // The special value stag = "NR" allows to just initialize the TProofLog
-   // object w/o retrieving the files; this may be useful when the number
-   // of workers is large and only a subset of logs is required.
-   // If 'stag' is specified 'isess' is ignored (unless stag = "NR").
-   // If 'pattern' is specified only the lines containing it are retrieved
-   // (remote grep functionality); to filter out a pattern 'pat' use
-   // pattern = "-v pat".
-   // Returns a TProofLog object (to be deleted by the caller) on success,
-   // 0 if something wrong happened.
-
    TProofLog *pl = 0;
 
    // The absolute value of isess counts
@@ -283,12 +283,12 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess, const char *stag,
    return pl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read 'len' bytes from offset 'ofs' of the local file 'fin'.
+/// Returns a TObjString with the content or 0, in case of failure
+
 TObjString *TProofMgrLite::ReadBuffer(const char *fin, Long64_t ofs, Int_t len)
 {
-   // Read 'len' bytes from offset 'ofs' of the local file 'fin'.
-   // Returns a TObjString with the content or 0, in case of failure
-
    if (!fin || strlen(fin) <= 0) {
       Error("ReadBuffer", "undefined path!");
       return (TObjString *)0;
@@ -347,12 +347,12 @@ TObjString *TProofMgrLite::ReadBuffer(const char *fin, Long64_t ofs, Int_t len)
    return new TObjString(outbuf.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read lines containing 'pattern' in 'file'.
+/// Returns a TObjString with the content or 0, in case of failure
+
 TObjString *TProofMgrLite::ReadBuffer(const char *fin, const char *pattern)
 {
-   // Read lines containing 'pattern' in 'file'.
-   // Returns a TObjString with the content or 0, in case of failure
-
    // If no pattern, read everything
    if (!pattern || strlen(pattern) <= 0)
       return (TObjString *)0;

@@ -12,14 +12,14 @@ enum ELatexID{
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TTextEditor constructor.
+
 TTextEditor::TTextEditor(const TGWindow *p,
                   Int_t width, Int_t height,
                   UInt_t options, Pixel_t back)
                   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // TTextEditor constructor.
-
    fText = 0;
 
    // start initializing the window components
@@ -68,18 +68,19 @@ TTextEditor::TTextEditor(const TGWindow *p,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TTextEditor destructor.
+
 TTextEditor::~TTextEditor()
 {
-   // TTextEditor destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model.
+
 void TTextEditor::SetModel(TObject *obj)
 {
-   // Set model.
-
    fEditedText = (TText*) (obj);
 
    fAvoidSignal = kTRUE;
@@ -94,11 +95,11 @@ void TTextEditor::SetModel(TObject *obj)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TTextEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fText->Connect("TextChanged(const char *)","TTextEditor",this,"DoText(const char *)");
    fXpos->Connect("ValueSet(Long_t)", "TTextEditor", this, "DoXpos()");
    fYpos->Connect("ValueSet(Long_t)", "TTextEditor", this, "DoYpos()");
@@ -108,55 +109,55 @@ void TTextEditor::ConnectSignals2Slots()
    fInit = kFALSE;  // connect the slots to the signals only once
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting the text Angle.
+
 void TTextEditor::DoAngle()
 {
-   // Slot for setting the text Angle.
-
    if (fAvoidSignal) return;
    fEditedText->SetTextAngle(fAngle->GetNumber());
    Update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting the text Size.
+
 void TTextEditor::DoSize()
 {
-   // Slot for setting the text Size.
-
    if (fAvoidSignal) return;
    fEditedText->SetTextSize(fSize->GetNumber());
    Update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting the text string.
+
 void TTextEditor::DoText(const char *text)
 {
-   // Slot for setting the text string.
-
    if (fAvoidSignal) return;
    fEditedText->SetTitle(text);
    Update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting the text X position.
+
 void TTextEditor::DoXpos()
 {
-   // Slot for setting the text X position.
-
    if (fAvoidSignal) return;
    fEditedText->SetX(fXpos->GetNumber());
    Update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting the text Y position.
+
 void TTextEditor::DoYpos()
 {
-   // Slot for setting the text Y position.
-
    if (fAvoidSignal) return;
    fEditedText->SetY(fYpos->GetNumber());
    Update();

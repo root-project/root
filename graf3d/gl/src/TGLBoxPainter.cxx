@@ -33,7 +33,9 @@
 
 ClassImp(TGLBoxPainter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+
 TGLBoxPainter::TGLBoxPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *coord)
                   : TGLPlotPainter(hist, cam, coord, kTRUE, kTRUE, kTRUE),
                     fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
@@ -42,11 +44,12 @@ TGLBoxPainter::TGLBoxPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *
                     fType(kBox),
                     fPolymarker(0)
 {
-   // Normal constructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+
 TGLBoxPainter::TGLBoxPainter(TH1 *hist, TPolyMarker3D * pm,
                              TGLPlotCamera *cam, TGLPlotCoordinates *coord)
                   : TGLPlotPainter(hist, cam, coord, kFALSE, kFALSE, kFALSE),
@@ -56,14 +59,13 @@ TGLBoxPainter::TGLBoxPainter(TH1 *hist, TPolyMarker3D * pm,
                     fType(kBox),
                     fPolymarker(pm)
 {
-   // Normal constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Show box info (i, j, k, binContent).
+
 char *TGLBoxPainter::GetPlotInfo(Int_t, Int_t)
 {
-   //Show box info (i, j, k, binContent).
-
    fPlotInfo = "";
 
    if (fSelectedPart) {
@@ -88,11 +90,11 @@ char *TGLBoxPainter::GetPlotInfo(Int_t, Int_t)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set ranges, find min and max bin content.
+
 Bool_t TGLBoxPainter::InitGeometry()
 {
-  //Set ranges, find min and max bin content.
-
    fCoord->SetZLog(kFALSE);
    fCoord->SetYLog(kFALSE);
    fCoord->SetXLog(kFALSE);
@@ -144,11 +146,11 @@ Bool_t TGLBoxPainter::InitGeometry()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User clicks right mouse button (in a pad).
+
 void TGLBoxPainter::StartPan(Int_t px, Int_t py)
 {
-   // User clicks right mouse button (in a pad).
-
    fMousePosition.fX = px;
    fMousePosition.fY = fCamera->GetHeight() - py;
    fCamera->StartPan(px, py);
@@ -156,11 +158,12 @@ void TGLBoxPainter::StartPan(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User's moving mouse cursor, with middle mouse button pressed (for pad).
+/// Calculate 3d shift related to 2d mouse movement.
+
 void TGLBoxPainter::Pan(Int_t px, Int_t py)
 {
-   // User's moving mouse cursor, with middle mouse button pressed (for pad).
-   // Calculate 3d shift related to 2d mouse movement.
    if (fSelectedPart >= fSelectionBase) {//Pan camera.
       SaveModelviewMatrix();
       SaveProjectionMatrix();
@@ -200,10 +203,11 @@ void TGLBoxPainter::Pan(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Box1 == spheres.
+
 void TGLBoxPainter::AddOption(const TString &option)
 {
-   // Box1 == spheres.
    using namespace std;//isdigit must be in std. But ...
 
    const Ssiz_t boxPos = option.Index("box");//"box" _already_ _exists_ in a string.
@@ -214,11 +218,11 @@ void TGLBoxPainter::AddOption(const TString &option)
    option.Index("z") == kNPOS ? fDrawPalette = kFALSE : fDrawPalette = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove sections.
+
 void TGLBoxPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
-   // Remove sections.
-
    if (event == kButton1Double && (HasSections() || fBoxCut.IsActive())) {
       fXOZSectionPos = fBackBox.Get3DBox()[0].Y();
       fYOZSectionPos = fBackBox.Get3DBox()[0].X();
@@ -239,10 +243,11 @@ void TGLBoxPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize some gl state variables.
+
 void TGLBoxPainter::InitGL()const
 {
-   // Initialize some gl state variables.
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
@@ -253,10 +258,11 @@ void TGLBoxPainter::InitGL()const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Return back some gl state variables.
+
 void TGLBoxPainter::DeInitGL()const
 {
-   //Return back some gl state variables.
    glDisable(GL_DEPTH_TEST);
    glDisable(GL_LIGHTING);
    glDisable(GL_LIGHT0);
@@ -266,11 +272,12 @@ void TGLBoxPainter::DeInitGL()const
 
 namespace {
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   ///
+
    void DrawMinusSigns(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
                        Double_t zMin, Double_t zMax, Int_t fp, Bool_t onSphere, Bool_t transp)
    {
-      //
       const TGLDisableGuard depthTest(GL_DEPTH_TEST);
       const TGLDisableGuard cullFace(GL_CULL_FACE);
 
@@ -351,7 +358,8 @@ namespace {
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLBoxPainter::DrawPlot()const
 {
    if (fPolymarker)
@@ -489,11 +497,11 @@ void TGLBoxPainter::DrawPlot()const
       DrawPalette();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw a frame and a polymarker inside.
+
 void TGLBoxPainter::DrawCloud()const
 {
-   //Draw a frame and a polymarker inside.
-
    //Shift plot to the point of origin.
    const Rgl::PlotTranslation trGuard(this);
 
@@ -515,11 +523,11 @@ void TGLBoxPainter::DrawCloud()const
    glEnable(GL_LIGHTING);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set boxes color.
+
 void TGLBoxPainter::SetPlotColor()const
 {
-   // Set boxes color.
-
    Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.05f};
 
    if (fPhysicalShapeColor) {
@@ -538,51 +546,54 @@ void TGLBoxPainter::SetPlotColor()const
    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 70.f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw XOZ parallel section.
+
 void TGLBoxPainter::DrawSectionXOZ()const
 {
-   // Draw XOZ parallel section.
-
    if (fSelectionPass)
       return;
    fXOZSlice.DrawSlice(fXOZSectionPos / fCoord->GetYScale());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw YOZ parallel section.
+
 void TGLBoxPainter::DrawSectionYOZ()const
 {
-   // Draw YOZ parallel section.
    if (fSelectionPass)
       return;
    fYOZSlice.DrawSlice(fYOZSectionPos / fCoord->GetXScale());
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw XOY parallel section.
+
 void TGLBoxPainter::DrawSectionXOY()const
 {
-   // Draw XOY parallel section.
    if (fSelectionPass)
       return;
    fXOYSlice.DrawSlice(fXOYSectionPos / fCoord->GetZScale());
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check, if any section exists.
+
 Bool_t TGLBoxPainter::HasSections()const
 {
-   // Check, if any section exists.
-
    return fXOZSectionPos > fBackBox.Get3DBox()[0].Y() || fYOZSectionPos> fBackBox.Get3DBox()[0].X() ||
           fXOYSectionPos > fBackBox.Get3DBox()[0].Z();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw. Palette.
+///Originally, fCamera was never null.
+///It can be a null now because of gl-viewer.
+
 void TGLBoxPainter::DrawPalette()const
 {
-   //Draw. Palette.
-   //Originally, fCamera was never null.
-   //It can be a null now because of gl-viewer.
    if (!fCamera) {
       //Thank you, gl-viewer!
       return;
@@ -610,10 +621,11 @@ void TGLBoxPainter::DrawPalette()const
    fCamera->Apply(fPadPhi, fPadTheta);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw. Palette. Axis.
+
 void TGLBoxPainter::DrawPaletteAxis()const
 {
-   //Draw. Palette. Axis.
    if (HasSections()) {
       gVirtualX->SetDrawMode(TVirtualX::kCopy);//TCanvas by default sets in kInverse
       Rgl::DrawPaletteAxis(fCamera, fMinMaxVal, fCoord->GetCoordType() == kGLCartesian ? fCoord->GetZLog() : kFALSE);

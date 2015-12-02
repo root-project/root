@@ -20,22 +20,22 @@
 
 ClassImp(TTVRecord)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TTVRecord default constructor
+
 TTVRecord::TTVRecord()
 {
-   // TTVRecord default constructor
-
    fName = "";
    fScanRedirected = kFALSE;
    fCutEnabled     = kTRUE;
    fUserCode = "";
    fAutoexec = kFALSE;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute user-defined code
+
 void TTVRecord::ExecuteUserCode()
 {
-   // Execute user-defined code
-
    if (fUserCode.Length()) {
       char code[250];
       code[0] = 0;
@@ -43,11 +43,11 @@ void TTVRecord::ExecuteUserCode()
       gInterpreter->ProcessLine(code);
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Populate members from treeviewer tv
+
 void TTVRecord::FormFrom(TTreeViewer *tv)
 {
-   // Populate members from treeviewer tv
-
    if (!tv)  return;
    fX        = tv->ExpressionItem(0)->GetTrueName();
    fXAlias   = tv->ExpressionItem(0)->GetAlias();
@@ -61,11 +61,11 @@ void TTVRecord::FormFrom(TTreeViewer *tv)
    fScanRedirected = tv->IsScanRedirected();
    fCutEnabled = tv->IsCutEnabled();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change treeviewer status to this record
+
 void TTVRecord::PlugIn(TTreeViewer *tv)
 {
-   // Change treeviewer status to this record
-
    TTVLVEntry *item;
    // change X expression
    item = tv->ExpressionItem(0);
@@ -84,11 +84,11 @@ void TTVRecord::PlugIn(TTreeViewer *tv)
    else
       item->SetSmallPic(gClient->GetPicture("cut-disable_t.xpm"));
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the TTVRecord in a C++ macro file
+
 void TTVRecord::SaveSource(std::ofstream &out)
 {
-   // Save the TTVRecord in a C++ macro file
-
    char quote = '"';
    out <<"//--- tree viewer record"<<std::endl;
    out <<"   tv_record = tv_session->AddRecord(kTRUE);"<<std::endl;
@@ -120,30 +120,30 @@ void TTVRecord::SaveSource(std::ofstream &out)
 
 ClassImp(TTVSession)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TTVSession::TTVSession(TTreeViewer *tv)
 {
-   // constructor
-
    fName    = "";
    fList    = new TClonesArray("TTVRecord", 100); // is 100 enough ?
    fViewer  = tv;
    fCurrent = 0;
    fRecords = 0;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TTVSession::~TTVSession()
 {
-   // destructor
-
    fList->Delete();
    delete fList;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add a record
+
 TTVRecord *TTVSession::AddRecord(Bool_t fromFile)
 {
-   // add a record
-
    TClonesArray &list = *fList;
    TTVRecord *newrec = new(list[fRecords++])TTVRecord();
    if (!fromFile) newrec->FormFrom(fViewer);
@@ -165,11 +165,11 @@ TTVRecord *TTVSession::AddRecord(Bool_t fromFile)
    }
    return newrec;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return record at index i
+
 TTVRecord *TTVSession::GetRecord(Int_t i)
 {
-   // return record at index i
-
    if (!fRecords) return 0;
    fCurrent = i;
    if (i < 0)           fCurrent = 0;
@@ -187,11 +187,11 @@ TTVRecord *TTVSession::GetRecord(Int_t i)
    fViewer->SetCurrentRecord(fCurrent);
    return (TTVRecord *)fList->UncheckedAt(fCurrent);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set record name
+
 void TTVSession::SetRecordName(const char *name)
 {
-   // Set record name
-
    Int_t crt = fCurrent;
    TTVRecord *current = GetRecord(fCurrent);
    current->SetName(name);
@@ -199,11 +199,11 @@ void TTVSession::SetRecordName(const char *name)
    fCurrent = crt;
    fViewer->SetCurrentRecord(fCurrent);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Remove current record from list
+
 void TTVSession::RemoveLastRecord()
 {
-   //--- Remove current record from list
-
    if (!fRecords) return;
    TTVRecord *rec = (TTVRecord *)fList->UncheckedAt(fRecords);
    delete rec;
@@ -218,21 +218,21 @@ void TTVSession::RemoveLastRecord()
    }
    GetRecord(fCurrent);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display record rec
+
 void TTVSession::Show(TTVRecord *rec)
 {
-   // Display record rec
-
    rec->PlugIn(fViewer);
    fViewer->ExecuteDraw();
    if (rec->HasUserCode() && rec->MustExecuteCode()) rec->ExecuteUserCode();
    fViewer->SetHistogramTitle(rec->GetName());
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the TTVSession in a C++ macro file
+
 void TTVSession::SaveSource(std::ofstream &out)
 {
-   // Save the TTVSession in a C++ macro file
-
    out<<"//--- session object"<<std::endl;
    out<<"   tv_session = new TTVSession(treeview);"<<std::endl;
    out<<"   treeview->SetSession(tv_session);"<<std::endl;
@@ -244,11 +244,11 @@ void TTVSession::SaveSource(std::ofstream &out)
    out<<"//--- Connect first record"<<std::endl;
    out<<"   tv_session->First();"<<std::endl;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Updates current record according to new X, Y, Z settings
+
 void TTVSession::UpdateRecord(const char *name)
 {
-   //--- Updates current record according to new X, Y, Z settings
-
    TTVRecord *current = (TTVRecord *)fList->UncheckedAt(fCurrent);
    current->FormFrom(fViewer);
    SetRecordName(name);

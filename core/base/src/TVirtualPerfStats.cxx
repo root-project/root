@@ -37,11 +37,11 @@ static const char *gEventTypeNames[] = {
    "Rate"
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the current ROOT perf stats if any.
+
 TVirtualPerfStats *&TVirtualPerfStats::CurrentPerfStats()
 {
-   // Return the current ROOT perf stats if any.
-
    static TVirtualPerfStats *currentPerfStats = 0;
    if (!gThreadTsd) {
       return currentPerfStats;
@@ -50,10 +50,11 @@ TVirtualPerfStats *&TVirtualPerfStats::CurrentPerfStats()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the name of the event type.
+
 const char *TVirtualPerfStats::EventType(EEventType type)
 {
-   // Return the name of the event type.
    if (type < kUnDefined || type >= kNumEventType) {
       return "Illegal EEventType";
    } else {

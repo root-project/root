@@ -51,7 +51,8 @@
 
 using namespace std;
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::ROCCalc::ROCCalc(TH1* mvaS, TH1* mvaB) :
    fMaxIter(100),
    fAbsTol(0.0),
@@ -105,13 +106,14 @@ TMVA::ROCCalc::ROCCalc(TH1* mvaS, TH1* mvaB) :
   
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Int_t c_Canvas         = TColor::GetColor( "#f0f0f0" );
+///  Int_t c_FrameFill      = TColor::GetColor( "#fffffd" );
+///  Int_t c_TitleBox       = TColor::GetColor( "#5D6B7D" );
+///  Int_t c_TitleBorder    = TColor::GetColor( "#7D8B9D" );
+///  Int_t c_TitleText      = TColor::GetColor( "#FFFFFF" );
+
 void TMVA::ROCCalc::ApplySignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* any ) {
-   //  Int_t c_Canvas         = TColor::GetColor( "#f0f0f0" );
-   //  Int_t c_FrameFill      = TColor::GetColor( "#fffffd" );
-   //  Int_t c_TitleBox       = TColor::GetColor( "#5D6B7D" );
-   //  Int_t c_TitleBorder    = TColor::GetColor( "#7D8B9D" );
-   //  Int_t c_TitleText      = TColor::GetColor( "#FFFFFF" );
    Int_t c_SignalLine     = TColor::GetColor( "#0000ee" );
    Int_t c_SignalFill     = TColor::GetColor( "#7d99d1" );
    Int_t c_BackgroundLine = TColor::GetColor( "#ff0000" );
@@ -156,10 +158,10 @@ void TMVA::ROCCalc::ApplySignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* any 
 }
 
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::ROCCalc::~ROCCalc() {
-   // destructor
-   
    // delete Splines and all histograms that were created only for internal use
    if (fSplS)            { delete fSplS; fSplS = 0; }
    if (fSplB)            { delete fSplB; fSplB = 0; }
@@ -172,10 +174,10 @@ TMVA::ROCCalc::~ROCCalc() {
    delete fLogger;
 }
 
-//_______________________________________________________________________________________
-TH1D* TMVA::ROCCalc::GetROC(){
-   // get the ROC curve
+////////////////////////////////////////////////////////////////////////////////
+/// get the ROC curve
 
+TH1D* TMVA::ROCCalc::GetROC(){
    // first get the cumulative distributions of the mva distribution 
    // --> efficiencies vs cut value
    fNevtS = fmvaS->GetSumOfWeights(); // needed to get the error on the eff.. will only be correct if the histogram is not scaled to "integral == 1" Yet;
@@ -261,10 +263,10 @@ TH1D* TMVA::ROCCalc::GetROC(){
    return rejBvsS;
 }
 
-//_______________________________________________________________________________________
-Double_t TMVA::ROCCalc::GetROCIntegral(){
-   // code to compute the area under the ROC ( rej-vs-eff ) curve
+////////////////////////////////////////////////////////////////////////////////
+/// code to compute the area under the ROC ( rej-vs-eff ) curve
 
+Double_t TMVA::ROCCalc::GetROCIntegral(){
    Double_t effS = 0, effB = 0;
    Int_t    nbins = 1000;
    if (fSpleffBvsS == 0) this->GetROC(); // that will make the ROC calculation if not done yet
@@ -283,12 +285,12 @@ Double_t TMVA::ROCCalc::GetROCIntegral(){
    return integral;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the signal efficiency for a particular backgroud efficiency 
+/// that will be the value of the efficiency retured (does not affect
+/// the efficiency-vs-bkg plot which is done anyway.
+
 Double_t TMVA::ROCCalc::GetEffSForEffBof(Double_t effBref, Double_t &effSerr){
-   // get the signal efficiency for a particular backgroud efficiency 
-   // that will be the value of the efficiency retured (does not affect
-   // the efficiency-vs-bkg plot which is done anyway.
-  
    // find precise efficiency value
    Double_t effS=0., effB, effSOld=1., effBOld=0.;
    Int_t    nbins = 1000;
@@ -316,10 +318,11 @@ Double_t TMVA::ROCCalc::GetEffSForEffBof(Double_t effBref, Double_t &effSerr){
    return effS;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns efficiency as function of cut
+
 Double_t TMVA::ROCCalc::GetEffForRoot( Double_t theCut )
 {
-   // returns efficiency as function of cut
    Double_t retVal=0;
 
    // retrieve the class object
@@ -340,10 +343,11 @@ Double_t TMVA::ROCCalc::GetEffForRoot( Double_t theCut )
    return retVal;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Root finding using Brents algorithm; taken from CERNLIB function RZERO
+
 Double_t TMVA::ROCCalc::Root( Double_t refValue  )
 {
-   // Root finding using Brents algorithm; taken from CERNLIB function RZERO
    Double_t a  = fXmin, b = fXmax;
    Double_t fa = GetEffForRoot( a ) - refValue;
    Double_t fb = GetEffForRoot( b ) - refValue;
@@ -421,7 +425,8 @@ Double_t TMVA::ROCCalc::Root( Double_t refValue  )
    return b;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TH1* TMVA::ROCCalc::GetPurity( Int_t nStot, Int_t nBtot)
 {
    if (fnStot!=nStot || fnBtot!=nBtot || !fSignificance) {
@@ -431,7 +436,8 @@ TH1* TMVA::ROCCalc::GetPurity( Int_t nStot, Int_t nBtot)
    }
    return fPurity;
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TH1* TMVA::ROCCalc::GetSignificance( Int_t nStot, Int_t nBtot)
 {
    if (fnStot==nStot && fnBtot==nBtot && !fSignificance) return fSignificance;

@@ -3,35 +3,39 @@
 
 ClassImp(TVirtualPadPainter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Virtual dtor.
+
 TVirtualPadPainter::~TVirtualPadPainter()
 {
-   //Virtual dtor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Empty definition.
+
 void TVirtualPadPainter::InitPainter()
 {
-   //Empty definition.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Empty definition.
+
 void TVirtualPadPainter::InvalidateCS()
 {
-   //Empty definition.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Empty definition.
+
 void TVirtualPadPainter::LockPainter()
 {
-   //Empty definition.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a pad painter of specified type.
+
 TVirtualPadPainter *TVirtualPadPainter::PadPainter(Option_t *type)
 {
-   // Create a pad painter of specified type.
-
    TVirtualPadPainter *painter = 0;
    TPluginHandler *h = gPluginMgr->FindHandler("TVirtualPadPainter", type);
 

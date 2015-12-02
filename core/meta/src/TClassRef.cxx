@@ -26,49 +26,50 @@
 
 #include "TClassRef.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor, increases reference count to original TClass object.
+
 TClassRef::TClassRef(const TClassRef &org) :
    fClassName(org.fClassName), fClassPtr(org.fClassPtr)
 {
-   // Copy ctor, increases reference count to original TClass object.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create reference to specified class name, but don't set referenced
+/// class object.
+
 TClassRef::TClassRef(const char *classname) :
     fClassName(classname), fClassPtr(0)
 {
-   // Create reference to specified class name, but don't set referenced
-   // class object.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add reference to specified class object.
+
 TClassRef::TClassRef(TClass *cl) : fClassPtr(0)
 {
-   // Add reference to specified class object.
-
    if (cl) {
       fClassName = cl->GetName();
       fClassPtr = cl->GetPersistentRef();
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator implementation, increases reference count to original class object.
+/// This routines assumes that the copy actually need to be done.
+
 void TClassRef::Assign(const TClassRef &rhs)
 {
-   // Assignment operator implementation, increases reference count to original class object.
-   // This routines assumes that the copy actually need to be done.
-
    fClassName = rhs.fClassName;
    fClassPtr  = rhs.fClassPtr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator, increases reference count to original class object.
+/// This routines assumes that the copy actually need to be done.
+
 void TClassRef::Assign(TClass* rhs)
 {
-   // Assignment operator, increases reference count to original class object.
-   // This routines assumes that the copy actually need to be done.
-
    if (rhs) {
       fClassPtr  = rhs->GetPersistentRef();
       fClassName = rhs->GetName();
@@ -78,11 +79,11 @@ void TClassRef::Assign(TClass* rhs)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the current TClass object corresponding to fClassName.
+
 TClass *TClassRef::InternalGetClass() const
 {
-   // Return the current TClass object corresponding to fClassName.
-
    if (fClassPtr && *fClassPtr) return *fClassPtr;
    if (fClassName.size()==0) return 0;
 

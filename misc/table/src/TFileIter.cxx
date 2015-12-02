@@ -121,34 +121,37 @@
 
 ClassImp(TFileIter)
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create iterator over all objects from the TFile provided
+
 TFileIter::TFileIter(TFile *file) : fNestedIterator(0)
          , fRootFile(file)
          , fEventName("event"), fRunNumber(UInt_t(-1)),fEventNumber(UInt_t(-1))
          , fCursorPosition(-1),  fOwnTFile(kFALSE)
 {
-   // Create iterator over all objects from the TFile provided
    Initialize();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create iterator over all objects from the TDirectory provided
+
 TFileIter::TFileIter(TDirectory *directory) :  fNestedIterator(0)
          , fRootFile(directory)
          , fEventName("event"), fRunNumber(UInt_t(-1)),fEventNumber(UInt_t(-1))
          , fCursorPosition(-1),  fOwnTFile(kFALSE)
 {
-   // Create iterator over all objects from the TDirectory provided
    Initialize();
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open ROOT TFile by the name provided;
+/// This TFile is to be deleted by the TFileIter alone
+
 TFileIter::TFileIter(const char *name, Option_t *option, const char *ftitle
                      , Int_t compress, Int_t /*netopt*/) : fNestedIterator(0)
                                                          ,fRootFile(0)
                                                          ,fEventName("event"), fRunNumber(UInt_t(-1)) ,fEventNumber(UInt_t(-1))
                                                          ,fCursorPosition(-1), fOwnTFile(kFALSE)
 {
-   // Open ROOT TFile by the name provided;
-   // This TFile is to be deleted by the TFileIter alone
    if (name && name[0]) {
       fOwnTFile = kTRUE;
       // Map a special file system to rfio
@@ -160,16 +163,17 @@ TFileIter::TFileIter(const char *name, Option_t *option, const char *ftitle
    }
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor can be used with the "read only" files only.
+///the next statement is illegal, spotted by coverity "Dereferencing pointer "this->fRootFile". (Deref happens because this is a virtual function call.)
+///assert(!fRootFile->IsWritable());
+
 TFileIter::TFileIter(const TFileIter &dst) : TListIter()
           , fNestedIterator(0)
           ,fRootFile(dst.fRootFile),fEventName(dst.fEventName), fRunNumber(dst.fRunNumber)
           ,fEventNumber(dst.fRunNumber),
            fCursorPosition(-1),  fOwnTFile(dst.fOwnTFile)
 {
-   // Copy ctor can be used with the "read only" files only.
-   //the next statement is illegal, spotted by coverity "Dereferencing pointer "this->fRootFile". (Deref happens because this is a virtual function call.)
-   //assert(!fRootFile->IsWritable());
    if (fRootFile && fOwnTFile) {
       // Reopen the file
       if (fRootFile->InheritsFrom(TFile::Class()))
@@ -186,10 +190,11 @@ TFileIter::TFileIter(const TFileIter &dst) : TListIter()
    // Adjust this iterator position
    SkipObjects(dst.fCursorPosition);
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TFileIter dtor
+
 TFileIter::~TFileIter()
 {
-   // TFileIter dtor
    TFileIter *deleteit = fNestedIterator; fNestedIterator = 0;
    delete deleteit;
    if (fRootFile && fOwnTFile ) {  // delete own TFile if any
@@ -200,10 +205,11 @@ TFileIter::~TFileIter()
    }
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TFileIter::Initialize()
 {
-   //to be documented
    if (fRootFile) {
       fDirection =  kIterForward;
       if (IsOpen()) Reset();
@@ -213,12 +219,12 @@ void TFileIter::Initialize()
       }
    }
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check whether the associated ROOT TFile was open
+/// and TFile object is healthy.
+
 Bool_t  TFileIter::IsOpen() const
 {
-   // Check whether the associated ROOT TFile was open
-   // and TFile object is healthy.
-
    Bool_t iOpen = kFALSE;
    if (fRootFile && !fRootFile->IsZombie() ) {
       iOpen = kTRUE;
@@ -228,83 +234,87 @@ Bool_t  TFileIter::IsOpen() const
    return iOpen;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the pointer to the current TKey
+
 TKey *TFileIter::GetCurrentKey() const
 {
-  // return the pointer to the current TKey
-
    return ((TFileIter*)this)->SkipObjects(0);
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the current number of the nested subdirectroies;
+///      = 0 - means there is no subdirectories
+
 Int_t TFileIter::GetDepth() const
 {
-   // return the current number of the nested subdirectroies;
-   //      = 0 - means there is no subdirectories
    return fNestedIterator ? fNestedIterator->GetDepth()+1 : 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the name of the current TKey
+
 const char *TFileIter::GetKeyName() const
 {
-   // return the name of the current TKey
    const char *name = 0;
    TKey *key  = GetCurrentKey();
    if (key) name = key->GetName();
    return name;
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read the object from TFile defined by the current TKey
+///
+/// ATTENTION:  memory leak danger !!!
+/// ---------
+/// This method does create a new object and it is the end-user
+/// code responsibility to take care about this object
+/// to avoid memory leak.
+///
+
 TObject *TFileIter::GetObject() const
 {
-  // read the object from TFile defined by the current TKey
-  //
-  // ATTENTION:  memory leak danger !!!
-  // ---------
-  // This method does create a new object and it is the end-user
-  // code responsibility to take care about this object
-  // to avoid memory leak.
-  //
    return ReadObj(GetCurrentKey());
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the uncompressed length of the current object
+
 Int_t TFileIter::GetObjlen() const
 {
-   // Returns the uncompressed length of the current object
    Int_t lenObj = 0;
    TKey *key = GetCurrentKey();
    if (key) lenObj = ((TKey *)key)->GetObjlen();
    return lenObj;
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The total number of the TKey keys in the current TDirectory only
+/// Usually this means the total number of different objects
+/// those can be read one by one.
+/// It does NOT count the nested sub-TDirectory.
+/// It is too costly and it can be abused.
+
 Int_t TFileIter::TotalKeys() const
 {
-  // The total number of the TKey keys in the current TDirectory only
-  // Usually this means the total number of different objects
-  // those can be read one by one.
-  // It does NOT count the nested sub-TDirectory.
-  // It is too costly and it can be abused.
-
    Int_t size = 0;
    if(fList) size +=  fList->GetSize();
    return size;
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the pointer to the object defined by next TKey
+/// This method is not recommended. It was done for the sake
+/// of the compatibility with TListIter
+
 TObject *TFileIter::Next(Int_t  nSkip)
 {
-  // return the pointer to the object defined by next TKey
-  // This method is not recommended. It was done for the sake
-  // of the compatibility with TListIter
-
    SkipObjects(nSkip);
    return GetObject();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the TKey duplication,
+/// leave the keys with highest cycle number only
+/// Sort if first
+
 void TFileIter::PurgeKeys(TList *listOfKeys)
 {
-   // Remove the TKey duplication,
-   // leave the keys with highest cycle number only
-   // Sort if first
-
    assert(listOfKeys);
    listOfKeys->Sort();
    TObjLink *lnk   = listOfKeys->FirstLink();
@@ -340,10 +350,11 @@ void TFileIter::PurgeKeys(TList *listOfKeys)
    }
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the status of the iterator
+
 void TFileIter::Reset()
 {
-   // Reset the status of the iterator
    if (fNestedIterator) {
       TFileIter *it = fNestedIterator;
       fNestedIterator=0;
@@ -367,26 +378,28 @@ void TFileIter::Reset()
       }
    }
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the key by the name provided
+
 void TFileIter::SetCursorPosition(const char *keyNameToFind)
 {
-   // Find the key by the name provided
    Reset();
    while( (*this != keyNameToFind) && SkipObjects() ) {;}
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Returns the TKey pointer to the nSkip TKey object from the current one
+/// nSkip = 0; the state of the iterator is not changed
+///
+/// nSkip > 0; iterator skips nSkip objects in the container.
+///            the direction of the iteration is
+///            sign(nSkip)*kIterForward
+///
+/// Returns: TKey that can be used to fetch the object from the TDirectory
+///
+
 TKey *TFileIter::SkipObjects(Int_t  nSkip)
 {
- //
- // Returns the TKey pointer to the nSkip TKey object from the current one
- // nSkip = 0; the state of the iterator is not changed
- //
- // nSkip > 0; iterator skips nSkip objects in the container.
- //            the direction of the iteration is
- //            sign(nSkip)*kIterForward
- //
- // Returns: TKey that can be used to fetch the object from the TDirectory
- //
    TKey *nextObject  = fNestedIterator ? fNestedIterator->SkipObjects(nSkip): 0;
    if (!nextObject) {
       if (fNestedIterator) {
@@ -425,10 +438,10 @@ TKey *TFileIter::SkipObjects(Int_t  nSkip)
    }
    return nextObject;
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TKey *TFileIter::NextEventKey(UInt_t eventNumber, UInt_t runNumber, const char *name)
 {
-
    // Return the key that name matches the "event" . "run number" . "event number" schema
 
    Bool_t reset = kFALSE;
@@ -464,22 +477,23 @@ TKey *TFileIter::NextEventKey(UInt_t eventNumber, UInt_t runNumber, const char *
    }
    return key;
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reads, creates and returns the object by TKey name that matches
+/// the "name" ."runNumber" ." eventNumber" schema
+/// Attention: This method does create a new TObject and it is the user
+/// code responsibility to take care (delete) this object to avoid
+/// memory leak.
+
 TObject *TFileIter::NextEventGet(UInt_t eventNumber, UInt_t runNumber, const char *name)
 {
-  // reads, creates and returns the object by TKey name that matches
-  // the "name" ."runNumber" ." eventNumber" schema
-  // Attention: This method does create a new TObject and it is the user
-  // code responsibility to take care (delete) this object to avoid
-  // memory leak.
-
    return ReadObj(NextEventKey(eventNumber,runNumber,name));
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Read the next TObject from for the TDirectory by TKey provided
+
 TObject *TFileIter::ReadObj(const TKey *key)  const
 {
-   //Read the next TObject from for the TDirectory by TKey provided
    TObject *obj = 0;
    if (fNestedIterator) obj = fNestedIterator->ReadObj(key);
    else if (key)  {
@@ -495,12 +509,12 @@ TObject *TFileIter::ReadObj(const TKey *key)  const
    return obj;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a special TKey name with obj provided and write it out.
+
 Int_t  TFileIter::NextEventPut(TObject *obj, UInt_t eventNum,  UInt_t runNumber
                               , const char *name)
 {
-   // Create a special TKey name with obj provided and write it out.
-
    Int_t wBytes = 0;
    if (obj && IsOpen() && fRootFile->IsWritable()) {
       TDsKey thisKey(runNumber,eventNum);
@@ -516,22 +530,22 @@ Int_t  TFileIter::NextEventPut(TObject *obj, UInt_t eventNum,  UInt_t runNumber
    }
    return wBytes;
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// --------------------------------------------------------------------------------------
+/// MapName(const char *name, const char *localSystemKey,const char *mountedFileSystemKey)
+/// --------------------------------------------------------------------------------------
+/// Substitute the logical name with the real one if any
+/// 1. add a line into system.rootrc or ~/.rootrc or ./.rootrc
+///
+///  TFileIter.ForeignFileMap  mapFile // the name of the file
+/// to map the local name
+/// to the global file service
+///
+///  If this line is omitted then TFileIter class seeks for
+///  the default mapping file in the current directory "io.config"
+
 TString TFileIter::MapName(const char *name, const char *localSystemKey,const char *mountedFileSystemKey)
 {
-   // --------------------------------------------------------------------------------------
-   // MapName(const char *name, const char *localSystemKey,const char *mountedFileSystemKey)
-   // --------------------------------------------------------------------------------------
-   // Substitute the logical name with the real one if any
-   // 1. add a line into system.rootrc or ~/.rootrc or ./.rootrc
-   //
-   //  TFileIter.ForeignFileMap  mapFile // the name of the file
-                                         // to map the local name
-                                         // to the global file service
-   //
-   //  If this line is omitted then TFileIter class seeks for
-   //  the default mapping file in the current directory "io.config"
-
    // 2. If the "io.config" file found then it defines the mapping as follows:
    //
    //  TFileIter.LocalFileSystem   /castor

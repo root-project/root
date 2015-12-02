@@ -179,7 +179,9 @@ private:
 };
 
 
-//________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer, user should not use it.
+
 TFoam::TFoam() :
    fDim(0), fNCells(0), fRNmax(0),
    fOptDrive(0), fChat(0), fOptRej(0),
@@ -197,9 +199,10 @@ TFoam::TFoam() :
    fPrime(0), fMCresult(0), fMCerror(0),
    fAlpha(0)
 {
-  // Default constructor for streamer, user should not use it.
 }
-//_________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User constructor, to be employed by the user
+
 TFoam::TFoam(const Char_t* Name) :
    fDim(0), fNCells(0), fRNmax(0),
    fOptDrive(0), fChat(0), fOptRej(0),
@@ -217,8 +220,6 @@ TFoam::TFoam(const Char_t* Name) :
    fPrime(0), fMCresult(0), fMCerror(0),
    fAlpha(0)
 {
-// User constructor, to be employed by the user
-
    if(strlen(Name)  >129) {
       Error("TFoam","Name too long %s \n",Name);
    }
@@ -242,7 +243,8 @@ TFoam::TFoam(const Char_t* Name) :
    fOptDrive = 2;                // type of Drive =1,2 for TrueVol,Sigma,WtMax
    fChat     = 1;                // Chat=0,1,2 chat level in output, Chat=1 normal level
    fOptRej   = 1;                // OptRej=0, wted events; OptRej=1, wt=1 events
-   //------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    fNBin     = 8;                // binning of edge-histogram in cell exploration
    fEvPerBin =25;                // maximum no. of EFFECTIVE event per bin, =0 option is inactive
    //------------------------------------------------------
@@ -262,11 +264,12 @@ TFoam::TFoam(const Char_t* Name) :
    fMethodCall=0;                // ROOT's pointer to global distribution function
 }
 
-//_______________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default destructor
+///  std::cout<<" DESTRUCTOR entered "<<std::endl;
+
 TFoam::~TFoam()
 {
-// Default destructor
-//  std::cout<<" DESTRUCTOR entered "<<std::endl;
    Int_t i;
 
    if(fCells!= 0) {
@@ -302,24 +305,26 @@ TFoam::~TFoam()
 }
 
 
-//_____________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy Constructor  NOT IMPLEMENTED (NEVER USED)
+
 TFoam::TFoam(const TFoam &From): TObject(From)
 {
-// Copy Constructor  NOT IMPLEMENTED (NEVER USED)
    Error("TFoam", "COPY CONSTRUCTOR NOT IMPLEMENTED \n");
 }
 
-//_____________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Basic initialization of FOAM invoked by the user. Mandatory!
+/// ============================================================
+/// This method starts the process of the cell build-up.
+/// User must invoke Initialize with two arguments or Initialize without arguments.
+/// This is done BEFORE generating first MC event and AFTER allocating FOAM object
+/// and reseting (optionally) its internal parameters/switches.
+/// The overall operational scheme of the FOAM is the following:
+///BEGIN_HTML <!--
+
 void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
 {
-// Basic initialization of FOAM invoked by the user. Mandatory!
-// ============================================================
-// This method starts the process of the cell build-up.
-// User must invoke Initialize with two arguments or Initialize without arguments.
-// This is done BEFORE generating first MC event and AFTER allocating FOAM object
-// and reseting (optionally) its internal parameters/switches.
-// The overall operational scheme of the FOAM is the following:
-//BEGIN_HTML <!--
 /* -->
 <img src="gif/foam_schema2.gif">
 <!--*/
@@ -357,13 +362,13 @@ void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
    Initialize();
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Basic initialization of FOAM invoked by the user.
+/// IMPORTANT: Random number generator and the distribution object has to be
+/// provided using SetPseRan and SetRho prior to invoking this initializator!
+
 void TFoam::Initialize()
 {
-// Basic initialization of FOAM invoked by the user.
-// IMPORTANT: Random number generator and the distribution object has to be
-// provided using SetPseRan and SetRho prior to invoking this initializator!
-
    Bool_t addStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(kFALSE);
    Int_t i;
@@ -482,12 +487,12 @@ void TFoam::Initialize()
    TH1::AddDirectory(addStatus);
 } // Initialize
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subprogram used by Initialize.
+/// It initializes "root part" of the FOAM of the tree of cells.
+
 void TFoam::InitCells()
 {
-// Internal subprogram used by Initialize.
-// It initializes "root part" of the FOAM of the tree of cells.
-
    Int_t i;
 
    fLastCe =-1;                             // Index of the last cell
@@ -514,12 +519,12 @@ void TFoam::InitCells()
    }
 }//InitCells
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subprogram used by Initialize.
+/// It initializes content of the newly allocated active cell.
+
 Int_t TFoam::CellFill(Int_t Status, TFoamCell *parent)
 {
-// Internal subprogram used by Initialize.
-// It initializes content of the newly allocated active cell.
-
    TFoamCell *cell;
    if (fLastCe==fNCells){
       Error( "CellFill", "Too many cells\n");
@@ -546,21 +551,21 @@ Int_t TFoam::CellFill(Int_t Status, TFoamCell *parent)
    return fLastCe;
 }
 
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subprogram used by Initialize.
+/// It explores newly defined cell with help of special short MC sampling.
+/// As a result, estimates of true and drive volume is defined/determined
+/// Average and dispersion of the weight distribution will is found along
+/// each edge and the best edge (minimum dispersion, best maximum weight)
+/// is memorized for future use.
+/// The optimal division point for eventual future cell division is
+/// determined/recorded. Recorded are also minimum and maximum weight etc.
+/// The volume estimate in all (inactive) parent cells is updated.
+/// Note that links to parents and initial volume = 1/2 parent has to be
+/// already defined prior to calling this routine.
+
 void TFoam::Explore(TFoamCell *cell)
 {
-// Internal subprogram used by Initialize.
-// It explores newly defined cell with help of special short MC sampling.
-// As a result, estimates of true and drive volume is defined/determined
-// Average and dispersion of the weight distribution will is found along
-// each edge and the best edge (minimum dispersion, best maximum weight)
-// is memorized for future use.
-// The optimal division point for eventual future cell division is
-// determined/recorded. Recorded are also minimum and maximum weight etc.
-// The volume estimate in all (inactive) parent cells is updated.
-// Note that links to parents and initial volume = 1/2 parent has to be
-// already defined prior to calling this routine.
-
    Double_t wt, dx, xBest=0, yBest=0;
    Double_t intOld, driOld;
 
@@ -658,7 +663,8 @@ void TFoam::Explore(TFoamCell *cell)
       }//k
    }
    ee05:
-   //------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    fNEffev += (Long_t)nevEff;
    nevMC          = ceSum[2];
    Double_t intTrue = ceSum[0]/(nevMC+0.000001);
@@ -703,14 +709,14 @@ void TFoam::Explore(TFoamCell *cell)
    //cell->Print();
 } // TFoam::Explore
 
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subrogram used by Initialize.
+/// In determines the best edge candidate and the position of the cell division plane
+/// in case of the variance reduction for future cell division,
+/// using results of the MC exploration run stored in fHistEdg
+
 void TFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Double_t &yBest)
 {
-// Internal subrogram used by Initialize.
-// In determines the best edge candidate and the position of the cell division plane
-// in case of the variance reduction for future cell division,
-// using results of the MC exploration run stored in fHistEdg
-
    Double_t nent   = ceSum[2];
    Double_t swAll  = ceSum[0];
    Double_t sswAll = ceSum[1];
@@ -779,14 +785,14 @@ void TFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
    if( (kBest >= fDim) || (kBest<0) ) Error("Varedu", "Something wrong with kBest - kBest = %d dim = %d\n",kBest,fDim);
 }          //TFoam::Varedu
 
-//________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subrogram used by Initialize.
+/// Determines the best edge-candidate and the position of the division plane
+/// for the future cell division, in the case of the optimization of the maximum weight.
+/// It exploits results of the cell MC exploration run stored in fHistEdg.
+
 void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
 {
-   // Internal subrogram used by Initialize.
-   // Determines the best edge-candidate and the position of the division plane
-   // for the future cell division, in the case of the optimization of the maximum weight.
-   // It exploits results of the cell MC exploration run stored in fHistEdg.
-
    Int_t    kProj,iBin;
    Double_t carve,carvTot,carvMax,carvOne,binMax,binTot;
    Int_t    jLow,jUp,iLow,iUp;
@@ -879,11 +885,12 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
    delete [] bins;
 }          //TFoam::Carver
 
-//______________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subrogram used by Initialize.
+/// Provides random vector Alpha  0< Alpha(i) < 1
+
 void TFoam::MakeAlpha()
 {
-// Internal subrogram used by Initialize.
-// Provides random vector Alpha  0< Alpha(i) < 1
    Int_t k;
    if(fDim<1) return;
 
@@ -893,12 +900,12 @@ void TFoam::MakeAlpha()
 } //MakeAlpha
 
 
-//_____________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subrogram used by Initialize.
+/// It grow new cells by the binary division process.
+
 void TFoam::Grow()
 {
-// Internal subrogram used by Initialize.
-// It grow new cells by the binary division process.
-
    Long_t iCell;
    TFoamCell* newCell;
 
@@ -928,12 +935,12 @@ void TFoam::Grow()
    CheckAll(0);   // set arg=1 for more info
 }// Grow
 
-//_____________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subprogram used by Initialize.
+/// It finds cell with maximal driver integral for the purpose of the division.
+
 Long_t  TFoam::PeekMax()
 {
-// Internal subprogram used by Initialize.
-// It finds cell with maximal driver integral for the purpose of the division.
-
    Long_t  i;
    Long_t iCell = -1;
    Double_t  drivMax, driv;
@@ -955,18 +962,18 @@ Long_t  TFoam::PeekMax()
    return(iCell);
 }                 // TFoam_PeekMax
 
-//_____________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subrogram used by Initialize.
+/// It divides cell iCell into two daughter cells.
+/// The iCell is retained and tagged as inactive, daughter cells are appended
+/// at the end of the buffer.
+/// New vertex is added to list of vertices.
+/// List of active cells is updated, iCell removed, two daughters added
+/// and their properties set with help of MC sampling (TFoam_Explore)
+/// Returns Code RC=-1 of buffer limit is reached,  fLastCe=fnBuf.
+
 Int_t TFoam::Divide(TFoamCell *cell)
 {
-// Internal subrogram used by Initialize.
-// It divides cell iCell into two daughter cells.
-// The iCell is retained and tagged as inactive, daughter cells are appended
-// at the end of the buffer.
-// New vertex is added to list of vertices.
-// List of active cells is updated, iCell removed, two daughters added
-// and their properties set with help of MC sampling (TFoam_Explore)
-// Returns Code RC=-1 of buffer limit is reached,  fLastCe=fnBuf.
-
    Int_t   kBest;
 
    if(fLastCe+1 >= fNCells) Error("Divide", "Buffer limit is reached, fLastCe=fnBuf \n");
@@ -991,14 +998,14 @@ Int_t TFoam::Divide(TFoamCell *cell)
 } // TFoam_Divide
 
 
-//_________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subrogram used by Initialize.
+/// It finds out number of active cells fNoAct,
+/// creates list of active cell fCellsAct and primary cumulative fPrimAcu.
+/// They are used during the MC generation to choose randomly an active cell.
+
 void TFoam::MakeActiveList()
 {
-// Internal subrogram used by Initialize.
-// It finds out number of active cells fNoAct,
-// creates list of active cell fCellsAct and primary cumulative fPrimAcu.
-// They are used during the MC generation to choose randomly an active cell.
-
    Long_t n, iCell;
    Double_t sum;
    // flush previous result
@@ -1034,14 +1041,14 @@ void TFoam::MakeActiveList()
 
 } //MakeActiveList
 
-//__________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User may optionally reset random number generator using this method
+/// Usually it is done when FOAM object is restored from the disk.
+/// IMPORTANT: this method deletes existing  random number generator registered in the FOAM object.
+/// In particular such an object is created by the streamer during the disk-read operation.
+
 void TFoam::ResetPseRan(TRandom *PseRan)
 {
-// User may optionally reset random number generator using this method
-// Usually it is done when FOAM object is restored from the disk.
-// IMPORTANT: this method deletes existing  random number generator registered in the FOAM object.
-// In particular such an object is created by the streamer during the disk-read operation.
-
    if(fPseRan) {
       Info("ResetPseRan", "Resetting random number generator  \n");
       delete fPseRan;
@@ -1049,22 +1056,22 @@ void TFoam::ResetPseRan(TRandom *PseRan)
    SetPseRan(PseRan);
 }
 
-//__________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User may use this method to set the distribution object
+
 void TFoam::SetRho(TFoamIntegrand *fun)
 {
-// User may use this method to set the distribution object
-
    if (fun)
       fRho=fun;
    else
       Error("SetRho", "Bad function \n" );
 }
-//__________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User may use this method to set the distribution object as a global function pointer
+/// (and not as an interpreted function).
+
 void TFoam::SetRhoInt(Double_t (*fun)(Int_t, Double_t *) )
 {
-// User may use this method to set the distribution object as a global function pointer
-// (and not as an interpreted function).
-
    // This is needed for both AClic and Cling
    if (fun) {
       // delete function object if it has been created here in SetRho
@@ -1074,16 +1081,16 @@ void TFoam::SetRhoInt(Double_t (*fun)(Int_t, Double_t *) )
       Error("SetRho", "Bad function \n" );
 }
 
-//__________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User may optionally reset the distribution using this method
+/// Usually it is done when FOAM object is restored from the disk.
+/// IMPORTANT: this method deletes existing  distribution object registered in the FOAM object.
+/// In particular such an object is created by the streamer diring the disk-read operation.
+/// This method is used only in very special cases, because the distribution in most cases
+/// should be "owned" by the FOAM object and should not be replaced by another one after initialization.
+
 void TFoam::ResetRho(TFoamIntegrand *fun)
 {
-// User may optionally reset the distribution using this method
-// Usually it is done when FOAM object is restored from the disk.
-// IMPORTANT: this method deletes existing  distribution object registered in the FOAM object.
-// In particular such an object is created by the streamer diring the disk-read operation.
-// This method is used only in very special cases, because the distribution in most cases
-// should be "owned" by the FOAM object and should not be replaced by another one after initialization.
-
    if(fRho) {
       Info("ResetRho", "!!! Resetting distribution function  !!!\n");
       delete fRho;
@@ -1091,15 +1098,15 @@ void TFoam::ResetRho(TFoamIntegrand *fun)
    SetRho(fun);
 }
 
-//__________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User may use this to set pointer to the global function (not descending
+/// from TFoamIntegrand) serving as a distribution for FOAM.
+/// It is useful for simple interactive applications.
+/// Note that persistency for FOAM object will not work in the case of such
+/// a distribution.
+
 void TFoam::SetRhoInt( void * fun)
 {
-// User may use this to set pointer to the global function (not descending
-// from TFoamIntegrand) serving as a distribution for FOAM.
-// It is useful for simple interactive applications.
-// Note that persistency for FOAM object will not work in the case of such
-// a distribution.
-
 
    const char *namefcn = gCling->Getp2f2funcname(fun); //name of integrand function
    if(namefcn) {
@@ -1109,12 +1116,12 @@ void TFoam::SetRhoInt( void * fun)
    fRho=0;
 }
 
-//__________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subprogram.
+/// Evaluates distribution to be generated.
+
 Double_t TFoam::Eval(Double_t *xRand)
 {
-// Internal subprogram.
-// Evaluates distribution to be generated.
-
    Double_t result;
 
    if(!fRho) {   //interactive mode
@@ -1130,13 +1137,13 @@ Double_t TFoam::Eval(Double_t *xRand)
    return result;
 }
 
-//___________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subprogram.
+/// Return randomly chosen active cell with probability equal to its
+/// contribution into total driver integral using interpolation search.
+
 void TFoam::GenerCel2(TFoamCell *&pCell)
 {
-// Internal subprogram.
-// Return randomly chosen active cell with probability equal to its
-// contribution into total driver integral using interpolation search.
-
    Long_t  lo, hi, hit;
    Double_t fhit, flo, fhi;
    Double_t random;
@@ -1166,15 +1173,15 @@ void TFoam::GenerCel2(TFoamCell *&pCell)
 }       // TFoam::GenerCel2
 
 
-//___________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User subprogram.
+/// It generates randomly point/vector according to user-defined distribution.
+/// Prior initialization with help of Initialize() is mandatory.
+/// Generated MC point/vector is available using GetMCvect and the MC weight with GetMCwt.
+/// MC point is generated with wt=1 or with variable weight, see OptRej switch.
+
 void TFoam::MakeEvent(void)
 {
-// User subprogram.
-// It generates randomly point/vector according to user-defined distribution.
-// Prior initialization with help of Initialize() is mandatory.
-// Generated MC point/vector is available using GetMCvect and the MC weight with GetMCwt.
-// MC point is generated with wt=1 or with variable weight, see OptRej switch.
-
    Int_t      j;
    Double_t   wt,dx,mcwt;
    TFoamCell *rCell;
@@ -1220,46 +1227,46 @@ ee0:
    //********************** MC LOOP ENDS HERE **********************
 } // MakeEvent
 
-//_________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User may get generated MC point/vector with help of this method
+
 void TFoam::GetMCvect(Double_t *MCvect)
 {
-// User may get generated MC point/vector with help of this method
-
    for ( Int_t k=0 ; k<fDim ; k++) *(MCvect +k) = fMCvect[k];
 }//GetMCvect
 
-//___________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User may get weight MC weight using this method
+
 Double_t TFoam::GetMCwt(void)
 {
-// User may get weight MC weight using this method
-
    return(fMCwt);
 }
-//___________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User may get weight MC weight using this method
+
 void TFoam::GetMCwt(Double_t &mcwt)
 {
-// User may get weight MC weight using this method
-
    mcwt=fMCwt;
 }
 
-//___________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User subprogram which generates MC event and returns MC weight
+
 Double_t TFoam::MCgenerate(Double_t *MCvect)
 {
-// User subprogram which generates MC event and returns MC weight
-
    MakeEvent();
    GetMCvect(MCvect);
    return(fMCwt);
 }//MCgenerate
 
-//___________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User subprogram.
+/// It provides the value of the integral calculated from the averages of the MC run
+/// May be called after (or during) the MC run.
+
 void TFoam::GetIntegMC(Double_t &mcResult, Double_t &mcError)
 {
-// User subprogram.
-// It provides the value of the integral calculated from the averages of the MC run
-// May be called after (or during) the MC run.
-
    Double_t mCerelat;
    mcResult = 0.0;
    mCerelat = 1.0;
@@ -1270,15 +1277,15 @@ void TFoam::GetIntegMC(Double_t &mcResult, Double_t &mcError)
    mcError = mcResult *mCerelat;
 }//GetIntegMC
 
-//____________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User subprogram.
+/// It returns NORMALIZATION integral to be combined with the average weights
+/// and content of the histograms in order to get proper absolute normalization
+/// of the integrand and distributions.
+/// It can be called after initialization, before or during the MC run.
+
 void  TFoam::GetIntNorm(Double_t& IntNorm, Double_t& Errel )
 {
-// User subprogram.
-// It returns NORMALIZATION integral to be combined with the average weights
-// and content of the histograms in order to get proper absolute normalization
-// of the integrand and distributions.
-// It can be called after initialization, before or during the MC run.
-
    if(fOptRej == 1) {    // Wt=1 events, internal rejection
       Double_t intMC,errMC;
       GetIntegMC(intMC,errMC);
@@ -1290,12 +1297,12 @@ void  TFoam::GetIntNorm(Double_t& IntNorm, Double_t& Errel )
    }
 }//GetIntNorm
 
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// May be called optionally after the MC run.
+/// Returns various parameters of the MC weight for efficiency evaluation
+
 void  TFoam::GetWtParams(Double_t eps, Double_t &aveWt, Double_t &wtMax, Double_t &sigma)
 {
-// May be called optionally after the MC run.
-// Returns various parameters of the MC weight for efficiency evaluation
-
    Double_t mCeff, wtLim;
    fMCMonit->GetMCeff(eps, mCeff, wtLim);
    wtMax = wtLim;
@@ -1303,12 +1310,12 @@ void  TFoam::GetWtParams(Double_t eps, Double_t &aveWt, Double_t &wtMax, Double_
    sigma = sqrt( fSumWt2/fNevGen -aveWt*aveWt );
 }//GetmCeff
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// May be called optionally by the user after the MC run.
+/// It provides normalization and also prints some information/statistics on the MC run.
+
 void TFoam::Finalize(Double_t& IntNorm, Double_t& Errel)
 {
-// May be called optionally by the user after the MC run.
-// It provides normalization and also prints some information/statistics on the MC run.
-
    GetIntNorm(IntNorm,Errel);
    Double_t mcResult,mcError;
    GetIntegMC(mcResult,mcError);
@@ -1351,14 +1358,15 @@ void TFoam::Finalize(Double_t& IntNorm, Double_t& Errel)
    }
 }  // Finalize
 
-//_____________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This can be called before Initialize, after setting kDim
+/// It defines which variables are excluded in the process of the cell division.
+/// For example 'FoamX->SetInhiDiv(1, 1);' inhibits division of y-variable.
+/// The resulting map of cells in 2-dim. case will look as follows:
+///BEGIN_HTML <!--
+
 void  TFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv)
 {
-// This can be called before Initialize, after setting kDim
-// It defines which variables are excluded in the process of the cell division.
-// For example 'FoamX->SetInhiDiv(1, 1);' inhibits division of y-variable.
-// The resulting map of cells in 2-dim. case will look as follows:
-//BEGIN_HTML <!--
 /* -->
 <img src="gif/foam_Map2.gif">
 <!--*/
@@ -1376,16 +1384,17 @@ void  TFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv)
       Error("SetInhiDiv:","Wrong iDim \n");
 }//SetInhiDiv
 
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This should be called before Initialize, after setting  kDim
+/// It predefines values of the cell division for certain variable iDim.
+/// For example setting 3 predefined division lines using:
+///     xDiv[0]=0.30; xDiv[1]=0.40; xDiv[2]=0.65;
+///     FoamX->SetXdivPRD(0,3,xDiv);
+/// results in the following 2-dim. pattern of the cells:
+///BEGIN_HTML <!--
+
 void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
 {
-// This should be called before Initialize, after setting  kDim
-// It predefines values of the cell division for certain variable iDim.
-// For example setting 3 predefined division lines using:
-//     xDiv[0]=0.30; xDiv[1]=0.40; xDiv[2]=0.65;
-//     FoamX->SetXdivPRD(0,3,xDiv);
-// results in the following 2-dim. pattern of the cells:
-//BEGIN_HTML <!--
 /* -->
 <img src="gif/foam_Map3.gif">
 <!--*/
@@ -1423,14 +1432,14 @@ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
    //
 }//SetXdivPRD
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  User utility, miscellaneous and debug.
+///  Checks all pointers in the tree of cells. This is useful autodiagnostic.
+///  level=0, no printout, failures causes STOP
+///  level=1, printout, failures lead to WARNINGS only
+
 void TFoam::CheckAll(Int_t level)
 {
-//  User utility, miscellaneous and debug.
-//  Checks all pointers in the tree of cells. This is useful autodiagnostic.
-//  level=0, no printout, failures causes STOP
-//  level=1, printout, failures lead to WARNINGS only
-
    Int_t errors, warnings;
    TFoamCell *cell;
    Long_t iCell;
@@ -1494,11 +1503,11 @@ void TFoam::CheckAll(Int_t level)
    }
 } // Check
 
-//________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints geometry of ALL cells of the FOAM
+
 void TFoam::PrintCells(void)
 {
-// Prints geometry of ALL cells of the FOAM
-
    Long_t iCell;
 
    for(iCell=0; iCell<=fLastCe; iCell++) {
@@ -1510,12 +1519,12 @@ void TFoam::PrintCells(void)
    }
 }
 
-//_________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Debugging tool which plots 2-dimensional cells as rectangles
+/// in C++ format readable for root
+
 void TFoam::RootPlot2dim(Char_t *filename)
 {
-// Debugging tool which plots 2-dimensional cells as rectangles
-// in C++ format readable for root
-
    std::ofstream outfile(filename, std::ios::out);
    Double_t   x1,y1,x2,y2,x,y;
    Long_t    iCell;

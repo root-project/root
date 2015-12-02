@@ -31,10 +31,11 @@ ClassImp(TGeoGlobalMagField)
 
 TGeoGlobalMagField *TGeoGlobalMagField::fgInstance = NULL;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Global field default constructor.
+
 TGeoGlobalMagField::TGeoGlobalMagField()
 {
-// Global field default constructor.
    fField = NULL;
    fLock = kFALSE;
    if (fgInstance) {
@@ -52,10 +53,11 @@ TGeoGlobalMagField::TGeoGlobalMagField()
    fgInstance = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Global field destructor.
+
 TGeoGlobalMagField::~TGeoGlobalMagField()
 {
-// Global field destructor.
    gROOT->GetListOfGeometries()->Remove(this);
    if (fField) {
       TVirtualMagField *field = fField;
@@ -65,10 +67,11 @@ TGeoGlobalMagField::~TGeoGlobalMagField()
    fgInstance = NULL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Field setter. Deletes previous field if any. Acts only if fLock=kFALSE.
+
 void TGeoGlobalMagField::SetField(TVirtualMagField *field)
 {
-// Field setter. Deletes previous field if any. Acts only if fLock=kFALSE.
    if (field==fField) return;
    // Check if we are allowed to change the old field.
    if (fField) {
@@ -86,25 +89,28 @@ void TGeoGlobalMagField::SetField(TVirtualMagField *field)
    if (fField) Info("SetField", "Global magnetic field set to <%s>", fField->GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static getter that does not create the object.
+
 TGeoGlobalMagField *TGeoGlobalMagField::GetInstance()
 {
-// Static getter that does not create the object.
    return fgInstance;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns always a valid static pointer to the field manager.
+
 TGeoGlobalMagField *TGeoGlobalMagField::Instance()
 {
-// Returns always a valid static pointer to the field manager.
    if (fgInstance) return fgInstance;
    return new TGeoGlobalMagField();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Locks the global magnetic field if this is set. Cannot be unlocked.
+
 void TGeoGlobalMagField::Lock()
 {
-// Locks the global magnetic field if this is set. Cannot be unlocked.
    if (!fField) {
       Warning("Lock", "Cannot lock global magnetic field since this was not set yet");
       return;

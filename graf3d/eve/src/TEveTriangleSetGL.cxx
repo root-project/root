@@ -27,48 +27,49 @@
 
 ClassImp(TEveTriangleSetGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveTriangleSetGL::TEveTriangleSetGL() : TGLObject(), fM(0)
 {
-   // Constructor.
-
    // fDLCache = false; // Disable display list.
    fMultiColor = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveTriangleSetGL::~TEveTriangleSetGL()
 {
-   // Destructor.
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEveTriangleSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEveTriangleSet>(obj);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding-box from the model.
+
 void TEveTriangleSetGL::SetBBox()
 {
-   // Set bounding-box from the model.
-
    // !! This ok if master sub-classed from TAttBBox
    SetAxisAlignedBBox(((TEveTriangleSet*)fExternalObj)->AssertBBox());
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Low-level GL rendering.
+
 void TEveTriangleSetGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
 {
-   // Low-level GL rendering.
-
    TEveTriangleSet& refTS = *fM;
    Bool_t isScaled = refTS.RefMainTrans().IsScale();
 

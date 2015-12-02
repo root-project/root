@@ -43,50 +43,52 @@ ClassImp(RooNumRunningInt)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct running integral of function '_func' over x_print from
+/// the lower bound on _x to the present value of _x using a numeric
+/// sampling technique. The sampling frequency is controlled by the
+/// binning named 'bname' and a default second order interpolation
+/// is applied to smooth the histogram-based c.d.f.
+
 RooNumRunningInt::RooNumRunningInt(const char *name, const char *title, RooAbsReal& _func, RooRealVar& _x, const char* bname) :
    RooAbsCachedReal(name,title), 
    func("func","func",this,_func),
    x("x","x",this,_x),
    _binningName(bname?bname:"cache")
  { 
-   // Construct running integral of function '_func' over x_print from
-   // the lower bound on _x to the present value of _x using a numeric
-   // sampling technique. The sampling frequency is controlled by the
-   // binning named 'bname' and a default second order interpolation
-   // is applied to smooth the histogram-based c.d.f.
-
    setInterpolationOrder(2) ;
  } 
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooNumRunningInt::RooNumRunningInt(const RooNumRunningInt& other, const char* name) :  
    RooAbsCachedReal(other,name), 
    func("func",this,other.func),
    x("x",this,other.x),
    _binningName(other._binningName)
  { 
-   // Copy constructor
  } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooNumRunningInt::~RooNumRunningInt() 
 {
-  // Destructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return unique name for RooAbsCachedPdf cache components
+/// constructed from input function name
+
 const char* RooNumRunningInt::inputBaseName() const 
 {
-  // Return unique name for RooAbsCachedPdf cache components
-  // constructed from input function name
-
   static string ret ;
   ret = func.arg().GetName() ;
   ret += "_NUMRUNINT" ;
@@ -95,12 +97,12 @@ const char* RooNumRunningInt::inputBaseName() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct RunningIntegral CacheElement
+
 RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt& self, const RooArgSet* nset) : 
   FuncCacheElem(self,nset), _self(&const_cast<RooNumRunningInt&>(self))
 {
-  // Construct RunningIntegral CacheElement
-  
   // Instantiate temp arrays
   _ax = new Double_t[hist()->numEntries()] ;
   _ay = new Double_t[hist()->numEntries()] ;
@@ -116,22 +118,22 @@ RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt& self, const R
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooNumRunningInt::RICacheElem::~RICacheElem() 
 {
-  // Destructor
-
   // Delete temp arrays 
   delete[] _ax ;
   delete[] _ay ;    
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return all RooAbsArg components contained in cache element
+
 RooArgList RooNumRunningInt::RICacheElem::containedArgs(Action action) 
 {
-  // Return all RooAbsArg components contained in cache element
-
   RooArgList ret ;
   ret.add(FuncCacheElem::containedArgs(action)) ;
   ret.add(*_self) ;
@@ -141,13 +143,13 @@ RooArgList RooNumRunningInt::RICacheElem::containedArgs(Action action)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the numeric running integral and store
+/// the result in the cache histogram provided
+/// by RooAbsCachedPdf
+
 void RooNumRunningInt::RICacheElem::calculate(Bool_t cdfmode) 
 {
-  // Calculate the numeric running integral and store
-  // the result in the cache histogram provided
-  // by RooAbsCachedPdf
-
   // Update contents of histogram
   Int_t nbins = hist()->numEntries() ;
   
@@ -186,16 +188,16 @@ void RooNumRunningInt::RICacheElem::calculate(Bool_t cdfmode)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill all empty histogram bins in the range [ixlo,ixhi] where nbins is the
+/// total number of histogram bins. This method samples the mid-point of the
+/// range and if the mid-point value is within small tolerance of the interpolated
+/// mid-point value fills all remaining elements through linear interpolation.
+/// If the tolerance is exceeded, the algorithm is recursed on the two subranges
+/// [xlo,xmid] and [xmid,xhi]
+
 void RooNumRunningInt::RICacheElem::addRange(Int_t ixlo, Int_t ixhi, Int_t nbins) 
 {
-  // Fill all empty histogram bins in the range [ixlo,ixhi] where nbins is the
-  // total number of histogram bins. This method samples the mid-point of the
-  // range and if the mid-point value is within small tolerance of the interpolated
-  // mid-point value fills all remaining elements through linear interpolation.
-  // If the tolerance is exceeded, the algorithm is recursed on the two subranges
-  // [xlo,xmid] and [xmid,xhi]
-
   // Add first and last point, if not there already
   if (_ay[ixlo]<0) {
     addPoint(ixlo) ;
@@ -238,11 +240,11 @@ void RooNumRunningInt::RICacheElem::addRange(Int_t ixlo, Int_t ixhi, Int_t nbins
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sample function at bin ix
+
 void RooNumRunningInt::RICacheElem::addPoint(Int_t ix)
 {
-  // Sample function at bin ix
-
   hist()->get(ix) ;
   _self->x = _xx->getVal() ;
   _ay[ix] = _self->func.arg().getVal(*_xx) ;
@@ -251,22 +253,23 @@ void RooNumRunningInt::RICacheElem::addPoint(Int_t ix)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the cache object by calling its calculate() method
+
 void RooNumRunningInt::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const 
 {
-  // Fill the cache object by calling its calculate() method
   RICacheElem& riCache = static_cast<RICacheElem&>(cache) ;
   riCache.calculate(kFALSE) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return observable in nset to be cached by RooAbsCachedPdf
+/// this is always the x observable that is integrated
+
 RooArgSet* RooNumRunningInt::actualObservables(const RooArgSet& /*nset*/) const 
 {
-  // Return observable in nset to be cached by RooAbsCachedPdf
-  // this is always the x observable that is integrated
-
   RooArgSet* ret = new RooArgSet ;
   ret->add(x.arg()) ;
   return ret ;
@@ -274,33 +277,33 @@ RooArgSet* RooNumRunningInt::actualObservables(const RooArgSet& /*nset*/) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the parameters of the cache created by RooAbsCachedPdf.
+/// These are always the input functions parameter, but never the
+/// integrated variable x.
+
 RooArgSet* RooNumRunningInt::actualParameters(const RooArgSet& /*nset*/) const 
 {
-  // Return the parameters of the cache created by RooAbsCachedPdf.
-  // These are always the input functions parameter, but never the
-  // integrated variable x.
-
   RooArgSet* ret = func.arg().getParameters(RooArgSet()) ;
   ret->remove(x.arg(),kTRUE,kTRUE) ;
   return ret ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create custom cache element for running integral calculations
+
 RooAbsCachedReal::FuncCacheElem* RooNumRunningInt::createCache(const RooArgSet* nset) const 
 {
-  // Create custom cache element for running integral calculations
-
   return new RICacheElem(*const_cast<RooNumRunningInt*>(this),nset) ; 
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy function that is never called
+
 Double_t RooNumRunningInt::evaluate() const 
 {
-  // Dummy function that is never called
-
   cout << "RooNumRunningInt::evaluate(" << GetName() << ")" << endl ;
   return 0 ;
 }

@@ -52,13 +52,13 @@ public:
    const TGString *GetText() const { return fStatusInfo; }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create statusbar part frame. This frame will contain the text for this
+/// statusbar part.
+
 TGStatusBarPart::TGStatusBarPart(const TGWindow *p, Int_t h, Int_t y, ULong_t back)
    : TGHorizontalFrame(p, 5, 5, kChildFrame | kHorizontalFrame, back)
 {
-   // Create statusbar part frame. This frame will contain the text for this
-   // statusbar part.
-
    fStatusInfo = 0;
    fYt = y + 1;
    fHeight = h;
@@ -67,21 +67,21 @@ TGStatusBarPart::TGStatusBarPart(const TGWindow *p, Int_t h, Int_t y, ULong_t ba
    fEditDisabled = kEditDisableGrab;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text in this part of the statusbar.
+
 void TGStatusBarPart::SetText(TGString *text)
 {
-   // Set text in this part of the statusbar.
-
    if (fStatusInfo) delete fStatusInfo;
    fStatusInfo = text;
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw string in statusbar part frame.
+
 void TGStatusBarPart::DoRedraw()
 {
-   // Draw string in statusbar part frame.
-
    TGHorizontalFrame::DoRedraw();
 
    if (fStatusInfo)
@@ -91,14 +91,14 @@ void TGStatusBarPart::DoRedraw()
 
 ClassImp(TGStatusBar)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a status bar widget. By default it consist of one part.
+/// Multiple parts can be created using SetParts().
+
 TGStatusBar::TGStatusBar(const TGWindow *p, UInt_t w, UInt_t h,
                          UInt_t options, ULong_t back) :
    TGHorizontalFrame(p, w, h, options, back)
 {
-   // Create a status bar widget. By default it consist of one part.
-   // Multiple parts can be created using SetParts().
-
    fBorderWidth   = 2;
    fStatusPart    = new TGStatusBarPart* [1];
    fParts         = new Int_t [1];
@@ -120,11 +120,11 @@ TGStatusBar::TGStatusBar(const TGWindow *p, UInt_t w, UInt_t h,
    //fEditDisabled = kEditDisableLayout;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete status bar widget.
+
 TGStatusBar::~TGStatusBar()
 {
-   // Delete status bar widget.
-
    if (!MustCleanup()) {
       for (int i = 0; i < fNpart; i++) {
          delete fStatusPart[i];
@@ -136,12 +136,12 @@ TGStatusBar::~TGStatusBar()
    delete [] fXt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text in partition partidx in status bar. The TGString is
+/// adopted by the status bar.
+
 void TGStatusBar::SetText(TGString *text, Int_t partidx)
 {
-   // Set text in partition partidx in status bar. The TGString is
-   // adopted by the status bar.
-
    if (partidx < 0 || partidx >= fNpart) {
       Error("SetText", "partidx out of range (0,%d)", fNpart-1);
       return;
@@ -150,19 +150,19 @@ void TGStatusBar::SetText(TGString *text, Int_t partidx)
    fStatusPart[partidx]->SetText(text);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text in partion partidx in status bar.
+
 void TGStatusBar::SetText(const char *text, Int_t partidx)
 {
-   // Set text in partion partidx in status bar.
-
    SetText(new TGString(text), partidx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return text in the part partidx
+
 const char *TGStatusBar::GetText(Int_t partidx) const
 {
-   // return text in the part partidx
-
    if (partidx < 0 || partidx >= fNpart) {
       Error("GetText", "partidx out of range (0,%d)", fNpart-1);
       return 0;
@@ -172,11 +172,11 @@ const char *TGStatusBar::GetText(Int_t partidx) const
    return str->Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the status bar border (including cute 3d corner).
+
 void TGStatusBar::DrawBorder()
 {
-   // Draw the status bar border (including cute 3d corner).
-
    // Current width is known at this stage so calculate fXt's.
    int i;
    for (i = 0; i < fNpart; i++) {
@@ -230,11 +230,11 @@ void TGStatusBar::DrawBorder()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw status bar.
+
 void TGStatusBar::DoRedraw()
 {
-   // Redraw status bar.
-
    // calls DrawBorder()
    TGFrame::DoRedraw();
 
@@ -242,12 +242,12 @@ void TGStatusBar::DoRedraw()
       fStatusPart[i]->DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divide the status bar in nparts. Size of each part is given in parts
+/// array (percentual).
+
 void TGStatusBar::SetParts(Int_t *parts, Int_t npart)
 {
-   // Divide the status bar in nparts. Size of each part is given in parts
-   // array (percentual).
-
    if (npart < 1) {
       Warning("SetParts", "must be at least one part");
       npart = 1;
@@ -284,11 +284,11 @@ void TGStatusBar::SetParts(Int_t *parts, Int_t npart)
    fNpart = npart;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divide the status bar in npart equal sized parts.
+
 void TGStatusBar::SetParts(Int_t npart)
 {
-   // Divide the status bar in npart equal sized parts.
-
    if (npart < 1) {
       Warning("SetParts", "must be at least one part");
       npart = 1;
@@ -324,21 +324,21 @@ void TGStatusBar::SetParts(Int_t npart)
    fNpart = npart;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default font structure in use.
+
 FontStruct_t TGStatusBar::GetDefaultFontStruct()
 {
-   // Return default font structure in use.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetStatusFont();
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context in use.
+
 const TGGC &TGStatusBar::GetDefaultGC()
 {
-   // Return default graphics context in use.
-
    if (!fgDefaultGC) {
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
       fgDefaultGC->SetFont(fgDefaultFont->GetFontHandle());
@@ -346,20 +346,20 @@ const TGGC &TGStatusBar::GetDefaultGC()
    return *fgDefaultGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns bar part. That allows to put in the bar part
+/// something more interesting than text ;-)
+
 TGCompositeFrame *TGStatusBar::GetBarPart(Int_t npart) const
 {
-   // Returns bar part. That allows to put in the bar part
-   // something more interesting than text ;-)
-
    return  ((npart<fNpart) && (npart>=0)) ? (TGCompositeFrame*)fStatusPart[npart] : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default size.
+
 TGDimension TGStatusBar::GetDefaultSize() const
 {
-   // Return default size.
-
    UInt_t h = fHeight;
 
    for (int i = 0; i < fNpart; i++) {
@@ -368,11 +368,11 @@ TGDimension TGStatusBar::GetDefaultSize() const
    return TGDimension(fWidth, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a status bar widget as a C++ statement(s) on output stream out.
+
 void TGStatusBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save a status bar widget as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << std::endl;

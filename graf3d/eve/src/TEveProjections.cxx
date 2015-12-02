@@ -34,7 +34,9 @@ ClassImp(TEveProjection);
 Float_t TEveProjection::fgEps    = 0.005f;
 Float_t TEveProjection::fgEpsSqr = 0.000025f;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveProjection::TEveProjection() :
    fType          (kPT_Unknown),
    fGeoMode       (kGM_Unknown),
@@ -49,42 +51,41 @@ TEveProjection::TEveProjection() :
    fPastFixRScale (1),   fPastFixZScale (1),
    fMaxTrackStep  (5)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project float array.
+
 void TEveProjection::ProjectPointfv(Float_t* v, Float_t d)
 {
-   // Project float array.
-
    ProjectPoint(v[0], v[1], v[2], d);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project double array.
+/// This is a bit piggish as we convert the doubles to floats and back.
+
 void TEveProjection::ProjectPointdv(Double_t* v, Float_t d)
 {
-   // Project double array.
-   // This is a bit piggish as we convert the doubles to floats and back.
-
    Float_t x = v[0], y = v[1], z = v[2];
    ProjectPoint(x, y, z, d);
    v[0] = x; v[1] = y; v[2] = z;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project TEveVector.
+
 void TEveProjection::ProjectVector(TEveVector& v, Float_t d)
 {
-   // Project TEveVector.
-
    ProjectPoint(v.fX, v.fY, v.fZ, d);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project float array, converting it to global coordinate system first if
+/// transformation matrix is set.
+
 void TEveProjection::ProjectPointfv(const TEveTrans* t, const Float_t* p, Float_t* v, Float_t d)
 {
-   // Project float array, converting it to global coordinate system first if
-   // transformation matrix is set.
-
    v[0] = p[0]; v[1] = p[1]; v[2] = p[2];
    if (t)
    {
@@ -93,13 +94,13 @@ void TEveProjection::ProjectPointfv(const TEveTrans* t, const Float_t* p, Float_
    ProjectPoint(v[0], v[1], v[2], d);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project double array, converting it to global coordinate system first if
+/// transformation matrix is set.
+/// This is a bit piggish as we convert the doubles to floats and back.
+
 void TEveProjection::ProjectPointdv(const TEveTrans* t, const Double_t* p, Double_t* v, Float_t d)
 {
-   // Project double array, converting it to global coordinate system first if
-   // transformation matrix is set.
-   // This is a bit piggish as we convert the doubles to floats and back.
-
    Float_t x, y, z;
    if (t)
    {
@@ -114,12 +115,12 @@ void TEveProjection::ProjectPointdv(const TEveTrans* t, const Double_t* p, Doubl
    v[0] = x; v[1] = y; v[2] = z;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project TEveVector, converting it to global coordinate system first if
+/// transformation matrix is set.
+
 void TEveProjection::ProjectVector(const TEveTrans* t, TEveVector& v, Float_t d)
 {
-   // Project TEveVector, converting it to global coordinate system first if
-   // transformation matrix is set.
-
    if (t)
    {
       t->MultiplyIP(v);
@@ -127,11 +128,11 @@ void TEveProjection::ProjectVector(const TEveTrans* t, TEveVector& v, Float_t d)
    ProjectPoint(v.fX, v.fY, v.fZ, d);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pre-scale single variable with pre-scale entry dim.
+
 void TEveProjection::PreScaleVariable(Int_t dim, Float_t& v)
 {
-   // Pre-scale single variable with pre-scale entry dim.
-
    if (!fPreScales[dim].empty())
    {
       Bool_t invp = kFALSE;
@@ -148,40 +149,40 @@ void TEveProjection::PreScaleVariable(Int_t dim, Float_t& v)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pre-scale point (x, y) in projected coordinates for 2D projections:
+///   RhoZ ~ (rho, z)
+///   RPhi ~ (r, phi), scaling phi doesn't make much sense.
+
 void TEveProjection::PreScalePoint(Float_t& x, Float_t& y)
 {
-   // Pre-scale point (x, y) in projected coordinates for 2D projections:
-   //   RhoZ ~ (rho, z)
-   //   RPhi ~ (r, phi), scaling phi doesn't make much sense.
-
    PreScaleVariable(0, x);
    PreScaleVariable(1, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pre-scale point (x, y, z) in projected coordinates for 3D projection.
+
 void TEveProjection::PreScalePoint(Float_t& x, Float_t& y, Float_t& z)
 {
-   // Pre-scale point (x, y, z) in projected coordinates for 3D projection.
-
    PreScaleVariable(0, x);
    PreScaleVariable(1, y);
    PreScaleVariable(2, z);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add new scaling range for given coordinate.
+/// Arguments:
+///  coord    0 ~ x, 1 ~ y, 2 ~ z
+///  value    value of input coordinate from which to apply this scale;
+///  scale    the scale to apply from value onwards.
+///
+/// NOTE: If pre-scaling is combined with center-displaced then
+/// the scale of the central region should be 1. This limitation
+/// can be removed but will cost CPU.
+
 void TEveProjection::AddPreScaleEntry(Int_t coord, Float_t value, Float_t scale)
 {
-   // Add new scaling range for given coordinate.
-   // Arguments:
-   //  coord    0 ~ x, 1 ~ y, 2 ~ z
-   //  value    value of input coordinate from which to apply this scale;
-   //  scale    the scale to apply from value onwards.
-   //
-   // NOTE: If pre-scaling is combined with center-displaced then
-   // the scale of the central region should be 1. This limitation
-   // can be removed but will cost CPU.
-
    static const TEveException eh("TEveProjection::AddPreScaleEntry ");
 
    if (coord < 0 || coord > 2)
@@ -215,16 +216,16 @@ void TEveProjection::AddPreScaleEntry(Int_t coord, Float_t value, Float_t scale)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change scale for given entry and coordinate.
+///
+/// NOTE: If the first entry you created used other value than 0,
+/// one entry (covering range from 0 to this value) was created
+/// automatically.
+
 void TEveProjection::ChangePreScaleEntry(Int_t   coord, Int_t entry,
                                          Float_t new_scale)
 {
-   // Change scale for given entry and coordinate.
-   //
-   // NOTE: If the first entry you created used other value than 0,
-   // one entry (covering range from 0 to this value) was created
-   // automatically.
-
    static const TEveException eh("TEveProjection::ChangePreScaleEntry ");
 
    if (coord < 0 || coord > 2)
@@ -245,21 +246,21 @@ void TEveProjection::ChangePreScaleEntry(Int_t   coord, Int_t entry,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear all pre-scaling information.
+
 void TEveProjection::ClearPreScales()
 {
-   // Clear all pre-scaling information.
-
    fPreScales[0].clear();
    fPreScales[1].clear();
    fPreScales[2].clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set distortion.
+
 void TEveProjection::SetDistortion(Float_t d)
 {
-   // Set distortion.
-
    fDistortion    = d;
    fScaleR        = 1.0f + fFixR*fDistortion;
    fScaleZ        = 1.0f + fFixZ*fDistortion;
@@ -267,40 +268,40 @@ void TEveProjection::SetDistortion(Float_t d)
    fPastFixZScale = TMath::Power(10.0f, fPastFixZFac) / fScaleZ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set fixed radius.
+
 void TEveProjection::SetFixR(Float_t r)
 {
-   // Set fixed radius.
-
    fFixR          = r;
    fScaleR        = 1 + fFixR*fDistortion;
    fPastFixRScale = TMath::Power(10.0f, fPastFixRFac) / fScaleR;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set fixed radius.
+
 void TEveProjection::SetFixZ(Float_t z)
 {
-   // Set fixed radius.
-
    fFixZ          = z;
    fScaleZ        = 1 + fFixZ*fDistortion;
    fPastFixZScale = TMath::Power(10.0f, fPastFixZFac) / fScaleZ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set 2's-exponent for relative scaling beyond FixR.
+
 void TEveProjection::SetPastFixRFac(Float_t x)
 {
-   // Set 2's-exponent for relative scaling beyond FixR.
-
    fPastFixRFac   = x;
    fPastFixRScale = TMath::Power(10.0f, fPastFixRFac) / fScaleR;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get projected center.
+
 Float_t* TEveProjection::GetProjectedCenter()
 {
-   // Get projected center.
-
    static TEveVector zero;
 
    if (fDisplaceOrigin)
@@ -309,36 +310,36 @@ Float_t* TEveProjection::GetProjectedCenter()
       return fCenter.Arr();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set flag to displace for center.
+/// This options is useful if want to have projected center
+/// at (0, 0) position in projected coordinates and want to dismiss
+/// gap around projected center in RhoZ projection.
+
 void  TEveProjection::SetDisplaceOrigin(Bool_t x)
 {
-   // Set flag to displace for center.
-   // This options is useful if want to have projected center
-   // at (0, 0) position in projected coordinates and want to dismiss
-   // gap around projected center in RhoZ projection.
-
    fDisplaceOrigin = x;
    // update projected center
    SetCenter(fCenter);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set 2's-exponent for relative scaling beyond FixZ.
+
 void TEveProjection::SetPastFixZFac(Float_t x)
 {
-   // Set 2's-exponent for relative scaling beyond FixZ.
-
    fPastFixZFac   = x;
    fPastFixZScale = TMath::Power(10.0f, fPastFixZFac) / fScaleZ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find break-point on both sides of the discontinuity.
+/// They still need to be projected after the call.
+/// This is an obsolete version of the method that required manual
+/// specification of precision -- this lead to (infrequent) infinite loops.
+
 void TEveProjection::BisectBreakPoint(TEveVector& vL, TEveVector& vR, Float_t /*eps_sqr*/)
 {
-   // Find break-point on both sides of the discontinuity.
-   // They still need to be projected after the call.
-   // This is an obsolete version of the method that required manual
-   // specification of precision -- this lead to (infrequent) infinite loops.
-
    static Bool_t warnedp = kFALSE;
 
    if (!warnedp)
@@ -350,14 +351,14 @@ void TEveProjection::BisectBreakPoint(TEveVector& vL, TEveVector& vR, Float_t /*
    BisectBreakPoint(vL, vR, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find break-point on both sides of the discontinuity.
+/// If project_result is true, the resulting break points will be projected
+/// with given depth value.
+
 void TEveProjection::BisectBreakPoint(TEveVector& vL, TEveVector& vR,
                                       Bool_t project_result, Float_t depth)
 {
-   // Find break-point on both sides of the discontinuity.
-   // If project_result is true, the resulting break points will be projected
-   // with given depth value.
-
    TEveVector vM, vLP, vMP;
    Int_t n_loops = TMath::CeilNint(TMath::Log2(1e12 * (vL-vR).Mag2() / (0.5f*(vL+vR)).Mag2()) / 2);
    while (--n_loops >= 0)
@@ -390,32 +391,32 @@ void TEveProjection::BisectBreakPoint(TEveVector& vL, TEveVector& vR,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method previously used by  TEveProjectionAxesGL. Now obsolete.
+
 Float_t TEveProjection::GetLimit(Int_t, Bool_t)
 {
-   // Method previously used by  TEveProjectionAxesGL. Now obsolete.
-
   ::Warning("TEveProjection::GetLimits", "method is obsolete");
 
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get vector for axis in a projected space.
+
 void TEveProjection::SetDirectionalVector(Int_t screenAxis, TEveVector& vec)
 {
-   // Get vector for axis in a projected space.
-
    for (Int_t i=0; i<3; i++)
    {
       vec[i] = (i==screenAxis) ? 1.0f : 0.0f;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get center ortogonal to given axis index.
+
 TEveVector TEveProjection::GetOrthogonalCenter(int i, TEveVector& centerOO)
 {
-   // Get center ortogonal to given axis index.
-
    TEveVector dirVec;
    SetDirectionalVector(i, dirVec);
 
@@ -427,11 +428,11 @@ TEveVector TEveProjection::GetOrthogonalCenter(int i, TEveVector& centerOO)
    return  centerOO;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Inverse projection.
+
 Float_t TEveProjection::GetValForScreenPos(Int_t axisIdx, Float_t sv)
 {
-   // Inverse projection.
-
    static const TEveException eH("TEveProjection::GetValForScreenPos ");
 
    static const int kMaxSteps = 5000;
@@ -514,11 +515,11 @@ Float_t TEveProjection::GetValForScreenPos(Int_t axisIdx, Float_t sv)
    return xM;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project point on given axis and return projected value.
+
 Float_t TEveProjection::GetScreenVal(Int_t i, Float_t x, TEveVector& dirVec, TEveVector& /*oCenter*/)
 {
-   // Project point on given axis and return projected value.
-
    TEveVector pos = dirVec*x;
 
    if (fDisplaceOrigin)
@@ -529,11 +530,11 @@ Float_t TEveProjection::GetScreenVal(Int_t i, Float_t x, TEveVector& dirVec, TEv
    return pos[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project point on given axis and return projected value.
+
 Float_t TEveProjection::GetScreenVal(Int_t i, Float_t x)
 {
-   // Project point on given axis and return projected value.
-
    TEveVector dirVec;
    SetDirectionalVector(i, dirVec);
    TEveVector oCenter;
@@ -554,22 +555,22 @@ Float_t TEveProjection::GetScreenVal(Int_t i, Float_t x)
 
 ClassImp(TEveRhoZProjection);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveRhoZProjection::TEveRhoZProjection() :
    TEveProjection()
 {
-   // Constructor.
-
    fType = kPT_RhoZ;
    fName = "RhoZ";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project point.
+
 void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
                                       Float_t  d, EPProc_e proc)
 {
-   // Project point.
-
    using namespace TMath;
 
    if (fDisplaceOrigin) {
@@ -619,11 +620,11 @@ void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set center of distortion (virtual method).
+
 void TEveRhoZProjection::SetCenter(TEveVector& v)
 {
-   // Set center of distortion (virtual method).
-
    fCenter = v;
 
    if (fDisplaceOrigin)
@@ -639,28 +640,28 @@ void TEveRhoZProjection::SetCenter(TEveVector& v)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get direction in the unprojected space for axis index in the
+/// projected space.
+/// This is virtual method from base-class TEveProjection.
+
 void TEveRhoZProjection::SetDirectionalVector(Int_t screenAxis, TEveVector& vec)
 {
-   // Get direction in the unprojected space for axis index in the
-   // projected space.
-   // This is virtual method from base-class TEveProjection.
-
    if (screenAxis == 0)
       vec.Set(0.0f, 0.0f, 1.0f);
    else if (screenAxis == 1)
       vec.Set(0.0f, 1.0f, 0.0f);
 
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if segment of two projected points is valid.
+///
+/// Move slightly one of the points if by shifting it by no more than
+/// tolearance the segment can become acceptable.
+
 Bool_t TEveRhoZProjection::AcceptSegment(TEveVector& v1, TEveVector& v2,
                                          Float_t tolerance) const
 {
-   // Check if segment of two projected points is valid.
-   //
-   // Move slightly one of the points if by shifting it by no more than
-   // tolearance the segment can become acceptable.
-
    Float_t a = fProjectedCenter.fY;
    Bool_t val = kTRUE;
    if ((v1.fY <  a && v2.fY > a) || (v1.fY > a && v2.fY < a))
@@ -682,21 +683,21 @@ Bool_t TEveRhoZProjection::AcceptSegment(TEveVector& v1, TEveVector& v2,
    return val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return sub-space id for the point.
+/// 0 - upper half-space
+/// 1 - lowwer half-space
+
 Int_t TEveRhoZProjection::SubSpaceId(const TEveVector& v) const
 {
-   // Return sub-space id for the point.
-   // 0 - upper half-space
-   // 1 - lowwer half-space
-
    return v.fY > fProjectedCenter.fY ? 0 : 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if point is on sub-space boundrary.
+
 Bool_t TEveRhoZProjection::IsOnSubSpaceBoundrary(const TEveVector& v) const
 {
-   // Checks if point is on sub-space boundrary.
-
    return v.fY == fProjectedCenter.fY;
 }
 
@@ -711,23 +712,23 @@ Bool_t TEveRhoZProjection::IsOnSubSpaceBoundrary(const TEveVector& v) const
 
 ClassImp(TEveRPhiProjection);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveRPhiProjection::TEveRPhiProjection() :
    TEveProjection()
 {
-   // Constructor.
-
    fType    = kPT_RPhi;
    fGeoMode = kGM_Polygons;
    fName    = "RhoPhi";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project point.
+
 void TEveRPhiProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
                                       Float_t d, EPProc_e proc)
 {
-   // Project point.
-
    using namespace TMath;
 
    if (fDisplaceOrigin)
@@ -789,23 +790,23 @@ void TEveRPhiProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
 
 ClassImp(TEve3DProjection);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEve3DProjection::TEve3DProjection() :
    TEveProjection()
 {
-   // Constructor.
-
    fType    = kPT_3D;
    fGeoMode = kGM_Unknown;
    fName    = "3D";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project point.
+
 void TEve3DProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
                                     Float_t /*d*/, EPProc_e proc)
 {
-   // Project point.
-
    using namespace TMath;
 
    if (proc != kPP_Plane)

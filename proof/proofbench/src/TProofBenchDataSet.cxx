@@ -30,21 +30,21 @@
 
 ClassImp(TProofBenchDataSet)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TProofBenchDataSet::TProofBenchDataSet(TProof *proof)
 {
-   // Constructor
-
    fProof = proof ? proof : gProof;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release memory cache for dataset 'dset'
+/// Return 0 on success, -1 on error
+
 Int_t TProofBenchDataSet::ReleaseCache(const char *dset)
 {
-   // Release memory cache for dataset 'dset'
-   // Return 0 on success, -1 on error
-
    // Clear the cache
    TPBHandleDSType type(TPBHandleDSType::kReleaseCache);
    if (Handle(dset, &type) != 0) {
@@ -55,13 +55,13 @@ Int_t TProofBenchDataSet::ReleaseCache(const char *dset)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Physically remove the dataset 'dset', i.e. remove the dataset and the files
+/// it describes
+/// Return 0 on success, -1 on error
+
 Int_t TProofBenchDataSet::RemoveFiles(const char *dset)
 {
-   // Physically remove the dataset 'dset', i.e. remove the dataset and the files
-   // it describes
-   // Return 0 on success, -1 on error
-
    // Phyically remove the files
    TPBHandleDSType type(TPBHandleDSType::kRemoveFiles);
    if (Handle(dset, &type) != 0) {
@@ -77,12 +77,12 @@ Int_t TProofBenchDataSet::RemoveFiles(const char *dset)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the files of dataset 'dset' to another directory
+/// Return 0 on success, -1 on error
+
 Int_t TProofBenchDataSet::CopyFiles(const char *dset, const char *destdir)
 {
-   // Copy the files of dataset 'dset' to another directory
-   // Return 0 on success, -1 on error
-
    // Check input
    if (!destdir || (destdir && strlen(destdir) <= 0)) {
       Error("CopyFiles", "specifying a destination dir is mandatory!");
@@ -103,13 +103,13 @@ Int_t TProofBenchDataSet::CopyFiles(const char *dset, const char *destdir)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Physically remove the dataset 'dset', i.e. remove the dataset and the files
+/// it describes
+/// Return 0 on success, -1 on error
+
 Int_t TProofBenchDataSet::Handle(const char *dset, TObject *type)
 {
-   // Physically remove the dataset 'dset', i.e. remove the dataset and the files
-   // it describes
-   // Return 0 on success, -1 on error
-
    // Check input
    if (!dset || (dset && strlen(dset) <= 0)) {
       Error("Handle", "a valid dataset name is mandatory");

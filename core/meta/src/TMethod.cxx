@@ -33,13 +33,13 @@
 
 ClassImp(TMethod)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TMethod ctor. TMethods are constructed in TClass.
+/// Comment strings are pre-parsed to find out whether the method is
+/// a context-menu item.
+
 TMethod::TMethod(MethodInfo_t *info, TClass *cl) : TFunction(info)
 {
-   // Default TMethod ctor. TMethods are constructed in TClass.
-   // Comment strings are pre-parsed to find out whether the method is
-   // a context-menu item.
-
    fClass        = cl;
    fGetterMethod = 0;
    fSetterMethod = 0;
@@ -50,11 +50,11 @@ TMethod::TMethod(MethodInfo_t *info, TClass *cl) : TFunction(info)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TMethod::TMethod(const TMethod& orig) : TFunction(orig)
 {
-   // Copy ctor.
-
    fClass        = orig.fClass;
    fMenuItem     = orig.fMenuItem;
    fGetter       = orig.fGetter;
@@ -62,11 +62,11 @@ TMethod::TMethod(const TMethod& orig) : TFunction(orig)
    fSetterMethod = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TMethod& TMethod::operator=(const TMethod& rhs)
 {
-   // Assignment operator.
-
    if (this != &rhs) {
       TFunction::operator=(rhs);
       fClass        = rhs.fClass;
@@ -82,57 +82,57 @@ TMethod& TMethod::operator=(const TMethod& rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TMethod::~TMethod()
 {
-   // Cleanup.
-
    delete fGetterMethod;
    delete fSetterMethod;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clone method.
+
 TObject *TMethod::Clone(const char *newname) const
 {
-   // Clone method.
-
    TNamed *newobj = new TMethod(*this);
    if (newname && strlen(newname)) newobj->SetName(newname);
    return newobj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a comment string from the class declaration.
+
 const char *TMethod::GetCommentString()
 {
-   // Returns a comment string from the class declaration.
-
    return fInfo ? gCling->MethodInfo_Title(fInfo) : "";
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Using the CINT method arg information create a complete signature string.
+
 void TMethod::CreateSignature()
 {
-   // Using the CINT method arg information create a complete signature string.
-
    TFunction::CreateSignature();
 
    if (Property() & kIsConstMethod) fSignature += " const";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tries to guess DataMember from comment string
+/// and Method's name <==(only if 1 Argument!).
+/// If more then one argument=> returns pointer to the last argument.
+/// It also sets MethodArgs' pointers to point to specified data members.
+///
+/// The form of comment string defining arguments is:
+/// void XXX(Int_t x1, Float_t y2) //*ARGS={x1=>fX1,y2=>fY2}
+/// where fX1, fY2 are data fields in the same class.
+/// ("pointers" to data members)
+
 TDataMember *TMethod::FindDataMember()
 {
-   // Tries to guess DataMember from comment string
-   // and Method's name <==(only if 1 Argument!).
-   // If more then one argument=> returns pointer to the last argument.
-   // It also sets MethodArgs' pointers to point to specified data members.
-   //
-   // The form of comment string defining arguments is:
-   // void XXX(Int_t x1, Float_t y2) //*ARGS={x1=>fX1,y2=>fY2}
-   // where fX1, fY2 are data fields in the same class.
-   // ("pointers" to data members)
-
    Char_t *argstring = (char*)strstr(GetCommentString(),"*ARGS={");
 
    // the following statement has been commented (Rene). Not needed
@@ -257,25 +257,25 @@ TDataMember *TMethod::FindDataMember()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return call environment for the getter method in case this is a
+/// *TOGGLE method (for the context menu).
+
 TMethodCall *TMethod::GetterMethod()
 {
-   // Return call environment for the getter method in case this is a
-   // *TOGGLE method (for the context menu).
-
    if (!fGetterMethod && fMenuItem == kMenuToggle && fGetter != "" && fClass) {
       fGetterMethod = new TMethodCall(fClass, Getter(), "");
    }
    return fGetterMethod;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if this function object is pointing to a currently
+/// loaded function.  If a function is unloaded after the TMethod
+/// is created, the TMethod will be set to be invalid.
+
 Bool_t TMethod::IsValid()
 {
-   // Return true if this function object is pointing to a currently
-   // loaded function.  If a function is unloaded after the TMethod
-   // is created, the TMethod will be set to be invalid.
-
    // Register the transaction when checking the validity of the object.
    if (!fInfo && UpdateInterpreterStateMarker()) {
       DeclId_t newId = gInterpreter->GetFunction(fClass->GetClassInfo(), fName);
@@ -288,24 +288,24 @@ Bool_t TMethod::IsValid()
    return fInfo != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return call environment for this method in case this is a
+/// *TOGGLE method which takes a single boolean or integer argument.
+
 TMethodCall *TMethod::SetterMethod()
 {
-   // Return call environment for this method in case this is a
-   // *TOGGLE method which takes a single boolean or integer argument.
-
    if (!fSetterMethod && fMenuItem == kMenuToggle && fClass) {
       fSetterMethod = new TMethodCall(fClass, GetName(), "1");
    }
    return fSetterMethod;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns methodarg list and additionally updates fDataMember in TMethod by
+/// calling FindDataMember();
+
 TList *TMethod::GetListOfMethodArgs()
 {
-   // Returns methodarg list and additionally updates fDataMember in TMethod by
-   // calling FindDataMember();
-
    if (!fMethodArgs){
       TFunction::GetListOfMethodArgs();
       FindDataMember();
@@ -313,11 +313,11 @@ TList *TMethod::GetListOfMethodArgs()
    return fMethodArgs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the menu item as prescribed in the doctstring.
+
 void TMethod::SetMenuItem(const char *docstring)
 {
-   // Set the menu item as prescribed in the doctstring.
-
    if (docstring && strstr(docstring, "*TOGGLE")) {
       fMenuItem = kMenuToggle;
       const char *s;
@@ -335,14 +335,14 @@ void TMethod::SetMenuItem(const char *docstring)
             fMenuItem = kMenuNoMenu;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the TMethod to reflect the new info.
+///
+/// This can be used to implement unloading (info == 0) and then reloading
+/// (info being the 'new' decl address).
+
 Bool_t TMethod::Update(MethodInfo_t *info)
 {
-   // Update the TMethod to reflect the new info.
-   //
-   // This can be used to implement unloading (info == 0) and then reloading
-   // (info being the 'new' decl address).
-
    if (TFunction::Update(info)) {
       delete fGetterMethod; fGetterMethod = 0;
       delete fSetterMethod; fSetterMethod = 0;

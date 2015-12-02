@@ -37,11 +37,12 @@
 
 ClassImp(TMVA::CrossEntropy)
    
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Cross Entropy defined as
+///  -p log (p) - (1-p)log(1-p);     p=purity = s/(s+b)                       
+
 Double_t  TMVA::CrossEntropy::GetSeparationIndex( const Double_t &s, const Double_t &b )
 {
-   //  Cross Entropy defined as
-   //  -p log (p) - (1-p)log(1-p);     p=purity = s/(s+b)                       
    if (s+b <= 0) return 0;
    Double_t p = s/(s+b);
    if (p<=0 || p >=1) return 0;

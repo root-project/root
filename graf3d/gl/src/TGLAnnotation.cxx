@@ -41,7 +41,8 @@ ClassImp(TGLAnnotation);
 Color_t  TGLAnnotation::fgBackColor = kAzure + 10;
 Color_t  TGLAnnotation::fgTextColor = kOrange;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLAnnotation::TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy) :
    TGLOverlayElement(TGLOverlayElement::kAnnotation),
 
@@ -71,7 +72,8 @@ TGLAnnotation::TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t po
    fParent = (TGLViewer*)parent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLAnnotation::TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy, TGLVector3 ref) :
    TGLOverlayElement(TGLOverlayElement::kAnnotation),
    fPosX(posx), fPosY(posy),
@@ -101,23 +103,23 @@ TGLAnnotation::TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t po
    fParent = (TGLViewer*)parent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLAnnotation::~TGLAnnotation()
 {
-   // Destructor.
-
    fParent->RemoveOverlayElement(this);
    delete fMainFrame;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle overlay event.
+/// Return TRUE if event was handled.
+
 Bool_t TGLAnnotation::Handle(TGLRnrCtx&          rnrCtx,
                              TGLOvlSelectRecord& selRec,
                              Event_t*            event)
 {
-   // Handle overlay event.
-   // Return TRUE if event was handled.
-
    if (selRec.GetN() < 2) return kFALSE;
    Int_t recID = selRec.GetItem(1);
    switch (event->fType)
@@ -188,20 +190,20 @@ Bool_t TGLAnnotation::Handle(TGLRnrCtx&          rnrCtx,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has entered overlay area.
+
 Bool_t TGLAnnotation::MouseEnter(TGLOvlSelectRecord& /*rec*/)
 {
-   // Mouse has entered overlay area.
-
    fActive = kTRUE;
    return kTRUE;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has left overlay area.
+
 void TGLAnnotation::MouseLeave()
 {
-   // Mouse has left overlay area.
-
    fActive = kFALSE;
 }
 
@@ -469,23 +471,23 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
    glPopAttrib();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns transparecy of annotation outline.
+/// If annotation is selected enforce visiblity of outline.
+
 Char_t TGLAnnotation::GetLineTransparency() const
 {
-   // Returns transparecy of annotation outline.
-   // If annotation is selected enforce visiblity of outline.
-
    if (fActive)
       return TMath::Min(70, fTransparency);
    else
       return fTransparency;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show the annotation editor.
+
 void TGLAnnotation::MakeEditor()
 {
-   // Show the annotation editor.
-
    if (fMainFrame == 0)
    {
       fMainFrame = new TGMainFrame(gClient->GetRoot(), 1000, 1000);
@@ -527,19 +529,19 @@ void TGLAnnotation::MakeEditor()
    fMainFrame->MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the annotation editor.
+
 void TGLAnnotation::CloseEditor()
 {
-   // Close the annotation editor.
-
    fMainFrame->UnmapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Modify the annotation text from the text-edit widget.
+
 void TGLAnnotation::UpdateText()
 {
-   // Modify the annotation text from the text-edit widget.
-
    fText = fTextEdit->GetText()->AsString();
    fMainFrame->UnmapWindow();
    fParent->RequestDraw();

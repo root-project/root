@@ -29,53 +29,53 @@
 
 ClassImp(TEvePolygonSetProjectedGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TEvePolygonSetProjectedGL::TEvePolygonSetProjectedGL() : TGLObject()
 {
-   // Constructor
-
    // fDLCache = kFALSE; // Disable DL.
    fMultiColor = kTRUE; // Potentially false, reset in DirectDraw().
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEvePolygonSetProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEvePolygonSetProjected>(obj);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup bounding-box information.
+
 void TEvePolygonSetProjectedGL::SetBBox()
 {
-   // Setup bounding-box information.
-
    SetAxisAlignedBBox(fM->AssertBBox());
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw function for TEvePolygonSetProjectedGL.
+/// Skips line-pass of outline mode.
+
 void TEvePolygonSetProjectedGL::Draw(TGLRnrCtx& rnrCtx) const
 {
-   // Draw function for TEvePolygonSetProjectedGL.
-   // Skips line-pass of outline mode.
-
    if (rnrCtx.IsDrawPassOutlineLine())
       return;
 
    TGLObject::Draw(rnrCtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw polygons outline.
+
 void TEvePolygonSetProjectedGL::DrawOutline() const
 {
-   // Draw polygons outline.
-
    if (fM->fPols.size() == 0) return;
 
    Bool_t done_p = kFALSE;
@@ -122,11 +122,11 @@ void TEvePolygonSetProjectedGL::DrawOutline() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do GL rendering.
+
 void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 {
-   // Do GL rendering.
-
    if (fM->fPols.size() == 0) return;
 
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
@@ -192,11 +192,11 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
    glPopAttrib();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw polygons in highlight mode.
+
 void TEvePolygonSetProjectedGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl) const
 {
-   // Draw polygons in highlight mode.
-
    if (lvl < 0) lvl = pshp->GetSelected();
 
    glColor4ubv(rnrCtx.ColorSet().Selection(lvl).CArr());

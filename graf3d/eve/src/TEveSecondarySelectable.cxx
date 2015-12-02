@@ -33,30 +33,31 @@
 
 ClassImp(TEveSecondarySelectable);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveSecondarySelectable::TEveSecondarySelectable() :
    fAlwaysSecSelect(kFALSE)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process secondary GL selection and populate selected set accordingly.
+
 void TEveSecondarySelectable::ProcessGLSelection(TGLSelectRecord& rec)
 {
-   // Process secondary GL selection and populate selected set accordingly.
-
    if (rec.GetHighlight())
       ProcessGLSelectionInternal(rec, fHighlightedSet);
    else
       ProcessGLSelectionInternal(rec, fSelectedSet);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process secondary GL selection and populate given set accordingly.
+
 void TEveSecondarySelectable::ProcessGLSelectionInternal(TGLSelectRecord& rec,
                                                          SelectionSet_t& sset)
 {
-   // Process secondary GL selection and populate given set accordingly.
-
    Int_t id = (rec.GetN() > 1) ? (Int_t) rec.GetItem(1) : -1;
 
    if (sset.empty())

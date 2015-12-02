@@ -8,7 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /**
    HypoTestInverter class for performing an hypothesis test inversion by scanning the hypothesis test results of an 
   HypoTestCalculator  for various values of the parameter of interest. By looking at the confidence level curve of 
@@ -317,7 +318,13 @@ HypoTestInverter::HypoTestInverter( AsymptoticCalculator& hc,
 }
 
 
-//_________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a model for B model and a model for S+B. 
+/// An HypoTestCalculator (Hybrid of Frequentis) will be created using the 
+/// S+B model as the null and the B model as the alternate
+/// If no variable to scan are given they are assumed to be the first variable
+/// from the parameter of interests of the null model
+
 HypoTestInverter::HypoTestInverter( RooAbsData& data, ModelConfig &sbModel, ModelConfig &bModel,
 				    RooRealVar * scannedVariable,  ECalculatorType type, double size) :
    fTotalToysRun(0),
@@ -333,12 +340,6 @@ HypoTestInverter::HypoTestInverter( RooAbsData& data, ModelConfig &sbModel, Mode
    fNBins(0), fXmin(1), fXmax(1),
    fNumErr(0)
 {
-   // Constructor from a model for B model and a model for S+B. 
-   // An HypoTestCalculator (Hybrid of Frequentis) will be created using the 
-   // S+B model as the null and the B model as the alternate
-   // If no variable to scan are given they are assumed to be the first variable
-   // from the parameter of interests of the null model
-
    if(fCalcType==kFrequentist) fHC.reset(new FrequentistCalculator(data, bModel, sbModel)); 
    if(fCalcType==kHybrid) fHC.reset( new HybridCalculator(data, bModel, sbModel)) ; 
    if(fCalcType==kAsymptotic) fHC.reset( new AsymptoticCalculator(data, bModel, sbModel)); 

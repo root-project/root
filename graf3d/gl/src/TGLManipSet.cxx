@@ -46,21 +46,21 @@ TGLManipSet::TGLManipSet() :
    fManip[kRotate] = new TGLRotateManip;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLManipSet::~TGLManipSet()
 {
-   // Destructor.
-
    for (Int_t i=kTrans; i<kEndType; ++i)
       delete fManip[i];
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set phys-shape, override of virtual from TGLPShapeRef.
+/// Forward to all managed manipulators.
+
 void TGLManipSet::SetPShape(TGLPhysicalShape* shape)
 {
-   // Set phys-shape, override of virtual from TGLPShapeRef.
-   // Forward to all managed manipulators.
-
    TGLPShapeRef::SetPShape(shape);
    for (Int_t i=kTrans; i<kEndType; ++i)
       fManip[i]->Attach(shape);
@@ -69,26 +69,26 @@ void TGLManipSet::SetPShape(TGLPhysicalShape* shape)
 /**************************************************************************/
 /**************************************************************************/
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has enetered this element.
+/// Always accept.
+
 Bool_t TGLManipSet::MouseEnter(TGLOvlSelectRecord& /*selRec*/)
 {
-   // Mouse has enetered this element.
-   // Always accept.
-
    TGLManip* manip = GetCurrentManip();
    manip->SetActive(kFALSE);
    manip->SetSelectedWidget(0);
    return kTRUE;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle overlay event.
+/// Return TRUE if event was handled.
+
 Bool_t TGLManipSet::Handle(TGLRnrCtx&          rnrCtx,
                            TGLOvlSelectRecord& selRec,
                            Event_t*            event)
 {
-   // Handle overlay event.
-   // Return TRUE if event was handled.
-
    TGLManip* manip = GetCurrentManip();
 
    switch (event->fType)
@@ -137,21 +137,21 @@ Bool_t TGLManipSet::Handle(TGLRnrCtx&          rnrCtx,
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has left the element.
+
 void TGLManipSet::MouseLeave()
 {
-   // Mouse has left the element.
-
    TGLManip* manip = GetCurrentManip();
    manip->SetActive(kFALSE);
    manip->SetSelectedWidget(0);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render the manipulator and bounding-box.
+
 void TGLManipSet::Render(TGLRnrCtx& rnrCtx)
 {
-   // Render the manipulator and bounding-box.
-
    if (fPShape == 0)
       return;
 
@@ -176,11 +176,11 @@ void TGLManipSet::Render(TGLRnrCtx& rnrCtx)
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set manipulator type, range checked.
+
 void TGLManipSet::SetManipType(Int_t type)
 {
-   // Set manipulator type, range checked.
-
    if (type < 0 || type >= kEndType)
       return;
    fType = (EManip) type;

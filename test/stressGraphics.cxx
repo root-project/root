@@ -173,7 +173,8 @@ char      gLine[80];
 
 
 #ifndef __CINT__
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int main(int argc, char *argv[])
 {
    gROOT->SetBatch();
@@ -225,11 +226,11 @@ int main(int argc, char *argv[])
 #endif
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run all graphics stress tests.
+
 void stressGraphics(Int_t verbose = 0)
 {
-   // Run all graphics stress tests.
-
    gErrorIgnoreLevel = 9999;
    gROOT->SetStyle("Classic");
 
@@ -430,12 +431,12 @@ void stressGraphics(Int_t verbose = 0)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print test program number and its title
+
 Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
                   Int_t res, Int_t ref, Int_t err)
 {
-   // Print test program number and its title
-
    if (!gOptionR) {
       if (id>0) {
          sprintf(gLine,"Test %2d: %s",id,title.Data());
@@ -474,24 +475,24 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the size of filename
+
 Int_t FileSize (char *filename)
 {
-   // Return the size of filename
-
    FileStat_t fs;
    gSystem->GetPathInfo(filename, fs);
    return (Int_t)fs.fSize;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Analyse the PS file "filename" and return the number of character in the
+/// meaningful part of the file. The variable part (date etc..) are not
+/// counted.
+
 Int_t AnalysePS(const TString &filename)
 {
-   // Analyse the PS file "filename" and return the number of character in the
-   // meaningful part of the file. The variable part (date etc..) are not
-   // counted.
-
    Bool_t counting = kFALSE;
    Int_t count = 0;
 
@@ -515,12 +516,12 @@ Int_t AnalysePS(const TString &filename)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start Test:
+/// Open the TCanvas C and set the acceptable error (number of characters)
+
 TCanvas *StartTest(Int_t w, Int_t h)
 {
-   // Start Test:
-   // Open the TCanvas C and set the acceptable error (number of characters)
-
    gTestNum++;
    gStyle->Reset();
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject("C");
@@ -532,13 +533,13 @@ TCanvas *StartTest(Int_t w, Int_t h)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Report 1:
+/// Draw the canvas generate as PostScript, count the number of characters in
+/// the PS file and compare the result with the reference value.
+
 void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
 {
-   // Report 1:
-   // Draw the canvas generate as PostScript, count the number of characters in
-   // the PS file and compare the result with the reference value.
-
    gErrorIgnoreLevel = 9999;
    sprintf(outfile,"sg1_%2.2d.ps",gTestNum);
 
@@ -596,11 +597,11 @@ void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate the C code conresponding to the canvas C.
+
 void DoCcode(TCanvas *C)
 {
-   // Generate the C code conresponding to the canvas C.
-
    gErrorIgnoreLevel = 9999;
 
    sprintf(gCfile,"sg%2.2d.C",gTestNum);
@@ -612,14 +613,14 @@ void DoCcode(TCanvas *C)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Report 2:
+/// Draw the canvas generate as .C, generate the corresponding PostScript
+/// file (using gPad), count the number of characters in it and compare the
+/// result with the reference value.
+
 void TestReport2(Int_t IPS)
 {
-   // Report 2:
-   // Draw the canvas generate as .C, generate the corresponding PostScript
-   // file (using gPad), count the number of characters in it and compare the
-   // result with the reference value.
-
    sprintf(outfile,"sg2_%2.2d.ps",gTestNum);
 
    gErrorIgnoreLevel = 9999;
@@ -648,11 +649,11 @@ void TestReport2(Int_t IPS)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test TLine.
+
 void tline()
 {
-   // Test TLine.
-
    TCanvas *C = StartTest(800,800);
 
    TLine *l1 = new TLine(0.1,0.1,0.9,0.1);
@@ -680,11 +681,11 @@ void tline()
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test TMarker
+
 void tmarker()
 {
-   // Test TMarker
-
    TCanvas *C = StartTest(100,800);
 
    C->Range(0,0,1,1);
@@ -709,11 +710,11 @@ void tmarker()
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxiliary function used by "tmarker"
+
 void tmarker_draw(Double_t x, Double_t y, Int_t mt, Double_t d)
 {
-   // Auxiliary function used by "tmarker"
-
    double dy=d/3;
    TMarker *m  = new TMarker(x+0.1, y, mt);
    TText   *t  = new TText(x-0.1, y, Form("%d",mt));
@@ -734,11 +735,11 @@ void tmarker_draw(Double_t x, Double_t y, Int_t mt, Double_t d)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test TPolyLine
+
 void tpolyline()
 {
-   // Test TPolyLine
-
    TCanvas *C = StartTest(700,500);
 
    C->Range(0,30,11,650);
@@ -756,11 +757,11 @@ void tpolyline()
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test Patterns
+
 void patterns()
 {
-   // Test Patterns
-
    TCanvas *C = StartTest(700,900);
 
    C->Range(0,0,1,1);
@@ -808,11 +809,11 @@ void patterns()
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxiliary function used by "patterns"
+
 void patterns_box(Int_t pat, Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
-   // Auxiliary function used by "patterns"
-
    TBox b;
    b.SetFillColor(1);
    b.SetFillStyle(pat);
@@ -834,11 +835,11 @@ void patterns_box(Int_t pat, Double_t x1, Double_t y1, Double_t x2, Double_t  y2
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 1st TText test.
+
 void ttext1()
 {
-   // 1st TText test.
-
    TCanvas *C = StartTest(900,500);
 
    C->Range(0,0,1,1);
@@ -897,11 +898,11 @@ void ttext1()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 2nd TText test. A very long text string.
+
 void ttext2()
 {
-   // 2nd TText test. A very long text string.
-
    TCanvas *C = StartTest(600,600);
 
    TText t(0.001,0.5,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
@@ -914,11 +915,11 @@ void ttext2()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 1st TLatex test.
+
 void tlatex1()
 {
-   // 1st TLatex test.
-
    TCanvas *C = StartTest(600,700);
 
    TLatex l;
@@ -936,11 +937,11 @@ void tlatex1()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 2nd TLatex test.
+
 void tlatex2()
 {
-   // 2nd TLatex test.
-
    TCanvas *C = StartTest(700,500);
 
    TLatex l;
@@ -957,11 +958,11 @@ void tlatex2()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 3rd TLatex test.
+
 void tlatex3()
 {
-   // 3rd TLatex test.
-
    TCanvas *C = StartTest(700,500);
 
    TPaveText pt(.05,.1,.95,.8);
@@ -982,11 +983,11 @@ void tlatex3()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 4th TLatex test.
+
 void tlatex4()
 {
-   // 4th TLatex test.
-
    TCanvas *C = StartTest(600,700);
 
    TLatex l;
@@ -1061,11 +1062,11 @@ void tlatex4()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 5th TLatex test.
+
 void tlatex5()
 {
-   // 5th TLatex test.
-
    TCanvas *C = StartTest(600,600);
 
    TLatex l;
@@ -1165,11 +1166,11 @@ void tlatex5()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Text kerning.
+
 void kerning()
 {
-   // Text kerning.
-
    TCanvas *C = StartTest(1000, 700);
 
    for (Int_t i = 0;i < 25;i++) {
@@ -1190,11 +1191,11 @@ void kerning()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TLatex commands #kern, #lower, #it and #bf
+
 void itbf()
 {
-   // TLatex commands #kern, #lower, #it and #bf
-
    TCanvas *C = StartTest(700, 500);
 
    gStyle->SetTextFont(132);
@@ -1211,7 +1212,8 @@ void itbf()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void tmathtext()
 {
    TCanvas *C = StartTest(700, 500);
@@ -1234,11 +1236,11 @@ void tmathtext()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transparent pad.
+
 void transpad()
 {
-   // Transparent pad.
-
    TCanvas *C = StartTest(700,500);
 
    TPad *pad1 = new TPad("pad1","",0,0,1,1);
@@ -1291,11 +1293,11 @@ void transpad()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stat and fit parameters with errors.
+
 void statfitparam ()
 {
-   // Stat and fit parameters with errors.
-
    TCanvas *C = StartTest(800,500);
 
    C->Divide(3,2);
@@ -1350,11 +1352,11 @@ void statfitparam ()
    TestReport2();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 1st TGaxis test.
+
 void tgaxis1()
 {
-   // 1st TGaxis test.
-
    TCanvas *C = StartTest(700,500);
 
    C->Range(-10,-1,10,1);
@@ -1397,11 +1399,11 @@ void tgaxis1()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 2nd TGaxis test.
+
 void tgaxis2()
 {
-   // 2nd TGaxis test.
-
    TCanvas *C = StartTest(600,700);
 
    C->Range(-10,-1,10,1);
@@ -1437,11 +1439,11 @@ void tgaxis2()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 3rd TGaxis test.
+
 void tgaxis3()
 {
-   // 3rd TGaxis test.
-
    TCanvas *C = StartTest(700,900);
 
    time_t script_time;
@@ -1504,11 +1506,11 @@ void tgaxis3()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 4th TGaxis test.
+
 void tgaxis4()
 {
-   // 4th TGaxis test.
-
    TCanvas *C = StartTest(600,700);
 
    TDatime T0(2003,1,1,0,0,0);
@@ -1536,11 +1538,11 @@ void tgaxis4()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 5th TGaxis test.
+
 void tgaxis5()
 {
-   // 5th TGaxis test.
-
    TCanvas *C = StartTest(800,570);
 
    double f = 1.8;
@@ -1623,11 +1625,11 @@ void tgaxis5()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// function used by tgaxis5
+
 TString stime(time_t* t, bool utc, bool display_time_zone)
 {
-   // function used by tgaxis5
-
    struct tm* tt;
    if (utc) tt = gmtime(t);
    else     tt = localtime(t);
@@ -1638,11 +1640,11 @@ TString stime(time_t* t, bool utc, bool display_time_zone)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Alphanumeric labels in a 1-d histogram
+
 void labels1()
 {
-   // Alphanumeric labels in a 1-d histogram
-
    TCanvas *C = StartTest(900,500);
 
    const Int_t nx = 20;
@@ -1693,11 +1695,11 @@ void labels1()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TEllipse test.
+
 void tellipse()
 {
-   // TEllipse test.
-
    TCanvas *C = StartTest(700,800);
 
    C->Range(0,0,1,1);
@@ -1729,11 +1731,11 @@ void tellipse()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Feynman diagrams test.
+
 void feynman()
 {
-   // Feynman diagrams test.
-
    TCanvas *C = StartTest(600,300);
 
    C->Range(0, 0, 140, 60);
@@ -1783,11 +1785,11 @@ void feynman()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 1st TGraph test.
+
 void tgraph1()
 {
-   // 1st TGraph test.
-
    TCanvas *C = StartTest(700,500);
 
    C->SetFillColor(42);
@@ -1817,11 +1819,11 @@ void tgraph1()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 2nd TGraph test.
+
 void tgraph2()
 {
-   // 2nd TGraph test.
-
    TCanvas *C = StartTest(700,500);
 
    C->SetGrid();
@@ -1862,11 +1864,11 @@ void tgraph2()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 3rd TGraph test.
+
 void tgraph3()
 {
-   // 3rd TGraph test.
-
    TCanvas *C = StartTest(800,400);
 
    C->Divide(2,1);
@@ -1912,11 +1914,11 @@ void tgraph3()
    TestReport2();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TH2Poly test.
+
 void th2poly()
 {
-   // TH2Poly test.
-
    TCanvas *C = StartTest(800,400);
 
    Int_t i;
@@ -1981,11 +1983,11 @@ void th2poly()
    TestReport2();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TMultigraph and TGraphErrors test
+
 void tmultigraph1()
 {
-   // TMultigraph and TGraphErrors test
-
    TCanvas *C = StartTest(700,500);
 
    gStyle->SetOptFit();
@@ -2027,11 +2029,11 @@ void tmultigraph1()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// All Kind of TMultigraph test
+
 void tmultigraph2()
 {
-   // All Kind of TMultigraph test
-
    TCanvas *C = StartTest(800,800);
 
    gStyle->SetOptFit();
@@ -2137,11 +2139,11 @@ void tmultigraph2()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 1st 2D options Test
+
 void options2d1()
 {
-   // 1st 2D options Test
-
    TCanvas *C = StartTest(800,600);
 
    gStyle->SetOptStat(0);
@@ -2174,11 +2176,11 @@ void options2d1()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 2nd 2D options Test
+
 void options2d2()
 {
-   // 2nd 2D options Test
-
    TCanvas *C = StartTest(800,600);
 
    TPaveLabel pl2;
@@ -2194,11 +2196,11 @@ void options2d2()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 3rd 2D options Test
+
 void options2d3()
 {
-   // 3rd 2D options Test
-
    TCanvas *C = StartTest(800,600);
 
    TPaveLabel pl3;
@@ -2225,11 +2227,11 @@ void options2d3()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 4th 2D options Test
+
 void options2d4()
 {
-   // 4th 2D options Test
-
    TCanvas *C = StartTest(800,600);
 
    TPaveLabel pl4;
@@ -2254,11 +2256,11 @@ void options2d4()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 5th 2D options Test
+
 void options2d5()
 {
-   // 5th 2D options Test
-
    TCanvas *C = StartTest(800,600);
 
    TPaveLabel pl5;
@@ -2282,11 +2284,11 @@ void options2d5()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 5th 2D options Test
+
 void earth()
 {
-   // 5th 2D options Test
-
    TCanvas *C = StartTest(1000,800);
 
    gStyle->SetPalette(kBird);
@@ -2330,11 +2332,11 @@ void earth()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 1st TGraph2D Test
+
 void tgraph2d1()
 {
-   // 1st TGraph2D Test
-
    TCanvas *C = StartTest(600,600);
 
    Double_t P = 5.;
@@ -2378,11 +2380,11 @@ void tgraph2d1()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 2nd TGraph2D Test
+
 void tgraph2d2()
 {
-   // 2nd TGraph2D Test
-
    TCanvas *C = StartTest(600,600);
 
    gStyle->SetPadBorderMode(0);
@@ -2419,11 +2421,11 @@ void tgraph2d2()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 3rd TGraph2D Test
+
 void tgraph2d3()
 {
-   // 3rd TGraph2D Test
-
    TCanvas *C = StartTest(600,600);
 
    gStyle->SetPadBorderMode(0);
@@ -2459,11 +2461,11 @@ void tgraph2d3()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 1st complex drawing and TPad test
+
 void ntuple1()
 {
-   // 1st complex drawing and TPad test
-
    TCanvas *C = StartTest(700,780);
 
    TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.52,0.48,0.98,21);
@@ -2531,11 +2533,11 @@ void ntuple1()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 2nd complex drawing and TPad test
+
 void quarks()
 {
-   // 2nd complex drawing and TPad test
-
    TCanvas *C = StartTest(630,760);
 
    C->SetFillColor(kBlack);
@@ -2606,11 +2608,11 @@ void quarks()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TImage test
+
 void timage()
 {
-   // TImage test
-
    TCanvas *C = StartTest(800,800);
 
    TImage *img = TImage::Open("$(ROOTSYS)/tutorials/image/rose512.jpg");
@@ -2690,11 +2692,11 @@ void zoomtf1()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Zoom/UnZoom a fitted histogram
+
 void zoomfit()
 {
-   // Zoom/UnZoom a fitted histogram
-
    TCanvas *C = StartTest(800,800);
 
    TH1 *hpx = (TH1*)gHsimple->Get("hpx");
@@ -2712,11 +2714,11 @@ void zoomfit()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ntuple drawing with alphanumeric variables
+
 void hbars()
 {
-   // Ntuple drawing with alphanumeric variables
-
    TCanvas *C = StartTest(700,800);
 
    TTree *T = (TTree*)gCernstaff->Get("T");
@@ -2758,11 +2760,11 @@ void hbars()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parallel Coordinates
+
 void parallelcoord()
 {
-   // Parallel Coordinates
-
    TCanvas *C = StartTest(800,700);
 
    TNtuple *ntuple = (TNtuple*)gHsimple->Get("ntuple");
@@ -2783,11 +2785,11 @@ void parallelcoord()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a pad and clone it
+
 void clonepad()
 {
-   // Draw a pad and clone it
-
    TCanvas *C = StartTest(700,500);
 
    TH1 *hpxpy = (TH1*)gHsimple->Get("hpxpy");
@@ -2800,11 +2802,11 @@ void clonepad()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Needed for the "waves" test
+
 Double_t interference( Double_t *x, Double_t *par)
 {
-   // Needed for the "waves" test
-
    Double_t x_p2 = x[0] * x[0];
    Double_t d_2 = 0.5 * par[2];
    Double_t ym_p2 = (x[1] - d_2) * (x[1] - d_2);
@@ -2816,11 +2818,11 @@ Double_t interference( Double_t *x, Double_t *par)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Needed for the "waves" test
+
 Double_t result( Double_t *x, Double_t *par)
 {
-   // Needed for the "waves" test
-
    Double_t xint[2];
    Double_t  maxintens = 0, xcur = 14;
    Double_t dlambda = 0.1 * par[1];
@@ -2835,11 +2837,11 @@ Double_t result( Double_t *x, Double_t *par)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraph, TArc, TPalette and TColor
+
 void waves()
 {
-   // TGraph, TArc, TPalette and TColor
-
    TF2 * finter;
    Double_t d = 3;
    Double_t lambda = 1;
@@ -2941,7 +2943,8 @@ void waves()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void cleanup()
 {
 }

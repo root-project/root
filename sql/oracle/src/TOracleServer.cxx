@@ -77,14 +77,14 @@ const char* TOracleServer::fgDatimeFormat = "MM/DD/YYYY, HH24:MI:SS";
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), method); \
    }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a connection to a Oracle DB server. The db arguments should be
+/// of the form "oracle://connection_identifier[/<database>]", e.g.:
+/// "oracle://cmscald.fnal.gov/test". The uid is the username and pw
+/// the password that should be used for the connection.
+
 TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
 {
-   // Open a connection to a Oracle DB server. The db arguments should be
-   // of the form "oracle://connection_identifier[/<database>]", e.g.:
-   // "oracle://cmscald.fnal.gov/test". The uid is the username and pw
-   // the password that should be used for the connection.
-
    fEnv = 0;
    fConn = 0;
 
@@ -141,21 +141,21 @@ TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
    MakeZombie();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection to Oracle DB server.
+
 TOracleServer::~TOracleServer()
 {
-   // Close connection to Oracle DB server.
-
    if (IsConnected())
       Close();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection to Oracle DB server.
+
 void TOracleServer::Close(Option_t *)
 {
-   // Close connection to Oracle DB server.
-
    ClearError();
 
    try {
@@ -168,7 +168,8 @@ void TOracleServer::Close(Option_t *)
    fPort = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSQLStatement *TOracleServer::Statement(const char *sql, Int_t niter)
 {
    CheckConnect("Statement",0);
@@ -190,12 +191,12 @@ TSQLStatement *TOracleServer::Statement(const char *sql, Int_t niter)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute SQL command. Result object must be deleted by the user.
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+
 TSQLResult *TOracleServer::Query(const char *sql)
 {
-   // Execute SQL command. Result object must be deleted by the user.
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-
    CheckConnect("Query",0);
 
    if (!sql || !*sql) {
@@ -224,12 +225,12 @@ TSQLResult *TOracleServer::Query(const char *sql)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute sql command wich does not produce any result set.
+/// Return kTRUE if successful
+
 Bool_t TOracleServer::Exec(const char* sql)
 {
-   // Execute sql command wich does not produce any result set.
-   // Return kTRUE if successful
-
    CheckConnect("Exec", kFALSE);
 
    if (!sql || !*sql) {
@@ -254,14 +255,14 @@ Bool_t TOracleServer::Exec(const char* sql)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all tables in the specified database. Wild is for wildcarding
+/// "t%" list all tables starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TOracleServer::GetTables(const char *dbname, const char * /*wild*/)
 {
-   // List all tables in the specified database. Wild is for wildcarding
-   // "t%" list all tables starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    // In Oracle 9 and above, table is accessed in schema.table format.
    // GetTables returns tables in all schemas accessible for the user.
    // Assumption: table ALL_OBJECTS is accessible for the user, which is true in Oracle 10g
@@ -278,7 +279,8 @@ TSQLResult *TOracleServer::GetTables(const char *dbname, const char * /*wild*/)
    return Query(sqlstr.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TList* TOracleServer::GetTablesList(const char* wild)
 {
    CheckConnect("GetTablesList",0);
@@ -310,12 +312,12 @@ TList* TOracleServer::GetTablesList(const char* wild)
    return lst;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produces SQL table info
+/// Object must be deleted by user
+
 TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
 {
-   // Produces SQL table info
-   // Object must be deleted by user
-
    CheckConnect("GetTableInfo",0);
 
    if ((tablename==0) || (*tablename==0)) return 0;
@@ -428,15 +430,15 @@ TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
    return new TSQLTableInfo(tablename, lst);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all columns in specified table in the specified database.
+/// Wild is for wildcarding "t%" list all columns starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TOracleServer::GetColumns(const char * /*dbname*/, const char *tablename,
                                       const char * wild)
 {
-   // List all columns in specified table in the specified database.
-   // Wild is for wildcarding "t%" list all columns starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    CheckConnect("GetColumns",0);
 
 //  make no sense, while method is not implemented
@@ -455,84 +457,84 @@ TSQLResult *TOracleServer::GetColumns(const char * /*dbname*/, const char *table
    return Query(sql);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select a database. Returns 0 if successful, non-zero otherwise.
+/// NOT IMPLEMENTED.
+
 Int_t TOracleServer::SelectDataBase(const char * /*dbname*/)
 {
-   // Select a database. Returns 0 if successful, non-zero otherwise.
-   // NOT IMPLEMENTED.
-
    CheckConnect("SelectDataBase", -1);
 
    // do nothing and return success code
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all available databases. Wild is for wildcarding "t%" list all
+/// databases starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+/// NOT IMPLEMENTED.
+
 TSQLResult *TOracleServer::GetDataBases(const char * /*wild*/)
 {
-   // List all available databases. Wild is for wildcarding "t%" list all
-   // databases starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-   // NOT IMPLEMENTED.
-
    CheckConnect("GetDataBases",0);
 
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a database. Returns 0 if successful, non-zero otherwise.
+/// NOT IMPLEMENTED.
+
 Int_t TOracleServer::CreateDataBase(const char * /*dbname*/)
 {
-   // Create a database. Returns 0 if successful, non-zero otherwise.
-   // NOT IMPLEMENTED.
-
    CheckConnect("CreateDataBase",-1);
 
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drop (i.e. delete) a database. Returns 0 if successful, non-zero
+/// otherwise.
+/// NOT IMPLEMENTED.
+
 Int_t TOracleServer::DropDataBase(const char * /*dbname*/)
 {
-   // Drop (i.e. delete) a database. Returns 0 if successful, non-zero
-   // otherwise.
-   // NOT IMPLEMENTED.
-
    CheckConnect("DropDataBase",-1);
 
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reload permission tables. Returns 0 if successful, non-zero
+/// otherwise. User must have reload permissions.
+/// NOT IMPLEMENTED.
+
 Int_t TOracleServer::Reload()
 {
-   // Reload permission tables. Returns 0 if successful, non-zero
-   // otherwise. User must have reload permissions.
-   // NOT IMPLEMENTED.
-
    CheckConnect("Reload", -1);
 
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shutdown the database server. Returns 0 if successful, non-zero
+/// otherwise. User must have shutdown permissions.
+/// NOT IMPLEMENTED.
+
 Int_t TOracleServer::Shutdown()
 {
-   // Shutdown the database server. Returns 0 if successful, non-zero
-   // otherwise. User must have shutdown permissions.
-   // NOT IMPLEMENTED.
-
    CheckConnect("Shutdown", -1);
 
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return Oracle server version info.
+
 const char *TOracleServer::ServerInfo()
 {
-   // Return Oracle server version info.
-
    CheckConnect("ServerInfo", 0);
 
    fInfo = "Oracle";
@@ -553,21 +555,21 @@ const char *TOracleServer::ServerInfo()
    return fInfo.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call Commit() to submit all chanes, done before.
+/// Commit() ot Rollback() must be used to complete submitted actions or cancel them
+
 Bool_t TOracleServer::StartTransaction()
 {
-   // Call Commit() to submit all chanes, done before.
-   // Commit() ot Rollback() must be used to complete submitted actions or cancel them
-
    return Commit();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Commits all changes made since the previous Commit() or Rollback()
+/// Return kTRUE if OK
+
 Bool_t TOracleServer::Commit()
 {
-   // Commits all changes made since the previous Commit() or Rollback()
-   // Return kTRUE if OK
-
    CheckConnect("Commit", kFALSE);
 
    try {
@@ -578,12 +580,12 @@ Bool_t TOracleServer::Commit()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drops all changes made since the previous Commit() or Rollback()
+/// Return kTRUE if OK
+
 Bool_t TOracleServer::Rollback()
 {
-   // Drops all changes made since the previous Commit() or Rollback()
-   // Return kTRUE if OK
-
    CheckConnect("Rollback", kFALSE);
 
    try {
@@ -594,20 +596,20 @@ Bool_t TOracleServer::Rollback()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set format for converting timestamps or date field into string
+/// default value is "MM/DD/YYYY, HH24:MI:SS"
+
 void TOracleServer::SetDatimeFormat(const char* fmt)
 {
-   // set format for converting timestamps or date field into string
-   // default value is "MM/DD/YYYY, HH24:MI:SS"
-
    if (fmt==0) fmt = "MM/DD/YYYY, HH24:MI:SS";
    fgDatimeFormat = fmt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return value of actul convertion format from timestamps or date to string
+
 const char* TOracleServer::GetDatimeFormat()
 {
-   // return value of actul convertion format from timestamps or date to string
-
    return fgDatimeFormat;
 }

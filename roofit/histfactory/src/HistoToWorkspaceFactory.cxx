@@ -8,7 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 BEGIN_HTML
 <p>
@@ -441,9 +442,10 @@ namespace HistFactory{
     proto->factory( edit.c_str() );
   }
 
-  //_____________________________________________________________
+  //////////////////////////////////////////////////////////////////////////////
+  ///    cout << "in edit, gammamap.size = " << gammaSyst.size() << ", unimap.size = " << uniformSyst.size() << endl;
+
   void HistoToWorkspaceFactory::EditSyst(RooWorkspace* proto, const char* pdfNameChar, map<string,double> gammaSyst, map<string,double> uniformSyst,map<string,double> logNormSyst) {
-    //    cout << "in edit, gammamap.size = " << gammaSyst.size() << ", unimap.size = " << uniformSyst.size() << endl;
     string pdfName(pdfNameChar);
 
     ModelConfig * combined_config = (ModelConfig *) proto->obj("ModelConfig");

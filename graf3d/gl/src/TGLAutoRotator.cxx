@@ -38,7 +38,9 @@
 
 ClassImp(TGLAutoRotator);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLAutoRotator::TGLAutoRotator(TGLViewer* v) :
    fViewer(v), fCamera(0),
    fTimer(new TTimer), fWatch(new TStopwatch),
@@ -52,28 +54,26 @@ TGLAutoRotator::TGLAutoRotator(TGLViewer* v) :
    fImageCount(0), fImageAutoSave(kFALSE),
    fImageGUIBaseName("animation"), fImageGUIOutMode(1)
 {
-   // Constructor.
-
    fTimer->Connect("Timeout()", "TGLAutoRotator", this, "Timeout()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLAutoRotator::~TGLAutoRotator()
 {
-   // Destructor.
-
    delete fWatch;
    delete fTimer;
 }
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set time between two redraws in seconds.
+/// Range: 0.001 -> 1.
+
 void TGLAutoRotator::SetDt(Double_t dt)
 {
-   // Set time between two redraws in seconds.
-   // Range: 0.001 -> 1.
-
    fDt = TMath::Range(0.01, 1.0, dt);
    if (fTimerRunning)
    {
@@ -82,12 +82,12 @@ void TGLAutoRotator::SetDt(Double_t dt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set relative amplitude of theta oscilation.
+/// Value range: 0.01 -> 1.
+
 void TGLAutoRotator::SetATheta(Double_t a)
 {
-   // Set relative amplitude of theta oscilation.
-   // Value range: 0.01 -> 1.
-
    a = TMath::Range(0.01, 1.0, a);
    if (fTimerRunning)
    {
@@ -96,12 +96,12 @@ void TGLAutoRotator::SetATheta(Double_t a)
    fATheta = a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set relative amplitude of forward/backward oscilation.
+/// Value range: 0.01 -> 1.
+
 void TGLAutoRotator::SetADolly(Double_t a)
 {
-   // Set relative amplitude of forward/backward oscilation.
-   // Value range: 0.01 -> 1.
-
   a = TMath::Range(0.01, 1.0, a);
   if (fTimerRunning)
   {
@@ -112,11 +112,11 @@ void TGLAutoRotator::SetADolly(Double_t a)
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start the auto-rotator.
+
 void TGLAutoRotator::Start()
 {
-   // Start the auto-rotator.
-
    if (fTimerRunning)
    {
       Stop();
@@ -134,11 +134,11 @@ void TGLAutoRotator::Start()
    fWatch->Start();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stop the auto-rotator.
+
 void TGLAutoRotator::Stop()
 {
-   // Stop the auto-rotator.
-
    if (fTimerRunning)
    {
       fWatch->Stop();
@@ -147,12 +147,12 @@ void TGLAutoRotator::Stop()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called on every timer timeout. Moves / rotates the camera and optionally
+/// produces a screenshot.
+
 void TGLAutoRotator::Timeout()
 {
-   // Called on every timer timeout. Moves / rotates the camera and optionally
-   // produces a screenshot.
-
    if (!fTimerRunning || gTQSender != fTimer)
    {
       Error("Timeout", "Not running or not called via timer.");
@@ -200,14 +200,14 @@ void TGLAutoRotator::Timeout()
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start saving into animated gif. The provided name will be used as it is,
+/// so make sure to end it with '.gif+'.
+/// Use convert tool from ImageMagic if you want to set a different delay or
+/// enable looping.
+
 void TGLAutoRotator::StartImageAutoSaveAnimatedGif(const TString& filename)
 {
-   // Start saving into animated gif. The provided name will be used as it is,
-   // so make sure to end it with '.gif+'.
-   // Use convert tool from ImageMagic if you want to set a different delay or
-   // enable looping.
-
    if ( ! filename.Contains(".gif+"))
    {
       Error("StartImageAutoSaveAnimatedGif", "Name should end with '.gif+'. Not starting.");
@@ -219,15 +219,15 @@ void TGLAutoRotator::StartImageAutoSaveAnimatedGif(const TString& filename)
    fImageAutoSave = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start saving into a set of images. The provided name will be used as a
+/// format to insert additional image sequence number so it should include
+/// an '%' character. A good name would be something like:
+///   "image-%04d.png"
+/// On GNU/Linux use mencoder and/or ffmpeg to bundle images into a movie.
+
 void TGLAutoRotator::StartImageAutoSave(const TString& filename)
 {
-   // Start saving into a set of images. The provided name will be used as a
-   // format to insert additional image sequence number so it should include
-   // an '%' character. A good name would be something like:
-   //   "image-%04d.png"
-   // On GNU/Linux use mencoder and/or ffmpeg to bundle images into a movie.
-
    if ( ! filename.Contains("%"))
    {
       Error("StartImageAutoSave", "Name should include a '%%' character, like 'image-%%05d.png'. Not starting.");
@@ -239,21 +239,21 @@ void TGLAutoRotator::StartImageAutoSave(const TString& filename)
    fImageAutoSave = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stops automatic saving of images.
+
 void TGLAutoRotator::StopImageAutoSave()
 {
-   // Stops automatic saving of images.
-
    fImageAutoSave = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set output mode for GUI operation:
+///   1 - animated gif;
+///   2 - a series of pngs
+
 void TGLAutoRotator::SetImageGUIOutMode(Int_t m)
 {
-   // Set output mode for GUI operation:
-   //   1 - animated gif;
-   //   2 - a series of pngs
-
    if (m < 1 || m > 2)
    {
       Warning("SetImageGUIOutMode", "Invalid value, ignoring");
@@ -262,11 +262,11 @@ void TGLAutoRotator::SetImageGUIOutMode(Int_t m)
    fImageGUIOutMode = m;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start auto-saving images as set-up via GUI.
+
 void TGLAutoRotator::StartImageAutoSaveWithGUISettings()
 {
-   // Start auto-saving images as set-up via GUI.
-
    if (fImageGUIOutMode == 1)
    {
       TString name = fImageGUIBaseName + ".gif+";
@@ -283,12 +283,13 @@ void TGLAutoRotator::StartImageAutoSaveWithGUISettings()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///"Scene rotation": either find a special object,
+///which will be an axis of rotation (it's Z actually)
+///or use a "global" Z axis.
+
 void TGLAutoRotator::RotateScene()
 {
-   //"Scene rotation": either find a special object,
-   //which will be an axis of rotation (it's Z actually)
-   //or use a "global" Z axis.
    TGLViewer::SceneInfoList_t & scenes = fViewer->fScenes;
    TGLViewer::SceneInfoList_i sceneIter = scenes.begin();
    

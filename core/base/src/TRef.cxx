@@ -220,27 +220,27 @@ TObject    *TRef::fgObject = 0;
 
 ClassImp(TRef)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a ref to obj.
+
 TRef::TRef(TObject *obj)
 {
-   // Create a ref to obj.
-
    *this = obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TRef copy ctor.
+
 TRef::TRef(const TRef &ref) : TObject(ref)
 {
-   // TRef copy ctor.
-
    *this = ref;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign object to reference.
+
 void TRef::operator=(TObject *obj)
 {
-   // Assign object to reference.
-
    UInt_t uid = 0;
    fPID = 0;
    if (obj) {
@@ -266,11 +266,11 @@ void TRef::operator=(TObject *obj)
    SetUniqueID(uid);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TRef assignment operator.
+
 TRef &TRef::operator=(const TRef &ref)
 {
-   // TRef assignment operator.
-
    if (this != &ref) {
       SetUniqueID(ref.GetUniqueID());
       fPID = ref.fPID;
@@ -279,30 +279,30 @@ TRef &TRef::operator=(const TRef &ref)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if r1 and r2 point to the same object.
+
 Bool_t operator==(const TRef &r1, const TRef &r2)
 {
-   // Return kTRUE if r1 and r2 point to the same object.
-
    if (r1.GetPID() == r2.GetPID() && r1.GetUniqueID() == r2.GetUniqueID()) return kTRUE;
    else return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if r1 and r2 do not point to the same object.
+
 Bool_t operator!=(const TRef &r1, const TRef &r2)
 {
-   // Return kTRUE if r1 and r2 do not point to the same object.
-
    if (r1.GetPID() == r2.GetPID() && r1.GetUniqueID() == r2.GetUniqueID()) return kFALSE;
    else return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If Exec with name does not exist in the list of Execs, it is created.
+/// returns the index of the Exec in the list.
+
 Int_t TRef::AddExec(const char *name)
 {
-   // If Exec with name does not exist in the list of Execs, it is created.
-   // returns the index of the Exec in the list.
-
 #ifdef R__COMPLETE_MEM_TERMINATION
    if (!fgExecs) GetListOfExecs();
 #else
@@ -318,11 +318,11 @@ Int_t TRef::AddExec(const char *name)
    return fgExecs->IndexOf(exec);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the static TObjArray holding the list of Execs.
+
 TObjArray *TRef::GetListOfExecs()
 {
-   // Return a pointer to the static TObjArray holding the list of Execs.
-
 #ifdef R__COMPLETE_MEM_TERMINATION
    static TObjArray listOfExecs(10);
    if (!fgExecs) {
@@ -337,11 +337,11 @@ TObjArray *TRef::GetListOfExecs()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the referenced object.
+
 TObject *TRef::GetObject() const
 {
-   // Return a pointer to the referenced object.
-
    //TObject *obj = 0;
    if (!fPID) return 0;
    if (!TProcessID::IsValid(fPID)) return 0;
@@ -386,12 +386,12 @@ TObject *TRef::GetObject() const
    return obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store the exec number (in the ROOT list of Execs)
+/// into the fBits of this TRef.
+
 void TRef::SetAction(const char *name)
 {
-   // Store the exec number (in the ROOT list of Execs)
-   // into the fBits of this TRef.
-
    TExec *exec = (TExec*)GetListOfExecs()->FindObject(name);
    if (!exec) {
       Error("SetAction","Unknow TExec: %s",name);
@@ -401,53 +401,54 @@ void TRef::SetAction(const char *name)
    SetBit(execid << 16);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the action to be executed in the dictionary of the parent class
+/// and store the corresponding exec number into fBits.
+/// This function searches a data member in the class of parent with an
+/// offset corresponding to this.
+/// If a comment "TEXEC:" is found in the comment field of the data member,
+/// the function stores the exec identifier of the exec statement
+/// following this keyword.
+
 void TRef::SetAction(TObject *parent)
 {
-   // Find the action to be executed in the dictionary of the parent class
-   // and store the corresponding exec number into fBits.
-   // This function searches a data member in the class of parent with an
-   // offset corresponding to this.
-   // If a comment "TEXEC:" is found in the comment field of the data member,
-   // the function stores the exec identifier of the exec statement
-   // following this keyword.
-
    if (!parent) return;
    if (gDirectory) gDirectory->SetTRefAction(this,parent);
 }
 
- //______________________________________________________________________________
+ ///////////////////////////////////////////////////////////////////////////////
+ /// Returns the static object.
+
 TObject *TRef::GetStaticObject() {
-   // Returns the static object.
    return fgObject;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static Obsolete function kept for back compatibility.
+/// In the near future will print a Warning, then will be deleted.
+
 void TRef::SetObject(TObject *obj)
 {
-   // static Obsolete function kept for back compatibility.
-   // In the near future will print a Warning, then will be deleted.
-
    SetStaticObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set the object found on the Action on Demand function.
+/// This function may be called by the user in the function called
+/// when a "EXEC:" keyword is specified in the data member field of the TRef.
+/// The function can get access to the dereferencing TRef (i.e. this)using
+/// the static function GetStaticObject().
+
 void TRef::SetStaticObject(TObject *obj)
 {
-   // Static function to set the object found on the Action on Demand function.
-   // This function may be called by the user in the function called
-   // when a "EXEC:" keyword is specified in the data member field of the TRef.
-   // The function can get access to the dereferencing TRef (i.e. this)using
-   // the static function GetStaticObject().
-
    fgObject = obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TRef.
+
 void TRef::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TRef.
-
    UShort_t pidf;
    if (R__b.IsReading()) {
       TObject::Streamer(R__b);

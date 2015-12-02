@@ -27,14 +27,14 @@
 ClassImp(TFileInfo)
 ClassImp(TFileInfoMeta)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TFileInfo::TFileInfo(const char *in, Long64_t size, const char *uuid,
                      const char *md5, TObject *meta)
    : fCurrentUrl(0), fUrlList(0), fSize(-1), fUUID(0), fMD5(0),
      fMetaDataList(0), fIndex(-1)
 {
-   // Constructor.
-
    // Get initializations form the input string: this will set at least the
    // current URL; but it may set more: see TFileInfo::ParseInput(). Please note
    // that MD5 sum should be provided as a string in md5ascii form.
@@ -69,14 +69,14 @@ TFileInfo::TFileInfo(const char *in, Long64_t size, const char *uuid,
    ResetBit(TFileInfo::kSortWithIndex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TFileInfo::TFileInfo(const TFileInfo &fi) : TNamed(fi.GetName(), fi.GetTitle()),
                                             fCurrentUrl(0), fUrlList(0),
                                             fSize(fi.fSize), fUUID(0), fMD5(0),
                                             fMetaDataList(0), fIndex(fi.fIndex)
 {
-   // Copy constructor.
-
    if (fi.fUrlList) {
       fUrlList = new TList;
       fUrlList->SetOwner();
@@ -115,48 +115,48 @@ TFileInfo::TFileInfo(const TFileInfo &fi) : TNamed(fi.GetName(), fi.GetTitle()),
    ResetBit(TFileInfo::kSortWithIndex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TFileInfo::~TFileInfo()
 {
-   // Destructor.
-
    SafeDelete(fMetaDataList);
    SafeDelete(fUUID);
    SafeDelete(fMD5);
    SafeDelete(fUrlList);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse the input line to extract init information from 'in'; the input
+/// string is tokenized on ' '; the tokens can be prefixed by the following
+/// keys:
+///
+///   url:<url1>,<url2>,...     URLs for the file; stored in the order given
+///   sz:<size>                 size of the file in bytes
+///   md5:<md5_ascii>           MD5 sum of the file in ASCII form
+///   uuid:<uuid>               UUID of the file
+///
+///   tree:<name>,<entries>,<first>,<last>
+///                             meta-information about a tree in the file; the
+///                             should be in the form <subdir>/tree-name;'entries' is
+///                             the number of entries in the tree; 'first' and 'last'
+///                             define the entry range.
+///
+///   obj:<name>,<class>,<entries>
+///                             meta-information about a generic object in the file;
+///                             the should be in the form <subdir>/obj-name; 'class'
+///                             is the object class; 'entries' is the number of occurences
+///                             for this object.
+///
+///   idx:<index>               Index of this file if sorting with index
+///
+/// Multiple occurences of 'tree:' or 'obj:' can be specified.
+/// The initializations done via the input string are superseeded by the ones by other
+/// parameters in the constructor, if any.
+/// If no key is given, the token is interpreted as URL(s).
+
 void TFileInfo::ParseInput(const char *in)
 {
-   // Parse the input line to extract init information from 'in'; the input
-   // string is tokenized on ' '; the tokens can be prefixed by the following
-   // keys:
-   //
-   //   url:<url1>,<url2>,...     URLs for the file; stored in the order given
-   //   sz:<size>                 size of the file in bytes
-   //   md5:<md5_ascii>           MD5 sum of the file in ASCII form
-   //   uuid:<uuid>               UUID of the file
-   //
-   //   tree:<name>,<entries>,<first>,<last>
-   //                             meta-information about a tree in the file; the
-   //                             should be in the form <subdir>/tree-name;'entries' is
-   //                             the number of entries in the tree; 'first' and 'last'
-   //                             define the entry range.
-   //
-   //   obj:<name>,<class>,<entries>
-   //                             meta-information about a generic object in the file;
-   //                             the should be in the form <subdir>/obj-name; 'class'
-   //                             is the object class; 'entries' is the number of occurences
-   //                             for this object.
-   //
-   //   idx:<index>               Index of this file if sorting with index
-   //
-   // Multiple occurences of 'tree:' or 'obj:' can be specified.
-   // The initializations done via the input string are superseeded by the ones by other
-   // parameters in the constructor, if any.
-   // If no key is given, the token is interpreted as URL(s).
-
    // Nothing to do if the string is empty
    if (!in || strlen(in) <= 0) return;
 
@@ -228,38 +228,38 @@ void TFileInfo::ParseInput(const char *in)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the UUID to the value associated to the string 'uuid'. This is
+/// useful to set the UUID to the one of the ROOT file during verification.
+/// NB: we do not change the name in here, because this would screw up lists
+///     of these objects hashed on the name. Those lists need to be rebuild.
+///     TFileCollection does that in RemoveDuplicates.
+
 void TFileInfo::SetUUID(const char *uuid)
 {
-   // Set the UUID to the value associated to the string 'uuid'. This is
-   // useful to set the UUID to the one of the ROOT file during verification.
-   // NB: we do not change the name in here, because this would screw up lists
-   //     of these objects hashed on the name. Those lists need to be rebuild.
-   //     TFileCollection does that in RemoveDuplicates.
-
    if (uuid) {
       if (fUUID) delete fUUID;
       fUUID = new TUUID(uuid);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the current url.
+
 TUrl *TFileInfo::GetCurrentUrl() const
 {
-   // Return the current url.
-
    if (!fCurrentUrl)
       const_cast<TFileInfo*>(this)->ResetUrl();
    return fCurrentUrl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Iterator function, start iteration by calling ResetUrl().
+/// The first call to NextUrl() will return the 1st element,
+/// the seconde the 2nd element etc. Returns 0 in case no more urls.
+
 TUrl *TFileInfo::NextUrl()
 {
-   // Iterator function, start iteration by calling ResetUrl().
-   // The first call to NextUrl() will return the 1st element,
-   // the seconde the 2nd element etc. Returns 0 in case no more urls.
-
    if (!fUrlList)
       return 0;
 
@@ -271,11 +271,11 @@ TUrl *TFileInfo::NextUrl()
    return returl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find an element from a URL. Returns 0 if not found.
+
 TUrl *TFileInfo::FindByUrl(const char *url, Bool_t withDeflt)
 {
-   // Find an element from a URL. Returns 0 if not found.
-
    TIter nextUrl(fUrlList);
    TUrl *urlelement;
 
@@ -288,13 +288,13 @@ TUrl *TFileInfo::FindByUrl(const char *url, Bool_t withDeflt)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new URL. If 'infront' is TRUE the new url is pushed at the beginning
+/// of the list; otherwise is pushed back.
+/// Returns kTRUE if successful, kFALSE otherwise.
+
 Bool_t TFileInfo::AddUrl(const char *url, Bool_t infront)
 {
-   // Add a new URL. If 'infront' is TRUE the new url is pushed at the beginning
-   // of the list; otherwise is pushed back.
-   // Returns kTRUE if successful, kFALSE otherwise.
-
    if (FindByUrl(url))
       return kFALSE;
 
@@ -315,11 +315,11 @@ Bool_t TFileInfo::AddUrl(const char *url, Bool_t infront)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove an URL. Returns kTRUE if successful, kFALSE otherwise.
+
 Bool_t TFileInfo::RemoveUrl(const char *url)
 {
-   // Remove an URL. Returns kTRUE if successful, kFALSE otherwise.
-
    TUrl *lurl;
    if ((lurl = FindByUrl(url))) {
       fUrlList->Remove(lurl);
@@ -331,11 +331,11 @@ Bool_t TFileInfo::RemoveUrl(const char *url)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove URL at given position. Returns kTRUE on success, kFALSE on error.
+
 Bool_t TFileInfo::RemoveUrlAt(Int_t i)
 {
-   // Remove URL at given position. Returns kTRUE on success, kFALSE on error.
-
    TUrl *tUrl;
    if ((tUrl = dynamic_cast<TUrl *>(fUrlList->At(i))) != NULL) {
       fUrlList->Remove(tUrl);
@@ -348,12 +348,12 @@ Bool_t TFileInfo::RemoveUrlAt(Int_t i)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set 'url' as current URL, if in the list
+/// Return kFALSE if not in the list
+
 Bool_t TFileInfo::SetCurrentUrl(const char *url)
 {
-   // Set 'url' as current URL, if in the list
-   // Return kFALSE if not in the list
-
    TUrl *lurl;
    if ((lurl = FindByUrl(url))) {
       fCurrentUrl = lurl;
@@ -362,12 +362,12 @@ Bool_t TFileInfo::SetCurrentUrl(const char *url)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set 'url' as current URL, if in the list
+/// Return kFALSE if not in the list
+
 Bool_t TFileInfo::SetCurrentUrl(TUrl *url)
 {
-   // Set 'url' as current URL, if in the list
-   // Return kFALSE if not in the list
-
    if (url && fUrlList && fUrlList->FindObject(url)) {
       fCurrentUrl = url;
       return kTRUE;
@@ -375,15 +375,15 @@ Bool_t TFileInfo::SetCurrentUrl(TUrl *url)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add's a meta data object to the file info object. The object will be
+/// adopted by the TFileInfo and should not be deleted by the user.
+/// Typically objects of class TFileInfoMeta or derivatives should be added,
+/// but any class is accepted.
+/// Returns kTRUE if successful, kFALSE otherwise.
+
 Bool_t TFileInfo::AddMetaData(TObject *meta)
 {
-   // Add's a meta data object to the file info object. The object will be
-   // adopted by the TFileInfo and should not be deleted by the user.
-   // Typically objects of class TFileInfoMeta or derivatives should be added,
-   // but any class is accepted.
-   // Returns kTRUE if successful, kFALSE otherwise.
-
    if (meta) {
       if (!fMetaDataList) {
          fMetaDataList = new TList;
@@ -395,12 +395,12 @@ Bool_t TFileInfo::AddMetaData(TObject *meta)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the metadata obeject. If meta is 0 remove all meta data objects.
+/// Returns kTRUE if successful, kFALSE otherwise.
+
 Bool_t TFileInfo::RemoveMetaData(const char *meta)
 {
-   // Remove the metadata obeject. If meta is 0 remove all meta data objects.
-   // Returns kTRUE if successful, kFALSE otherwise.
-
    if (fMetaDataList) {
       if (!meta || strlen(meta) <= 0) {
          SafeDelete(fMetaDataList);
@@ -417,13 +417,13 @@ Bool_t TFileInfo::RemoveMetaData(const char *meta)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get meta data object with specified name. If meta is 0
+/// get first meta data object. Returns 0 in case no
+/// suitable meta data object is found.
+
 TFileInfoMeta *TFileInfo::GetMetaData(const char *meta) const
 {
-   // Get meta data object with specified name. If meta is 0
-   // get first meta data object. Returns 0 in case no
-   // suitable meta data object is found.
-
    if (fMetaDataList) {
       TFileInfoMeta *m;
       if (!meta || strlen(meta) <= 0)
@@ -438,11 +438,11 @@ TFileInfoMeta *TFileInfo::GetMetaData(const char *meta) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare TFileInfo object by their first urls.
+
 Int_t TFileInfo::Compare(const TObject *obj) const
 {
-   // Compare TFileInfo object by their first urls.
-
    Int_t rc = 0;
    if (TestBit(TFileInfo::kSortWithIndex)) {
       const TFileInfo *fi = dynamic_cast<const TFileInfo *>(obj);
@@ -468,15 +468,15 @@ Int_t TFileInfo::Compare(const TObject *obj) const
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print information about this object. If option contains 'L' a long listing
+/// will be printed (on multiple lines). Otherwise one line is printed with the
+/// following information: current url, default tree name|class|entries, md5;
+/// the default tree name is passed via the option ("T:<default_tree>") by the
+/// owning TFileCollection.
+
 void TFileInfo::Print(Option_t *option) const
 {
-   // Print information about this object. If option contains 'L' a long listing
-   // will be printed (on multiple lines). Otherwise one line is printed with the
-   // following information: current url, default tree name|class|entries, md5;
-   // the default tree name is passed via the option ("T:<default_tree>") by the
-   // owning TFileCollection.
-
    if (GetMD5()) GetMD5()->Final();
    TString opt(option);
    if (opt.Contains("L", TString::kIgnoreCase)) {
@@ -516,15 +516,15 @@ void TFileInfo::Print(Option_t *option) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create file meta data object.
+
 TFileInfoMeta::TFileInfoMeta(const char *objPath, const char *objClass,
                              Long64_t entries, Long64_t first, Long64_t last,
                              Long64_t totbytes, Long64_t zipbytes)
               : TNamed(objPath, objClass), fEntries(entries), fFirst(first),
                 fLast(last), fTotBytes(totbytes), fZipBytes(zipbytes)
 {
-   // Create file meta data object.
-
    TString p = objPath;
    if (!p.BeginsWith("/")) {
       p.Prepend("/");
@@ -536,7 +536,9 @@ TFileInfoMeta::TFileInfoMeta(const char *objPath, const char *objClass,
    ResetBit(TFileInfoMeta::kExternal);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create file meta data object.
+
 TFileInfoMeta::TFileInfoMeta(const char *objPath, const char *objDir,
                              const char *objClass, Long64_t entries,
                              Long64_t first, Long64_t last,
@@ -544,8 +546,6 @@ TFileInfoMeta::TFileInfoMeta(const char *objPath, const char *objDir,
               : TNamed(objPath, objClass), fEntries(entries), fFirst(first),
                 fLast(last), fTotBytes(totbytes), fZipBytes(zipbytes)
 {
-   // Create file meta data object.
-
    TString sdir = objDir;
    if (!sdir.BeginsWith("/"))
       sdir.Prepend("/");
@@ -559,12 +559,12 @@ TFileInfoMeta::TFileInfoMeta(const char *objPath, const char *objDir,
    ResetBit(TFileInfoMeta::kExternal);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TFileInfoMeta::TFileInfoMeta(const TFileInfoMeta &m)
               : TNamed(m.GetName(), m.GetTitle())
 {
-   // Copy constructor
-
    fEntries = m.fEntries;
    fFirst = m.fFirst;
    fLast = m.fLast;
@@ -575,28 +575,28 @@ TFileInfoMeta::TFileInfoMeta(const TFileInfoMeta &m)
    if (m.TestBit(TFileInfoMeta::kExternal)) SetBit(TFileInfoMeta::kExternal);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the object's directory in the ROOT file.
+
 const char *TFileInfoMeta::GetDirectory() const
 {
-   // Get the object's directory in the ROOT file.
-
    return gSystem->DirName(GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the object name, with path stripped off. For full path
+/// use GetName().
+
 const char *TFileInfoMeta::GetObject() const
 {
-   // Get the object name, with path stripped off. For full path
-   // use GetName().
-
    return gSystem->BaseName(GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print information about this object.
+
 void TFileInfoMeta::Print(Option_t * /* option */) const
 {
-   // Print information about this object.
-
    Printf(" Name:    %s\n Class:   %s\n Entries: %lld\n"
           " First:   %lld\n Last:    %lld",
           fName.Data(), fTitle.Data(), fEntries, fFirst, fLast);

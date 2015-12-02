@@ -68,15 +68,15 @@
 #include "TMVA/VariableNormalizeTransform.h"
 #include "TMVA/VariableRearrangeTransform.h"
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::TransformationHandler::TransformationHandler( DataSetInfo& dsi, const TString& callerName ) 
    : fDataSetInfo(dsi),
      fRootBaseDir(0),
      fCallerName (callerName),
      fLogger     ( new MsgLogger(TString("TFHandler_" + callerName).Data(), kINFO) )
 {
-   // constructor
-   
    // produce one entry for each class and one entry for all classes. If there is only one class, 
    // produce only one entry
    fNumC = (dsi.GetNClasses()<= 1) ? 1 : dsi.GetNClasses()+1;
@@ -85,10 +85,11 @@ TMVA::TransformationHandler::TransformationHandler( DataSetInfo& dsi, const TStr
    for (Int_t i=0; i<fNumC; i++ ) fVariableStats.at(i).resize(dsi.GetNVariables() + dsi.GetNTargets());
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::TransformationHandler::~TransformationHandler() 
 {
-   // destructor
    std::vector<Ranking*>::const_iterator it = fRanking.begin();
    for (; it != fRanking.end(); it++) delete *it;
 
@@ -96,14 +97,16 @@ TMVA::TransformationHandler::~TransformationHandler()
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::TransformationHandler::SetCallerName( const TString& name ) 
 { 
    fCallerName = name; 
    fLogger->SetSource( TString("TFHandler_" + fCallerName).Data() );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::VariableTransformBase* TMVA::TransformationHandler::AddTransformation( VariableTransformBase *trf, Int_t cls ) 
 {
    TString tfname = trf->Log().GetName();
@@ -113,7 +116,8 @@ TMVA::VariableTransformBase* TMVA::TransformationHandler::AddTransformation( Var
    return trf;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::TransformationHandler::AddStats( Int_t k, UInt_t ivar, Double_t mean, Double_t rms, Double_t min, Double_t max ) 
 {
    if (rms <= 0) {
@@ -127,21 +131,22 @@ void TMVA::TransformationHandler::AddStats( Int_t k, UInt_t ivar, Double_t mean,
    fVariableStats.at(k).at(ivar) = stat;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// overrides the setting for all classes! (this is put in basically for the likelihood-method)
+/// be careful with the usage this method
+
 void TMVA::TransformationHandler::SetTransformationReferenceClass( Int_t cls ) 
 {
-   // overrides the setting for all classes! (this is put in basically for the likelihood-method)
-   // be careful with the usage this method
    for (UInt_t i = 0; i < fTransformationsReferenceClasses.size(); i++) {
       fTransformationsReferenceClasses.at( i ) = cls;
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the transformation
+
 const TMVA::Event* TMVA::TransformationHandler::Transform( const Event* ev ) const 
 {
-   // the transformation
-   
    TListIter trIt(&fTransformations);
    std::vector<Int_t>::const_iterator rClsIt = fTransformationsReferenceClasses.begin();
    const Event* trEv = ev;
@@ -153,7 +158,8 @@ const TMVA::Event* TMVA::TransformationHandler::Transform( const Event* ev ) con
    return trEv;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const TMVA::Event* TMVA::TransformationHandler::InverseTransform( const Event* ev, Bool_t suppressIfNoTargets ) const 
 {
    if (fTransformationsReferenceClasses.empty()){
@@ -195,11 +201,12 @@ const TMVA::Event* TMVA::TransformationHandler::InverseTransform( const Event* e
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computation of transformation
+
 const std::vector<TMVA::Event*>* TMVA::TransformationHandler::CalcTransformations( const std::vector<Event*>& events, 
                                                                                    Bool_t createNewVector ) 
 {
-   // computation of transformation
    if (fTransformations.GetEntries() <= 0)
       return &events;
 
@@ -239,10 +246,10 @@ const std::vector<TMVA::Event*>* TMVA::TransformationHandler::CalcTransformation
    return transformedEvents; // give back the newly created event collection (containing the transformed events)
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::TransformationHandler::CalcStats (const std::vector<Event*>& events )
 {
-
    // method to calculate minimum, maximum, mean, and RMS for all
    // variables used in the MVA
 
@@ -370,10 +377,11 @@ void TMVA::TransformationHandler::CalcStats (const std::vector<Event*>& events )
    delete [] varMax;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create transformation function
+
 void TMVA::TransformationHandler::MakeFunction( std::ostream& fout, const TString& fncName, Int_t part ) const 
 {
-   // create transformation function
    TListIter trIt(&fTransformations);
    std::vector< Int_t >::const_iterator rClsIt = fTransformationsReferenceClasses.begin();
    UInt_t trCounter=1;
@@ -406,10 +414,11 @@ void TMVA::TransformationHandler::MakeFunction( std::ostream& fout, const TStrin
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return transformation name
+
 TString TMVA::TransformationHandler::GetName() const
 {
-   // return transformation name
    TString name("Id");
    TListIter trIt(&fTransformations);
    VariableTransformBase *trf;
@@ -420,10 +429,11 @@ TString TMVA::TransformationHandler::GetName() const
    return name;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// incorporates transformation type into title axis (usually for histograms)
+
 TString TMVA::TransformationHandler::GetVariableAxisTitle( const VariableInfo& info ) const
 {
-   // incorporates transformation type into title axis (usually for histograms)
    TString xtit = info.GetTitle();
    // indicate transformation, but not in case of single identity transform
    if (fTransformations.GetSize() >= 1) {
@@ -436,13 +446,13 @@ TString TMVA::TransformationHandler::GetVariableAxisTitle( const VariableInfo& i
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create histograms from the input variables
+/// - histograms for all input variables
+/// - scatter plots for all pairs of input variables
+
 void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& events, TDirectory* theDirectory )
 {
-   // create histograms from the input variables
-   // - histograms for all input variables
-   // - scatter plots for all pairs of input variables
-
    if (fRootBaseDir==0 && theDirectory == 0) return;
 
    Log() << kINFO << "Plot event variables for ";
@@ -796,28 +806,31 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
    else                    fRootBaseDir->cd();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns string for transformation
+
 std::vector<TString>* TMVA::TransformationHandler::GetTransformationStringsOfLastTransform() const
 {
-   // returns string for transformation
    VariableTransformBase* trf = ((VariableTransformBase*)GetTransformationList().Last());
    if (!trf) return 0;
    else      return trf->GetTransformationStrings( fTransformationsReferenceClasses.back() );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns string for transformation
+
 const char* TMVA::TransformationHandler::GetNameOfLastTransform() const
 {
-   // returns string for transformation
    VariableTransformBase* trf = ((VariableTransformBase*)GetTransformationList().Last());
    if (!trf) return 0;
    else      return trf->GetName();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write transformatino to stream
+
 void TMVA::TransformationHandler::WriteToStream( std::ostream& o ) const 
 {
-   // write transformatino to stream
    TListIter trIt(&fTransformations);
    std::vector< Int_t >::const_iterator rClsIt = fTransformationsReferenceClasses.begin();
 
@@ -838,11 +851,12 @@ void TMVA::TransformationHandler::WriteToStream( std::ostream& o ) const
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// XML node describing the transformation
+///   return;
+
 void TMVA::TransformationHandler::AddXMLTo( void* parent ) const 
 {
-   // XML node describing the transformation
-   //   return;
    if(!parent) return;
    void* trfs = gTools().AddChild(parent, "Transformations");
    gTools().AddAttr( trfs, "NTransformations", fTransformations.GetSize() );
@@ -850,16 +864,18 @@ void TMVA::TransformationHandler::AddXMLTo( void* parent ) const
    while (VariableTransformBase *trf = (VariableTransformBase*) trIt()) trf->AttachXMLTo(trfs);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///VariableTransformBase* trf = ((VariableTransformBase*)GetTransformationList().Last());
+///trf->ReadTransformationFromStream(fin);
+
 void TMVA::TransformationHandler::ReadFromStream( std::istream& ) 
 {
-   //VariableTransformBase* trf = ((VariableTransformBase*)GetTransformationList().Last());
-   //trf->ReadTransformationFromStream(fin);
    Log() << kFATAL << "Read transformations not implemented" << Endl;
    // TODO
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::TransformationHandler::ReadFromXML( void* trfsnode )
 {
    void* ch = gTools().GetChild( trfsnode );
@@ -900,17 +916,19 @@ void TMVA::TransformationHandler::ReadFromXML( void* trfsnode )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prints ranking of input variables
+
 void TMVA::TransformationHandler::PrintVariableRanking() const
 {
-   // prints ranking of input variables
    Log() << kINFO << " " << Endl;
    Log() << kINFO << "Ranking input variables (method unspecific)..." << Endl;
    std::vector<Ranking*>::const_iterator it = fRanking.begin();
    for (; it != fRanking.end(); it++) (*it)->Print();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::TransformationHandler::GetMean( Int_t ivar, Int_t cls ) const
 {
    try {
@@ -929,7 +947,8 @@ Double_t TMVA::TransformationHandler::GetMean( Int_t ivar, Int_t cls ) const
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::TransformationHandler::GetRMS( Int_t ivar, Int_t cls ) const
 {
    try {
@@ -947,7 +966,8 @@ Double_t TMVA::TransformationHandler::GetRMS( Int_t ivar, Int_t cls ) const
    return 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::TransformationHandler::GetMin( Int_t ivar, Int_t cls ) const
 {
    try {
@@ -965,7 +985,8 @@ Double_t TMVA::TransformationHandler::GetMin( Int_t ivar, Int_t cls ) const
    return 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::TransformationHandler::GetMax( Int_t ivar, Int_t cls ) const
 {
    try {

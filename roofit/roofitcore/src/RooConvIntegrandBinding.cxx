@@ -40,7 +40,8 @@ ClassImp(RooConvIntegrandBinding)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const RooAbsReal& model, 
 				       RooAbsReal& xprime, RooAbsReal& x, 
 				       const RooArgSet* nset, Bool_t clipInvalid) :
@@ -92,19 +93,20 @@ RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const R
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooConvIntegrandBinding::~RooConvIntegrandBinding() 
 {
-  // Destructor
   if(0 != _vars) delete[] _vars;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load external input values
+
 void RooConvIntegrandBinding::loadValues(const Double_t xvector[], Bool_t clipInvalid) const 
 {
-  // Load external input values
-
   _xvecValid = kTRUE ;
   for(UInt_t index= 0; index < _dimension; index++) {
     if (clipInvalid && !_vars[index]->isValidReal(xvector[index])) {
@@ -117,11 +119,11 @@ void RooConvIntegrandBinding::loadValues(const Double_t xvector[], Bool_t clipIn
 }  
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate self at given parameter values
+
 Double_t RooConvIntegrandBinding::operator()(const Double_t xvector[]) const 
 {
-  // Evaluate self at given parameter values
-
   assert(isValid());
   _ncall++ ;
 
@@ -147,20 +149,21 @@ Double_t RooConvIntegrandBinding::operator()(const Double_t xvector[]) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve lower limit of i-th observable 
+
 Double_t RooConvIntegrandBinding::getMinLimit(UInt_t index) const 
 {
-  // Retrieve lower limit of i-th observable 
   assert(isValid());
   return _vars[index]->getMin();
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve upper limit of i-th observable 
+
 Double_t RooConvIntegrandBinding::getMaxLimit(UInt_t index) const 
 {
-  // Retrieve upper limit of i-th observable 
-
   assert(isValid());
   return _vars[index]->getMax();
 }

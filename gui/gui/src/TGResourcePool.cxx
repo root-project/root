@@ -55,11 +55,11 @@ static unsigned char gray_bits[] = {
 
 ClassImp(TGResourcePool)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the global GUI resource pool manager.
+
 TGResourcePool::TGResourcePool(TGClient *client)
 {
-   // Create the global GUI resource pool manager.
-
    fClient = client;
    fDefaultColormap = gVirtualX->GetColormap();
 
@@ -258,11 +258,11 @@ TGResourcePool::TGResourcePool(TGClient *client)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup the resource pool...
+
 TGResourcePool::~TGResourcePool()
 {
-   // Cleanup the resource pool...
-
    delete fPicturePool;
    delete fFontPool;
    delete fGCPool;

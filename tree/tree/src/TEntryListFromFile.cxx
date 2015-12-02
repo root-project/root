@@ -46,20 +46,20 @@ TEntryListFromFile::TEntryListFromFile(): TEntryList(),
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// File naming convention:
+/// - by default, filename_elist.root is used, where filename is the
+///   name of the chain element
+/// - xxx$xxx.root - $ sign is replaced by the name of the chain element
+/// The TObjArray of chain elements is set by the TEntryListFromFile::SetFileNames()
+/// function.
+/// If the list name is not specified, the first object of class TEntryList
+/// in the file is taken.
+/// nfiles is the total number of files to process
+
 TEntryListFromFile::TEntryListFromFile(const char *filename, const char *listname, Int_t nfiles) : TEntryList(),
    fListFileName(filename), fListName(listname), fNFiles(nfiles), fListOffset(0), fFile(0), fFileNames(0)
 {
-   // File naming convention:
-   // - by default, filename_elist.root is used, where filename is the
-   //   name of the chain element
-   // - xxx$xxx.root - $ sign is replaced by the name of the chain element
-   // The TObjArray of chain elements is set by the TEntryListFromFile::SetFileNames()
-   // function.
-   // If the list name is not specified, the first object of class TEntryList
-   // in the file is taken.
-   // nfiles is the total number of files to process
-
    fListOffset = new Long64_t[fNFiles+1];
    fListOffset[0]=0;
    for (Int_t i=1; i<fNFiles+1; i++){
@@ -68,23 +68,23 @@ TEntryListFromFile::TEntryListFromFile(const char *filename, const char *listnam
    fN = kBigNumber;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// d-tor
+
 TEntryListFromFile::~TEntryListFromFile()
 {
-   // d-tor
-
    delete [] fListOffset;
    fListOffset = 0;
    delete fFile;
    fFile = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///returns entry #index
+///See also Next() for a faster alternative
+
 Long64_t TEntryListFromFile::GetEntry(Int_t index)
 {
-   //returns entry #index
-   //See also Next() for a faster alternative
-
    if (index<0) return -1;
 
    if (index > fListOffset[fNFiles] && fListOffset[fNFiles]!=kBigNumber){
@@ -144,23 +144,23 @@ Long64_t TEntryListFromFile::GetEntry(Int_t index)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return the entry corresponding to the index parameter and the
+///number of the tree, where this entry is
+
 Long64_t TEntryListFromFile::GetEntryAndTree(Int_t index, Int_t &treenum)
 {
-   //return the entry corresponding to the index parameter and the
-   //number of the tree, where this entry is
-
    Long64_t result = GetEntry(index);
    treenum = fTreeNumber;
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the total number of entries in the list.
+///If some lists have not been loaded, loads them.
+
 Long64_t TEntryListFromFile::GetEntries()
 {
-   //Returns the total number of entries in the list.
-   //If some lists have not been loaded, loads them.
-
    if (fN==kBigNumber){
       for (Int_t i=0; i<fNFiles; i++){
          if (fListOffset[i+1]==kBigNumber){
@@ -173,12 +173,12 @@ Long64_t TEntryListFromFile::GetEntries()
    return fN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the next entry in the list.
+///Faster than GetEntry()
+
 Long64_t TEntryListFromFile::Next()
 {
-   //Returns the next entry in the list.
-   //Faster than GetEntry()
-
    Int_t itree =0;
    while (!fCurrent && itree<fNFiles){
       LoadList(itree);
@@ -220,12 +220,12 @@ Long64_t TEntryListFromFile::Next()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Loads the list #listnumber
+///This is the only function that can modify fCurrent and fFile data members
+
 Int_t TEntryListFromFile::LoadList(Int_t listnumber)
 {
-   //Loads the list #listnumber
-   //This is the only function that can modify fCurrent and fFile data members
-
    //first close the current list
    if (fCurrent){
       if (fFile) {
@@ -295,10 +295,11 @@ Int_t TEntryListFromFile::LoadList(Int_t listnumber)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Print info about this list
+
 void TEntryListFromFile::Print(const Option_t* option) const
 {
-   //Print info about this list
    printf("total number of files: %d\n", fNFiles);
    TFile *f;
    TEntryList *el=0;

@@ -99,7 +99,8 @@ ClassImp(TGLViewer);
 TGLColorSet TGLViewer::fgDefaultColorSet;
 Bool_t      TGLViewer::fgUseDefaultColorSetForNewViewers = kFALSE;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
                      Int_t width, Int_t height) :
    fPad(pad),
@@ -163,7 +164,8 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    SetViewport(x, y, width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLViewer::TGLViewer(TVirtualPad * pad) :
    fPad(pad),
    fContextMenu(0),
@@ -234,11 +236,11 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Common initialization.
+
 void TGLViewer::InitSecondaryObjects()
 {
-   // Common initialization.
-
    fLightSet = new TGLLightSet;
    fClipSet  = new TGLClipSet;
    AddOverlayElement(fClipSet);
@@ -268,11 +270,11 @@ void TGLViewer::InitSecondaryObjects()
    fRedrawTimer = new TGLRedrawTimer(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy viewer object.
+
 TGLViewer::~TGLViewer()
 {
-   // Destroy viewer object.
-
    delete fAutoRotator;
 
    delete fLightSet;
@@ -294,15 +296,15 @@ TGLViewer::~TGLViewer()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Entry point for updating viewer contents via VirtualViewer3D
+/// interface.
+/// We search and forward the request to appropriate TGLScenePad.
+/// If it is not found we create a new TGLScenePad so this can
+/// potentially also be used for registration of new pads.
+
 void TGLViewer::PadPaint(TVirtualPad* pad)
 {
-   // Entry point for updating viewer contents via VirtualViewer3D
-   // interface.
-   // We search and forward the request to appropriate TGLScenePad.
-   // If it is not found we create a new TGLScenePad so this can
-   // potentially also be used for registration of new pads.
-
    TGLScenePad* scenepad = 0;
    for (SceneInfoList_i si = fScenes.begin(); si != fScenes.end(); ++si)
    {
@@ -329,12 +331,12 @@ void TGLViewer::PadPaint(TVirtualPad* pad)
 /**************************************************************************/
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Force update of pad-scenes. Eventually this could be generalized
+/// to all scene-types via a virtual function in TGLSceneBase.
+
 void TGLViewer::UpdateScene(Bool_t redraw)
 {
-   // Force update of pad-scenes. Eventually this could be generalized
-   // to all scene-types via a virtual function in TGLSceneBase.
-
    // Cancel any pending redraw timer.
    fRedrawTimer->Stop();
 
@@ -352,20 +354,20 @@ void TGLViewer::UpdateScene(Bool_t redraw)
       RequestDraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resets position/rotation of current camera to default values.
+
 void TGLViewer::ResetCurrentCamera()
 {
-   // Resets position/rotation of current camera to default values.
-
    MergeSceneBBoxes(fOverallBoundingBox);
    CurrentCamera().Setup(fOverallBoundingBox, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup cameras for current bounding box.
+
 void TGLViewer::SetupCameras(Bool_t reset)
 {
-   // Setup cameras for current bounding box.
-
    if (IsLocked()) {
       Error("TGLViewer::SetupCameras", "expected kUnlocked, found %s", LockName(CurrentLock()));
       return;
@@ -386,11 +388,11 @@ void TGLViewer::SetupCameras(Bool_t reset)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform post scene-build setup.
+
 void TGLViewer::PostSceneBuildSetup(Bool_t resetCameras)
 {
-   // Perform post scene-build setup.
-
    MergeSceneBBoxes(fOverallBoundingBox);
    SetupCameras(resetCameras);
 
@@ -403,11 +405,11 @@ void TGLViewer::PostSceneBuildSetup(Bool_t resetCameras)
 /**************************************************************************/
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialise GL state.
+
 void TGLViewer::InitGL()
 {
-   // Initialise GL state.
-
    glEnable(GL_LIGHTING);
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_CULL_FACE);
@@ -431,12 +433,12 @@ void TGLViewer::InitGL()
    TGLUtil::CheckError("TGLViewer::InitGL");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Post request for redraw of viewer at level of detail 'LOD'
+/// Request is directed via cross thread gVirtualGL object.
+
 void TGLViewer::RequestDraw(Short_t LODInput)
 {
-   // Post request for redraw of viewer at level of detail 'LOD'
-   // Request is directed via cross thread gVirtualGL object.
-
    fRedrawTimer->Stop();
    // Ignore request if GL window or context not yet availible or shown.
    if ((!fGLWidget && fGLDevice == -1) || (fGLWidget && !fGLWidget->IsMapped()))
@@ -462,11 +464,11 @@ void TGLViewer::RequestDraw(Short_t LODInput)
       DoDraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup clip-object. Protected virtual method.
+
 void TGLViewer::SetupClipObject()
 {
-   // Setup clip-object. Protected virtual method.
-
    if (GetClipAutoUpdate())
    {
       fClipSet->SetupCurrentClip(fOverallBoundingBox);
@@ -476,12 +478,12 @@ void TGLViewer::SetupClipObject()
       fClipSet->SetupCurrentClipIfInvalid(fOverallBoundingBox);
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize objects that influence rendering.
+/// Called before every render.
+
 void TGLViewer::PreRender()
 {
-   // Initialize objects that influence rendering.
-   // Called before every render.
-
    fCamera = fCurrentCamera;
    fClip   = fClipSet->GetCurrentClip();
    if (fGLDevice != -1)
@@ -511,11 +513,11 @@ void TGLViewer::PreRender()
    fLightSet->StdSetupLights(fOverallBoundingBox, *fCamera, fDebugMode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal rendering, used by mono and stereo rendering.
+
 void TGLViewer::Render()
 {
-   // Normal rendering, used by mono and stereo rendering.
-
    TGLViewerBase::Render();
 
    DrawGuides();
@@ -530,23 +532,23 @@ void TGLViewer::Render()
    DrawDebugInfo();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restore state set in PreRender().
+/// Called after every render.
+
 void TGLViewer::PostRender()
 {
-   // Restore state set in PreRender().
-   // Called after every render.
-
    TGLViewerBase::PostRender();
 
    TGLUtil::SetPointSizeScale(1);
    TGLUtil::SetLineWidthScale(1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw out the viewer.
+
 void TGLViewer::DoDraw(Bool_t swap_buffers)
 {
-   // Draw out the viewer.
-
    // Locking mainly for Win32 multi thread safety - but no harm in all using it
    // During normal draws a draw lock is taken in other thread (Win32) in RequestDraw()
    // to ensure thread safety. For PrintObjects repeated Draw() calls are made.
@@ -620,11 +622,11 @@ void TGLViewer::DoDraw(Bool_t swap_buffers)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw out in monoscopic mode.
+
 void TGLViewer::DoDrawMono(Bool_t swap_buffers)
 {
-   // Draw out in monoscopic mode.
-
    MakeCurrent();
 
    if (!fIsPrinting) PreDraw();
@@ -652,11 +654,11 @@ void TGLViewer::DoDrawMono(Bool_t swap_buffers)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw out in stereoscopic mode.
+
 void TGLViewer::DoDrawStereo(Bool_t swap_buffers)
 {
-   // Draw out in stereoscopic mode.
-
    TGLPerspectiveCamera &c = *dynamic_cast<TGLPerspectiveCamera*>(fCurrentCamera);
 
    Float_t gl_near, gl_far, zero_p_dist;
@@ -775,33 +777,33 @@ void TGLViewer::DoDrawStereo(Bool_t swap_buffers)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save current image using the default file name which can be set
+/// via SetPictureFileName() and defaults to "viewer.jpg".
+/// Really useful for the files ending with 'gif+'.
+
 Bool_t TGLViewer::SavePicture()
 {
-   // Save current image using the default file name which can be set
-   // via SetPictureFileName() and defaults to "viewer.jpg".
-   // Really useful for the files ending with 'gif+'.
-
    return SavePicture(fPictureFileName);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save current image in various formats (gif, gif+, jpg, png, eps, pdf).
+/// 'gif+' will append image to an existng file (animated gif).
+/// 'eps' and 'pdf' do not fully support transparency and texturing.
+/// The viewer window most be fully contained within the desktop but
+/// can be covered by other windows.
+/// Returns false if something obvious goes wrong, true otherwise.
+///
+/// The mage is saved using a frame-buffer object if the GL implementation
+/// claims to support it -- this claim is not always true, especially when
+/// running over ssh with drastically different GL implementations on the
+/// client and server sides. Set this in .rootrc to enforce creation of
+/// pictures using the back-buffer:
+///   OpenGL.SavePicturesViaFBO: off
+
 Bool_t TGLViewer::SavePicture(const TString &fileName)
 {
-   // Save current image in various formats (gif, gif+, jpg, png, eps, pdf).
-   // 'gif+' will append image to an existng file (animated gif).
-   // 'eps' and 'pdf' do not fully support transparency and texturing.
-   // The viewer window most be fully contained within the desktop but
-   // can be covered by other windows.
-   // Returns false if something obvious goes wrong, true otherwise.
-   //
-   // The mage is saved using a frame-buffer object if the GL implementation
-   // claims to support it -- this claim is not always true, especially when
-   // running over ssh with drastically different GL implementations on the
-   // client and server sides. Set this in .rootrc to enforce creation of
-   // pictures using the back-buffer:
-   //   OpenGL.SavePicturesViaFBO: off
-
    if (fileName.EndsWith(".eps"))
    {
       return TGLOutput::Capture(*this, TGLOutput::kEPS_BSP, fileName.Data());
@@ -823,16 +825,16 @@ Bool_t TGLViewer::SavePicture(const TString &fileName)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save current image in various formats (gif, gif+, jpg, png).
+/// 'gif+' will append image to an existng file (animated gif).
+/// Back-Buffer is used for capturing of the image.
+/// The viewer window most be fully contained within the desktop but
+/// can be covered by other windows.
+/// Returns false if something obvious goes wrong, true otherwise.
+
 Bool_t TGLViewer::SavePictureUsingBB(const TString &fileName)
 {
-   // Save current image in various formats (gif, gif+, jpg, png).
-   // 'gif+' will append image to an existng file (animated gif).
-   // Back-Buffer is used for capturing of the image.
-   // The viewer window most be fully contained within the desktop but
-   // can be covered by other windows.
-   // Returns false if something obvious goes wrong, true otherwise.
-
    static const TString eh("TGLViewer::SavePictureUsingBB");
 
    if (! fileName.EndsWith(".gif") && ! fileName.Contains(".gif+") &&
@@ -875,22 +877,22 @@ Bool_t TGLViewer::SavePictureUsingBB(const TString &fileName)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save current image in various formats (gif, gif+, jpg, png).
+/// 'gif+' will append image to an existng file (animated gif).
+/// Frame-Buffer-Object is used for capturing of the image - OpenGL
+/// 1.5 is required.
+/// The viewer window does not have to be visible at all.
+/// Returns false if something obvious goes wrong, true otherwise.
+///
+/// pixel_object_scale is used to scale (as much as possible) the
+/// objects whose representation size is pixel based (point-sizes,
+/// line-widths, bitmap/pixmap font-sizes).
+/// If set to 0 (default) no scaling is applied.
+
 Bool_t TGLViewer::SavePictureUsingFBO(const TString &fileName, Int_t w, Int_t h,
                                       Float_t pixel_object_scale)
 {
-   // Save current image in various formats (gif, gif+, jpg, png).
-   // 'gif+' will append image to an existng file (animated gif).
-   // Frame-Buffer-Object is used for capturing of the image - OpenGL
-   // 1.5 is required.
-   // The viewer window does not have to be visible at all.
-   // Returns false if something obvious goes wrong, true otherwise.
-   //
-   // pixel_object_scale is used to scale (as much as possible) the
-   // objects whose representation size is pixel based (point-sizes,
-   // line-widths, bitmap/pixmap font-sizes).
-   // If set to 0 (default) no scaling is applied.
-
    static const TString eh("TGLViewer::SavePictureUsingFBO");
 
    if (! fileName.EndsWith(".gif") && ! fileName.Contains(".gif+") &&
@@ -976,14 +978,14 @@ Bool_t TGLViewer::SavePictureUsingFBO(const TString &fileName, Int_t w, Int_t h,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns current image.
+/// Back-Buffer is used for capturing of the image.
+/// The viewer window most be fully contained within the desktop but
+/// can be covered by other windows.
+
 TImage* TGLViewer::GetPictureUsingBB()
 {
-    // Returns current image.
-    // Back-Buffer is used for capturing of the image.
-    // The viewer window most be fully contained within the desktop but
-    // can be covered by other windows.
-
     static const TString eh("TGLViewer::GetPictureUsingBB");
 
     if ( ! TakeLock(kDrawLock)) {
@@ -1018,19 +1020,19 @@ TImage* TGLViewer::GetPictureUsingBB()
     return image;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns current image.
+/// Frame-Buffer-Object is used for capturing of the image - OpenGL
+/// 1.5 is required.
+/// The viewer window does not have to be visible at all.
+///
+/// pixel_object_scale is used to scale (as much as possible) the
+/// objects whose representation size is pixel based (point-sizes,
+/// line-widths, bitmap/pixmap font-sizes).
+/// If set to 0 (default) no scaling is applied.
+
 TImage* TGLViewer::GetPictureUsingFBO(Int_t w, Int_t h,Float_t pixel_object_scale)
 {
-    // Returns current image.
-    // Frame-Buffer-Object is used for capturing of the image - OpenGL
-    // 1.5 is required.
-    // The viewer window does not have to be visible at all.
-    //
-    // pixel_object_scale is used to scale (as much as possible) the
-    // objects whose representation size is pixel based (point-sizes,
-    // line-widths, bitmap/pixmap font-sizes).
-    // If set to 0 (default) no scaling is applied.
-
     static const TString eh("TGLViewer::GetPictureUsingFBO");
 
     if ( ! TakeLock(kDrawLock)) {
@@ -1101,53 +1103,53 @@ TImage* TGLViewer::GetPictureUsingFBO(Int_t w, Int_t h,Float_t pixel_object_scal
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save picture with given width (height scaled proportinally).
+/// If pixel_object_scale is true (default), the corresponding
+/// scaling gets calculated from the current window size.
+
 Bool_t TGLViewer::SavePictureWidth(const TString &fileName, Int_t width,
                                    Bool_t pixel_object_scale)
 {
-   // Save picture with given width (height scaled proportinally).
-   // If pixel_object_scale is true (default), the corresponding
-   // scaling gets calculated from the current window size.
-
    Float_t scale  = Float_t(width) / fViewport.Width();
    Int_t   height = TMath::Nint(scale*fViewport.Height());
 
    return SavePictureUsingFBO(fileName, width, height, pixel_object_scale ? scale : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save picture with given height (width scaled proportinally).
+/// If pixel_object_scale is true (default), the corresponding
+/// scaling gets calculated from the current window size.
+
 Bool_t TGLViewer::SavePictureHeight(const TString &fileName, Int_t height,
                                     Bool_t pixel_object_scale)
 {
-   // Save picture with given height (width scaled proportinally).
-   // If pixel_object_scale is true (default), the corresponding
-   // scaling gets calculated from the current window size.
-
    Float_t scale = Float_t(height) / fViewport.Height();
    Int_t   width = TMath::Nint(scale*fViewport.Width());
 
    return SavePictureUsingFBO(fileName, width, height, pixel_object_scale ? scale : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save picture with given scale to current window size.
+/// If pixel_object_scale is true (default), the same scaling is
+/// used.
+
 Bool_t TGLViewer::SavePictureScale (const TString &fileName, Float_t scale,
                                     Bool_t pixel_object_scale)
 {
-   // Save picture with given scale to current window size.
-   // If pixel_object_scale is true (default), the same scaling is
-   // used.
-
    Int_t w = TMath::Nint(scale*fViewport.Width());
    Int_t h = TMath::Nint(scale*fViewport.Height());
 
    return SavePictureUsingFBO(fileName, w, h, pixel_object_scale ? scale : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw reference marker and coordinate axes.
+
 void TGLViewer::DrawGuides()
 {
-   // Draw reference marker and coordinate axes.
-
    Bool_t disabled = kFALSE;
    if (fReferenceOn)
    {
@@ -1178,11 +1180,11 @@ void TGLViewer::DrawGuides()
       glEnable(GL_DEPTH_TEST);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If in debug mode draw camera aids and overall bounding box.
+
 void TGLViewer::DrawDebugInfo()
 {
-   // If in debug mode draw camera aids and overall bounding box.
-
    if (fDebugMode)
    {
       glDisable(GL_LIGHTING);
@@ -1204,11 +1206,11 @@ void TGLViewer::DrawDebugInfo()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform GL work which must be done before each draw.
+
 void TGLViewer::PreDraw()
 {
-   // Perform GL work which must be done before each draw.
-
    InitGL();
 
    // For embedded gl clear color must be pad's background color.
@@ -1229,21 +1231,21 @@ void TGLViewer::PreDraw()
    TGLUtil::CheckError("TGLViewer::PreDraw");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform GL work which must be done after each draw.
+
 void TGLViewer::PostDraw()
 {
-   // Perform GL work which must be done after each draw.
-
    glFlush();
    TGLUtil::CheckError("TGLViewer::PostDraw");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a rectangle (background color and given alpha) across the
+/// whole viewport.
+
 void TGLViewer::FadeView(Float_t alpha)
 {
-   // Draw a rectangle (background color and given alpha) across the
-   // whole viewport.
-
    static const Float_t z = -1.0f;
 
    glMatrixMode(GL_PROJECTION); glPushMatrix(); glLoadIdentity();
@@ -1264,20 +1266,22 @@ void TGLViewer::FadeView(Float_t alpha)
    glMatrixMode(GL_MODELVIEW);  glPopMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make GL context current
+
 void TGLViewer::MakeCurrent() const
 {
-   // Make GL context current
    if (fGLDevice == -1)
       fGLWidget->MakeCurrent();
    else
       gGLManager->MakeCurrent(fGLDevice);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Swap GL buffers
+
 void TGLViewer::SwapBuffers() const
 {
-   // Swap GL buffers
    if ( ! IsDrawOrSelectLock()) {
       Error("TGLViewer::SwapBuffers", "viewer is %s", LockName(CurrentLock()));
    }
@@ -1290,12 +1294,12 @@ void TGLViewer::SwapBuffers() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Post request for selection render pass viewer, picking objects
+/// around the window point (x,y).
+
 Bool_t TGLViewer::RequestSelect(Int_t x, Int_t y)
 {
-   // Post request for selection render pass viewer, picking objects
-   // around the window point (x,y).
-
    // Take select lock on scene immediately we enter here - it is released
    // in the other (drawing) thread - see TGLViewer::DoSelect()
 
@@ -1309,15 +1313,15 @@ Bool_t TGLViewer::RequestSelect(Int_t x, Int_t y)
       return DoSelect(x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform GL selection, picking objects overlapping WINDOW
+/// area described by 'rect'. Return kTRUE if selection should be
+/// changed, kFALSE otherwise.
+/// Select lock should already been taken in other thread in
+/// TGLViewer::ReqSelect().
+
 Bool_t TGLViewer::DoSelect(Int_t x, Int_t y)
 {
-   // Perform GL selection, picking objects overlapping WINDOW
-   // area described by 'rect'. Return kTRUE if selection should be
-   // changed, kFALSE otherwise.
-   // Select lock should already been taken in other thread in
-   // TGLViewer::ReqSelect().
-
    R__LOCKGUARD2(gROOTMutex);
 
    if (CurrentLock() != kSelectLock) {
@@ -1367,11 +1371,11 @@ Bool_t TGLViewer::DoSelect(Int_t x, Int_t y)
    return ! TGLSelectRecord::AreSameSelectionWise(fSelRec, fCurrentSelRec);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Request secondary select.
+
 Bool_t TGLViewer::RequestSecondarySelect(Int_t x, Int_t y)
 {
-   // Request secondary select.
-
    if ( ! TakeLock(kSelectLock)) {
       return kFALSE;
    }
@@ -1382,11 +1386,11 @@ Bool_t TGLViewer::RequestSecondarySelect(Int_t x, Int_t y)
       return DoSecondarySelect(x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Secondary selection.
+
 Bool_t TGLViewer::DoSecondarySelect(Int_t x, Int_t y)
 {
-   // Secondary selection.
-
    R__LOCKGUARD2(gROOTMutex);
 
    if (CurrentLock() != kSelectLock) {
@@ -1455,13 +1459,13 @@ Bool_t TGLViewer::DoSecondarySelect(Int_t x, Int_t y)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process result from last selection (in fSelRec) and
+/// extract a new current selection from it.
+/// Here we only use physical shape.
+
 void TGLViewer::ApplySelection()
 {
-   // Process result from last selection (in fSelRec) and
-   // extract a new current selection from it.
-   // Here we only use physical shape.
-
    fCurrentSelRec = fSelRec;
 
    TGLPhysicalShape *selPhys = fSelRec.GetPhysShape();
@@ -1473,12 +1477,12 @@ void TGLViewer::ApplySelection()
    RequestDraw(TGLRnrCtx::kLODHigh);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Post request for secondary selection rendering of selected object
+/// around the window point (x,y).
+
 Bool_t TGLViewer::RequestOverlaySelect(Int_t x, Int_t y)
 {
-   // Post request for secondary selection rendering of selected object
-   // around the window point (x,y).
-
    // Take select lock on viewer immediately - it is released
    // in the other (drawing) thread - see TGLViewer::DoSecondarySelect().
 
@@ -1492,12 +1496,12 @@ Bool_t TGLViewer::RequestOverlaySelect(Int_t x, Int_t y)
       return DoOverlaySelect(x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform GL selection, picking overlay objects only.
+/// Return TRUE if the selected overlay-element has changed.
+
 Bool_t TGLViewer::DoOverlaySelect(Int_t x, Int_t y)
 {
-   // Perform GL selection, picking overlay objects only.
-   // Return TRUE if the selected overlay-element has changed.
-
    R__LOCKGUARD2(gROOTMutex);
 
    if (CurrentLock() != kSelectLock) {
@@ -1564,11 +1568,11 @@ Bool_t TGLViewer::DoOverlaySelect(Int_t x, Int_t y)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make one fading step and request redraw.
+
 void TGLFaderHelper::MakeFadeStep()
 {
-   // Make one fading step and request redraw.
-
    Float_t fade = fViewer->GetFader();
 
    if (fade == fFadeTarget) {
@@ -1590,39 +1594,39 @@ void TGLFaderHelper::MakeFadeStep()
                       "TGLFaderHelper", this, "MakeFadeStep()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Animate fading from curernt value to fade over given time (sec)
+/// and number of steps.
+
 void TGLViewer::AutoFade(Float_t fade, Float_t time, Int_t steps)
 {
-   // Animate fading from curernt value to fade over given time (sec)
-   // and number of steps.
-
    TGLFaderHelper* fh = new TGLFaderHelper(this, fade, time, steps);
    fh->MakeFadeStep();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use the dark color-set.
+
 void TGLViewer::UseDarkColorSet()
 {
-   // Use the dark color-set.
-
    fRnrCtx->ChangeBaseColorSet(&fDarkColorSet);
    RefreshPadEditor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use the light color-set.
+
 void TGLViewer::UseLightColorSet()
 {
-   // Use the light color-set.
-
    fRnrCtx->ChangeBaseColorSet(&fLightColorSet);
    RefreshPadEditor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Swtich between dark and light colorsets.
+
 void TGLViewer::SwitchColorSet()
 {
-   // Swtich between dark and light colorsets.
-
    if (IsUsingDefaultColorSet())
    {
       Info("SwitchColorSet()", "Global color-set is in use, switch not supported.");
@@ -1635,11 +1639,11 @@ void TGLViewer::SwitchColorSet()
       UseLightColorSet();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set usage of the default color set.
+
 void TGLViewer::UseDefaultColorSet(Bool_t x)
 {
-   // Set usage of the default color set.
-
    if (x)
       fRnrCtx->ChangeBaseColorSet(&fgDefaultColorSet);
    else
@@ -1647,58 +1651,58 @@ void TGLViewer::UseDefaultColorSet(Bool_t x)
    RefreshPadEditor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the viewer is using the default color set.
+/// If yes, some operations might be disabled.
+
 Bool_t TGLViewer::IsUsingDefaultColorSet() const
 {
-   // Check if the viewer is using the default color set.
-   // If yes, some operations might be disabled.
-
    return fRnrCtx->GetBaseColorSet() == &fgDefaultColorSet;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set background method.
+/// Deprecated method - set background color in the color-set.
+
 void TGLViewer::SetClearColor(Color_t col)
 {
-   // Set background method.
-   // Deprecated method - set background color in the color-set.
-
    fRnrCtx->GetBaseColorSet()->Background().SetColor(col);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns reference to the default color-set.
+/// Static function.
+
 TGLColorSet& TGLViewer::GetDefaultColorSet()
 {
-   // Returns reference to the default color-set.
-   // Static function.
-
    return fgDefaultColorSet;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets static flag that determines if new viewers should use the
+/// default color-set.
+/// This is false at startup.
+
 void TGLViewer::UseDefaultColorSetForNewViewers(Bool_t x)
 {
-   // Sets static flag that determines if new viewers should use the
-   // default color-set.
-   // This is false at startup.
-
    fgUseDefaultColorSetForNewViewers = x;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the value of the static flag that determines if new
+/// viewers should use the default color-set.
+/// This is false at startup.
+
 Bool_t TGLViewer::IsUsingDefaultColorSetForNewViewers()
 {
-   // Returns the value of the static flag that determines if new
-   // viewers should use the default color-set.
-   // This is false at startup.
-
    return fgUseDefaultColorSetForNewViewers;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if curremt color set is dark.
+
 Bool_t TGLViewer::IsColorSetDark() const
 {
-   // Returns true if curremt color set is dark.
-
    return fRnrCtx->GetBaseColorSet() == &fDarkColorSet;
 }
 
@@ -1706,12 +1710,12 @@ Bool_t TGLViewer::IsColorSetDark() const
 // Viewport
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set viewer viewport (window area) with bottom/left at (x,y), with
+/// dimensions 'width'/'height'
+
 void TGLViewer::SetViewport(Int_t x, Int_t y, Int_t width, Int_t height)
 {
-   // Set viewer viewport (window area) with bottom/left at (x,y), with
-   // dimensions 'width'/'height'
-
    if (fStereo && ! fStereoQuadBuf) width /= 2;
 
    // Only process if changed
@@ -1739,11 +1743,11 @@ void TGLViewer::SetViewport(const TGLRect& vp)
 // Camera methods
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return camera reference by type.
+
 TGLCamera& TGLViewer::RefCamera(ECameraType cameraType)
 {
-   // Return camera reference by type.
-
    // TODO: Move these into a vector!
    switch(cameraType) {
       case kCameraPerspXOZ:
@@ -1770,14 +1774,14 @@ TGLCamera& TGLViewer::RefCamera(ECameraType cameraType)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current active camera - 'cameraType' one of:
+///   kCameraPerspX,    kCameraPerspY,    kCameraPerspZ,
+///   kCameraOrthoXOY,  kCameraOrthoXOZ,  kCameraOrthoZOY,
+///   kCameraOrthoXnOY, kCameraOrthoXnOZ, kCameraOrthoZnOY
+
 void TGLViewer::SetCurrentCamera(ECameraType cameraType)
 {
-   // Set current active camera - 'cameraType' one of:
-   //   kCameraPerspX,    kCameraPerspY,    kCameraPerspZ,
-   //   kCameraOrthoXOY,  kCameraOrthoXOZ,  kCameraOrthoZOY,
-   //   kCameraOrthoXnOY, kCameraOrthoXnOZ, kCameraOrthoZnOY
-
    if (IsLocked()) {
       Error("TGLViewer::SetCurrentCamera", "expected kUnlocked, found %s", LockName(CurrentLock()));
       return;
@@ -1854,25 +1858,25 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set an orthographic camera to supplied configuration - note this
+/// does not need to be the current camera - though you will not see
+/// the effect if it is not.
+///
+/// 'camera' defines the ortho camera - one of kCameraOrthoXOY / XOZ / ZOY
+/// 'left' / 'right' / 'top' / 'bottom' define the WORLD coordinates which
+/// corresepond with the left/right/top/bottom positions on the GL viewer viewport
+/// E.g. for kCameraOrthoXOY camera left/right are X world coords,
+/// top/bottom are Y world coords
+/// As this is an orthographic camera the other axis (in eye direction) is
+/// no relevant. The near/far clip planes are set automatically based in scene
+/// contents
+
 void TGLViewer::SetOrthoCamera(ECameraType camera,
                                Double_t zoom, Double_t dolly,
                                Double_t center[3],
                                Double_t hRotate, Double_t vRotate)
 {
-   // Set an orthographic camera to supplied configuration - note this
-   // does not need to be the current camera - though you will not see
-   // the effect if it is not.
-   //
-   // 'camera' defines the ortho camera - one of kCameraOrthoXOY / XOZ / ZOY
-   // 'left' / 'right' / 'top' / 'bottom' define the WORLD coordinates which
-   // corresepond with the left/right/top/bottom positions on the GL viewer viewport
-   // E.g. for kCameraOrthoXOY camera left/right are X world coords,
-   // top/bottom are Y world coords
-   // As this is an orthographic camera the other axis (in eye direction) is
-   // no relevant. The near/far clip planes are set automatically based in scene
-   // contents
-
    // TODO: Move these into a vector!
    switch(camera) {
       case kCameraOrthoXOY: {
@@ -1903,24 +1907,24 @@ void TGLViewer::SetOrthoCamera(ECameraType camera,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a perspective camera to supplied configuration - note this
+/// does not need to be the current camera - though you will not see
+/// the effect if it is not.
+///
+/// 'camera' defines the persp camera - one of kCameraPerspXOZ, kCameraPerspYOZ, kCameraPerspXOY
+/// 'fov' - field of view (lens angle) in degrees (clamped to 0.1 - 170.0)
+/// 'dolly' - distance from 'center'
+/// 'center' - world position from which dolly/hRotate/vRotate are measured
+///             camera rotates round this, always facing in (in center of viewport)
+/// 'hRotate' - horizontal rotation from initial configuration in degrees
+/// 'hRotate' - vertical rotation from initial configuration in degrees
+
 void TGLViewer::SetPerspectiveCamera(ECameraType camera,
                                      Double_t fov, Double_t dolly,
                                      Double_t center[3],
                                      Double_t hRotate, Double_t vRotate)
 {
-   // Set a perspective camera to supplied configuration - note this
-   // does not need to be the current camera - though you will not see
-   // the effect if it is not.
-   //
-   // 'camera' defines the persp camera - one of kCameraPerspXOZ, kCameraPerspYOZ, kCameraPerspXOY
-   // 'fov' - field of view (lens angle) in degrees (clamped to 0.1 - 170.0)
-   // 'dolly' - distance from 'center'
-   // 'center' - world position from which dolly/hRotate/vRotate are measured
-   //             camera rotates round this, always facing in (in center of viewport)
-   // 'hRotate' - horizontal rotation from initial configuration in degrees
-   // 'hRotate' - vertical rotation from initial configuration in degrees
-
    // TODO: Move these into a vector!
    switch(camera) {
       case kCameraPerspXOZ: {
@@ -1951,13 +1955,13 @@ void TGLViewer::SetPerspectiveCamera(ECameraType camera,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change base-vectors defining the camera-base transformation of current
+/// camera. hAxis and vAxis are the default directions for forward
+/// (inverted) and upwards.
+
 void TGLViewer::ReinitializeCurrentCamera(const TGLVector3& hAxis, const TGLVector3& vAxis, Bool_t redraw)
 {
-   // Change base-vectors defining the camera-base transformation of current
-   // camera. hAxis and vAxis are the default directions for forward
-   // (inverted) and upwards.
-
    TGLMatrix& cb = fCurrentCamera->RefCamBase();
    cb.Set(cb.GetTranslation(), vAxis, hAxis);
    fCurrentCamera->Setup(fOverallBoundingBox, kTRUE);
@@ -1965,36 +1969,36 @@ void TGLViewer::ReinitializeCurrentCamera(const TGLVector3& hAxis, const TGLVect
       RequestDraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the auto-rotator for this viewer.
+
 TGLAutoRotator* TGLViewer::GetAutoRotator()
 {
-   // Get the auto-rotator for this viewer.
-
    if (fAutoRotator == 0)
       fAutoRotator = new TGLAutoRotator(this);
    return fAutoRotator;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the auto-rotator for this viewer. The old rotator is deleted.
+
 void TGLViewer::SetAutoRotator(TGLAutoRotator* ar)
 {
-   // Set the auto-rotator for this viewer. The old rotator is deleted.
-
    delete fAutoRotator;
    fAutoRotator = ar;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable stereo rendering.
+/// If quad_buf is true rendering is done into separate left and right GL
+/// buffers. This requires hardware support. Otherwise left and right images
+/// get rendered into left and right half of the window.
+/// Note that mouse highlighting and selection will not work exactly right
+/// as image for each eye gets slightly shifted and there are two different
+/// directions through the mouse pointer, one for each eye.
+
 void TGLViewer::SetStereo(Bool_t stereo, Bool_t quad_buf)
 {
-   // Enable stereo rendering.
-   // If quad_buf is true rendering is done into separate left and right GL
-   // buffers. This requires hardware support. Otherwise left and right images
-   // get rendered into left and right half of the window.
-   // Note that mouse highlighting and selection will not work exactly right
-   // as image for each eye gets slightly shifted and there are two different
-   // directions through the mouse pointer, one for each eye.
-
    if (stereo != fStereo)
    {
       fStereo = stereo;
@@ -2011,11 +2015,11 @@ void TGLViewer::SetStereo(Bool_t stereo, Bool_t quad_buf)
 // Guide methods
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fetch the state of guides (axes & reference markers) into arguments
+
 void TGLViewer::GetGuideState(Int_t & axesType, Bool_t & axesDepthTest, Bool_t & referenceOn, Double_t referencePos[3]) const
 {
-   // Fetch the state of guides (axes & reference markers) into arguments
-
    axesType = fAxesType;
    axesDepthTest = fAxesDepthTest;
 
@@ -2025,11 +2029,11 @@ void TGLViewer::GetGuideState(Int_t & axesType, Bool_t & axesDepthTest, Bool_t &
    referencePos[2] = fReferencePos.Z();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the state of guides (axes & reference markers) from arguments.
+
 void TGLViewer::SetGuideState(Int_t axesType, Bool_t axesDepthTest, Bool_t referenceOn, const Double_t referencePos[3])
 {
-   // Set the state of guides (axes & reference markers) from arguments.
-
    fAxesType    = axesType;
    fAxesDepthTest = axesDepthTest;
    fReferenceOn = referenceOn;
@@ -2040,62 +2044,62 @@ void TGLViewer::SetGuideState(Int_t axesType, Bool_t axesDepthTest, Bool_t refer
    RequestDraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw camera look at and rotation point.
+
 void TGLViewer::SetDrawCameraCenter(Bool_t x)
 {
-   // Draw camera look at and rotation point.
-
    fDrawCameraCenter = x;
    RequestDraw();
 }
 
 // Selected physical
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return selected physical shape.
+
 const TGLPhysicalShape * TGLViewer::GetSelected() const
 {
-   // Return selected physical shape.
-
    return fSelectedPShapeRef->GetPShape();
 }
 
 /**************************************************************************/
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit MouseOver signal.
+
 void TGLViewer::MouseOver(TGLPhysicalShape *shape)
 {
-   // Emit MouseOver signal.
-
    Emit("MouseOver(TGLPhysicalShape*)", (Long_t)shape);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit MouseOver signal.
+
 void TGLViewer::MouseOver(TGLPhysicalShape *shape, UInt_t state)
 {
-   // Emit MouseOver signal.
-
    Long_t args[2];
    args[0] = (Long_t)shape;
    args[1] = state;
    Emit("MouseOver(TGLPhysicalShape*,UInt_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit MouseOver signal.
+
 void TGLViewer::MouseOver(TObject *obj, UInt_t state)
 {
-   // Emit MouseOver signal.
-
    Long_t args[2];
    args[0] = (Long_t)obj;
    args[1] = state;
    Emit("MouseOver(TObject*,UInt_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit MouseOver signal.
+
 void TGLViewer::ReMouseOver(TObject *obj, UInt_t state)
 {
-   // Emit MouseOver signal.
-
    Long_t args[2];
    args[0] = (Long_t)obj;
    args[1] = state;
@@ -2103,30 +2107,30 @@ void TGLViewer::ReMouseOver(TObject *obj, UInt_t state)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit UnMouseOver signal.
+
 void TGLViewer::UnMouseOver(TObject *obj, UInt_t state)
 {
-   // Emit UnMouseOver signal.
-
    Long_t args[2];
    args[0] = (Long_t)obj;
    args[1] = state;
    Emit("UnMouseOver(TObject*,UInt_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Clicked signal.
+
 void TGLViewer::Clicked(TObject *obj)
 {
-   // Emit Clicked signal.
-
    Emit("Clicked(TObject*)", (Long_t)obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Clicked signal with button id and modifier state.
+
 void TGLViewer::Clicked(TObject *obj, UInt_t button, UInt_t state)
 {
-   // Emit Clicked signal with button id and modifier state.
-
    Long_t args[3];
    args[0] = (Long_t)obj;
    args[1] = button;
@@ -2135,11 +2139,11 @@ void TGLViewer::Clicked(TObject *obj, UInt_t button, UInt_t state)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit ReClicked signal with button id and modifier state.
+
 void TGLViewer::ReClicked(TObject *obj, UInt_t button, UInt_t state)
 {
-   // Emit ReClicked signal with button id and modifier state.
-
    Long_t args[3];
    args[0] = (Long_t)obj;
    args[1] = button;
@@ -2147,11 +2151,11 @@ void TGLViewer::ReClicked(TObject *obj, UInt_t button, UInt_t state)
    Emit("ReClicked(TObject*,UInt_t,UInt_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit UnClicked signal with button id and modifier state.
+
 void TGLViewer::UnClicked(TObject *obj, UInt_t button, UInt_t state)
 {
-   // Emit UnClicked signal with button id and modifier state.
-
    Long_t args[3];
    args[0] = (Long_t)obj;
    args[1] = button;
@@ -2159,11 +2163,11 @@ void TGLViewer::UnClicked(TObject *obj, UInt_t button, UInt_t state)
    Emit("UnClicked(TObject*,UInt_t,UInt_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit MouseIdle signal.
+
 void TGLViewer::MouseIdle(TGLPhysicalShape *shape, UInt_t posx, UInt_t posy)
 {
-   // Emit MouseIdle signal.
-
    Long_t args[3];
    static UInt_t oldx = 0, oldy = 0;
 
@@ -2179,43 +2183,43 @@ void TGLViewer::MouseIdle(TGLPhysicalShape *shape, UInt_t posx, UInt_t posy)
 
 /**************************************************************************/
 /**************************************************************************/
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calcaulate and return pixel distance to nearest viewer object from
+/// window location px, py
+/// This is provided for use when embedding GL viewer into pad
+
 Int_t TGLViewer::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
-   // Calcaulate and return pixel distance to nearest viewer object from
-   // window location px, py
-   // This is provided for use when embedding GL viewer into pad
-
    // Can't track the indvidual objects in rollover. Just set the viewer as the
    // selected object, and return 0 (object identified) so we receive ExecuteEvent calls
    gPad->SetSelected(this);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process event of type 'event' - one of EEventType types,
+/// occuring at window location px, py
+/// This is provided for use when embedding GL viewer into pad
+
 void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Process event of type 'event' - one of EEventType types,
-   // occuring at window location px, py
-   // This is provided for use when embedding GL viewer into pad
-
    if (fEventHandler)
       return fEventHandler->ExecuteEvent(event, px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pass viewer for print capture by TGLOutput.
+
 void TGLViewer::PrintObjects()
 {
-   // Pass viewer for print capture by TGLOutput.
-
    TGLOutput::Capture(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update GUI components for embedded viewer selection change.
+
 void TGLViewer::SelectionChanged()
 {
-   // Update GUI components for embedded viewer selection change.
-
    if (!fGedEditor)
       return;
 
@@ -2230,38 +2234,38 @@ void TGLViewer::SelectionChanged()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// An overlay operation can result in change to an object.
+/// Refresh geditor.
+
 void TGLViewer::OverlayDragFinished()
 {
-   // An overlay operation can result in change to an object.
-   // Refresh geditor.
-
    if (fGedEditor)
    {
       fGedEditor->SetModel(fPad, fGedEditor->GetModel(), kButton1Down);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update GED editor if it is set.
+
 void TGLViewer::RefreshPadEditor(TObject* obj)
 {
-   // Update GED editor if it is set.
-
    if (fGedEditor && (obj == 0 || fGedEditor->GetModel() == obj))
    {
       fGedEditor->SetModel(fPad, fGedEditor->GetModel(), kButton1Down);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the event-handler. The event-handler is owned by the viewer.
+/// If GLWidget is set, the handler is propagated to it.
+///
+/// If called with handler=0, the current handler will be deleted
+/// (also from TGLWidget).
+
 void TGLViewer::SetEventHandler(TGEventHandler *handler)
 {
-   // Set the event-handler. The event-handler is owned by the viewer.
-   // If GLWidget is set, the handler is propagated to it.
-   //
-   // If called with handler=0, the current handler will be deleted
-   // (also from TGLWidget).
-
    if (fEventHandler)
       delete fEventHandler;
 
@@ -2270,11 +2274,11 @@ void TGLViewer::SetEventHandler(TGEventHandler *handler)
       fGLWidget->SetEventHandler(fEventHandler);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove overlay element.
+
 void  TGLViewer::RemoveOverlayElement(TGLOverlayElement* el)
 {
-   // Remove overlay element.
-
    if (el == fCurrentOvlElm)
    {
       fCurrentOvlElm = 0;
@@ -2282,13 +2286,13 @@ void  TGLViewer::RemoveOverlayElement(TGLOverlayElement* el)
    TGLViewerBase::RemoveOverlayElement(el);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset current overlay-element to zero, eventually notifying the
+/// old one that the mouse has left.
+/// Usually called when mouse leaves the window.
+
 void TGLViewer::ClearCurrentOvlElm()
 {
-   // Reset current overlay-element to zero, eventually notifying the
-   // old one that the mouse has left.
-   // Usually called when mouse leaves the window.
-
    if (fCurrentOvlElm)
    {
       fCurrentOvlElm->MouseLeave();

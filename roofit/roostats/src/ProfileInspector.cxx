@@ -14,7 +14,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 ProfileInspector : 
 
@@ -36,21 +37,23 @@ ClassImp(RooStats::ProfileInspector);
 using namespace RooStats;
 using namespace std;
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ProfileInspector::ProfileInspector()
 {
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ProfileInspector destructor
+
 ProfileInspector::~ProfileInspector()
 {
-  // ProfileInspector destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::ModelConfig * config)
 {
-
    //
     // < This tool makes a plot of the conditional maximum likelihood estimate of the nuisance parameter 
     //   vs the parameter of interest >

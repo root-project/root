@@ -25,8 +25,9 @@
 // in order to quiet down some fussy librarians
 int gDummy_ref_cpp;
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Leave fRefs alone
+
 TRefCnt::TRefCnt(EReferenceFlag)
 {
-  // Leave fRefs alone
 }

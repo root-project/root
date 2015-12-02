@@ -46,10 +46,11 @@
 
 ClassImp(TGeoHelix)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy constructor
+
 TGeoHelix::TGeoHelix()
 {
-// Dummy constructor
    fC    = 0.;
    fS    = 0.;
    fStep = 0.;
@@ -66,10 +67,11 @@ TGeoHelix::TGeoHelix()
    TObject::SetBit(kHelixCircle, kFALSE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor
+
 TGeoHelix::TGeoHelix(Double_t curvature, Double_t hstep, Int_t charge)
 {
-// Normal constructor
    SetXYcurvature(curvature);
    SetHelixStep(hstep);
    fQ    = 0;
@@ -87,45 +89,50 @@ TGeoHelix::TGeoHelix(Double_t curvature, Double_t hstep, Int_t charge)
    TObject::SetBit(kHelixCircle, kFALSE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoHelix::~TGeoHelix()
 {
-// Destructor
    if (fMatrix)    delete fMatrix;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe linear step that can be made such that the error
+/// between linear-helix extrapolation is less than EPSIL.
+
 Double_t TGeoHelix::ComputeSafeStep(Double_t epsil) const
 {
-// Compute safe linear step that can be made such that the error
-// between linear-helix extrapolation is less than EPSIL.
    if (TestBit(kHelixStraigth) || TMath::Abs(fC)<TGeoShape::Tolerance()) return 1.E30;
    Double_t c = GetTotalCurvature();
    Double_t step = TMath::Sqrt(2.*epsil/c);
    return step;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize coordinates of a point on the helix
+
 void TGeoHelix::InitPoint(Double_t x0, Double_t y0, Double_t z0)
 {
-// Initialize coordinates of a point on the helix
    fPointInit[0] = x0;
    fPointInit[1] = y0;
    fPointInit[2] = z0;
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set initial point on the helix.
+
 void TGeoHelix::InitPoint (Double_t *point)
 {
-// Set initial point on the helix.
    InitPoint(point[0], point[1], point[2]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize particle direction (tangent on the helix in initial point)
+
 void TGeoHelix::InitDirection(Double_t dirx, Double_t diry, Double_t dirz, Bool_t is_normalized)
 {
-// Initialize particle direction (tangent on the helix in initial point)
    fDirInit[0] = dirx;
    fDirInit[1] = diry;
    fDirInit[2] = dirz;
@@ -135,25 +142,28 @@ void TGeoHelix::InitDirection(Double_t dirx, Double_t diry, Double_t dirz, Bool_
    for (Int_t i=0; i<3; i++) fDirInit[i] *= norm;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize particle direction (tangent on the helix in initial point)
+
 void TGeoHelix::InitDirection(Double_t *dir, Bool_t is_normalized)
 {
-// Initialize particle direction (tangent on the helix in initial point)
    InitDirection(dir[0], dir[1], dir[2], is_normalized);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute helix total curvature
+
 Double_t TGeoHelix::GetTotalCurvature() const
 {
-// Compute helix total curvature
    Double_t k = fC/(1.+fC*fC*fS*fS);
    return k;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set XY curvature: c = 1/Rxy
+
 void TGeoHelix::SetXYcurvature(Double_t curvature)
 {
-// Set XY curvature: c = 1/Rxy
    fC    = curvature;
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
    if (fC < 0) {
@@ -166,10 +176,11 @@ void TGeoHelix::SetXYcurvature(Double_t curvature)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Positive charge means left-handed helix.
+
 void TGeoHelix::SetCharge(Int_t charge)
 {
-// Positive charge means left-handed helix.
    if (charge==0) {
       Error("ctor", "charge cannot be 0 - define it positive for a left-handed helix, negative otherwise");
       return;
@@ -180,10 +191,11 @@ void TGeoHelix::SetCharge(Int_t charge)
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize particle direction (tangent on the helix in initial point)
+
 void TGeoHelix::SetField(Double_t bx, Double_t by, Double_t bz, Bool_t is_normalized)
 {
-// Initialize particle direction (tangent on the helix in initial point)
    fB[0] = bx;
    fB[1] = by;
    fB[2] = bz;
@@ -193,10 +205,11 @@ void TGeoHelix::SetField(Double_t bx, Double_t by, Double_t bz, Bool_t is_normal
    for (Int_t i=0; i<3; i++) fB[i] *= norm;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Z step of the helix on a complete turn. Positive or null.
+
 void TGeoHelix::SetHelixStep(Double_t step)
 {
-// Set Z step of the helix on a complete turn. Positive or null.
    if (step < 0) {
       Error("ctor", "Z step %f not valid. Must be positive.", step);
       return;
@@ -206,27 +219,29 @@ void TGeoHelix::SetHelixStep(Double_t step)
    if (fS < TGeoShape::Tolerance()) TObject::SetBit(kHelixCircle, kTRUE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset current point/direction to initial values
+
 void TGeoHelix::ResetStep()
 {
-// Reset current point/direction to initial values
    fStep = 0.;
    memcpy(fPoint, fPointInit, 3*sizeof(Double_t));
    memcpy(fDir, fDirInit, 3*sizeof(Double_t));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a step from current point along the helix and compute new point, direction and angle
+/// To reach a plane/ shape boundary, one has to:
+///  1. Compute the safety to the plane/boundary
+///  2. Define / update a helix according local field and particle state (position, direction, charge)
+///  3. Compute the magnetic safety (maximum distance for which the field can be considered constant)
+///  4. Call TGeoHelix::Step() having as argument the minimum between 1. and 3.
+///  5. Repeat from 1. until the step to be made is small enough.
+///  6. Add to the total step the distance along a straigth line from the last point
+///     to the plane/shape boundary
+
 void TGeoHelix::Step(Double_t step)
 {
-// Make a step from current point along the helix and compute new point, direction and angle
-// To reach a plane/ shape boundary, one has to:
-//  1. Compute the safety to the plane/boundary
-//  2. Define / update a helix according local field and particle state (position, direction, charge)
-//  3. Compute the magnetic safety (maximum distance for which the field can be considered constant)
-//  4. Call TGeoHelix::Step() having as argument the minimum between 1. and 3.
-//  5. Repeat from 1. until the step to be made is small enough.
-//  6. Add to the total step the distance along a straigth line from the last point
-//     to the plane/shape boundary
    Int_t i;
    fStep += step;
    if (TObject::TestBit(kHelixStraigth)) {
@@ -254,10 +269,11 @@ void TGeoHelix::Step(Double_t step)
    fMatrix->LocalToMasterVect(vect, fDir);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Propagate initial point up to a given Z position in MARS.
+
 Double_t TGeoHelix::StepToPlane(Double_t *point, Double_t *norm)
 {
-// Propagate initial point up to a given Z position in MARS.
    Double_t step = 0.;
    Double_t snext = 1.E30;
    Double_t dx, dy, dz;
@@ -307,10 +323,11 @@ Double_t TGeoHelix::StepToPlane(Double_t *point, Double_t *norm)
    return step;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the local helix matrix.
+
 void TGeoHelix::UpdateHelix()
 {
-// Update the local helix matrix.
    TObject::SetBit(kHelixNeedUpdate, kFALSE);
    fStep = 0.;
    memcpy(fPoint, fPointInit, 3*sizeof(Double_t));

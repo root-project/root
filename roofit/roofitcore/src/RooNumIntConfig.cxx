@@ -44,11 +44,12 @@ ClassImp(RooNumIntConfig)
 RooNumIntConfig* RooNumIntConfig::_default = 0 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Function called by atexit() handler installed by RooSentinel to
+/// cleanup global objects at end of job
+
 void RooNumIntConfig::cleanup()
 {
-  // Function called by atexit() handler installed by RooSentinel to
-  // cleanup global objects at end of job
   if (_default) {
     delete _default ;
     _default = 0 ;
@@ -57,11 +58,11 @@ void RooNumIntConfig::cleanup()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return reference to instance of default numeric integrator configuration object
+
 RooNumIntConfig& RooNumIntConfig::defaultConfig() 
 {
-  // Return reference to instance of default numeric integrator configuration object
-  
   // Instantiate object if it doesn't exist yet
   if (_default==0) {
     _default = new RooNumIntConfig ;    
@@ -72,7 +73,9 @@ RooNumIntConfig& RooNumIntConfig::defaultConfig()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor 
+
 RooNumIntConfig::RooNumIntConfig() : 
   _epsAbs(1e-7),
   _epsRel(1e-7),
@@ -84,8 +87,6 @@ RooNumIntConfig::RooNumIntConfig() :
   _method2DOpen("method2DOpen","2D integration method in open domain"),
   _methodNDOpen("methodNDOpen","ND integration method in open domain")
 {
-  // Constructor 
-
   // Set all methods to undefined
   // Defined methods will be registered by static initialization routines
   // of the various numeric integrator engines
@@ -98,17 +99,19 @@ RooNumIntConfig::RooNumIntConfig() :
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooNumIntConfig::~RooNumIntConfig()
 {
-  // Destructor
-
   // Delete all configuration data
   _configSets.Delete() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooNumIntConfig::RooNumIntConfig(const RooNumIntConfig& other) :
   TObject(other), RooPrintable(other),
   _epsAbs(other._epsAbs),
@@ -121,8 +124,6 @@ RooNumIntConfig::RooNumIntConfig(const RooNumIntConfig& other) :
   _method2DOpen(other._method2DOpen),
   _methodNDOpen(other._methodNDOpen)
 {
-  // Copy constructor
-  
   // Clone all configuration dat
   TIterator* iter = other._configSets.MakeIterator() ;
   RooArgSet* set ;
@@ -135,11 +136,11 @@ RooNumIntConfig::RooNumIntConfig(const RooNumIntConfig& other) :
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator from other RooNumIntConfig
+
 RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other) 
 {
-  // Assignment operator from other RooNumIntConfig
-
   // Prevent self-assignment 
   if (&other==this) {
     return *this ;
@@ -173,13 +174,13 @@ RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a configuration section for a particular integrator. Integrator name and capabilities are
+/// automatically determined from instance passed as 'proto'. The defaultConfig object is associated
+/// as the default configuration for the integrator. 
+
 Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& inDefaultConfig)
 {
-  // Add a configuration section for a particular integrator. Integrator name and capabilities are
-  // automatically determined from instance passed as 'proto'. The defaultConfig object is associated
-  // as the default configuration for the integrator. 
-
   TString name = proto->IsA()->GetName() ;
 
   // Register integrator for appropriate dimensionalities
@@ -214,20 +215,20 @@ Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const Ro
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return section with configuration parameters for integrator with given (class) name
+
 RooArgSet& RooNumIntConfig::getConfigSection(const char* name)  
 {
-  // Return section with configuration parameters for integrator with given (class) name
-
   return const_cast<RooArgSet&>((const_cast<const RooNumIntConfig*>(this)->getConfigSection(name))) ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve configuration information specific to integrator with given name
+
 const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
 {
-  // Retrieve configuration information specific to integrator with given name
-
   static RooArgSet dummy ;
   RooArgSet* config = (RooArgSet*) _configSets.FindObject(name) ;
   if (!config) {
@@ -239,11 +240,11 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set absolute convergence criteria (convergence if abs(Err)<newEpsAbs)
+
 void RooNumIntConfig::setEpsAbs(Double_t newEpsAbs)
 {
-  // Set absolute convergence criteria (convergence if abs(Err)<newEpsAbs)
-
   if (newEpsAbs<=0) {
     oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::setEpsAbs: ERROR: target absolute precision must be greater than zero" << endl ;
     return ;
@@ -269,11 +270,11 @@ RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) cons
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set relative convergence criteria (convergence if abs(Err)/abs(Int)<newEpsRel)
+
 void RooNumIntConfig::setEpsRel(Double_t newEpsRel) 
 {
-  // Set relative convergence criteria (convergence if abs(Err)/abs(Int)<newEpsRel)
-
   if (newEpsRel<=0) {
     oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::setEpsRel: ERROR: target absolute precision must be greater than zero" << endl ;
     return ;
@@ -283,11 +284,11 @@ void RooNumIntConfig::setEpsRel(Double_t newEpsRel)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Detailed printing interface
+
 void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verbose, TString indent) const
 {
-  // Detailed printing interface
-
   os << indent << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;
   if (_printEvalCounter) {
     os << indent << "Printing of function evaluation counter for each integration enabled" << endl << endl ;

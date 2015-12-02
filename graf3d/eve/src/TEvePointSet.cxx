@@ -45,7 +45,8 @@
 
 ClassImp(TEvePointSet);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
    TEveElement(),
    TPointSet3D(n_points),
@@ -66,7 +67,8 @@ TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
    fPickable = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEvePointSet::TEvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_type) :
    TEveElement(),
    TPointSet3D(n_points),
@@ -88,7 +90,8 @@ TEvePointSet::TEvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_t
    fPickable = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEvePointSet::TEvePointSet(const TEvePointSet& e) :
    TEveElement(e),
    TPointSet3D(e),
@@ -103,21 +106,21 @@ TEvePointSet::TEvePointSet(const TEvePointSet& e) :
    // Copy constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEvePointSet::~TEvePointSet()
 {
-   // Destructor.
-
    delete fIntIds;
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clone points and all point-related information from point-set 'e'.
+
 void TEvePointSet::ClonePoints(const TEvePointSet& e)
 {
-   // Clone points and all point-related information from point-set 'e'.
-
    // TPolyMarker3D
    delete [] fP;
    fN = e.fN;
@@ -142,21 +145,21 @@ void TEvePointSet::ClonePoints(const TEvePointSet& e)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointset icon.
+
 const TGPicture* TEvePointSet::GetListTreeIcon(Bool_t)
 {
-   // Return pointset icon.
-
    return TEveElement::fgListTreeIcons[3];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drop all data and set-up the data structures to recive new data.
+/// n_points   specifies the initial size of the arrays.
+/// n_int_ids  specifies the number of integer ids per point.
+
 void TEvePointSet::Reset(Int_t n_points, Int_t n_int_ids)
 {
-   // Drop all data and set-up the data structures to recive new data.
-   // n_points   specifies the initial size of the arrays.
-   // n_int_ids  specifies the number of integer ids per point.
-
    delete [] fP; fP = 0;
    fN = n_points;
    if (fN) {
@@ -171,14 +174,14 @@ void TEvePointSet::Reset(Int_t n_points, Int_t n_int_ids)
    ResetBBox();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resizes internal array to allow additional n_points to be stored.
+/// Returns the old size which is also the location where one can
+/// start storing new data.
+/// The caller is *obliged* to fill the new point slots.
+
 Int_t TEvePointSet::GrowFor(Int_t n_points)
 {
-   // Resizes internal array to allow additional n_points to be stored.
-   // Returns the old size which is also the location where one can
-   // start storing new data.
-   // The caller is *obliged* to fill the new point slots.
-
    Int_t old_size = Size();
    Int_t new_size = old_size + n_points;
    SetPoint(new_size - 1, 0, 0, 0);
@@ -189,57 +192,57 @@ Int_t TEvePointSet::GrowFor(Int_t n_points)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assert that size of IntId array is compatible with the size of
+/// the point array.
+
 inline void TEvePointSet::AssertIntIdsSize()
 {
-   // Assert that size of IntId array is compatible with the size of
-   // the point array.
-
    Int_t exp_size = GetN()*fIntIdsPerPoint;
    if (fIntIds->GetSize() < exp_size)
       fIntIds->Set(exp_size);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to integer ids of point with index p.
+/// Existence of integer id array is checked, 0 is returned if it
+/// does not exist.
+/// Validity of p is *not* checked.
+
 Int_t* TEvePointSet::GetPointIntIds(Int_t p) const
 {
-   // Return a pointer to integer ids of point with index p.
-   // Existence of integer id array is checked, 0 is returned if it
-   // does not exist.
-   // Validity of p is *not* checked.
-
    if (fIntIds)
       return fIntIds->GetArray() + p*fIntIdsPerPoint;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return i-th integer id of point with index p.
+/// Existence of integer id array is checked, kMinInt is returned if
+/// it does not exist.
+/// Validity of p and i is *not* checked.
+
 Int_t TEvePointSet::GetPointIntId(Int_t p, Int_t i) const
 {
-   // Return i-th integer id of point with index p.
-   // Existence of integer id array is checked, kMinInt is returned if
-   // it does not exist.
-   // Validity of p and i is *not* checked.
-
    if (fIntIds)
       return * (fIntIds->GetArray() + p*fIntIdsPerPoint + i);
    return kMinInt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set integer ids for the last point that was registered (most
+/// probably via TPolyMarker3D::SetNextPoint(x,y,z)).
+
 void TEvePointSet::SetPointIntIds(Int_t* ids)
 {
-   // Set integer ids for the last point that was registered (most
-   // probably via TPolyMarker3D::SetNextPoint(x,y,z)).
-
    SetPointIntIds(fLastPoint, ids);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set integer ids for point with index n.
+
 void TEvePointSet::SetPointIntIds(Int_t n, Int_t* ids)
 {
-   // Set integer ids for point with index n.
-
    if (!fIntIds) return;
    AssertIntIdsSize();
    Int_t* x = fIntIds->GetArray() + n*fIntIdsPerPoint;
@@ -249,11 +252,11 @@ void TEvePointSet::SetPointIntIds(Int_t n, Int_t* ids)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker style, propagate to projecteds.
+
 void TEvePointSet::SetMarkerStyle(Style_t mstyle)
 {
-   // Set marker style, propagate to projecteds.
-
    static const TEveException eh("TEvePointSet::SetMarkerStyle ");
 
    std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
@@ -270,11 +273,11 @@ void TEvePointSet::SetMarkerStyle(Style_t mstyle)
    TAttMarker::SetMarkerStyle(mstyle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker size, propagate to projecteds.
+
 void TEvePointSet::SetMarkerSize(Size_t msize)
 {
-   // Set marker size, propagate to projecteds.
-
    static const TEveException eh("TEvePointSet::SetMarkerSize ");
 
    std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
@@ -293,23 +296,23 @@ void TEvePointSet::SetMarkerSize(Size_t msize)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint point-set.
+
 void TEvePointSet::Paint(Option_t*)
 {
-   // Paint point-set.
-
    PaintStandard(this);
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize point-set for new filling.
+/// subIdNum gives the number of integer ids that can be assigned to
+/// each point.
+
 void TEvePointSet::InitFill(Int_t subIdNum)
 {
-   // Initialize point-set for new filling.
-   // subIdNum gives the number of integer ids that can be assigned to
-   // each point.
-
    if (subIdNum > 0) {
       fIntIdsPerPoint = subIdNum;
       if (!fIntIds)
@@ -322,13 +325,13 @@ void TEvePointSet::InitFill(Int_t subIdNum)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called from TEvePointSelector when internal arrays of the tree-selector
+/// are filled up and need to be processed.
+/// Virtual from TEvePointSelectorConsumer.
+
 void TEvePointSet::TakeAction(TEvePointSelector* sel)
 {
-   // Called from TEvePointSelector when internal arrays of the tree-selector
-   // are filled up and need to be processed.
-   // Virtual from TEvePointSelectorConsumer.
-
    static const TEveException eh("TEvePointSet::TakeAction ");
 
    if(sel == 0)
@@ -384,11 +387,11 @@ void TEvePointSet::TakeAction(TEvePointSelector* sel)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy visualization parameters from element el.
+
 void TEvePointSet::CopyVizParams(const TEveElement* el)
 {
-   // Copy visualization parameters from element el.
-
    const TEvePointSet* m = dynamic_cast<const TEvePointSet*>(el);
    if (m)
    {
@@ -399,11 +402,11 @@ void TEvePointSet::CopyVizParams(const TEveElement* el)
    TEveElement::CopyVizParams(el);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write visualization parameters.
+
 void TEvePointSet::WriteVizParams(std::ostream& out, const TString& var)
 {
-   // Write visualization parameters.
-
    TEveElement::WriteVizParams(out, var);
 
    TAttMarker::SaveMarkerAttributes(out, var);
@@ -411,20 +414,20 @@ void TEvePointSet::WriteVizParams(std::ostream& out, const TString& var)
 
 //******************************************************************************
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TEveProjectable, returns TEvePointSetProjected class.
+
 TClass* TEvePointSet::ProjectedClass(const TEveProjection*) const
 {
-   // Virtual from TEveProjectable, returns TEvePointSetProjected class.
-
    return TEvePointSetProjected::Class();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual method of base class TPointSet3D. The function call is
+/// invoked with secondary selection in TPointSet3DGL.
+
 void TEvePointSet::PointSelected(Int_t id)
 {
-   // Virtual method of base class TPointSet3D. The function call is
-   // invoked with secondary selection in TPointSet3DGL.
-
    Emit("PointSelected(Int_t)", id);
    TPointSet3D::PointSelected(id);
 }
@@ -456,7 +459,8 @@ void TEvePointSet::PointSelected(Int_t id)
 
 ClassImp(TEvePointSetArray);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEvePointSetArray::TEvePointSetArray(const char* name,
                                      const char* title) :
    TEveElement(),
@@ -472,21 +476,21 @@ TEvePointSetArray::TEvePointSetArray(const char* name,
    SetMainColorPtr(&fMarkerColor);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor: deletes the fBins array. Actual removal of
+/// elements done by TEveElement.
+
 TEvePointSetArray::~TEvePointSetArray()
 {
-   // Destructor: deletes the fBins array. Actual removal of
-   // elements done by TEveElement.
-
    // printf("TEvePointSetArray::~TEvePointSetArray()\n");
    delete [] fBins; fBins = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TEveElement, provide bin management.
+
 void TEvePointSetArray::RemoveElementLocal(TEveElement* el)
 {
-   // Virtual from TEveElement, provide bin management.
-
    for (Int_t i=0; i<fNBins; ++i) {
       if (fBins[i] == el) {
          fBins[i] = 0;
@@ -495,21 +499,21 @@ void TEvePointSetArray::RemoveElementLocal(TEveElement* el)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TEveElement, provide bin management.
+
 void TEvePointSetArray::RemoveElementsLocal()
 {
-   // Virtual from TEveElement, provide bin management.
-
    delete [] fBins; fBins = 0; fLastBin = -1;
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker color, propagate to children.
+
 void TEvePointSetArray::SetMarkerColor(Color_t tcolor)
 {
-   // Set marker color, propagate to children.
-
    static const TEveException eh("TEvePointSetArray::SetMarkerColor ");
 
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
@@ -520,11 +524,11 @@ void TEvePointSetArray::SetMarkerColor(Color_t tcolor)
    TAttMarker::SetMarkerColor(tcolor);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker style, propagate to children.
+
 void TEvePointSetArray::SetMarkerStyle(Style_t mstyle)
 {
-   // Set marker style, propagate to children.
-
    static const TEveException eh("TEvePointSetArray::SetMarkerStyle ");
 
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
@@ -535,11 +539,11 @@ void TEvePointSetArray::SetMarkerStyle(Style_t mstyle)
    TAttMarker::SetMarkerStyle(mstyle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker size, propagate to children.
+
 void TEvePointSetArray::SetMarkerSize(Size_t msize)
 {
-   // Set marker size, propagate to children.
-
    static const TEveException eh("TEvePointSetArray::SetMarkerSize ");
 
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
@@ -552,13 +556,13 @@ void TEvePointSetArray::SetMarkerSize(Size_t msize)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called from TEvePointSelector when internal arrays of the tree-selector
+/// are filled up and need to be processed.
+/// Virtual from TEvePointSelectorConsumer.
+
 void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
 {
-   // Called from TEvePointSelector when internal arrays of the tree-selector
-   // are filled up and need to be processed.
-   // Virtual from TEvePointSelectorConsumer.
-
    static const TEveException eh("TEvePointSetArray::TakeAction ");
 
    if (sel == 0)
@@ -603,13 +607,13 @@ void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the total number of filled points.
+/// 'under' and 'over' flags specify if under/overflow channels
+/// should be added to the sum.
+
 Int_t TEvePointSetArray::Size(Bool_t under, Bool_t over) const
 {
-   // Get the total number of filled points.
-   // 'under' and 'over' flags specify if under/overflow channels
-   // should be added to the sum.
-
    Int_t size = 0;
    const Int_t min = under ? 0 : 1;
    const Int_t max = over  ? fNBins : fNBins - 1;
@@ -621,14 +625,14 @@ Int_t TEvePointSetArray::Size(Bool_t under, Bool_t over) const
    return size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize internal point-sets with given binning parameters.
+/// The actual number of bins is nbins+2, bin 0 corresponding to
+/// underflow and bin nbin+1 to owerflow pointset.
+
 void TEvePointSetArray::InitBins(const char* quant_name,
                                  Int_t nbins, Double_t min, Double_t max)
 {
-   // Initialize internal point-sets with given binning parameters.
-   // The actual number of bins is nbins+2, bin 0 corresponding to
-   // underflow and bin nbin+1 to owerflow pointset.
-
    static const TEveException eh("TEvePointSetArray::InitBins ");
 
    if (nbins < 1) throw eh + "nbins < 1.";
@@ -663,14 +667,14 @@ void TEvePointSetArray::InitBins(const char* quant_name,
    fBins[fNBins-1]->SetRnrSelf(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new point. Appropriate point-set will be chosen based on
+/// the value of the separating quantity 'quant'.
+/// If the selected bin does not have an associated TEvePointSet
+/// the point is discarded and false is returned.
+
 Bool_t TEvePointSetArray::Fill(Double_t x, Double_t y, Double_t z, Double_t quant)
 {
-   // Add a new point. Appropriate point-set will be chosen based on
-   // the value of the separating quantity 'quant'.
-   // If the selected bin does not have an associated TEvePointSet
-   // the point is discarded and false is returned.
-
    fLastBin = TMath::FloorNint((quant - fMin)/fBinWidth) + 1;
 
    if (fLastBin < 0)
@@ -693,22 +697,22 @@ Bool_t TEvePointSetArray::Fill(Double_t x, Double_t y, Double_t z, Double_t quan
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set external object id of the last added point.
+
 void TEvePointSetArray::SetPointId(TObject* id)
 {
-   // Set external object id of the last added point.
-
    if (fLastBin >= 0)
       fBins[fLastBin]->SetPointId(id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call this after all the points have been filled.
+/// At this point we can calculate bounding-boxes of individual
+/// point-sets.
+
 void TEvePointSetArray::CloseBins()
 {
-   // Call this after all the points have been filled.
-   // At this point we can calculate bounding-boxes of individual
-   // point-sets.
-
    for (Int_t i=0; i<fNBins; ++i)
    {
       if (fBins[i] != 0)
@@ -722,11 +726,11 @@ void TEvePointSetArray::CloseBins()
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Propagate id-object ownership to children.
+
 void TEvePointSetArray::SetOwnIds(Bool_t o)
 {
-   // Propagate id-object ownership to children.
-
    for (Int_t i=0; i<fNBins; ++i)
    {
       if (fBins[i] != 0)
@@ -736,13 +740,13 @@ void TEvePointSetArray::SetOwnIds(Bool_t o)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set active range of the separating quantity.
+/// Appropriate point-sets are tagged for rendering.
+/// Over/underflow point-sets are left as they were.
+
 void TEvePointSetArray::SetRange(Double_t min, Double_t max)
 {
-   // Set active range of the separating quantity.
-   // Appropriate point-sets are tagged for rendering.
-   // Over/underflow point-sets are left as they were.
-
    using namespace TMath;
 
    fCurMin = min; fCurMax = max;
@@ -768,30 +772,31 @@ void TEvePointSetArray::SetRange(Double_t min, Double_t max)
 
 ClassImp(TEvePointSetProjected);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default contructor.
+
 TEvePointSetProjected::TEvePointSetProjected() :
    TEvePointSet  (),
    TEveProjected ()
 {
-   // Default contructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set projection manager and projection model.
+/// Virtual from TEveProjected.
+
 void TEvePointSetProjected::SetProjection(TEveProjectionManager* proj,
                                           TEveProjectable* model)
 {
-   // Set projection manager and projection model.
-   // Virtual from TEveProjected.
-
    TEveProjected::SetProjection(proj, model);
    CopyVizParams(dynamic_cast<TEveElement*>(model));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set depth (z-coordinate) of the projected points.
+
 void TEvePointSetProjected::SetDepthLocal(Float_t d)
 {
-   // Set depth (z-coordinate) of the projected points.
-
    SetDepthCommon(d, this, fBBox);
 
    Int_t    n = Size();
@@ -800,12 +805,12 @@ void TEvePointSetProjected::SetDepthLocal(Float_t d)
       *p = fDepth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Re-apply the projection.
+/// Virtual from TEveProjected.
+
 void TEvePointSetProjected::UpdateProjection()
 {
-   // Re-apply the projection.
-   // Virtual from TEveProjected.
-
    TEveProjection &proj = * fManager->GetProjection();
    TEvePointSet   &ps   = * dynamic_cast<TEvePointSet*>(fProjectable);
    TEveTrans      *tr   =   ps.PtrMainTrans(kFALSE);
@@ -820,12 +825,12 @@ void TEvePointSetProjected::UpdateProjection()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual method of base class TPointSet3D.
+/// Forward to projectable.
+
 void TEvePointSetProjected::PointSelected(Int_t id)
 {
-   // Virtual method of base class TPointSet3D.
-   // Forward to projectable.
-
    TEvePointSet *ps = dynamic_cast<TEvePointSet*>(fProjectable);
    ps->PointSelected(id);
 }

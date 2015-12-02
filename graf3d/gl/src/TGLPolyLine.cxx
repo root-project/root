@@ -23,7 +23,8 @@
 #include "TClass.h"
 #include "TError.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>GL Polyline</h2></center>
 To draw a 3D polyline in a GL window.
@@ -31,23 +32,25 @@ End_Html */
 
 ClassImp(TGLPolyLine)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+///dynamic_cast because of multiple inheritance.
+
 TGLPolyLine::TGLPolyLine(const TBuffer3D & buffer) :
    TGLLogicalShape(buffer),
    fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts()),
    fLineWidth(1.)
 {
-   // constructor
-   //dynamic_cast because of multiple inheritance.
    if (TAttLine *lineAtt = dynamic_cast<TAttLine *>(buffer.fID))
       fLineWidth = lineAtt->GetLineWidth();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Debug tracing
+
 void TGLPolyLine::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Debug tracing
    if (gDebug > 4) {
       Info("TGLPolyLine::DirectDraw", "this %ld (class %s) LOD %d", (Long_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }

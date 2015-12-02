@@ -35,7 +35,9 @@ using namespace std;
 
 ClassImp(RooEffGenContext);
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of generator context for RooEffProd products
+
 RooEffGenContext::RooEffGenContext(const RooAbsPdf &model, 
                                    const RooAbsPdf& pdf, const RooAbsReal& eff,
                                    const RooArgSet &vars,
@@ -43,8 +45,6 @@ RooEffGenContext::RooEffGenContext(const RooAbsPdf &model,
                                    Bool_t verbose, const RooArgSet* /*forceDirect*/) :
    RooAbsGenContext(model, vars, prototype, auxProto, verbose), _maxEff(0.)
 {
-   // Constructor of generator context for RooEffProd products
-
    RooArgSet x(eff,eff.GetName());
    _cloneSet = static_cast<RooArgSet*>(x.snapshot(kTRUE));
    _eff = dynamic_cast<RooAbsReal*>(_cloneSet->find(eff.GetName()));
@@ -52,20 +52,21 @@ RooEffGenContext::RooEffGenContext(const RooAbsPdf &model,
    _vars = static_cast<RooArgSet*>(vars.snapshot(kTRUE));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooEffGenContext::~RooEffGenContext()
 {
-   // Destructor
    delete _generator;
    delete _cloneSet;
    delete _vars;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// One-time initialization of generator.
+
 void RooEffGenContext::initGenerator(const RooArgSet &theEvent)
 {
-   // One-time initialization of generator.
-
    _eff->recursiveRedirectServers(theEvent);
    _generator->initGenerator(theEvent);
 
@@ -78,13 +79,13 @@ void RooEffGenContext::initGenerator(const RooArgSet &theEvent)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate one event. Generate an event from the p.d.f and
+/// then perform an accept/reject sampling based on the efficiency
+/// function
+
 void RooEffGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 {
-   // Generate one event. Generate an event from the p.d.f and
-   // then perform an accept/reject sampling based on the efficiency
-   // function
-
    while (true) {
       _generator->generateEvent(theEvent, remaining);
       double val = _eff->getVal();

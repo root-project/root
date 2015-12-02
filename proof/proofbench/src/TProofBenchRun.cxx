@@ -23,11 +23,11 @@
 
 ClassImp(TProofBenchRun)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor: check PROOF and load selectors PAR
+
 TProofBenchRun::TProofBenchRun(TProof *proof, const char *sel) : fSelName(sel)
 {
-   // Constructor: check PROOF and load selectors PAR
-
    fProof = proof;
    if (!fProof){
       fProof = gProof;
@@ -39,8 +39,9 @@ TProofBenchRun::TProofBenchRun(TProof *proof, const char *sel) : fSelName(sel)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TProofBenchRun::~TProofBenchRun()
 {
-   //destructor
 }

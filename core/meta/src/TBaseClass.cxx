@@ -31,39 +31,39 @@
 
 ClassImp(TBaseClass)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TBaseClass ctor. TBaseClasses are constructed in TClass
+/// via a call to TCling::CreateListOfBaseClasses().
+
 TBaseClass::TBaseClass(BaseClassInfo_t *info, TClass *cl) :
    TDictionary(), fInfo(info), fClass(cl), fDelta(INT_MAX),
    fProperty(-1), fSTLType(-1)
 {
-   // Default TBaseClass ctor. TBaseClasses are constructed in TClass
-   // via a call to TCling::CreateListOfBaseClasses().
-
    if (fInfo) SetName(gCling->BaseClassInfo_FullName(fInfo));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TBaseClass dtor deletes adopted CINT BaseClassInfo object.
+
 TBaseClass::~TBaseClass()
 {
-   // TBaseClass dtor deletes adopted CINT BaseClassInfo object.
-
    gCling->BaseClassInfo_Delete(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called by the browser, to browse a baseclass.
+
 void TBaseClass::Browse(TBrowser *b)
 {
-   // Called by the browser, to browse a baseclass.
-
    TClass *c = GetClassPointer();
    if (c) c->Browse(b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get pointer to the base class TClass.
+
 TClass *TBaseClass::GetClassPointer(Bool_t load)
 {
-   // Get pointer to the base class TClass.
-
    if (!fClassPtr) {
       if (fInfo) fClassPtr = TClass::GetClass(gCling->BaseClassInfo_ClassInfo(fInfo),load);
       else fClassPtr = TClass::GetClass(fName, load);
@@ -71,11 +71,11 @@ TClass *TBaseClass::GetClassPointer(Bool_t load)
    return fClassPtr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get offset from "this" to part of base class.
+
 Int_t TBaseClass::GetDelta()
 {
-   // Get offset from "this" to part of base class.
-
    // Initialized to INT_MAX to signal that it's unset; -1 is a valid value
    // meaning "cannot calculate base offset".
    if (fDelta == INT_MAX) {
@@ -88,20 +88,20 @@ Int_t TBaseClass::GetDelta()
    return fDelta;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get base class description (comment).
+
 const char *TBaseClass::GetTitle() const
 {
-   // Get base class description (comment).
-
    TClass *c = ((TBaseClass *)this)->GetClassPointer();
    return c ? c->GetTitle() : "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return which type (if any) of STL container the data member is.
+
 ROOT::ESTLType TBaseClass::IsSTLContainer()
 {
-   // Return which type (if any) of STL container the data member is.
-
    // fSTLType is -1 if not yet evaulated.
    // fSTLType is -2 if no fInfo was available.
 
@@ -130,10 +130,11 @@ ROOT::ESTLType TBaseClass::IsSTLContainer()
    return (ROOT::ESTLType) fSTLType;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get property description word. For meaning of bits see EProperty.
+
 Long_t TBaseClass::Property() const
 {
-   // Get property description word. For meaning of bits see EProperty.
    if (fProperty == -1 && fInfo) {
       R__LOCKGUARD(gInterpreterMutex);
       fProperty = gCling->BaseClassInfo_Property(fInfo);
@@ -141,10 +142,11 @@ Long_t TBaseClass::Property() const
    return fProperty;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of TBaseClass. Triggers the calculation of the
+/// cache variables to store them.
+
 void TBaseClass::Streamer(TBuffer& b) {
-   // Stream an object of TBaseClass. Triggers the calculation of the
-   // cache variables to store them.
    if (b.IsReading()) {
       b.ReadClassBuffer(Class(), this);
    } else {

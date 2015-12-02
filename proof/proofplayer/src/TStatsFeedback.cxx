@@ -35,11 +35,11 @@
 ClassImp(TStatsFeedback)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TStatsFeedback::TStatsFeedback(TProof *proof)
 {
-   // Constructor
-
    if (proof == 0) proof = gProof;
 
    TProof *p = dynamic_cast<TProof*>(proof);
@@ -59,19 +59,19 @@ TStatsFeedback::TStatsFeedback(TProof *proof)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TStatsFeedback::~TStatsFeedback()
 {
-   // Destructor
-
    fProof->Disconnect("Feedback(TList*)", this, "Feedback(TList*");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display feedback
+
 void TStatsFeedback::Feedback(TList *objs)
 {
-   // Display feedback
-
    TSeqCollection *canvases = gROOT->GetListOfCanvases();
 
    PDB(kFeedback,1) Info("Feedback", "%d Objects", objs->GetSize());

@@ -23,12 +23,12 @@
 ExceptionContext_t *gException;
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If an exception context has been set (using the TRY and RETRY macros)
+/// jump back to where it was set.
+
 void Throw(int code)
 {
-   // If an exception context has been set (using the TRY and RETRY macros)
-   // jump back to where it was set.
-
    if (gException)
 #ifdef NEED_SIGJMP
       siglongjmp(gException->fBuf, code);

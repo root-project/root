@@ -200,7 +200,8 @@ Double_t Tester::DoTest() {
   Printf(" CpuTime=%7.2f seconds", v);
   return 1000*v/fNtimes;
 };
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const int ntests = 8;     // Number of classes to be tested
 Double_t deltas[ntests];  // benchmark results
 

@@ -42,22 +42,25 @@ ClassImp(RooNormSetCache)
 #include <iostream>
 using namespace std ;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNormSetCache::RooNormSetCache(ULong_t max) :
   _max(max), _next(0), _set2RangeName(0)
 {
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooNormSetCache::~RooNormSetCache() 
 {
-  // Destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear contents 
+
 void RooNormSetCache::clear()
 {
-  // Clear contents 
   {
     PairIdxMapType tmpmap;
     tmpmap.swap(_pairToIdx);
@@ -69,11 +72,11 @@ void RooNormSetCache::clear()
   _next = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add given pair of RooArgSet pointers to our store
+
 void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
 {
-  // Add given pair of RooArgSet pointers to our store
-
   const Pair pair(set1, set2);
   PairIdxMapType::iterator it = _pairToIdx.lower_bound(pair);
   if (_pairToIdx.end() != it && !PairCmp()(it->first, pair) &&
@@ -100,15 +103,15 @@ void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
   }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If RooArgSets set1 and set2 or sets with similar contents have
+/// been seen by this cache manager before return kFALSE If not,
+/// return kTRUE. If sets have not been seen and doRefill is true,
+/// update cache reference to current input sets.
+
 Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1,
 	const RooArgSet* set2, const TNamed* set2RangeName, Bool_t doRefill) 
 {
-  // If RooArgSets set1 and set2 or sets with similar contents have
-  // been seen by this cache manager before return kFALSE If not,
-  // return kTRUE. If sets have not been seen and doRefill is true,
-  // update cache reference to current input sets.
-  
 
   // Automated cache management function - Returns kTRUE if cache is invalidated
   

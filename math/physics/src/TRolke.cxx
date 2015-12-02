@@ -193,7 +193,10 @@
 
 ClassImp(TRolke)
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor with optional Confidence Level argument.
+///'option' is not used.
+
 TRolke::TRolke(Double_t CL, Option_t * /*option*/)
 :  fCL(CL),
    fUpperLimit(0.0),
@@ -202,13 +205,11 @@ TRolke::TRolke(Double_t CL, Option_t * /*option*/)
    fNumWarningsDeprecated1(0),
    fNumWarningsDeprecated2(0)
 {
-//constructor with optional Confidence Level argument.
-//'option' is not used.
-
    SetModelParameters();
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TRolke::~TRolke()
 {
 }
@@ -1052,10 +1053,11 @@ void TRolke::ProfLikeMod1(Double_t mu, Double_t &b, Double_t &e, Int_t x, Int_t 
    b = Double_t(y) / (tau - eta / mu);
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///gradient model likelihood
+
 Double_t TRolke::LikeGradMod1(Double_t e, Double_t mu, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m)
 {
-//gradient model likelihood
    Double_t eta, etaprime, bprime, f;
    eta = static_cast<double>(z) / e - static_cast<double>(m - z) / (1.0 - e);
    etaprime = (-1) * (static_cast<double>(m - z) / ((1.0 - e) * (1.0 - e)) + static_cast<double>(z) / (e * e));
@@ -1065,15 +1067,16 @@ Double_t TRolke::LikeGradMod1(Double_t e, Double_t mu, Int_t x, Int_t y, Int_t z
    return f;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the Profile Likelihood for MODEL 2:
+///  Poisson background/ Gauss Efficiency
+/// what = 1: Maximum likelihood estimate is returned
+/// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
+/// what = 3: Profile Likelihood of Test hypothesis is returned
+/// otherwise parameters as described in the beginning of the class)
+
 Double_t TRolke::EvalLikeMod2(Double_t mu, Int_t x, Int_t y, Double_t em, Double_t sde, Double_t tau, Int_t what)
 {
-// Calculates the Profile Likelihood for MODEL 2:
-//  Poisson background/ Gauss Efficiency
-// what = 1: Maximum likelihood estimate is returned
-// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
-// what = 3: Profile Likelihood of Test hypothesis is returned
-// otherwise parameters as described in the beginning of the class)
    Double_t v =  sde * sde;
    Double_t coef[4], roots[3];
    Double_t f = 0;
@@ -1113,12 +1116,12 @@ Double_t TRolke::EvalLikeMod2(Double_t mu, Int_t x, Int_t y, Double_t em, Double
    return f;
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Profile Likelihood function for MODEL 2:
+/// Poisson background/Gauss Efficiency
+
 Double_t TRolke::LikeMod2(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t y, Double_t em, Double_t tau, Double_t v)
 {
-// Profile Likelihood function for MODEL 2:
-// Poisson background/Gauss Efficiency
-
    double s = e*mu+b;
    double lls = - s;
    if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
@@ -1131,16 +1134,16 @@ Double_t TRolke::LikeMod2(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t y,
    return 2*( lls + llb + lle);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the Profile Likelihood for MODEL 3:
+/// Gauss  background/ Gauss Efficiency
+/// what = 1: Maximum likelihood estimate is returned
+/// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
+/// what = 3: Profile Likelihood of Test hypothesis is returned
+/// otherwise parameters as described in the beginning of the class)
+
 Double_t TRolke::EvalLikeMod3(Double_t mu, Int_t x, Double_t bm, Double_t em, Double_t sde, Double_t sdb, Int_t what)
 {
-// Calculates the Profile Likelihood for MODEL 3:
-// Gauss  background/ Gauss Efficiency
-// what = 1: Maximum likelihood estimate is returned
-// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
-// what = 3: Profile Likelihood of Test hypothesis is returned
-// otherwise parameters as described in the beginning of the class)
-
    Double_t f = 0.;
    Double_t  v = sde * sde;
    Double_t  u = sdb * sdb;
@@ -1181,12 +1184,12 @@ Double_t TRolke::EvalLikeMod3(Double_t mu, Int_t x, Double_t bm, Double_t em, Do
    return f;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Profile Likelihood function for MODEL 3:
+/// Gauss background/Gauss Efficiency
+
 Double_t TRolke::LikeMod3(Double_t mu, Double_t b, Double_t e, Int_t x, Double_t bm, Double_t em, Double_t u, Double_t v)
 {
-// Profile Likelihood function for MODEL 3:
-// Gauss background/Gauss Efficiency
-
    double s = e*mu+b;
    double lls = - s;
    if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
@@ -1199,15 +1202,16 @@ Double_t TRolke::LikeMod3(Double_t mu, Double_t b, Double_t e, Int_t x, Double_t
 
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the Profile Likelihood for MODEL 4:
+/// Poiss  background/Efficiency known
+/// what = 1: Maximum likelihood estimate is returned
+/// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
+/// what = 3: Profile Likelihood of Test hypothesis is returned
+/// otherwise parameters as described in the beginning of the class)
+
 Double_t TRolke::EvalLikeMod4(Double_t mu, Int_t x, Int_t y, Double_t tau, Int_t what)
 {
-// Calculates the Profile Likelihood for MODEL 4:
-// Poiss  background/Efficiency known
-// what = 1: Maximum likelihood estimate is returned
-// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
-// what = 3: Profile Likelihood of Test hypothesis is returned
-// otherwise parameters as described in the beginning of the class)
    Double_t f = 0.0;
 
    if (what == 1) f = x - y / tau;
@@ -1228,12 +1232,12 @@ Double_t TRolke::EvalLikeMod4(Double_t mu, Int_t x, Int_t y, Double_t tau, Int_t
    return f;
 }
 
-//___________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Profile Likelihood function for MODEL 4:
+/// Poiss background/Efficiency known
+
 Double_t TRolke::LikeMod4(Double_t mu, Double_t b, Int_t x, Int_t y, Double_t tau)
 {
-// Profile Likelihood function for MODEL 4:
-// Poiss background/Efficiency known
-
    double s = mu+b;
    double lls = - s;
    if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
@@ -1244,16 +1248,16 @@ Double_t TRolke::LikeMod4(Double_t mu, Double_t b, Int_t x, Int_t y, Double_t ta
    return 2*( lls + llb);
 }
 
-//___________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the Profile Likelihood for MODEL 5:
+/// Gauss  background/Efficiency known
+/// what = 1: Maximum likelihood estimate is returned
+/// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
+/// what = 3: Profile Likelihood of Test hypothesis is returned
+/// otherwise parameters as described in the beginning of the class)
+
 Double_t TRolke::EvalLikeMod5(Double_t mu, Int_t x, Double_t bm, Double_t sdb, Int_t what)
 {
-// Calculates the Profile Likelihood for MODEL 5:
-// Gauss  background/Efficiency known
-// what = 1: Maximum likelihood estimate is returned
-// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
-// what = 3: Profile Likelihood of Test hypothesis is returned
-// otherwise parameters as described in the beginning of the class)
-
    Double_t u = sdb * sdb;
    Double_t f = 0;
 
@@ -1273,12 +1277,12 @@ Double_t TRolke::EvalLikeMod5(Double_t mu, Int_t x, Double_t bm, Double_t sdb, I
    return f;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Profile Likelihood function for MODEL 5:
+/// Gauss background/Efficiency known
+
 Double_t TRolke::LikeMod5(Double_t mu, Double_t b, Int_t x, Double_t bm, Double_t u)
 {
-// Profile Likelihood function for MODEL 5:
-// Gauss background/Efficiency known
-
    double s = mu+b;
    double lls = - s;
    if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
@@ -1288,16 +1292,16 @@ Double_t TRolke::LikeMod5(Double_t mu, Double_t b, Int_t x, Double_t bm, Double_
    return 2*( lls + llb);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the Profile Likelihood for MODEL 6:
+/// Background known/Efficiency binomial
+/// what = 1: Maximum likelihood estimate is returned
+/// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
+/// what = 3: Profile Likelihood of Test hypothesis is returned
+/// otherwise parameters as described in the beginning of the class)
+
 Double_t TRolke::EvalLikeMod6(Double_t mu, Int_t x, Int_t z, Double_t b, Int_t m, Int_t what)
 {
-// Calculates the Profile Likelihood for MODEL 6:
-// Background known/Efficiency binomial
-// what = 1: Maximum likelihood estimate is returned
-// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
-// what = 3: Profile Likelihood of Test hypothesis is returned
-// otherwise parameters as described in the beginning of the class)
-
    Double_t coef[4], roots[3];
    Double_t f = 0.;
    Double_t zm = Double_t(z) / m;
@@ -1328,12 +1332,12 @@ Double_t TRolke::EvalLikeMod6(Double_t mu, Int_t x, Int_t z, Double_t b, Int_t m
    return f;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Profile Likelihood function for MODEL 6:
+/// background known/ Efficiency binomial
+
 Double_t TRolke::LikeMod6(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t z, Int_t m)
 {
-// Profile Likelihood function for MODEL 6:
-// background known/ Efficiency binomial
-
    double s = e*mu+b;
    double lls = - s;
    if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
@@ -1347,16 +1351,16 @@ Double_t TRolke::LikeMod6(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t z,
 }
 
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the Profile Likelihood for MODEL 7:
+/// background known/Efficiency Gauss
+/// what = 1: Maximum likelihood estimate is returned
+/// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
+/// what = 3: Profile Likelihood of Test hypothesis is returned
+/// otherwise parameters as described in the beginning of the class)
+
 Double_t TRolke::EvalLikeMod7(Double_t mu, Int_t x, Double_t em, Double_t sde, Double_t b, Int_t what)
 {
-// Calculates the Profile Likelihood for MODEL 7:
-// background known/Efficiency Gauss
-// what = 1: Maximum likelihood estimate is returned
-// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
-// what = 3: Profile Likelihood of Test hypothesis is returned
-// otherwise parameters as described in the beginning of the class)
-
    Double_t v = sde * sde;
    Double_t f = 0.;
 
@@ -1383,12 +1387,12 @@ Double_t TRolke::EvalLikeMod7(Double_t mu, Int_t x, Double_t em, Double_t sde, D
    return f;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Profile Likelihood function for MODEL 6:
+/// background known/ Efficiency gaussian
+
 Double_t TRolke::LikeMod7(Double_t mu, Double_t b, Double_t e, Int_t x, Double_t em, Double_t v)
 {
-// Profile Likelihood function for MODEL 6:
-// background known/ Efficiency gaussian
-
    double s = e*mu+b;
    double lls = - s;
    if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
@@ -1399,10 +1403,11 @@ Double_t TRolke::LikeMod7(Double_t mu, Double_t b, Double_t e, Int_t x, Double_t
    return 2*( lls + lle);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// evaluate polynomial
+
 Double_t TRolke::EvalPolynomial(Double_t x, const Int_t  coef[], Int_t N)
 {
-// evaluate polynomial
    const Int_t   *p;
    p = coef;
    Double_t ans = *p++;
@@ -1415,10 +1420,11 @@ Double_t TRolke::EvalPolynomial(Double_t x, const Int_t  coef[], Int_t N)
    return ans;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// evaluate mononomial
+
 Double_t TRolke::EvalMonomial(Double_t x, const Int_t coef[], Int_t N)
 {
-// evaluate mononomial
    Double_t ans;
    const Int_t   *p;
 
@@ -1433,11 +1439,11 @@ Double_t TRolke::EvalMonomial(Double_t x, const Int_t coef[], Int_t N)
    return ans;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// LogFactorial function (use the logGamma function via the relation Gamma(n+1) = n!
+
 Double_t TRolke::LogFactorial(Int_t n)
 {
-// LogFactorial function (use the logGamma function via the relation Gamma(n+1) = n!
-
    return TMath::LnGamma(n+1);
 }
 

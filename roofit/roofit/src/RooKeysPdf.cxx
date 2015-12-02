@@ -57,17 +57,20 @@ ClassImp(RooKeysPdf)
 const Double_t RooKeysPdf::_nSigma = std::sqrt(-2. *
     std::log(std::numeric_limits<Double_t>::epsilon()));
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// coverity[UNINIT_CTOR]
+
   RooKeysPdf::RooKeysPdf() : _nEvents(0), _dataPts(0), _dataWgts(0), _weights(0), _sumWgt(0),
 			     _mirrorLeft(kFALSE), _mirrorRight(kFALSE), 
 			     _asymLeft(kFALSE), _asymRight(kFALSE)
 { 
-  // coverity[UNINIT_CTOR]
   TRACE_CREATE
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// cache stuff about x
+
 RooKeysPdf::RooKeysPdf(const char *name, const char *title,
                        RooAbsReal& x, RooDataSet& data,
                        Mirror mirror, Double_t rho) :
@@ -83,7 +86,6 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
   _asymRight(mirror==MirrorAsymRight || mirror==MirrorLeftAsymRight || mirror==MirrorAsymBoth),
   _rho(rho)
 {
-  // cache stuff about x
   snprintf(_varName, 128,"%s", x.GetName());
   RooAbsRealLValue& real= (RooRealVar&)(_x.arg());
   _lo = real.getMin();
@@ -97,7 +99,9 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// cache stuff about x
+
 RooKeysPdf::RooKeysPdf(const char *name, const char *title,
                        RooAbsReal& xpdf, RooRealVar& xdata, RooDataSet& data,
                        Mirror mirror, Double_t rho) :
@@ -113,7 +117,6 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
   _asymRight(mirror==MirrorAsymRight || mirror==MirrorLeftAsymRight || mirror==MirrorAsymBoth),
   _rho(rho)
 {
-  // cache stuff about x
   snprintf(_varName, 128,"%s", xdata.GetName());
   RooAbsRealLValue& real= (RooRealVar&)(xdata);
   _lo = real.getMin();
@@ -127,14 +130,14 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
   RooAbsPdf(other,name), _x("x",this,other._x), _nEvents(other._nEvents),
   _dataPts(0), _dataWgts(0), _weights(0), _sumWgt(0),
   _mirrorLeft( other._mirrorLeft ), _mirrorRight( other._mirrorRight ),
   _asymLeft(other._asymLeft), _asymRight(other._asymRight),
   _rho( other._rho ) {
-
   // cache stuff about x
   snprintf(_varName, 128, "%s", other._varName );
   _lo = other._lo;
@@ -157,7 +160,8 @@ RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooKeysPdf::~RooKeysPdf() {
   delete[] _dataPts;
   delete[] _dataWgts;
@@ -168,9 +172,10 @@ RooKeysPdf::~RooKeysPdf() {
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// small helper structure
+
 namespace {
-  // small helper structure
   struct Data {
     Double_t x;
     Double_t w;
@@ -307,7 +312,8 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
     _lookupTable[i] /= sqrt2pi * _sumWgt;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooKeysPdf::evaluate() const {
   Int_t i = (Int_t)floor((Double_t(_x)-_lo)/_binWidth);
   if (i<0) {
@@ -394,9 +400,9 @@ Double_t RooKeysPdf::maxVal(Int_t code) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooKeysPdf::g(Double_t x,Double_t sigmav) const {
-  
   Double_t y=0;
   // since data is sorted, we can be a little faster because we know which data
   // points contribute

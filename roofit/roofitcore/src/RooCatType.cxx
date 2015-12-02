@@ -40,10 +40,11 @@ ClassImp(RooCatType)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with name argument
+
 void RooCatType::SetName(const Text_t* name) 
 { 
-  // Constructor with name argument
   if (strlen(name)>255) {
     std::cout << "RooCatType::SetName warning: label '" << name << "' truncated at 255 chars" << std::endl ;
     _label[255]=0 ;
@@ -53,37 +54,41 @@ void RooCatType::SetName(const Text_t* name)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the name of the state
+
 void RooCatType::printName(ostream& os) const 
 {
-  // Print the name of the state
   os << GetName() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the title of the state
+
 void RooCatType::printTitle(ostream& os) const 
 {
-  // Print the title of the state
   os << GetTitle() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the class name of the state
+
 void RooCatType::printClassName(ostream& os) const 
 {
-  // Print the class name of the state
   os << IsA()->GetName() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the value (index integer) of the state
+
 void RooCatType::printValue(ostream& os) const
 {
-  // Print the value (index integer) of the state
   os << getVal() ;
 }
 

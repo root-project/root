@@ -48,7 +48,8 @@ ClassImp(RooAddition)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooAddition::RooAddition()
   : _setIter( _set.createIterator() )
 {
@@ -56,17 +57,17 @@ RooAddition::RooAddition()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with a single set of RooAbsReals. The value of the function will be
+/// the sum of the values in sumSet. If takeOwnership is true the RooAddition object
+/// will take ownership of the arguments in sumSet
+
 RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet, Bool_t takeOwnership) 
   : RooAbsReal(name, title)
   , _set("!set","set of components",this)
   , _setIter( _set.createIterator() ) // yes, _setIter is defined _after_ _set ;-)
   , _cacheMgr(this,10)
 {
-  // Constructor with a single set of RooAbsReals. The value of the function will be
-  // the sum of the values in sumSet. If takeOwnership is true the RooAddition object
-  // will take ownership of the arguments in sumSet
-
   std::auto_ptr<TIterator> inputIter( sumSet.createIterator() );
   RooAbsArg* comp ;
   while((comp = (RooAbsArg*)inputIter->Next())) {
@@ -83,19 +84,19 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with two set of RooAbsReals. The value of the function will be
+///
+///  A = sum_i sumSet1(i)*sumSet2(i) 
+///
+/// If takeOwnership is true the RooAddition object will take ownership of the arguments in sumSet
+
 RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet1, const RooArgList& sumSet2, Bool_t takeOwnership) 
     : RooAbsReal(name, title)
     , _set("!set","set of components",this)
     , _setIter( _set.createIterator() ) // yes, _setIter is defined _after_ _set ;-)
     , _cacheMgr(this,10)
 {
-  // Constructor with two set of RooAbsReals. The value of the function will be
-  //
-  //  A = sum_i sumSet1(i)*sumSet2(i) 
-  //
-  // If takeOwnership is true the RooAddition object will take ownership of the arguments in sumSet
-
   if (sumSet1.getSize() != sumSet2.getSize()) {
     coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: input lists should be of equal length" << endl ;
     RooErrorHandler::softAbort() ;    
@@ -135,29 +136,31 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAddition::RooAddition(const RooAddition& other, const char* name) 
     : RooAbsReal(other, name)
     , _set("!set",this,other._set)
     , _setIter( _set.createIterator() ) // yes, _setIter is defined _after_ _set ;-)
     , _cacheMgr(other._cacheMgr,this)
 {
-  // Copy constructor
-  
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooAddition::~RooAddition() 
 { // Destructor
   delete _setIter ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return current value of self
+
 Double_t RooAddition::evaluate() const 
 {
-  // Calculate and return current value of self
   Double_t sum(0);
   const RooArgSet* nset = _set.nset() ;
 
@@ -175,17 +178,17 @@ Double_t RooAddition::evaluate() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the default error level for MINUIT error analysis
+/// If the addition contains one or more RooNLLVars and 
+/// no RooChi2Vars, return the defaultErrorLevel() of
+/// RooNLLVar. If the addition contains one ore more RooChi2Vars
+/// and no RooNLLVars, return the defaultErrorLevel() of
+/// RooChi2Var. If the addition contains neither or both
+/// issue a warning message and return a value of 1
+
 Double_t RooAddition::defaultErrorLevel() const 
 {
-  // Return the default error level for MINUIT error analysis
-  // If the addition contains one or more RooNLLVars and 
-  // no RooChi2Vars, return the defaultErrorLevel() of
-  // RooNLLVar. If the addition contains one ore more RooChi2Vars
-  // and no RooNLLVars, return the defaultErrorLevel() of
-  // RooChi2Var. If the addition contains neither or both
-  // issue a warning message and return a value of 1
-
   RooAbsReal* nllArg(0) ;
   RooAbsReal* chi2Arg(0) ;
 
@@ -224,7 +227,8 @@ Double_t RooAddition::defaultErrorLevel() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooAddition::enableOffsetting(Bool_t flag) 
 {
   _setIter->Reset() ;
@@ -237,7 +241,8 @@ void RooAddition::enableOffsetting(Bool_t flag)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t RooAddition::setData(RooAbsData& data, Bool_t cloneData) 
 {
   _setIter->Reset() ;
@@ -251,7 +256,8 @@ Bool_t RooAddition::setData(RooAbsData& data, Bool_t cloneData)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooAddition::printMetaArgs(ostream& os) const 
 {
   _setIter->Reset() ;
@@ -267,10 +273,10 @@ void RooAddition::printMetaArgs(ostream& os) const
   os << " " ;    
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
-  
   // we always do things ourselves -- actually, always delegate further down the line ;-)
   analVars.add(allVars);
 
@@ -295,11 +301,11 @@ Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
   return 1+code;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate integral internally from appropriate integral cache
+
 Double_t RooAddition::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-  // Calculate integral internally from appropriate integral cache
-
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
   if (cache==0) {
@@ -324,7 +330,8 @@ Double_t RooAddition::analyticalIntegral(Int_t code, const char* rangeName) cons
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::list<Double_t>* RooAddition::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
   std::list<Double_t>* sumBinB = 0 ;
@@ -387,7 +394,8 @@ Bool_t RooAddition::isBinnedDistribution(const RooArgSet& obs) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::list<Double_t>* RooAddition::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
   std::list<Double_t>* sumHint = 0 ;
@@ -433,10 +441,11 @@ std::list<Double_t>* RooAddition::plotSamplingHint(RooAbsRealLValue& obs, Double
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list of all RooAbsArgs in cache element
+
 RooArgList RooAddition::CacheElem::containedArgs(Action)
 {
-  // Return list of all RooAbsArgs in cache element
   RooArgList ret(_I) ;
   return ret ;
 }

@@ -34,41 +34,42 @@ ClassImp(TPARA)
 //                  faces at -DZ and +DZ in z
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PARA shape default constructor
+
 TPARA::TPARA()
 {
-   // PARA shape default constructor
-
    fAlpha = 0.;
    fTheta = 0.;
    fPhi   = 0.;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PARA shape normal constructor
+
 TPARA::TPARA(const char *name, const char *title, const char *material, Float_t dx, Float_t dy, Float_t dz,
              Float_t alpha, Float_t theta, Float_t phi) : TBRIK(name, title,material, dx, dy, dz)
 {
-   // PARA shape normal constructor
-
    fAlpha = alpha;
    fTheta = theta;
    fPhi   = phi;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PARA shape default destructor
+
 TPARA::~TPARA()
 {
-   // PARA shape default destructor
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create PARA points
+
 void TPARA::SetPoints(Double_t *points) const
 {
-   // Create PARA points
-
    if (!points) return;
    Float_t dx, dy, dz, theta, phi, alpha;
    const Float_t pi = Float_t (TMath::Pi());

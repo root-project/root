@@ -46,12 +46,13 @@ enum ETGeoParaWid {
    kPARA_THETA, kPARA_PHI, kPARA_APPLY, kPARA_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for para editor
+
 TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for para editor
    fShape   = 0;
    fXi = fYi = fZi = fAlphai = fThetai = fPhii = 0.0;
    fNamei = "";
@@ -157,10 +158,11 @@ TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoParaEditor::~TGeoParaEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -170,10 +172,11 @@ TGeoParaEditor::~TGeoParaEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoParaEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoParaEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoParaEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoParaEditor", this, "DoModified()");
@@ -193,10 +196,11 @@ void TGeoParaEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoParaEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoPara::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -227,24 +231,27 @@ void TGeoParaEditor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shape drawing is delayed.
+
 Bool_t TGeoParaEditor::IsDelayed() const
 {
-// Check if shape drawing is delayed.
    return (fDelayed->GetState() == kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for name.
+
 void TGeoParaEditor::DoName()
 {
-// Slot for name.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying current settings.
+
 void TGeoParaEditor::DoApply()
 {
-// Slot for applying current settings.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t dx = fEDx->GetNumber();
@@ -279,17 +286,19 @@ void TGeoParaEditor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for notifying modifications.
+
 void TGeoParaEditor::DoModified()
 {
-// Slot for notifying modifications.
    fApply->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoParaEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fEDx->SetNumber(fXi);
    fEDy->SetNumber(fYi);
    fEDz->SetNumber(fZi);
@@ -301,10 +310,11 @@ void TGeoParaEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
    
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for X.
+
 void TGeoParaEditor::DoX()
 {
-// Slot for X.
    Double_t dx = fEDx->GetNumber();
    if (dx<=0) {
       dx = 0.1;
@@ -314,10 +324,11 @@ void TGeoParaEditor::DoX()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Y.
+
 void TGeoParaEditor::DoY()
 {
-// Slot for Y.
    Double_t dy = fEDy->GetNumber();
    if (dy<=0) {
       dy = 0.1;
@@ -327,10 +338,11 @@ void TGeoParaEditor::DoY()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Z.
+
 void TGeoParaEditor::DoZ()
 {
-// Slot for Z.
    Double_t dz = fEDz->GetNumber();
    if (dz<=0) {
       dz = 0.1;
@@ -340,10 +352,11 @@ void TGeoParaEditor::DoZ()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for alpha.
+
 void TGeoParaEditor::DoAlpha()
 {
-// Slot for alpha.
    Double_t alpha = fEAlpha->GetNumber();
    if (TMath::Abs(alpha)>=90) {
       alpha = 89.9*TMath::Sign(1.,alpha);
@@ -353,10 +366,11 @@ void TGeoParaEditor::DoAlpha()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for theta.
+
 void TGeoParaEditor::DoTheta()
 {
-// Slot for theta.
    Double_t theta = fETheta->GetNumber(); 
    if (theta<0) {
       theta = 0;
@@ -370,10 +384,11 @@ void TGeoParaEditor::DoTheta()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi.
+
 void TGeoParaEditor::DoPhi()
 {
-// Slot for phi.
    Double_t phi = fEPhi->GetNumber();
    if (phi<0 || phi>360) {
       phi = 0;

@@ -26,52 +26,53 @@ ClassImp(TDialogCanvas)
 // See examples in TAttLineCanvas, TAttFillCanvas, TAttTextCanvas, TAttMarkerCanvas
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// DialogCanvas default constructor
+
 TDialogCanvas::TDialogCanvas() : TCanvas()
 {
-   // DialogCanvas default constructor
-
    fRefObject = 0;
    fRefPad    = 0;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// DialogCanvas constructor
+
 TDialogCanvas::TDialogCanvas(const char *name, const char *title, Int_t ww, Int_t wh)
              : TCanvas(name,title,-ww,wh)
 {
-   // DialogCanvas constructor
-
    SetFillColor(36);
    fRefObject = 0;
    fRefPad    = 0;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// DialogCanvas constructor
+
 TDialogCanvas::TDialogCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, UInt_t ww, UInt_t wh)
              : TCanvas(name,title,-wtopx,wtopy,ww,wh)
 {
-   // DialogCanvas constructor
-
    SetFillColor(36);
    fRefObject = 0;
    fRefPad    = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// DialogCanvas default destructor
+
 TDialogCanvas::~TDialogCanvas()
 {
-   // DialogCanvas default destructor
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when the APPLY button is executed
+
 void TDialogCanvas::Apply(const char *action)
 {
-   // Called when the APPLY button is executed
-
    if (!fRefPad) return;
    SetCursor(kWatch);
 
@@ -94,11 +95,11 @@ void TDialogCanvas::Apply(const char *action)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create APPLY, gStyle and CLOSE buttons
+
 void TDialogCanvas::BuildStandardButtons()
 {
-   // Create APPLY, gStyle and CLOSE buttons
-
    TGroupButton *apply = new TGroupButton("APPLY","Apply","",.05,.01,.3,.09);
    apply->SetTextSize(0.55);
    apply->SetBorderSize(3);
@@ -119,20 +120,20 @@ void TDialogCanvas::BuildStandardButtons()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set world coordinate system for the pad
+
 void TDialogCanvas::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   // Set world coordinate system for the pad
-
    TPad::Range(x1,y1,x2,y2);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively remove object from a pad and its subpads
+
 void TDialogCanvas::RecursiveRemove(TObject *obj)
 {
-   // Recursively remove object from a pad and its subpads
-
    TPad::RecursiveRemove(obj);
    if (fRefObject == obj) fRefObject = 0;
    if (fRefPad    == obj) fRefPad    = 0;

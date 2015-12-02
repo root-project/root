@@ -27,10 +27,11 @@
 
 ClassImp(TVirtualMagField)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Unregisters the field.
+
 TVirtualMagField::~TVirtualMagField()
 {
-// Destructor. Unregisters the field.
    if (TGeoGlobalMagField::GetInstance()) {
       TVirtualMagField *global_field = TGeoGlobalMagField::GetInstance()->GetField();
       if (global_field == this)
@@ -45,21 +46,23 @@ TVirtualMagField::~TVirtualMagField()
 
 ClassImp(TGeoUniformMagField)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor;
+
 TGeoUniformMagField::TGeoUniformMagField()
                     :TVirtualMagField()
 {
-// Default constructor;
    fB[0] = 0.;
    fB[1] = 0.;
    fB[2] = 0.;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor;
+
 TGeoUniformMagField::TGeoUniformMagField(Double_t Bx, Double_t By, Double_t Bz)
                     :TVirtualMagField("Uniform magnetic field")
 {
-// Default constructor;
    fB[0] = Bx;
    fB[1] = By;
    fB[2] = Bz;

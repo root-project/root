@@ -76,7 +76,8 @@ private:
 ClassImp(TFoamSampler)
 
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /**
    TFoamSampler class
    class implementing  the ROOT::Math::DistSampler interface using FOAM

@@ -117,11 +117,11 @@
 
 ClassImp(TDecompBase)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TDecompBase::TDecompBase()
 {
-// Default constructor
-
    fTol       = std::numeric_limits<double>::epsilon();
    fDet1      = 0;
    fDet2      = 0;
@@ -130,18 +130,18 @@ TDecompBase::TDecompBase()
    fColLwb    = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TDecompBase::TDecompBase(const TDecompBase &another) : TObject(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TDecompBase::Hager(Double_t &est,Int_t iter)
 {
-
 // Estimates lower bound for norm1 of inverse of A. Returns norm
 // estimate in est.  iter sets the maximum number of iterations to be used.
 // The return value indicates the number of iterations remaining on exit from
@@ -197,10 +197,10 @@ Int_t TDecompBase::Hager(Double_t &est,Int_t iter)
    return iter;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TDecompBase::DiagProd(const TVectorD &diag,Double_t tol,Double_t &d1,Double_t &d2)
 {
-
 // Returns product of matrix diagonal elements in d1 and d2. d1 is a mantissa and d2
 // an exponent for powers of 2. If matrix is in diagonal or triangular-matrix form this
 // will be the determinant.
@@ -244,11 +244,11 @@ void TDecompBase::DiagProd(const TVectorD &diag,Double_t tol,Double_t &d1,Double
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix condition number
+
 Double_t TDecompBase::Condition()
 {
-// Matrix condition number
-
    if ( !TestBit(kCondition) ) {
       fCondition = -1;
       if (TestBit(kSingular))
@@ -267,11 +267,11 @@ Double_t TDecompBase::Condition()
    return fCondition;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve set of equations with RHS in columns of B
+
 Bool_t TDecompBase::MultiSolve(TMatrixD &B)
 {
-// Solve set of equations with RHS in columns of B
-
    const TMatrixDBase &m = GetDecompMatrix();
    R__ASSERT(m.IsValid() && B.IsValid());
 
@@ -286,11 +286,11 @@ Bool_t TDecompBase::MultiSolve(TMatrixD &B)
    return status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix determinant det = d1*TMath::Power(2.,d2)
+
 void TDecompBase::Det(Double_t &d1,Double_t &d2)
 {
-// Matrix determinant det = d1*TMath::Power(2.,d2)
-
    if ( !TestBit(kDetermined) ) {
       if ( !TestBit(kDecomposed) )
          Decompose();
@@ -311,11 +311,11 @@ void TDecompBase::Det(Double_t &d1,Double_t &d2)
    d2 = fDet2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print class members
+
 void TDecompBase::Print(Option_t * /*opt*/) const
 {
-// Print class members
-
    printf("fTol       = %.4e\n",fTol);
    printf("fDet1      = %.4e\n",fDet1);
    printf("fDet2      = %.4e\n",fDet2);
@@ -324,11 +324,11 @@ void TDecompBase::Print(Option_t * /*opt*/) const
    printf("fColLwb    = %d\n",fColLwb);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TDecompBase &TDecompBase::operator=(const TDecompBase &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TObject::operator=(source);
       fTol       = source.fTol;
@@ -341,12 +341,12 @@ TDecompBase &TDecompBase::operator=(const TDecompBase &source)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define a Householder-transformation through the parameters up and b .
+
 Bool_t DefHouseHolder(const TVectorD &vc,Int_t lp,Int_t l,Double_t &up,Double_t &beta,
                       Double_t tol)
 {
-// Define a Householder-transformation through the parameters up and b .
-
    const Int_t n = vc.GetNrows();
    const Double_t * const vp = vc.GetMatrixArray();
 
@@ -376,12 +376,12 @@ Bool_t DefHouseHolder(const TVectorD &vc,Int_t lp,Int_t l,Double_t &up,Double_t 
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply Householder-transformation.
+
 void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
                       Int_t lp,Int_t l,TMatrixDRow &cr)
 {
-// Apply Householder-transformation.
-
    const Int_t nv = vc.GetNrows();
    const Int_t nc = (cr.GetMatrix())->GetNcols();
 
@@ -405,12 +405,12 @@ void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
       cp[i*inc_c] += s*vp[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply Householder-transformation.
+
 void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
                       Int_t lp,Int_t l,TMatrixDColumn &cc)
 {
-// Apply Householder-transformation.
-
    const Int_t nv = vc.GetNrows();
    const Int_t nc = (cc.GetMatrix())->GetNrows();
 
@@ -434,12 +434,12 @@ void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
       cp[i*inc_c] += s*vp[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Apply Householder-transformation.
+
 void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
                       Int_t lp,Int_t l,TVectorD &cv)
 {
-//  Apply Householder-transformation.
-
    const Int_t nv = vc.GetNrows();
    const Int_t nc = cv.GetNrows();
 
@@ -462,12 +462,12 @@ void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
       cp[i] += s*vp[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Defines a Givens-rotation by calculating 2 rotation parameters c and s.
+/// The rotation is defined with the vector components v1 and v2.
+
 void DefGivens(Double_t v1,Double_t v2,Double_t &c,Double_t &s)
 {
-// Defines a Givens-rotation by calculating 2 rotation parameters c and s.
-// The rotation is defined with the vector components v1 and v2.
-
    const Double_t a1 = TMath::Abs(v1);
    const Double_t a2 = TMath::Abs(v2);
    if (a1 > a2) {
@@ -490,13 +490,13 @@ void DefGivens(Double_t v1,Double_t v2,Double_t &c,Double_t &s)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define and apply a Givens-rotation by calculating 2 rotation
+/// parameters c and s. The rotation is defined with and applied to the vector
+/// components v1 and v2.
+
 void DefAplGivens(Double_t &v1,Double_t &v2,Double_t &c,Double_t &s)
 {
-// Define and apply a Givens-rotation by calculating 2 rotation
-// parameters c and s. The rotation is defined with and applied to the vector
-// components v1 and v2.
-
    const Double_t a1 = TMath::Abs(v1);
    const Double_t a2 = TMath::Abs(v2);
    if (a1 > a2) {
@@ -523,12 +523,12 @@ void DefAplGivens(Double_t &v1,Double_t &v2,Double_t &c,Double_t &s)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply a Givens transformation as defined by c and s to the vector compenents
+/// v1 and v2 .
+
 void ApplyGivens(Double_t &z1,Double_t &z2,Double_t c,Double_t s)
 {
-// Apply a Givens transformation as defined by c and s to the vector compenents
-// v1 and v2 .
-
    const Double_t w = z1*c+z2*s;
    z2 = -z1*s+z2*c;
    z1 = w;

@@ -37,7 +37,8 @@ using namespace std;
 ClassImp(RooBifurGauss)
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooBifurGauss::RooBifurGauss(const char *name, const char *title,
 			     RooAbsReal& _x, RooAbsReal& _mean,
 			     RooAbsReal& _sigmaL, RooAbsReal& _sigmaR) :
@@ -51,7 +52,8 @@ RooBifurGauss::RooBifurGauss(const char *name, const char *title,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooBifurGauss::RooBifurGauss(const RooBifurGauss& other, const char* name) : 
   RooAbsPdf(other,name), x("x",this,other.x), mean("mean",this,other.mean),
   sigmaL("sigmaL",this,other.sigmaL), sigmaR("sigmaR", this, other.sigmaR)
@@ -59,9 +61,9 @@ RooBifurGauss::RooBifurGauss(const RooBifurGauss& other, const char* name) :
 }
 
 
-//_____________________________________________________________________________
-Double_t RooBifurGauss::evaluate() const {
+////////////////////////////////////////////////////////////////////////////////
 
+Double_t RooBifurGauss::evaluate() const {
   Double_t arg = x - mean;
 
   Double_t coef(0.0);
@@ -80,7 +82,8 @@ Double_t RooBifurGauss::evaluate() const {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooBifurGauss::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
@@ -88,7 +91,8 @@ Int_t RooBifurGauss::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooBifurGauss::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   switch(code) {

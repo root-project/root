@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 BEGIN_HTML
 <p>
@@ -76,7 +77,8 @@ using namespace RooStats;
 using namespace std;
 
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 NeymanConstruction::NeymanConstruction(RooAbsData& data, ModelConfig& model):
    fSize(0.05),
    fData(data),
@@ -98,18 +100,19 @@ NeymanConstruction::NeymanConstruction(RooAbsData& data, ModelConfig& model):
 //   fPdfName = "";
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+///  if(fOwnsWorkspace && fWS) delete fWS;
+///  if(fConfBelt) delete fConfBelt;
+
 NeymanConstruction::~NeymanConstruction() {
-   // default constructor
-  //  if(fOwnsWorkspace && fWS) delete fWS;
-  //  if(fConfBelt) delete fConfBelt;
 }
 
-//_______________________________________________________
-PointSetInterval* NeymanConstruction::GetInterval() const {
-  // Main interface to get a RooStats::ConfInterval.  
-  // It constructs a RooStats::SetInterval.
+////////////////////////////////////////////////////////////////////////////////
+/// Main interface to get a RooStats::ConfInterval.  
+/// It constructs a RooStats::SetInterval.
 
+PointSetInterval* NeymanConstruction::GetInterval() const {
 
   TFile* f=0;
   if(fSaveBeltToFile){

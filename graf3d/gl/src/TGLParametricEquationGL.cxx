@@ -27,23 +27,25 @@
 
 ClassImp(TGLParametricEquationGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLParametricEquationGL::TGLParametricEquationGL() : TGLPlot3D(), fM(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLParametricEquationGL::~TGLParametricEquationGL()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TGLParametricEquationGL::SetModel(TObject* obj, const Option_t* opt)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TGLParametricEquation>(obj);
 
    SetPainter( new TGLParametricPlot(fM, 0) );
@@ -54,19 +56,19 @@ Bool_t TGLParametricEquationGL::SetModel(TObject* obj, const Option_t* opt)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup bounding-box.
+
 void TGLParametricEquationGL::SetBBox()
 {
-   // Setup bounding-box.
-
    fBoundingBox.Set(fPlotPainter->RefBackBox().Get3DBox());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render the object.
+
 void TGLParametricEquationGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 {
-   // Render the object.
-
    fPlotPainter->RefBackBox().FindFrontPoint();
    glPushAttrib(GL_ENABLE_BIT | GL_LIGHTING_BIT);
    glEnable(GL_NORMALIZE);

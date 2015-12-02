@@ -56,25 +56,25 @@ namespace {
 
 ClassImp(TUrl)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse url character string and split in its different subcomponents.
+/// Use IsValid() to check if URL is legal.
+///
+/// url: [proto://][user[:passwd]@]host[:port]/file.ext[?options][#anchor]
+///
+/// Known protocols: http, root, proof, ftp, news and any special protocols
+/// defined in the rootrc Url.Special key.
+/// The default protocol is "http", unless defaultIsFile is true in which
+/// case the url is assumed to be of type "file".
+/// If a passwd contains a @ it must be escaped by a \\, e.g.
+/// "pip@" becomes "pip\\@".
+///
+/// Default ports: http=80, root=1094, proof=1093, ftp=20, news=119.
+/// Port #1093 has been assigned by IANA (www.iana.org) to proofd.
+/// Port #1094 has been assigned by IANA (www.iana.org) to rootd.
+
 TUrl::TUrl(const char *url, Bool_t defaultIsFile)
 {
-   // Parse url character string and split in its different subcomponents.
-   // Use IsValid() to check if URL is legal.
-   //
-   // url: [proto://][user[:passwd]@]host[:port]/file.ext[?options][#anchor]
-   //
-   // Known protocols: http, root, proof, ftp, news and any special protocols
-   // defined in the rootrc Url.Special key.
-   // The default protocol is "http", unless defaultIsFile is true in which
-   // case the url is assumed to be of type "file".
-   // If a passwd contains a @ it must be escaped by a \\, e.g.
-   // "pip@" becomes "pip\\@".
-   //
-   // Default ports: http=80, root=1094, proof=1093, ftp=20, news=119.
-   // Port #1093 has been assigned by IANA (www.iana.org) to proofd.
-   // Port #1094 has been assigned by IANA (www.iana.org) to rootd.
-
    SetUrl(url, defaultIsFile);
 
 #ifdef R__COMPLETE_MEM_TERMINATION
@@ -82,33 +82,33 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TUrl::~TUrl()
 {
-   // Cleanup.
-
    delete fOptionsMap;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse url character string and split in its different subcomponents.
+/// Use IsValid() to check if URL is legal.
+///
+/// url: [proto://][user[:passwd]@]host[:port]/file.ext[?options][#anchor]
+///
+/// Known protocols: http, root, proof, ftp, news and any special protocols
+/// defined in the rootrc Url.Special key.
+/// The default protocol is "http", unless defaultIsFile is true in which
+/// case the url is assumed to be of type "file".
+/// If a passwd contains a @ it must be escaped by a \\, e.g.
+/// "pip@" becomes "pip\\@".
+///
+/// Default ports: http=80, root=1094, proof=1093, ftp=20, news=119.
+/// Port #1093 has been assigned by IANA (www.iana.org) to proofd.
+/// Port #1094 has been assigned by IANA (www.iana.org) to rootd.
+
 void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
 {
-   // Parse url character string and split in its different subcomponents.
-   // Use IsValid() to check if URL is legal.
-   //
-   // url: [proto://][user[:passwd]@]host[:port]/file.ext[?options][#anchor]
-   //
-   // Known protocols: http, root, proof, ftp, news and any special protocols
-   // defined in the rootrc Url.Special key.
-   // The default protocol is "http", unless defaultIsFile is true in which
-   // case the url is assumed to be of type "file".
-   // If a passwd contains a @ it must be escaped by a \\, e.g.
-   // "pip@" becomes "pip\\@".
-   //
-   // Default ports: http=80, root=1094, proof=1093, ftp=20, news=119.
-   // Port #1093 has been assigned by IANA (www.iana.org) to proofd.
-   // Port #1094 has been assigned by IANA (www.iana.org) to rootd.
-
    fOptionsMap = 0;
 
    if (!url || !url[0]) {
@@ -280,11 +280,11 @@ cleanup:
    delete [] u0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find file and optionally anchor and options.
+
 void TUrl::FindFile(char *u, Bool_t stripDoubleSlash)
 {
-   // Find file and optionally anchor and options.
-
    char *s, sav;
 
    // Locate anchor and options, if any
@@ -338,11 +338,11 @@ void TUrl::FindFile(char *u, Bool_t stripDoubleSlash)
    fAnchor = s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TUrl copy ctor.
+
 TUrl::TUrl(const TUrl &url) : TObject(url)
 {
-   // TUrl copy ctor.
-
    fUrl        = url.fUrl;
    fProtocol   = url.fProtocol;
    fUser       = url.fUser;
@@ -357,11 +357,11 @@ TUrl::TUrl(const TUrl &url) : TObject(url)
    fOptionsMap = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TUrl assignment operator.
+
 TUrl &TUrl::operator=(const TUrl &rhs)
 {
-   // TUrl assignment operator.
-
    if (this != &rhs) {
       TObject::operator=(rhs);
       fUrl        = rhs.fUrl;
@@ -380,12 +380,12 @@ TUrl &TUrl::operator=(const TUrl &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return full URL. If withDflt is kTRUE, explicitly add the port even
+/// if it matches the default value for the URL protocol.
+
 const char *TUrl::GetUrl(Bool_t withDeflt) const
 {
-   // Return full URL. If withDflt is kTRUE, explicitly add the port even
-   // if it matches the default value for the URL protocol.
-
    if (((TestBit(kUrlWithDefaultPort) && !withDeflt) ||
        (!TestBit(kUrlWithDefaultPort) && withDeflt)) &&
        TestBit(kUrlHasDefaultPort))
@@ -462,12 +462,12 @@ const char *TUrl::GetUrl(Bool_t withDeflt) const
    return fUrl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return fully qualified domain name of url host. If host cannot be
+/// resolved or not valid return the host name as originally specified.
+
 const char *TUrl::GetHostFQDN() const
 {
-   // Return fully qualified domain name of url host. If host cannot be
-   // resolved or not valid return the host name as originally specified.
-
    if (fHostFQ == "") {
       // Check if we already resolved it
       TNamed *fqdn = fgHostFQDNs ? (TNamed *) fgHostFQDNs->FindObject(fHost) : 0;
@@ -493,13 +493,13 @@ const char *TUrl::GetHostFQDN() const
    return fHostFQ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the file and its options (the string specified behind the ?).
+/// Convenience function useful when the option is used to pass
+/// authetication/access information for the specified file.
+
 const char *TUrl::GetFileAndOptions() const
 {
-   // Return the file and its options (the string specified behind the ?).
-   // Convenience function useful when the option is used to pass
-   // authetication/access information for the specified file.
-
    if (fFileOA == "") {
       fFileOA = fFile;
       if (fOptions != "") {
@@ -514,11 +514,11 @@ const char *TUrl::GetFileAndOptions() const
    return fFileOA;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set protocol and, optionally, change the port accordingly.
+
 void TUrl::SetProtocol(const char *proto, Bool_t setDefaultPort)
 {
-   // Set protocol and, optionally, change the port accordingly.
-
    fProtocol = proto;
    if (setDefaultPort) {
       if (!fProtocol.CompareTo("http"))
@@ -541,35 +541,35 @@ void TUrl::SetProtocol(const char *proto, Bool_t setDefaultPort)
    fUrl = "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare two urls as strings.
+
 Int_t TUrl::Compare(const TObject *obj) const
 {
-   // Compare two urls as strings.
-
    if (this == obj) return 0;
    if (TUrl::Class() != obj->IsA()) return -1;
    return TString(GetUrl()).CompareTo(((TUrl*)obj)->GetUrl(), TString::kExact);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print URL on stdout.
+
 void TUrl::Print(Option_t *) const
 {
-   // Print URL on stdout.
-
    if (fPort == -1)
       Printf("Illegal URL");
 
    Printf("%s", GetUrl());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the list of special protocols from the rootrc files.
+/// These protocols will be parsed in a protocol and a file part,
+/// no host or other info will be determined. This is typically
+/// used for legacy file descriptions like: rfio:host:/path/file.root.
+
 TObjArray *TUrl::GetSpecialProtocols()
 {
-   // Read the list of special protocols from the rootrc files.
-   // These protocols will be parsed in a protocol and a file part,
-   // no host or other info will be determined. This is typically
-   // used for legacy file descriptions like: rfio:host:/path/file.root.
-
    static Bool_t usedEnv = kFALSE;
 
    if (!gEnv) {
@@ -612,11 +612,11 @@ TObjArray *TUrl::GetSpecialProtocols()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse URL options into a key/value map.
+
 void TUrl::ParseOptions() const
 {
-   // Parse URL options into a key/value map.
-
    if (fOptionsMap) return;
 
    TString urloptions = GetOptions();
@@ -642,35 +642,35 @@ void TUrl::ParseOptions() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a value for a given key from the URL options.
+/// Returns 0 in case key is not found.
+
 const char *TUrl::GetValueFromOptions(const char *key) const
 {
-   // Return a value for a given key from the URL options.
-   // Returns 0 in case key is not found.
-
    if (!key) return 0;
    ParseOptions();
    TObject *option = fOptionsMap ? fOptionsMap->GetValue(key) : 0;
    return (option ? ((TObjString*)fOptionsMap->GetValue(key))->GetName(): 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a value for a given key from the URL options as an Int_t,
+/// a missing key returns -1.
+
 Int_t TUrl::GetIntValueFromOptions(const char *key) const
 {
-   // Return a value for a given key from the URL options as an Int_t,
-   // a missing key returns -1.
-
    if (!key) return -1;
    ParseOptions();
    TObject *option = fOptionsMap ? fOptionsMap->GetValue(key) : 0;
    return (option ? (atoi(((TObjString*)fOptionsMap->GetValue(key))->GetName())) : -1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if the given key appears in the URL options list.
+
 Bool_t TUrl::HasOption(const char *key) const
 {
-   // Returns true if the given key appears in the URL options list.
-
    if (!key) return kFALSE;
    ParseOptions();
 
@@ -679,11 +679,11 @@ Bool_t TUrl::HasOption(const char *key) const
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recompute the path removing all relative directory jumps via '..'.
+
 void TUrl::CleanRelativePath()
 {
-   // Recompute the path removing all relative directory jumps via '..'.
-
    Ssiz_t slash = 0;
    while ( (slash = fFile.Index("/..") ) != kNPOS) {
       // find backwards the next '/'

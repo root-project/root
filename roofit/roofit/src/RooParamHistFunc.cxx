@@ -22,7 +22,9 @@ ClassImp(RooParamHistFunc)
   ;  
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Populate x with observables
+
 RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, Bool_t paramRelative) :
   RooAbsReal(name,title), 
   _x("x","x",this),
@@ -30,7 +32,6 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataH
   _dh(dh),
   _relParam(paramRelative)
 { 
-  // Populate x with observables
   _x.add(*_dh.get()) ;
 
   // Now populate p with parameters 
@@ -49,7 +50,9 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataH
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Populate x with observables
+
 RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, const RooAbsArg& /*x*/, RooDataHist& dh, Bool_t paramRelative) :
   RooAbsReal(name,title), 
   _x("x","x",this),
@@ -57,7 +60,6 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, const Ro
   _dh(dh),
   _relParam(paramRelative)
 { 
-  // Populate x with observables
   _x.add(*_dh.get()) ;
 
   // Now populate p with parameters 
@@ -76,7 +78,8 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, const Ro
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, const RooParamHistFunc& paramSource, Bool_t paramRelative) :
   RooAbsReal(name,title), 
   _x("x","x",this),
@@ -84,7 +87,6 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataH
   _dh(dh),
   _relParam(paramRelative)
 { 
-
   // Populate x with observables
   _x.add(*_dh.get()) ;
   
@@ -94,7 +96,8 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataH
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooParamHistFunc::RooParamHistFunc(const RooParamHistFunc& other, const char* name) :  
   RooAbsReal(other,name), 
   _x("x",this,other._x),
@@ -106,7 +109,8 @@ RooParamHistFunc::RooParamHistFunc(const RooParamHistFunc& other, const char* na
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooParamHistFunc::evaluate() const 
 { 
   Int_t idx = ((RooDataHist&)_dh).getIndex(_x,kTRUE) ;
@@ -120,7 +124,8 @@ Double_t RooParamHistFunc::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooParamHistFunc::getActual(Int_t ibin) 
 {
   return ((RooAbsReal&)_p[ibin]).getVal() ;
@@ -128,7 +133,8 @@ Double_t RooParamHistFunc::getActual(Int_t ibin)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooParamHistFunc::setActual(Int_t ibin, Double_t newVal) 
 {
   ((RooRealVar&)_p[ibin]).setVal(newVal) ;
@@ -136,7 +142,8 @@ void RooParamHistFunc::setActual(Int_t ibin, Double_t newVal)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooParamHistFunc::getNominal(Int_t ibin) const
 {
   _dh.get(ibin) ;
@@ -144,7 +151,8 @@ Double_t RooParamHistFunc::getNominal(Int_t ibin) const
 }
   
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooParamHistFunc::getNominalError(Int_t ibin) const
 {
   _dh.get(ibin) ;
@@ -153,13 +161,13 @@ Double_t RooParamHistFunc::getNominalError(Int_t ibin) const
   
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return sampling hint for making curves of (projections) of this function
+/// as the recursive division strategy of RooCurve cannot deal efficiently
+/// with the vertical lines that occur in a non-interpolated histogram
+
 list<Double_t>* RooParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  // Return sampling hint for making curves of (projections) of this function
-  // as the recursive division strategy of RooCurve cannot deal efficiently
-  // with the vertical lines that occur in a non-interpolated histogram
-
   // Check that observable is in dataset, if not no hint is generated
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dh.get()->find(obs.GetName())) ;
   if (!lvarg) {
@@ -191,13 +199,13 @@ list<Double_t>* RooParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return sampling hint for making curves of (projections) of this function
+/// as the recursive division strategy of RooCurve cannot deal efficiently
+/// with the vertical lines that occur in a non-interpolated histogram
+
 std::list<Double_t>* RooParamHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
 {
-  // Return sampling hint for making curves of (projections) of this function
-  // as the recursive division strategy of RooCurve cannot deal efficiently
-  // with the vertical lines that occur in a non-interpolated histogram
-
   // Check that observable is in dataset, if not no hint is generated
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dh.get()->find(obs.GetName())) ;
   if (!lvarg) {
@@ -223,12 +231,12 @@ std::list<Double_t>* RooParamHistFunc::binBoundaries(RooAbsRealLValue& obs, Doub
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Advertise that all integrals can be handled internally.
+
 Int_t RooParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
 						const RooArgSet* /*normSet*/, const char* /*rangeName*/) const 
 {
-  // Advertise that all integrals can be handled internally.
-
   // Simplest scenario, integrate over all dependents
   RooAbsCollection *allVarsCommon = allVars.selectCommon(_x) ;  
   Bool_t intAllObs = (allVarsCommon->getSize()==_x.getSize()) ;  
@@ -243,12 +251,12 @@ Int_t RooParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& a
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement analytical integrations by doing appropriate weighting from  component integrals
+/// functions to integrators of components
+
 Double_t RooParamHistFunc::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet2*/,const char* /*rangeName*/) const 
 {
-  // Implement analytical integrations by doing appropriate weighting from  component integrals
-  // functions to integrators of components
-
   R__ASSERT(code==1) ;
 
   RooFIter iter = _p.fwdIterator() ;

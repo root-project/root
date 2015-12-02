@@ -23,16 +23,18 @@
 ClassImp(TQtTimer)
 
 TQtTimer *TQtTimer::fgQTimer=0;
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// proceess the ROOT events inside of Qt event loop
+
 void TQtTimer::AwakeRootEvent(){
-     // proceess the ROOT events inside of Qt event loop
      gSystem->DispatchOneEvent(kFALSE);
      start(5);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a singelton object TQtTimer
+
 TQtTimer * TQtTimer::Create(QObject *parent)
 {
-   // Create a singelton object TQtTimer
    if (!fgQTimer) {
       fgQTimer = new  TQtTimer(parent);
       fgQTimer->setSingleShot(true);
@@ -41,10 +43,11 @@ TQtTimer * TQtTimer::Create(QObject *parent)
    return fgQTimer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the singelton TQtTimer object
+
 TQtTimer *TQtTimer::QtTimer()
 {
-   // Return the singelton TQtTimer object
    return fgQTimer;
 }
 

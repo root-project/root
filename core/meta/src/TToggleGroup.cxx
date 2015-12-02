@@ -24,27 +24,27 @@
 
 ClassImp(TToggleGroup)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TToggleGroup::TToggleGroup()
 {
-   // Constructor.
-
    fToggles  = new TOrdCollection();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TToggleGroup::TToggleGroup(const TToggleGroup& rhs) : TNamed(rhs),fToggles(0)
 {
-   // Copy constructor
-
    fToggles = (TOrdCollection*)rhs.fToggles->Clone();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TToggleGroup &TToggleGroup::operator=(const TToggleGroup &rhs)
 {
-   // Assignment operator.
-
    if (this != &rhs) {
       delete fToggles;
       fToggles = (TOrdCollection*)rhs.fToggles->Clone();
@@ -53,19 +53,19 @@ TToggleGroup &TToggleGroup::operator=(const TToggleGroup &rhs)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes togglegroup but does not disposes toggled objects!
+
 TToggleGroup::~TToggleGroup()
 {
-   // Deletes togglegroup but does not disposes toggled objects!
-
    delete fToggles;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new toggle.
+
 Int_t TToggleGroup::Add(TToggle *t, Bool_t select)
 {
-   // Add a new toggle.
-
    if (t) {
       fToggles->AddLast(t);
       if (select)
@@ -75,11 +75,11 @@ Int_t TToggleGroup::Add(TToggle *t, Bool_t select)
       return (-1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new toggle at a specific position.
+
 Int_t TToggleGroup::InsertAt(TToggle *t, Int_t pos,Bool_t select)
 {
-   // Add a new toggle at a specific position.
-
    if (t) {
       fToggles->AddAt(t,pos);
       if (select)
@@ -89,21 +89,21 @@ Int_t TToggleGroup::InsertAt(TToggle *t, Int_t pos,Bool_t select)
       return (-1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select a toggle.
+
 void TToggleGroup::Select(Int_t idx)
 {
-   // Select a toggle.
-
    TToggle *sel = At(idx);
    if (sel)
       Select(sel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Selector a toggle.
+
 void TToggleGroup::Select(TToggle *t)
 {
-   // Selector a toggle.
-
    TIter next(fToggles);
    TToggle *i = 0;
 
@@ -114,10 +114,10 @@ void TToggleGroup::Select(TToggle *t)
          i->Toggle();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disposes of all objects and clears array
+
 void TToggleGroup::DeleteAll()
 {
-   // Disposes of all objects and clears array
-
    fToggles->Delete();
 }

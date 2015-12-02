@@ -39,7 +39,8 @@ typedef void   (*FCN)(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_
 
 
 // ROSENBROCK function
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RosenBrock(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*iflag*/)
 {
   gNCall++;

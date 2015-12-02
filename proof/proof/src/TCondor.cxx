@@ -35,12 +35,12 @@ ClassImp(TCondorSlave)
 ClassImp(TCondor)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create Condor interface object. Uses Condor apps since there is no
+/// API yet.
+
 TCondor::TCondor(const char *pool) : fPool(pool), fState(kFree)
 {
-   // Create Condor interface object. Uses Condor apps since there is no
-   // API yet.
-
    fClaims = new TList;
 
    // Setup Condor
@@ -69,11 +69,11 @@ TCondor::TCondor(const char *pool) : fPool(pool), fState(kFree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup Condor interface.
+
 TCondor::~TCondor()
 {
-   // Cleanup Condor interface.
-
    PDB(kCondor,1) Info("~TCondor","fState %d", fState );
 
    if (fState != kFree) {
@@ -83,11 +83,11 @@ TCondor::~TCondor()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print master status
+
 void TCondor::Print(Option_t * opt) const
 {
-   // Print master status
-
    std::cout << "OBJ: " << IsA()->GetName()
       << "\tPool: \"" << fPool << "\""
       << "\tState: " << fState << std::endl;
@@ -95,11 +95,11 @@ void TCondor::Print(Option_t * opt) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Claim a VirtualMachine for PROOF usage.
+
 TCondorSlave *TCondor::ClaimVM(const char *vm, const char *cmd)
 {
-   // Claim a VirtualMachine for PROOF usage.
-
 //    TString reinitCmd = "KRB5CCNAME=FILE:/tmp/condor.$$ && /usr/krb5/bin/kinit -F -k -t /etc/cdfcaf.keytab cafuser/cdf/h2caf@FNAL.GOV";
 //    gSystem->Exec(reinitCmd.Data());
    Int_t port = 0;
@@ -189,12 +189,12 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char *cmd)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the names of the virtual machines in the pool.
+/// Return a TList of TObjString or 0 in case of failure
+
 TList *TCondor::GetVirtualMachines() const
 {
-   // Get the names of the virtual machines in the pool.
-   // Return a TList of TObjString or 0 in case of failure
-
    TString poolopt = fPool ? "" : Form("-pool %s", fPool.Data());
    TString cmd = Form("condor_status %s -format \"%%s\\n\" Name", poolopt.Data());
 
@@ -227,13 +227,13 @@ TList *TCondor::GetVirtualMachines() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Claim n virtual machines
+/// This function figures out the image and performance index before returning
+/// the list of condor slaves
+
 TList *TCondor::Claim(Int_t n, const char *cmd)
 {
-   // Claim n virtual machines
-   // This function figures out the image and performance index before returning
-   // the list of condor slaves
-
    if (fState != kFree) {
       Error("Claim","not in state Free");
       return 0;
@@ -259,13 +259,13 @@ TList *TCondor::Claim(Int_t n, const char *cmd)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Claim virtual machine with name vmname
+/// This function does not figure out the image and performance index before
+/// returning the condor slave
+
 TCondorSlave *TCondor::Claim(const char *vmname, const char *cmd)
 {
-   // Claim virtual machine with name vmname
-   // This function does not figure out the image and performance index before
-   // returning the condor slave
-
    if (fState != kFree && fState != kActive) {
       Error("Claim","not in state Free or Active");
       return 0;
@@ -281,11 +281,11 @@ TCondorSlave *TCondor::Claim(const char *vmname, const char *cmd)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the state of workers
+
 Bool_t TCondor::SetState(EState state)
 {
-   // Set the state of workers
-
    PDB(kCondor,1) Info("SetState","state: %s (%lld)",
                        state == kSuspended ? "kSuspended" : "kActive", Long64_t(gSystem->Now()));
    TIter next(fClaims);
@@ -322,11 +322,11 @@ Bool_t TCondor::SetState(EState state)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Suspend worker
+
 Bool_t TCondor::Suspend()
 {
-   // Suspend worker
-
    if (fState != kActive) {
       Error("Suspend","not in state Active");
       return kFALSE;
@@ -336,11 +336,11 @@ Bool_t TCondor::Suspend()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resume worker
+
 Bool_t TCondor::Resume()
 {
-   // Resume worker
-
    if (fState != kSuspended) {
       Error("Suspend","not in state Suspended");
       return kFALSE;
@@ -350,11 +350,11 @@ Bool_t TCondor::Resume()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release worker
+
 Bool_t TCondor::Release()
 {
-   // Release worker
-
    if (fState == kFree) {
       Error("Suspend","not in state Active or Suspended");
       return kFALSE;
@@ -394,11 +394,11 @@ Bool_t TCondor::Release()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about worker status
+
 Bool_t TCondor::GetVmInfo(const char *vm, TString &image, Int_t &perfidx) const
 {
-   // Get info about worker status
-
    TString cmd = Form("condor_status -format \"%%d:\" Mips -format \"%%s\\n\" FileSystemDomain "
                       "-const 'Name==\"%s\"'", vm);
 
@@ -433,11 +433,11 @@ Bool_t TCondor::GetVmInfo(const char *vm, TString &image, Int_t &perfidx) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get image of the worker
+
 TString TCondor::GetImage(const char *host) const
 {
-   // Get image of the worker
-
    TString cmd = Form("condor_status -direct %s -format \"Image:%%s\\n\" "
                       "FileSystemDomain", host);
 
@@ -472,11 +472,11 @@ TString TCondor::GetImage(const char *host) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print worker status
+
 void TCondorSlave::Print(Option_t * /*opt*/ ) const
 {
-   // Print worker status
-
    std::cout << "OBJ: " << IsA()->GetName()
       << " " << fHostname << ":" << fPort
       << "  Perf: " << fPerfIdx

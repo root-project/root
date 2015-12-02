@@ -18,11 +18,11 @@ using namespace oracle::occi;
 
 ClassImp(TOracleResult)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Oracle query result.
+
 void TOracleResult::initResultSet(Statement *stmt)
 {
-   // Oracle query result.
-
    if (!stmt) {
       Error("initResultSet", "construction: empty statement");
    } else {
@@ -47,7 +47,8 @@ void TOracleResult::initResultSet(Statement *stmt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TOracleResult::TOracleResult(Connection *conn, Statement *stmt)
 {
    fConn        = conn;
@@ -64,11 +65,11 @@ TOracleResult::TOracleResult(Connection *conn, Statement *stmt)
    if (fResult) ProducePool();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This construction func is only used to get table metainfo.
+
 TOracleResult::TOracleResult(Connection *conn, const char *tableName)
 {
-   // This construction func is only used to get table metainfo.
-
    fResult      = 0;
    fStmt        = 0;
    fConn        = 0;
@@ -88,19 +89,19 @@ TOracleResult::TOracleResult(Connection *conn, const char *tableName)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup Oracle query result.
+
 TOracleResult::~TOracleResult()
 {
-   // Cleanup Oracle query result.
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close query result.
+
 void TOracleResult::Close(Option_t *)
 {
-   // Close query result.
-
    if (fConn && fStmt) {
       if (fResult) fStmt->closeResultSet(fResult);
       fConn->terminateStatement(fStmt);
@@ -122,11 +123,11 @@ void TOracleResult::Close(Option_t *)
    fPool = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if result set is open and field index within range.
+
 Bool_t TOracleResult::IsValid(Int_t field)
 {
-   // Check if result set is open and field index within range.
-
    if (field < 0 || field >= fFieldCount) {
       Error("IsValid", "field index out of bounds");
       return kFALSE;
@@ -134,31 +135,31 @@ Bool_t TOracleResult::IsValid(Int_t field)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of fields in result.
+
 Int_t TOracleResult::GetFieldCount()
 {
-   // Get number of fields in result.
-
    return fFieldCount;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get name of specified field.
+
 const char *TOracleResult::GetFieldName(Int_t field)
 {
-   // Get name of specified field.
-
    if (!IsValid(field))
       return 0;
    fNameBuffer = (*fFieldInfo)[field].getString(MetaData::ATTR_NAME);
    return fNameBuffer.c_str();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next query result row. The returned object must be
+/// deleted by the user.
+
 TSQLRow *TOracleResult::Next()
 {
-   // Get next query result row. The returned object must be
-   // deleted by the user.
-
    if (!fResult || (fResultType!=1)) return 0;
 
    if (fPool!=0) {
@@ -181,7 +182,8 @@ TSQLRow *TOracleResult::Next()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TOracleResult::GetRowCount() const
 {
    if (!fResult) return 0;
@@ -191,7 +193,8 @@ Int_t TOracleResult::GetRowCount() const
    return fRowCount;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TOracleResult::ProducePool()
 {
    if (fPool!=0) return;

@@ -28,37 +28,40 @@
 #include "TMVA/DecisionTree.h"
 #include "TMVA/MsgLogger.h"
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// main constructor
+
 TMVA::RuleCut::RuleCut(  const std::vector<const Node*> & nodes )
    : fCutNeve(0),
      fPurity(0),
      fLogger(new MsgLogger("RuleFit"))
 {
-   // main constructor
    MakeCuts( nodes );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// empty constructor
+
 TMVA::RuleCut::RuleCut()
    : fCutNeve(0),
      fPurity(0),
      fLogger(new MsgLogger("RuleFit"))
 {
-   // empty constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::RuleCut::~RuleCut() {
-   // destructor
    delete fLogger;
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct the cuts from the given array of nodes
+
 void TMVA::RuleCut::MakeCuts( const std::vector<const Node*> & nodes )
 {
-   // Construct the cuts from the given array of nodes
-
    // Atleast 2 nodes are required
    UInt_t nnodes = nodes.size();
    if (nnodes<2) {
@@ -149,10 +152,11 @@ void TMVA::RuleCut::MakeCuts( const std::vector<const Node*> & nodes )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get number of cuts
+
 UInt_t  TMVA::RuleCut::GetNcuts() const
 {
-   // get number of cuts
    UInt_t rval=0;
    for (UInt_t i=0; i<fSelector.size(); i++) {
       if (fCutDoMin[i]) rval += 1;
@@ -160,10 +164,11 @@ UInt_t  TMVA::RuleCut::GetNcuts() const
    }
    return rval;
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get cut range for a given selector
+
 Bool_t TMVA::RuleCut::GetCutRange(Int_t sel,Double_t &rmin, Double_t &rmax, Bool_t &dormin, Bool_t &dormax) const
 {
-   // get cut range for a given selector
    dormin=kFALSE;
    dormax=kFALSE;
    Bool_t done=kFALSE;

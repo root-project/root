@@ -26,11 +26,11 @@
 
 ClassImp(TBits)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TBits constructor.  All bits set to 0
+
 TBits::TBits(UInt_t nbits) : fNbits(nbits)
 {
-   // TBits constructor.  All bits set to 0
-
    if (nbits <= 0) nbits = 8;
    fNbytes  = ((nbits-1)/8) + 1;
    fAllBits = new UChar_t[fNbytes];
@@ -38,22 +38,22 @@ TBits::TBits(UInt_t nbits) : fNbits(nbits)
    memset(fAllBits,0,fNbytes);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TBits copy constructor
+
 TBits::TBits(const TBits &original) : TObject(original), fNbits(original.fNbits),
    fNbytes(original.fNbytes)
 {
-   // TBits copy constructor
-
    fAllBits = new UChar_t[fNbytes];
    memcpy(fAllBits,original.fAllBits,fNbytes);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TBits assignment operator
+
 TBits& TBits::operator=(const TBits& rhs)
 {
-   // TBits assignment operator
-
    if (this != &rhs) {
       TObject::operator=(rhs);
       fNbits   = rhs.fNbits;
@@ -69,30 +69,30 @@ TBits& TBits::operator=(const TBits& rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TBits destructor
+
 TBits::~TBits()
 {
-   // TBits destructor
-
    delete [] fAllBits;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the value.
+
 void TBits::Clear(Option_t * /*option*/)
 {
-   // Clear the value.
-
    delete [] fAllBits;
    fAllBits = 0;
    fNbits   = 0;
    fNbytes  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reduce the storage used by the object to a minimun
+
 void TBits::Compact()
 {
-   // Reduce the storage used by the object to a minimun
-
    if (!fNbits || !fAllBits) return;
    UInt_t needed;
    for(needed=fNbytes-1;
@@ -111,11 +111,11 @@ void TBits::Compact()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of bits set to 1 starting at bit startBit
+
 UInt_t TBits::CountBits(UInt_t startBit) const
 {
-   // Return number of bits set to 1 starting at bit startBit
-
    static const Int_t nbits[256] = {
              0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,
              1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
@@ -156,13 +156,13 @@ UInt_t TBits::CountBits(UInt_t startBit) const
    return count;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute (*this) &= rhs;
+/// Extra bits in rhs are ignored
+/// Missing bits in rhs are assumed to be zero.
+
 void TBits::DoAndEqual(const TBits& rhs)
 {
-   // Execute (*this) &= rhs;
-   // Extra bits in rhs are ignored
-   // Missing bits in rhs are assumed to be zero.
-
    UInt_t min = (fNbytes<rhs.fNbytes) ? fNbytes : rhs.fNbytes;
    for(UInt_t i=0; i<min; ++i) {
       fAllBits[i] &= rhs.fAllBits[i];
@@ -172,48 +172,48 @@ void TBits::DoAndEqual(const TBits& rhs)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute (*this) &= rhs;
+/// Extra bits in rhs are ignored
+/// Missing bits in rhs are assumed to be zero.
+
 void TBits::DoOrEqual(const TBits& rhs)
 {
-   // Execute (*this) &= rhs;
-   // Extra bits in rhs are ignored
-   // Missing bits in rhs are assumed to be zero.
-
    UInt_t min = (fNbytes<rhs.fNbytes) ? fNbytes : rhs.fNbytes;
    for(UInt_t i=0; i<min; ++i) {
       fAllBits[i] |= rhs.fAllBits[i];
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute (*this) ^= rhs;
+/// Extra bits in rhs are ignored
+/// Missing bits in rhs are assumed to be zero.
+
 void TBits::DoXorEqual(const TBits& rhs)
 {
-   // Execute (*this) ^= rhs;
-   // Extra bits in rhs are ignored
-   // Missing bits in rhs are assumed to be zero.
-
    UInt_t min = (fNbytes<rhs.fNbytes) ? fNbytes : rhs.fNbytes;
    for(UInt_t i=0; i<min; ++i) {
       fAllBits[i] ^= rhs.fAllBits[i];
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute ~(*this)
+
 void TBits::DoFlip()
 {
-   // Execute ~(*this)
-
    for(UInt_t i=0; i<fNbytes; ++i) {
       fAllBits[i] = ~fAllBits[i];
    }
    // NOTE: out-of-bounds bit were also flipped!
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the left shift operation.
+
 void TBits::DoLeftShift(UInt_t shift)
 {
-   // Execute the left shift operation.
-
    if (shift==0) return;
    const UInt_t wordshift = shift / 8;
    const UInt_t offset = shift % 8;
@@ -232,11 +232,11 @@ void TBits::DoLeftShift(UInt_t shift)
    memset(fAllBits,0,wordshift);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the left shift operation.
+
 void TBits::DoRightShift(UInt_t shift)
 {
-   // Execute the left shift operation.
-
    if (shift==0) return;
    const UInt_t wordshift = shift / 8;
    const UInt_t offset = shift % 8;
@@ -257,11 +257,11 @@ void TBits::DoRightShift(UInt_t shift)
    memset(&(fAllBits[limit + 1]),0, fNbytes - limit - 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return position of first null bit (starting from position 0 and up)
+
 UInt_t TBits::FirstNullBit(UInt_t startBit) const
 {
-   // Return position of first null bit (starting from position 0 and up)
-
    static const Int_t fbits[256] = {
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,5,
@@ -302,11 +302,11 @@ UInt_t TBits::FirstNullBit(UInt_t startBit) const
    return fNbits;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return position of first null bit (starting from position 0 and up)
+
 UInt_t TBits::LastNullBit(UInt_t startBit) const
 {
-   // Return position of first null bit (starting from position 0 and up)
-
    static const Int_t fbits[256] = {
              7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
              7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
@@ -341,11 +341,11 @@ UInt_t TBits::LastNullBit(UInt_t startBit) const
    return fNbits;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return position of first non null bit (starting from position 0 and up)
+
 UInt_t TBits::FirstSetBit(UInt_t startBit) const
 {
-   // Return position of first non null bit (starting from position 0 and up)
-
    static const Int_t fbits[256] = {
              8,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,
              4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,
@@ -386,11 +386,11 @@ UInt_t TBits::FirstSetBit(UInt_t startBit) const
    return fNbits;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return position of first non null bit (starting from position 0 and up)
+
 UInt_t TBits::LastSetBit(UInt_t startBit) const
 {
-   // Return position of first non null bit (starting from position 0 and up)
-
    static const Int_t fbits[256] = {
              8,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,
              4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
@@ -425,11 +425,11 @@ UInt_t TBits::LastSetBit(UInt_t startBit) const
    return fNbits;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the value to the std::ostream
+
 void TBits::Output(std::ostream &os) const
 {
-   // Print the value to the std::ostream
-
    for(UInt_t i=0; i<fNbytes; ++i) {
       UChar_t val = fAllBits[fNbytes - 1 - i];
       for (UInt_t j=0; j<8; ++j) {
@@ -439,19 +439,19 @@ void TBits::Output(std::ostream &os) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Once implemented, it will draw the bit field as an histogram.
+/// use the TVirtualPainter as the usual trick
+
 void TBits::Paint(Option_t *)
 {
-   // Once implemented, it will draw the bit field as an histogram.
-   // use the TVirtualPainter as the usual trick
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the list of active bits
+
 void TBits::Print(Option_t *) const
 {
-   // Print the list of active bits
-
    Int_t count = 0;
    for(UInt_t i=0; i<fNbytes; ++i) {
       UChar_t val = fAllBits[i];
@@ -463,19 +463,19 @@ void TBits::Print(Option_t *) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset all bits to 0 (false).
+
 void TBits::ResetAllBits(Bool_t)
 {
-   // Reset all bits to 0 (false).
-
    if (fAllBits) memset(fAllBits,0,fNbytes);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reverse each bytes.
+
 void TBits::ReserveBytes(UInt_t nbytes)
 {
-   // Reverse each bytes.
-
    if (nbytes > fNbytes) {
       // do it in this order to remain exception-safe.
       UChar_t *newBits=new UChar_t[nbytes];
@@ -485,11 +485,11 @@ void TBits::ReserveBytes(UInt_t nbytes)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set all the bytes.
+
 void TBits::Set(UInt_t nbits, const Char_t *array)
 {
-   // Set all the bytes.
-
    UInt_t nbytes=(nbits+7)>>3;
 
    ReserveBytes(nbytes);
@@ -498,11 +498,11 @@ void TBits::Set(UInt_t nbits, const Char_t *array)
    memcpy(fAllBits, array, nbytes);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy all the byes.
+
 void TBits::Get(Char_t *array) const
 {
-   // Copy all the byes.
-
    memcpy(array, fAllBits, (fNbits+7)>>3);
 }
 

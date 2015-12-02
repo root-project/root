@@ -49,14 +49,14 @@ ClassImp(TPerfStats)
 
 //------------------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TPerfEvent::TPerfEvent(TTimeStamp *offset)
    : fEvtNode("-3"), fType(TVirtualPerfStats::kUnDefined), fSlave(),
      fEventsProcessed(0), fBytesRead(0), fLen(0), fLatency(0.0), fProcTime(0.0), fCpuTime(0.0),
      fIsStart(kFALSE), fIsOk(kFALSE)
 {
-   // Constructor
-
    if (gProofServ != 0) {
       fEvtNode = gProofServ->GetOrdinal();
    } else {
@@ -72,12 +72,12 @@ TPerfEvent::TPerfEvent(TTimeStamp *offset)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare method. Must return -1 if this is smaller than obj,
+/// 0 if objects are equal and 1 if this is larger than obj.
+
 Int_t TPerfEvent::Compare(const TObject *obj) const
 {
-   // Compare method. Must return -1 if this is smaller than obj,
-   // 0 if objects are equal and 1 if this is larger than obj.
-
    const TPerfEvent *pe = dynamic_cast<const TPerfEvent*>(obj);
 
    if (!pe) {
@@ -94,11 +94,11 @@ Int_t TPerfEvent::Compare(const TObject *obj) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump content of this instance
+
 void TPerfEvent::Print(Option_t *) const
 {
-   // Dump content of this instance
-
    TString where;
    if (fEvtNode == -2) {
       where = "TPerfEvent: StandAlone ";
@@ -114,7 +114,9 @@ void TPerfEvent::Print(Option_t *) const
 Long_t TPerfStats::fgVirtMemMax = -1;
 Long_t TPerfStats::fgResMemMax = -1;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+
 TPerfStats::TPerfStats(TList *input, TList *output)
    : fTrace(0), fPerfEvent(0), fPacketsHist(0), fProcPcktHist(0),
       fEventsHist(0), fLatencyHist(0),
@@ -125,8 +127,6 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fMonitorPerPacket(kFALSE), fMonSenders(3),
       fDataSet("+++none+++"), fDataSetSize(-1), fOutput(output)
 {
-   // Normal constructor.
-
    TProof *proof = (gProofServ) ? gProofServ->GetProof() : gProof;
 
    // Master flag
@@ -373,21 +373,21 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TPerfStats::~TPerfStats()
 {
-   // Destructor
-
    // Shutdown the monitor writers, if any
    fMonSenders.SetOwner(kTRUE);
    fMonSenders.Delete();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simple event.
+
 void TPerfStats::SimpleEvent(EEventType type)
 {
-   // Simple event.
-
    if (type == kStop && fPacketsHist != 0) {
       fPacketsHist->LabelsDeflate("X");
       fPacketsHist->LabelsOption("auv","X");
@@ -407,15 +407,15 @@ void TPerfStats::SimpleEvent(EEventType type)
    fPerfEvent = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Packet event.
+/// See WriteQueryLog for the descripition of the structure sent for monitoring
+/// when fMonitorPerPacket is kTRUE.
+
 void TPerfStats::PacketEvent(const char *slave, const char* slavename, const char* filename,
                              Long64_t eventsprocessed, Double_t latency, Double_t proctime,
                              Double_t cputime, Long64_t bytesRead)
 {
-   // Packet event.
-   // See WriteQueryLog for the descripition of the structure sent for monitoring
-   // when fMonitorPerPacket is kTRUE.
-
    if (fDoTrace && fTrace != 0) {
       TPerfEvent pe(&fTzero);
 
@@ -520,12 +520,12 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// File event.
+
 void TPerfStats::FileEvent(const char *slave, const char *slavename, const char *nodename,
                             const char *filename, Bool_t isStart)
 {
-   // File event.
-
    if (fDoTrace && fTrace != 0) {
       TPerfEvent pe(&fTzero);
 
@@ -547,11 +547,11 @@ void TPerfStats::FileEvent(const char *slave, const char *slavename, const char 
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open file event.
+
 void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t start)
 {
-   // Open file event.
-
    if (fDoTrace && fTrace != 0) {
       TPerfEvent pe(&fTzero);
 
@@ -568,11 +568,11 @@ void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t start
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read file event.
+
 void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
 {
-   // Read file event.
-
    if (fDoTrace && fTrace != 0) {
       TPerfEvent pe(&fTzero);
 
@@ -589,26 +589,26 @@ void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Record TTree file unzip event.
+/// start is the TimeStamp before unzip
+/// pos is where in the file the compressed buffer came from
+/// complen is the length of the compressed buffer
+/// objlen is the length of the de-compressed buffer
+
 void TPerfStats::UnzipEvent(TObject * /* tree */, Long64_t /* pos */,
                             Double_t /* start */, Int_t /* complen */,
                             Int_t /* objlen */)
 {
-   // Record TTree file unzip event.
-   // start is the TimeStamp before unzip
-   // pos is where in the file the compressed buffer came from
-   // complen is the length of the compressed buffer
-   // objlen is the length of the de-compressed buffer
-
    // Do nothing for now.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rate event.
+
 void TPerfStats::RateEvent(Double_t proctime, Double_t deltatime,
                            Long64_t eventsprocessed, Long64_t bytesRead)
 {
-   // Rate event.
-
    if ((fDoTrace || fDoTraceRate) && fTrace != 0) {
       TPerfEvent pe(&fTzero);
 
@@ -625,30 +625,30 @@ void TPerfStats::RateEvent(Double_t proctime, Double_t deltatime,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set number of bytes read.
+
 void TPerfStats::SetBytesRead(Long64_t num)
 {
-   // Set number of bytes read.
-
    fBytesRead = num;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of bytes read.
+
 Long64_t TPerfStats::GetBytesRead() const
 {
-   // Get number of bytes read.
-
    return fBytesRead;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send to the connected monitoring servers information related to this query.
+/// The information is of three types: 'summary', 'dataset' and 'files'.
+/// Actual 'table' formatting is done by the relevant sender, implementation of
+/// TProofMonSender, where the details are given.
+
 void TPerfStats::WriteQueryLog()
 {
-   // Send to the connected monitoring servers information related to this query.
-   // The information is of three types: 'summary', 'dataset' and 'files'.
-   // Actual 'table' formatting is done by the relevant sender, implementation of
-   // TProofMonSender, where the details are given.
-
    TTimeStamp stop;
 
    // Write to monitoring system
@@ -723,11 +723,11 @@ void TPerfStats::WriteQueryLog()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup the PROOF input list with requested statistics and tracing options.
+
 void TPerfStats::Setup(TList *input)
 {
-   // Setup the PROOF input list with requested statistics and tracing options.
-
    const Int_t ntags=3;
    const char *tags[ntags] = {"StatsHist", "StatsTrace", "SlaveStatsTrace"};
 
@@ -740,11 +740,11 @@ void TPerfStats::Setup(TList *input)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize PROOF statistics run.
+
 void TPerfStats::Start(TList *input, TList *output)
 {
-   // Initialize PROOF statistics run.
-
    if (gPerfStats)
       delete gPerfStats;
    fgVirtMemMax = -1;
@@ -760,11 +760,11 @@ void TPerfStats::Start(TList *input, TList *output)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminate the PROOF statistics run.
+
 void TPerfStats::Stop()
 {
-   // Terminate the PROOF statistics run.
-
    if (!gPerfStats) return;
 
    TPerfStats::SetMemValues();
@@ -774,11 +774,11 @@ void TPerfStats::Stop()
    gPerfStats = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Record memory usage
+
 void TPerfStats::SetMemValues()
 {
-   // Record memory usage
-
    ProcInfo_t pi;
    if (!gSystem->GetProcInfo(&pi)){
       if (pi.fMemVirtual > fgVirtMemMax) fgVirtMemMax = pi.fMemVirtual;
@@ -786,11 +786,11 @@ void TPerfStats::SetMemValues()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get memory usage
+
 void TPerfStats::GetMemValues(Long_t &vmax, Long_t &rmax)
 {
-   // Get memory usage
-
    vmax = fgVirtMemMax;
    rmax = fgResMemMax;
 }

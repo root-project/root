@@ -35,21 +35,21 @@ ClassImp(TBasketSQL)
 
 namespace std {} using namespace std;
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TBasketSQL::TBasketSQL() : TBasket(), fResultPtr(0), fRowPtr(0), fInsertQuery(0)
 {
-   // Default constructor.
-
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Regular constructor.
+
 TBasketSQL::TBasketSQL(const char *name, const char *title, TBranch *branch,
                          TSQLResult ** rs, TString *insert_query,
                          std::vector<Int_t> *vc, TSQLRow **r) :
   fResultPtr(rs),fRowPtr(r)
 {
-   // Regular constructor.
-
    SetName(name);
    SetTitle(title);
    fClassName   = "TBasketSQL";
@@ -76,19 +76,20 @@ TBasketSQL::TBasketSQL(const char *name, const char *title, TBranch *branch,
 
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TBasketSQL::~TBasketSQL()
 {
-   // Destructor
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TSQLBuffer for this basket.
+
 void TBasketSQL::CreateBuffer(const char *name, TString title,
                               std::vector<Int_t> *vc,
                               TBranch *branch, TSQLResult ** rs)
 {
-   // Create a TSQLBuffer for this basket.
-
    fResultPtr = rs;
    SetName(name);
    SetTitle(title);
@@ -115,48 +116,48 @@ void TBasketSQL::CreateBuffer(const char *name, TString title,
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prepare the basket for the next entry.
+
 void TBasketSQL::PrepareBasket(Long64_t entry)
 {
-   // Prepare the basket for the next entry.
-
    ((TBufferSQL*)fBufferRef)->ResetOffset();
    ((TTreeSQL*)fBranch->GetTree())->PrepEntry(entry);
    fBufferRef->Reset();
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TBasket::ReadBasketBytes.  This is not implemented in TBasketSQL.
+
 Int_t TBasketSQL::ReadBasketBytes(Long64_t , TFile *)
 {
-   // See TBasket::ReadBasketBytes.  This is not implemented in TBasketSQL.
-
    Error("ReadBasketBytes","This member function should not be called!");
    return 0;
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TBasket::ReadBasketBuffers.  This is not implemented in TBasketSQL.
+
 Int_t TBasketSQL::ReadBasketBuffers(Long64_t , Int_t, TFile *)
 {
-   // See TBasket::ReadBasketBuffers.  This is not implemented in TBasketSQL.
-
    Error("ReadBasketBuffers","This member function should not be called!");
    return 0;
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TBasket::Reset
+
 void TBasketSQL::Reset()
 {
-   // See TBasket::Reset
-
    TBasket::Reset();
 }
 
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TBasket::Update.
+
 void TBasketSQL::Update(Int_t, Int_t)
 {
-   // See TBasket::Update.
-
    ((TBufferSQL*)fBufferRef)->ResetOffset();
    fNevBuf++;
 }

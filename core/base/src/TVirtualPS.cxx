@@ -24,11 +24,11 @@ const Int_t  kMaxBuffer = 250;
 ClassImp(TVirtualPS)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// VirtualPS default constructor.
+
 TVirtualPS::TVirtualPS()
 {
-   // VirtualPS default constructor.
-
    fStream    = 0;
    fNByte     = 0;
    fSizBuffer = kMaxBuffer;
@@ -39,12 +39,12 @@ TVirtualPS::TVirtualPS()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// VirtualPS constructor.
+
 TVirtualPS::TVirtualPS(const char *name, Int_t)
           : TNamed(name,"Postscript interface")
 {
-   // VirtualPS constructor.
-
    fStream    = 0;
    fNByte     = 0;
    fSizBuffer = kMaxBuffer;
@@ -55,20 +55,20 @@ TVirtualPS::TVirtualPS(const char *name, Int_t)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// VirtualPS destructor
+
 TVirtualPS::~TVirtualPS()
 {
-   // VirtualPS destructor
-
    if (fBuffer) delete [] fBuffer;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Output the string str in the output buffer
+
 void TVirtualPS::PrintStr(const char *str)
 {
-   // Output the string str in the output buffer
-
    if (!str || !str[0])
       return;
    Int_t len = strlen(str);
@@ -95,10 +95,11 @@ void TVirtualPS::PrintStr(const char *str)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fast version of Print
+
 void TVirtualPS::PrintFast(Int_t len, const char *str)
 {
-   // Fast version of Print
    if (!len || !str) return;
    while ((len + fLenBuffer) > kMaxBuffer) {
       Int_t nWrite = kMaxBuffer;
@@ -158,14 +159,14 @@ void TVirtualPS::PrintFast(Int_t len, const char *str)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write one Integer to the file
+///
+/// n: Integer to be written in the file.
+/// space: If TRUE, a space in written before the integer.
+
 void TVirtualPS::WriteInteger(Int_t n, Bool_t space )
 {
-   // Write one Integer to the file
-   //
-   // n: Integer to be written in the file.
-   // space: If TRUE, a space in written before the integer.
-
    char str[15];
    if (space) {
       snprintf(str,15," %d", n);
@@ -176,11 +177,11 @@ void TVirtualPS::WriteInteger(Int_t n, Bool_t space )
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write a Real number to the file
+
 void TVirtualPS::WriteReal(Float_t z, Bool_t space)
 {
-   // Write a Real number to the file
-
    char str[15];
    if (space) {
       snprintf(str,15," %g", z);
@@ -191,11 +192,11 @@ void TVirtualPS::WriteReal(Float_t z, Bool_t space)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print a raw
+
 void TVirtualPS::PrintRaw(Int_t len, const char *str)
 {
-   // Print a raw
-
    fNByte += len;
    if ((len + fLenBuffer) > kMaxBuffer - 1) {
       fStream->write(fBuffer, fLenBuffer);

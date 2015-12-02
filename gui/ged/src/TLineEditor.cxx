@@ -41,13 +41,13 @@ enum ELineWid {
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of line GUI.
+
 TLineEditor::TLineEditor(const TGWindow *p, Int_t width,
                            Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of line GUI.
-
    fLine = 0;
 
    MakeTitle("Points");
@@ -110,17 +110,18 @@ TLineEditor::TLineEditor(const TGWindow *p, Int_t width,
    AddFrame(fHorizontal, new TGLayoutHints(kLHintsTop, 8, 1, 3, 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of line editor.
+
 TLineEditor::~TLineEditor()
 {
-   // Destructor of line editor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TLineEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fStartPointX->Connect("ValueSet(Long_t)", "TLineEditor", this, "DoStartPoint()");
    (fStartPointX->GetNumberEntry())->Connect("ReturnPressed()", "TLineEditor", this, "DoStartPoint()");
    fStartPointY->Connect("ValueSet(Long_t)", "TLineEditor", this, "DoStartPoint()");
@@ -135,11 +136,11 @@ void TLineEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the used line attributes.
+
 void TLineEditor::SetModel(TObject* obj)
 {
-   // Pick up the used line attributes.
-
    fLine = (TLine *)obj;
    fAvoidSignal = kTRUE;
 
@@ -166,22 +167,22 @@ void TLineEditor::SetModel(TObject* obj)
    fAvoidSignal = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the line start point.
+
 void TLineEditor::DoStartPoint()
 {
-   // Slot connected to the line start point.
-
    if (fAvoidSignal) return;
    fLine->SetX1((Double_t)fStartPointX->GetNumber());
    fLine->SetY1((Double_t)fStartPointY->GetNumber());
    fLine->Paint(fLine->GetDrawOption());
    Update();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the line EndPoint.
+
 void TLineEditor::DoEndPoint()
 {
-   // Slot connected to the line EndPoint.
-
    if (fAvoidSignal) return;
    fLine->SetX2((Double_t)fEndPointX->GetNumber());
    fLine->SetY2((Double_t)fEndPointY->GetNumber());
@@ -189,11 +190,11 @@ void TLineEditor::DoEndPoint()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot so set the line vertical
+
 void TLineEditor::DoLineVertical()
 {
-   // Slot so set the line vertical
-
    if (fAvoidSignal) return;
    if (fVertical->GetState() == kButtonDown) {
       fLine->SetVertical();
@@ -204,11 +205,11 @@ void TLineEditor::DoLineVertical()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot so set the line horizontal
+
 void TLineEditor::DoLineHorizontal()
 {
-   // Slot so set the line horizontal
-
    if (fAvoidSignal) return;
    if (fHorizontal->GetState() == kButtonDown) {
       fLine->SetHorizontal();

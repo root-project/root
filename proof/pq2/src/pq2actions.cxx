@@ -54,33 +54,33 @@ void do_anadist_getkey(TUrl *u, TString &key);
 #define SDELTRE(x,y,z)  { SafeDelete(x); SafeDelete(y); SafeDelete(z); }
 #define SDELETE(x,y,z,w,t)  { SafeDelete(x); SafeDelete(y); SafeDelete(z); SafeDelete(w); SafeDelete(t); }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute 'cache'
+
 void do_cache(bool clear, const char *ds)
 {
-   // Execute 'cache'
-
    // Show / Clear the cache
    DataSetCache(clear, ds);
    // Remove the error file
    gSystem->Unlink(ferr.Data());
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute 'ls'
+
 void do_ls(const char *ds, const char *opt)
 {
-   // Execute 'ls'
-
    // List the data sets
    ShowDataSets(ds, opt);
    // Remove the error file
    gSystem->Unlink(ferr.Data());
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute 'ls-files'
+
 void do_ls_files_server(const char *ds, const char *server)
 {
-   // Execute 'ls-files'
-
    const char *action = (server && strlen(server) > 0) ? "pq2-ls-files-server" : "pq2-ls-files";
 
    // We need to scan all the datasets to find the matching ones ...
@@ -161,16 +161,16 @@ void do_ls_files_server(const char *ds, const char *server)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Formatted printout of the content of TFileCollection 'fc'.
+/// Options in the form
+///           popt = u * 10 + f
+///     f    0 => header only, 1 => header + files
+///   when printing files
+///     u    0 => print file name only, 1 => print full URL
+
 void printDataSet(TFileCollection *fc, Int_t popt)
 {
-   // Formatted printout of the content of TFileCollection 'fc'.
-   // Options in the form
-   //           popt = u * 10 + f
-   //     f    0 => header only, 1 => header + files
-   //   when printing files
-   //     u    0 => print file name only, 1 => print full URL
-
    if (!fc) return;
 
    Int_t f = popt%10;
@@ -198,11 +198,11 @@ void printDataSet(TFileCollection *fc, Int_t popt)
    Printf("+++");
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute 'info-server'
+
 void do_info_server(const char *server)
 {
-   // Execute 'info-server'
-
    const char *action = "pq2-info-server";
 
    // We need to scan all the datasets to find the matching ones ...
@@ -231,9 +231,9 @@ void do_info_server(const char *server)
    return;
 }
 
-//_______________________________________________________________________________________
-Int_t pq2register(const char *dsname, const char *files, const char *opt) {
+////////////////////////////////////////////////////////////////////////////////
 
+Int_t pq2register(const char *dsname, const char *files, const char *opt) {
    // If the dataset exists already do not continue
    TString oo(opt);
    oo.ToUpper();
@@ -272,11 +272,11 @@ Int_t pq2register(const char *dsname, const char *files, const char *opt) {
    return rc;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute 'put'
+
 void do_put(const char *files, const char *opt)
 {
-   // Execute 'put'
-
    const char *action = "pq2-put";
 
    // Check the file path makes sense
@@ -385,11 +385,11 @@ void do_put(const char *files, const char *opt)
    return;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute 'rm'
+
 void do_rm(const char *dsname)
 {
-   // Execute 'rm'
-
    const char *action = "pq2-ds";
 
    Int_t nd = 0;
@@ -453,11 +453,11 @@ void do_rm(const char *dsname)
    return;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute 'verify'
+
 int do_verify(const char *dsname, const char *opt, const char *redir)
 {
-   // Execute 'verify'
-
    const char *action = "pq2-verify";
 
    Int_t nd = 0, rc = -1;
@@ -522,15 +522,15 @@ int do_verify(const char *dsname, const char *opt, const char *redir)
    return rc;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute 'analyze-distribution' for the dataset(s) described by 'ds'.
+/// The result is output to the screan and the details about file movement to file
+/// 'fnout', if defined.
+
 void do_anadist(const char *ds, const char *servers, const char *ignsrvs,
                 const char *excsrvs, const char *metrics, const char *fnout,
                 const char *plot, const char *outfile, const char *infile)
 {
-   // Execute 'analyze-distribution' for the dataset(s) described by 'ds'.
-   // The result is output to the screan and the details about file movement to file
-   // 'fnout', if defined.
-
    const char *action = "pq2-ana-dist";
 
    // Running mode
@@ -687,13 +687,13 @@ void do_anadist(const char *ds, const char *servers, const char *ignsrvs,
    return;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do analysis of dataset 'fc'
+
 int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
                   const char *excsrvs, int met, const char *fnout,
                   TList *distinfo, const char *outfile, const char *infile)
 {
-   // Do analysis of dataset 'fc'
-
    const char *action = "pq2-ana-dist-ds";
 
    // Check the inputs
@@ -1077,11 +1077,11 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
    return 0;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the key corresponding to path 'p'.
+
 void do_anadist_getkey(const char *p, TString &key)
 {
-   // Get the key corresponding to path 'p'.
-
    TUrl u(p);
    if (strncmp(p, u.GetProtocol(), strlen(u.GetProtocol()))) {
       u.SetProtocol("root");
@@ -1092,11 +1092,11 @@ void do_anadist_getkey(const char *p, TString &key)
    return do_anadist_getkey(&u, key);
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the key corresponding to url 'u'.
+
 void do_anadist_getkey(TUrl *u, TString &key)
 {
-   // Get the key corresponding to url 'u'.
-
    key = "";
    if (u) {
       TParameter<Int_t> *php = (TParameter<Int_t> *)gProtoPortMap.FindObject(u->GetProtocol());
@@ -1114,12 +1114,12 @@ void do_anadist_getkey(TUrl *u, TString &key)
    // Done
    return;
 }
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the plot for the histogram, and save to 'fnout'.
+/// Format determined by th extension of fnout.
+
 int do_anadist_plot(TH1D *h1d, const char */*fnout*/)
 {
-   // Create the plot for the histogram, and save to 'fnout'.
-   // Format determined by th extension of fnout.
-
    Printf("do_anadist_plot: will be doing a plot here ... ");
 
    if (h1d) {

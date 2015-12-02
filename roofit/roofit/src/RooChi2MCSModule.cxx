@@ -49,7 +49,8 @@ ClassImp(RooChi2MCSModule)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooChi2MCSModule::RooChi2MCSModule() : 
   RooAbsMCStudyModule("RooChi2MCSModule","RooChi2Module"),
   _data(0), _chi2(0), _ndof(0), _chi2red(0), _prob(0)
@@ -61,21 +62,22 @@ RooChi2MCSModule::RooChi2MCSModule() :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooChi2MCSModule::RooChi2MCSModule(const RooChi2MCSModule& other) : 
   RooAbsMCStudyModule(other), 
   _data(0), _chi2(0), _ndof(0), _chi2red(0), _prob(0)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooChi2MCSModule:: ~RooChi2MCSModule() 
 {
-  // Destructor
-
   if (_chi2) {
     delete _chi2 ;
   }
@@ -95,11 +97,11 @@ RooChi2MCSModule:: ~RooChi2MCSModule()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize module after attachment to RooMCStudy object
+
 Bool_t RooChi2MCSModule::initializeInstance()
 {
-  // Initialize module after attachment to RooMCStudy object
-
   // Construct variable that holds -log(L) fit with null hypothesis for given parameter
   _chi2     = new RooRealVar("chi2","chi^2",0) ;
   _ndof     = new RooRealVar("ndof","number of degrees of freedom",0) ;   
@@ -114,34 +116,34 @@ Bool_t RooChi2MCSModule::initializeInstance()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize module at beginning of RooCMStudy run
+
 Bool_t RooChi2MCSModule::initializeRun(Int_t /*numSamples*/) 
 {
-  // Initialize module at beginning of RooCMStudy run
-
   _data->reset() ;
   return kTRUE ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return auxiliary dataset with results of chi2 analysis
+/// calculations of this module so that it is merged with
+/// RooMCStudy::fitParDataSet() by RooMCStudy
+
 RooDataSet* RooChi2MCSModule::finalizeRun() 
 {
-  // Return auxiliary dataset with results of chi2 analysis
-  // calculations of this module so that it is merged with
-  // RooMCStudy::fitParDataSet() by RooMCStudy
-
   return _data ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bin dataset and calculate chi2 of p.d.f w.r.t binned dataset
+
 Bool_t RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/)  
 {
-  // Bin dataset and calculate chi2 of p.d.f w.r.t binned dataset
-
   RooAbsData* data = genSample() ;
   RooDataHist* binnedData = dynamic_cast<RooDataHist*>(data) ;
   Bool_t deleteData(kFALSE) ;

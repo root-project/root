@@ -482,7 +482,8 @@ ClassImp(RooSimPdfBuilder)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooSimPdfBuilder::RooSimPdfBuilder(const RooArgSet& protoPdfSet) :
   _protoPdfSet(protoPdfSet)
 {
@@ -494,10 +495,11 @@ RooSimPdfBuilder::RooSimPdfBuilder(const RooArgSet& protoPdfSet) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make RooArgSet of configuration objects
+
 RooArgSet* RooSimPdfBuilder::createProtoBuildConfig()
 {
-  // Make RooArgSet of configuration objects
   RooArgSet* buildConfig = new RooArgSet ;
   buildConfig->addOwned(* new RooStringVar("physModels","List and mapping of physics models to include in build","",4096)) ;
   buildConfig->addOwned(* new RooStringVar("splitCats","List of categories used for splitting","",1024)) ;
@@ -514,7 +516,8 @@ RooArgSet* RooSimPdfBuilder::createProtoBuildConfig()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooSimPdfBuilder::addSpecializations(const RooArgSet& specSet) 
 {
   _splitNodeList.add(specSet) ;
@@ -522,11 +525,12 @@ void RooSimPdfBuilder::addSpecializations(const RooArgSet& specSet)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize needed components
+
 RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents,
 					    const RooArgSet* auxSplitCats, Bool_t verbose)
 {
-  // Initialize needed components
   const char* spaceChars = " \t" ;
 
   // Retrieve physics index category
@@ -1114,7 +1118,8 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooSimPdfBuilder::~RooSimPdfBuilder() 
 {
   _retiredCustomizerList.Delete() ;

@@ -72,7 +72,8 @@ public:
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TGFSFrameElement : public TGFrameElement {
 public:
    TGFileContainer  *fContainer;   // file container
@@ -81,11 +82,11 @@ public:
    Int_t  Compare(const TObject *obj) const;
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort frame elements in file selection list view container.
+
 Int_t TGFSFrameElement::Compare(const TObject *obj) const
 {
-   // Sort frame elements in file selection list view container.
-
    Int_t type1, type2;
 
    TGFileItem *f1 = (TGFileItem *) fFrame;
@@ -218,28 +219,30 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the timer.
+
 Bool_t TViewUpdateTimer::Notify()
 {
-   // Reset the timer.
-
    fContainer->HandleTimer(0);
    Reset();
    return kFALSE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw icon.
+
 void TGFileIcon::DoRedraw()
 {
-   // Draw icon.
-
    TGIcon::DoRedraw();
    if (fLpic) fLpic->Draw(fId, GetBckgndGC()(), 0, 0);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list view item.
+
 TGFileItem::TGFileItem(const TGWindow *p,
                        const TGPicture *bpic, const TGPicture *blpic,
                        const TGPicture *spic, const TGPicture *slpic,
@@ -248,8 +251,6 @@ TGFileItem::TGFileItem(const TGWindow *p,
                        UInt_t options, ULong_t back) :
    TGLVEntry(p, bpic, spic, name, 0, viewMode, options, back)
 {
-   // Create a list view item.
-
    FileStat_t buf;
 
    buf.fMode   = type;
@@ -262,7 +263,9 @@ TGFileItem::TGFileItem(const TGWindow *p,
    Init(blpic, slpic, buf, viewMode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list view item.
+
 TGFileItem::TGFileItem(const TGWindow *p,
                        const TGPicture *bpic, const TGPicture *blpic,
                        const TGPicture *spic, const TGPicture *slpic,
@@ -270,17 +273,15 @@ TGFileItem::TGFileItem(const TGWindow *p,
                        UInt_t options, ULong_t back) :
    TGLVEntry(p, bpic, spic, name, 0, viewMode, options, back)
 {
-   // Create a list view item.
-
    Init(blpic, slpic, stat, viewMode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Common initializer for file list view item.
+
 void TGFileItem::Init(const TGPicture *blpic, const TGPicture *slpic,
                       FileStat_t &stat, EListViewMode viewMode)
 {
-   // Common initializer for file list view item.
-
    char tmp[256];
    Long64_t fsize, bsize;
 
@@ -386,19 +387,19 @@ void TGFileItem::Init(const TGPicture *blpic, const TGPicture *slpic,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGFileItem::~TGFileItem()
 {
-   // Destructor.
-
    delete fBuf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set container item view mode.
+
 void TGFileItem::SetViewMode(EListViewMode viewMode)
 {
-   // Set container item view mode.
-
    TGLVEntry::SetViewMode(viewMode);
 
    if (viewMode == kLVLargeIcons)
@@ -409,11 +410,11 @@ void TGFileItem::SetViewMode(EListViewMode viewMode)
    if (fClient) fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw list view container item.
+
 void TGFileItem::DoRedraw()
 {
-   // Draw list view container item.
-
    int ix, iy;
 
    TGLVEntry::DoRedraw();
@@ -431,14 +432,14 @@ void TGFileItem::DoRedraw()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list view container which will hold the contents of
+/// the current directory.
+
 TGFileContainer::TGFileContainer(const TGWindow *p, UInt_t w, UInt_t h,
                                  UInt_t options, ULong_t back) :
    TGLVContainer(p, w, h, options, back)
 {
-   // Create a list view container which will hold the contents of
-   // the current directory.
-
    fSortType  = kSortByName;
    fFilter    = 0;
    fDirectory = gSystem->WorkingDirectory();
@@ -466,13 +467,13 @@ TGFileContainer::TGFileContainer(const TGWindow *p, UInt_t w, UInt_t h,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list view container which will hold the contents of
+/// the current directory.
+
 TGFileContainer::TGFileContainer(TGCanvas *p, UInt_t options, ULong_t back) :
    TGLVContainer(p,options, back)
 {
-   // Create a list view container which will hold the contents of
-   // the current directory.
-
    fSortType  = kSortByName;
    fFilter    = 0;
    fDirectory = gSystem->WorkingDirectory();
@@ -500,11 +501,11 @@ TGFileContainer::TGFileContainer(TGCanvas *p, UInt_t options, ULong_t back) :
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete list view file container.
+
 TGFileContainer::~TGFileContainer()
 {
-   // Delete list view file container.
-
    if (fRefresh) delete fRefresh;
    if (fFilter)  delete fFilter;
    fClient->FreePicture(fFolder_s);
@@ -526,11 +527,11 @@ TGFileContainer::~TGFileContainer()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add frame to the composite frame.
+
 void TGFileContainer::AddFrame(TGFrame *f, TGLayoutHints *l)
 {
-   // Add frame to the composite frame.
-
    TGFSFrameElement *nw;
 
    nw = new TGFSFrameElement;
@@ -541,12 +542,12 @@ void TGFileContainer::AddFrame(TGFrame *f, TGLayoutHints *l)
    fList->Add(nw);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refresh container contents. Check every 5 seconds to see if the
+/// directory modification date has changed.
+
 Bool_t TGFileContainer::HandleTimer(TTimer *)
 {
-   // Refresh container contents. Check every 5 seconds to see if the
-   // directory modification date has changed.
-
    FileStat_t sbuf;
 
    if (gSystem->GetPathInfo(fDirectory, sbuf) == 0)
@@ -555,20 +556,20 @@ Bool_t TGFileContainer::HandleTimer(TTimer *)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set file selection filter.
+
 void TGFileContainer::SetFilter(const char *filter)
 {
-   // Set file selection filter.
-
    if (fFilter) delete fFilter;
    fFilter = new TRegexp(filter, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort file system list view container according to sortType.
+
 void TGFileContainer::Sort(EFSSortMode sortType)
 {
-   // Sort file system list view container according to sortType.
-
    fSortType = sortType;
 
    fList->Sort();
@@ -577,13 +578,13 @@ void TGFileContainer::Sort(EFSSortMode sortType)
    canvas->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine the file picture for the given file type.
+
 void TGFileContainer::GetFilePictures(const TGPicture **pic,
              const TGPicture **lpic, Int_t file_type, Bool_t is_link,
              const char *name, Bool_t /*small*/)
 {
-   // Determine the file picture for the given file type.
-
    static TString cached_ext;
    static const TGPicture *cached_spic = 0;
    static const TGPicture *cached_lpic = 0;
@@ -673,11 +674,11 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
    cached_ext = "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change current directory.
+
 void TGFileContainer::ChangeDirectory(const char *path)
 {
-   // Change current directory.
-
    TString savdir = gSystem->WorkingDirectory();
    gSystem->ChangeDirectory(fDirectory.Data());   // so path of ".." will work
    if (gSystem->ChangeDirectory(gSystem->ExpandPathName(path))) {
@@ -687,12 +688,12 @@ void TGFileContainer::ChangeDirectory(const char *path)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display the contents of the current directory in the container.
+/// This can be used to refresh the contents of the window.
+
 void TGFileContainer::DisplayDirectory()
 {
-   // Display the contents of the current directory in the container.
-   // This can be used to refresh the contents of the window.
-
    RemoveAll();
    CreateFileList();
 
@@ -706,11 +707,11 @@ void TGFileContainer::DisplayDirectory()
    MapSubwindows();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function creates the file list from current dir.
+
 void TGFileContainer::CreateFileList()
 {
-   // This function creates the file list from current dir.
-
    TString savdir = gSystem->WorkingDirectory();
    if (!gSystem->ChangeDirectory(fDirectory.Data())) return;
 
@@ -735,12 +736,12 @@ void TGFileContainer::CreateFileList()
    gSystem->ChangeDirectory(savdir.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add file in container.
+
 TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
                                      const TGPicture *ilpic)
 {
-   // Add file in container.
-
    TString     filename;
    TGFileItem *item = 0;
    const TGPicture *spic, *slpic;
@@ -784,12 +785,12 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
    return item;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add remote file in container.
+
 TGFileItem *TGFileContainer::AddRemoteFile(TObject *obj, const TGPicture *ipic,
                                            const TGPicture *ilpic)
 {
-   // Add remote file in container.
-
    TString     filename;
    TGFileItem *item = 0;
    const TGPicture *spic, *slpic;
@@ -822,29 +823,29 @@ TGFileItem *TGFileContainer::AddRemoteFile(TObject *obj, const TGPicture *ipic,
    return item;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// stop refresh  timer
+
 void TGFileContainer::StopRefreshTimer()
 {
-   // stop refresh  timer
-
    if (fRefresh) delete fRefresh;
    fRefresh = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// start refreshing
+
 void TGFileContainer::StartRefreshTimer(ULong_t msec)
 {
-   // start refreshing
-
    fRefresh = new TViewUpdateTimer(this, msec);
    gSystem->AddTimer(fRefresh);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a file container widget as a C++ statement(s) on output stream out.
+
 void TGFileContainer::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a file container widget as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    char quote = '"';

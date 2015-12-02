@@ -57,7 +57,9 @@
 
 ClassImp(TGLEventHandler);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLEventHandler::TGLEventHandler(TGWindow *w, TObject *obj) :
    TGEventHandler      ("TGLEventHandler", w, obj),
    fGLViewer           ((TGLViewer *)obj),
@@ -78,8 +80,6 @@ TGLEventHandler::TGLEventHandler(TGWindow *w, TObject *obj) :
    fDoInternalSelection(kTRUE),
    fViewerCentricControls(kFALSE)
 {
-   // Constructor.
-
    fMouseTimer = new TTimer(this, 80);
    fTooltip    = new TGToolTip(0, 0, "", 650);
    fTooltip->Hide();
@@ -89,20 +89,20 @@ TGLEventHandler::TGLEventHandler(TGWindow *w, TObject *obj) :
    fMouseWheelFactor = gEnv->GetValue("OpenGL.EventHandler.MouseWheelFactor", 1.0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLEventHandler::~TGLEventHandler()
 {
-   // Destructor.
-
    delete fMouseTimer;
    delete fTooltip;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Acquire mouse grab.
+
 void TGLEventHandler::GrabMouse()
 {
-   // Acquire mouse grab.
-
    if (!fInPointerGrab)
    {
       gVirtualX->GrabPointer(fGLViewer->GetGLWidget()->GetId(),
@@ -112,11 +112,11 @@ void TGLEventHandler::GrabMouse()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release mouse grab.
+
 void TGLEventHandler::UnGrabMouse()
 {
-   // Release mouse grab.
-
    if (fInPointerGrab)
    {
       gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
@@ -124,13 +124,13 @@ void TGLEventHandler::UnGrabMouse()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run selection (optionally with on secondary selection) and emit
+/// corresponding Clicked() signals.
+/// Protected method.
+
 void TGLEventHandler::SelectForClicked(Event_t *event)
 {
-   // Run selection (optionally with on secondary selection) and emit
-   // corresponding Clicked() signals.
-   // Protected method.
-
    fGLViewer->RequestSelect(fLastPos.fX, fLastPos.fY);
 
    TGLLogicalShape  *lshp = fGLViewer->fSelRec.GetLogShape();
@@ -166,13 +166,13 @@ void TGLEventHandler::SelectForClicked(Event_t *event)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run selection (optionally with on secondary selection) and emit
+/// corresponding MouseOver() signals.
+/// Protected method.
+
 void TGLEventHandler::SelectForMouseOver()
 {
-   // Run selection (optionally with on secondary selection) and emit
-   // corresponding MouseOver() signals.
-   // Protected method.
-
    fGLViewer->RequestSelect(fLastPos.fX, fLastPos.fY);
 
    TGLPhysicalShape *pshp = fGLViewer->fSelRec.GetPhysShape();
@@ -216,13 +216,13 @@ void TGLEventHandler::SelectForMouseOver()
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process event of type 'event' - one of EEventType types,
+/// occuring at window location px, py
+/// This is provided for use when embedding GL viewer into pad
+
 void TGLEventHandler::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Process event of type 'event' - one of EEventType types,
-   // occuring at window location px, py
-   // This is provided for use when embedding GL viewer into pad
-
    /*enum EEventType {
    kNoEvent       =  0,
    kButton1Down   =  1, kButton2Down   =  2, kButton3Down   =  3, kKeyDown  =  4,
@@ -349,12 +349,12 @@ void TGLEventHandler::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle generic Event_t type 'event' - provided to catch focus changes
+/// and terminate any interaction in viewer.
+
 Bool_t TGLEventHandler::HandleEvent(Event_t *event)
 {
-   // Handle generic Event_t type 'event' - provided to catch focus changes
-   // and terminate any interaction in viewer.
-
    if (event->fType == kFocusIn) {
       if (fGLViewer->fDragAction != TGLViewer::kDragNone) {
          Error("TGLEventHandler::HandleEvent", "active drag-action at focus-in.");
@@ -374,12 +374,12 @@ Bool_t TGLEventHandler::HandleEvent(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle generic Event_t type 'event' - provided to catch focus changes
+/// and terminate any interaction in viewer.
+
 Bool_t TGLEventHandler::HandleFocusChange(Event_t *event)
 {
-   // Handle generic Event_t type 'event' - provided to catch focus changes
-   // and terminate any interaction in viewer.
-
    fGLViewer->MouseIdle(0, 0, 0);
    if (event->fType == kFocusIn) {
       if (fGLViewer->fDragAction != TGLViewer::kDragNone) {
@@ -401,12 +401,12 @@ Bool_t TGLEventHandler::HandleFocusChange(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle generic Event_t type 'event' - provided to catch focus changes
+/// and terminate any interaction in viewer.
+
 Bool_t TGLEventHandler::HandleCrossing(Event_t *event)
 {
-   // Handle generic Event_t type 'event' - provided to catch focus changes
-   // and terminate any interaction in viewer.
-
    // Ignore grab and ungrab events.
    if (event->fCode != 0) {
       return kTRUE;
@@ -434,11 +434,11 @@ Bool_t TGLEventHandler::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button 'event'.
+
 Bool_t TGLEventHandler::HandleButton(Event_t * event)
 {
-   // Handle mouse button 'event'.
-
    if (fGLViewer->IsLocked()) {
       if (gDebug>2) {
          Info("TGLEventHandler::HandleButton", "ignored - viewer is %s",
@@ -670,11 +670,11 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse double click 'event'.
+
 Bool_t TGLEventHandler::HandleDoubleClick(Event_t *event)
 {
-   // Handle mouse double click 'event'.
-
    if (fGLViewer->IsLocked()) {
       if (gDebug>3) {
          Info("TGLEventHandler::HandleDoubleClick", "ignored - viewer is %s",
@@ -702,11 +702,11 @@ Bool_t TGLEventHandler::HandleDoubleClick(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle configure notify 'event' - a window resize/movement.
+
 Bool_t TGLEventHandler::HandleConfigureNotify(Event_t *event)
 {
-   // Handle configure notify 'event' - a window resize/movement.
-
    if (fGLViewer->IsLocked())
    {
       if (gDebug > 0) {
@@ -725,11 +725,11 @@ Bool_t TGLEventHandler::HandleConfigureNotify(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle window expose 'event' - show.
+
 Bool_t TGLEventHandler::HandleExpose(Event_t * event)
 {
-   // Handle window expose 'event' - show.
-
    if (event->fCount != 0) return kTRUE;
 
    if (fGLViewer->IsLocked()) {
@@ -744,11 +744,11 @@ Bool_t TGLEventHandler::HandleExpose(Event_t * event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle keyboard 'event'.
+
 Bool_t TGLEventHandler::HandleKey(Event_t *event)
 {
-   // Handle keyboard 'event'.
-
    // We only handle key-press events.
    if (event->fType == kKeyRelease)
       return kTRUE;
@@ -888,11 +888,11 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion 'event'.
+
 Bool_t TGLEventHandler::HandleMotion(Event_t * event)
 {
-   // Handle mouse motion 'event'.
-
    fGLViewer->MouseIdle(0, 0, 0);
    if (fGLViewer->IsLocked()) {
       if (gDebug>3) {
@@ -978,21 +978,21 @@ Bool_t TGLEventHandler::HandleMotion(Event_t * event)
    return processed;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method to handle action TGLViewer::kDragCameraRotate.
+
 Bool_t TGLEventHandler::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
 {
-   // Method to handle action TGLViewer::kDragCameraRotate.
-
    TGLCamera &cam = fGLViewer->CurrentCamera();
    if (fArcBall) return cam.RotateArcBall(xDelta, -yDelta, mod1, mod2);
    else          return cam.Rotate       (xDelta, -yDelta, mod1, mod2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If mouse delay timer times out emit signal.
+
 Bool_t TGLEventHandler::HandleTimer(TTimer *t)
 {
-   // If mouse delay timer times out emit signal.
-
    if (t != fMouseTimer) return kFALSE;
 
    fMouseTimerRunning = kFALSE;
@@ -1013,30 +1013,30 @@ Bool_t TGLEventHandler::HandleTimer(TTimer *t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start mouse timer in single-shot mode.
+
 void TGLEventHandler::StartMouseTimer()
 {
-   // Start mouse timer in single-shot mode.
-
    fMouseTimer->Start(-1, kTRUE);
    fMouseTimerRunning = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure mouse timers are not running.
+
 void TGLEventHandler::StopMouseTimer()
 {
-   // Make sure mouse timers are not running.
-
    fMouseTimerRunning = kFALSE;
    fMouseTimer->Stop();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear mouse-over state and emit mouse-over signals.
+/// Current overlay element is also told the mouse has left.
+
 void TGLEventHandler::ClearMouseOver()
 {
-   // Clear mouse-over state and emit mouse-over signals.
-   // Current overlay element is also told the mouse has left.
-
    fLastMouseOverPos.fX = fLastMouseOverPos.fY = -1;
    fLastMouseOverShape = 0;
    fGLViewer->MouseOver(fLastMouseOverShape);
@@ -1046,11 +1046,11 @@ void TGLEventHandler::ClearMouseOver()
    fGLViewer->ClearCurrentOvlElm();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle window expose 'event' - show.
+
 void TGLEventHandler::Repaint()
 {
-   // Handle window expose 'event' - show.
-
    if (fGLViewer->IsLocked()) {
       if (gDebug > 0) {
          Info("TGLViewer::HandleExpose", "ignored - viewer is %s",
@@ -1061,12 +1061,12 @@ void TGLEventHandler::Repaint()
    fGLViewer->fRedrawTimer->RequestDraw(20, TGLRnrCtx::kLODHigh);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Popup context menu.
+
 void TGLEventHandler::PopupContextMenu(TGLPhysicalShape* pshp, Event_t * /*event*/,
                                        Int_t gx, Int_t gy)
 {
-   // Popup context menu.
-
    if (!fGLViewer->fContextMenu)
    {
       fGLViewer->fContextMenu = new TContextMenu("glcm", "GL Viewer Context Menu");
@@ -1088,11 +1088,11 @@ void TGLEventHandler::PopupContextMenu(TGLPhysicalShape* pshp, Event_t * /*event
    // }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Trigger display of tooltip.
+
 void TGLEventHandler::TriggerTooltip(const char* text)
 {
-   // Trigger display of tooltip.
-
    static UInt_t screenW = 0, screenH = 0;
    fTooltipPos   = fLastGlobalPos;
    fTooltipShown = kTRUE;
@@ -1115,27 +1115,27 @@ void TGLEventHandler::TriggerTooltip(const char* text)
    fTooltip->Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hide the tooltip.
+
 void TGLEventHandler::RemoveTooltip()
 {
-   // Hide the tooltip.
-
    fTooltip->Hide();
    fTooltipShown = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set delay of mouse-over probe (highlight).
+
 void TGLEventHandler::SetMouseOverSelectDelay(Int_t ms)
 {
-   // Set delay of mouse-over probe (highlight).
-
    fMouseTimer->SetTime(ms);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set delay of tooltip timer.
+
 void TGLEventHandler::SetMouseOverTooltipDelay(Int_t ms)
 {
-   // Set delay of tooltip timer.
-
    fTooltip->SetDelay(ms);
 }

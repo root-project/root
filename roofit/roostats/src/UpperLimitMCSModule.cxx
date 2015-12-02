@@ -51,7 +51,8 @@ using namespace RooStats ;
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 UpperLimitMCSModule::UpperLimitMCSModule(const RooArgSet* poi, Double_t CL) : 
   RooAbsMCStudyModule(Form("UpperLimitMCSModule_%s",poi->first()->GetName()),Form("UpperLimitMCSModule_%s",poi->first()->GetName())),
   _parName(poi->first()->GetName()), 
@@ -65,22 +66,23 @@ UpperLimitMCSModule::UpperLimitMCSModule(const RooArgSet* poi, Double_t CL) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 UpperLimitMCSModule::UpperLimitMCSModule(const UpperLimitMCSModule& other) : 
   RooAbsMCStudyModule(other), 
   _parName(other._poi->first()->GetName()),
   _plc(0),_ul(0),_poi(other._poi), _data(0), _cl(other._cl), _model(other._model)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 UpperLimitMCSModule:: ~UpperLimitMCSModule() 
 {
-  // Destructor
-
  
   if (_plc) {
     delete _plc ;
@@ -101,11 +103,11 @@ UpperLimitMCSModule:: ~UpperLimitMCSModule()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize module after attachment to RooMCStudy object
+
 Bool_t UpperLimitMCSModule::initializeInstance()
 {
-  // Initialize module after attachment to RooMCStudy object
-
   // Check that parameter is also present in fit parameter list of RooMCStudy object
   if (!fitParams()->find(_parName.c_str())) {
     coutE(InputArguments) << "UpperLimitMCSModule::initializeInstance:: ERROR: No parameter named " << _parName << " in RooMCStudy!" << endl ;
@@ -133,24 +135,24 @@ Bool_t UpperLimitMCSModule::initializeInstance()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize module at beginning of RooCMStudy run
+
 Bool_t UpperLimitMCSModule::initializeRun(Int_t /*numSamples*/) 
 {
-  // Initialize module at beginning of RooCMStudy run
-
   _data->reset() ;
   return kTRUE ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return auxiliary dataset with results of delta(-log(L))
+/// calculations of this module so that it is merged with
+/// RooMCStudy::fitParDataSet() by RooMCStudy
+
 RooDataSet* UpperLimitMCSModule::finalizeRun() 
 {
-  // Return auxiliary dataset with results of delta(-log(L))
-  // calculations of this module so that it is merged with
-  // RooMCStudy::fitParDataSet() by RooMCStudy
-
   return _data ;
 }
 
@@ -186,9 +188,9 @@ RooDataSet* UpperLimitMCSModule::finalizeRun()
 // }
 
 
-//_____________________________________________________________________________
-Bool_t UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
+////////////////////////////////////////////////////////////////////////////////
 
+Bool_t UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
   std::cout<<"after generation Test"<<std::endl;
 
   if (!fitInitParams() || !genSample() || !fitParams() || !fitModel() ) return kFALSE; 

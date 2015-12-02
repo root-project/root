@@ -30,34 +30,38 @@
 
 ClassImp(TGeoShapeAssembly)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoShapeAssembly::TGeoShapeAssembly()
 {
-// Default constructor
    fVolume  = 0;
    fBBoxOK = kFALSE;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor specifying hyperboloid parameters.
+
 TGeoShapeAssembly::TGeoShapeAssembly(TGeoVolumeAssembly *vol)
 {
-// Constructor specifying hyperboloid parameters.
    fVolume  = vol;
    fBBoxOK = kFALSE;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoShapeAssembly::~TGeoShapeAssembly()
 {
-// destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding box of the assembly
+
 void TGeoShapeAssembly::ComputeBBox()
 {
-// Compute bounding box of the assembly
    if (!fVolume) {
       Fatal("ComputeBBox", "Assembly shape %s without volume", GetName());
       return;
@@ -98,10 +102,11 @@ void TGeoShapeAssembly::ComputeBBox()
    if (fDX>0 && fDY>0 && fDZ>0) fBBoxOK = kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recompute bounding box of the assembly after adding a node.
+
 void TGeoShapeAssembly::RecomputeBoxLast()
 {
-// Recompute bounding box of the assembly after adding a node.
    Int_t nd = fVolume->GetNdaughters();
    if (!nd) {
       Warning("RecomputeBoxLast", "No daughters for volume %s yet", fVolume->GetName());
@@ -144,10 +149,11 @@ void TGeoShapeAssembly::RecomputeBoxLast()
    fBBoxOK = kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute normal to closest surface from POINT. Should not be called.
+
 void TGeoShapeAssembly::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT. Should not be called.
    if (!fBBoxOK) ((TGeoShapeAssembly*)this)->ComputeBBox();
    Int_t inext = fVolume->GetNextNodeIndex();
    if (inext<0) {
@@ -166,10 +172,11 @@ void TGeoShapeAssembly::ComputeNormal(const Double_t *point, const Double_t *dir
    node->LocalToMasterVect(lnorm,norm);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test if point is inside the assembly
+
 Bool_t TGeoShapeAssembly::Contains(const Double_t *point) const
 {
-// Test if point is inside the assembly
    if (!fBBoxOK) ((TGeoShapeAssembly*)this)->ComputeBBox();
    if (!TGeoBBox::Contains(point)) return kFALSE;
    TGeoVoxelFinder *voxels = fVolume->GetVoxels();
@@ -215,27 +222,30 @@ Bool_t TGeoShapeAssembly::Contains(const Double_t *point) const
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute closest distance from point px,py to each vertex. Should not be called.
+
 Int_t TGeoShapeAssembly::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
-// compute closest distance from point px,py to each vertex. Should not be called.
    return 9999;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from inside point to surface of the hyperboloid.
+
 Double_t TGeoShapeAssembly::DistFromInside(const Double_t * /*point*/, const Double_t * /*dir*/, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
-// Compute distance from inside point to surface of the hyperboloid.
    Info("DistFromInside", "Cannot compute distance from inside the assembly (but from a component)");
    return TGeoShape::Big();
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute distance from outside point to surface of the hyperboloid.
+///   fVolume->SetNextNodeIndex(-1);
+
 Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from outside point to surface of the hyperboloid.
-//   fVolume->SetNextNodeIndex(-1);
 #ifdef TGEO_DEBUG
    static int indent=0;
    indent++;
@@ -382,28 +392,31 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
    return TGeoShape::Big();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cannot divide assemblies.
+
 TGeoVolume *TGeoShapeAssembly::Divide(TGeoVolume * /*voldiv*/, const char *divname, Int_t /*iaxis*/, Int_t /*ndiv*/,
                              Double_t /*start*/, Double_t /*step*/)
 {
-// Cannot divide assemblies.
    Error("Divide", "Assemblies cannot be divided. Division volume %s not created", divname);
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// in case shape has some negative parameters, these has to be computed
+/// in order to fit the mother
+
 TGeoShape *TGeoShapeAssembly::GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const
 {
-// in case shape has some negative parameters, these has to be computed
-// in order to fit the mother
    Error("GetMakeRuntimeShape", "Assemblies cannot be parametrized.");
    return NULL;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print shape parameters
+
 void TGeoShapeAssembly::InspectShape() const
 {
-// print shape parameters
    printf("*** Shape %s: TGeoShapeAssembly ***\n", GetName());
    printf("    Volume assembly %s with %i nodes\n", fVolume->GetName(), fVolume->GetNdaughters());
    printf(" Bounding box:\n");
@@ -411,18 +424,20 @@ void TGeoShapeAssembly::InspectShape() const
    TGeoBBox::InspectShape();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill TBuffer3D structure for segments and polygons.
+
 void TGeoShapeAssembly::SetSegsAndPols(TBuffer3D & /*buff*/) const
 {
-// Fill TBuffer3D structure for segments and polygons.
    Error("SetSegsAndPols", "Drawing functions should not be called for assemblies, but rather for their content");
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes the closest distance from given point to this shape, according
+/// to option. The matching point on the shape is stored in spoint.
+
 Double_t TGeoShapeAssembly::Safety(const Double_t *point, Bool_t in) const
 {
-// computes the closest distance from given point to this shape, according
-// to option. The matching point on the shape is stored in spoint.
    Double_t safety = TGeoShape::Big();
    Double_t pt[3], loc[3];
    if (!fBBoxOK) ((TGeoShapeAssembly*)this)->ComputeBBox();
@@ -473,72 +488,81 @@ Double_t TGeoShapeAssembly::Safety(const Double_t *point, Bool_t in) const
    return safety;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoShapeAssembly::SavePrimitive(std::ostream & /*out*/, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// No mesh for assemblies.
+
 void TGeoShapeAssembly::SetPoints(Double_t * /*points*/) const
 {
-// No mesh for assemblies.
    Error("SetPoints", "Drawing functions should not be called for assemblies, but rather for their content");
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// No mesh for assemblies.
+
 void TGeoShapeAssembly::SetPoints(Float_t * /*points*/) const
 {
-// No mesh for assemblies.
    Error("SetPoints", "Drawing functions should not be called for assemblies, but rather for their content");
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns numbers of vertices, segments and polygons composing the shape mesh.
+
 void TGeoShapeAssembly::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
-// Returns numbers of vertices, segments and polygons composing the shape mesh.
    nvert = 0;
    nsegs = 0;
    npols = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the inside status for each of the points in the array.
+/// Input: Array of point coordinates + vector size
+/// Output: Array of Booleans for the inside of each point
+
 void TGeoShapeAssembly::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
 {
-// Check the inside status for each of the points in the array.
-// Input: Array of point coordinates + vector size
-// Output: Array of Booleans for the inside of each point
    for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the normal for an array o points so that norm.dot.dir is positive
+/// Input: Arrays of point coordinates and directions + vector size
+/// Output: Array of normal directions
+
 void TGeoShapeAssembly::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
 {
-// Compute the normal for an array o points so that norm.dot.dir is positive
-// Input: Arrays of point coordinates and directions + vector size
-// Output: Array of normal directions
    for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoShapeAssembly::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoShapeAssembly::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe distance from each of the points in the input array.
+/// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+/// Output: Safety values
+
 void TGeoShapeAssembly::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
 {
-// Compute safe distance from each of the points in the input array.
-// Input: Array of point coordinates, array of statuses for these points, size of the arrays
-// Output: Safety values
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }

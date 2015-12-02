@@ -48,15 +48,15 @@ ClassImp(RooAbsNumGenerator)
   ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize an accept-reject generator for the specified distribution function,
+/// which must be non-negative but does not need to be normalized over the
+/// variables to be generated, genVars. The function and its dependents are
+/// cloned and so will not be disturbed during the generation process.
+
 RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose, const RooAbsReal* maxFuncVal) :
   TNamed(func), _cloneSet(0), _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose), _funcValStore(0), _funcValPtr(0), _cache(0)
 {
-  // Initialize an accept-reject generator for the specified distribution function,
-  // which must be non-negative but does not need to be normalized over the
-  // variables to be generated, genVars. The function and its dependents are
-  // cloned and so will not be disturbed during the generation process.
-
   // Clone the function and all nodes that it depends on so that this generator
   // is independent of any existing objects.
   RooArgSet nodes(func,func.GetName());
@@ -149,10 +149,11 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooAbsNumGenerator::~RooAbsNumGenerator() 
 {
-  // Destructor
   delete _cloneSet;
   delete _cache ;
   delete _funcValStore ;
@@ -160,11 +161,11 @@ RooAbsNumGenerator::~RooAbsNumGenerator()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reattach original parameters to function clone
+
 void RooAbsNumGenerator::attachParameters(const RooArgSet& vars) 
 {
-  // Reattach original parameters to function clone
-
   RooArgSet newParams(vars) ;
   newParams.remove(*_cache->get(),kTRUE,kTRUE) ;
   _funcClone->recursiveRedirectServers(newParams) ;
@@ -174,41 +175,41 @@ void RooAbsNumGenerator::attachParameters(const RooArgSet& vars)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print name of the generator
+
 void RooAbsNumGenerator::printName(ostream& os) const 
 {
-  // Print name of the generator
-
   os << GetName() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the title of the generator
+
 void RooAbsNumGenerator::printTitle(ostream& os) const 
 {
-  // Print the title of the generator
-
   os << GetTitle() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the class name of the generator
+
 void RooAbsNumGenerator::printClassName(ostream& os) const 
 {
-  // Print the class name of the generator
-
   os << IsA()->GetName() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the arguments of the generator
+
 void RooAbsNumGenerator::printArgs(ostream& os) const 
 {
-  // Print the arguments of the generator
-
   os << "[ function=" << _funcClone->GetName() << " catobs=" << _catVars << " realobs=" << _realVars << " ]" ;
 }
 

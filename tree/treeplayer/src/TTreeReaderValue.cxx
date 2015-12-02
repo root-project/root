@@ -44,7 +44,9 @@
 
 ClassImp(TTreeReaderValueBase)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a tree value reader and register it with the reader object.
+
 ROOT::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /*= 0*/,
                                                  const char* branchname /*= 0*/,
                                                  TDictionary* dict /*= 0*/):
@@ -57,23 +59,23 @@ ROOT::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /*= 0*/,
    fSetupStatus(kSetupNotSetup),
    fReadStatus(kReadNothingYet)
 {
-   // Construct a tree value reader and register it with the reader object.
    if (fTreeReader) fTreeReader->RegisterValueReader(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unregister from tree reader, cleanup.
+
 ROOT::TTreeReaderValueBase::~TTreeReaderValueBase()
 {
-   // Unregister from tree reader, cleanup.
    if (fTreeReader) fTreeReader->DeregisterValueReader(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try to read the value from the TBranchProxy, returns
+/// the status of the read.
+
 ROOT::TTreeReaderValueBase::EReadStatus
 ROOT::TTreeReaderValueBase::ProxyRead() {
-   // Try to read the value from the TBranchProxy, returns
-   // the status of the read.
-
    if (!fProxy) return kReadNothingYet;
    if (fProxy->Read()) {
       fReadStatus = kReadSuccess;
@@ -83,10 +85,10 @@ ROOT::TTreeReaderValueBase::ProxyRead() {
    return fReadStatus;
 }
 
-//______________________________________________________________________________
-TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() {
-   // If we are reading a leaf, return the corresponding TLeaf.
+////////////////////////////////////////////////////////////////////////////////
+/// If we are reading a leaf, return the corresponding TLeaf.
 
+TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() {
    if (fLeafName.Length() > 0){
 
       Long64_t newChainOffset = fTreeReader->GetTree()->GetChainOffset();
@@ -123,10 +125,10 @@ TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() {
    }
 }
 
-//______________________________________________________________________________
-void* ROOT::TTreeReaderValueBase::GetAddress() {
-   // Returns the memory address of the object being read.
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the memory address of the object being read.
 
+void* ROOT::TTreeReaderValueBase::GetAddress() {
    if (ProxyRead() != kReadSuccess) return 0;
 
    if (fLeafName.Length() > 0){
@@ -151,9 +153,10 @@ void* ROOT::TTreeReaderValueBase::GetAddress() {
    return fProxy ? (Byte_t*)fProxy->GetWhere() : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the proxy object for our branch.
+
 void ROOT::TTreeReaderValueBase::CreateProxy() {
-   // Create the proxy object for our branch.
    if (fProxy) {
       return;
    }
@@ -363,14 +366,14 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
    fProxy = namedProxy->GetProxy();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the type of data stored by branch; put its dictionary into
+/// dict, return its type name. If no dictionary is available, at least
+/// its type name should be returned.
+
 const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
                                            TDictionary* &dict) const
 {
-   // Retrieve the type of data stored by branch; put its dictionary into
-   // dict, return its type name. If no dictionary is available, at least
-   // its type name should be returned.
-
    dict = 0;
    if (branch->IsA() == TBranchElement::Class()) {
       TBranchElement* brElement = (TBranchElement*)branch;

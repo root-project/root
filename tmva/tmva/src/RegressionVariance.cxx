@@ -39,22 +39,22 @@
 
 ClassImp(TMVA::RegressionVariance)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Separation Gain:                                                     
+/// the measure of how the quality of separation of the sample increases 
+/// by splitting the sample e.g. into a "left-node" and a "right-node"   
+/// (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right) 
+/// this is then the quality crition which is optimized for when trying  
+/// to increase the information in the system
+/// for the Regression: as the "Gain is maximised", the RMS (sqrt(variance))
+/// which is used as a "separation" index should be as small as possible.
+/// the "figure of merit" here has to be -(rms left+rms-right) or 1/rms...
+
 Double_t TMVA::RegressionVariance::GetSeparationGain(const Double_t &nLeft, 
                                                      const Double_t& targetLeft , const Double_t& target2Left , 
                                                      const Double_t &nTot, 
                                                      const Double_t& targetTot , const Double_t& target2Tot)
 {
-   // Separation Gain:                                                     
-   // the measure of how the quality of separation of the sample increases 
-   // by splitting the sample e.g. into a "left-node" and a "right-node"   
-   // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right) 
-   // this is then the quality crition which is optimized for when trying  
-   // to increase the information in the system
-   // for the Regression: as the "Gain is maximised", the RMS (sqrt(variance))
-   // which is used as a "separation" index should be as small as possible.
-   // the "figure of merit" here has to be -(rms left+rms-right) or 1/rms...
-
 
    if  ( nTot==nLeft || nLeft==0 ) return 0.;
 
@@ -66,12 +66,12 @@ Double_t TMVA::RegressionVariance::GetSeparationGain(const Double_t &nLeft,
    return (parentIndex - leftIndex - rightIndex)/(parentIndex);   
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Separation Index:  a simple Variance
+
 Double_t TMVA::RegressionVariance::GetSeparationIndex(const Double_t& n, 
                                                       const Double_t& target , const Double_t& target2)
 {
-   // Separation Index:  a simple Variance
-
    //   return TMath::Sqrt(( target2 - target*target/n) / n);
    return ( target2 - target*target/n) / n;
 

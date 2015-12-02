@@ -29,11 +29,11 @@
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,00,00)
 
 ////////////////////////////////////////////////////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns TCint object
+
 TInterpreter *TGWin32InterpreterProxy::RealObject()
 {
-   // returns TCint object
-
    return gROOT->GetInterpreter();
 }
 

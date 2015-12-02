@@ -68,12 +68,13 @@ enum ETGeoVolumeWid {
    kDIV_NAME
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for volume editor.
+
 TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for volume editor.
    fGeometry = 0;
    fVolume   = 0;
    
@@ -371,10 +372,11 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    fCategories->SetDefaultSize(GetDefaultWidth(), GetDefaultHeight());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoVolumeEditor::~TGeoVolumeEditor()
 {
-// Destructor
    TGCompositeFrame *cont;
    cont = (TGCompositeFrame*)fCategories->GetItem("Properties")->GetContainer();
    TGeoTabManager::Cleanup(cont);
@@ -394,10 +396,11 @@ TGeoVolumeEditor::~TGeoVolumeEditor()
    Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoVolumeEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fVolumeName->Connect("TextChanged(const char *)", "TGeoVolumeEditor", this, "DoVolumeName()");
    fDivName->Connect("TextChanged(const char *)", "TGeoVolumeEditor", this, "DoDivName()");
    fEditMedium->Connect("Clicked()", "TGeoVolumeEditor", this, "DoEditMedium()");
@@ -426,10 +429,11 @@ void TGeoVolumeEditor::ConnectSignals2Slots()
    fApplyDiv->Connect("Clicked()", "TGeoVolumeEditor", this, "DoApplyDiv()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the picked volume.
+
 void TGeoVolumeEditor::SetModel(TObject* obj)
 {
-   // Connect to the picked volume.
    if (obj == 0 || !obj->InheritsFrom(TGeoVolume::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -506,26 +510,28 @@ void TGeoVolumeEditor::SetModel(TObject* obj)
    if (GetParent()==fTabMgr->GetVolumeTab()) fTab->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add editors to fGedFrame and exclude TLineEditor.
+
 void TGeoVolumeEditor::ActivateBaseClassEditors(TClass* cl)
 {
-   // Add editors to fGedFrame and exclude TLineEditor.
-
    fGedEditor->ExcludeClassEditor(TAttFill::Class());
    TGedFrame::ActivateBaseClassEditors(cl);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Modify volume name.
+
 void TGeoVolumeEditor::DoVolumeName()
 {
-// Modify volume name.
    fVolume->SetName(fVolumeName->GetText());
 }
    
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select a new shape.
+
 void TGeoVolumeEditor::DoSelectShape()
 {
-// Select a new shape.
    TGeoShape *shape = fSelectedShape;
    new TGeoShapeDialog(fBSelShape, gClient->GetRoot(), 200,300);  
    fSelectedShape = (TGeoShape*)TGeoShapeDialog::GetSelected();
@@ -533,10 +539,11 @@ void TGeoVolumeEditor::DoSelectShape()
    else fSelectedShape = shape;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select a new medium.
+
 void TGeoVolumeEditor::DoSelectMedium()
 {
-// Select a new medium.
    TGeoMedium *med = fSelectedMedium;
    new TGeoMediumDialog(fBSelMedium, gClient->GetRoot(), 200,300);  
    fSelectedMedium = (TGeoMedium*)TGeoMediumDialog::GetSelected();
@@ -544,10 +551,11 @@ void TGeoVolumeEditor::DoSelectMedium()
    else fSelectedMedium = med;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select a matrix for positioning.
+
 void TGeoVolumeEditor::DoSelectMatrix()
 {
-// Select a matrix for positioning.
    TGeoMatrix *matrix = fSelectedMatrix;
    new TGeoMatrixDialog(fBSelMatrix, gClient->GetRoot(), 200,300);  
    fSelectedMatrix = (TGeoMatrix*)TGeoMatrixDialog::GetSelected();
@@ -555,10 +563,11 @@ void TGeoVolumeEditor::DoSelectMatrix()
    else fSelectedMatrix = matrix;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select a daughter volume.
+
 void TGeoVolumeEditor::DoSelectVolume()
 {
-// Select a daughter volume.
    TGeoVolume *vol = fSelectedVolume;
    new TGeoVolumeDialog(fBSelVolume, gClient->GetRoot(), 200,300);  
    fSelectedVolume = (TGeoVolume*)TGeoVolumeDialog::GetSelected();
@@ -569,34 +578,38 @@ void TGeoVolumeEditor::DoSelectVolume()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Edit the shape of the volume.
+
 void TGeoVolumeEditor::DoEditShape()
 {
-// Edit the shape of the volume.
    fTabMgr->GetShapeEditor(fVolume->GetShape());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Edit the medium of the volume.
+
 void TGeoVolumeEditor::DoEditMedium()
 {
-// Edit the medium of the volume.
    fTabMgr->GetMediumEditor(fVolume->GetMedium());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Edit the position of the selected node.
+
 void TGeoVolumeEditor::DoEditMatrix()
 {
-// Edit the position of the selected node.
    if (!fVolume->GetNdaughters()) return;
    Int_t i = fNodeList->GetSelected();
    if (i<0) return;
    fTabMgr->GetMatrixEditor(fVolume->GetNode(i)->GetMatrix());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a daughter.
+
 void TGeoVolumeEditor::DoAddNode()
 {
-// Add a daughter.
    if (!fSelectedVolume || fVolume->GetFinder()) return;
    Int_t icopy = fCopyNumber->GetIntNumber();
    fVolume->AddNode(fSelectedVolume, icopy, fSelectedMatrix);
@@ -612,10 +625,11 @@ void TGeoVolumeEditor::DoAddNode()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a daughter.
+
 void TGeoVolumeEditor::DoRemoveNode()
 {
-// Remove a daughter.
    if (!fVolume->GetNdaughters() || fVolume->GetFinder()) {
       fRemoveNode->SetEnabled(kFALSE);
       fEditMatrix->SetEnabled(kFALSE);
@@ -648,30 +662,33 @@ void TGeoVolumeEditor::DoRemoveNode()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting volume visible/invisible.
+
 void TGeoVolumeEditor::DoVisVolume()
 {
-// Slot for setting volume visible/invisible.
    Bool_t on = (fBVis[0]->GetState()==kButtonDown)?kTRUE:kFALSE;
    if (fVolume->IsVisible() == on) return;
    fVolume->SetVisibility(on);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting daughters visible/invisible.
+
 void TGeoVolumeEditor::DoVisDaughters()
 {
-// Slot for setting daughters visible/invisible.
    Bool_t on = (fBVis[1]->GetState()==kButtonDown)?kTRUE:kFALSE;
    if (fVolume->IsVisibleDaughters() == on) return;
    fVolume->VisibleDaughters(on);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting visibility depth auto.
+
 void TGeoVolumeEditor::DoVisAuto()
 {
-// Slot for setting visibility depth auto.
    Bool_t on = (fBAuto->GetState()==kButtonDown)?kTRUE:kFALSE;
    if ((fGeometry->GetVisLevel()==0) == on) return;
    if (on) fGeometry->SetVisLevel(0);
@@ -679,19 +696,21 @@ void TGeoVolumeEditor::DoVisAuto()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for visibility level.
+
 void TGeoVolumeEditor::DoVisLevel()
 {
-// Slot for visibility level.
    fBAuto->SetState(kButtonUp);
    fGeometry->SetVisLevel(fEVisLevel->GetIntNumber());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for viewing volume and containers.
+
 void TGeoVolumeEditor::DoViewAll()
 {
-// Slot for viewing volume and containers.
    Bool_t on = (fBView[0]->GetState()==kButtonDown)?kTRUE:kFALSE;
    if (!on) return;
    if (fVolume->IsVisContainers() == on) return;
@@ -703,10 +722,11 @@ void TGeoVolumeEditor::DoViewAll()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for viewing last leaves only.
+
 void TGeoVolumeEditor::DoViewLeaves()
 {
-// Slot for viewing last leaves only.
    Bool_t on = (fBView[1]->GetState()==kButtonDown)?kTRUE:kFALSE;
    if (!on) return;
    if (fVolume->IsVisLeaves() == on) return;
@@ -718,10 +738,11 @@ void TGeoVolumeEditor::DoViewLeaves()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for viewing volume only.
+
 void TGeoVolumeEditor::DoViewOnly()
 {
-// Slot for viewing volume only.
    Bool_t on = (fBView[2]->GetState()==kButtonDown)?kTRUE:kFALSE;
    if (!on) return;
    if (fVolume->IsVisOnly() == on) return;
@@ -733,27 +754,30 @@ void TGeoVolumeEditor::DoViewOnly()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for raytracing.
+
 void TGeoVolumeEditor::DoRaytrace()
 {
-// Slot for raytracing.
    Bool_t on = (fBRaytrace->GetState()==kButtonDown)?kTRUE:kFALSE;
    if (fVolume->IsRaytracing() == on) return;
    fVolume->Raytrace(on);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Modify division name.
+
 void TGeoVolumeEditor::DoDivName()
 {
-// Modify division name.
    fApplyDiv->SetEnabled(kTRUE);   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change division axis and preserve number of slices.
+
 void TGeoVolumeEditor::DoDivSelAxis()
 {
-// Change division axis and preserve number of slices.
    Int_t iaxis = 1;
    for (Int_t i=0; i<3; i++) {
       if (fBDiv[i]->GetState()!=kButtonDown) continue;
@@ -776,10 +800,11 @@ void TGeoVolumeEditor::DoDivSelAxis()
    fApplyDiv->SetEnabled(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle division range modification.
+
 void TGeoVolumeEditor::DoDivFromTo()
 {
-// Handle division range modification.
    Double_t min, max, xlo, xhi, step;
    Int_t iaxis = 1;
    Int_t ndiv;
@@ -818,10 +843,11 @@ void TGeoVolumeEditor::DoDivFromTo()
    fApplyDiv->SetEnabled(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle division step modification.
+
 void TGeoVolumeEditor::DoDivStep()
 {
-// Handle division step modification.
    Double_t min, max, xlo, xhi;
    Int_t iaxis = 1;
    for (Int_t i=0; i<3; i++) {
@@ -860,10 +886,11 @@ void TGeoVolumeEditor::DoDivStep()
    fApplyDiv->SetEnabled(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle division N modification.
+
 void TGeoVolumeEditor::DoDivN()
 {
-// Handle division N modification.
    Double_t min, max, xlo, xhi;
    Int_t iaxis = 1;
    for (Int_t i=0; i<3; i++) {
@@ -901,10 +928,11 @@ void TGeoVolumeEditor::DoDivN()
    fApplyDiv->SetEnabled(kTRUE);   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply current division settings
+
 void TGeoVolumeEditor::DoApplyDiv()
 {
-// Apply current division settings
    Double_t xlo, xhi, step;
    Int_t iaxis = 1;
    Int_t ndiv;

@@ -28,49 +28,50 @@ ClassImp(TCONE)
 //     - rmax2      outside radius at +DZ in z
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CONE shape default constructor
+
 TCONE::TCONE()
 {
-   // CONE shape default constructor
-
    fRmin2 = 0.;
    fRmax2 = 0.;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CONE shape normal constructor
+
 TCONE::TCONE(const char *name, const char *title, const char *material, Float_t dz,
              Float_t rmin1, Float_t rmax1,
              Float_t rmin2, Float_t rmax2)
       : TTUBE(name, title,material,rmin1,rmax1,dz)
 {
-   // CONE shape normal constructor
-
    fRmin2 = rmin2;
    fRmax2 = rmax2;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CONE shape "simplified" constructor
+
 TCONE::TCONE(const char *name, const char *title, const char *material, Float_t dz, Float_t rmax1
             , Float_t rmax2) : TTUBE(name, title,material,0,rmax1,dz)
 {
-   // CONE shape "simplified" constructor
-
    fRmin2 = 0;
    fRmax2 = rmax2;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CONE shape default destructor
+
 TCONE::~TCONE()
 {
-   // CONE shape default destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create CONE points
+
 void TCONE::SetPoints(Double_t *points) const
 {
-   // Create CONE points
-
    Double_t rmin1, rmax1, dz;
    Int_t j, n;
 

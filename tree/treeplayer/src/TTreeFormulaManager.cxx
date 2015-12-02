@@ -28,12 +28,12 @@ ClassImp(TTreeFormulaManager)
 //
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Tree FormulaManger default constructor*-*-*-*-*-*-*-*-*-*
+///*-*                  ======================================
+
 TTreeFormulaManager::TTreeFormulaManager() : TObject()
 {
-//*-*-*-*-*-*-*-*-*-*-*Tree FormulaManger default constructor*-*-*-*-*-*-*-*-*-*
-//*-*                  ======================================
-
    fMultiplicity = 0;
    fMultiVarDim  = kFALSE;
    fNeedSync     = kFALSE;
@@ -49,12 +49,12 @@ TTreeFormulaManager::TTreeFormulaManager() : TObject()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Tree FormulaManager default destructor*-*-*-*-*-*-*-*-*-*
+///*-*                  ======================================
+
 TTreeFormulaManager::~TTreeFormulaManager()
 {
-//*-*-*-*-*-*-*-*-*-*-*Tree FormulaManager default destructor*-*-*-*-*-*-*-*-*-*
-//*-*                  ======================================
-
    for (int l = 0; l<kMAXFORMDIM; l++) {
       if (fVarDims[l]) delete fVarDims[l];
       fVarDims[l] = 0;
@@ -62,21 +62,21 @@ TTreeFormulaManager::~TTreeFormulaManager()
    if (fCumulUsedVarDims) delete fCumulUsedVarDims;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a formula from this manager
+
 void TTreeFormulaManager::Remove(TTreeFormula* adding)
 {
-   // Remove a formula from this manager
-
    fFormulas.Remove(adding);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new formula to the list of formulas managed
+/// The manager of the formula will be changed and the old one will be deleted
+/// if it is empty.
+
 void TTreeFormulaManager::Add(TTreeFormula* adding)
 {
-  // Add a new formula to the list of formulas managed
-  // The manager of the formula will be changed and the old one will be deleted
-  // if it is empty.
-
    TTreeFormulaManager * old = adding->fManager;
 
    if (old) {
@@ -97,41 +97,41 @@ void TTreeFormulaManager::Add(TTreeFormula* adding)
    fNeedSync = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a variable dimension
+
 void TTreeFormulaManager::AddVarDims(Int_t virt_dim)
 {
-   // Add a variable dimension
-
    if (!fVarDims[virt_dim]) fVarDims[virt_dim] = new TArrayI;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cancel a dimension.  This is usually called when an out-of-bounds index
+/// is used.
+
 void TTreeFormulaManager::CancelDimension(Int_t virt_dim)
 {
-   // Cancel a dimension.  This is usually called when an out-of-bounds index
-   // is used.
-
    fCumulUsedSizes[virt_dim] = 0;
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the manager as handling a formula with multiple variable dimensions
+
 void TTreeFormulaManager::EnableMultiVarDims()
 {
-   // Set the manager as handling a formula with multiple variable dimensions
-
    fMultiVarDim = kTRUE;
    if (!fCumulUsedVarDims) fCumulUsedVarDims = new TArrayI;
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*Return number of available instances in the formulas*-*-*-*-*-*
+///*-*            ====================================================
+///
+
 Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
 {
-//*-*-*-*-*-*-*-*Return number of available instances in the formulas*-*-*-*-*-*
-//*-*            ====================================================
-//
-
    Int_t k;
 
    // new version of GetNData:
@@ -220,11 +220,11 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Synchronize all the formulae.
+
 Bool_t TTreeFormulaManager::Sync()
 {
-   // Synchronize all the formulae.
-
    if (!fNeedSync) return true;
 
    TTreeFormula* current = 0;
@@ -293,14 +293,14 @@ Bool_t TTreeFormulaManager::Sync()
    return true;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// this function could be called TTreePlayer::UpdateFormulaLeaves, itself
+/// called by TChain::LoadTree when a new Tree is loaded.
+/// Because Trees in a TChain may have a different list of leaves, one
+/// must update the leaves numbers in the TTreeFormula used by the TreePlayer.
+
 void TTreeFormulaManager::UpdateFormulaLeaves()
 {
-   // this function could be called TTreePlayer::UpdateFormulaLeaves, itself
-   // called by TChain::LoadTree when a new Tree is loaded.
-   // Because Trees in a TChain may have a different list of leaves, one
-   // must update the leaves numbers in the TTreeFormula used by the TreePlayer.
-
    // A safer alternative would be to recompile the whole thing .... However
    // currently compile HAS TO be called from the constructor!
 
@@ -315,11 +315,11 @@ void TTreeFormulaManager::UpdateFormulaLeaves()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reload the array sizes
+
 void TTreeFormulaManager::UpdateUsedSize(Int_t &virt_dim, Int_t vsize)
 {
-   // Reload the array sizes
-
    if (vsize<0)
       fVirtUsedSizes[virt_dim] = -1 * TMath::Abs(fVirtUsedSizes[virt_dim]);
    else

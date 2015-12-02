@@ -28,15 +28,15 @@
 
 ClassImp(TEveGridStepperSubEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveGridStepperSubEditor::TEveGridStepperSubEditor(const TGWindow *p) :
    TGVerticalFrame(p),
    fM (0),
    fNx(0), fNy(0), fNz(0),
    fDx(0), fDy(0), fDz(0)
 {
-   // Constructor.
-
    Int_t labelW = 15;
 
    TGHorizontalFrame* hf = new TGHorizontalFrame(this);
@@ -118,11 +118,11 @@ TEveGridStepperSubEditor::TEveGridStepperSubEditor(const TGWindow *p) :
    AddFrame(hf, new TGLayoutHints(kLHintsExpandX, 2, 0, 0, 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveGridStepperSubEditor::SetModel(TEveGridStepper* m)
 {
-   // Set model object.
-
    fM = m;
 
    fNx->SetValue(fM->fNx);
@@ -134,28 +134,28 @@ void TEveGridStepperSubEditor::SetModel(TEveGridStepper* m)
    fDz->SetValue(fM->fDz);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Changed signal.
+
 void TEveGridStepperSubEditor::Changed()
 {
-   // Emit Changed signal.
-
    Emit("Changed()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for changing fN's.
+
 void TEveGridStepperSubEditor::DoNs()
 {
-   // Slot for changing fN's.
-
    fM->SetNs((Int_t)fNx->GetValue(), (Int_t)fNy->GetValue(), (Int_t)fNz->GetValue());
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for changing fD's.
+
 void TEveGridStepperSubEditor::DoDs()
 {
-   // Slot for changing fD's.
-
    fM->SetDs(fDx->GetValue(), fDy->GetValue(), fDz->GetValue());
    Changed();
 }
@@ -168,15 +168,15 @@ void TEveGridStepperSubEditor::DoDs()
 
 ClassImp(TEveGridStepperEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveGridStepperEditor::TEveGridStepperEditor(const TGWindow *p, Int_t width, Int_t height,
                                              UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM  (0),
    fSE (0)
 {
-   // Constructor.
-
    MakeTitle("TEveGridStepper");
 
    fSE = new TEveGridStepperSubEditor(this);
@@ -184,11 +184,11 @@ TEveGridStepperEditor::TEveGridStepperEditor(const TGWindow *p, Int_t width, Int
    fSE->Connect("Changed()", "TEveGridStepperEditor", this, "Update()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveGridStepperEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveGridStepper*>(obj);
    fSE->SetModel(fM);
 }

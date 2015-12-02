@@ -55,15 +55,17 @@ ClassImp(RooSecondMoment)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooSecondMoment::RooSecondMoment() 
 {
-  // Default constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Bool_t centr, Bool_t takeRoot) :
   RooAbsMoment(name, title,func,x,2,takeRoot),
   _xf("!xf","xf",this,kFALSE,kFALSE),
@@ -71,7 +73,6 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
   _if("!if","if",this),
   _xfOffset(0)
 {
-
   setExpensiveObjectCache(func.expensiveObjectCache()) ;
   
   RooAbsReal* XF(0) ;
@@ -108,7 +109,8 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
   addOwnedComponents(RooArgSet(*XF,*intXF,*intF)) ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, 
 		     Bool_t centr, Bool_t takeRoot, Bool_t intNSet) :
   RooAbsMoment(name, title,func,x,2,takeRoot),
@@ -117,7 +119,6 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
   _if("!if","if",this),
   _xfOffset(0)
 {
-
   setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
   _nset.add(nset) ;
@@ -166,7 +167,8 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooSecondMoment::RooSecondMoment(const RooSecondMoment& other, const char* name) :
   RooAbsMoment(other, name), 
   _xf("xf",this,other._xf),
@@ -178,18 +180,20 @@ RooSecondMoment::RooSecondMoment(const RooSecondMoment& other, const char* name)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooSecondMoment::~RooSecondMoment() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate value  
+
 Double_t RooSecondMoment::evaluate() const 
 {
-  // Calculate value  
   Double_t ratio = _ixf / _if ;
 
   if (_mean.absArg()) {

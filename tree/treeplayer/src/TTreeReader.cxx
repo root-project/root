@@ -197,36 +197,39 @@ END_HTML
 
 ClassImp(TTreeReader)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Access data from tree.
+
 TTreeReader::TTreeReader(TTree* tree):
    fTree(tree),
    fDirectory(0),
    fEntryStatus(kEntryNotLoaded),
    fDirector(0)
 {
-   // Access data from tree.
    Initialize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Access data from the tree called keyname in the directory (e.g. TFile)
+/// dir, or the current directory if dir is NULL. If keyname cannot be
+/// found, or if it is not a TTree, IsZombie() will return true.
+
 TTreeReader::TTreeReader(const char* keyname, TDirectory* dir /*= NULL*/):
    fTree(0),
    fDirectory(dir),
    fEntryStatus(kEntryNotLoaded),
    fDirector(0)
 {
-   // Access data from the tree called keyname in the directory (e.g. TFile)
-   // dir, or the current directory if dir is NULL. If keyname cannot be
-   // found, or if it is not a TTree, IsZombie() will return true.
    if (!fDirectory) fDirectory = gDirectory;
    fDirectory->GetObject(keyname, fTree);
    Initialize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tell all value readers that the tree reader does not exist anymore.
+
 TTreeReader::~TTreeReader()
 {
-   // Tell all value readers that the tree reader does not exist anymore.
    for (std::deque<ROOT::TTreeReaderValueBase*>::const_iterator
            i = fValues.begin(), e = fValues.end(); i != e; ++i) {
       (*i)->MarkTreeReaderUnavailable();
@@ -235,10 +238,11 @@ TTreeReader::~TTreeReader()
    fProxies.SetOwner();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization of the director.
+
 void TTreeReader::Initialize()
 {
-   // Initialization of the director.
    if (!fTree) {
       MakeZombie();
       fEntryStatus = kEntryNoTree;
@@ -247,10 +251,10 @@ void TTreeReader::Initialize()
    }
 }
 
-//______________________________________________________________________________
-Long64_t TTreeReader::GetCurrentEntry() const {
-   //Returns the index of the current entry being read
+////////////////////////////////////////////////////////////////////////////////
+///Returns the index of the current entry being read
 
+Long64_t TTreeReader::GetCurrentEntry() const {
    if (!fDirector) return 0;
    Long64_t currentTreeEntry = fDirector->GetReadEntry();
    if (fTree->IsA() == TChain::Class() && currentTreeEntry >= 0) {
@@ -259,12 +263,12 @@ Long64_t TTreeReader::GetCurrentEntry() const {
    return currentTreeEntry;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load an entry into the tree, return the status of the read.
+/// For chains, entry is the global (i.e. not tree-local) entry number.
+
 TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local)
 {
-   // Load an entry into the tree, return the status of the read.
-   // For chains, entry is the global (i.e. not tree-local) entry number.
-
    if (!fTree) {
       fEntryStatus = kEntryNoTree;
       return fEntryStatus;
@@ -308,11 +312,12 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
    return fEntryStatus;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set (or update) the which tree to reader from. tree can be
+/// a TTree or a TChain.
+
 void TTreeReader::SetTree(TTree* tree)
 {
-   // Set (or update) the which tree to reader from. tree can be
-   // a TTree or a TChain.
    fTree = tree;
    if (fTree) {
       ResetBit(kZombie);
@@ -330,17 +335,19 @@ void TTreeReader::SetTree(TTree* tree)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a value reader for this tree.
+
 void TTreeReader::RegisterValueReader(ROOT::TTreeReaderValueBase* reader)
 {
-   // Add a value reader for this tree.
    fValues.push_back(reader);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a value reader for this tree.
+
 void TTreeReader::DeregisterValueReader(ROOT::TTreeReaderValueBase* reader)
 {
-   // Remove a value reader for this tree.
    std::deque<ROOT::TTreeReaderValueBase*>::iterator iReader
       = std::find(fValues.begin(), fValues.end(), reader);
    if (iReader == fValues.end()) {

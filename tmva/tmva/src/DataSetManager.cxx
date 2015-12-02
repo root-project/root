@@ -50,31 +50,33 @@ using std::endl;
 
 // void TMVA::DataSetManager::DestroyInstance() { if (fgDSManager) { delete fgDSManager; fgDSManager=0; } } // DSMTEST removed
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::DataSetManager::DataSetManager( DataInputHandler& dataInput )
    : fDatasetFactory(0),
      fDataInput(dataInput),
      fDataSetInfoCollection(),
      fLogger( new MsgLogger("DataSetManager", kINFO) )
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+///   fDataSetInfoCollection.SetOwner(); // DSMTEST --> created a segfault because the DataSetInfo-objects got deleted twice
+
 TMVA::DataSetManager::~DataSetManager()
 {
-   // destructor
-//   fDataSetInfoCollection.SetOwner(); // DSMTEST --> created a segfault because the DataSetInfo-objects got deleted twice
-
    DataSetFactory::destroyNewInstance(fDatasetFactory);
 
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates the singleton dataset
+
 TMVA::DataSet* TMVA::DataSetManager::CreateDataSet( const TString& dsiName )
 {
-   // Creates the singleton dataset
    DataSetInfo* dsi = GetDataSetInfo( dsiName );
    if (!dsi) Log() << kFATAL << "DataSetInfo object '" << dsiName << "' not found" << Endl;
 
@@ -83,18 +85,19 @@ TMVA::DataSet* TMVA::DataSetManager::CreateDataSet( const TString& dsiName )
    return fDatasetFactory->CreateDataSet( *dsi, fDataInput );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns datasetinfo object for given name
+
 TMVA::DataSetInfo* TMVA::DataSetManager::GetDataSetInfo(const TString& dsiName)
 {
-   // returns datasetinfo object for given name
    return (DataSetInfo*)fDataSetInfoCollection.FindObject( dsiName );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// stores a copy of the dataset info object
+
 TMVA::DataSetInfo& TMVA::DataSetManager::AddDataSetInfo(DataSetInfo& dsi)
 {
-   // stores a copy of the dataset info object
-
    dsi.SetDataSetManager( this ); // DSMTEST
 
    DataSetInfo * dsiInList = GetDataSetInfo(dsi.GetName());

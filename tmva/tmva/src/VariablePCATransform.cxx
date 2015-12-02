@@ -47,37 +47,41 @@
 
 ClassImp(TMVA::VariablePCATransform)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::VariablePCATransform::VariablePCATransform( DataSetInfo& dsi )
 : VariableTransformBase( dsi, Types::kPCA, "PCA" )
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::VariablePCATransform::~VariablePCATransform()
 {
-   // destructor
    for (UInt_t i=0; i<fMeanValues.size(); i++) {
       if (fMeanValues.at(i)   != 0) delete fMeanValues.at(i);
       if (fEigenVectors.at(i) != 0) delete fEigenVectors.at(i);
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialization of the transformation.
+/// Has to be called in the preparation and not in the constructor,
+/// since the number of classes it not known at construction, but
+/// only after the creation of the DataSet which might be later.
+
 void TMVA::VariablePCATransform::Initialize()
 {
-   // initialization of the transformation.
-   // Has to be called in the preparation and not in the constructor,
-   // since the number of classes it not known at construction, but
-   // only after the creation of the DataSet which might be later.
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the principal components using the ROOT class TPrincipal
+/// and the normalization
+
 Bool_t TMVA::VariablePCATransform::PrepareTransformation (const std::vector<Event*>& events)
 {
-   // calculate the principal components using the ROOT class TPrincipal
-   // and the normalization
    Initialize();
 
    if (!IsEnabled() || IsCreated()) return kTRUE;
@@ -111,10 +115,11 @@ Bool_t TMVA::VariablePCATransform::PrepareTransformation (const std::vector<Even
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// apply the principal component analysis
+
 const TMVA::Event* TMVA::VariablePCATransform::Transform( const Event* const ev, Int_t cls ) const
 {
-   // apply the principal component analysis
    if (!IsCreated()) return 0;
 
 //   const Int_t inputSize = fGet.size();
@@ -157,13 +162,13 @@ const TMVA::Event* TMVA::VariablePCATransform::Transform( const Event* const ev,
    return fTransformedEvent;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// apply the principal component analysis
+/// TODO: implementation of inverse transformation
+///    Log() << kFATAL << "Inverse transformation for PCA transformation not yet implemented. Hence, this transformation cannot be applied together with regression. Please contact the authors if necessary." << Endl;
+
 const TMVA::Event* TMVA::VariablePCATransform::InverseTransform( const Event* const ev, Int_t cls ) const
 {
-   // apply the principal component analysis
-   // TODO: implementation of inverse transformation
-//    Log() << kFATAL << "Inverse transformation for PCA transformation not yet implemented. Hence, this transformation cannot be applied together with regression. Please contact the authors if necessary." << Endl;
-
    if (!IsCreated()) return 0;
 //   const Int_t inputSize = fGet.size();
    const UInt_t nCls = GetNClasses();
@@ -188,12 +193,12 @@ const TMVA::Event* TMVA::VariablePCATransform::InverseTransform( const Event* co
    return fBackTransformedEvent;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the principal components for the signal and the background data
+/// it uses the MakePrincipal method of ROOT's TPrincipal class
+
 void TMVA::VariablePCATransform::CalculatePrincipalComponents( const std::vector< Event*>& events )
 {
-   // calculate the principal components for the signal and the background data
-   // it uses the MakePrincipal method of ROOT's TPrincipal class
-
    UInt_t nvars = 0, ntgts = 0, nspcts = 0;
    CountVariableTypes( nvars, ntgts, nspcts );
    if( nvars>0  && ntgts>0 )
@@ -258,13 +263,14 @@ void TMVA::VariablePCATransform::CalculatePrincipalComponents( const std::vector
    delete [] dvec;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the principal components from the original data vector
+/// x, and return it in p (function extracted from TPrincipal::X2P)
+/// It's the users responsibility to make sure that both x and p are
+/// of the right size (i.e., memory must be allocated for p)
+
 void TMVA::VariablePCATransform::X2P( std::vector<Float_t>& pc, const std::vector<Float_t>& x, Int_t cls ) const
 {
-   // Calculate the principal components from the original data vector
-   // x, and return it in p (function extracted from TPrincipal::X2P)
-   // It's the users responsibility to make sure that both x and p are
-   // of the right size (i.e., memory must be allocated for p)
    const Int_t nInput = x.size();
    pc.assign(nInput,0);
 
@@ -276,13 +282,14 @@ void TMVA::VariablePCATransform::X2P( std::vector<Float_t>& pc, const std::vecto
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the back-transformation from the principal components
+/// pc, and return x 
+/// It's the users responsibility to make sure that both x and pc are
+/// of the right size (i.e., memory must be allocated for p)
+
 void TMVA::VariablePCATransform::P2X( std::vector<Float_t>& x, const std::vector<Float_t>& pc, Int_t cls ) const
 {
-   // Perform the back-transformation from the principal components
-   // pc, and return x 
-   // It's the users responsibility to make sure that both x and pc are
-   // of the right size (i.e., memory must be allocated for p)
    const Int_t nInput = pc.size();
    x.assign(nInput,0);
 
@@ -294,10 +301,11 @@ void TMVA::VariablePCATransform::P2X( std::vector<Float_t>& x, const std::vector
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write mean values to stream
+
 void TMVA::VariablePCATransform::WriteTransformationToStream( std::ostream& o ) const
 {
-   // write mean values to stream
    for (Int_t sbType=0; sbType<2; sbType++) {
       o << "# PCA mean values " << std::endl;
       const TVectorD* means = fMeanValues[sbType];
@@ -324,10 +332,10 @@ void TMVA::VariablePCATransform::WriteTransformationToStream( std::ostream& o ) 
    o << "##" << std::endl;
 }
 
-//_______________________________________________________________________
-void TMVA::VariablePCATransform::AttachXMLTo(void* parent) {
-   // create XML description of PCA transformation
+////////////////////////////////////////////////////////////////////////////////
+/// create XML description of PCA transformation
 
+void TMVA::VariablePCATransform::AttachXMLTo(void* parent) {
    void* trfxml = gTools().AddChild(parent, "Transform");
    gTools().AddAttr(trfxml, "Name", "PCA");
 
@@ -362,11 +370,11 @@ void TMVA::VariablePCATransform::AttachXMLTo(void* parent) {
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the transformation matrices from the xml node
+
 void TMVA::VariablePCATransform::ReadFromXML( void* trfnode )
 {
-   // Read the transformation matrices from the xml node
-
    Int_t nrows, ncols;
    UInt_t clsIdx;
    TString classtype;
@@ -428,10 +436,11 @@ void TMVA::VariablePCATransform::ReadFromXML( void* trfnode )
    SetCreated();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read mean values from input stream
+
 void TMVA::VariablePCATransform::ReadTransformationFromStream( std::istream& istr, const TString& classname )
 {
-   // Read mean values from input stream
    char buf[512];
    istr.getline(buf,512);
    TString strvar, dummy;
@@ -508,12 +517,12 @@ void TMVA::VariablePCATransform::ReadTransformationFromStream( std::istream& ist
    SetCreated();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates C++ code fragment of the PCA transform for inclusion in standalone C++ class
+
 void TMVA::VariablePCATransform::MakeFunction( std::ostream& fout, const TString& fcncName,
                                                Int_t part, UInt_t trCounter, Int_t )
 {
-   // creates C++ code fragment of the PCA transform for inclusion in standalone C++ class
-
    UInt_t nvar = fEigenVectors[0]->GetNrows();
 
    // creates a PCA transformation function

@@ -98,11 +98,11 @@ ClassImp(TSlider)
 //////////////////////////////////////////////////////////////////////////
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// slider default constructor.
+
 TSlider::TSlider(): TPad()
 {
-   // slider default constructor.
-
    fObject  = 0;
    fMethod  = "";
    fMinimum = 0;
@@ -110,14 +110,14 @@ TSlider::TSlider(): TPad()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slider normal constructor.
+///
+///   x1,y1,x2,y2 are in pad user coordinates
+
 TSlider::TSlider(const char *name, const char *title, Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Color_t color, Short_t bordersize, Short_t bordermode)
            :TPad(name,title,0.1,0.1,0.9,0.9,color,bordersize,bordermode)
 {
-   // Slider normal constructor.
-   //
-   //   x1,y1,x2,y2 are in pad user coordinates
-
    Double_t x1pad = gPad->GetX1();
    Double_t x2pad = gPad->GetX2();
    Double_t y1pad = gPad->GetY1();
@@ -145,27 +145,28 @@ TSlider::TSlider(const char *name, const char *title, Double_t x1, Double_t y1,D
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// slider default destructor.
+
 TSlider::~TSlider()
 {
-   // slider default destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this slider with its current attributes.
+
 void TSlider::Paint(Option_t *option)
 {
-   // Paint this slider with its current attributes.
-
    TPad::Paint(option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TSlider::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    TPad *padsav = (TPad*)gPad;
    char quote = '"';
    if (gROOT->ClassSaved(TSlider::Class())) {
@@ -200,12 +201,12 @@ void TSlider::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Set Slider range in [0,1]*-*-*-*-*
+///*-*                  =========================
+
 void TSlider::SetRange(Double_t xmin, Double_t xmax)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set Slider range in [0,1]*-*-*-*-*
-//*-*                  =========================
-
    TSliderBox *sbox = (TSliderBox*)fPrimitives->FindObject("TSliderBox");
    if (sbox) {
       if (fAbsWNDC > fAbsHNDC) {

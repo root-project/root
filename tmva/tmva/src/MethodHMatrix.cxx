@@ -64,7 +64,9 @@ ClassImp(TMVA::MethodHMatrix)
 //_______________________________________________________________________
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor for the H-Matrix method
+
 TMVA::MethodHMatrix::MethodHMatrix( const TString& jobName,
                                     const TString& methodTitle,
                                     DataSetInfo& theData,
@@ -76,10 +78,11 @@ TMVA::MethodHMatrix::MethodHMatrix( const TString& jobName,
   ,fVecMeanS(0)    
   ,fVecMeanB(0)    
 {
-   // standard constructor for the H-Matrix method
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from weight file
+
 TMVA::MethodHMatrix::MethodHMatrix( DataSetInfo& theData,
                                     const TString& theWeightFile,
                                     TDirectory* theTargetDir )
@@ -89,14 +92,13 @@ TMVA::MethodHMatrix::MethodHMatrix( DataSetInfo& theData,
   ,fVecMeanS(0)    
   ,fVecMeanB(0)    
 {
-   // constructor from weight file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default initialization called by all constructors
+
 void TMVA::MethodHMatrix::Init( void )
 {
-   // default initialization called by all constructors
-
    //SetNormalised( kFALSE ); obsolete!
 
    fInvHMatrixS = new TMatrixD( GetNvar(), GetNvar() );
@@ -108,42 +110,46 @@ void TMVA::MethodHMatrix::Init( void )
    SetSignalReferenceCut( 0.0 );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodHMatrix::~MethodHMatrix( void )
 {
-   // destructor
    if (NULL != fInvHMatrixS) delete fInvHMatrixS;
    if (NULL != fInvHMatrixB) delete fInvHMatrixB;
    if (NULL != fVecMeanS   ) delete fVecMeanS;
    if (NULL != fVecMeanB   ) delete fVecMeanB;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// FDA can handle classification with 2 classes and regression with one regression-target
+
 Bool_t TMVA::MethodHMatrix::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
 {
-   // FDA can handle classification with 2 classes and regression with one regression-target
    if( type == Types::kClassification && numberClasses == 2 ) return kTRUE;
    return kFALSE;
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MethodHMatrix options: none (apart from those implemented in MethodBase)
+
 void TMVA::MethodHMatrix::DeclareOptions()
 {
-   // MethodHMatrix options: none (apart from those implemented in MethodBase)
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// process user options
+
 void TMVA::MethodHMatrix::ProcessOptions()
 {
-   // process user options
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes H-matrices for signal and background samples
+
 void TMVA::MethodHMatrix::Train( void )
 {
-   // computes H-matrices for signal and background samples
-
    // covariance matrices for signal and background
    ComputeCovariance( kTRUE,  fInvHMatrixS );
    ComputeCovariance( kFALSE, fInvHMatrixB );
@@ -180,11 +186,11 @@ void TMVA::MethodHMatrix::Train( void )
    fInvHMatrixB->Invert();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute covariance matrix
+
 void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
 {
-   // compute covariance matrix
-
    Data()->SetCurrentType(Types::kTraining);
 
    const UInt_t nvar = DataInfo().GetNVariables();
@@ -247,10 +253,11 @@ void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
    delete [] xval;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the H-matrix signal estimator
+
 Double_t TMVA::MethodHMatrix::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // returns the H-matrix signal estimator
    Double_t s = GetChi2( Types::kSignal     );
    Double_t b = GetChi2( Types::kBackground );
   
@@ -262,11 +269,11 @@ Double_t TMVA::MethodHMatrix::GetMvaValue( Double_t* err, Double_t* errUpper )
    return (b - s)/(s + b);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute chi2-estimator for event according to type (signal/background)
+
 Double_t TMVA::MethodHMatrix::GetChi2( Types::ESBType type ) 
 {
-   // compute chi2-estimator for event according to type (signal/background)
-
    // get original (not transformed) event
 
    const Event* origEvt = fTmpEvent ? fTmpEvent:Data()->GetEvent();
@@ -303,11 +310,11 @@ Double_t TMVA::MethodHMatrix::GetChi2( Types::ESBType type )
    return chi2;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create XML description for HMatrix classification
+
 void TMVA::MethodHMatrix::AddWeightsXMLTo( void* parent ) const 
 {
-   // create XML description for HMatrix classification
-
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().WriteTVectorDToXML( wght, "VecMeanS", fVecMeanS    ); 
    gTools().WriteTVectorDToXML( wght, "VecMeanB", fVecMeanB    );
@@ -315,11 +322,11 @@ void TMVA::MethodHMatrix::AddWeightsXMLTo( void* parent ) const
    gTools().WriteTMatrixDToXML( wght, "InvHMatB", fInvHMatrixB );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read weights from XML file
+
 void TMVA::MethodHMatrix::ReadWeightsFromXML( void* wghtnode )
 {
-   // read weights from XML file
-
    void* descnode = gTools().GetChild(wghtnode);
    gTools().ReadTVectorDFromXML( descnode, "VecMeanS", fVecMeanS    );
    descnode = gTools().GetNextChild(descnode);
@@ -330,12 +337,13 @@ void TMVA::MethodHMatrix::ReadWeightsFromXML( void* wghtnode )
    gTools().ReadTMatrixDFromXML( descnode, "InvHMatB", fInvHMatrixB );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read variable names and min/max
+/// NOTE: the latter values are mandatory for the normalisation 
+/// in the reader application !!!
+
 void  TMVA::MethodHMatrix::ReadWeightsFromStream( std::istream& istr )
 {
-   // read variable names and min/max
-   // NOTE: the latter values are mandatory for the normalisation 
-   // in the reader application !!!
    UInt_t ivar,jvar;
    TString var, dummy;
    istr >> dummy;
@@ -356,10 +364,11 @@ void  TMVA::MethodHMatrix::ReadWeightsFromStream( std::istream& istr )
          istr >> (*fInvHMatrixB)(ivar,jvar);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write Fisher-specific classifier response
+
 void TMVA::MethodHMatrix::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
-   // write Fisher-specific classifier response
    fout << "   // arrays of input evt vs. variable " << std::endl;
    fout << "   double fInvHMatrixS[" << GetNvar() << "][" << GetNvar() << "]; // inverse H-matrix (signal)" << std::endl;
    fout << "   double fInvHMatrixB[" << GetNvar() << "][" << GetNvar() << "]; // inverse H-matrix (background)" << std::endl;
@@ -447,13 +456,14 @@ void TMVA::MethodHMatrix::MakeClassSpecific( std::ostream& fout, const TString& 
    fout << "}" << std::endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get help message text
+///
+/// typical length of text line: 
+///         "|--------------------------------------------------------------|"
+
 void TMVA::MethodHMatrix::GetHelpMessage() const
 {
-   // get help message text
-   //
-   // typical length of text line: 
-   //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;

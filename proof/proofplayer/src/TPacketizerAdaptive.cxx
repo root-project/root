@@ -363,13 +363,13 @@ public:
    TProofProgressStatus *AddProcessed(TProofProgressStatus *st = 0);
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TPacketizerAdaptive::TSlaveStat::TSlaveStat(TSlave *slave)
    : fFileNode(0), fCurFile(0), fCurElem(0),
      fCurProcessed(0), fCurProcTime(0)
 {
-   // Constructor
-
    fDSubSet = new TList();
    fDSubSet->SetOwner();
    fSlave = slave;
@@ -387,20 +387,20 @@ TPacketizerAdaptive::TSlaveStat::TSlaveStat(TSlave *slave)
       Info("TSlaveStat", "wrk FQDN: %s", fWrkFQDN.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup
+
 TPacketizerAdaptive::TSlaveStat::~TSlaveStat()
 {
-   // Cleanup
-
    SafeDelete(fDSubSet);
    SafeDelete(fStatus);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update packetizer rates
+
 void TPacketizerAdaptive::TSlaveStat::UpdateRates(TProofProgressStatus *st)
 {
-   // Update packetizer rates
-
    if (!st) {
       Error("UpdateRates", "no status object!");
       return;
@@ -418,13 +418,13 @@ void TPacketizerAdaptive::TSlaveStat::UpdateRates(TProofProgressStatus *st)
    fStatus = st;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the current element to the fDSubSet (subset processed by this worker)
+/// and if the status arg is given, then change the size of the packet.
+/// return the difference (*st - *fStatus)
+
 TProofProgressStatus *TPacketizerAdaptive::TSlaveStat::AddProcessed(TProofProgressStatus *st)
 {
-   // Add the current element to the fDSubSet (subset processed by this worker)
-   // and if the status arg is given, then change the size of the packet.
-   // return the difference (*st - *fStatus)
-
    if (st && fDSubSet && fCurElem) {
       if (fCurElem->GetNum() != st->GetEntries() - GetEntriesProcessed())
          fCurElem->SetNum(st->GetEntries() - GetEntriesProcessed());
@@ -441,14 +441,14 @@ TProofProgressStatus *TPacketizerAdaptive::TSlaveStat::AddProcessed(TProofProgre
 
 ClassImp(TPacketizerAdaptive)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
                                          Long64_t first, Long64_t num,
                                          TList *input, TProofProgressStatus *st)
                     : TVirtualPacketizer(input, st)
 {
-   // Constructor
-
    PDB(kPacketizer,1) Info("TPacketizerAdaptive",
                            "enter (first %lld, num %lld)", first, num);
 
@@ -876,11 +876,11 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    PDB(kPacketizer,1) Info("TPacketizerAdaptive", "return");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TPacketizerAdaptive::~TPacketizerAdaptive()
 {
-   // Destructor.
-
    if (fSlaveStats) {
       fSlaveStats->DeleteValues();
    }
@@ -892,12 +892,12 @@ TPacketizerAdaptive::~TPacketizerAdaptive()
    SafeDelete(fFilesToProcess);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// (re)initialise the statistics
+/// called at the begining or after a worker dies.
+
 void TPacketizerAdaptive::InitStats()
 {
-   // (re)initialise the statistics
-   // called at the begining or after a worker dies.
-
    // calculating how many files from TDSet are not cached on
    // any slave
    Int_t noRemoteFiles = 0;
@@ -929,13 +929,13 @@ void TPacketizerAdaptive::InitStats()
    PDB(kPacketizer,1) Info("InitStats", "return");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next unallocated file from 'node' or other nodes:
+/// First try 'node'. If there is no more files, keep trying to
+/// find an unallocated file on other nodes.
+
 TPacketizerAdaptive::TFileStat *TPacketizerAdaptive::GetNextUnAlloc(TFileNode *node, const char *nodeHostName)
 {
-   // Get next unallocated file from 'node' or other nodes:
-   // First try 'node'. If there is no more files, keep trying to
-   // find an unallocated file on other nodes.
-
    TFileStat *file = 0;
 
    if (node != 0) {
@@ -1013,12 +1013,12 @@ TPacketizerAdaptive::TFileStat *TPacketizerAdaptive::GetNextUnAlloc(TFileNode *n
    return file;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next node which has unallocated files.
+/// the order is determined by TFileNode::Compare
+
 TPacketizerAdaptive::TFileNode *TPacketizerAdaptive::NextNode()
 {
-   // Get next node which has unallocated files.
-   // the order is determined by TFileNode::Compare
-
    fUnAllocated->Sort();
    PDB(kPacketizer,2) {
       fUnAllocated->Print();
@@ -1035,19 +1035,19 @@ TPacketizerAdaptive::TFileNode *TPacketizerAdaptive::NextNode()
    return fn;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove unallocated node.
+
 void TPacketizerAdaptive::RemoveUnAllocNode(TFileNode * node)
 {
-   // Remove unallocated node.
-
    fUnAllocated->Remove(node);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next active file.
+
 TPacketizerAdaptive::TFileStat *TPacketizerAdaptive::GetNextActive()
 {
-   // Get next active file.
-
    TFileNode *node;
    TFileStat *file = 0;
 
@@ -1060,11 +1060,11 @@ TPacketizerAdaptive::TFileStat *TPacketizerAdaptive::GetNextActive()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next active node.
+
 TPacketizerAdaptive::TFileNode *TPacketizerAdaptive::NextActiveNode()
 {
-   // Get next active node.
-
    fActive->Sort();
    PDB(kPacketizer,2) {
       Info("NextActiveNode", "enter");
@@ -1082,30 +1082,30 @@ TPacketizerAdaptive::TFileNode *TPacketizerAdaptive::NextActiveNode()
    return fn;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove file from the list of actives.
+
 void TPacketizerAdaptive::RemoveActive(TFileStat *file)
 {
-   // Remove file from the list of actives.
-
    TFileNode *node = file->GetNode();
 
    node->RemoveActive(file);
    if (node->GetNumberOfActiveFiles() == 0) RemoveActiveNode(node);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove node from the list of actives.
+
 void TPacketizerAdaptive::RemoveActiveNode(TFileNode *node)
 {
-   // Remove node from the list of actives.
-
    fActive->Remove(node);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the internal data structure for packet distribution.
+
 void TPacketizerAdaptive::Reset()
 {
-   // Reset the internal data structure for packet distribution.
-
    fUnAllocated->Clear();
    fUnAllocated->AddAll(fFileNodes);
 
@@ -1149,13 +1149,13 @@ void TPacketizerAdaptive::Reset()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check existence of file/dir/tree an get number of entries.
+/// Assumes the files have been setup.
+
 void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves,
                                         Long64_t maxent, Bool_t byfile)
 {
-   // Check existence of file/dir/tree an get number of entries.
-   // Assumes the files have been setup.
-
    TMap     slaves_by_sock;
    TMonitor mon;
    TList    workers;
@@ -1475,11 +1475,11 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The result depends on the fStrategy
+
 Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr, Long64_t cachesz, Int_t learnent)
 {
-   // The result depends on the fStrategy
-
    Long64_t num;
    if (fStrategy == 0) {
       // TPacketizer's heuristic for starting packet size
@@ -1563,16 +1563,16 @@ Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr, Long64_t cach
    return num;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// To be used by GetNextPacket but also in reaction to kPROOF_STOPPROCESS
+/// message (when the worker was asked to stop processing during a packet).
+/// returns the #entries intended in the last packet - #processed entries
+
 Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
                                         TProofProgressStatus *status,
                                         Double_t latency,
                                         TList **listOfMissingFiles)
 {
-   // To be used by GetNextPacket but also in reaction to kPROOF_STOPPROCESS
-   // message (when the worker was asked to stop processing during a packet).
-   // returns the #entries intended in the last packet - #processed entries
-
    // find slave
    TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue( sl );
    if (!slstat) {
@@ -1656,17 +1656,17 @@ Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next packet;
+/// A meaningfull difference to TPacketizer is the fact that this
+/// packetizer, for each worker, tries to predict whether the worker
+/// will finish processing it's local files before the end of the query.
+/// If yes, it allocates, to those workers, files from non-slave filenodes
+/// or from slaves that are overloaded. The check is done every time a new
+/// file needs to be assigned.
+
 TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
 {
-   // Get next packet;
-   // A meaningfull difference to TPacketizer is the fact that this
-   // packetizer, for each worker, tries to predict whether the worker
-   // will finish processing it's local files before the end of the query.
-   // If yes, it allocates, to those workers, files from non-slave filenodes
-   // or from slaves that are overloaded. The check is done every time a new
-   // file needs to be assigned.
-
    if ( !fValid ) {
       return 0;
    }
@@ -1945,11 +1945,11 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
    return slstat->fCurElem;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of workers still processing
+
 Int_t TPacketizerAdaptive::GetActiveWorkers()
 {
-   // Return the number of workers still processing
-
    Int_t actw = 0;
    TIter nxw(fSlaveStats);
    TObject *key;
@@ -1961,12 +1961,12 @@ Int_t TPacketizerAdaptive::GetActiveWorkers()
    return actw;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get Estimation of the current rate; just summing the current rates of
+/// the active workers
+
 Float_t TPacketizerAdaptive::GetCurrentRate(Bool_t &all)
 {
-   // Get Estimation of the current rate; just summing the current rates of
-   // the active workers
-
    all = kTRUE;
    // Loop over the workers
    Float_t currate = 0.;
@@ -1987,16 +1987,16 @@ Float_t TPacketizerAdaptive::GetCurrentRate(Bool_t &all)
    return currate;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get estimation for the number of processed entries and bytes read at time t,
+/// based on the numbers already processed and the latests worker measured speeds.
+/// If t <= 0 the current time is used.
+/// Only the estimation for the entries is currently implemented.
+/// This is needed to smooth the instantaneous rate plot.
+
 Int_t TPacketizerAdaptive::GetEstEntriesProcessed(Float_t t, Long64_t &ent,
                                                   Long64_t &bytes, Long64_t &calls)
 {
-   // Get estimation for the number of processed entries and bytes read at time t,
-   // based on the numbers already processed and the latests worker measured speeds.
-   // If t <= 0 the current time is used.
-   // Only the estimation for the entries is currently implemented.
-   // This is needed to smooth the instantaneous rate plot.
-
    // Default value
    ent = GetEntriesProcessed();
    bytes = GetBytesRead();
@@ -2059,19 +2059,19 @@ Int_t TPacketizerAdaptive::GetEstEntriesProcessed(Float_t t, Long64_t &ent,
    return ((all) ? 0 : 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method can be called at any time during processing
+/// as an effect of handling kPROOF_STOPPROCESS
+/// If the output list from this worker is going to be sent back to the master,
+/// the 'status' includes the number of entries processed by the slave.
+/// From this we calculate the remaining part of the packet.
+/// 0 indicates that the results from that worker were lost completely.
+/// Assume that the filenodes for which we have a TFileNode object
+/// are still up and running.
+
 void TPacketizerAdaptive::MarkBad(TSlave *s, TProofProgressStatus *status,
                                   TList **listOfMissingFiles)
 {
-   // This method can be called at any time during processing
-   // as an effect of handling kPROOF_STOPPROCESS
-   // If the output list from this worker is going to be sent back to the master,
-   // the 'status' includes the number of entries processed by the slave.
-   // From this we calculate the remaining part of the packet.
-   // 0 indicates that the results from that worker were lost completely.
-   // Assume that the filenodes for which we have a TFileNode object
-   // are still up and running.
-
    TSlaveStat *slaveStat = (TSlaveStat *)(fSlaveStats->GetValue(s));
    if (!slaveStat) {
       Error("MarkBad", "Worker does not exist");
@@ -2125,13 +2125,13 @@ void TPacketizerAdaptive::MarkBad(TSlave *s, TProofProgressStatus *status,
    InitStats();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The file in the listOfMissingFiles can appear several times;
+/// in order to fix that, a TDSetElement::Merge method is needed.
+
 Int_t TPacketizerAdaptive::ReassignPacket(TDSetElement *e,
                                           TList **listOfMissingFiles)
 {
-   // The file in the listOfMissingFiles can appear several times;
-   // in order to fix that, a TDSetElement::Merge method is needed.
-
    if (!e) {
       Error("ReassignPacket", "empty packet!");
       return -1;
@@ -2169,14 +2169,14 @@ Int_t TPacketizerAdaptive::ReassignPacket(TDSetElement *e,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Split into per host entries
+/// The files in the listOfMissingFiles can appear several times;
+/// in order to fix that, a TDSetElement::Merge method is needed.
+
 void TPacketizerAdaptive::SplitPerHost(TList *elements,
                                        TList **listOfMissingFiles)
 {
-   // Split into per host entries
-   // The files in the listOfMissingFiles can appear several times;
-   // in order to fix that, a TDSetElement::Merge method is needed.
-
    if (!elements) {
       Error("SplitPerHost", "Empty list of packets!");
       return;

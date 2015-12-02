@@ -30,53 +30,55 @@
 
 ClassImp(TRootSecContext)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ctor for SecContext object.
+
    TRootSecContext::TRootSecContext(const char *user, const char *host, Int_t meth,
                                     Int_t offset, const char *id,
                                     const char *token, TDatime expdate,
                                     void *ctx, Int_t key)
       : TSecContext(user, host, meth, offset, id, token, expdate, ctx)
 {
-   // Ctor for SecContext object.
    R__ASSERT(gROOT);
 
    fRSAKey  = key;
    fMethodName = TAuthenticate::GetAuthMethod(fMethod);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ctor for SecContext object.
+/// User and host from url = user@host .
+
 TRootSecContext::TRootSecContext(const char *url, Int_t meth, Int_t offset,
                                  const char *id, const char *token,
                                  TDatime expdate, void *ctx, Int_t key)
    : TSecContext(url, meth, offset, id, token, expdate, ctx)
 {
-   // Ctor for SecContext object.
-   // User and host from url = user@host .
    R__ASSERT(gROOT);
 
    fRSAKey  = key;
    fMethodName = TAuthenticate::GetAuthMethod(fMethod);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dtor: delete (deActivate, local/remote cleanup, list removal)
+/// all what is still active
+
 TRootSecContext::~TRootSecContext()
 {
-   // Dtor: delete (deActivate, local/remote cleanup, list removal)
-   // all what is still active
-
    TSecContext::Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set OffSet to -1 and expiring Date to default
+/// Remove from the list
+/// If globus, cleanup local stuff
+/// If Opt contains "C" or "c", ask for remote cleanup
+/// If Opt contains "R" or "r", remove from the list
+/// Default Opt="CR"
+
 void TRootSecContext::DeActivate(Option_t *Opt)
 {
-   // Set OffSet to -1 and expiring Date to default
-   // Remove from the list
-   // If globus, cleanup local stuff
-   // If Opt contains "C" or "c", ask for remote cleanup
-   // If Opt contains "R" or "r", remove from the list
-   // Default Opt="CR"
-
    // Ask remote cleanup of this context
    Bool_t clean = (strstr(Opt,"C") || strstr(Opt,"c"));
    if (clean && fOffSet > -1)
@@ -116,12 +118,13 @@ void TRootSecContext::DeActivate(Option_t *Opt)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ask remote client to cleanup security context 'ctx'
+/// If 'all', all sec context with the same host as ctx
+/// are cleaned.
+
 Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
 {
-   // Ask remote client to cleanup security context 'ctx'
-   // If 'all', all sec context with the same host as ctx
-   // are cleaned.
    Bool_t cleaned = kFALSE;
 
    // Nothing to do if inactive ...
@@ -192,15 +195,15 @@ Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
    return cleaned;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If opt is "F" (default) print object content.
+/// If opt is "<number>" print in special form for calls within THostAuth
+/// with cardinality <number>
+/// If opt is "S" prints short in-line form for calls within TFTP,
+/// TSlave, TProof ...
+
 void TRootSecContext::Print(Option_t *opt) const
 {
-   // If opt is "F" (default) print object content.
-   // If opt is "<number>" print in special form for calls within THostAuth
-   // with cardinality <number>
-   // If opt is "S" prints short in-line form for calls within TFTP,
-   // TSlave, TProof ...
-
    // Check if option is numeric
    Int_t ord = -1, i = 0;
    for (; i < (Int_t)strlen(opt); i++) {
@@ -250,12 +253,12 @@ void TRootSecContext::Print(Option_t *opt) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns short string with relevant information about this
+/// security context
+
 const char *TRootSecContext::AsString(TString &out)
 {
-   // Returns short string with relevant information about this
-   // security context
-
    if (fOffSet > -1) {
       if (fID.BeginsWith("AFS"))
          out = Form("Method: AFS, not reusable");

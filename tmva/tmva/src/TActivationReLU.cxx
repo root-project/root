@@ -34,35 +34,37 @@
 
 ClassImp(TMVA::TActivationReLU)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor for ReLU
+
 TMVA::TActivationReLU::TActivationReLU()
 {
-   // constructor for ReLU
-
    // sorry, I really don't know what I would possibly want to do here ;)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::TActivationReLU::~TActivationReLU()
 {
-   // destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get expressions for the tanh and its derivative
+
 TString TMVA::TActivationReLU::GetExpression()
 {
-   // get expressions for the tanh and its derivative
-
    TString expr = "max(0,x)";
 
    return expr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// writes the sigmoid activation function source code
+
 void TMVA::TActivationReLU::MakeFunction( std::ostream& fout, const TString& fncName ) 
 {
-   // writes the sigmoid activation function source code
    fout << "double " << fncName << "(double x) const {" << std::endl;
    fout << "   // rectified linear unit" << std::endl;
    fout << "   return x>0 ? x : 0; " << std::endl;

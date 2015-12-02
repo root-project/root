@@ -29,12 +29,12 @@
 
 ClassImp(TGLSphere);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor
+
 TGLSphere::TGLSphere(const TBuffer3DSphere &buffer) :
    TGLLogicalShape(buffer)
 {
-   // Default ctor
-
    fDLSize = 14;
 
    fRadius = buffer.fRadiusOuter;
@@ -48,12 +48,12 @@ TGLSphere::TGLSphere(const TBuffer3DSphere &buffer) :
    // buffer.fPhiMax;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return display-list offset for given LOD.
+/// Calculation based on what is done in virtual QuantizeShapeLOD below.
+
 UInt_t TGLSphere::DLOffset(Short_t lod) const
 {
-   // Return display-list offset for given LOD.
-   // Calculation based on what is done in virtual QuantizeShapeLOD below.
-
    UInt_t  off = 0;
    if      (lod >= 100) off = 0;
    else if (lod <  10)  off = lod / 2;
@@ -61,11 +61,11 @@ UInt_t TGLSphere::DLOffset(Short_t lod) const
    return off;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Factor in scene/viewer LOD and quantize.
+
 Short_t TGLSphere::QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const
 {
-   // Factor in scene/viewer LOD and quantize.
-
    Int_t lod = ((Int_t)shapeLOD * (Int_t)combiLOD) / 100;
 
    if (lod >= 100)
@@ -85,10 +85,11 @@ Short_t TGLSphere::QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const
    return static_cast<Short_t>(lod);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Debug tracing
+
 void TGLSphere::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Debug tracing
    if (gDebug > 4) {
       Info("TGLSphere::DirectDraw", "this %ld (class %s) LOD %d", (Long_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }

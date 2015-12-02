@@ -34,11 +34,11 @@
 
 ClassImp(TFileCacheRead)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default Constructor.
+
 TFileCacheRead::TFileCacheRead() : TObject()
 {
-   // Default Constructor.
-
    fBufferSizeMin = 0;
    fBufferSize  = 0;
    fBufferLen   = 0;
@@ -86,12 +86,12 @@ TFileCacheRead::TFileCacheRead() : TObject()
    fPrefetchedBlocks= 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a TFileCacheRead data structure.
+
 TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree)
            : TObject()
 {
-   // Creates a TFileCacheRead data structure.
-
    if (buffersize <=10000) fBufferSize = 100000;
    else fBufferSize = buffersize;
 
@@ -153,11 +153,11 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree)
    if (file) file->SetCacheRead(this, tree);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TFileCacheRead::~TFileCacheRead()
 {
-   // Destructor.
-
    SafeDelete(fPrefetch);
    delete [] fSeek;
    delete [] fSeekIndex;
@@ -179,14 +179,14 @@ TFileCacheRead::~TFileCacheRead()
    delete [] fBLen;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close out any threads or asynchronous fetches used by the underlying
+/// implementation.
+/// This is called by TFile::Close to prevent usage of the file handles
+/// after the closing of the file.
+
 void TFileCacheRead::Close(Option_t * /* opt = "" */)
 {
-   // Close out any threads or asynchronous fetches used by the underlying
-   // implementation.
-   // This is called by TFile::Close to prevent usage of the file handles
-   // after the closing of the file.
-
    if (fPrefetch) {
       delete fPrefetch;
       fPrefetch = 0;
@@ -194,12 +194,12 @@ void TFileCacheRead::Close(Option_t * /* opt = "" */)
 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add block of length len at position pos in the list of blocks to
+/// be prefetched. If pos <= 0 the current blocks (if any) are reset.
+
 void TFileCacheRead::Prefetch(Long64_t pos, Int_t len)
 {
-   // Add block of length len at position pos in the list of blocks to
-   // be prefetched. If pos <= 0 the current blocks (if any) are reset.
-
    fIsSorted = kFALSE;
    fIsTransferred = kFALSE;
    if (pos <= 0) {
@@ -253,9 +253,9 @@ void TFileCacheRead::Prefetch(Long64_t pos, Int_t len)
 }
 
 
-//____________________________________________________________________________
-void TFileCacheRead::SecondPrefetch(Long64_t pos, Int_t len){
+////////////////////////////////////////////////////////////////////////////////
 
+void TFileCacheRead::SecondPrefetch(Long64_t pos, Int_t len){
    //add a new element and increase the size if necessary
    fBIsSorted = kFALSE;
    if (pos <= 0) {
@@ -309,19 +309,19 @@ void TFileCacheRead::SecondPrefetch(Long64_t pos, Int_t len){
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print cache statistics, like
+///   ******TreeCache statistics for file: cms2.root ******
+///   Reading............................: 72761843 bytes in 7 transactions
+///   Readahead..........................: 256000 bytes with overhead = 0 bytes
+///   Average transaction................: 10394.549000 Kbytes
+///   Number of blocks in current cache..: 210, total size: 6280352
+///
+/// if option = "a" the list of blocks in the cache is printed
+/// NB: this function is automatically called by TTreeCache::Print
+
 void TFileCacheRead::Print(Option_t *option) const
 {
-   // Print cache statistics, like
-   //   ******TreeCache statistics for file: cms2.root ******
-   //   Reading............................: 72761843 bytes in 7 transactions
-   //   Readahead..........................: 256000 bytes with overhead = 0 bytes
-   //   Average transaction................: 10394.549000 Kbytes
-   //   Number of blocks in current cache..: 210, total size: 6280352
-   //
-   // if option = "a" the list of blocks in the cache is printed
-   // NB: this function is automatically called by TTreeCache::Print
-
    TString opt = option;
    opt.ToLower();
    printf("Cached Reading.....................: %lld bytes in %d transactions\n",this->GetBytesRead(), this->GetReadCalls());
@@ -348,14 +348,14 @@ void TFileCacheRead::Print(Option_t *option) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read buffer at position pos.
+/// If pos is in the list of prefetched blocks read from fBuffer,
+/// otherwise need to make a normal read from file. Returns -1 in case of
+/// read error, 0 in case not in cache, 1 in case read from cache.
+
 Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
-   // Read buffer at position pos.
-   // If pos is in the list of prefetched blocks read from fBuffer,
-   // otherwise need to make a normal read from file. Returns -1 in case of
-   // read error, 0 in case not in cache, 1 in case read from cache.
-
    Long64_t fileBytesRead0 = fFile->GetBytesRead();
    Long64_t fileBytesReadExtra0 = fFile->GetBytesReadExtra();
    Int_t fileReadCalls0 = fFile->GetReadCalls();
@@ -370,7 +370,8 @@ Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    return rc;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &loc)
 {
    if (fEnablePrefetching)
@@ -380,10 +381,11 @@ Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &l
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///prefetch the first block
+
 Int_t TFileCacheRead::ReadBufferExtPrefetch(char *buf, Long64_t pos, Int_t len, Int_t &loc)
 {
-   //prefetch the first block
    if (fNseek > 0 && !fIsSorted) {
       Sort();
       loc = -1;
@@ -436,13 +438,13 @@ Int_t TFileCacheRead::ReadBufferExtPrefetch(char *buf, Long64_t pos, Int_t len, 
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Base function for ReadBuffer. Also gives out the position
+/// of the block in the internal buffer. This helps TTreeCacheUnzip to avoid
+/// doing twice the binary search
+
 Int_t TFileCacheRead::ReadBufferExtNormal(char *buf, Long64_t pos, Int_t len, Int_t &loc)
 {
-   // Base function for ReadBuffer. Also gives out the position
-   // of the block in the internal buffer. This helps TTreeCacheUnzip to avoid
-   // doing twice the binary search
-
    if (fNseek > 0 && !fIsSorted) {
       Sort();
       loc = -1;
@@ -529,11 +531,11 @@ Int_t TFileCacheRead::ReadBufferExtNormal(char *buf, Long64_t pos, Int_t len, In
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the file using this cache and reset the current blocks (if any).
+
 void TFileCacheRead::SetFile(TFile *file, TFile::ECacheAction action)
 {
-   // Set the file using this cache and reset the current blocks (if any).
-
    fFile = file;
 
    if (fAsyncReading) {
@@ -555,12 +557,12 @@ void TFileCacheRead::SetFile(TFile *file, TFile::ECacheAction action)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort buffers to be prefetched in increasing order of positions.
+/// Merge consecutive blocks if necessary.
+
 void TFileCacheRead::Sort()
 {
-   // Sort buffers to be prefetched in increasing order of positions.
-   // Merge consecutive blocks if necessary.
-
    if (!fNseek) return;
    TMath::Sort(fNseek,fSeek,fSeekIndex,kFALSE);
    Int_t i;
@@ -612,14 +614,14 @@ void TFileCacheRead::Sort()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort buffers to be prefetched in increasing order of positions.
+/// Merge consecutive blocks if necessary.
+/// Sort buffers to be prefetched in increasing order of positions.
+/// Merge consecutive blocks if necessary.
+
 void TFileCacheRead::SecondSort()
 {
-   // Sort buffers to be prefetched in increasing order of positions.
-   // Merge consecutive blocks if necessary.
-   // Sort buffers to be prefetched in increasing order of positions.
-   // Merge consecutive blocks if necessary.
-
    if (!fBNseek) return;
    TMath::Sort(fBNseek,fBSeek,fBSeekIndex,kFALSE);
    Int_t i;
@@ -670,14 +672,15 @@ void TFileCacheRead::SecondSort()
    fBIsSorted = kTRUE;
 }
 
-//______________________________________________________________________________
-TFilePrefetch* TFileCacheRead::GetPrefetchObj(){
+////////////////////////////////////////////////////////////////////////////////
 
+TFilePrefetch* TFileCacheRead::GetPrefetchObj(){
    return this->fPrefetch;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TFileCacheRead::WaitFinishPrefetch()
 {
    if ( fEnablePrefetching && fPrefetch ) {
@@ -686,16 +689,16 @@ void TFileCacheRead::WaitFinishPrefetch()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the buffer size. If the current prefetch list is too large to fit in
+/// the new buffer some or all of the prefetch blocks are dropped. The
+/// requested buffersize must be greater than zero.
+/// Returns  0 if the prefetch block lists remain unchanged
+///          1 if some or all blocks have been removed from the prefetch list
+///         -1 on error
+
 Int_t TFileCacheRead::SetBufferSize(Int_t buffersize)
 {
-   // Sets the buffer size. If the current prefetch list is too large to fit in
-   // the new buffer some or all of the prefetch blocks are dropped. The
-   // requested buffersize must be greater than zero.
-   // Returns  0 if the prefetch block lists remain unchanged
-   //          1 if some or all blocks have been removed from the prefetch list
-   //         -1 on error
-
    if (buffersize <= 0) return -1;
    if (buffersize <=10000) buffersize = 100000;
 
@@ -746,27 +749,27 @@ Int_t TFileCacheRead::SetBufferSize(Int_t buffersize)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the prefetching mode of this file.
+/// if 'setPrefetching', enable the asynchronous prefetching
+/// (using TFilePrefetch) and if the gEnv and rootrc
+/// variable Cache.Directory is set, also enable the local
+/// caching of the prefetched blocks.
+/// if 'setPrefetching', the old prefetcher is enabled is
+/// the gEnv and rootrc variable is TFile.AsyncReading
+
 void TFileCacheRead::SetEnablePrefetching(Bool_t setPrefetching)
 {
-   // Set the prefetching mode of this file.
-   // if 'setPrefetching', enable the asynchronous prefetching
-   // (using TFilePrefetch) and if the gEnv and rootrc
-   // variable Cache.Directory is set, also enable the local
-   // caching of the prefetched blocks.
-   // if 'setPrefetching', the old prefetcher is enabled is
-   // the gEnv and rootrc variable is TFile.AsyncReading
-
    SetEnablePrefetchingImpl(setPrefetching);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TFileCacheRead implementation of SetEnablePrefetching.
+///
+/// This function is called from the constructor and should not be virtual.
+
 void TFileCacheRead::SetEnablePrefetchingImpl(Bool_t setPrefetching)
 {
-   // TFileCacheRead implementation of SetEnablePrefetching.
-   //
-   // This function is called from the constructor and should not be virtual.
-
    fEnablePrefetching = setPrefetching;
 
    if (!fPrefetch && fEnablePrefetching) {

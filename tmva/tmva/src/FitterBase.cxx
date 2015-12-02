@@ -25,7 +25,8 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
   FitterBase
 
@@ -48,7 +49,9 @@ ClassImp(TMVA::FitterBase)
 #pragma warning ( disable : 4355 )
 #endif
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor   
+
 TMVA::FitterBase::FitterBase( IFitterTarget& target, 
                               const TString& name, 
                               const std::vector<Interval*> ranges, 
@@ -60,15 +63,15 @@ TMVA::FitterBase::FitterBase( IFitterTarget& target,
      fLogger( new MsgLogger("FitterBase", kINFO) ),
      fClassName( name )
 {
-   // constructor   
    SetConfigName( GetName() );
    SetConfigDescription( "Configuration options for setup and tuning of specific fitter" );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// estimator function interface for fitting 
+
 Double_t TMVA::FitterBase::Run()
 {
-   // estimator function interface for fitting 
    std::vector<Double_t> pars;
    for (std::vector<Interval*>::const_iterator parIt = fRanges.begin(); parIt != fRanges.end(); parIt++) {
       pars.push_back( (*parIt)->GetMean() );
@@ -78,10 +81,11 @@ Double_t TMVA::FitterBase::Run()
    return this->Run( pars );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// estimator function interface for fitting 
+
 Double_t TMVA::FitterBase::EstimatorFunction( std::vector<Double_t>& parameters )
 {
-   // estimator function interface for fitting 
    return GetFitterTarget().EstimatorFunction( parameters );
 }
 

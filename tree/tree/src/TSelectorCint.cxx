@@ -24,7 +24,8 @@
 
 ClassImp(TSelectorCint)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSelectorCint::TSelectorCint() : TSelector(),
    fClass(0),
    fFuncVersion    (0),
@@ -53,11 +54,11 @@ TSelectorCint::TSelectorCint() : TSelector(),
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor for a Selector.
+
 TSelectorCint::~TSelectorCint()
 {
-   // destructor for a Selector.
-
    gCling->CallFunc_Delete(fFuncVersion);
    gCling->CallFunc_Delete(fFuncInit);
    gCling->CallFunc_Delete(fFuncBegin);
@@ -81,13 +82,13 @@ TSelectorCint::~TSelectorCint()
    gCling->ClassInfo_Delete(fClass);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the function prototype.
+
 void TSelectorCint::SetFuncProto(CallFunc_t *cf, ClassInfo_t *cl,
                                  const char* fname, const char* argtype,
                                  Bool_t required)
 {
-   // Set the function prototype.
-
    Long_t offset = 0;
 
    gCling->CallFunc_SetFuncProto(cf, cl,fname,argtype,&offset);
@@ -99,11 +100,11 @@ void TSelectorCint::SetFuncProto(CallFunc_t *cf, ClassInfo_t *cl,
       Error("SetFuncProto","cannot set %s(%s)",fname,argtype);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the CallFunc objects when selector is interpreted.
+
 void TSelectorCint::Build(TSelector *iselector, ClassInfo_t *cl, Bool_t isowner)
 {
-   // Initialize the CallFunc objects when selector is interpreted.
-
    gCling->CallFunc_Delete(fFuncVersion);
    gCling->CallFunc_Delete(fFuncInit);
    gCling->CallFunc_Delete(fFuncBegin);
@@ -173,11 +174,11 @@ void TSelectorCint::Build(TSelector *iselector, ClassInfo_t *cl, Bool_t isowner)
    SetFuncProto(fFuncGetStat,fClass,"GetStatus","");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the Version function via the interpreter.
+
 int TSelectorCint::Version() const
 {
-   // Invoke the Version function via the interpreter.
-
    if (gDebug > 2)
       Info("Version","Call Version");
 
@@ -189,11 +190,11 @@ int TSelectorCint::Version() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the Init function via the interpreter.
+
 void TSelectorCint::Init(TTree *tree)
 {
-   // Invoke the Init function via the interpreter.
-
    if (gDebug > 2)
       Info("Init","Call Init tree = %p", tree);
 
@@ -202,11 +203,11 @@ void TSelectorCint::Init(TTree *tree)
    gCling->CallFunc_Exec(fFuncInit, fIntSelector);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the Begin function via the interpreter.
+
 void TSelectorCint::Begin(TTree *tree)
 {
-   // Invoke the Begin function via the interpreter.
-
    if (gDebug > 2)
       Info("Begin","Call Begin tree = %p", tree);
    gCling->CallFunc_ResetArg(fFuncBegin);
@@ -214,11 +215,11 @@ void TSelectorCint::Begin(TTree *tree)
    gCling->CallFunc_ExecInt(fFuncBegin, fIntSelector);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the SlaveBegin function via the interpreter if available.
+
 void TSelectorCint::SlaveBegin(TTree *tree)
 {
-   // Invoke the SlaveBegin function via the interpreter if available.
-
    if (gDebug > 2)
       Info("SlaveBegin","Call SlaveBegin tree = %p", tree);
 
@@ -232,22 +233,22 @@ void TSelectorCint::SlaveBegin(TTree *tree)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the Notify function via the interpreter.
+
 Bool_t TSelectorCint::Notify()
 {
-   // Invoke the Notify function via the interpreter.
-
    if (gDebug > 2)
       Info("Notify","Call Notify");
    Long64_t sel = gCling->CallFunc_ExecInt(fFuncNotif, fIntSelector);
    return (Bool_t)sel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the ProcessCut function via the interpreter.
+
 Bool_t TSelectorCint::ProcessCut(Long64_t entry)
 {
-   // Invoke the ProcessCut function via the interpreter.
-
    if (gDebug > 3)
       Info("ProcessCut","Call ProcessCut entry = %lld", entry);
 
@@ -262,11 +263,11 @@ Bool_t TSelectorCint::ProcessCut(Long64_t entry)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the ProcessFill function via the interpreter.
+
 void TSelectorCint::ProcessFill(Long64_t entry)
 {
-   // Invoke the ProcessFill function via the interpreter.
-
    if (gDebug > 3)
       Info("ProcessFill","Call ProcessFill entry = %lld", entry);
 
@@ -279,11 +280,11 @@ void TSelectorCint::ProcessFill(Long64_t entry)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the ProcessCut function via the interpreter.
+
 Bool_t TSelectorCint::Process(Long64_t entry)
 {
-   // Invoke the ProcessCut function via the interpreter.
-
    if (gDebug > 3)
       Info("Process","Call Process entry = %lld", entry);
 
@@ -298,11 +299,11 @@ Bool_t TSelectorCint::Process(Long64_t entry)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the selector option.
+
 void TSelectorCint::SetOption(const char *option)
 {
-   // Set the selector option.
-
    if (gDebug > 2)
       Info("SetOption","Option = %s", option);
    gCling->CallFunc_ResetArg(fFuncOption);
@@ -310,11 +311,11 @@ void TSelectorCint::SetOption(const char *option)
    gCling->CallFunc_Exec(fFuncOption, fIntSelector);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the current object.
+
 void TSelectorCint::SetObject(TObject *obj)
 {
-   // Set the current object.
-
    if (gDebug > 3)
       Info("SetObject","Object = %p", obj);
    gCling->CallFunc_ResetArg(fFuncObj);
@@ -322,11 +323,11 @@ void TSelectorCint::SetObject(TObject *obj)
    gCling->CallFunc_Exec(fFuncObj, fIntSelector);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the selector list of input objects.
+
 void TSelectorCint::SetInputList(TList *input)
 {
-   // Set the selector list of input objects.
-
    if (gDebug > 2)
       Info("SetInputList","Object = %p", input);
    gCling->CallFunc_ResetArg(fFuncInp);
@@ -334,11 +335,11 @@ void TSelectorCint::SetInputList(TList *input)
    gCling->CallFunc_Exec(fFuncInp,fIntSelector);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the list of output object.
+
 TList *TSelectorCint::GetOutputList() const
 {
-   // Return the list of output object.
-
    TList *out = (TList *) gCling->CallFunc_ExecInt(fFuncOut, fIntSelector);
 
    if (gDebug > 2)
@@ -347,11 +348,11 @@ TList *TSelectorCint::GetOutputList() const
    return out;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the SlaveTerminate function via the interpreter if available.
+
 void TSelectorCint::SlaveTerminate()
 {
-   // Invoke the SlaveTerminate function via the interpreter if available.
-
    if (gDebug > 2)
       Info("SlaveTerminate","Call SlaveTerminate");
 
@@ -363,21 +364,21 @@ void TSelectorCint::SlaveTerminate()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the Terminate function via the interpreter.
+
 void TSelectorCint::Terminate()
 {
-   // Invoke the Terminate function via the interpreter.
-
    if (gDebug > 2)
       Info("Terminate","Call Terminate");
    gCling->CallFunc_Exec(fFuncTerm,fIntSelector);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the GetAbort function via the interpreter.
+
 void TSelectorCint::Abort(const char *mesg, EAbort what)
 {
-   // Invoke the GetAbort function via the interpreter.
-
    if (gDebug > 2)
       Info("Abort","Call Abort");
 
@@ -389,11 +390,11 @@ void TSelectorCint::Abort(const char *mesg, EAbort what)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the GetAbort function via the interpreter.
+
 TSelector::EAbort TSelectorCint::GetAbort() const
 {
-   // Invoke the GetAbort function via the interpreter.
-
    if (gDebug > 2)
       Info("GetAbort","Call GetAbort");
 
@@ -405,11 +406,11 @@ TSelector::EAbort TSelectorCint::GetAbort() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the GetAbort function via the interpreter.
+
 void TSelectorCint::ResetAbort()
 {
-   // Invoke the GetAbort function via the interpreter.
-
    if (gDebug > 2)
       Info("ResetAbort","Call ResetAbort");
 
@@ -419,11 +420,11 @@ void TSelectorCint::ResetAbort()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the GetStatus function via the interpreter.
+
 Long64_t TSelectorCint::GetStatus() const
 {
-   // Invoke the GetStatus function via the interpreter.
-
    if (gDebug > 2)
       Info("GetStatus","Call GetStatus");
 
@@ -435,11 +436,11 @@ Long64_t TSelectorCint::GetStatus() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the TClass object for the interpreted class.
+
 TClass *TSelectorCint::GetInterpretedClass() const
 {
-   // Retrieve the TClass object for the interpreted class.
-
    if (!fClass) return 0;
    return TClass::GetClass(gCling->ClassInfo_FullName(fClass), kTRUE);
 }

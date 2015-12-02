@@ -59,12 +59,12 @@ enum EContextMenu {
 
 ClassImp(TRootContextMenu)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create context menu.
+
 TRootContextMenu::TRootContextMenu(TContextMenu *c, const char *)
     : TGPopupMenu(gClient->GetDefaultRoot()), TContextMenuImp(c)
 {
-   // Create context menu.
-
    fDialog  = 0;
    fTrash = new TList;
 
@@ -74,22 +74,22 @@ TRootContextMenu::TRootContextMenu(TContextMenu *c, const char *)
    Associate(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a context menu.
+
 TRootContextMenu::~TRootContextMenu()
 {
-   // Delete a context menu.
-
    gROOT->GetListOfCleanups()->Remove(this);
    delete fDialog;
    if (fTrash) fTrash->Delete();
    delete fTrash;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display context popup menu for currently selected object.
+
 void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
 {
-   // Display context popup menu for currently selected object.
-
    if (fClient->IsEditable()) return;
 
    // delete menu items releated to previous object and reset menu size
@@ -141,13 +141,13 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
    Resize(GetDefaultWidth()+5, GetDefaultHeight());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decodes the Hierarchy="Level0/Level1/Level2/..." statement from the comment field
+/// and returns the - if needed - created sub menu "Level0/Level1"
+/// Returns the last component in last_component.
+
 TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString & last_component)
 {
-  // Decodes the Hierarchy="Level0/Level1/Level2/..." statement from the comment field
-  // and returns the - if needed - created sub menu "Level0/Level1"
-  // Returns the last component in last_component.
-
    TString cmd(commentstring);
    TString option;
    TString hierarchy;
@@ -219,12 +219,12 @@ TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString
    return currentMenu;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a entry to current menu with alphabetical ordering.
+
 void TRootContextMenu::AddEntrySorted(TGPopupMenu *currentMenu, const char *s, Int_t id, void *ud,
                                          const TGPicture *p , Bool_t sorted)
 {
-   // Add a entry to current menu with alphabetical ordering.
-
    TGMenuEntry *ptr2 = 0;
    if (sorted) {
       TIter next(currentMenu->GetListOfEntries());
@@ -236,11 +236,11 @@ void TRootContextMenu::AddEntrySorted(TGPopupMenu *currentMenu, const char *s, I
    currentMenu->AddEntry(s,id,ud,p,ptr2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the context menu depending on the selected object.
+
 void TRootContextMenu::CreateMenu(TObject *object)
 {
-   // Create the context menu depending on the selected object.
-
    if (!object || fClient->IsEditable()) return;
 
    int entry = 0, toggle = kToggleStart, togglelist = kToggleListStart;
@@ -394,22 +394,22 @@ void TRootContextMenu::CreateMenu(TObject *object)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create dialog object with OK and Cancel buttons. This dialog
+/// prompts for the arguments of "method".
+
 void TRootContextMenu::Dialog(TObject *object, TMethod *method)
 {
-   // Create dialog object with OK and Cancel buttons. This dialog
-   // prompts for the arguments of "method".
-
    Dialog(object,(TFunction*)method);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create dialog object with OK and Cancel buttons. This dialog
+/// prompts for the arguments of "function".
+/// function may be a global function or a method
+
 void TRootContextMenu::Dialog(TObject *object, TFunction *function)
 {
-   // Create dialog object with OK and Cancel buttons. This dialog
-   // prompts for the arguments of "function".
-   // function may be a global function or a method
-
    Int_t selfobjpos;
 
    if (!function) return;
@@ -549,11 +549,11 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
    fDialog->Popup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw context menu entry.
+
 void TRootContextMenu::DrawEntry(TGMenuEntry *entry)
 {
-   // Draw context menu entry.
-
    int ty, offset;
    static int max_ascent = 0, max_descent = 0;
 
@@ -570,11 +570,11 @@ void TRootContextMenu::DrawEntry(TGMenuEntry *entry)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle button event in the context menu.
+
 Bool_t TRootContextMenu::HandleButton(Event_t *event)
 {
-   // Handle button event in the context menu.
-
    int   id;
    void *ud = 0;
 
@@ -605,11 +605,11 @@ Bool_t TRootContextMenu::HandleButton(Event_t *event)
    return TGPopupMenu::HandleButton(event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle pointer crossing event in context menu.
+
 Bool_t TRootContextMenu::HandleCrossing(Event_t *event)
 {
-   // Handle pointer crossing event in context menu.
-
    if (event->fType == kLeaveNotify) {
       // just to reset the mouse pointer...
       HandleMotion(event);
@@ -617,11 +617,11 @@ Bool_t TRootContextMenu::HandleCrossing(Event_t *event)
    return TGPopupMenu::HandleCrossing(event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle pointer motion event in context menu.
+
 Bool_t TRootContextMenu::HandleMotion(Event_t *event)
 {
-   // Handle pointer motion event in context menu.
-
    static int toggle = 0;
    static Cursor_t handCur = kNone, rightCur = kNone;
    static UInt_t mask = kButtonPressMask | kButtonReleaseMask | kPointerMotionMask;
@@ -653,11 +653,11 @@ Bool_t TRootContextMenu::HandleMotion(Event_t *event)
    return TGPopupMenu::HandleMotion(event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open the online help matching the actual class/method.
+
 void TRootContextMenu::OnlineHelp()
 {
-   // Open the online help matching the actual class/method.
-
    TString clname;
    TString cmd;
    TString url = gEnv->GetValue("Browser.StartUrl", "http://root.cern.ch/root/html/");
@@ -693,11 +693,11 @@ void TRootContextMenu::OnlineHelp()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle context menu messages.
+
 Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
-   // Handle context menu messages.
-
    TObjectSpy savedPad;
    if (GetContextMenu()->GetSelectedPad()) {
       savedPad.SetObject(gPad);
@@ -780,12 +780,12 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the context menu if the object is deleted in the
+/// RecursiveRemove() operation.
+
 void TRootContextMenu::RecursiveRemove(TObject *obj)
 {
-   // Close the context menu if the object is deleted in the
-   // RecursiveRemove() operation.
-
    void *ud;
    if (obj == fContextMenu->GetSelectedCanvas())
       fContextMenu->SetCanvas(0);

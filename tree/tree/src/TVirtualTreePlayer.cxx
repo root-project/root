@@ -29,13 +29,13 @@ TVirtualTreePlayer  *TVirtualTreePlayer::fgCurrent = 0;
 
 ClassImp(TVirtualTreePlayer)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning a pointer to a Tree player.
+/// The player will process the specified obj. If the Tree player
+/// does not exist a default player is created.
+
 TVirtualTreePlayer *TVirtualTreePlayer::TreePlayer(TTree *obj)
 {
-   // Static function returning a pointer to a Tree player.
-   // The player will process the specified obj. If the Tree player
-   // does not exist a default player is created.
-
    // if no player set yet,  create a default painter via the PluginManager
    if (!fgPlayer) {
       TPluginHandler *h;
@@ -54,30 +54,30 @@ TVirtualTreePlayer *TVirtualTreePlayer::TreePlayer(TTree *obj)
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Common destructor.
+
 TVirtualTreePlayer::~TVirtualTreePlayer()
 {
-   // Common destructor.
-
    if (fgCurrent==this) {
       // Make sure fgCurrent does not point to a deleted player.
       fgCurrent=0;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function: return the current player (if any)
+
 TVirtualTreePlayer *TVirtualTreePlayer::GetCurrentPlayer()
 {
-   // Static function: return the current player (if any)
-
    return fgCurrent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set an alternative Tree player.
+
 void TVirtualTreePlayer::SetPlayer(const char *player)
 {
-   // Static function to set an alternative Tree player.
-
    fgPlayer = TClass::GetClass(player);
 }
 

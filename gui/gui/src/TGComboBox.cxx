@@ -57,13 +57,13 @@ ClassImp(TGLineStyleComboBox)
 ClassImp(TGLineWidthComboBox)
 ClassImp(TGFontTypeComboBox)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a combo box popup frame.
+
 TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
                                  UInt_t options, ULong_t back) :
    TGCompositeFrame (p, w, h, options, back), fListBox(0), fSelected(0)
 {
-   // Create a combo box popup frame.
-
    SetWindowAttributes_t wattr;
 
    wattr.fMask = kWAOverrideRedirect | kWASaveUnder |
@@ -79,11 +79,11 @@ TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in combo box popup.
+
 Bool_t TGComboBoxPopup::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in combo box popup.
-
    if (event->fType == kButtonPress && event->fCode == kButton1) {
       if ((fListBox != 0) && (fSelected != 0) &&
           fListBox->GetSelectedEntry() != fSelected) {
@@ -101,11 +101,11 @@ Bool_t TGComboBoxPopup::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ungrab pointer and unmap popup window.
+
 void TGComboBoxPopup::EndPopup()
 {
-   // Ungrab pointer and unmap popup window.
-
    if (IsMapped()) {
       Handle_t id = fListBox->GetContainer()->GetId();
       gVirtualX->GrabKey(id, gVirtualX->KeysymToKeycode(kKey_Up),
@@ -125,11 +125,11 @@ void TGComboBoxPopup::EndPopup()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Popup combo box popup window at the specified place.
+
 void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Popup combo box popup window at the specified place.
-
    Int_t  rx, ry;
    UInt_t rw, rh;
 
@@ -181,11 +181,11 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    EndPopup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot handling the key press events.
+
 void TGComboBoxPopup::KeyPressed(TGFrame *f, UInt_t keysym, UInt_t)
 {
-   // Slot handling the key press events.
-
    switch ((EKeySym)keysym) {
       case kKey_Enter:
       case kKey_Return:
@@ -210,13 +210,13 @@ void TGComboBoxPopup::KeyPressed(TGFrame *f, UInt_t keysym, UInt_t)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a combo box widget.
+
 TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
                        ULong_t back) :
    TGCompositeFrame (p, 10, 10, options | kOwnBackground, back)
 {
-   // Create a combo box widget.
-
    fWidgetId  = id;
    fMsgWindow = p;
    fTextEntry = 0;
@@ -229,13 +229,13 @@ TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an editable combo box widget.
+
 TGComboBox::TGComboBox(const TGWindow *p, const char *text, Int_t id,
                        UInt_t options, ULong_t back) :
             TGCompositeFrame (p, 10, 10, options | kOwnBackground, back)
 {
-   // Create an editable combo box widget.
-
    fWidgetId  = id;
    fMsgWindow = p;
    fSelEntry = 0;
@@ -249,11 +249,11 @@ TGComboBox::TGComboBox(const TGWindow *p, const char *text, Int_t id,
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a combo box widget.
+
 TGComboBox::~TGComboBox()
 {
-   // Delete a combo box widget.
-
    fClient->FreePicture(fBpic);
 
    if (!MustCleanup()) {
@@ -272,11 +272,11 @@ TGComboBox::~TGComboBox()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initiate the internal classes of a combo box.
+
 void TGComboBox::Init()
 {
-   // Initiate the internal classes of a combo box.
-
    fBpic = fClient->GetPicture("arrow_down.xpm");
 
    if (!fBpic)
@@ -324,11 +324,11 @@ void TGComboBox::Init()
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw border of combo box widget.
+
 void TGComboBox::DrawBorder()
 {
-   // Draw border of combo box widget.
-
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame | kDoubleBorder:
          gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, fWidth-2, 0);
@@ -348,11 +348,11 @@ void TGComboBox::DrawBorder()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Switch text input or readonly mode of combobox (not perfect yet).
+
 void TGComboBox::EnableTextInput(Bool_t on)
 {
-   // Switch text input or readonly mode of combobox (not perfect yet).
-
    // UInt_t w, h;
    const char *text = "";
    Pixel_t back = TGFrame::GetWhitePixel(); // default
@@ -408,22 +408,22 @@ void TGComboBox::EnableTextInput(Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find entry by name.
+
 TGLBEntry *TGComboBox::FindEntry(const char *s) const
 {
-   // Find entry by name.
-
    TGLBEntry *sel = 0;
    sel = fListBox->FindEntry(s);
    return sel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a new combo box value (normally update of text string in
+/// fSelEntry is done via fSelEntry::Update()).
+
 void TGComboBox::SetTopEntry(TGLBEntry *e, TGLayoutHints *lh)
 {
-   // Set a new combo box value (normally update of text string in
-   // fSelEntry is done via fSelEntry::Update()).
-
    if (!fSelEntry) return;
 
    RemoveFrame(fSelEntry);
@@ -436,12 +436,12 @@ void TGComboBox::SetTopEntry(TGLBEntry *e, TGLayoutHints *lh)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make the selected item visible in the combo box window
+/// and emit signals according to the second parameter.
+
 void TGComboBox::Select(Int_t id, Bool_t emit)
 {
-   // Make the selected item visible in the combo box window
-   // and emit signals according to the second parameter.
-
    if (id!=GetSelected()) {
       TGLBEntry *e;
       e = fListBox->Select(id);
@@ -458,11 +458,11 @@ void TGComboBox::Select(Int_t id, Bool_t emit)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button events in the combo box.
+
 Bool_t TGComboBox::HandleButton(Event_t *event)
 {
-   // Handle mouse button events in the combo box.
-
    if (!fDDButton || !fDDButton->IsEnabled()) return kFALSE;
 
    if (event->fType == kButtonPress) {
@@ -499,11 +499,11 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove entry. If id == -1, the currently selected entry is removed
+
 void TGComboBox::RemoveEntry(Int_t id)
 {
-   // Remove entry. If id == -1, the currently selected entry is removed
-
    fListBox->RemoveEntry(id);
 
    if (id < 0) {
@@ -518,11 +518,11 @@ void TGComboBox::RemoveEntry(Int_t id)
    Resize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// layout combobox
+
 void TGComboBox::Layout()
 {
-   // layout combobox
-
    TGCompositeFrame::Layout();
    UInt_t h = fListBox->GetNumberOfEntries()*fListBox->GetItemVsize();
 
@@ -531,45 +531,45 @@ void TGComboBox::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle double click in text entry.
+
 Bool_t TGComboBox::HandleDoubleClick(Event_t *event)
 {
-   // Handle double click in text entry.
-
    return fTextEntry ? fTextEntry->HandleDoubleClick(event) : kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle pointer motion in text entry.
+
 Bool_t TGComboBox::HandleMotion(Event_t *event)
 {
-   // Handle pointer motion in text entry.
-
    return fTextEntry ? fTextEntry->HandleMotion(event) : kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle selection in text entry.
+
 Bool_t TGComboBox::HandleSelection(Event_t *event)
 {
-   // Handle selection in text entry.
-
    return fTextEntry ? fTextEntry->HandleSelection(event) : kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle selection request in text entry.
+
 Bool_t TGComboBox::HandleSelectionRequest(Event_t *event)
 {
-   // Handle selection request in text entry.
-
    return fTextEntry ? fTextEntry->HandleSelectionRequest(event) : kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process messages generated by the listbox and forward
+/// messages to the combobox message handling window. Parm2 contains
+/// the id of the selected listbox entry.
+
 Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
 {
-   // Process messages generated by the listbox and forward
-   // messages to the combobox message handling window. Parm2 contains
-   // the id of the selected listbox entry.
-
    TGLBEntry *e;
 
    switch (GET_MSG(msg)) {
@@ -609,11 +609,11 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit signal.
+
 void TGComboBox::Selected(Int_t widgetId, Int_t id)
 {
-   // Emit signal.
-
    Long_t args[2];
 
    args[0] = widgetId;
@@ -622,11 +622,11 @@ void TGComboBox::Selected(Int_t widgetId, Int_t id)
    Emit("Selected(Int_t,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set state of combo box. If kTRUE=enabled, kFALSE=disabled.
+
 void TGComboBox::SetEnabled(Bool_t on)
 {
-   // Set state of combo box. If kTRUE=enabled, kFALSE=disabled.
-
    fDDButton->SetEnabled(on);
    if (on) {
       SetFlags(kWidgetIsEnabled);
@@ -638,12 +638,12 @@ void TGComboBox::SetEnabled(Bool_t on)
    fClient->NeedRedraw(fSelEntry);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add new entry to combo box when return key pressed inside text entry
+/// ReturnPressed signal is emitted.
+
 void TGComboBox::ReturnPressed()
 {
-   // Add new entry to combo box when return key pressed inside text entry
-   // ReturnPressed signal is emitted.
-
    if (!fTextEntry) return;
 
    TGLBContainer *lbc = (TGLBContainer *)fListBox->GetContainer();
@@ -666,11 +666,11 @@ void TGComboBox::ReturnPressed()
    Select(nn);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all entries from combo box.
+
 void TGComboBox::RemoveAll()
 {
-   // Remove all entries from combo box.
-
    fListBox->RemoveAll();
 
    if (fSelEntry) {
@@ -682,11 +682,11 @@ void TGComboBox::RemoveAll()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a combo box widget as a C++ statement(s) on output stream out.
+
 void TGComboBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a combo box widget as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << std::endl << "   // combo box" << std::endl;
@@ -729,13 +729,13 @@ void TGComboBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   " << GetName() << "->Select(" << GetSelected() << ");" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a line style combo box.
+
 TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
                                          UInt_t options, Pixel_t back)
    : TGComboBox(p, id, options, back)
 {
-   // Create a line style combo box.
-
    SetTopEntry(new TGLineLBEntry(this, 0),
                new TGLayoutHints(kLHintsLeft | kLHintsExpandY | kLHintsExpandX));
    fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
@@ -750,11 +750,11 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a line style combo box widget as a C++ statement(s).
+
 void TGLineStyleComboBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a line style combo box widget as a C++ statement(s).
-
    out << std::endl << "   // line style combo box" << std::endl;
    out << "   TGLineStyleComboBox *";
 
@@ -767,14 +767,14 @@ void TGLineStyleComboBox::SavePrimitive(std::ostream &out, Option_t *option /*= 
    out << "   " << GetName() << "->Select(" << GetSelected() << ");" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a line width combo box.
+/// If "none" is equal to kTRUE the first entry is "None".
+
 TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
                                          UInt_t options, Pixel_t back, Bool_t none)
    : TGComboBox(p, id, options, back)
 {
-   // Create a line width combo box.
-   // If "none" is equal to kTRUE the first entry is "None".
-
    SetTopEntry(new TGLineLBEntry(this,0),
                new TGLayoutHints(kLHintsLeft | kLHintsExpandY | kLHintsExpandX));
    fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
@@ -792,11 +792,11 @@ TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a line width combo box widget as a C++ statement(s).
+
 void TGLineWidthComboBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a line width combo box widget as a C++ statement(s).
-
    out << std::endl << "   // line width combo box" << std::endl;
    out << "   TGLineWidthComboBox *";
 
@@ -827,13 +827,13 @@ static const char *gFonts[][2] = {    //   unix name,     name
    { 0, 0}
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a text font combo box.
+
 TGFontTypeComboBox::TGFontTypeComboBox(const TGWindow *p, Int_t id,
                                        UInt_t options, Pixel_t back) :
    TGComboBox(p, id, options, back)
 {
-   // Create a text font combo box.
-
    Int_t noFonts = 0;
 
    for (Int_t i = 1; gFonts[i][0] != 0 && noFonts < kMaxFonts; i++) {
@@ -861,11 +861,11 @@ TGFontTypeComboBox::TGFontTypeComboBox(const TGWindow *p, Int_t id,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Text font combo box dtor.
+
 TGFontTypeComboBox::~TGFontTypeComboBox()
 {
-   // Text font combo box dtor.
-
    for (int i = 0; i < kMaxFonts && fFonts[i] != 0; i++) {
       if (fFonts[i] != TGTextLBEntry::GetDefaultFontStruct()) gVirtualX->DeleteFont(fFonts[i]);
    }

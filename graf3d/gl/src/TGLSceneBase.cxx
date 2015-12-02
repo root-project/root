@@ -49,7 +49,8 @@ ClassImp(TGLSceneBase);
 
 UInt_t TGLSceneBase::fgSceneIDSrc = 1;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLSceneBase::TGLSceneBase() :
    TGLLockable(),
 
@@ -73,22 +74,22 @@ TGLSceneBase::TGLSceneBase() :
    fName = Form("unnamed-%d", fSceneID);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLSceneBase::~TGLSceneBase()
 {
-   // Destructor.
-
    for (ViewerList_i i=fViewers.begin(); i!=fViewers.end(); ++i)
    {
       (*i)->SceneDestructing(this);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add viewer to the list.
+
 void TGLSceneBase::AddViewer(TGLViewerBase* viewer)
 {
-   // Add viewer to the list.
-
    ViewerList_i i = std::find(fViewers.begin(), fViewers.end(), viewer);
    if (i == fViewers.end())
       fViewers.push_back(viewer);
@@ -96,13 +97,13 @@ void TGLSceneBase::AddViewer(TGLViewerBase* viewer)
       Warning("TGLSceneBase::AddViewer", "viewer already in the list.");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove viewer from the list.
+/// If auto-destruct is on and the last viewer is removed the scene
+/// destructs itself.
+
 void TGLSceneBase::RemoveViewer(TGLViewerBase* viewer)
 {
-   // Remove viewer from the list.
-   // If auto-destruct is on and the last viewer is removed the scene
-   // destructs itself.
-
    ViewerList_i i = std::find(fViewers.begin(), fViewers.end(), viewer);
    if (i != fViewers.end())
       fViewers.erase(i);
@@ -116,11 +117,11 @@ void TGLSceneBase::RemoveViewer(TGLViewerBase* viewer)
       delete this;
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tag all viewers as changed.
+
 void TGLSceneBase::TagViewersChanged()
 {
-   // Tag all viewers as changed.
-
    for (ViewerList_i i=fViewers.begin(); i!=fViewers.end(); ++i)
    {
       (*i)->Changed();
@@ -129,11 +130,11 @@ void TGLSceneBase::TagViewersChanged()
 
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Name printed on locking info messages.
+
 const char* TGLSceneBase::LockIdStr() const
 {
-   // Name printed on locking info messages.
-
    return Form("TGLSceneBase %s", fName.Data());
 }
 
@@ -141,40 +142,40 @@ const char* TGLSceneBase::LockIdStr() const
 // SceneInfo management
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a scene-info instance appropriate for this scene class.
+/// Here we instantiate the scene-info base-class TGLSceneInfo.
+
 TGLSceneInfo* TGLSceneBase::CreateSceneInfo(TGLViewerBase* view)
 {
-   // Create a scene-info instance appropriate for this scene class.
-   // Here we instantiate the scene-info base-class TGLSceneInfo.
-
    return new TGLSceneInfo(view, this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill scene-info with very basic information that is practically
+/// view independent. This is called when scene content is changed
+/// or when camera-interest changes.
+
 void TGLSceneBase::RebuildSceneInfo(TGLRnrCtx& ctx)
 {
-   // Fill scene-info with very basic information that is practically
-   // view independent. This is called when scene content is changed
-   // or when camera-interest changes.
-
    TGLSceneInfo* sinfo = ctx.GetSceneInfo();
 
    sinfo->SetLastClip(0);
    sinfo->SetLastCamera(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill scene-info with information needed for rendering, take into
+/// account the render-context (viewer state, camera, clipping).
+/// Usually called from TGLViewer before rendering a scene if some
+/// moderately significant part of render-context has changed.
+///
+/// Here we update the basic state (clear last-LOD, mark the time,
+/// set global <-> scene transforamtion matrices) and potentially
+/// study and refine the clipping planes based on scene bounding box.
+
 void TGLSceneBase::UpdateSceneInfo(TGLRnrCtx& ctx)
 {
-   // Fill scene-info with information needed for rendering, take into
-   // account the render-context (viewer state, camera, clipping).
-   // Usually called from TGLViewer before rendering a scene if some
-   // moderately significant part of render-context has changed.
-   //
-   // Here we update the basic state (clear last-LOD, mark the time,
-   // set global <-> scene transforamtion matrices) and potentially
-   // study and refine the clipping planes based on scene bounding box.
-
    if (gDebug > 3)
    {
       Info("TGLSceneBase::UpdateSceneInfo",
@@ -282,13 +283,13 @@ void TGLSceneBase::UpdateSceneInfo(TGLRnrCtx& ctx)
    sinfo->SetCameraStamp(ctx.GetCamera()->TimeStamp());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup LOD-dependant values in scene-info.
+///
+/// Nothing to be done here but to store the last LOD.
+
 void TGLSceneBase::LodifySceneInfo(TGLRnrCtx& ctx)
 {
-   // Setup LOD-dependant values in scene-info.
-   //
-   // Nothing to be done here but to store the last LOD.
-
    if (gDebug > 3)
    {
       Info("TGLSceneBase::LodifySceneInfo",
@@ -305,15 +306,15 @@ void TGLSceneBase::LodifySceneInfo(TGLRnrCtx& ctx)
 // Rendering
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform basic pre-render initialization:
+///  - calculate LOD, Style, Clipping,
+///  - build draw lists.
+///
+/// This is called in the beginning of the GL-viewer draw cycle.
+
 void TGLSceneBase::PreDraw(TGLRnrCtx & rnrCtx)
 {
-   // Perform basic pre-render initialization:
-   //  - calculate LOD, Style, Clipping,
-   //  - build draw lists.
-   //
-   // This is called in the beginning of the GL-viewer draw cycle.
-
    if ( ! IsDrawOrSelectLock()) {
       Error("TGLSceneBase::FullRender", "expected Draw or Select Lock");
    }
@@ -397,14 +398,14 @@ void TGLSceneBase::PreDraw(TGLRnrCtx & rnrCtx)
    sInfo.SetLastOLLineW(ol_linew);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform pre-render initialization - fill rnrCtx with
+/// values stored during PreDraw().
+///
+/// This is called each time before RenderXyzz().
+
 void TGLSceneBase::PreRender(TGLRnrCtx & rnrCtx)
 {
-   // Perform pre-render initialization - fill rnrCtx with
-   // values stored during PreDraw().
-   //
-   // This is called each time before RenderXyzz().
-
    TGLSceneInfo& sInfo = * rnrCtx.GetSceneInfo();
 
    rnrCtx.SetClip         (sInfo.LastClip());
@@ -420,95 +421,102 @@ void TGLSceneBase::PreRender(TGLRnrCtx & rnrCtx)
    // Should also fix camera matrices
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function does rendering of all stages, the shapes are
+/// rendered in the following order: opaque, transparent,
+/// selected-opaque, selected-transparent.
+///
+/// GL-depth buffer is cleared after transparent shapes have been
+/// rendered.
+///
+/// This is never called from ROOT GL directly. Use it if you know
+/// you are rendering a single scene.
+
 void TGLSceneBase::Render(TGLRnrCtx & rnrCtx)
 {
-   // This function does rendering of all stages, the shapes are
-   // rendered in the following order: opaque, transparent,
-   // selected-opaque, selected-transparent.
-   //
-   // GL-depth buffer is cleared after transparent shapes have been
-   // rendered.
-   //
-   // This is never called from ROOT GL directly. Use it if you know
-   // you are rendering a single scene.
-
    RenderOpaque(rnrCtx);
    RenderTransp(rnrCtx);
    RenderSelOpaque(rnrCtx);
    RenderSelTransp(rnrCtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render opaque elements.
+
 void TGLSceneBase::RenderOpaque(TGLRnrCtx & /*rnrCtx*/)
 {
-   // Render opaque elements.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render transparent elements.
+
 void TGLSceneBase::RenderTransp(TGLRnrCtx & /*rnrCtx*/)
 {
-   // Render transparent elements.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render selected opaque elements.
+
 void TGLSceneBase::RenderSelOpaque(TGLRnrCtx & /*rnrCtx*/)
 {
-   // Render selected opaque elements.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render selected transparent elements for highlight.
+
 void TGLSceneBase::RenderSelTransp(TGLRnrCtx & /*rnrCtx*/)
 {
-   // Render selected transparent elements for highlight.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render selected opaque elements for highlight.
+
 void TGLSceneBase::RenderSelOpaqueForHighlight(TGLRnrCtx & /*rnrCtx*/)
 {
-   // Render selected opaque elements for highlight.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render selected transparent elements.
+
 void TGLSceneBase::RenderSelTranspForHighlight(TGLRnrCtx & /*rnrCtx*/)
 {
-   // Render selected transparent elements.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform post-render clean-up.
+
 void TGLSceneBase::PostRender(TGLRnrCtx & /*rnrCtx*/)
 {
-   // Perform post-render clean-up.
-
    // !!!
    // Cleanup matrix stack
    // glPopMatrix();
    // Should also fix camera matrices
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finalize drawing.
+///
+/// This is called at the end of the GL-viewer draw cycle.
+
 void TGLSceneBase::PostDraw(TGLRnrCtx & /*rnrCtx*/)
 {
-   // Finalize drawing.
-   //
-   // This is called at the end of the GL-viewer draw cycle.
 }
 
 /**************************************************************************/
 // Selection
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process selection record rec.
+/// 'curIdx' is the item position where the scene should start
+/// its processing.
+/// Return TRUE if an object has been identified or FALSE otherwise.
+/// The scene-info member of the record is already set by the caller.
+///
+/// See implementation in sub-class TGLScene, here we just return FALSE.
+
 Bool_t TGLSceneBase::ResolveSelectRecord(TGLSelectRecord & /*rec*/,
                                          Int_t             /*curIdx*/)
 {
-   // Process selection record rec.
-   // 'curIdx' is the item position where the scene should start
-   // its processing.
-   // Return TRUE if an object has been identified or FALSE otherwise.
-   // The scene-info member of the record is already set by the caller.
-   //
-   // See implementation in sub-class TGLScene, here we just return FALSE.
-
    return kFALSE;
 }

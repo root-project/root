@@ -32,7 +32,10 @@ ClassImp(TPgSQLStatement)
 
 static const Int_t kBindStringSize = 25;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+/// Checks if statement contains parameters tags.
+
 TPgSQLStatement::TPgSQLStatement(PgSQL_Stmt_t* stmt, Bool_t errout):
    TSQLStatement(errout),
    fStmt(stmt),
@@ -46,9 +49,6 @@ TPgSQLStatement::TPgSQLStatement(PgSQL_Stmt_t* stmt, Bool_t errout):
    fNumResultRows(0),
    fNumResultCols(0)
 {
-   // Normal constructor.
-   // Checks if statement contains parameters tags.
-
    // Given fRes not used, we retrieve the statement using the connection.
    if (fStmt->fRes != NULL) {
       PQclear(fStmt->fRes);
@@ -68,19 +68,19 @@ TPgSQLStatement::TPgSQLStatement(PgSQL_Stmt_t* stmt, Bool_t errout):
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TPgSQLStatement::~TPgSQLStatement()
 {
-   // Destructor.
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close statement.
+
 void TPgSQLStatement::Close(Option_t *)
 {
-   // Close statement.
-
    if (fStmt->fRes)
       PQclear(fStmt->fRes);
 
@@ -149,11 +149,11 @@ void TPgSQLStatement::Close(Option_t *)
       }                                                 \
    }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process statement.
+
 Bool_t TPgSQLStatement::Process()
 {
-   // Process statement.
-
    CheckStmt("Process",kFALSE);
 
    // We create the prepared statement below, MUST delete the old one
@@ -177,21 +177,21 @@ Bool_t TPgSQLStatement::Process()
    return kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of affected rows after statement is processed.
+
 Int_t TPgSQLStatement::GetNumAffectedRows()
 {
-   // Return number of affected rows after statement is processed.
-
    CheckStmt("GetNumAffectedRows", -1);
 
    return (Int_t) atoi(PQcmdTuples(fStmt->fRes));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of statement parameters.
+
 Int_t TPgSQLStatement::GetNumParameters()
 {
-   // Return number of statement parameters.
-
    CheckStmt("GetNumParameters", -1);
 
    if (IsSetParsMode()) {
@@ -201,12 +201,12 @@ Int_t TPgSQLStatement::GetNumParameters()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store result of statement processing to access them
+/// via GetInt(), GetDouble() and so on methods.
+
 Bool_t TPgSQLStatement::StoreResult()
 {
-   // Store result of statement processing to access them
-   // via GetInt(), GetDouble() and so on methods.
-
    int i;
    for (i=0;i<fNumResultCols;i++){
       fFieldName[i] = PQfname(fStmt->fRes,i);
@@ -222,11 +222,11 @@ Bool_t TPgSQLStatement::StoreResult()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of fields in result set.
+
 Int_t TPgSQLStatement::GetNumFields()
 {
-   // Return number of fields in result set.
-
    if (fWorkingMode==1)
       return fNumBuffers;
    if (fWorkingMode==2)
@@ -234,21 +234,21 @@ Int_t TPgSQLStatement::GetNumFields()
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns field name in result set.
+
 const char* TPgSQLStatement::GetFieldName(Int_t nfield)
 {
-   // Returns field name in result set.
-
    if (!IsResultSetMode() || (nfield<0) || (nfield>=fNumBuffers)) return 0;
 
    return fFieldName[nfield];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shift cursor to nect row in result set.
+
 Bool_t TPgSQLStatement::NextResultRow()
 {
-   // Shift cursor to nect row in result set.
-
    if ((fStmt==0) || !IsResultSetMode()) return kFALSE;
 
    Bool_t res=kTRUE;
@@ -259,13 +259,13 @@ Bool_t TPgSQLStatement::NextResultRow()
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment iteration counter for statement, where parameter can be set.
+/// Statement with parameters of previous iteration
+/// automatically will be applied to database.
+
 Bool_t TPgSQLStatement::NextIteration()
 {
-   // Increment iteration counter for statement, where parameter can be set.
-   // Statement with parameters of previous iteration
-   // automatically will be applied to database.
-
    ClearError();
 
    if (!IsSetParsMode() || (fBind==0)) {
@@ -290,11 +290,11 @@ Bool_t TPgSQLStatement::NextIteration()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release all buffers, used by statement.
+
 void TPgSQLStatement::FreeBuffers()
 {
-   // Release all buffers, used by statement.
-
   //individual field names free()'ed by PQclear of fStmt->fRes
    if (fFieldName)
       delete[] fFieldName;
@@ -318,11 +318,11 @@ void TPgSQLStatement::FreeBuffers()
    fParamFormats = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate buffers for statement parameters/ result fields.
+
 void TPgSQLStatement::SetBuffersNumber(Int_t numpars)
 {
-   // Allocate buffers for statement parameters/ result fields.
-
    FreeBuffers();
    if (numpars<=0) return;
 
@@ -341,74 +341,74 @@ void TPgSQLStatement::SetBuffersNumber(Int_t numpars)
    memset(fParamFormats, 0, sizeof(int)*fNumBuffers);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert field value to string.
+
 const char* TPgSQLStatement::ConvertToString(Int_t npar)
 {
-   // Convert field value to string.
-
    const char *buf = PQgetvalue(fStmt->fRes, fIterationCount, npar);
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert field to numeric.
+
 long double TPgSQLStatement::ConvertToNumeric(Int_t npar)
 {
-   // Convert field to numeric.
-
    if (PQgetisnull(fStmt->fRes,fIterationCount,npar))
       return (long double)0;
 
    return (long double) atof(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if field value is null.
+
 Bool_t TPgSQLStatement::IsNull(Int_t npar)
 {
-   // Checks if field value is null.
-
    CheckGetField("IsNull", kTRUE);
 
    return PQgetisnull(fStmt->fRes,fIterationCount,npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get integer.
+
 Int_t TPgSQLStatement::GetInt(Int_t npar)
 {
-   // Get integer.
-
    if (PQgetisnull(fStmt->fRes,fIterationCount,npar))
       return (Int_t)0;
 
    return (Int_t) atoi(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get unsigned integer.
+
 UInt_t TPgSQLStatement::GetUInt(Int_t npar)
 {
-   // Get unsigned integer.
-
    if (PQgetisnull(fStmt->fRes,fIterationCount,npar))
       return (UInt_t)0;
 
    return (UInt_t) atoi(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get long.
+
 Long_t TPgSQLStatement::GetLong(Int_t npar)
 {
-   // Get long.
-
    if (PQgetisnull(fStmt->fRes,fIterationCount,npar))
       return (Long_t)0;
 
    return (Long_t) atol(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get long64.
+
 Long64_t TPgSQLStatement::GetLong64(Int_t npar)
 {
-   // Get long64.
-
    if (PQgetisnull(fStmt->fRes,fIterationCount,npar))
       return (Long64_t)0;
 
@@ -419,11 +419,11 @@ Long64_t TPgSQLStatement::GetLong64(Int_t npar)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as unsigned 64-bit integer
+
 ULong64_t TPgSQLStatement::GetULong64(Int_t npar)
 {
-   // Return field value as unsigned 64-bit integer
-
    if (PQgetisnull(fStmt->fRes,fIterationCount,npar))
       return (ULong64_t)0;
 
@@ -434,30 +434,30 @@ ULong64_t TPgSQLStatement::GetULong64(Int_t npar)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as double.
+
 Double_t TPgSQLStatement::GetDouble(Int_t npar)
 {
-   // Return field value as double.
-
    if (PQgetisnull(fStmt->fRes,fIterationCount,npar))
       return (Double_t)0;
    return (Double_t) atof(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as string.
+
 const char *TPgSQLStatement::GetString(Int_t npar)
 {
-   // Return field value as string.
-
    return PQgetvalue(fStmt->fRes,fIterationCount,npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as binary array.
+/// Note PQgetvalue mallocs/frees and ROOT classes expect new/delete.
+
 Bool_t TPgSQLStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 {
-   // Return field value as binary array.
-   // Note PQgetvalue mallocs/frees and ROOT classes expect new/delete.
-
    size_t sz;
    char *cptr = PQgetvalue(fStmt->fRes,fIterationCount,npar);
    unsigned char * mptr = PQunescapeBytea((const unsigned char*)cptr,&sz);
@@ -471,11 +471,11 @@ Bool_t TPgSQLStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return large object whose oid is in the given field.
+
 Bool_t TPgSQLStatement::GetLargeObject(Int_t npar, void* &mem, Long_t& size)
 {
-   // Return large object whose oid is in the given field.
-
    Int_t objID = atoi(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 
    // All this needs to happen inside a transaction, or it will NOT work.
@@ -538,11 +538,11 @@ Bool_t TPgSQLStatement::GetLargeObject(Int_t npar, void* &mem, Long_t& size)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as date, in UTC.
+
 Bool_t TPgSQLStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day)
 {
-   // Return field value as date, in UTC.
-
    TString val=PQgetvalue(fStmt->fRes,fIterationCount,npar);
    TDatime d = TDatime(val.Data());
    year = d.GetYear();
@@ -555,11 +555,11 @@ Bool_t TPgSQLStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& da
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field as time, in UTC.
+
 Bool_t TPgSQLStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
 {
-   // Return field as time, in UTC.
-
    TString val=PQgetvalue(fStmt->fRes,fIterationCount,npar);
    TDatime d = TDatime(val.Data());
    hour = d.GetHour();
@@ -572,11 +572,11 @@ Bool_t TPgSQLStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as date & time, in UTC.
+
 Bool_t TPgSQLStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
 {
-   // Return field value as date & time, in UTC.
-
    TString val=PQgetvalue(fStmt->fRes,fIterationCount,npar);
    TDatime d = TDatime(val.Data());
    year = d.GetYear();
@@ -589,11 +589,11 @@ Bool_t TPgSQLStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& 
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert timestamp value to UTC if a zone is included.
+
 void TPgSQLStatement::ConvertTimeToUTC(const TString &PQvalue, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
 {
-   // Convert timestamp value to UTC if a zone is included.
-
    Ssiz_t p = PQvalue.Last('.');
    // Check if timestamp has timezone
    TSubString *s_zone = nullptr;
@@ -633,15 +633,15 @@ void TPgSQLStatement::ConvertTimeToUTC(const TString &PQvalue, Int_t& year, Int_
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field as timestamp, in UTC.
+/// Second fraction is to be interpreted as in the following example:
+/// 2013-01-12 12:10:23.093854+02
+/// Fraction is '93854', precision is fixed in this method to 6 decimal places.
+/// This means the returned frac-value is always in microseconds.
+
 Bool_t TPgSQLStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t& frac)
 {
-   // Return field as timestamp, in UTC.
-   // Second fraction is to be interpreted as in the following example:
-   // 2013-01-12 12:10:23.093854+02
-   // Fraction is '93854', precision is fixed in this method to 6 decimal places.
-   // This means the returned frac-value is always in microseconds.
-
    TString val=PQgetvalue(fStmt->fRes,fIterationCount,npar);
    TDatime d(val.Data());
    year = d.GetYear();
@@ -665,87 +665,87 @@ Bool_t TPgSQLStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set NULL as parameter value.
+/// If NULL should be set for statement parameter during first iteration,
+/// one should call before proper Set... method to identify type of argument for
+/// the future. For instance, if one suppose to have double as type of parameter,
+/// code should look like:
+///    stmt->SetDouble(2, 0.);
+///    stmt->SetNull(2);
+
 Bool_t TPgSQLStatement::SetNull(Int_t npar)
 {
-   // Set NULL as parameter value.
-   // If NULL should be set for statement parameter during first iteration,
-   // one should call before proper Set... method to identify type of argument for
-   // the future. For instance, if one suppose to have double as type of parameter,
-   // code should look like:
-   //    stmt->SetDouble(2, 0.);
-   //    stmt->SetNull(2);
-
    fBind[npar][0] = 0;
 
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as integer.
+
 Bool_t TPgSQLStatement::SetInt(Int_t npar, Int_t value)
 {
-   // Set parameter value as integer.
-
    snprintf(fBind[npar],kBindStringSize,"%d",value);
 
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as unsinged integer.
+
 Bool_t TPgSQLStatement::SetUInt(Int_t npar, UInt_t value)
 {
-   // Set parameter value as unsinged integer.
-
    snprintf(fBind[npar],kBindStringSize,"%u",value);
 
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as long.
+
 Bool_t TPgSQLStatement::SetLong(Int_t npar, Long_t value)
 {
-   // Set parameter value as long.
-
    snprintf(fBind[npar],kBindStringSize,"%ld",value);
 
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as 64-bit integer.
+
 Bool_t TPgSQLStatement::SetLong64(Int_t npar, Long64_t value)
 {
-   // Set parameter value as 64-bit integer.
-
    snprintf(fBind[npar],kBindStringSize,"%lld",(Long64_t)value);
 
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as unsinged 64-bit integer.
+
 Bool_t TPgSQLStatement::SetULong64(Int_t npar, ULong64_t value)
 {
-   // Set parameter value as unsinged 64-bit integer.
-
    snprintf(fBind[npar],kBindStringSize,"%llu",(ULong64_t)value);
 
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as double value.
+
 Bool_t TPgSQLStatement::SetDouble(Int_t npar, Double_t value)
 {
-   // Set parameter value as double value.
-
    snprintf(fBind[npar],kBindStringSize,"%lf",value);
 
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as string.
+
 Bool_t TPgSQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
-   // Set parameter value as string.
-
    if(sizeof(fBind[npar])<(unsigned)maxsize){
       delete [] fBind[npar];
       fBind[npar] = new char[maxsize];
@@ -754,11 +754,11 @@ Bool_t TPgSQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as binary data.
+
 Bool_t TPgSQLStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize)
 {
-   // Set parameter value as binary data.
-
    size_t sz=size;
    size_t mxsz=maxsize;
    char* mptr = (char*)malloc(2*sz+1);
@@ -771,11 +771,11 @@ Bool_t TPgSQLStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t max
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value to large object and immediately insert the large object into DB.
+
 Bool_t TPgSQLStatement::SetLargeObject(Int_t npar, void* mem, Long_t size, Long_t /*maxsize*/)
 {
-   // Set parameter value to large object and immediately insert the large object into DB.
-
    // All this needs to happen inside a transaction, or it will NOT work.
    PGresult *res=PQexec(fStmt->fConn,"BEGIN");
 
@@ -824,45 +824,45 @@ Bool_t TPgSQLStatement::SetLargeObject(Int_t npar, void* mem, Long_t size, Long_
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as date.
+
 Bool_t TPgSQLStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
 {
-   // Set parameter value as date.
-
    TDatime d =TDatime(year,month,day,0,0,0);
    snprintf(fBind[npar],kBindStringSize,"%s",(char*)d.AsSQLString());
 
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as time.
+
 Bool_t TPgSQLStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
 {
-   // Set parameter value as time.
-
    TDatime d=TDatime(2000,1,1,hour,min,sec);
    snprintf(fBind[npar],kBindStringSize,"%s",(char*)d.AsSQLString());
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as date & time.
+
 Bool_t TPgSQLStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec)
 {
-   // Set parameter value as date & time.
-
    TDatime d=TDatime(year,month,day,hour,min,sec);
    snprintf(fBind[npar],kBindStringSize,"%s",(char*)d.AsSQLString());
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as timestamp.
+/// Second fraction is assumed as value in microseconds,
+/// i.e. as a fraction with six decimal places.
+/// See GetTimestamp() for an example.
+
 Bool_t TPgSQLStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac)
 {
-   // Set parameter value as timestamp.
-   // Second fraction is assumed as value in microseconds,
-   // i.e. as a fraction with six decimal places.
-   // See GetTimestamp() for an example.
-
    TDatime d(year,month,day,hour,min,sec);
    snprintf(fBind[npar],kBindStringSize,"%s.%06d",(char*)d.AsSQLString(),frac);
    return kTRUE;
@@ -870,358 +870,363 @@ Bool_t TPgSQLStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t 
 
 #else
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+/// For PgSQL version < 8.2 no statement is supported.
+
 TPgSQLStatement::TPgSQLStatement(PgSQL_Stmt_t*, Bool_t)
 {
-   // Normal constructor.
-   // For PgSQL version < 8.2 no statement is supported.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TPgSQLStatement::~TPgSQLStatement()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close statement.
+
 void TPgSQLStatement::Close(Option_t *)
 {
-   // Close statement.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process statement.
+
 Bool_t TPgSQLStatement::Process()
 {
-   // Process statement.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of affected rows after statement is processed.
+
 Int_t TPgSQLStatement::GetNumAffectedRows()
 {
-   // Return number of affected rows after statement is processed.
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of statement parameters.
+
 Int_t TPgSQLStatement::GetNumParameters()
 {
-   // Return number of statement parameters.
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store result of statement processing to access them
+/// via GetInt(), GetDouble() and so on methods.
+
 Bool_t TPgSQLStatement::StoreResult()
 {
-   // Store result of statement processing to access them
-   // via GetInt(), GetDouble() and so on methods.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of fields in result set.
+
 Int_t TPgSQLStatement::GetNumFields()
 {
-   // Return number of fields in result set.
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns field name in result set.
+
 const char* TPgSQLStatement::GetFieldName(Int_t)
 {
-   // Returns field name in result set.
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shift cursor to nect row in result set.
+
 Bool_t TPgSQLStatement::NextResultRow()
 {
-   // Shift cursor to nect row in result set.
-
    return kFALSE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment iteration counter for statement, where parameter can be set.
+/// Statement with parameters of previous iteration
+/// automatically will be applied to database.
+
 Bool_t TPgSQLStatement::NextIteration()
 {
-   // Increment iteration counter for statement, where parameter can be set.
-   // Statement with parameters of previous iteration
-   // automatically will be applied to database.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release all buffers, used by statement.
+
 void TPgSQLStatement::FreeBuffers()
 {
-   // Release all buffers, used by statement.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate buffers for statement parameters/ result fields.
+
 void TPgSQLStatement::SetBuffersNumber(Int_t)
 {
-   // Allocate buffers for statement parameters/ result fields.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert field value to string.
+
 const char* TPgSQLStatement::ConvertToString(Int_t)
 {
-   // Convert field value to string.
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert field to numeric value.
+
 long double TPgSQLStatement::ConvertToNumeric(Int_t)
 {
-   // Convert field to numeric value.
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if field value is null.
+
 Bool_t TPgSQLStatement::IsNull(Int_t)
 {
-   // Checks if field value is null.
-
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as integer.
+
 Int_t TPgSQLStatement::GetInt(Int_t)
 {
-   // Return field value as integer.
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as unsigned integer.
+
 UInt_t TPgSQLStatement::GetUInt(Int_t)
 {
-   // Return field value as unsigned integer.
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as long integer.
+
 Long_t TPgSQLStatement::GetLong(Int_t)
 {
-   // Return field value as long integer.
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as 64-bit integer.
+
 Long64_t TPgSQLStatement::GetLong64(Int_t)
 {
-   // Return field value as 64-bit integer.
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as unsigned 64-bit integer.
+
 ULong64_t TPgSQLStatement::GetULong64(Int_t)
 {
-   // Return field value as unsigned 64-bit integer.
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as double.
+
 Double_t TPgSQLStatement::GetDouble(Int_t)
 {
-   // Return field value as double.
-
    return 0.;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as string.
+
 const char *TPgSQLStatement::GetString(Int_t)
 {
-   // Return field value as string.
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as binary array.
+
 Bool_t TPgSQLStatement::GetBinary(Int_t, void* &, Long_t&)
 {
-   // Return field value as binary array.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return large object whose oid is in the given field.
+
 Bool_t TPgSQLStatement::GetLargeObject(Int_t, void* &, Long_t&)
 {
-   // Return large object whose oid is in the given field.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as date.
+
 Bool_t TPgSQLStatement::GetDate(Int_t, Int_t&, Int_t&, Int_t&)
 {
-   // Return field value as date.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as time.
+
 Bool_t TPgSQLStatement::GetTime(Int_t, Int_t&, Int_t&, Int_t&)
 {
-   // Return field value as time.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as date & time.
+
 Bool_t TPgSQLStatement::GetDatime(Int_t, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&)
 {
-   // Return field value as date & time.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as time stamp.
+
 Bool_t TPgSQLStatement::GetTimestamp(Int_t, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&)
 {
-   // Return field value as time stamp.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter type to be used as buffer.
+/// Used in both setting data to database and retriving data from data base.
+/// Initialize proper PGSQL_BIND structure and allocate required buffers.
+
 Bool_t TPgSQLStatement::SetSQLParamType(Int_t, int, bool, int)
 {
-   // Set parameter type to be used as buffer.
-   // Used in both setting data to database and retriving data from data base.
-   // Initialize proper PGSQL_BIND structure and allocate required buffers.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set NULL as parameter value.
+/// If NULL should be set for statement parameter during first iteration,
+/// one should call before proper Set... method to identify type of argument for
+/// the future. For instance, if one suppose to have double as type of parameter,
+/// code should look like:
+///    stmt->SetDouble(2, 0.);
+///    stmt->SetNull(2);
+
 Bool_t TPgSQLStatement::SetNull(Int_t)
 {
-   // Set NULL as parameter value.
-   // If NULL should be set for statement parameter during first iteration,
-   // one should call before proper Set... method to identify type of argument for
-   // the future. For instance, if one suppose to have double as type of parameter,
-   // code should look like:
-   //    stmt->SetDouble(2, 0.);
-   //    stmt->SetNull(2);
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as integer.
+
 Bool_t TPgSQLStatement::SetInt(Int_t, Int_t)
 {
-   // Set parameter value as integer.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as unsigned integer.
+
 Bool_t TPgSQLStatement::SetUInt(Int_t, UInt_t)
 {
-   // Set parameter value as unsigned integer.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as long integer.
+
 Bool_t TPgSQLStatement::SetLong(Int_t, Long_t)
 {
-   // Set parameter value as long integer.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as 64-bit integer.
+
 Bool_t TPgSQLStatement::SetLong64(Int_t, Long64_t)
 {
-   // Set parameter value as 64-bit integer.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as unsigned 64-bit integer.
+
 Bool_t TPgSQLStatement::SetULong64(Int_t, ULong64_t)
 {
-   // Set parameter value as unsigned 64-bit integer.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as double.
+
 Bool_t TPgSQLStatement::SetDouble(Int_t, Double_t)
 {
-   // Set parameter value as double.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as string.
+
 Bool_t TPgSQLStatement::SetString(Int_t, const char*, Int_t)
 {
-   // Set parameter value as string.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as binary data.
+
 Bool_t TPgSQLStatement::SetBinary(Int_t, void*, Long_t, Long_t)
 {
-   // Set parameter value as binary data.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value to large object and immediately insert the large object into DB.
+
 Bool_t TPgSQLStatement::SetLargeObject(Int_t, void*, Long_t, Long_t)
 {
-   // Set parameter value to large object and immediately insert the large object into DB.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as date.
+
 Bool_t TPgSQLStatement::SetDate(Int_t, Int_t, Int_t, Int_t)
 {
-   // Set parameter value as date.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as time.
+
 Bool_t TPgSQLStatement::SetTime(Int_t, Int_t, Int_t, Int_t)
 {
-   // Set parameter value as time.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as date & time.
+
 Bool_t TPgSQLStatement::SetDatime(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t)
 {
-   // Set parameter value as date & time.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as timestamp.
+
 Bool_t TPgSQLStatement::SetTimestamp(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t)
 {
-   // Set parameter value as timestamp.
-
    return kFALSE;
 }
 

@@ -29,27 +29,29 @@ THLimitsFinder *THLimitsFinder::fgLimitsFinder = 0;
 
 ClassImp(THLimitsFinder)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 THLimitsFinder::THLimitsFinder()
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 THLimitsFinder::~THLimitsFinder()
 {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute the best axis limits for the X axis.
+/// If the bit kIsInteger is set, the number of channels is also recomputed.
+/// The axis parameters are replaced by the optimized parameters
+/// example:
+///  With the input parameters xmin=-1.467 and xmax=2.344, the function
+///  will compute better limits -1.8 and 2.7 and store them in the axis.
+
 Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax)
 {
-// compute the best axis limits for the X axis.
-// If the bit kIsInteger is set, the number of channels is also recomputed.
-// The axis parameters are replaced by the optimized parameters
-// example:
-//  With the input parameters xmin=-1.467 and xmax=2.344, the function
-//  will compute better limits -1.8 and 2.7 and store them in the axis.
-
    Int_t newbins;
    TAxis *xaxis = h->GetXaxis();
 
@@ -67,13 +69,13 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute the best axis limits for the X and Y axis.
+/// If the bit kIsInteger is set, the number of channels is also recomputed.
+/// The axis parameters are replaced by the optimized parameters
+
 Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax)
 {
-// compute the best axis limits for the X and Y axis.
-// If the bit kIsInteger is set, the number of channels is also recomputed.
-// The axis parameters are replaced by the optimized parameters
-
    Int_t newbinsx,newbinsy;
    TAxis *xaxis = h->GetXaxis();
    TAxis *yaxis = h->GetYaxis();
@@ -99,13 +101,13 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Doubl
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute the best axis limits for the X, Y and Z axis.
+/// If the bit kIsInteger is set, the number of channels is also recomputed.
+/// The axis parameters are replaced by the optimized parameters
+
 Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax)
 {
-// compute the best axis limits for the X, Y and Z axis.
-// If the bit kIsInteger is set, the number of channels is also recomputed.
-// The axis parameters are replaced by the optimized parameters
-
    Int_t newbinsx,newbinsy,newbinsz;
    TAxis *xaxis = h->GetXaxis();
    TAxis *yaxis = h->GetYaxis();
@@ -140,46 +142,46 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Doubl
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to the current finder.
+/// Create one if none exists
+/// Use SetLimitsFinder to set a user defined finder.
+
 THLimitsFinder *THLimitsFinder::GetLimitsFinder()
 {
-// Return pointer to the current finder.
-// Create one if none exists
-// Use SetLimitsFinder to set a user defined finder.
-
    if (!fgLimitsFinder) fgLimitsFinder = new THLimitsFinder();
    return fgLimitsFinder;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This static function can be used to specify a finder derived from THLimitsFinder.
+/// The finder may redefine the functions FindGoodLimits.
+/// Note that the redefined functions may call THLimitsFinder::FindGoodLimits.
+
 void THLimitsFinder::SetLimitsFinder(THLimitsFinder *finder)
 {
-// This static function can be used to specify a finder derived from THLimitsFinder.
-// The finder may redefine the functions FindGoodLimits.
-// Note that the redefined functions may call THLimitsFinder::FindGoodLimits.
-
    fgLimitsFinder = finder;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function to compute reasonable axis limits
+///
+/// Input parameters:
+///
+///  A1,A2          : Original axis limits
+///  BinLow,BinHigh : Optimized axis limits. They should be initialized by the
+///                   calling method for instance to 0.
+///  nold           : Original number of divisions.
+///  nbins          : Optimized number of divisions.
+///  BinWidth       : Optimized bin width. It should be initialized by the
+///                   calling method for instance to 0.
+///  option         : "T" means Time axis.
+
 void THLimitsFinder::Optimize(Double_t A1,  Double_t A2,  Int_t nold ,
                               Double_t &BinLow, Double_t &BinHigh,
                               Int_t &nbins, Double_t &BinWidth,
                               Option_t *option)
 {
-// static function to compute reasonable axis limits
-//
-// Input parameters:
-//
-//  A1,A2          : Original axis limits
-//  BinLow,BinHigh : Optimized axis limits. They should be initialized by the
-//                   calling method for instance to 0.
-//  nold           : Original number of divisions.
-//  nbins          : Optimized number of divisions.
-//  BinWidth       : Optimized bin width. It should be initialized by the
-//                   calling method for instance to 0.
-//  option         : "T" means Time axis.
-
    Int_t lwid, kwid;
    Int_t ntemp = 0;
    Int_t jlog  = 0;
@@ -352,13 +354,13 @@ LOK:
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Optimize axis limits.
+/// When isInter=kTRUE, the function makes an integer binwidth
+/// and recompute the number of bins accordingly.
+
 void THLimitsFinder::OptimizeLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax, Bool_t isInteger)
 {
-// Optimize axis limits.
-// When isInter=kTRUE, the function makes an integer binwidth
-// and recompute the number of bins accordingly.
-
    Double_t binlow = 0,binhigh = 0,binwidth=0;
    Int_t n=0;
    Double_t dx = 0.1*(xmax-xmin);

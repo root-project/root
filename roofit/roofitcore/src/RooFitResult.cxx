@@ -63,18 +63,21 @@ ClassImp(RooFitResult)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with name and title
+/// coverity[UNINIT_CTOR]
+
 RooFitResult::RooFitResult(const char* name, const char* title) : 
   TNamed(name,title), _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0), _randomPars(0), _Lt(0),
   _CM(0), _VM(0), _GC(0)
 {  
-  // Constructor with name and title
-  // coverity[UNINIT_CTOR]
   if (name) appendToDir(this,kTRUE) ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooFitResult::RooFitResult(const RooFitResult& other) : 
   TNamed(other),
   RooPrintable(other),
@@ -91,8 +94,6 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   _VM(0),
   _GC(0)
 {
-  // Copy constructor
-
   _constPars = (RooArgList*) other._constPars->snapshot() ;
   _initPars = (RooArgList*) other._initPars->snapshot() ;
   _finalPars = (RooArgList*) other._finalPars->snapshot() ;
@@ -105,11 +106,11 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooFitResult::~RooFitResult() 
 {
-  // Destructor
-
   if (_constPars) delete _constPars ;
   if (_initPars)  delete _initPars ;
   if (_finalPars) delete _finalPars ;
@@ -126,11 +127,11 @@ RooFitResult::~RooFitResult()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the list of constant parameters
+
 void RooFitResult::setConstParList(const RooArgList& list) 
 {
-  // Fill the list of constant parameters
-
   if (_constPars) delete _constPars ;
   _constPars = (RooArgList*) list.snapshot() ;
   TIterator* iter = _constPars->createIterator() ;
@@ -146,11 +147,11 @@ void RooFitResult::setConstParList(const RooArgList& list)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the list of initial values of the floating parameters 
+
 void RooFitResult::setInitParList(const RooArgList& list)
 {
-  // Fill the list of initial values of the floating parameters 
-
   if (_initPars) delete _initPars ;
   _initPars = (RooArgList*) list.snapshot() ;
   TIterator* iter = _initPars->createIterator() ;
@@ -166,11 +167,11 @@ void RooFitResult::setInitParList(const RooArgList& list)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the list of final values of the floating parameters 
+
 void RooFitResult::setFinalParList(const RooArgList& list)
 {
-  // Fill the list of final values of the floating parameters 
-
   if (_finalPars) delete _finalPars ;
   _finalPars = (RooArgList*) list.snapshot() ;
 
@@ -187,7 +188,8 @@ void RooFitResult::setFinalParList(const RooArgList& list)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooFitResult::statusCodeHistory(UInt_t icycle) const
 { 
   if (icycle>=_statusHistory.size()) {
@@ -200,7 +202,8 @@ Int_t RooFitResult::statusCodeHistory(UInt_t icycle) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char* RooFitResult::statusLabelHistory(UInt_t icycle) const 
 { 
   if (icycle>=_statusHistory.size()) {
@@ -213,34 +216,34 @@ const char* RooFitResult::statusLabelHistory(UInt_t icycle) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add objects to a 2D plot that represent the fit results for the
+/// two named parameters.  The input frame with the objects added is
+/// returned, or zero in case of an error.  Which objects are added
+/// are determined by the options string which should be a concatenation
+/// of the following (not case sensitive):
+///
+///   M - a marker at the best fit result
+///   E - an error ellipse calculated at 1-sigma using the error matrix at the minimum
+///   1 - the 1-sigma error bar for parameter 1
+///   2 - the 1-sigma error bar for parameter 2
+///   B - the bounding box for the error ellipse
+///   H - a line and horizontal axis for reading off the correlation coefficient
+///   V - a line and vertical axis for reading off the correlation coefficient
+///   A - draw axes for reading off the correlation coefficients with the H or V options
+///
+/// You can change the attributes of objects in the returned RooPlot using the
+/// various RooPlot::getAttXxx(name) member functions, e.g.
+///
+///   plot->getAttLine("contour")->SetLineStyle(kDashed);
+///
+/// Use plot->Print() for a list of all objects and their names (unfortunately most
+/// of the ROOT builtin graphics objects like TLine are unnamed). Drag the left mouse
+/// button along the labels of either axis button to interactively zoom in a plot.
+
 RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *parName2,
 			      const char *options) const 
 {
-  // Add objects to a 2D plot that represent the fit results for the
-  // two named parameters.  The input frame with the objects added is
-  // returned, or zero in case of an error.  Which objects are added
-  // are determined by the options string which should be a concatenation
-  // of the following (not case sensitive):
-  //
-  //   M - a marker at the best fit result
-  //   E - an error ellipse calculated at 1-sigma using the error matrix at the minimum
-  //   1 - the 1-sigma error bar for parameter 1
-  //   2 - the 1-sigma error bar for parameter 2
-  //   B - the bounding box for the error ellipse
-  //   H - a line and horizontal axis for reading off the correlation coefficient
-  //   V - a line and vertical axis for reading off the correlation coefficient
-  //   A - draw axes for reading off the correlation coefficients with the H or V options
-  //
-  // You can change the attributes of objects in the returned RooPlot using the
-  // various RooPlot::getAttXxx(name) member functions, e.g.
-  //
-  //   plot->getAttLine("contour")->SetLineStyle(kDashed);
-  //
-  // Use plot->Print() for a list of all objects and their names (unfortunately most
-  // of the ROOT builtin graphics objects like TLine are unnamed). Drag the left mouse
-  // button along the labels of either axis button to interactively zoom in a plot.
-
   // lookup the input parameters by name: we require that they were floated in our fit
   const RooRealVar *par1= dynamic_cast<const RooRealVar*>(floatParsFinal().find(parName1));
   if(0 == par1) {
@@ -329,15 +332,15 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a list of floating parameter values that are perturbed from the final
+/// fit values by random amounts sampled from the covariance matrix. The returned
+/// object is overwritten with each call and belongs to the RooFitResult. Uses
+/// the "square root method" to decompose the covariance matrix, which makes inverting
+/// it unnecessary.
+
 const RooArgList& RooFitResult::randomizePars() const 
 {
-  // Return a list of floating parameter values that are perturbed from the final
-  // fit values by random amounts sampled from the covariance matrix. The returned
-  // object is overwritten with each call and belongs to the RooFitResult. Uses
-  // the "square root method" to decompose the covariance matrix, which makes inverting
-  // it unnecessary.
-  
   Int_t nPar= _finalPars->getSize();
   if(0 == _randomPars) { // first-time initialization
     assert(0 != _finalPars);
@@ -389,10 +392,11 @@ const RooArgList& RooFitResult::randomizePars() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the correlation between parameters 'par1' and 'par2'
+
 Double_t RooFitResult::correlation(const char* parname1, const char* parname2) const 
 {
-  // Return the correlation between parameters 'par1' and 'par2'
   Int_t idx1 = _finalPars->index(parname1) ;
   Int_t idx2 = _finalPars->index(parname2) ;
   if (idx1<0) {
@@ -408,12 +412,12 @@ Double_t RooFitResult::correlation(const char* parname1, const char* parname2) c
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the set of correlation coefficients of parameter 'par' with
+/// all other floating parameters
+
 const RooArgList* RooFitResult::correlation(const char* parname) const 
 {
-  // Return the set of correlation coefficients of parameter 'par' with
-  // all other floating parameters
-
   if (_globalCorr==0) {
     fillLegacyCorrMatrix() ;
   }
@@ -428,11 +432,11 @@ const RooArgList* RooFitResult::correlation(const char* parname) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the global correlation of the named parameter
+
 Double_t RooFitResult::globalCorr(const char* parname) 
 {
-  // Return the global correlation of the named parameter
-
   if (_globalCorr==0) {
     fillLegacyCorrMatrix() ;
   }
@@ -452,11 +456,11 @@ Double_t RooFitResult::globalCorr(const char* parname)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the list of all global correlations
+
 const RooArgList* RooFitResult::globalCorr() 
 {
-  // Return the list of all global correlations
-
   if (_globalCorr==0) {
     fillLegacyCorrMatrix() ;
   }
@@ -466,30 +470,32 @@ const RooArgList* RooFitResult::globalCorr()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a correlation matrix element addressed with numeric indices.
+
 Double_t RooFitResult::correlation(Int_t row, Int_t col) const 
 {
-  // Return a correlation matrix element addressed with numeric indices.
   return (*_CM)(row,col) ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the covariance matrix element addressed with numeric indices.
+
 Double_t RooFitResult::covariance(Int_t row, Int_t col) const 
 {
-  // Return the covariance matrix element addressed with numeric indices.
   return (*_VM)(row,col) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print fit result to stream 'os'. In Verbose mode, the contant parameters and
+/// the initial and final values of the floating parameters are printed. 
+/// Standard mode only the final values of the floating parameters are printed
+
 void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const
 {
-  // Print fit result to stream 'os'. In Verbose mode, the contant parameters and
-  // the initial and final values of the floating parameters are printed. 
-  // Standard mode only the final values of the floating parameters are printed
-
 
   os << endl 
      << indent << "  RooFitResult: minimized FCN value: " << _minNLL << ", estimated distance to minimum: " << _edm << endl
@@ -580,11 +586,11 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbos
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Function called by RooMinimizer
+
 void RooFitResult::fillCorrMatrix(const std::vector<double>& globalCC, const TMatrixDSym& corrs, const TMatrixDSym& covs)
 {
-  // Function called by RooMinimizer
-
   // Sanity check
   if (globalCC.empty() || corrs.GetNoElements() < 1 || covs.GetNoElements() < 1) {
     coutI(Minimization) << "RooFitResult::fillCorrMatrix: number of floating parameters is zero, correlation matrix not filled" << endl ;
@@ -615,10 +621,11 @@ void RooFitResult::fillCorrMatrix(const std::vector<double>& globalCC, const TMa
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sanity check
+
 void RooFitResult::fillLegacyCorrMatrix() const 
 {
-  // Sanity check
   if (!_CM) return ;
 
   // Delete eventual prevous correlation data holders
@@ -695,13 +702,13 @@ void RooFitResult::fillLegacyCorrMatrix() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal utility method to extract the correlation matrix and the
+/// global correlation coefficients from the MINUIT memory buffer and
+/// fill the internal arrays.
+
 void RooFitResult::fillCorrMatrix()
 {
-  // Internal utility method to extract the correlation matrix and the
-  // global correlation coefficients from the MINUIT memory buffer and
-  // fill the internal arrays.
-
   // Sanity check
   if (gMinuit->fNpar < 1) {
     coutI(Minimization) << "RooFitResult::fillCorrMatrix: number of floating parameters is zero, correlation matrix not filled" << endl ;
@@ -756,12 +763,12 @@ void RooFitResult::fillCorrMatrix()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if this fit result is identical to other within tolerance 'tol' on fitted values
+/// and tolerance 'tolCor' on correlation coefficients
+
 Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double_t tolCorr, Bool_t /*verbose*/) const 
 {
-  // Return true if this fit result is identical to other within tolerance 'tol' on fitted values
-  // and tolerance 'tolCor' on correlation coefficients
-
   Bool_t ret = kTRUE ;
 
   if (fabs(_minNLL-other._minNLL)>=tol) {
@@ -850,12 +857,12 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Import the results of the last fit performed by gMinuit, interpreting
+/// the fit parameters as the given varList of parameters.
+
 RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList) 
 {
-  // Import the results of the last fit performed by gMinuit, interpreting
-  // the fit parameters as the given varList of parameters.
-
   // Verify length of supplied varList
   if (varList.getSize()>0 && varList.getSize()!=gMinuit->fNu) {
     oocoutE((TObject*)0,InputArguments) << "RooFitResult::lastMinuitFit: ERROR: supplied variable list must be either empty " << endl 
@@ -943,11 +950,11 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store externally provided correlation matrix in this RooFitResult ;
+
 void RooFitResult::setCovarianceMatrix(TMatrixDSym& V) 
 {
-  // Store externally provided correlation matrix in this RooFitResult ;
-
   // Delete any previous matrices
   if (_VM) {
     delete _VM ;
@@ -977,10 +984,11 @@ void RooFitResult::setCovarianceMatrix(TMatrixDSym& V)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return TH2D of correlation matrix 
+
 TH2* RooFitResult::correlationHist(const char* name) const 
 {
-  // Return TH2D of correlation matrix 
   Int_t n = _CM->GetNcols() ;
 
   TH2D* hh = new TH2D(name,name,n,0,n,n,0,n) ;
@@ -1002,22 +1010,23 @@ TH2* RooFitResult::correlationHist(const char* name) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return covariance matrix 
+
 const TMatrixDSym& RooFitResult::covarianceMatrix() const 
 {
-  // Return covariance matrix 
   return *_VM ;
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a reduced covariance matrix (Note that Vred _is_ a simple sub-matrix of V,
+/// row/columns are ordered to matched the convention given in input argument 'params'
+
 TMatrixDSym RooFitResult::reducedCovarianceMatrix(const RooArgList& params) const 
 {
-  // Return a reduced covariance matrix (Note that Vred _is_ a simple sub-matrix of V,
-  // row/columns are ordered to matched the convention given in input argument 'params'
-
   const TMatrixDSym& V = covarianceMatrix() ;
 
   // Handle case where V==Vred here
@@ -1069,19 +1078,19 @@ TMatrixDSym RooFitResult::reducedCovarianceMatrix(const RooArgList& params) cons
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a reduced covariance matrix, which is calculated as
+///        ___                   -1
+/// Vred = V22  = V11 - V12 * V22   * V21
+///
+/// Where V11,V12,V21,V22 represent a block decomposition of the covariance matrix into observables that
+/// are propagated (labeled by index '1') and that are not propagated (labeled by index '2'), and V22bar
+/// is the Shur complement of V22, calculated as shown above  
+///
+/// (Note that Vred is _not_ a simple sub-matrix of V)
+
 TMatrixDSym RooFitResult::conditionalCovarianceMatrix(const RooArgList& params) const 
 {
-  // Return a reduced covariance matrix, which is calculated as
-  //        ___                   -1
-  // Vred = V22  = V11 - V12 * V22   * V21
-  //
-  // Where V11,V12,V21,V22 represent a block decomposition of the covariance matrix into observables that
-  // are propagated (labeled by index '1') and that are not propagated (labeled by index '2'), and V22bar
-  // is the Shur complement of V22, calculated as shown above  
-  //
-  // (Note that Vred is _not_ a simple sub-matrix of V)
-
   const TMatrixDSym& V = covarianceMatrix() ;
 
   // Handle case where V==Vred here
@@ -1158,21 +1167,22 @@ TMatrixDSym RooFitResult::conditionalCovarianceMatrix(const RooArgList& params) 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return correlation matrix ;
+
 const TMatrixDSym& RooFitResult::correlationMatrix() const 
 {
-  // Return correlation matrix ;
   return *_CM ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a p.d.f that represents the fit result as a multi-variate probability densisty
+/// function on the floating fit parameters, including correlations
+
 RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
 {
-  // Return a p.d.f that represents the fit result as a multi-variate probability densisty
-  // function on the floating fit parameters, including correlations
-
   const TMatrixDSym& V = covarianceMatrix() ;
   Double_t det = V.Determinant() ;
 
@@ -1279,87 +1289,88 @@ RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change name of RooFitResult object
+
 void RooFitResult::SetName(const char *name) 
 {
-  // Change name of RooFitResult object
-
   if (_dir) _dir->GetList()->Remove(this);
   TNamed::SetName(name) ;
   if (_dir) _dir->GetList()->Add(this);
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change name and title of RooFitResult object
+
 void RooFitResult::SetNameTitle(const char *name, const char* title) 
 {
-  // Change name and title of RooFitResult object
-
   if (_dir) _dir->GetList()->Remove(this);
   TNamed::SetNameTitle(name,title) ;
   if (_dir) _dir->GetList()->Add(this);
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print name of fit result
+
 void RooFitResult::printName(ostream& os) const 
 {
-  // Print name of fit result
-
   os << GetName() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print title of fit result
+
 void RooFitResult::printTitle(ostream& os) const 
 {
-  // Print title of fit result
-
   os << GetTitle() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print class name of fit result
+
 void RooFitResult::printClassName(ostream& os) const 
 {
-  // Print class name of fit result
-
   os << IsA()->GetName() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print arguments of fit result, i.e. the parameters of the fit
+
 void RooFitResult::printArgs(ostream& os) const 
 {
-  // Print arguments of fit result, i.e. the parameters of the fit
-
   os << "[constPars=" << *_constPars << ",floatPars=" << *_finalPars << "]" ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the value of the fit result, i.e.g the status, minimized FCN, edm and covariance quality code
+
 void RooFitResult::printValue(ostream& os) const 
 {
-  // Print the value of the fit result, i.e.g the status, minimized FCN, edm and covariance quality code
-
   os << "(status=" << _status << ",FCNmin=" << _minNLL << ",EDM=" << _edm << ",covQual=" << _covQual << ")" ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Configure default contents to be printed
+
 Int_t RooFitResult::defaultPrintContents(Option_t* /*opt*/) const 
 {
-  // Configure default contents to be printed
-
   return kName|kClassName|kArgs|kValue ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Configure mapping of Print() arguments to RooPrintable print styles
+
 RooPrintable::StyleOption RooFitResult::defaultPrintStyle(Option_t* opt) const 
 {
-  // Configure mapping of Print() arguments to RooPrintable print styles
   if (!opt || strlen(opt)==0) {
     return kStandard ;
   }
@@ -1367,11 +1378,11 @@ RooPrintable::StyleOption RooFitResult::defaultPrintStyle(Option_t* opt) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class RooFitResult.
+
 void RooFitResult::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class RooFitResult.
-    
   if (R__b.IsReading()) {
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);     

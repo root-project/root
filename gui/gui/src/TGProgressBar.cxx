@@ -36,14 +36,14 @@ ClassImp(TGProgressBar)
 ClassImp(TGHProgressBar)
 ClassImp(TGVProgressBar)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create progress bar.
+
 TGProgressBar::TGProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
                              ULong_t back, ULong_t barcolor, GContext_t norm,
                              FontStruct_t font, UInt_t options) :
    TGFrame(p, w, h, options | kOwnBackground, back)
 {
-   // Create progress bar.
-
    fMin        = 0;
    fMax        = 100;
    fPos        = 0;
@@ -60,11 +60,11 @@ TGProgressBar::TGProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
    fDrawBar    = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set min and max of progress bar.
+
 void TGProgressBar::SetRange(Float_t min, Float_t max)
 {
-   // Set min and max of progress bar.
-
    if (min >= max) {
       Error("SetRange", "max must be > min");
       return;
@@ -86,11 +86,11 @@ void TGProgressBar::SetRange(Float_t min, Float_t max)
       DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set progress position between [min,max].
+
 void TGProgressBar::SetPosition(Float_t pos)
 {
-   // Set progress position between [min,max].
-
    if (pos < fMin) pos = fMin;
    if (pos > fMax) pos = fMax;
 
@@ -104,11 +104,11 @@ void TGProgressBar::SetPosition(Float_t pos)
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment progress position.
+
 void TGProgressBar::Increment(Float_t inc)
 {
-   // Increment progress position.
-
    if (fPos == fMax)
       return;
 
@@ -120,92 +120,92 @@ void TGProgressBar::Increment(Float_t inc)
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset progress bar (i.e. set pos to 0).
+
 void TGProgressBar::Reset()
 {
-   // Reset progress bar (i.e. set pos to 0).
-
    fPos = 0;
 
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set fill type.
+
 void TGProgressBar::SetFillType(EFillType type)
 {
-   // Set fill type.
-
    fFillType = type;
 
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bar type.
+
 void TGProgressBar::SetBarType(EBarType type)
 {
-   // Set bar type.
-
    fBarType = type;
 
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set progress bar color.
+
 void TGProgressBar::SetBarColor(ULong_t color)
 {
-   // Set progress bar color.
-
    fBarColorGC.SetForeground(color);
 
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set progress bar color.
+
 void TGProgressBar::SetBarColor(const char *color)
 {
-   // Set progress bar color.
-
    ULong_t ic;
    fClient->GetColorByName(color, ic);
    fBarColorGC.SetForeground(ic);
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set format for displaying a value.
+
 void TGProgressBar::Format(const char *format)
 {
-   // Set format for displaying a value.
-
    fFormat = format;
 
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default font structure in use.
+
 FontStruct_t TGProgressBar::GetDefaultFontStruct()
 {
-   // Return default font structure in use.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context in use.
+
 const TGGC &TGProgressBar::GetDefaultGC()
 {
-   // Return default graphics context in use.
-
    if (!fgDefaultGC)
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
    return *fgDefaultGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change text color drawing.
+
 void TGProgressBar::SetForegroundColor(Pixel_t pixel)
 {
-   // Change text color drawing.
-
    TGGC *gc = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
 
    if (!gc) {
@@ -217,19 +217,24 @@ void TGProgressBar::SetForegroundColor(Pixel_t pixel)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Horizontal progress bar constructor.
+
 TGHProgressBar::TGHProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
                               Pixel_t back, Pixel_t barcolor,
                               GContext_t norm, FontStruct_t font, UInt_t options) :
       TGProgressBar(p, w, h, back, barcolor, norm, font, options)
 {
-   // Horizontal progress bar constructor.
-
    fBarWidth = h;
    fEditDisabled = kEditDisableHeight;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simple constructor allow you to create either a standard progress
+/// bar, or a more fancy progress bar (fancy means: double sized border,
+/// white background and a bit wider to allow for text to be printed
+/// in the bar.
+
 TGHProgressBar::TGHProgressBar(const TGWindow *p, EBarType type, UInt_t w)
    : TGProgressBar(p, w, type == kStandard ? kProgressBarStandardWidth :
                    kProgressBarTextWidth, type == kStandard ? GetDefaultFrameBackground() :
@@ -237,21 +242,16 @@ TGHProgressBar::TGHProgressBar(const TGWindow *p, EBarType type, UInt_t w)
                    GetDefaultFontStruct(),
                    type == kStandard ? kSunkenFrame : kDoubleBorder | kSunkenFrame)
 {
-   // Simple constructor allow you to create either a standard progress
-   // bar, or a more fancy progress bar (fancy means: double sized border,
-   // white background and a bit wider to allow for text to be printed
-   // in the bar.
-
    fBarType  = type;
    fBarWidth = (type == kStandard) ? kProgressBarStandardWidth : kProgressBarTextWidth;
    fEditDisabled = kEditDisableHeight;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show postion text, either in percent or formatted according format.
+
 void TGHProgressBar::ShowPosition(Bool_t set, Bool_t percent, const char *format)
 {
-   // Show postion text, either in percent or formatted according format.
-
    fShowPos = set;
    fPercent = percent;
    fFormat  = format;
@@ -259,11 +259,11 @@ void TGHProgressBar::ShowPosition(Bool_t set, Bool_t percent, const char *format
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw horizontal progress bar.
+
 void TGHProgressBar::DoRedraw()
 {
-   // Draw horizontal progress bar.
-
    if (!fDrawBar) {
       // calls TGProgressBar::DrawBorder()
       TGFrame::DoRedraw();
@@ -324,19 +324,24 @@ void TGHProgressBar::DoRedraw()
    fDrawBar = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// cconstructor
+
 TGVProgressBar::TGVProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
                               Pixel_t back, Pixel_t barcolor, GContext_t norm,
                               FontStruct_t font,UInt_t options) :
       TGProgressBar(p, w, h, back, barcolor, norm, font, options)
 {
-   // cconstructor
-
    fBarWidth = w;
    fEditDisabled = kEditDisableWidth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simple constructor allow you to create either a standard progress
+/// bar, or a more fancy progress bar (fancy means: double sized border,
+/// white background and a bit wider to allow for text to be printed
+/// in the bar.
+
 TGVProgressBar::TGVProgressBar(const TGWindow *p, EBarType type, UInt_t h)
    : TGProgressBar(p, type == kStandard ? kProgressBarStandardWidth :
                    kProgressBarTextWidth, h, type == kStandard ? GetDefaultFrameBackground() :
@@ -344,22 +349,17 @@ TGVProgressBar::TGVProgressBar(const TGWindow *p, EBarType type, UInt_t h)
                    GetDefaultFontStruct(),
                    type == kStandard ? kSunkenFrame : kDoubleBorder | kSunkenFrame)
 {
-   // Simple constructor allow you to create either a standard progress
-   // bar, or a more fancy progress bar (fancy means: double sized border,
-   // white background and a bit wider to allow for text to be printed
-   // in the bar.
-
    fBarType  = type;
    fBarWidth = (type == kStandard) ? kProgressBarStandardWidth : kProgressBarTextWidth;
    fDrawBar  = kFALSE;
    fEditDisabled = kEditDisableWidth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw vertical progress bar.
+
 void TGVProgressBar::DoRedraw()
 {
-   // Draw vertical progress bar.
-
    if (!fDrawBar) {
       // calls TGProgressBar::DrawBorder()
       TGFrame::DoRedraw();
@@ -394,11 +394,11 @@ void TGVProgressBar::DoRedraw()
    fDrawBar = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save progress bar parameters as a C++ statement(s) on output stream out.
+
 void TGProgressBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save progress bar parameters as a C++ statement(s) on output stream out.
-
    const char *barcolor;
    char quote = '"';
    switch (fBarType) {
@@ -436,11 +436,11 @@ void TGProgressBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a vertical progress bar as a C++ statement(s) on output stream out.
+
 void TGVProgressBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a vertical progress bar as a C++ statement(s) on output stream out.
-
 
    out << "   TGVProgressBar *";
    out << GetName() << " = new TGVProgressBar(" << fParent->GetName();
@@ -462,11 +462,11 @@ void TGVProgressBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TGProgressBar::SavePrimitive(out, option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a horizontal progress bar as a C++ statement(s) on output stream out
+
 void TGHProgressBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save a horizontal progress bar as a C++ statement(s) on output stream out
-
    char quote = '"';
 
    out <<"   TGHProgressBar *";

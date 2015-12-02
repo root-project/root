@@ -683,7 +683,9 @@ in the transformed space.
 
 ClassImp(TPrincipal);
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Empty CTOR, Do not use.
+
 TPrincipal::TPrincipal()
   : fMeanValues(0),
     fSigmas(0),
@@ -693,8 +695,6 @@ TPrincipal::TPrincipal()
     fOffDiagonal(0),
     fStoreData(kFALSE)
 {
-  // Empty CTOR, Do not use.
-
    fTrace              = 0;
    fHistograms         = 0;
    fIsNormalised       = kFALSE;
@@ -702,7 +702,14 @@ TPrincipal::TPrincipal()
    fNumberOfVariables  = 0;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ctor. Argument is number of variables in the sample of data
+/// Options are:
+///   N       Normalize the covariance matrix (default)
+///   D       Store input data (default)
+///
+/// The created object is  named "principal" by default.
+
 TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
   : fMeanValues(nVariables),
     fSigmas(nVariables),
@@ -712,12 +719,6 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
     fOffDiagonal(nVariables),
     fStoreData(kFALSE)
 {
-   // Ctor. Argument is number of variables in the sample of data
-   // Options are:
-   //   N       Normalize the covariance matrix (default)
-   //   D       Store input data (default)
-   //
-   // The created object is  named "principal" by default.
    if (nVariables <= 1) {
       Error("TPrincipal", "You can't be serious - nVariables == 1!!!");
       return;
@@ -765,7 +766,9 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
    }
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TPrincipal::TPrincipal(const TPrincipal& pr) :
   TNamed(pr),
   fNumberOfDataPoints(pr.fNumberOfDataPoints),
@@ -782,13 +785,13 @@ TPrincipal::TPrincipal(const TPrincipal& pr) :
   fIsNormalised(pr.fIsNormalised),
   fStoreData(pr.fStoreData)
 {
-   //copy constructor
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignement operator
+
 TPrincipal& TPrincipal::operator=(const TPrincipal& pr)
 {
-   //assignement operator
    if(this!=&pr) {
       TNamed::operator=(pr);
       fNumberOfDataPoints=pr.fNumberOfDataPoints;
@@ -808,21 +811,22 @@ TPrincipal& TPrincipal::operator=(const TPrincipal& pr)
    return *this;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TPrincipal::~TPrincipal()
 {
-   // destructor
-
    if (fHistograms) {
       fHistograms->Delete();
       delete fHistograms;
    }
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Begin_Html
+
 void TPrincipal::AddRow(const Double_t *p)
 {
-  // Begin_Html
   /*
      </PRE>
 Add a data point and update the covariance matrix. The input
@@ -991,10 +995,11 @@ With <IMG
 
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse the TPrincipal object in the TBrowser.
+
 void TPrincipal::Browse(TBrowser *b)
 {
-   // Browse the TPrincipal object in the TBrowser.
    if (fHistograms) {
       TIter next(fHistograms);
       TH1* h = 0;
@@ -1012,11 +1017,12 @@ void TPrincipal::Browse(TBrowser *b)
 
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the data in Object. Notice, that's not possible to change
+/// the dimension of the original data.
+
 void TPrincipal::Clear(Option_t *opt)
 {
-   // Clear the data in Object. Notice, that's not possible to change
-   // the dimension of the original data.
    if (fHistograms) {
       fHistograms->Delete(opt);
    }
@@ -1036,13 +1042,14 @@ void TPrincipal::Clear(Option_t *opt)
    }
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a row of the user supplied data.
+/// If row is out of bounds, 0 is returned.
+/// It's up to the user to delete the returned array.
+/// Row 0 is the first row;
+
 const Double_t *TPrincipal::GetRow(Int_t row)
 {
-   // Return a row of the user supplied data.
-   // If row is out of bounds, 0 is returned.
-   // It's up to the user to delete the returned array.
-   // Row 0 is the first row;
    if (row >= fNumberOfDataPoints)
       return 0;
 
@@ -1054,32 +1061,32 @@ const Double_t *TPrincipal::GetRow(Int_t row)
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generates the file <filename>, with .C appended if it does
+/// argument doesn't end in .cxx or .C.
+///
+/// The file contains the implementation of two functions
+///
+///    void X2P(Double_t *x, Double *p)
+///    void P2X(Double_t *p, Double *x, Int_t nTest)
+///
+/// which does the same as  TPrincipal::X2P and TPrincipal::P2X
+/// respectively. Please refer to these methods.
+///
+/// Further, the static variables:
+///
+///    Int_t    gNVariables
+///    Double_t gEigenValues[]
+///    Double_t gEigenVectors[]
+///    Double_t gMeanValues[]
+///    Double_t gSigmaValues[]
+///
+/// are initialized. The only ROOT header file needed is Rtypes.h
+///
+/// See TPrincipal::MakeRealCode for a list of options
+
 void TPrincipal::MakeCode(const char *filename, Option_t *opt)
 {
-   // Generates the file <filename>, with .C appended if it does
-   // argument doesn't end in .cxx or .C.
-   //
-   // The file contains the implementation of two functions
-   //
-   //    void X2P(Double_t *x, Double *p)
-   //    void P2X(Double_t *p, Double *x, Int_t nTest)
-   //
-   // which does the same as  TPrincipal::X2P and TPrincipal::P2X
-   // respectively. Please refer to these methods.
-   //
-   // Further, the static variables:
-   //
-   //    Int_t    gNVariables
-   //    Double_t gEigenValues[]
-   //    Double_t gEigenVectors[]
-   //    Double_t gMeanValues[]
-   //    Double_t gSigmaValues[]
-   //
-   // are initialized. The only ROOT header file needed is Rtypes.h
-   //
-   // See TPrincipal::MakeRealCode for a list of options
-
    TString outName(filename);
    if (!outName.EndsWith(".C") && !outName.EndsWith(".cxx"))
       outName += ".C";
@@ -1087,23 +1094,24 @@ void TPrincipal::MakeCode(const char *filename, Option_t *opt)
    MakeRealCode(outName.Data(),"",opt);
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make histograms of the result of the analysis.
+/// The option string say which histograms to create
+///      X         Histogram original data
+///      P         Histogram principal components corresponding to
+///                original data
+///      D         Histogram the difference between the original data
+///                and the projection of principal unto a lower
+///                dimensional subspace (2D histograms)
+///      E         Histogram the eigenvalues
+///      S         Histogram the square of the residues
+///                (see TPrincipal::SumOfSquareResidues)
+/// The histograms will be named <name>_<type><number>, where <name>
+/// is the first argument, <type> is one of X,P,D,E,S, and <number>
+/// is the variable.
+
 void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
 {
-   // Make histograms of the result of the analysis.
-   // The option string say which histograms to create
-   //      X         Histogram original data
-   //      P         Histogram principal components corresponding to
-   //                original data
-   //      D         Histogram the difference between the original data
-   //                and the projection of principal unto a lower
-   //                dimensional subspace (2D histograms)
-   //      E         Histogram the eigenvalues
-   //      S         Histogram the square of the residues
-   //                (see TPrincipal::SumOfSquareResidues)
-   // The histograms will be named <name>_<type><number>, where <name>
-   // is the first argument, <type> is one of X,P,D,E,S, and <number>
-   // is the variable.
    Bool_t makeX  = kFALSE;
    Bool_t makeD  = kFALSE;
    Bool_t makeP  = kFALSE;
@@ -1317,11 +1325,11 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       hS->Scale(Double_t(1.)/fNumberOfDataPoints);
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE METHOD: Normalize the covariance matrix
+
 void TPrincipal::MakeNormalised()
 {
-   // PRIVATE METHOD: Normalize the covariance matrix
-
    Int_t i,j;
    for (i = 0; i < fNumberOfVariables; i++) {
       fSigmas(i) = TMath::Sqrt(fCovarianceMatrix(i,i));
@@ -1341,62 +1349,62 @@ void TPrincipal::MakeNormalised()
 
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate the file <classname>PCA.cxx which contains the
+/// implementation of two methods:
+///
+///    void <classname>::X2P(Double_t *x, Double *p)
+///    void <classname>::P2X(Double_t *p, Double *x, Int_t nTest)
+///
+/// which does the same as  TPrincipal::X2P and TPrincipal::P2X
+/// respectivly. Please refer to these methods.
+///
+/// Further, the public static members:
+///
+///    Int_t    <classname>::fgNVariables
+///    Double_t <classname>::fgEigenValues[]
+///    Double_t <classname>::fgEigenVectors[]
+///    Double_t <classname>::fgMeanValues[]
+///    Double_t <classname>::fgSigmaValues[]
+///
+/// are initialized, and assumed to exist. The class declaration is
+/// assumed to be in <classname>.h and assumed to be provided by the
+/// user.
+///
+/// See TPrincipal::MakeRealCode for a list of options
+///
+/// The minimal class definition is:
+///
+///   class <classname> {
+///   public:
+///     static Int_t    fgNVariables;
+///     static Double_t fgEigenVectors[];
+///     static Double_t fgEigenValues[];
+///     static Double_t fgMeanValues[];
+///     static Double_t fgSigmaValues[];
+///
+///     void X2P(Double_t *x, Double_t *p);
+///     void P2X(Double_t *p, Double_t *x, Int_t nTest);
+///   };
+///
+/// Whether the methods <classname>::X2P and <classname>::P2X should
+/// be static or not, is up to the user.
+
 void TPrincipal::MakeMethods(const char *classname, Option_t *opt)
 {
-   // Generate the file <classname>PCA.cxx which contains the
-   // implementation of two methods:
-   //
-   //    void <classname>::X2P(Double_t *x, Double *p)
-   //    void <classname>::P2X(Double_t *p, Double *x, Int_t nTest)
-   //
-   // which does the same as  TPrincipal::X2P and TPrincipal::P2X
-   // respectivly. Please refer to these methods.
-   //
-   // Further, the public static members:
-   //
-   //    Int_t    <classname>::fgNVariables
-   //    Double_t <classname>::fgEigenValues[]
-   //    Double_t <classname>::fgEigenVectors[]
-   //    Double_t <classname>::fgMeanValues[]
-   //    Double_t <classname>::fgSigmaValues[]
-   //
-   // are initialized, and assumed to exist. The class declaration is
-   // assumed to be in <classname>.h and assumed to be provided by the
-   // user.
-   //
-   // See TPrincipal::MakeRealCode for a list of options
-   //
-   // The minimal class definition is:
-   //
-   //   class <classname> {
-   //   public:
-   //     static Int_t    fgNVariables;
-   //     static Double_t fgEigenVectors[];
-   //     static Double_t fgEigenValues[];
-   //     static Double_t fgMeanValues[];
-   //     static Double_t fgSigmaValues[];
-   //
-   //     void X2P(Double_t *x, Double_t *p);
-   //     void P2X(Double_t *p, Double_t *x, Int_t nTest);
-   //   };
-   //
-   // Whether the methods <classname>::X2P and <classname>::P2X should
-   // be static or not, is up to the user.
-
 
    MakeRealCode(Form("%sPCA.cxx", classname), classname, opt);
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the principal components analysis.
+/// This is done in several stages in the TMatrix::EigenVectors method:
+/// * Transform the covariance matrix into a tridiagonal matrix.
+/// * Find the eigenvalues and vectors of the tridiagonal matrix.
+
 void TPrincipal::MakePrincipals()
 {
-   // Perform the principal components analysis.
-   // This is done in several stages in the TMatrix::EigenVectors method:
-   // * Transform the covariance matrix into a tridiagonal matrix.
-   // * Find the eigenvalues and vectors of the tridiagonal matrix.
-
    // Normalize covariance matrix
    MakeNormalised();
 
@@ -1410,17 +1418,17 @@ void TPrincipal::MakePrincipals()
    }
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE METHOD:
+/// This is the method that actually generates the code for the
+/// transformations to and from feature space and pattern space
+/// It's called by TPrincipal::MakeCode and TPrincipal::MakeMethods.
+///
+/// The options are: NONE so far
+
 void TPrincipal::MakeRealCode(const char *filename, const char *classname,
                               Option_t *)
 {
-   // PRIVATE METHOD:
-   // This is the method that actually generates the code for the
-   // transformations to and from feature space and pattern space
-   // It's called by TPrincipal::MakeCode and TPrincipal::MakeMethods.
-   //
-   // The options are: NONE so far
-
    Bool_t  isMethod = (classname[0] == '\0' ? kFALSE : kTRUE);
    const char *prefix   = (isMethod ? Form("%s::", classname) : "");
    const char *cv_qual  = (isMethod ? "" : "static ");
@@ -1581,14 +1589,14 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname,
    std::cout << "done" << std::endl;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate x as a function of nTest of the most significant
+/// principal components p, and return it in x.
+/// It's the users responsibility to make sure that both x and p are
+/// of the right size (i.e., memory must be allocated for x).
+
 void TPrincipal::P2X(const Double_t *p, Double_t *x, Int_t nTest)
 {
-   // Calculate x as a function of nTest of the most significant
-   // principal components p, and return it in x.
-   // It's the users responsibility to make sure that both x and p are
-   // of the right size (i.e., memory must be allocated for x).
-
    for (Int_t i = 0; i < fNumberOfVariables; i++){
       x[i] = fMeanValues(i);
       for (Int_t j = 0; j < nTest; j++)
@@ -1598,17 +1606,17 @@ void TPrincipal::P2X(const Double_t *p, Double_t *x, Int_t nTest)
 
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the statistics
+/// Options are
+///      M            Print mean values of original data
+///      S            Print sigma values of original data
+///      E            Print eigenvalues of covariance matrix
+///      V            Print eigenvectors of covariance matrix
+/// Default is MSE
+
 void TPrincipal::Print(Option_t *opt) const
 {
-   // Print the statistics
-   // Options are
-   //      M            Print mean values of original data
-   //      S            Print sigma values of original data
-   //      E            Print eigenvalues of covariance matrix
-   //      V            Print eigenvectors of covariance matrix
-   // Default is MSE
-
    Bool_t printV = kFALSE;
    Bool_t printM = kFALSE;
    Bool_t printS = kFALSE;
@@ -1684,11 +1692,12 @@ void TPrincipal::Print(Option_t *opt) const
    }
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE METHOD:
+/// Begin_html
+
 void TPrincipal::SumOfSquareResiduals(const Double_t *x, Double_t *s)
 {
-   // PRIVATE METHOD:
-   // Begin_html
    /*
     </PRE>
     Calculates the sum of the square residuals, that is
@@ -1753,11 +1762,12 @@ void TPrincipal::SumOfSquareResiduals(const Double_t *x, Double_t *s)
    }
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test the PCA, bye calculating the sum square of residuals
+/// (see method SumOfSquareResiduals), and display the histogram
+
 void TPrincipal::Test(Option_t *)
 {
-   // Test the PCA, bye calculating the sum square of residuals
-   // (see method SumOfSquareResiduals), and display the histogram
    MakeHistograms("pca","S");
 
    if (!fStoreData)
@@ -1773,13 +1783,14 @@ void TPrincipal::Test(Option_t *)
    pca_s->Draw();
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the principal components from the original data vector
+/// x, and return it in p.
+/// It's the users responsibility to make sure that both x and p are
+/// of the right size (i.e., memory must be allocated for p).
+
 void TPrincipal::X2P(const Double_t *x, Double_t *p)
 {
-   // Calculate the principal components from the original data vector
-   // x, and return it in p.
-   // It's the users responsibility to make sure that both x and p are
-   // of the right size (i.e., memory must be allocated for p).
    for (Int_t i = 0; i < fNumberOfVariables; i++){
       p[i] = 0;
       for (Int_t j = 0; j < fNumberOfVariables; j++)

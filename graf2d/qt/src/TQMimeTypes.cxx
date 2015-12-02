@@ -36,7 +36,8 @@
 
 ClassImp(TQMimeTypes)
 QFileIconProvider  *TQMimeTypes::fgDefaultProvider = 0; // Default provider of the system icons;
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 QIcon
 TQMimeTypes::IconProvider(const QFileInfo &info)
 {
@@ -46,12 +47,12 @@ TQMimeTypes::IconProvider(const QFileInfo &info)
     return fgDefaultProvider->icon(info);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a mime type cache. Read the mime types file "filename" and
+/// built a list of mime types.
+
 TQMimeTypes::TQMimeTypes(const char *iconPath, const char *filename)
 {
-   // Create a mime type cache. Read the mime types file "filename" and
-   // built a list of mime types.
-
    char     line[1024];
    char     mime[1024];
    char     pattern[256];
@@ -149,21 +150,21 @@ TQMimeTypes::TQMimeTypes(const char *iconPath, const char *filename)
    fChanged = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete mime type pool.
+
 TQMimeTypes::~TQMimeTypes()
 {
-   // Delete mime type pool.
-
    if (fChanged) SaveMimes();
    fList->Delete();
    delete fList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given a filename find the matching mime type object.
+
 TQMime *TQMimeTypes::Find(const char *filename) const
 {
-   // Given a filename find the matching mime type object.
-
    if (!filename) return 0;
 
    TString fn = filename;
@@ -177,28 +178,30 @@ TQMime *TQMimeTypes::Find(const char *filename) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return icon belonging to mime type of filename.
+
 const QIcon *TQMimeTypes::GetIcon(const char *filename) const
 {
-   // Return icon belonging to mime type of filename.
    TQMime *mime= Find(filename);
    if (mime)  return mime->fIcon;
    return 0;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return icon belonging to mime type of TSystemFile extension
+
 const QIcon *TQMimeTypes::GetIcon(const TSystemFile *filename)
 {
-   // Return icon belonging to mime type of TSystemFile extension
    const char *name = filename->GetName();
    const QIcon *set = GetIcon(name);
    if (!set) set = AddType(filename);
    return set;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 const QIcon *TQMimeTypes::AddType(const TSystemFile *filename)
 {
-   //
-
    QFileInfo info(filename->GetName());
    const QIcon    icon = IconProvider(info);
    if (icon.isNull()) return 0;
@@ -223,11 +226,11 @@ const QIcon *TQMimeTypes::AddType(const TSystemFile *filename)
    fChanged = kTRUE;
    return mime->fIcon;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return in action the mime action string belonging to filename.
+
 Bool_t TQMimeTypes::GetAction(const char *filename, char *action) const
 {
-   // Return in action the mime action string belonging to filename.
-
    TQMime *mime;
 
    action[0] = 0;
@@ -238,11 +241,11 @@ Bool_t TQMimeTypes::GetAction(const char *filename, char *action) const
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return in type the mime type belonging to filename.
+
 Bool_t TQMimeTypes::GetType(const char *filename, char *type) const
 {
-   // Return in type the mime type belonging to filename.
-
    TQMime *mime;
 
    memset(type, 0, strlen(type));
@@ -253,11 +256,11 @@ Bool_t TQMimeTypes::GetType(const char *filename, char *type) const
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print list of mime types.
+
 void TQMimeTypes::Print(Option_t *) const
 {
-   // Print list of mime types.
-
    TQMime *m;
    TIter next(fList);
 
@@ -270,11 +273,11 @@ void TQMimeTypes::Print(Option_t *) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save mime types in user's mime type file.
+
 void TQMimeTypes::SaveMimes()
 {
-   // Save mime types in user's mime type file.
-
    char filename[1024];
    snprintf(filename,1024, "%s/.root.mimes",  gSystem->HomeDirectory());
 
@@ -303,12 +306,12 @@ void TQMimeTypes::SaveMimes()
    fChanged = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a mime type to the list of mime types.
+
 void TQMimeTypes::AddType(const char *type, const char *pattern, const char *icon,
                           const char * /*sicon*/, const char *action)
 {
-   // Add a mime type to the list of mime types.
-
    TQMime *mime = new TQMime;
 
    mime->fType    = type;
@@ -326,10 +329,11 @@ void TQMimeTypes::AddType(const char *type, const char *pattern, const char *ico
    fChanged = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete mime object.
+
 TQMime::~TQMime()
 {
-   // Delete mime object.
    delete fIcon; fIcon = 0;
    delete fReg;
 }

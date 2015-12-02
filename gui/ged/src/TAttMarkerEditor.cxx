@@ -45,13 +45,13 @@ enum EMarkerWid {
    kALPHAFIELD
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of marker attributes GUI.
+
 TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t width,
                                    Int_t height,UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of marker attributes GUI.
-
    fAttMarker = 0;
    fSizeForText = kFALSE;
 
@@ -95,17 +95,18 @@ TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t width,
    AddFrame(f2a, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of marker editor.
+
 TAttMarkerEditor::~TAttMarkerEditor()
 {
-   // Destructor of marker editor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TAttMarkerEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttMarkerEditor", this, "DoMarkerColor(Pixel_t)");
    fColorSelect->Connect("AlphaColorSelected(ULong_t)", "TAttMarkerEditor", this, "DoMarkerAlphaColor(ULong_t)");
    fMarkerType->Connect("MarkerSelected(Style_t)", "TAttMarkerEditor", this, "DoMarkerStyle(Style_t)");
@@ -118,10 +119,11 @@ void TAttMarkerEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the values of used marker attributes.
+
 void TAttMarkerEditor::SetModel(TObject* obj)
 {
-   // Pick up the values of used marker attributes.
    fAvoidSignal = kTRUE;
 
    fAttMarker = dynamic_cast<TAttMarker *>(obj);
@@ -159,11 +161,11 @@ void TAttMarkerEditor::SetModel(TObject* obj)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the marker color.
+
 void TAttMarkerEditor::DoMarkerColor(Pixel_t color)
 {
-   // Slot connected to the marker color.
-
    if (fAvoidSignal) return;
    fAttMarker->SetMarkerColor(TColor::GetColor(color));
 
@@ -175,11 +177,11 @@ void TAttMarkerEditor::DoMarkerColor(Pixel_t color)
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the color with alpha.
+
 void TAttMarkerEditor::DoMarkerAlphaColor(ULong_t p)
 {
-   // Slot connected to the color with alpha.
-
    TColor *color = (TColor *)p;
 
    if (fAvoidSignal) return;
@@ -190,11 +192,11 @@ void TAttMarkerEditor::DoMarkerAlphaColor(ULong_t p)
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the marker type.
+
 void TAttMarkerEditor::DoMarkerStyle(Style_t marker)
 {
-   // Slot connected to the marker type.
-
    if (fAvoidSignal) return;
    if ((marker==1 || marker==6 || marker==7) && !fSizeForText) {
       fMarkerSize->SetNumber(1.);
@@ -206,11 +208,11 @@ void TAttMarkerEditor::DoMarkerStyle(Style_t marker)
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the marker size.
+
 void TAttMarkerEditor::DoMarkerSize()
 {
-   // Slot connected to the marker size.
-
    if (fAvoidSignal) return;
    Style_t marker = fAttMarker->GetMarkerStyle();
    if ((marker==1 || marker==6 || marker==7) && !fSizeForText) {
@@ -223,11 +225,11 @@ void TAttMarkerEditor::DoMarkerSize()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the alpha value from the entry field.
+
 void TAttMarkerEditor::DoAlphaField()
 {
-   // Slot to set the alpha value from the entry field.
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fAttMarker->GetMarkerColor())) {
@@ -237,11 +239,11 @@ void TAttMarkerEditor::DoAlphaField()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the alpha value
+
 void TAttMarkerEditor::DoAlpha()
 {
-   // Slot to set the alpha value
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fAttMarker->GetMarkerColor())) {
@@ -251,11 +253,11 @@ void TAttMarkerEditor::DoAlpha()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set alpha value online.
+
 void TAttMarkerEditor::DoLiveAlpha(Int_t a)
 {
-   // Slot to set alpha value online.
-
    if (fAvoidSignal) return;
    fAlphaField->SetNumber((Float_t)a/1000);
 
@@ -270,11 +272,11 @@ void TAttMarkerEditor::DoLiveAlpha(Int_t a)
    Update();
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to update alpha value on click on Slider
+
 void TAttMarkerEditor::GetCurAlpha()
 {
-   // Slot to update alpha value on click on Slider
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fAttMarker->GetMarkerColor())) {

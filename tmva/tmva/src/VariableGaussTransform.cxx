@@ -58,7 +58,11 @@
 
 ClassImp(TMVA::VariableGaussTransform)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+/// can only be applied one after the other when they are created. But in order to
+/// determine the Gauss transformation
+
 TMVA::VariableGaussTransform::VariableGaussTransform( DataSetInfo& dsi, TString strcor )
    : VariableTransformBase( dsi, Types::kGauss, "Gauss" ),
      fFlatNotGauss(kFALSE),
@@ -66,31 +70,30 @@ TMVA::VariableGaussTransform::VariableGaussTransform( DataSetInfo& dsi, TString 
      fPdfMaxSmooth(0),
      fElementsperbin(0)
 { 
-   // constructor
-   // can only be applied one after the other when they are created. But in order to
-   // determine the Gauss transformation
   if (strcor=="Uniform") {fFlatNotGauss = kTRUE;
     SetName("Uniform");
   }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::VariableGaussTransform::~VariableGaussTransform( void )
 {
-   // destructor
    CleanUpCumulativeArrays();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::VariableGaussTransform::Initialize()
 {
-
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the cumulative distributions
+
 Bool_t TMVA::VariableGaussTransform::PrepareTransformation (const std::vector<Event*>& events)
 {
-   // calculate the cumulative distributions
    Initialize();
 
    if (!IsEnabled() || IsCreated()) return kTRUE;
@@ -117,11 +120,11 @@ Bool_t TMVA::VariableGaussTransform::PrepareTransformation (const std::vector<Ev
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// apply the Gauss transformation
+
 const TMVA::Event* TMVA::VariableGaussTransform::Transform(const Event* const ev, Int_t cls ) const
 {
-   // apply the Gauss transformation
-
    if (!IsCreated()) Log() << kFATAL << "Transformation not yet created" << Endl;
    //EVT this is a workaround to address the reader problem with transforma and EvaluateMVA(std::vector<float/double> ,...) 
    //EVT if (cls <0 || cls > GetNClasses() ) {
@@ -186,11 +189,11 @@ const TMVA::Event* TMVA::VariableGaussTransform::Transform(const Event* const ev
    return fTransformedEvent;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// apply the inverse Gauss or inverse uniform transformation
+
 const TMVA::Event* TMVA::VariableGaussTransform::InverseTransform(const  Event* const ev, Int_t cls ) const
 {
-   // apply the inverse Gauss or inverse uniform transformation
-
    if (!IsCreated()) Log() << kFATAL << "Transformation not yet created" << Endl;
    //EVT this is a workaround to address the reader problem with transforma and EvaluateMVA(std::vector<float/double> ,...) 
    //EVT if (cls <0 || cls > GetNClasses() ) {
@@ -246,11 +249,11 @@ const TMVA::Event* TMVA::VariableGaussTransform::InverseTransform(const  Event* 
    return fBackTransformedEvent;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// fill the cumulative distributions
+
 void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>& events )
 {
-   // fill the cumulative distributions
-
    const UInt_t inputSize = fGet.size();
 //   const UInt_t nCls = GetNClasses();
 
@@ -432,15 +435,17 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::VariableGaussTransform::WriteTransformationToStream( std::ostream& ) const
 {
    Log() << kFATAL << "VariableGaussTransform::WriteTransformationToStream is obsolete" << Endl; 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// clean up of cumulative arrays
+
 void TMVA::VariableGaussTransform::CleanUpCumulativeArrays(TString opt) {
-   // clean up of cumulative arrays
    if (opt == "ALL" || opt == "PDF"){ 
       for (UInt_t ivar=0; ivar<fCumulativePDF.size(); ivar++) {
          for (UInt_t icls=0; icls<fCumulativePDF[ivar].size(); icls++) { 
@@ -458,9 +463,10 @@ void TMVA::VariableGaussTransform::CleanUpCumulativeArrays(TString opt) {
       fCumulativeDist.clear();
    }
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create XML description of Gauss transformation
+
 void TMVA::VariableGaussTransform::AttachXMLTo(void* parent) {
-   // create XML description of Gauss transformation
    void* trfxml = gTools().AddChild(parent, "Transform");
    gTools().AddAttr(trfxml, "Name",        "Gauss");
    gTools().AddAttr(trfxml, "FlatOrGauss", (fFlatNotGauss?"Flat":"Gauss") );
@@ -484,10 +490,10 @@ void TMVA::VariableGaussTransform::AttachXMLTo(void* parent) {
    }
 }
 
-//_______________________________________________________________________
-void TMVA::VariableGaussTransform::ReadFromXML( void* trfnode ) {
-   // Read the transformation matrices from the xml node
+////////////////////////////////////////////////////////////////////////////////
+/// Read the transformation matrices from the xml node
 
+void TMVA::VariableGaussTransform::ReadFromXML( void* trfnode ) {
    // clean up first
    CleanUpCumulativeArrays();
    TString FlatOrGauss;
@@ -541,10 +547,11 @@ void TMVA::VariableGaussTransform::ReadFromXML( void* trfnode ) {
    SetCreated();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the cumulative distribution
+
 void TMVA::VariableGaussTransform::ReadTransformationFromStream( std::istream& istr, const TString& classname)
 {
-   // Read the cumulative distribution
    Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
    char buf[512];
@@ -673,21 +680,23 @@ Double_t TMVA::VariableGaussTransform::OldCumulant(Float_t x, TH1* h ) const {
 
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prints the transformation 
+
 void TMVA::VariableGaussTransform::PrintTransformation( std::ostream& ) 
 {
-   // prints the transformation 
    Int_t cls = 0;
    Log() << kINFO << "I do not know yet how to print this... look in the weight file " << cls << ":" << Endl;
    cls++;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates the transformation function
+///
+
 void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TString& fcncName, 
                                                  Int_t part, UInt_t trCounter, Int_t ) 
 {
-   // creates the transformation function
-   //
    const UInt_t nvar = fGet.size();
    UInt_t numDist  = GetNClasses() + 1;
    Int_t nBins = -1; 

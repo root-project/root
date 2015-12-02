@@ -50,7 +50,8 @@ using namespace std ;
 ClassImp(RooStats::HistFactory::RooBarlowBeestonLL) 
 
 
-//_____________________________________________________________________________ 
+////////////////////////////////////////////////////////////////////////////////
+
  RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL() : 
    RooAbsReal("RooBarlowBeestonLL","RooBarlowBeestonLL"), 
    _nll(), 
@@ -65,7 +66,8 @@ ClassImp(RooStats::HistFactory::RooBarlowBeestonLL)
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const char *name, const char *title, 
 				       RooAbsReal& nllIn /*, const RooArgSet& observables*/) :
   RooAbsReal(name,title), 
@@ -97,7 +99,8 @@ RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const char *name, 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const RooBarlowBeestonLL& other, const char* name) :  
   RooAbsReal(other,name), 
   _nll("nll",this,other._nll),
@@ -118,11 +121,11 @@ RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const RooBarlowBee
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooStats::HistFactory::RooBarlowBeestonLL::~RooBarlowBeestonLL()
 {
-  // Destructor
-
   // Delete instance of minuit if it was ever instantiated
   // if (_minuit) {
   //   delete _minuit ;
@@ -134,7 +137,8 @@ RooStats::HistFactory::RooBarlowBeestonLL::~RooBarlowBeestonLL()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooStats::HistFactory::RooBarlowBeestonLL::BarlowCache::SetBinCenter() const {
   TIterator* iter = bin_center->createIterator() ;
   RooRealVar* var;
@@ -146,9 +150,9 @@ void RooStats::HistFactory::RooBarlowBeestonLL::BarlowCache::SetBinCenter() cons
 }
 
 
-//_____________________________________________________________________________
-void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
+////////////////////////////////////////////////////////////////////////////////
 
+void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
   bool verbose=false;
 
   if(!_data) {
@@ -365,9 +369,9 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
 }
 
 
-//_____________________________________________________________________________
-RooArgSet* RooStats::HistFactory::RooBarlowBeestonLL::getParameters(const RooArgSet* depList, Bool_t stripDisconnected) const {
+////////////////////////////////////////////////////////////////////////////////
 
+RooArgSet* RooStats::HistFactory::RooBarlowBeestonLL::getParameters(const RooArgSet* depList, Bool_t stripDisconnected) const {
   RooArgSet* allArgs = RooAbsArg::getParameters( depList, stripDisconnected );
 
   TIterator* iter_args = allArgs->createIterator();
@@ -390,7 +394,8 @@ RooArgSet* RooStats::HistFactory::RooBarlowBeestonLL::getParameters(const RooArg
 
 
 /*
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const RooArgSet& RooStats::HistFactory::RooBarlowBeestonLL::bestFitParams() const 
 {
   validateAbsMin() ;
@@ -398,7 +403,8 @@ const RooArgSet& RooStats::HistFactory::RooBarlowBeestonLL::bestFitParams() cons
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const RooArgSet& RooStats::HistFactory::RooBarlowBeestonLL::bestFitObs() const 
 {
   validateAbsMin() ;
@@ -408,14 +414,14 @@ const RooArgSet& RooStats::HistFactory::RooBarlowBeestonLL::bestFitObs() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Optimized implementation of createProfile for profile likelihoods.
+/// Return profile of original function in terms of stated parameters 
+/// of interest rather than profiling recursively.
+
 /*
 RooAbsReal* RooStats::HistFactory::RooBarlowBeestonLL::createProfile(const RooArgSet& paramsOfInterest) 
 {
-  // Optimized implementation of createProfile for profile likelihoods.
-  // Return profile of original function in terms of stated parameters 
-  // of interest rather than profiling recursively.
-
   return nll().createProfile(paramsOfInterest) ;
 }
 */
@@ -451,10 +457,10 @@ void RooStats::HistFactory::RooBarlowBeestonLL::FactorizePdf(const RooArgSet &ob
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const 
 { 
-
   /*
   // Loop over the cached bins and channels
   RooArgSet* channels = new RooArgSet();
@@ -652,13 +658,13 @@ Double_t RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
 
 
 /*
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check that parameters and likelihood value for 'best fit' are still valid. If not,
+/// because the best fit has never been calculated, or because constant parameters have
+/// changed value or parameters have changed const/float status, the minimum is recalculated
+
 void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const 
 {
-  // Check that parameters and likelihood value for 'best fit' are still valid. If not,
-  // because the best fit has never been calculated, or because constant parameters have
-  // changed value or parameters have changed const/float status, the minimum is recalculated
-
   // Check if constant status of any of the parameters have changed
   if (_absMinValid) {
     _piter->Reset() ;
@@ -739,7 +745,8 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
 */
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t RooStats::HistFactory::RooBarlowBeestonLL::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
 					 Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 { 

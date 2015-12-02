@@ -42,10 +42,11 @@ ClassImp(RooPolyVar)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooPolyVar::RooPolyVar() : _lowestOrder(0)
 {
-  // Default constructor
 }
 
 
@@ -84,7 +85,9 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of flat polynomial function
+
 RooPolyVar::RooPolyVar(const char* name, const char* title,
                            RooAbsReal& x) :
   RooAbsReal(name, title),
@@ -92,36 +95,38 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
   _coefList("coefList","List of coefficients",this),
   _lowestOrder(1)
 {
-  // Constructor of flat polynomial function
 }                                                                                                                                 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooPolyVar::RooPolyVar(const RooPolyVar& other, const char* name) :
   RooAbsReal(other, name), 
   _x("x", this, other._x), 
   _coefList("coefList",this,other._coefList),
   _lowestOrder(other._lowestOrder) 
 {
-  // Copy constructor
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooPolyVar::~RooPolyVar() 
 {
-  // Destructor
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return value of polynomial
+
 Double_t RooPolyVar::evaluate() const 
 {
-  // Calculate and return value of polynomial
   const unsigned sz = _coefList.getSize();
   const int lowestOrder = _lowestOrder;
   if (!sz) return lowestOrder ? 1. : 0.;
@@ -141,22 +146,22 @@ Double_t RooPolyVar::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Advertise that we can internally integrate over x
+
 Int_t RooPolyVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
-  // Advertise that we can internally integrate over x
-
   if (matchArgs(allVars, analVars, _x)) return 1;
   return 0;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return analytical integral over x
+
 Double_t RooPolyVar::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-  // Calculate and return analytical integral over x
-
   R__ASSERT(code==1) ;
 
   const Double_t xmin = _x.min(rangeName), xmax = _x.max(rangeName);

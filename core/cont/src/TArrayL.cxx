@@ -23,66 +23,66 @@
 
 ClassImp(TArrayL)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TArrayL ctor.
+
 TArrayL::TArrayL()
 {
-   // Default TArrayL ctor.
-
    fArray = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TArrayL object and set array size to n longs.
+
 TArrayL::TArrayL(Int_t n)
 {
-   // Create TArrayL object and set array size to n longs.
-
    fArray = 0;
    if (n > 0) Set(n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TArrayL object and initialize it with values of array.
+
 TArrayL::TArrayL(Int_t n, const Long_t *array)
 {
-   // Create TArrayL object and initialize it with values of array.
-
    fArray = 0;
    Set(n, array);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TArrayL::TArrayL(const TArrayL &array) : TArray(array)
 {
-   // Copy constructor.
-
    fArray = 0;
    Set(array.fN, array.fArray);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TArrayL assignment operator.
+
 TArrayL &TArrayL::operator=(const TArrayL &rhs)
 {
-   // TArrayL assignment operator.
-
    if (this != &rhs)
       Set(rhs.fN, rhs.fArray);
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete TArrayL object.
+
 TArrayL::~TArrayL()
 {
-   // Delete TArrayL object.
-
    delete [] fArray;
    fArray = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adopt array arr into TArrayL, i.e. don't copy arr but use it directly
+/// in TArrayL. User may not delete arr, TArrayL dtor will do it.
+
 void TArrayL::Adopt(Int_t n, Long_t *arr)
 {
-   // Adopt array arr into TArrayL, i.e. don't copy arr but use it directly
-   // in TArrayL. User may not delete arr, TArrayL dtor will do it.
-
    if (fArray)
       delete [] fArray;
 
@@ -90,23 +90,23 @@ void TArrayL::Adopt(Int_t n, Long_t *arr)
    fArray = arr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add long c at position i. Check for out of bounds.
+
 void TArrayL::AddAt(Long_t c, Int_t i)
 {
-   // Add long c at position i. Check for out of bounds.
-
    if (!BoundsOk("TArrayL::AddAt", i)) return;
    fArray[i] = c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of this array to n longs.
+/// A new array is created, the old contents copied to the new array,
+/// then the old array is deleted.
+/// This function should not be called if the array was declared via Adopt.
+
 void TArrayL::Set(Int_t n)
 {
-   // Set size of this array to n longs.
-   // A new array is created, the old contents copied to the new array,
-   // then the old array is deleted.
-   // This function should not be called if the array was declared via Adopt.
-
    if (n < 0) return;
    if (n != fN) {
       Long_t *temp = fArray;
@@ -125,12 +125,12 @@ void TArrayL::Set(Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of this array to n longs and set the contents.
+/// This function should not be called if the array was declared via Adopt.
+
 void TArrayL::Set(Int_t n, const Long_t *array)
 {
-   // Set size of this array to n longs and set the contents.
-   // This function should not be called if the array was declared via Adopt.
-
    if (fArray && fN != n) {
       delete [] fArray;
       fArray = 0;
@@ -142,11 +142,11 @@ void TArrayL::Set(Int_t n, const Long_t *array)
    memmove(fArray, array, n*sizeof(Long_t));
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a TArrayL object.
+
 void TArrayL::Streamer(TBuffer &b)
 {
-   // Stream a TArrayL object.
-
    if (b.IsReading()) {
       Int_t n;
       b >> n;

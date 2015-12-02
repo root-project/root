@@ -24,7 +24,8 @@
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TChainIndex::TChainIndexEntry::SetMinMaxFrom(const TTreeIndex *index )
 {
    fMinIndexValue    = index->GetIndexValues()[0];
@@ -37,28 +38,28 @@ void TChainIndex::TChainIndexEntry::SetMinMaxFrom(const TTreeIndex *index )
 
 ClassImp(TChainIndex)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for TChainIndex
+
 TChainIndex::TChainIndex(): TVirtualIndex()
 {
-// Default constructor for TChainIndex
-
    fTree = 0;
    fMajorFormulaParent = fMinorFormulaParent = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor for TChainIndex. See TTreeIndex::TTreeIndex for the description of the
+/// parameters.
+/// The tree must be a TChain.
+/// All the index values in the first tree of the chain must be
+/// less then any index value in the second one, and so on.
+/// If any of those requirements isn't met the object becomes a zombie.
+/// If some subtrees don't have indices the indices are created and stored inside this
+/// TChainIndex.
+
 TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *minorname)
            : TVirtualIndex()
 {
-   // Normal constructor for TChainIndex. See TTreeIndex::TTreeIndex for the description of the
-   // parameters.
-   // The tree must be a TChain.
-   // All the index values in the first tree of the chain must be
-   // less then any index value in the second one, and so on.
-   // If any of those requirements isn't met the object becomes a zombie.
-   // If some subtrees don't have indices the indices are created and stored inside this
-   // TChainIndex.
-
    fTree = 0;
    fMajorFormulaParent = fMinorFormulaParent = 0;
 
@@ -126,12 +127,12 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add an index to this chain
+/// if delaySort is kFALSE (default) check if the indices of different trees are in order.
+
 void TChainIndex::Append(const TVirtualIndex *index, Bool_t delaySort )
 {
-   // add an index to this chain
-   // if delaySort is kFALSE (default) check if the indices of different trees are in order.
-
    if (index) {
       const TTreeIndex *ti_index = dynamic_cast<const TTreeIndex*>(index);
       if (ti_index == 0) {
@@ -157,10 +158,11 @@ void TChainIndex::Append(const TVirtualIndex *index, Bool_t delaySort )
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete all the indices which were built by this object
+
 void TChainIndex::DeleteIndices()
 {
-   // Delete all the indices which were built by this object
    for (unsigned int i = 0; i < fEntries.size(); i++) {
       if (fEntries[i].fTreeIndex) {
          if (fTree->GetTree() && fTree->GetTree()->GetTreeIndex() == fEntries[i].fTreeIndex) {
@@ -172,23 +174,24 @@ void TChainIndex::DeleteIndices()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The destructor.
+
 TChainIndex::~TChainIndex()
 {
-   // The destructor.
    DeleteIndices();
    if (fTree && fTree->GetTreeIndex() == this)
       fTree->SetTreeIndex(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a TVirtualIndex for a tree which holds the entry with the specified
+/// major and minor values and the number of that tree.
+/// If the index for that tree was created by this object it's set to the tree.
+/// The tree index should be later released using ReleaseSubTreeIndex();
+
 std::pair<TVirtualIndex*, Int_t> TChainIndex::GetSubTreeIndex(Long64_t major, Long64_t minor) const
 {
-   // Returns a TVirtualIndex for a tree which holds the entry with the specified
-   // major and minor values and the number of that tree.
-   // If the index for that tree was created by this object it's set to the tree.
-   // The tree index should be later released using ReleaseSubTreeIndex();
-
    using namespace std;
    if (fEntries.size() == 0) {
       Warning("GetSubTreeIndex", "No subindices in the chain. The chain is probably empty");
@@ -233,24 +236,24 @@ std::pair<TVirtualIndex*, Int_t> TChainIndex::GetSubTreeIndex(Long64_t major, Lo
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Releases the tree index got using GetSubTreeIndex. If the index was
+/// created by this object it is removed from the current tree, so that it isn't
+/// deleted in its destructor.
+
 void TChainIndex::ReleaseSubTreeIndex(TVirtualIndex* index, int treeNo) const
 {
-   // Releases the tree index got using GetSubTreeIndex. If the index was
-   // created by this object it is removed from the current tree, so that it isn't
-   // deleted in its destructor.
-
    if (fEntries[treeNo].fTreeIndex == index) {
       R__ASSERT(fTree->GetTree()->GetTreeIndex() == index);
       fTree->GetTree()->SetTreeIndex(0);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// see TTreeIndex::GetEntryNumberFriend for description
+
 Long64_t TChainIndex::GetEntryNumberFriend(const TTree *parent)
 {
-   // see TTreeIndex::GetEntryNumberFriend for description
-
    if (!parent) return -3;
    GetMajorFormulaParent(parent);
    GetMinorFormulaParent(parent);
@@ -278,11 +281,11 @@ Long64_t TChainIndex::GetEntryNumberFriend(const TTree *parent)
    return fTree->GetEntryNumberWithIndex(majorv,minorv);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TTreeIndex::GetEntryNumberWithBestIndex for details.
+
 Long64_t TChainIndex::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) const
 {
-   // See TTreeIndex::GetEntryNumberWithBestIndex for details.
-
    std::pair<TVirtualIndex*, Int_t> indexAndNumber = GetSubTreeIndex(major, minor);
    if (!indexAndNumber.first) {
       // Error("GetEntryNumberWithBestIndex","no index found");
@@ -297,12 +300,12 @@ Long64_t TChainIndex::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the entry number with given index values.
+/// See TTreeIndex::GetEntryNumberWithIndex for details.
+
 Long64_t TChainIndex::GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const
 {
-   // Returns the entry number with given index values.
-   // See TTreeIndex::GetEntryNumberWithIndex for details.
-
    std::pair<TVirtualIndex*, Int_t> indexAndNumber = GetSubTreeIndex(major, minor);
    if (!indexAndNumber.first) {
       // Error("GetEntryNumberWithIndex","no index found");
@@ -321,11 +324,11 @@ Long64_t TChainIndex::GetEntryNumberWithIndex(Long64_t major, Long64_t minor) co
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return a pointer to the TreeFormula corresponding to the majorname in parent tree T
+
 TTreeFormula *TChainIndex::GetMajorFormulaParent(const TTree *parent)
 {
-   // return a pointer to the TreeFormula corresponding to the majorname in parent tree T
-
    if (!fMajorFormulaParent) {
       TTree::TFriendLock friendlock(fTree, TTree::kFindLeaf | TTree::kFindBranch | TTree::kGetBranch | TTree::kGetLeaf);
       fMajorFormulaParent = new TTreeFormula("MajorP",fMajorName.Data(),const_cast<TTree*>(parent));
@@ -338,11 +341,11 @@ TTreeFormula *TChainIndex::GetMajorFormulaParent(const TTree *parent)
    return fMajorFormulaParent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return a pointer to the TreeFormula corresponding to the minorname in parent tree T
+
 TTreeFormula *TChainIndex::GetMinorFormulaParent(const TTree *parent)
 {
-   // return a pointer to the TreeFormula corresponding to the minorname in parent tree T
-
    if (!fMinorFormulaParent) {
       // Prevent TTreeFormula from finding any of the branches in our TTree even if it
       // is a friend of the parent TTree.
@@ -358,11 +361,12 @@ TTreeFormula *TChainIndex::GetMinorFormulaParent(const TTree *parent)
    return fMinorFormulaParent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Updates the parent formulae.
+/// Called by TChain::LoadTree when the parent chain changes it's tree.
+
 void TChainIndex::UpdateFormulaLeaves(const TTree *parent)
 {
-   // Updates the parent formulae.
-   // Called by TChain::LoadTree when the parent chain changes it's tree.
    if (fMajorFormulaParent) {
       // Prevent TTreeFormula from finding any of the branches in our TTree even if it
       // is a friend of the parent TTree.
@@ -376,11 +380,11 @@ void TChainIndex::UpdateFormulaLeaves(const TTree *parent)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TTreeIndex::SetTree.
+
 void TChainIndex::SetTree(const TTree *T)
 {
-   // See TTreeIndex::SetTree.
-
    R__ASSERT(fTree == 0 || fTree == T || T==0);
 }
 

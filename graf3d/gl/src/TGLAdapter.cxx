@@ -17,52 +17,59 @@
 
 ClassImp(TGLAdapter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLAdapter::TGLAdapter(Int_t glDevice)
                : fGLDevice(glDevice)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set as current GL contet.
+
 Bool_t TGLAdapter::MakeCurrent()
 {
-   // Set as current GL contet.
    return fGLDevice != -1 && gGLManager->MakeCurrent(fGLDevice);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Swap front/back buffers.
+
 void TGLAdapter::SwapBuffers()
 {
-   // Swap front/back buffers.
    if (fGLDevice != -1)
       gGLManager->Flush(fGLDevice);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mark gl-device for later copying into x-pixmap.
+
 void TGLAdapter::MarkForDirectCopy(Bool_t isDirect)
 {
-   // Mark gl-device for later copying into x-pixmap.
    gGLManager->MarkForDirectCopy(fGLDevice, isDirect);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read gl buffer into x-pixmap.
+
 void TGLAdapter::ReadGLBuffer()
 {
-   // Read gl buffer into x-pixmap.
    gGLManager->ReadGLBuffer(fGLDevice);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extract viewport from gl.
+
 void TGLAdapter::ExtractViewport(Int_t *vp)const
 {
-   // Extract viewport from gl.
    gGLManager->ExtractViewport(fGLDevice, vp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select off-screen device for rendering.
+
 void TGLAdapter::SelectOffScreenDevice()
 {
-   // Select off-screen device for rendering.
    gGLManager->SelectOffScreenDevice(fGLDevice);
 }

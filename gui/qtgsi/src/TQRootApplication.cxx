@@ -19,7 +19,8 @@ bool TQRootApplication::fgWarning=kFALSE;
 
 ClassImp(TQRootApplication)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void qMessageOutput( QtMsgType type, const char *msg )
 {
    switch ( type ) {
@@ -42,12 +43,12 @@ void qMessageOutput( QtMsgType type, const char *msg )
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect ROOT via Timer call back.
+
 TQRootApplication::TQRootApplication(int &argc, char **argv, int poll) :
       QApplication(argc,argv), fQTimer(0), fRTimer(0)
 {
-   // Connect ROOT via Timer call back.
-
    if (poll == 0) {
       fQTimer = new QTimer( this );
       QObject::connect( fQTimer, SIGNAL(timeout()),this, SLOT(Execute()) );
@@ -61,24 +62,25 @@ TQRootApplication::TQRootApplication(int &argc, char **argv, int poll) :
    qInstallMsgHandler( qMessageOutput );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dtor
+
 TQRootApplication::~TQRootApplication()
 {
-   // dtor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call the inner loop of ROOT.
+
 void TQRootApplication::Execute()
 {
-   // Call the inner loop of ROOT.
-
    gSystem->InnerLoop();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a Qt-Specific error handler.
+
 void TQRootApplication::Quit()
 {
-   // Set a Qt-Specific error handler.
-
    gSystem->Exit( 0 );
 }

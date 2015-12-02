@@ -29,15 +29,15 @@ enum ETreeInput {
 
 ClassImp(TTreeInput)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create simple input dialog.
+
    TTreeInput::TTreeInput(const TGWindow *p, const TGWindow *main,
                           char *strvars, char *strcuts):
       TGTransientFrame(p, main, 10, 10, kVerticalFrame),
       fStrvars(strvars),
       fStrcuts(strcuts)
 {
-   // Create simple input dialog.
-
    if (!p && !main) {
       MakeZombie();
       return;
@@ -116,19 +116,19 @@ ClassImp(TTreeInput)
    gClient->WaitFor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup dialog.
+
 TTreeInput::~TTreeInput()
 {
-   // Cleanup dialog.
-
    Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle button and text enter events
+
 Bool_t TTreeInput::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Handle button and text enter events
-
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
          switch (GET_SUBMSG(msg)) {

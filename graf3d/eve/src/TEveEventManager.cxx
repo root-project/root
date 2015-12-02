@@ -21,42 +21,43 @@
 
 ClassImp(TEveEventManager)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveEventManager::TEveEventManager(const char* n, const char* t) :
    TEveElementList(n, t),
    fNewEventCommands()
 {
-   // Constructor.
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual function to be called after a new event is loaded.
+/// It iterates over the list of registered commands
+/// (fNewEventCommands) and executes them in given order.
+
 void TEveEventManager::AfterNewEventLoaded()
 {
-   // Virtual function to be called after a new event is loaded.
-   // It iterates over the list of registered commands
-   // (fNewEventCommands) and executes them in given order.
-
    for (std::vector<TString>::iterator i = fNewEventCommands.begin(); i != fNewEventCommands.end(); ++i)
    {
       gInterpreter->ProcessLine(*i);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register a command to be executed on each new event.
+
 void TEveEventManager::AddNewEventCommand(const TString& cmd)
 {
-   // Register a command to be executed on each new event.
-
    fNewEventCommands.push_back(cmd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the first command equal to cmd.
+
 void TEveEventManager::RemoveNewEventCommand(const TString& cmd)
 {
-   // Remove the first command equal to cmd.
-
    for (std::vector<TString>::iterator i = fNewEventCommands.begin(); i != fNewEventCommands.end(); ++i)
    {
       if (cmd == *i) {
@@ -66,10 +67,10 @@ void TEveEventManager::RemoveNewEventCommand(const TString& cmd)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the list of commands to be executed on each new event.
+
 void TEveEventManager::ClearNewEventCommands()
 {
-   // Clear the list of commands to be executed on each new event.
-
    fNewEventCommands.clear();
 }

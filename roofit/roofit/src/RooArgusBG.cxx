@@ -40,7 +40,8 @@ using namespace std;
 ClassImp(RooArgusBG)
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooArgusBG::RooArgusBG(const char *name, const char *title,
 		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c) :
   RooAbsPdf(name, title), 
@@ -52,7 +53,8 @@ RooArgusBG::RooArgusBG(const char *name, const char *title,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooArgusBG::RooArgusBG(const char *name, const char *title,
 		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c, RooAbsReal& _p) :
   RooAbsPdf(name, title), 
@@ -64,7 +66,8 @@ RooArgusBG::RooArgusBG(const char *name, const char *title,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooArgusBG::RooArgusBG(const RooArgusBG& other, const char* name) :
   RooAbsPdf(other,name), 
   m("m",this,other.m), 
@@ -76,7 +79,8 @@ RooArgusBG::RooArgusBG(const RooArgusBG& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooArgusBG::evaluate() const {
   Double_t t= m/m0;
   if(t >= 1) return 0;
@@ -88,7 +92,8 @@ Double_t RooArgusBG::evaluate() const {
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooArgusBG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
   if (p.arg().isConstant()) {
@@ -101,7 +106,8 @@ Int_t RooArgusBG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1);

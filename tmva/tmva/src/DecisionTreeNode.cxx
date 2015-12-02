@@ -52,7 +52,9 @@ ClassImp(TMVA::DecisionTreeNode)
 
 bool     TMVA::DecisionTreeNode::fgIsTraining = false;
 UInt_t   TMVA::DecisionTreeNode::fgTmva_Version_Code = 0;
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor of an essentially "empty" node floating in space
+
 TMVA::DecisionTreeNode::DecisionTreeNode()
    : TMVA::Node(),
      fCutValue(0),
@@ -64,7 +66,6 @@ TMVA::DecisionTreeNode::DecisionTreeNode()
      fPurity (-99),
      fIsTerminalNode( kFALSE )
 {
-   // constructor of an essentially "empty" node floating in space
    if (DecisionTreeNode::fgIsTraining){
       fTrainInfo = new DTNodeTrainingInfo();
       //std::cout << "Node constructor with TrainingINFO"<<std::endl;
@@ -75,7 +76,9 @@ TMVA::DecisionTreeNode::DecisionTreeNode()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor of a daughter node as a daughter of 'p'
+
 TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p, char pos)
    : TMVA::Node(p, pos),
      fCutValue( 0 ),
@@ -87,7 +90,6 @@ TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p, char pos)
      fPurity (-99),
      fIsTerminalNode( kFALSE )
 {
-   // constructor of a daughter node as a daughter of 'p'
    if (DecisionTreeNode::fgIsTraining){
       fTrainInfo = new DTNodeTrainingInfo();
       //std::cout << "Node constructor with TrainingINFO"<<std::endl;
@@ -98,7 +100,10 @@ TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p, char pos)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor of a node. It will result in an explicit copy of
+/// the node and recursively all it's daughters
+
 TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
                                          DecisionTreeNode* parent)
    : TMVA::Node(n),
@@ -111,8 +116,6 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
      fPurity  ( n.fPurity),
      fIsTerminalNode( n.fIsTerminalNode )
 {
-   // copy constructor of a node. It will result in an explicit copy of
-   // the node and recursively all it's daughters
    this->SetParent( parent );
    if (n.GetLeft() == 0 ) this->SetLeft(NULL);
    else this->SetLeft( new DecisionTreeNode( *((DecisionTreeNode*)(n.GetLeft())),this));
@@ -130,17 +133,19 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::DecisionTreeNode::~DecisionTreeNode(){
-   // destructor
    delete fTrainInfo;
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test event if it decends the tree at this node to the right
+
 Bool_t TMVA::DecisionTreeNode::GoesRight(const TMVA::Event & e) const
 {
-   // test event if it decends the tree at this node to the right
    Bool_t result;
    // first check if the fisher criterium is used or ordinary cuts:
    if (GetNFisherCoeff() == 0){
@@ -160,22 +165,23 @@ Bool_t TMVA::DecisionTreeNode::GoesRight(const TMVA::Event & e) const
    else return !result;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test event if it decends the tree at this node to the left
+
 Bool_t TMVA::DecisionTreeNode::GoesLeft(const TMVA::Event & e) const
 {
-   // test event if it decends the tree at this node to the left
    if (!this->GoesRight(e)) return kTRUE;
    else return kFALSE;
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the S/(S+B) (purity) for the node
+/// REM: even if nodes with purity 0.01 are very PURE background nodes, they still
+///      get a small value of the purity.
+
 void TMVA::DecisionTreeNode::SetPurity( void )
 {
-   // return the S/(S+B) (purity) for the node
-   // REM: even if nodes with purity 0.01 are very PURE background nodes, they still
-   //      get a small value of the purity.
-
    if ( ( this->GetNSigEvents() + this->GetNBkgEvents() ) > 0 ) {
       fPurity = this->GetNSigEvents() / ( this->GetNSigEvents() + this->GetNBkgEvents());
    }
@@ -188,10 +194,11 @@ void TMVA::DecisionTreeNode::SetPurity( void )
 }
 
 // print a node
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///print the node
+
 void TMVA::DecisionTreeNode::Print(std::ostream& os) const
 {
-   //print the node
    os << "< ***  "  << std::endl;
    os << " d: "     << this->GetDepth()
       << std::setprecision(6)
@@ -219,11 +226,11 @@ void TMVA::DecisionTreeNode::Print(std::ostream& os) const
    os << " **** > " << std::endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///recursively print the node and its daughters (--> print the 'tree')
+
 void TMVA::DecisionTreeNode::PrintRec(std::ostream& os) const
 {
-   //recursively print the node and its daughters (--> print the 'tree')
-
    os << this->GetDepth()
       << std::setprecision(6)
       << " "         << this->GetPos()
@@ -250,10 +257,11 @@ void TMVA::DecisionTreeNode::PrintRec(std::ostream& os) const
    if (this->GetRight() != NULL) this->GetRight()->PrintRec(os);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the data block
+
 Bool_t TMVA::DecisionTreeNode::ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code )
 {
-   // Read the data block
    fgTmva_Version_Code=tmva_Version_Code;
    string tmp;
 
@@ -323,10 +331,11 @@ Bool_t TMVA::DecisionTreeNode::ReadDataRecord( std::istream& is, UInt_t tmva_Ver
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// clear the nodes (their S/N, Nevents etc), just keep the structure of the tree
+
 void TMVA::DecisionTreeNode::ClearNodeAndAllDaughters()
 {
-   // clear the nodes (their S/N, Nevents etc), just keep the structure of the tree
    SetNSigEvents(0);
    SetNBkgEvents(0);
    SetNEvents(0);
@@ -341,10 +350,11 @@ void TMVA::DecisionTreeNode::ClearNodeAndAllDaughters()
    if (this->GetRight() != NULL) ((DecisionTreeNode*)(this->GetRight()))->ClearNodeAndAllDaughters();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// temporary stored node values (number of events, etc.) that originate
+/// not from the training but from the validation data (used in pruning)
+
 void TMVA::DecisionTreeNode::ResetValidationData( ) {
-   // temporary stored node values (number of events, etc.) that originate
-   // not from the training but from the validation data (used in pruning)
    SetNBValidation( 0.0 );
    SetNSValidation( 0.0 );
    SetSumTarget( 0 );
@@ -356,10 +366,10 @@ void TMVA::DecisionTreeNode::ResetValidationData( ) {
    }
 }
 
-//_______________________________________________________________________
-void TMVA::DecisionTreeNode::PrintPrune( std::ostream& os ) const {
-   // printout of the node (can be read in with ReadDataRecord)
+////////////////////////////////////////////////////////////////////////////////
+/// printout of the node (can be read in with ReadDataRecord)
 
+void TMVA::DecisionTreeNode::PrintPrune( std::ostream& os ) const {
    os << "----------------------" << std::endl
       << "|~T_t| " << GetNTerminal() << std::endl
       << "R(t): " << GetNodeR() << std::endl
@@ -368,10 +378,10 @@ void TMVA::DecisionTreeNode::PrintPrune( std::ostream& os ) const {
       << "G(t): "  << GetAlphaMinSubtree() << std::endl;
 }
 
-//_______________________________________________________________________
-void TMVA::DecisionTreeNode::PrintRecPrune( std::ostream& os ) const {
-   // recursive printout of the node and its daughters
+////////////////////////////////////////////////////////////////////////////////
+/// recursive printout of the node and its daughters
 
+void TMVA::DecisionTreeNode::PrintRecPrune( std::ostream& os ) const {
    this->PrintPrune(os);
    if(this->GetLeft() != NULL && this->GetRight() != NULL) {
       ((DecisionTreeNode*)this->GetLeft())->PrintRecPrune(os);
@@ -379,54 +389,60 @@ void TMVA::DecisionTreeNode::PrintRecPrune( std::ostream& os ) const {
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::DecisionTreeNode::SetCC(Double_t cc)
 {
    if (fTrainInfo) fTrainInfo->fCC = cc;
    else Log() << kFATAL << "call to SetCC without trainingInfo" << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the minimum of variable ivar from the training sample
+/// that pass/end up in this node
+
 Float_t TMVA::DecisionTreeNode::GetSampleMin(UInt_t ivar) const {
-   // return the minimum of variable ivar from the training sample
-   // that pass/end up in this node
    if (fTrainInfo && ivar < fTrainInfo->fSampleMin.size()) return fTrainInfo->fSampleMin[ivar];
    else Log() << kFATAL << "You asked for Min of the event sample in node for variable "
               << ivar << " that is out of range" << Endl;
    return -9999;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the maximum of variable ivar from the training sample
+/// that pass/end up in this node
+
 Float_t TMVA::DecisionTreeNode::GetSampleMax(UInt_t ivar) const {
-   // return the maximum of variable ivar from the training sample
-   // that pass/end up in this node
    if (fTrainInfo && ivar < fTrainInfo->fSampleMin.size()) return fTrainInfo->fSampleMax[ivar];
    else Log() << kFATAL << "You asked for Max of the event sample in node for variable "
               << ivar << " that is out of range" << Endl;
    return 9999;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the minimum of variable ivar from the training sample
+/// that pass/end up in this node
+
 void TMVA::DecisionTreeNode::SetSampleMin(UInt_t ivar, Float_t xmin){
-   // set the minimum of variable ivar from the training sample
-   // that pass/end up in this node
    if ( fTrainInfo) {
       if ( ivar >= fTrainInfo->fSampleMin.size()) fTrainInfo->fSampleMin.resize(ivar+1);
       fTrainInfo->fSampleMin[ivar]=xmin;
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the maximum of variable ivar from the training sample
+/// that pass/end up in this node
+
 void TMVA::DecisionTreeNode::SetSampleMax(UInt_t ivar, Float_t xmax){
-   // set the maximum of variable ivar from the training sample
-   // that pass/end up in this node
    if( ! fTrainInfo ) return;
    if ( ivar >= fTrainInfo->fSampleMax.size() )
       fTrainInfo->fSampleMax.resize(ivar+1);
    fTrainInfo->fSampleMax[ivar]=xmax;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::DecisionTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Version_Code */  )
 {
    Float_t tempNSigEvents,tempNBkgEvents;
@@ -461,10 +477,11 @@ void TMVA::DecisionTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Version_C
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add attribute to xml
+
 void TMVA::DecisionTreeNode::AddAttributesToNode(void* node) const
 {
-   // add attribute to xml
    gTools().AddAttr(node, "NCoef", GetNFisherCoeff());
    for (Int_t i=0; i< (Int_t) this->GetNFisherCoeff(); i++)
       gTools().AddAttr(node, Form("fC%d",i),  this->GetFisherCoeff(i));
@@ -483,30 +500,34 @@ void TMVA::DecisionTreeNode::AddAttributesToNode(void* node) const
    gTools().AddAttr(node, "nType", GetNodeType());
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set fisher coefficients
+
 void  TMVA::DecisionTreeNode::SetFisherCoeff(Int_t ivar, Double_t coeff)
 {
-   // set fisher coefficients
    if ((Int_t) fFisherCoeff.size()<ivar+1) fFisherCoeff.resize(ivar+1) ;
    fFisherCoeff[ivar]=coeff;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// adding attributes to tree node  (well, was used in BinarySearchTree,
+/// and somehow I guess someone programmed it such that we need this in
+/// this tree too, although we don't..)
+
 void TMVA::DecisionTreeNode::AddContentToNode( std::stringstream& /*s*/ ) const
 {
-   // adding attributes to tree node  (well, was used in BinarySearchTree,
-   // and somehow I guess someone programmed it such that we need this in
-   // this tree too, although we don't..)
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reading attributes from tree node  (well, was used in BinarySearchTree,
+/// and somehow I guess someone programmed it such that we need this in
+/// this tree too, although we don't..)
+
 void TMVA::DecisionTreeNode::ReadContent( std::stringstream& /*s*/ )
 {
-   // reading attributes from tree node  (well, was used in BinarySearchTree,
-   // and somehow I guess someone programmed it such that we need this in
-   // this tree too, although we don't..)
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::MsgLogger& TMVA::DecisionTreeNode::Log() {
   TTHREAD_TLS_DECL_ARG(MsgLogger,logger,"DecisionTreeNode");    // static because there is a huge number of nodes...
   return logger;

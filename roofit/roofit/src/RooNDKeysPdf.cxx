@@ -52,7 +52,27 @@ ClassImp(RooNDKeysPdf)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct N-dimensional kernel estimation p.d.f. in observables 'varList'
+/// from dataset 'data'. Options can be 
+///
+///   'a' = Use adaptive kernels (width varies with local event density)
+///   'm' = Mirror data points over observable boundaries. Improves modeling
+///         behavior at edges for distributions that are not close to zero
+///         at edge
+///   'd' = Debug flag
+///   'v' = Verbose flag
+/// 
+/// The parameter rho (default = 1) provides an overall scale factor that can
+/// be applied to the bandwith calculated for each kernel. The nSigma parameter
+/// determines the size of the box that is used to search for contributing kernels
+/// around a given point in observable space. The nSigma parameters is used
+/// in case of non-adaptive bandwidths and for the 1st non-adaptive pass for
+/// the calculation of adaptive keys p.d.f.s.
+///
+/// The optional weight arguments allows to specify an observable or function
+/// expression in observables that specifies the weight of each event.
+
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
 			   const RooArgList& varList, RooDataSet& data,
 			   TString options, Double_t rho, Double_t nSigma, Bool_t rotate) : 
@@ -65,26 +85,6 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
   _weights(&_weights0),
   _rotate(rotate)
 {
-  // Construct N-dimensional kernel estimation p.d.f. in observables 'varList'
-  // from dataset 'data'. Options can be 
-  //
-  //   'a' = Use adaptive kernels (width varies with local event density)
-  //   'm' = Mirror data points over observable boundaries. Improves modeling
-  //         behavior at edges for distributions that are not close to zero
-  //         at edge
-  //   'd' = Debug flag
-  //   'v' = Verbose flag
-  // 
-  // The parameter rho (default = 1) provides an overall scale factor that can
-  // be applied to the bandwith calculated for each kernel. The nSigma parameter
-  // determines the size of the box that is used to search for contributing kernels
-  // around a given point in observable space. The nSigma parameters is used
-  // in case of non-adaptive bandwidths and for the 1st non-adaptive pass for
-  // the calculation of adaptive keys p.d.f.s.
-  //
-  // The optional weight arguments allows to specify an observable or function
-  // expression in observables that specifies the weight of each event.
-
   // Constructor
   _varItr    = _varList.createIterator() ;
 
@@ -104,7 +104,9 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
   createPdf();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
 			   const RooArgList& varList, RooDataSet& data, const TVectorD& rho,
 			   TString options, Double_t nSigma, Bool_t rotate) : 
@@ -117,7 +119,6 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
   _weights(&_weights0),
   _rotate(rotate)
 {
-  // Constructor
   _varItr    = _varList.createIterator() ;
 
   TIterator* varItr = varList.createIterator() ;
@@ -150,7 +151,10 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Backward compatibility constructor for (1-dim) RooKeysPdf. If you are a new user,
+/// please use the first constructor form.
+
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
                            RooAbsReal& x, RooDataSet& data,
                            Mirror mirror, Double_t rho, Double_t nSigma, Bool_t rotate) : 
@@ -163,9 +167,6 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
   _weights(&_weights0),
   _rotate(rotate)
 { 
-  // Backward compatibility constructor for (1-dim) RooKeysPdf. If you are a new user,
-  // please use the first constructor form.
-
   _varItr = _varList.createIterator() ;
   
   _varList.add(x) ;
@@ -182,7 +183,10 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Backward compatibility constructor for Roo2DKeysPdf. If you are a new user,
+/// please use the first constructor form.
+
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal& x, RooAbsReal & y,
                            RooDataSet& data, TString options, Double_t rho, Double_t nSigma, Bool_t rotate) : 
   RooAbsPdf(name,title),
@@ -194,9 +198,6 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal& x, R
   _weights(&_weights0),
   _rotate(rotate)
 { 
-  // Backward compatibility constructor for Roo2DKeysPdf. If you are a new user,
-  // please use the first constructor form.
-
   _varItr = _varList.createIterator() ;
 
   _varList.add(RooArgSet(x,y)) ;
@@ -208,7 +209,9 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal& x, R
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf& other, const char* name) :
   RooAbsPdf(other,name), 
   _varList("varList",this,other._varList),
@@ -219,7 +222,6 @@ RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf& other, const char* name) :
   _weights(&_weights0),
   _rotate(other._rotate)
 {
-  // Constructor
   _varItr      = _varList.createIterator() ;
 
   _fixedShape  = other._fixedShape;
@@ -286,7 +288,8 @@ RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNDKeysPdf::~RooNDKeysPdf() 
 {
   if (_varItr)    delete _varItr;
@@ -315,11 +318,11 @@ RooNDKeysPdf::~RooNDKeysPdf()
 
 void
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// evaluation order of constructor.
+
 RooNDKeysPdf::createPdf(Bool_t firstCall) const
 {
-  // evaluation order of constructor.
-
   if (firstCall) {
     // set options
     setOptions();
@@ -354,11 +357,11 @@ RooNDKeysPdf::createPdf(Bool_t firstCall) const
 
 void 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the configuration
+
 RooNDKeysPdf::setOptions() const
 {
-  // set the configuration
-
   _options.ToLower(); 
 
   if( _options.Contains("a") ) { _weights = &_weights1; }
@@ -387,10 +390,11 @@ RooNDKeysPdf::setOptions() const
 
 void
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialization
+
 RooNDKeysPdf::initialize() const
 {
-  // initialization
   _sqrt2pi   = sqrt(2.0*TMath::Pi()) ;
   _nDim      = _varList.getSize();
   _nEvents   = (Int_t)_data.numEntries();
@@ -463,11 +467,11 @@ RooNDKeysPdf::initialize() const
 
 void
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy the dataset and calculate some useful variables
+
 RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
 {
-  // copy the dataset and calculate some useful variables
-
   // first some initialization
   _nEventsW=0.;
 
@@ -600,15 +604,15 @@ RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
 
 void
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// determine mirror dataset.
+/// mirror points are added around the physical boundaries of the dataset
+/// Two steps:
+/// 1. For each entry, determine if it should be mirrored (the mirror configuration).
+/// 2. For each mirror configuration, make the mirror points.
+
 RooNDKeysPdf::mirrorDataSet() const
 {
-  // determine mirror dataset.
-  // mirror points are added around the physical boundaries of the dataset
-  // Two steps:
-  // 1. For each entry, determine if it should be mirrored (the mirror configuration).
-  // 2. For each mirror configuration, make the mirror points.
-
   for (Int_t j=0; j<_nDim; j++) {
     _xDatLo3s[j] = _xDatLo[j] + _nSigma * (_rho[j] * _n * _sigma[j]);
     _xDatHi3s[j] = _xDatHi[j] - _nSigma * (_rho[j] * _n * _sigma[j]);
@@ -694,7 +698,8 @@ RooNDKeysPdf::mirrorDataSet() const
 
 
 void
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNDKeysPdf::loadWeightSet() const
 {
   _wMap.clear();
@@ -712,13 +717,13 @@ RooNDKeysPdf::loadWeightSet() const
 
 
 void
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// determine points in +/- nSigma shell around the box determined by the variable
+/// ranges. These points are needed in the normalization, to determine probability
+/// leakage in and out of the box.
+
 RooNDKeysPdf::calculateShell(BoxInfo* bi) const 
 {
-  // determine points in +/- nSigma shell around the box determined by the variable
-  // ranges. These points are needed in the normalization, to determine probability
-  // leakage in and out of the box.
-
   for (Int_t j=0; j<_nDim; j++) {
     if (bi->xVarLo[j]==_xDatLo[j] && bi->xVarHi[j]==_xDatHi[j]) { 
       bi->netFluxZ = bi->netFluxZ && kTRUE; 
@@ -788,12 +793,12 @@ RooNDKeysPdf::calculateShell(BoxInfo* bi) const
 
 
 void
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///bi->nEventsBMSW=0.;
+///bi->nEventsBW=0.;
+
 RooNDKeysPdf::calculatePreNorm(BoxInfo* bi) const
 {
-  //bi->nEventsBMSW=0.;
-  //bi->nEventsBW=0.;
-
   // box minus shell
   for (Int_t i=0; i<Int_t(bi->bmsIdcs.size()); i++) 
     bi->nEventsBMSW += _wMap[bi->bmsIdcs[i]];
@@ -810,11 +815,11 @@ RooNDKeysPdf::calculatePreNorm(BoxInfo* bi) const
 
 
 void
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// sort entries, as needed for loopRange()
+
 RooNDKeysPdf::sortDataIndices(BoxInfo* bi) const
 {
-  // sort entries, as needed for loopRange()
-
   itVec itrVecR;
   vector<TVectorD>::iterator dpRItr = _dataPtsR.begin();
   for (Int_t i=0; dpRItr!=_dataPtsR.end(); ++dpRItr, ++i) {
@@ -838,7 +843,8 @@ RooNDKeysPdf::sortDataIndices(BoxInfo* bi) const
 
 
 void
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNDKeysPdf::calculateBandWidth() const
 {
   cxcoutD(Eval) << "RooNDKeysPdf::calculateBandWidth()" << endl; 
@@ -887,11 +893,11 @@ RooNDKeysPdf::calculateBandWidth() const
 
 
 Double_t
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// loop over all closest point to x, as determined by loopRange()
+
 RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& weights) const 
 {
-  // loop over all closest point to x, as determined by loopRange()
-
   if(_nEvents==0) return 0.;
 
   Double_t z=0.;
@@ -935,11 +941,11 @@ RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& weights) con
 
 
 void
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// determine closest points to x, to loop over in evaluate()
+
 RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) const
 {
-  // determine closest points to x, to loop over in evaluate()
-
   TVectorD xRm(_nDim);
   TVectorD xRp(_nDim);
 
@@ -982,7 +988,8 @@ RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) const
 
 
 void
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNDKeysPdf::boxInfoInit(BoxInfo* bi, const char* rangeName, Int_t /*code*/) const
 {
   vector<Bool_t> doInt(_nDim,kTRUE);
@@ -1020,7 +1027,8 @@ RooNDKeysPdf::boxInfoInit(BoxInfo* bi, const char* rangeName, Int_t /*code*/) co
 
 
 Double_t 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNDKeysPdf::evaluate() const 
 {
   _varItr->Reset() ;
@@ -1041,10 +1049,10 @@ RooNDKeysPdf::evaluate() const
 
 
 Int_t 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNDKeysPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
-
   if (rangeName) return 0 ;
 
   Int_t code=0;
@@ -1056,7 +1064,8 @@ RooNDKeysPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, con
 
 
 Double_t 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   cxcoutD(Eval) << "Calling RooNDKeysPdf::analyticalIntegral(" << GetName() << ") with code " << code 

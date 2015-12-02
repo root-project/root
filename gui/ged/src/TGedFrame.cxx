@@ -30,7 +30,9 @@
 
 ClassImp(TGedFrame)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of the base GUI attribute frame.
+
 TGedFrame::TGedFrame(const TGWindow *p, Int_t width,
                      Int_t height, UInt_t options, Pixel_t back)
       : TGCompositeFrame(p, width, height, options, back),
@@ -41,18 +43,16 @@ TGedFrame::TGedFrame(const TGWindow *p, Int_t width,
         fExtraTabs(0),
         fPriority(50)
 {
-   // Constructor of the base GUI attribute frame.
-
    fName = "";
    fGedEditor = TGedEditor::GetFrameCreator();
    SetCleanup(kDeepCleanup);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of the base GUI attribute frame.
+
 TGedFrame::~TGedFrame()
 {
-   // Destructor of the base GUI attribute frame.
-
    if (fExtraTabs) {
       TGedSubFrame* sf;
       TIter next(fExtraTabs);
@@ -67,19 +67,19 @@ TGedFrame::~TGedFrame()
    // Destructor of TGCompositeFrame will do the rest.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the current pad when an attribute is changed via GUI.
+
 void TGedFrame::Update()
 {
-   // Update the current pad when an attribute is changed via GUI.
-
    fGedEditor->Update(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get draw options of the selected object.
+
 Option_t *TGedFrame::GetDrawOption() const
 {
-   // Get draw options of the selected object.
-
    if (!fGedEditor->GetPad()) return "";
 
    TListIter next(fGedEditor->GetPad()->GetListOfPrimitives());
@@ -90,11 +90,11 @@ Option_t *TGedFrame::GetDrawOption() const
    return "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create attribute frame title.
+
 void TGedFrame::MakeTitle(const char *title)
 {
-   // Create attribute frame title.
-
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame |
                                                               kFitWidth |
                                                               kFixedWidth |
@@ -106,22 +106,22 @@ void TGedFrame::MakeTitle(const char *title)
    AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds tab container to list of extra tabs.
+
 void TGedFrame::AddExtraTab(TGedSubFrame* sf)
 {
-  // Adds tab container to list of extra tabs.
-
    if (fExtraTabs == 0) fExtraTabs = new TList();
    fExtraTabs->Add(sf);
    sf->fFrame->SetCleanup(kDeepCleanup);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a vertical frame to be used by 'owner' in extra tab 'name'.
+/// The new frame is registered into the sub-frame list.
+
 TGVerticalFrame* TGedFrame::CreateEditorTabSubFrame(const char* name)
 {
-   // Create a vertical frame to be used by 'owner' in extra tab 'name'.
-   // The new frame is registered into the sub-frame list.
-
    TGCompositeFrame* tabcont  = fGedEditor->GetEditorTab(name);
 
    TGVerticalFrame* newframe = new TGVerticalFrame(tabcont);
@@ -129,21 +129,21 @@ TGVerticalFrame* TGedFrame::CreateEditorTabSubFrame(const char* name)
    return newframe;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refresh the GUI info about the object attributes.
+
 void TGedFrame::Refresh(TObject* model)
 {
-   // Refresh the GUI info about the object attributes.
-
    SetModel(model);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set drawing option for object. This option only affects
+/// the drawing style and is stored in the option field of the
+/// TObjOptLink supporting a TPad's primitive list (TList).
+
 void TGedFrame::SetDrawOption(Option_t *option)
 {
-   // Set drawing option for object. This option only affects
-   // the drawing style and is stored in the option field of the
-   // TObjOptLink supporting a TPad's primitive list (TList).
-
    if (!fGedEditor->GetPad() || !option) return;
 
    TListIter next(fGedEditor->GetPad()->GetListOfPrimitives());
@@ -159,27 +159,27 @@ void TGedFrame::SetDrawOption(Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Provide list of editors for base-classes.
+/// In this class we return all classed with editors found via recursive
+/// descent into list of base classes.
+/// Override to control which editors are actually shown (see TH2Editor).
+
 void TGedFrame::ActivateBaseClassEditors(TClass* cl)
 {
-   // Provide list of editors for base-classes.
-   // In this class we return all classed with editors found via recursive
-   // descent into list of base classes.
-   // Override to control which editors are actually shown (see TH2Editor).
-
    // printf("%s::FillListOfBaseEditors %s\n", IsA()->GetName(), cl->GetName());
    if (cl->GetListOfBases()->IsEmpty() == kFALSE) {
       fGedEditor->ActivateEditors(cl->GetListOfBases(), kTRUE);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the frame containing the selected object name.
+
 TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t width,
                               Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Create the frame containing the selected object name.
-
    fPriority = 0;
 
    f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame |
@@ -207,19 +207,19 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t width,
    AddInput(kEnterWindowMask | kLeaveWindowMask | kKeyPressMask | kButtonPressMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGedNameFrame::~TGedNameFrame()
 {
-   // Destructor.
-
    delete fTip;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse crossing event for tooltip.
+
 Bool_t TGedNameFrame::HandleCrossing(Event_t *event)
 {
-   // Handle mouse crossing event for tooltip.
-
    if (event->fType == kEnterNotify)
       fTip->Reset();
    else
@@ -228,21 +228,21 @@ Bool_t TGedNameFrame::HandleCrossing(Event_t *event)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event.
+
 Bool_t TGedNameFrame::HandleButton(Event_t * /*event*/)
 {
-   // Handle mouse button event.
-
    if (fTip) fTip->Hide();
 
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets text for the label.
+
 void TGedNameFrame::SetModel(TObject* obj)
 {
-   // Sets text for the label.
-
    TString string;
 
    if (obj == 0) {

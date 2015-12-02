@@ -109,29 +109,33 @@ static const uchar unicode_to_symbol_05[32] = {
     This codec has the name "symbol".
 */
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*! \reimp */
 int QSymbolCodec::mibEnum() const
 {
     return 2001;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*! \reimp */
 QByteArray QSymbolCodec::name() const
 {
     return mimeName(); // "symbol";
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   Returns the codec's mime name.
+
 /*! \reimp */
 const char* QSymbolCodec::mimeName() const
 {
-   //   Returns the codec's mime name.
   return "symbol";
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*! \reimp */
 QString QSymbolCodec::toUnicode(const char* chars, int len ) const
 {
@@ -157,10 +161,11 @@ QString QSymbolCodec::toUnicode(const char* chars, int len ) const
    }
    return r;
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// process only len chars... - not implemented yet.
+
 QByteArray QSymbolCodec::fromUnicode(const QString& /*uc*/, int& /*lenInOut*/) const
 {
-   // process only len chars... - not implemented yet.
    qWarning( "Method <QSymbolCodec::fromUnicode> has not been implemented yet");
    /*
    //int l;
@@ -174,17 +179,20 @@ QByteArray QSymbolCodec::fromUnicode(const QString& /*uc*/, int& /*lenInOut*/) c
    return rstr;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*! \reimp */
 QByteArray QSymbolCodec::convertFromUnicode( const QChar *input, int number, ConverterState *) const
 {  return  fromUnicode(input, number) ;                         }
 
- //_______________________________________________________________________
+ ///////////////////////////////////////////////////////////////////////////////
+
 /*! \reimp */
 QString    QSymbolCodec::convertToUnicode(const char *chars, int len, ConverterState *) const
 {  return toUnicode(chars,len);                                                    }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*! \reimp */
 int QSymbolCodec::heuristicContentMatch(const char* chars, int len) const
 {

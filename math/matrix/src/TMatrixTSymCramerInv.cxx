@@ -38,7 +38,8 @@
 NamespaceImp(TMatrixTSymCramerInv);
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTSymCramerInv::Inv2x2(TMatrixTSym<Element> &m,Double_t *determ)
 {
@@ -67,7 +68,8 @@ Bool_t TMatrixTSymCramerInv::Inv2x2(TMatrixTSym<Element> &m,Double_t *determ)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTSymCramerInv::Inv3x3(TMatrixTSym<Element> &m,Double_t *determ)
 {
@@ -152,7 +154,8 @@ Bool_t TMatrixTSymCramerInv::Inv3x3(TMatrixTSym<Element> &m,Double_t *determ)
 #define SF32 11
 #define SF33 15
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Element> &m,Double_t *determ)
 {
@@ -276,7 +279,8 @@ Bool_t TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Element> &m,Double_t *determ)
 #define SM43 19
 #define SM44 24
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<Element> &m,Double_t *determ)
 {
@@ -471,7 +475,8 @@ Bool_t TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<Element> &m,Double_t *determ)
 #define SA54 29
 #define SA55 35
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTSymCramerInv::Inv6x6(TMatrixTSym<Element> &m,Double_t *determ)
 {

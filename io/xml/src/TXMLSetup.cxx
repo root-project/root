@@ -97,23 +97,25 @@ namespace xmlio {
 
 TString TXMLSetup::fgNameSpaceBase = "http://root.cern.ch/root/htmldoc/";
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return default value for XML setup
+
 TString TXMLSetup::DefaultXmlSetup()
 {
-   // return default value for XML setup
-
    return TString("2xoo");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set namespace base
+
 void TXMLSetup::SetNameSpaceBase(const char* namespacebase)
 {
-   // set namespace base
-
    fgNameSpaceBase = namespacebase;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// defaule constructor of TXMLSetup class
+
 TXMLSetup::TXMLSetup() :
    fXmlLayout(kSpecialized),
    fStoreStreamerInfos(kTRUE),
@@ -121,10 +123,11 @@ TXMLSetup::TXMLSetup() :
    fUseNamespaces(kFALSE),
    fRefCounter(0)
 {
-   // defaule constructor of TXMLSetup class
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// contsruct TXMLSetup object getting values from string
+
 TXMLSetup::TXMLSetup(const char* opt) :
    fXmlLayout(kSpecialized),
    fStoreStreamerInfos(kTRUE),
@@ -132,12 +135,12 @@ TXMLSetup::TXMLSetup(const char* opt) :
    fUseNamespaces(kFALSE),
    fRefCounter(0)
 {
-   // contsruct TXMLSetup object getting values from string
-
    ReadSetupFromStr(opt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy sonstructor of TXMLSetup class
+
 TXMLSetup::TXMLSetup(const TXMLSetup& src) :
    fXmlLayout(src.fXmlLayout),
    fStoreStreamerInfos(src.fStoreStreamerInfos),
@@ -145,21 +148,20 @@ TXMLSetup::TXMLSetup(const TXMLSetup& src) :
    fUseNamespaces(src.fUseNamespaces),
    fRefCounter(0)
 {
-   // copy sonstructor of TXMLSetup class
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TXMLSetup class destructor
+
 TXMLSetup::~TXMLSetup()
 {
-   // TXMLSetup class destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return setup values as string
+
 TString TXMLSetup::GetSetupAsString()
 {
-   // return setup values as string
-
    char setupstr[10] = "2xxx";
 
    setupstr[0] = char(48+fXmlLayout);
@@ -170,11 +172,11 @@ TString TXMLSetup::GetSetupAsString()
    return TString(setupstr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// checks if string is valid setup
+
 Bool_t TXMLSetup::IsValidXmlSetup(const char* setupstr)
 {
-   // checks if string is valid setup
-
    if ((setupstr==0) || (strlen(setupstr)!=4)) return kFALSE;
    TString str = setupstr;
    str.ToLower();
@@ -184,11 +186,11 @@ Bool_t TXMLSetup::IsValidXmlSetup(const char* setupstr)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get values from string
+
 Bool_t TXMLSetup::ReadSetupFromStr(const char* setupstr)
 {
-   // get values from string
-
    if ((setupstr==0) || (strlen(setupstr)<4)) return kFALSE;
    Int_t lay          = EXMLLayout(setupstr[0] - 48);
    if (lay==kGeneralized) fXmlLayout = kGeneralized;
@@ -200,11 +202,11 @@ Bool_t TXMLSetup::ReadSetupFromStr(const char* setupstr)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// show setup values
+
 void TXMLSetup::PrintSetup()
 {
-   // show setup values
-
    std::cout << " *** Setup printout ***" << std::endl;
    std::cout << "Attribute mode = " << fXmlLayout << std::endl;
    std::cout << "Store streamer infos = " << (fStoreStreamerInfos ? "true" : "false") << std::endl;
@@ -212,11 +214,11 @@ void TXMLSetup::PrintSetup()
    std::cout << "Use name spaces = " << (fUseNamespaces ? "true" : "false") << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert class name to exclude any special symbols like ':', '<' '>' ',' and spaces
+
 const char* TXMLSetup::XmlConvertClassName(const char* clname)
 {
-   // convert class name to exclude any special symbols like ':', '<' '>' ',' and spaces
-
    fStrBuf = clname;
    fStrBuf.ReplaceAll("<","_");
    fStrBuf.ReplaceAll(">","_");
@@ -226,11 +228,11 @@ const char* TXMLSetup::XmlConvertClassName(const char* clname)
    return fStrBuf.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// produce string which used as reference in class namespace definition
+
 const char* TXMLSetup::XmlClassNameSpaceRef(const TClass* cl)
 {
-   // produce string which used as reference in class namespace definition
-
    TString clname = XmlConvertClassName(cl->GetName());
    fStrBuf = fgNameSpaceBase;
    fStrBuf += clname;
@@ -239,34 +241,34 @@ const char* TXMLSetup::XmlClassNameSpaceRef(const TClass* cl)
    return fStrBuf.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  return converted name for TStreamerElement
+
 const char* TXMLSetup::XmlGetElementName(const TStreamerElement* el)
 {
-   //  return converted name for TStreamerElement
-
    if (el==0) return 0;
    if (!el->InheritsFrom(TStreamerSTL::Class())) return el->GetName();
    if (strcmp(el->GetName(), el->GetClassPointer()->GetName())!=0) return el->GetName();
    return XmlConvertClassName(el->GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get item name for given element
+
 const char* TXMLSetup::GetElItemName(TStreamerElement* el)
 {
-   // get item name for given element
-
    if (el==0) return 0;
    fStrBuf = el->GetName();
    fStrBuf+="_item";
    return fStrBuf.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define class for the converted class name, where
+/// special symbols were replaced by '_'
+
 TClass* TXMLSetup::XmlDefineClass(const char* xmlClassName)
 {
-   // define class for the converted class name, where
-   // special symbols were replaced by '_'
-
    if (strchr(xmlClassName,'_')==0) return TClass::GetClass(xmlClassName);
 
    TIter iter(gROOT->GetListOfClasses());
@@ -278,12 +280,12 @@ TClass* TXMLSetup::XmlDefineClass(const char* xmlClassName)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// converts string to integer.
+/// if error, returns default value
+
 Int_t TXMLSetup::AtoI(const char* sbuf, Int_t def, const char* errinfo)
 {
-   // converts string to integer.
-   // if error, returns default value
-
    if (sbuf) return atoi(sbuf);
    if (errinfo)
       std::cerr << "<Error in TXMLSetup::AtoI>" << errinfo << " not valid integer: sbuf <NULL>" << std::endl;

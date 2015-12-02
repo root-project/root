@@ -18,14 +18,14 @@
 
 ClassImp(TSapDBServer)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a connection to a SapDB DB server. The db arguments should be
+/// of the form "sapdb://<host>[:<port>][/<database>]", e.g.:
+/// "sapdb://pcroot.cern.ch:3456/test". The uid is the username and pw
+/// the password that should be used for the connection.
+
 TSapDBServer::TSapDBServer(const char *db, const char *uid, const char *pw)
 {
-   // Open a connection to a SapDB DB server. The db arguments should be
-   // of the form "sapdb://<host>[:<port>][/<database>]", e.g.:
-   // "sapdb://pcroot.cern.ch:3456/test". The uid is the username and pw
-   // the password that should be used for the connection.
-
    fSapDB     = 0;
    fEnv       = 0;
    fStmt      = 0;
@@ -97,20 +97,20 @@ TSapDBServer::TSapDBServer(const char *db, const char *uid, const char *pw)
    fPort = url.GetPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection to SapDB DB server.
+
 TSapDBServer::~TSapDBServer()
 {
-   // Close connection to SapDB DB server.
-
    if (IsConnected())
       Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection to SapDB DB server.
+
 void TSapDBServer::Close(Option_t *)
 {
-   // Close connection to SapDB DB server.
-
    // Disconnect from the data source and free all handles
    RETCODE rc = SQLDisconnect(fSapDB);
    if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
@@ -142,13 +142,13 @@ void TSapDBServer::Close(Option_t *)
   fPort = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute SQL command. Result object must be deleted by the user.
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TSapDBServer::Query(const char *sql)
 {
-   // Execute SQL command. Result object must be deleted by the user.
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    if (!IsConnected()) {
       Error("Query", "not connected");
       return 0;
@@ -217,12 +217,12 @@ TSQLResult *TSapDBServer::Query(const char *sql)
    return new TSapDBResult(fStmt, slRowCount);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select a database. Returns 0 if successful, non-zero otherwise.
+/// For SapDB: only to be used to check the dbname.
+
 Int_t TSapDBServer::SelectDataBase(const char *dbname)
 {
-   // Select a database. Returns 0 if successful, non-zero otherwise.
-   // For SapDB: only to be used to check the dbname.
-
    if (!IsConnected()) {
       Error("SelectDataBase", "not connected");
       return -1;
@@ -236,16 +236,16 @@ Int_t TSapDBServer::SelectDataBase(const char *dbname)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all available databases. Wild is for wildcarding "t%" list all
+/// databases starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+/// For SapDB: you are connected to a certain database, so give me a
+/// list of tables
+
 TSQLResult *TSapDBServer::GetDataBases(const char *wild)
 {
-   // List all available databases. Wild is for wildcarding "t%" list all
-   // databases starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-   // For SapDB: you are connected to a certain database, so give me a
-   // list of tables
-
    if (!IsConnected()) {
       Error("GetDataBases", "not connected");
       return 0;
@@ -254,14 +254,14 @@ TSQLResult *TSapDBServer::GetDataBases(const char *wild)
    return GetTables(fDB, wild);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all tables in the specified database. Wild is for wildcarding
+/// "t%" list all tables starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TSapDBServer::GetTables(const char * /*dbname*/, const char *wild)
 {
-   // List all tables in the specified database. Wild is for wildcarding
-   // "t%" list all tables starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    if (!IsConnected()) {
       Error("GetTables", "not connected");
       return 0;
@@ -274,15 +274,15 @@ TSQLResult *TSapDBServer::GetTables(const char * /*dbname*/, const char *wild)
    return Query(sql);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all columns in specified table in the specified database.
+/// Wild is for wildcarding "t%" list all columns starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TSapDBServer::GetColumns(const char *dbname, const char *table,
                                      const char *wild)
 {
-   // List all columns in specified table in the specified database.
-   // Wild is for wildcarding "t%" list all columns starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    if (!IsConnected()) {
       Error("GetColumns", "not connected");
       return 0;
@@ -302,12 +302,12 @@ TSQLResult *TSapDBServer::GetColumns(const char *dbname, const char *table,
    return Query(sql);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a database. Returns 0 if successful, non-zero otherwise.
+/// For SapDB: do nothing
+
 Int_t TSapDBServer::CreateDataBase(const char * /*dbname*/)
 {
-   // Create a database. Returns 0 if successful, non-zero otherwise.
-   // For SapDB: do nothing
-
    if (!IsConnected()) {
       Error("CreateDataBase", "not connected");
       return -1;
@@ -317,13 +317,13 @@ Int_t TSapDBServer::CreateDataBase(const char * /*dbname*/)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drop (i.e. delete) a database. Returns 0 if successful, non-zero
+/// otherwise.
+/// For SapDB: do nothing
+
 Int_t TSapDBServer::DropDataBase(const char * /*dbname*/)
 {
-   // Drop (i.e. delete) a database. Returns 0 if successful, non-zero
-   // otherwise.
-   // For SapDB: do nothing
-
    if (!IsConnected()) {
       Error("DropDataBase", "not connected");
       return -1;
@@ -333,13 +333,13 @@ Int_t TSapDBServer::DropDataBase(const char * /*dbname*/)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reload permission tables. Returns 0 if successful, non-zero
+/// otherwise. User must have reload permissions.
+/// For SapDB: do nothing
+
 Int_t TSapDBServer::Reload()
 {
-   // Reload permission tables. Returns 0 if successful, non-zero
-   // otherwise. User must have reload permissions.
-   // For SapDB: do nothing
-
    if (!IsConnected()) {
       Error("Reload", "not connected");
       return -1;
@@ -349,13 +349,13 @@ Int_t TSapDBServer::Reload()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shutdown the database server. Returns 0 if successful, non-zero
+/// otherwise. User must have shutdown permissions.
+/// for SapDB: do nothing
+
 Int_t TSapDBServer::Shutdown()
 {
-   // Shutdown the database server. Returns 0 if successful, non-zero
-   // otherwise. User must have shutdown permissions.
-   // for SapDB: do nothing
-
    if (!IsConnected()) {
       Error("Shutdown", "not connected");
       return -1;
@@ -365,11 +365,11 @@ Int_t TSapDBServer::Shutdown()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return server info.
+
 const char *TSapDBServer::ServerInfo()
 {
-   // Return server info.
-
    if (!IsConnected()) {
       Error("ServerInfo", "not connected");
       return 0;
@@ -394,11 +394,11 @@ const char *TSapDBServer::ServerInfo()
    return info;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print SapDB error message.
+
 Int_t TSapDBServer::printSQLError(SQLHDBC hdbc, SQLHSTMT hstmt)
 {
-   // Print SapDB error message.
-
    UCHAR  sqlstate[10];
    SDWORD sqlcode;
    UCHAR  errortxt[512+1];

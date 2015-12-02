@@ -78,7 +78,8 @@ static TMutex createLock;
 static Context* davix_context_s = NULL;
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 bool isno(const char *str)
 {
    if (!str) return false;
@@ -89,7 +90,8 @@ bool isno(const char *str)
 
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int configure_open_flag(const std::string &str, int old_flag)
 {
    if (strcasecmp(str.c_str(), open_mode_read) == 0)
@@ -104,7 +106,8 @@ int configure_open_flag(const std::string &str, int old_flag)
    return old_flag;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static void ConfigureDavixLogLevel()
 {
    Int_t log_level = (gEnv) ? gEnv->GetValue("Davix.Debug", 0) : 0;
@@ -131,7 +134,8 @@ static void ConfigureDavixLogLevel()
 ///////////////////////////////////////////////////////////////////
 // Authn implementation, Locate and get VOMS cred if exist
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static void TDavixFile_http_get_ucert(std::string &ucert, std::string &ukey)
 {
    char default_proxy[64];
@@ -190,7 +194,8 @@ static void TDavixFile_http_get_ucert(std::string &ucert, std::string &ukey)
 
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static int TDavixFile_http_authn_cert_X509(void *userdata, const Davix::SessionInfo &info,
       Davix::X509Credential *cert, Davix::DavixError **err)
 {
@@ -209,14 +214,16 @@ static int TDavixFile_http_authn_cert_X509(void *userdata, const Davix::SessionI
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDavixFileInternal::~TDavixFileInternal()
 {
    delete davixPosix;
    delete davixParam;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Context *TDavixFileInternal::getDavixInstance()
 {
    if (davix_context_s == NULL) {
@@ -228,7 +235,8 @@ Context *TDavixFileInternal::getDavixInstance()
    return davix_context_s;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Davix_fd *TDavixFileInternal::Open()
 {
    DavixError *davixErr = NULL;
@@ -245,7 +253,8 @@ Davix_fd *TDavixFileInternal::Open()
    return fd;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TDavixFileInternal::Close()
 {
    DavixError *davixErr = NULL;
@@ -256,7 +265,8 @@ void TDavixFileInternal::Close()
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TDavixFileInternal::enableGridMode()
 {
    const char *env_var = NULL;
@@ -272,7 +282,8 @@ void TDavixFileInternal::enableGridMode()
       Info("enableGridMode", "Adding CAdir %s", env_var);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TDavixFileInternal::setS3Auth(const std::string &key, const std::string &token)
 {
    if (gDebug > 1)
@@ -281,7 +292,8 @@ void TDavixFileInternal::setS3Auth(const std::string &key, const std::string &to
    davixParam->setProtocol(RequestProtocol::AwsS3);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TDavixFileInternal::parseConfig()
 {
    const char *env_var = NULL, *env_var2 = NULL;
@@ -314,10 +326,11 @@ void TDavixFileInternal::parseConfig()
       enableGridMode();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// intput params
+
 void TDavixFileInternal::parseParams(Option_t *option)
 {
-   // intput params
    std::stringstream ss(option);
    std::string item;
    std::vector<std::string> parsed_options;
@@ -357,7 +370,8 @@ void TDavixFileInternal::parseParams(Option_t *option)
       oflags = O_RDONLY;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TDavixFileInternal::init()
 {
    davixPosix = new DavPosix(davixContext);
@@ -368,7 +382,8 @@ void TDavixFileInternal::init()
    parseParams(opt);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TDavixFileInternal::DavixStat(const char *url, struct stat *st)
 {
    DavixError *davixErr = NULL;
@@ -385,7 +400,8 @@ Int_t TDavixFileInternal::DavixStat(const char *url, struct stat *st)
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDavixFile::TDavixFile(const char *url, Option_t *opt, const char *ftitle, Int_t compress) : TFile(url, "WEB"),
    d_ptr(new TDavixFileInternal(fUrl, opt))
 {
@@ -394,14 +410,16 @@ TDavixFile::TDavixFile(const char *url, Option_t *opt, const char *ftitle, Int_t
    Init(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDavixFile::~TDavixFile()
 {
    d_ptr->Close();
    delete d_ptr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TDavixFile::Init(Bool_t init)
 {
    (void) init;
@@ -418,11 +436,11 @@ void TDavixFile::Init(Bool_t init)
    fD = -2; // so TFile::IsOpen() will return true when in TFile::~TFi */
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set position from where to start reading.
+
 void TDavixFile::Seek(Long64_t offset, ERelativeTo pos)
 {
-   // Set position from where to start reading.
-
    TLockGuard guard(&(d_ptr->positionLock));
    switch (pos) {
       case kBeg:
@@ -444,11 +462,12 @@ void TDavixFile::Seek(Long64_t offset, ERelativeTo pos)
            , fOffset);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified byte range from remote file via HTTP.
+/// Returns kTRUE in case of error.
+
 Bool_t TDavixFile::ReadBuffer(char *buf, Int_t len)
 {
-   // Read specified byte range from remote file via HTTP.
-   // Returns kTRUE in case of error.
    TLockGuard guard(&(d_ptr->positionLock));
    Davix_fd *fd;
    if ((fd = d_ptr->getDavixFileInstance()) == NULL)
@@ -464,10 +483,10 @@ Bool_t TDavixFile::ReadBuffer(char *buf, Int_t len)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TDavixFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
-
    Davix_fd *fd;
    if ((fd = d_ptr->getDavixFileInstance()) == NULL)
       return kTRUE;
@@ -482,10 +501,10 @@ Bool_t TDavixFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    return kFALSE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TDavixFile::ReadBufferAsync(Long64_t offs, Int_t len)
 {
-
    Davix_fd *fd;
    if ((fd = d_ptr->getDavixFileInstance()) == NULL)
       return kFALSE;
@@ -498,7 +517,8 @@ Bool_t TDavixFile::ReadBufferAsync(Long64_t offs, Int_t len)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TDavixFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 {
    Davix_fd *fd;
@@ -516,10 +536,10 @@ Bool_t TDavixFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TDavixFile::WriteBuffer(const char *buf, Int_t len)
 {
-
    Davix_fd *fd;
    if ((fd = d_ptr->getDavixFileInstance()) == NULL)
       return kTRUE;
@@ -534,19 +554,22 @@ Bool_t TDavixFile::WriteBuffer(const char *buf, Int_t len)
    return kFALSE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TDavixFile::setCACheck(Bool_t check)
 {
    d_ptr->davixParam->setSSLCAcheck((bool)check);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TDavixFile::enableGridMode()
 {
    d_ptr->enableGridMode();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 bool TDavixFileInternal::isMyDird(void *fd)
 {
    TLockGuard l(&(openLock));
@@ -554,14 +577,16 @@ bool TDavixFileInternal::isMyDird(void *fd)
    return (f != dirdVec.end());
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TDavixFileInternal::addDird(void *fd)
 {
    TLockGuard l(&(openLock));
    dirdVec.push_back(fd);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TDavixFileInternal::removeDird(void *fd)
 {
    TLockGuard l(&(openLock));
@@ -570,7 +595,8 @@ void TDavixFileInternal::removeDird(void *fd)
       dirdVec.erase(f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Long64_t TDavixFile::GetSize() const
 {
    struct stat st;
@@ -583,7 +609,8 @@ Long64_t TDavixFile::GetSize() const
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TDavixFile::eventStart()
 {
    if (gPerfStats)
@@ -591,10 +618,11 @@ Double_t TDavixFile::eventStart()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set TFile state info
+
 void TDavixFile::eventStop(Double_t t_start, Long64_t len)
 {
-   // set TFile state info
    fBytesRead += len;
    fReadCalls += 1;
 
@@ -602,7 +630,8 @@ void TDavixFile::eventStop(Double_t t_start, Long64_t len)
       gPerfStats->FileReadEvent(this, (Int_t) len, t_start);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Long64_t TDavixFile::DavixReadBuffer(Davix_fd *fd, char *buf, Int_t len)
 {
    DavixError *davixErr = NULL;
@@ -621,7 +650,8 @@ Long64_t TDavixFile::DavixReadBuffer(Davix_fd *fd, char *buf, Int_t len)
    return ret;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Long64_t TDavixFile::DavixWriteBuffer(Davix_fd *fd, const char *buf, Int_t len)
 {
    DavixError *davixErr = NULL;
@@ -640,7 +670,8 @@ Long64_t TDavixFile::DavixWriteBuffer(Davix_fd *fd, const char *buf, Int_t len)
    return ret;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Long64_t TDavixFile::DavixPReadBuffer(Davix_fd *fd, char *buf, Long64_t pos, Int_t len)
 {
    DavixError *davixErr = NULL;
@@ -659,7 +690,8 @@ Long64_t TDavixFile::DavixPReadBuffer(Davix_fd *fd, char *buf, Long64_t pos, Int
    return ret;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Long64_t TDavixFile::DavixReadBuffers(Davix_fd *fd, char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 {
    DavixError *davixErr = NULL;

@@ -89,11 +89,11 @@ TTask *TTask::fgBreakPoint = 0;
 
 ClassImp(TTask)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor invoked when reading a TTask object from a file.
+
 TTask::TTask()
 {
-   // Default constructor invoked when reading a TTask object from a file.
-
    fHasExecuted = kFALSE;
    fActive      = kTRUE;
    fBreakin     = 0;
@@ -101,12 +101,12 @@ TTask::TTask()
    fTasks       = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Standard constructor.
+
 TTask::TTask(const char* name, const char *title)
       : TNamed(name,title)
 {
-   // Standard constructor.
-
    fHasExecuted = kFALSE;
    fActive      = kTRUE;
    fBreakin     = 0;
@@ -135,10 +135,11 @@ TTask& TTask::operator=(const TTask& tt)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TTask::TTask(const TTask &other) : TNamed(other)
 {
-   // Copy constructor.
    fTasks = new TList();
    TIter next(other.fTasks);
    TTask *task;
@@ -152,23 +153,24 @@ TTask::TTask(const TTask &other) : TNamed(other)
    fActive = other.fActive;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a task and its subtasks.
+
 TTask::~TTask()
 {
-   // Delete a task and its subtasks.
    if (!fTasks) return;
    fTasks->Delete();
    delete fTasks;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Abort current tree of tasks.
+/// After this call, the tree of tasks is ready to be executed again.
+/// The application must take care of cleaning data structures created
+/// by previous executions.
+
 void TTask::Abort()
 {
-   // Abort current tree of tasks.
-   // After this call, the tree of tasks is ready to be executed again.
-   // The application must take care of cleaning data structures created
-   // by previous executions.
-
    if (!fgBeginTask) {
       printf(" Nothing to abort: No task currently running\n");
       return;
@@ -178,24 +180,24 @@ void TTask::Abort()
    fgBreakPoint = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse the list of tasks.
+/// It is recommended to add the top level task to the list of
+/// ROOT browsables by:
+///    gROOT->GetListOfBrowsables()->Add(myTopLevelTask)
+
 void TTask::Browse(TBrowser *b)
 {
-   // Browse the list of tasks.
-   // It is recommended to add the top level task to the list of
-   // ROOT browsables by:
-   //    gROOT->GetListOfBrowsables()->Add(myTopLevelTask)
-
    fTasks->Browse(b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset tasks state: breakpoints and execute flags
+/// also invokes the Clear function of each task to clear all data
+/// structures created by a previous execution of a task.
+
 void TTask::CleanTasks()
 {
-   // Reset tasks state: breakpoints and execute flags
-   // also invokes the Clear function of each task to clear all data
-   // structures created by a previous execution of a task.
-
    if (fBreakin)  fBreakin  = 1;
    if (fBreakout) fBreakout = 1;
    fHasExecuted = kFALSE;
@@ -207,20 +209,21 @@ void TTask::CleanTasks()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively call the Clear function of this task and its subtasks.
+/// The Clear function must be implemented for each derived class
+/// to clear all data structures created by a previous execution of a task.
+/// This function is automatically called by the CleanTasks function.
+
 void TTask::Clear(Option_t *)
 {
-   // Recursively call the Clear function of this task and its subtasks.
-   // The Clear function must be implemented for each derived class
-   // to clear all data structures created by a previous execution of a task.
-   // This function is automatically called by the CleanTasks function.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resume execution at the current break point.
+
 void TTask::Continue()
 {
-   // Resume execution at the current break point.
-
    if (!fgBeginTask) {
       printf(" No task to continue\n");
       return;
@@ -235,24 +238,25 @@ void TTask::Continue()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy Execute.
+/// This function must be redefined in the derived classes.
+
 void TTask::Exec(Option_t *)
 {
-   // Dummy Execute.
-   // This function must be redefined in the derived classes.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute main task and its subtasks.
+/// When calling this function, the Exec function of the corresponding class
+/// is invoked, then the list of its subtasks is executed calling recursively
+/// all the subtasks, etc.
+///
+/// The option parameter may be used to select different execution steps
+/// within a task. This parameter is passed also to all the subtasks.
+
 void TTask::ExecuteTask(Option_t *option)
 {
-   // Execute main task and its subtasks.
-   // When calling this function, the Exec function of the corresponding class
-   // is invoked, then the list of its subtasks is executed calling recursively
-   // all the subtasks, etc.
-   //
-   // The option parameter may be used to select different execution steps
-   // within a task. This parameter is passed also to all the subtasks.
-
    if (fgBeginTask) {
       Error("ExecuteTask","Cannot execute task:%s, already running task: %s",GetName(),fgBeginTask->GetName());
       return;
@@ -283,11 +287,11 @@ void TTask::ExecuteTask(Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute all the subtasks of a task.
+
 void TTask::ExecuteTasks(Option_t *option)
 {
-   // Execute all the subtasks of a task.
-
    TIter next(fTasks);
    TTask *task;
    while((task=(TTask*)next())) {
@@ -322,12 +326,12 @@ void TTask::ExecuteTasks(Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List the tree of tasks.
+/// Indentation is used to identify the task tree.
+
 void TTask::ls(Option_t *option) const
 {
-   // List the tree of tasks.
-   // Indentation is used to identify the task tree.
-
    TROOT::IndentLevel();
    std::cout <<GetName()<<"\t"<<GetTitle()<<std::endl;
    TROOT::IncreaseDirLevel();

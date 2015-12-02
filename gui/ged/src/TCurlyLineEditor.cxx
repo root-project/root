@@ -43,13 +43,13 @@ enum ECurlyLineWid {
    kCRLL_ENDY
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of CurlyLine GUI.
+
 TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t width,
                            Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of CurlyLine GUI.
-
    fCurlyLine = 0;
 
    MakeTitle("Curly Line");
@@ -139,17 +139,18 @@ TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t width,
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of CurlyLine editor.
+
 TCurlyLineEditor::~TCurlyLineEditor()
 {
-   // Destructor of CurlyLine editor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TCurlyLineEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fStartXEntry->Connect("ValueSet(Long_t)", "TCurlyLineEditor", this, "DoStartXY()");
    (fStartXEntry->GetNumberEntry())->Connect("ReturnPressed()", "TCurlyLineEditor", this, "DoStartXY()");
    fStartYEntry->Connect("ValueSet(Long_t)", "TCurlyLineEditor", this, "DoStartXY()");
@@ -167,11 +168,11 @@ void TCurlyLineEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the used curly line attributes.
+
 void TCurlyLineEditor::SetModel(TObject* obj)
 {
-   // Pick up the used curly line attributes.
-
    if (obj->InheritsFrom("TCurlyArc")) {
       HideFrame(fStartXFrame);
       fStartXEntry->Disconnect("ValueSet(Long_t)");
@@ -214,52 +215,52 @@ void TCurlyLineEditor::SetModel(TObject* obj)
    fAvoidSignal = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exclude TAttFillEditor.
+
 void TCurlyLineEditor::ActivateBaseClassEditors(TClass* cl)
 {
-   // Exclude TAttFillEditor.
-
    fGedEditor->ExcludeClassEditor(TAttFill::Class());
    TGedFrame::ActivateBaseClassEditors(cl);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the CurlyLine StartPoint.
+
 void TCurlyLineEditor::DoStartXY()
 {
-   // Slot connected to the CurlyLine StartPoint.
-
    if (fAvoidSignal) return;
    fCurlyLine->SetStartPoint(fStartXEntry->GetNumber(), fStartYEntry->GetNumber());
    fCurlyLine->Paint(fCurlyLine->GetDrawOption());
    Update();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the CurlyLine End.
+
 void TCurlyLineEditor::DoEndXY()
 {
-   // Slot connected to the CurlyLine End.
-
    if (fAvoidSignal) return;
    fCurlyLine->SetEndPoint(fEndXEntry->GetNumber(), fEndYEntry->GetNumber());
    fCurlyLine->Paint(fCurlyLine->GetDrawOption());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the amplitude setting.
+
 void TCurlyLineEditor::DoAmplitude()
 {
-   // Slot connected to the amplitude setting.
-
    if (fAvoidSignal) return;
    fCurlyLine->SetAmplitude((Double_t)fAmplitudeEntry->GetNumber());
    fCurlyLine->Paint(fCurlyLine->GetDrawOption());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the wavelength setting.
+
 void TCurlyLineEditor::DoWaveLength()
 {
-   // Slot connected to the wavelength setting.
-
    if (fAvoidSignal) return;
    Double_t num = fWaveLengthEntry->GetNumber();
    fCurlyLine->SetWaveLength(num);
@@ -267,11 +268,11 @@ void TCurlyLineEditor::DoWaveLength()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the wavy / curly setting.
+
 void TCurlyLineEditor::DoWavy()
 {
-   // Slot connected to the wavy / curly setting.
-
    if (fAvoidSignal) return;
    if (fIsWavy->GetState() == kButtonDown)
       fCurlyLine->SetCurly();

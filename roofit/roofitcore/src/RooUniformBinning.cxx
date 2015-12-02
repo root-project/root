@@ -40,42 +40,46 @@ ClassImp(RooUniformBinning)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default Constructor
+/// coverity[UNINIT_CTOR]
+
 RooUniformBinning::RooUniformBinning(const char* name) : 
   RooAbsBinning(name)
 {  
-  // Default Constructor
-  // coverity[UNINIT_CTOR]
   _array = 0 ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct range [xlo,xhi] with 'nBins' bins
+
 RooUniformBinning::RooUniformBinning(Double_t xlo, Double_t xhi, Int_t nBins, const char* name) :
   RooAbsBinning(name),
   _array(0), 
   _nbins(nBins)
 {
-  // Construct range [xlo,xhi] with 'nBins' bins
   setRange(xlo,xhi) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooUniformBinning::~RooUniformBinning() 
 {
-  // Destructor
   if (_array) delete[] _array ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooUniformBinning::RooUniformBinning(const RooUniformBinning& other, const char* name) :
   RooAbsBinning(name)
 {
-  // Copy constructor
   _array = 0 ;
   _xlo   = other._xlo ;
   _xhi   = other._xhi ;
@@ -85,12 +89,12 @@ RooUniformBinning::RooUniformBinning(const RooUniformBinning& other, const char*
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change range to [xlo,xhi]. A changes in range automatically
+/// adjusts the binning as well to nBins bins in the new range
+
 void RooUniformBinning::setRange(Double_t xlo, Double_t xhi) 
 {
-  // Change range to [xlo,xhi]. A changes in range automatically
-  // adjusts the binning as well to nBins bins in the new range
-
   if (xlo>xhi) {
     coutE(InputArguments) << "RooUniformBinning::setRange: ERROR low bound > high bound" << endl ;
     return ;
@@ -109,11 +113,11 @@ void RooUniformBinning::setRange(Double_t xlo, Double_t xhi)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the index of the bin that encloses 'x'
+
 Int_t RooUniformBinning::binNumber(Double_t x) const  
 {
-  // Return the index of the bin that encloses 'x'
-
   Int_t bin = Int_t((x - _xlo)/_binw) ;
   if (bin<0) return 0 ;
   if (bin>_nbins-1) return _nbins-1 ;
@@ -122,10 +126,11 @@ Int_t RooUniformBinning::binNumber(Double_t x) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the central value of the 'i'-th fit bin
+
 Double_t RooUniformBinning::binCenter(Int_t i) const 
 {
-  // Return the central value of the 'i'-th fit bin
   if (i<0 || i>=_nbins) {
     coutE(InputArguments) << "RooUniformBinning::binCenter ERROR: bin index " << i 
 			  << " is out of range (0," << _nbins-1 << ")" << endl ;
@@ -138,20 +143,21 @@ Double_t RooUniformBinning::binCenter(Int_t i) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the bin width (same for all bins)
+
 Double_t RooUniformBinning::binWidth(Int_t /*bin*/) const 
 {
-  // Return the bin width (same for all bins)
   return _binw ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the low edge of the 'i'-th fit bin
+
 Double_t RooUniformBinning::binLow(Int_t i) const 
 {
-  // Return the low edge of the 'i'-th fit bin
-
   if (i<0 || i>=_nbins) {
     coutE(InputArguments) << "RooUniformBinning::binLow ERROR: bin index " << i 
 			  << " is out of range (0," << _nbins-1 << ")" << endl ;
@@ -163,11 +169,11 @@ Double_t RooUniformBinning::binLow(Int_t i) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the high edge of the 'i'-th fit bin
+
 Double_t RooUniformBinning::binHigh(Int_t i) const 
 {
-  // Return the high edge of the 'i'-th fit bin
-
   if (i<0 || i>=_nbins) {
     coutE(InputArguments) << "RooUniformBinning::fitBinHigh ERROR: bin index " << i 
 			  << " is out of range (0," << _nbins-1 << ")" << endl ;
@@ -179,10 +185,11 @@ Double_t RooUniformBinning::binHigh(Int_t i) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an array of doubles with the bin boundaries
+
 Double_t* RooUniformBinning::array() const 
 {
-  // Return an array of doubles with the bin boundaries
   if (_array) delete[] _array ;
   _array = new Double_t[_nbins+1] ;
 

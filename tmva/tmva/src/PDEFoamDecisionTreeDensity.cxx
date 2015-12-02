@@ -48,59 +48,63 @@
 
 ClassImp(TMVA::PDEFoamDecisionTreeDensity)
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::PDEFoamDecisionTreeDensity::PDEFoamDecisionTreeDensity()
    : PDEFoamDensityBase()
    , fClass(0)
 {}
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User construcor:
+///
+/// Parameters:
+///
+/// - box - size of the range-searching box (n-dimensional
+///   std::vector)
+///
+/// - cls - event class used for the range-searching
+
 TMVA::PDEFoamDecisionTreeDensity::PDEFoamDecisionTreeDensity(std::vector<Double_t> box, UInt_t cls)
    : PDEFoamDensityBase(box)
    , fClass(cls)
 {
-   // User construcor:
-   //
-   // Parameters:
-   //
-   // - box - size of the range-searching box (n-dimensional
-   //   std::vector)
-   //
-   // - cls - event class used for the range-searching
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TMVA::PDEFoamDecisionTreeDensity::PDEFoamDecisionTreeDensity(const PDEFoamDecisionTreeDensity &distr)
    : PDEFoamDensityBase(distr)
    , fClass(distr.fClass)
 {
-   // Copy constructor
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is not used in the decision tree like PDEFoam,
+/// instead FillHist() is used.
+
 Double_t TMVA::PDEFoamDecisionTreeDensity::Density(std::vector<Double_t>& /* Xarg */,
                                                    Double_t&              /* event_density */)
 {
-   // This function is not used in the decision tree like PDEFoam,
-   // instead FillHist() is used.
    return 0;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the given histograms with signal and background events,
+/// which are found in the volume.
+///
+/// Parameters:
+///
+/// - volume - volume box to search in
+///
+/// - hsig, hbkg, hsig_unw, hbkg_unw - histograms with weighted and
+///   unweighted signal and background events
+
 void TMVA::PDEFoamDecisionTreeDensity::FillHistograms(TMVA::Volume &volume, std::vector<TH1D*> &hsig,
                                                       std::vector<TH1D*> &hbkg, std::vector<TH1D*> &hsig_unw,
                                                       std::vector<TH1D*> &hbkg_unw)
 {
-   // Fill the given histograms with signal and background events,
-   // which are found in the volume.
-   //
-   // Parameters:
-   //
-   // - volume - volume box to search in
-   //
-   // - hsig, hbkg, hsig_unw, hbkg_unw - histograms with weighted and
-   //   unweighted signal and background events
-
    // sanity check
    if (hsig.size() != volume.fLower->size()
        || hbkg.size() != volume.fLower->size()

@@ -38,32 +38,32 @@
 
 ClassImp(TNtuple)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Default constructor for Ntuple*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*        ==============================
+
 TNtuple::TNtuple(): TTree()
 {
-//*-*-*-*-*-*Default constructor for Ntuple*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ==============================
-
    fNvar = 0;
    fArgs = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*-*Create an Ntuple*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                      ================
+///       The parameter varlist describes the list of the ntuple variables
+///       separated by a colon:
+///         example:  "x:y:z:energy"
+///       For each variable in the list a separate branch is created.
+///
+///      NOTE:
+///       -Use TTree to create branches with variables of different data types.
+///       -Use TTree when the number of branches is large (> 100).
+///*-*
+
 TNtuple::TNtuple(const char *name, const char *title, const char *varlist, Int_t bufsize)
        :TTree(name,title)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Create an Ntuple*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ================
-//       The parameter varlist describes the list of the ntuple variables
-//       separated by a colon:
-//         example:  "x:y:z:energy"
-//       For each variable in the list a separate branch is created.
-//
-//      NOTE:
-//       -Use TTree to create branches with variables of different data types.
-//       -Use TTree when the number of branches is large (> 100).
-//*-*
-
    Int_t i;
    fNvar = 0;
    fArgs = 0;
@@ -95,28 +95,28 @@ TNtuple::TNtuple(const char *name, const char *title, const char *varlist, Int_t
    delete [] pvars;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Default destructor for an Ntuple*-*-*-*-*-*-*-*-*-*-*-*
+///*-*        ================================
+
 TNtuple::~TNtuple()
 {
-//*-*-*-*-*-*Default destructor for an Ntuple*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ================================
-
    delete [] fArgs;
    fArgs = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a clone of this tree and copy nentries.
+///
+/// By default copy all entries.
+/// Note that only active branches are copied.
+/// The compression level of the cloned tree is set to the destination file's
+/// compression level.
+///
+/// See TTree::CloneTree for more details.
+
 TTree* TNtuple::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" */)
 {
-   // Create a clone of this tree and copy nentries.
-   //
-   // By default copy all entries.
-   // Note that only active branches are copied.
-   // The compression level of the cloned tree is set to the destination file's
-   // compression level.
-   //
-   // See TTree::CloneTree for more details.
-
    TNtuple *newtuple = dynamic_cast<TNtuple*> (TTree::CloneTree(nentries,option) );
    if (newtuple) {
       // To deal with the cases of some of the branches where dropped.
@@ -125,12 +125,12 @@ TTree* TNtuple::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = ""
    return newtuple;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the branch addresses to the internal fArgs array. Use this
+/// method when the addresses were changed via calls to SetBranchAddress().
+
 void TNtuple::ResetBranchAddress(TBranch *branch)
 {
-   // Reset the branch addresses to the internal fArgs array. Use this
-   // method when the addresses were changed via calls to SetBranchAddress().
-
    if (branch) {
       Int_t index = fBranches.IndexOf(branch);
       if (index>=0) {
@@ -139,43 +139,43 @@ void TNtuple::ResetBranchAddress(TBranch *branch)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the branch addresses to the internal fArgs array. Use this
+/// method when the addresses were changed via calls to SetBranchAddress().
+
 void TNtuple::ResetBranchAddresses()
 {
-   // Reset the branch addresses to the internal fArgs array. Use this
-   // method when the addresses were changed via calls to SetBranchAddress().
-
    for (Int_t i = 0; i < fNvar; i++) {
       TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
       if (branch) branch->SetAddress(&fArgs[i]);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse content of the ntuple
+
 void TNtuple::Browse(TBrowser *b)
 {
-   // Browse content of the ntuple
-
    fLeaves.Browse( b );
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Fill a Ntuple with current values in fArgs*-*-*-*-*-*-*
+///*-*              ==========================================
+/// Note that this function is protected.
+/// Currently called only by TChain::Merge
+
 Int_t TNtuple::Fill()
 {
-//*-*-*-*-*-*-*-*-*Fill a Ntuple with current values in fArgs*-*-*-*-*-*-*
-//*-*              ==========================================
-// Note that this function is protected.
-// Currently called only by TChain::Merge
-
    return TTree::Fill();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill a Ntuple with an array of floats
+
 Int_t TNtuple::Fill(const Float_t *x)
 {
-   // Fill a Ntuple with an array of floats
-
 
    // Store array x into buffer
    for (Int_t i=0;i<fNvar;i++)  {
@@ -186,13 +186,13 @@ Int_t TNtuple::Fill(const Float_t *x)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill a Ntuple: Each Ntuple item is an argument
+
 Int_t TNtuple::Fill(Float_t x0,Float_t x1,Float_t x2,Float_t x3,Float_t x4
               ,Float_t x5,Float_t x6,Float_t x7,Float_t x8,Float_t x9
               ,Float_t x10,Float_t x11,Float_t x12,Float_t x13,Float_t x14)
 {
-   // Fill a Ntuple: Each Ntuple item is an argument
-
    if (fNvar >  0) fArgs[0]  = x0;
    if (fNvar >  1) fArgs[1]  = x1;
    if (fNvar >  2) fArgs[2]  = x2;
@@ -212,14 +212,14 @@ Int_t TNtuple::Fill(Float_t x0,Float_t x1,Float_t x2,Float_t x3,Float_t x4
    return TTree::Fill();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read from filename as many columns as variables in the ntuple
+/// the function returns the number of rows found in the file
+/// The second argument "branchDescriptor" is currently not used.
+/// Lines in the input file starting with "#" are ignored.
+
 Long64_t TNtuple::ReadStream(std::istream &inputStream, const char * /*branchDescriptor*/, char delimiter)
 {
-   // Read from filename as many columns as variables in the ntuple
-   // the function returns the number of rows found in the file
-   // The second argument "branchDescriptor" is currently not used.
-   // Lines in the input file starting with "#" are ignored.
-
    /*
    Long64_t nlines = 0;
    char newline = GetNewlineValue(inputStream);
@@ -245,11 +245,12 @@ Long64_t TNtuple::ReadStream(std::istream &inputStream, const char * /*branchDes
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*              =========================================
+
 void TNtuple::Streamer(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              =========================================
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);

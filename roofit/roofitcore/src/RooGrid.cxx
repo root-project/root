@@ -44,20 +44,21 @@ ClassImp(RooGrid)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooGrid::RooGrid() :
   _valid(kFALSE), _dim(0), _bins(0), _boxes(0), _vol(0), _xl(0),  _xu(0),  _delx(0),  _d(0),  _xi(0),  _xin(0),  _weight(0)
 {
-  // Default constructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with given function binding
+
 RooGrid::RooGrid(const RooAbsFunc &function)
   : _valid(kTRUE), _xl(0),_xu(0),_delx(0),_xi(0)
 {
-  // Constructor with given function binding
-
   // check that the input function is valid
   if(!(_valid= function.isValid())) {
     oocoutE((TObject*)0,InputArguments) << ClassName() << ": cannot initialize using an invalid function" << endl;
@@ -84,10 +85,11 @@ RooGrid::RooGrid(const RooAbsFunc &function)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooGrid::~RooGrid() 
 {
-  // Destructor
   if(_xl)     delete[] _xl;
   if(_xu)     delete[] _xu;
   if(_delx)   delete[] _delx;
@@ -98,13 +100,13 @@ RooGrid::~RooGrid()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and store the grid dimensions and volume using the
+/// specified function, and initialize the grid using a single bin.
+/// Return kTRUE, or else kFALSE if the range is not valid.
+
 Bool_t RooGrid::initialize(const RooAbsFunc &function) 
 {
-  // Calculate and store the grid dimensions and volume using the
-  // specified function, and initialize the grid using a single bin.
-  // Return kTRUE, or else kFALSE if the range is not valid.
-
   _vol= 1;
   _bins= 1;
   for(UInt_t index= 0; index < _dim; index++) {
@@ -133,14 +135,14 @@ Bool_t RooGrid::initialize(const RooAbsFunc &function)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adjust the subdivision of each axis to give the specified
+/// number of bins, using an algorithm that preserves relative
+/// bin density. The new binning can be finer or coarser than
+/// the original binning.
+
 void RooGrid::resize(UInt_t bins) 
 {
-  // Adjust the subdivision of each axis to give the specified
-  // number of bins, using an algorithm that preserves relative
-  // bin density. The new binning can be finer or coarser than
-  // the original binning.
-
   // is there anything to do?
   if(bins == _bins) return;
   
@@ -173,11 +175,11 @@ void RooGrid::resize(UInt_t bins)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the values associated with each grid cell.
+
 void RooGrid::resetValues() 
 {
-  // Reset the values associated with each grid cell.
-  
   for(UInt_t i = 0; i < _bins; i++) {
     for (UInt_t j = 0; j < _dim; j++) {
       value(i,j)= 0.0;
@@ -186,16 +188,16 @@ void RooGrid::resetValues()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate a random vector in the specified box and and store its
+/// coordinates in the x[] array provided, the corresponding bin
+/// indices in the bin[] array, and the volume of this bin in vol.
+/// The box is specified by the array box[] of box integer indices
+/// that each range from 0 to getNBoxes()-1.
+
 void RooGrid::generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[], Double_t &vol,
 			    Bool_t useQuasiRandom) const 
 {
-  // Generate a random vector in the specified box and and store its
-  // coordinates in the x[] array provided, the corresponding bin
-  // indices in the bin[] array, and the volume of this bin in vol.
-  // The box is specified by the array box[] of box integer indices
-  // that each range from 0 to getNBoxes()-1.
-
   vol= 1;
 
   // generate a vector of quasi-random numbers to use
@@ -237,24 +239,24 @@ void RooGrid::generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[], Doub
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the specified array of box indices to refer to the first box
+/// in the standard traversal order.
+
 void RooGrid::firstBox(UInt_t box[]) const 
 {
-  // Reset the specified array of box indices to refer to the first box
-  // in the standard traversal order.
-
   for(UInt_t i= 0; i < _dim; i++) box[i]= 0;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the specified array of box indices to refer to the next box
+/// in the standard traversal order and return kTRUE, or else return
+/// kFALSE if we the indices already refer to the last box.
+
 Bool_t RooGrid::nextBox(UInt_t box[]) const 
 {
-  // Update the specified array of box indices to refer to the next box
-  // in the standard traversal order and return kTRUE, or else return
-  // kFALSE if we the indices already refer to the last box.
-
   // try incrementing each index until we find one that does not roll
   // over, starting from the last index.
   Int_t j(_dim-1);
@@ -269,11 +271,11 @@ Bool_t RooGrid::nextBox(UInt_t box[]) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print info about this object to the specified stream.
+
 void RooGrid::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const 
 {
-  // Print info about this object to the specified stream.
-
   os << ClassName() << ": volume = " << getVolume() << endl;
   os << indent << "  Has " << getDimension() << " dimension(s) each subdivided into "
      << getNBins() << " bin(s) and sampled with " << _boxes << " box(es)" << endl;
@@ -289,49 +291,52 @@ void RooGrid::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TS
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print name of grid object
+
 void RooGrid::printName(ostream& os) const 
 {
-  // Print name of grid object
   os << GetName() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print title of grid object
+
 void RooGrid::printTitle(ostream& os) const 
 {
-  // Print title of grid object
   os << GetTitle() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print class name of grid object
+
 void RooGrid::printClassName(ostream& os) const 
 {
-  // Print class name of grid object
   os << IsA()->GetName() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the specified amount to bin[j] of the 1D histograms associated
+/// with each axis j.
+
 void RooGrid::accumulate(const UInt_t bin[], Double_t amount) 
 {
-  // Add the specified amount to bin[j] of the 1D histograms associated
-  // with each axis j.
-
   for(UInt_t j = 0; j < _dim; j++) value(bin[j],j) += amount;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refine the grid using the values that have been accumulated so far.
+/// The parameter alpha controls the stiffness of the rebinning and should
+/// usually be between 1 (stiffer) and 2 (more flexible). A value of zero
+/// prevents any rebinning.
+
 void RooGrid::refine(Double_t alpha) 
 {
-  // Refine the grid using the values that have been accumulated so far.
-  // The parameter alpha controls the stiffness of the rebinning and should
-  // usually be between 1 (stiffer) and 2 (more flexible). A value of zero
-  // prevents any rebinning.
-  
   for (UInt_t j = 0; j < _dim; j++) {
 
     // smooth this dimension's histogram of grid values and calculate the

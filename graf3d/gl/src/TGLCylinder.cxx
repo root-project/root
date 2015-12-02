@@ -119,11 +119,11 @@ TGLMesh::TGLMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r4,
    // constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get normal
+
 void TGLMesh::GetNormal(const TGLVertex3 &v, TGLVector3 &n)const
 {
-   // get normal
-
    if( fDz < 1.e-10 ) {
       n[0] = 0.;
       n[1] = 0.;
@@ -142,10 +142,11 @@ void TGLMesh::GetNormal(const TGLVertex3 &v, TGLVector3 &n)const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get Z coordinate
+
 Double_t TGLMesh::GetZcoord(Double_t x, Double_t y, Double_t z)const
 {
-   // get Z coordinate
    Double_t newz = 0;
    if (z < 0) newz = -fDz - (x * fNlow[0] + y * fNlow[1]) / fNlow[2];
    else newz = fDz - (x * fNhigh[0] + y * fNhigh[1]) / fNhigh[2];
@@ -153,10 +154,11 @@ Double_t TGLMesh::GetZcoord(Double_t x, Double_t y, Double_t z)const
    return newz;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// make vertex
+
 const TGLVertex3 &TGLMesh::MakeVertex(Double_t x, Double_t y, Double_t z)const
 {
-   // make vertex
    static TGLVertex3 vert(0., 0., 0.);
    vert[0] = x;
    vert[1] = y;
@@ -165,7 +167,8 @@ const TGLVertex3 &TGLMesh::MakeVertex(Double_t x, Double_t y, Double_t z)const
    return vert;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TubeSegMesh::TubeSegMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
                          Double_t phi1, Double_t phi2,
                          const TGLVector3 &l, const TGLVector3 &h)
@@ -240,11 +243,12 @@ TubeSegMesh::TubeSegMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Doub
    fNorm[ind + 3] = norm;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Tube segment is drawn as three quad strips
+///1. enabling vertex arrays
+
 void TubeSegMesh::Draw() const
 {
-   //Tube segment is drawn as three quad strips
-   //1. enabling vertex arrays
    glEnableClientState(GL_VERTEX_ARRAY);
    glEnableClientState(GL_NORMAL_ARRAY);
    //2. setting arrays
@@ -260,12 +264,13 @@ void TubeSegMesh::Draw() const
    glDisableClientState(GL_NORMAL_ARRAY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TubeMesh::TubeMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t z,
                    const TGLVector3 &l, const TGLVector3 &h)
              :TGLMesh(LOD, r1, r2, r3, r4, z, l, h), fMesh(), fNorm()
 {
-   // constructor
    const Double_t delta = TMath::TwoPi() / fLOD;
    Double_t currAngle = 0.;
 
@@ -307,10 +312,11 @@ TubeMesh::TubeMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Tube is drawn as four quad strips
+
 void TubeMesh::Draw() const
 {
-   //Tube is drawn as four quad strips
    glEnableClientState(GL_VERTEX_ARRAY);
    glEnableClientState(GL_NORMAL_ARRAY);
 
@@ -327,12 +333,13 @@ void TubeMesh::Draw() const
    glDisableClientState(GL_NORMAL_ARRAY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TCylinderMesh::TCylinderMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t dz,
                              const TGLVector3 &l, const TGLVector3 &h)
                  :TGLMesh(LOD, 0., r1, 0., r2, dz, l, h), fMesh(), fNorm()
 {
-   // constructor
    const Double_t delta = TMath::TwoPi() / fLOD;
    Double_t currAngle = 0.;
 
@@ -374,10 +381,11 @@ TCylinderMesh::TCylinderMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t dz,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// draw cylinder mesh
+
 void TCylinderMesh::Draw() const
 {
-   // draw cylinder mesh
    glEnableClientState(GL_VERTEX_ARRAY);
    glEnableClientState(GL_NORMAL_ARRAY);
 
@@ -394,13 +402,14 @@ void TCylinderMesh::Draw() const
    glDisableClientState(GL_NORMAL_ARRAY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///One quad mesh and two fans
+
 TCylinderSegMesh::TCylinderSegMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t dz, Double_t phi1,
                                     Double_t phi2, const TGLVector3 &l,
                                     const TGLVector3 &h)
                      :TGLMesh(LOD, 0., r1, 0., r2, dz, l, h), fMesh(), fNorm()
 {
-   //One quad mesh and two fans
    Double_t delta = (phi2 - phi1) / fLOD;
    Double_t currAngle = phi1;
 
@@ -474,12 +483,13 @@ TCylinderSegMesh::TCylinderSegMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_
    fNorm[ind + 3] = norm;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Cylinder segment is drawn as one quad strip and
+///two triangle fans
+///1. enabling vertex arrays
+
 void TCylinderSegMesh::Draw() const
 {
-   //Cylinder segment is drawn as one quad strip and
-   //two triangle fans
-   //1. enabling vertex arrays
    glEnableClientState(GL_VERTEX_ARRAY);
    glEnableClientState(GL_NORMAL_ARRAY);
    //2. setting arrays
@@ -507,13 +517,13 @@ void TCylinderSegMesh::Draw() const
 
 ClassImp(TGLCylinder);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy out relevant parts of buffer - we create and delete mesh
+/// parts on demand in DirectDraw() and they are DL cached
+
 TGLCylinder::TGLCylinder(const TBuffer3DTube &buffer) :
    TGLLogicalShape(buffer)
 {
-   // Copy out relevant parts of buffer - we create and delete mesh
-   // parts on demand in DirectDraw() and they are DL cached
-
    fDLSize = 14;
 
    fR1 = buffer.fRadiusInner;
@@ -570,18 +580,19 @@ TGLCylinder::TGLCylinder(const TBuffer3DTube &buffer) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TGLCylinder::~TGLCylinder()
 {
-   //destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return display-list offset for given LOD.
+/// Calculation based on what is done in virtual QuantizeShapeLOD below.
+
 UInt_t TGLCylinder::DLOffset(Short_t lod) const
 {
-   // Return display-list offset for given LOD.
-   // Calculation based on what is done in virtual QuantizeShapeLOD below.
-
    UInt_t  off = 0;
    if      (lod >= 100) off = 0;
    else if (lod <  10)  off = lod / 2;
@@ -589,11 +600,11 @@ UInt_t TGLCylinder::DLOffset(Short_t lod) const
    return off;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Factor in scene/viewer LOD and quantize.
+
 Short_t TGLCylinder::QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const
 {
-   // Factor in scene/viewer LOD and quantize.
-
    Int_t lod = ((Int_t)shapeLOD * (Int_t)combiLOD) / 100;
 
    if (lod >= 100)
@@ -613,10 +624,11 @@ Short_t TGLCylinder::QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const
    return static_cast<Short_t>(lod);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Debug tracing
+
 void TGLCylinder::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Debug tracing
    if (gDebug > 4) {
       Info("TGLCylinder::DirectDraw", "this %ld (class %s) LOD %d",
            (Long_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());

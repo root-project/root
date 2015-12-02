@@ -23,66 +23,66 @@
 
 ClassImp(TArrayC)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TArrayC ctor.
+
 TArrayC::TArrayC()
 {
-   // Default TArrayC ctor.
-
    fArray = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TArrayC object and set array size to n chars.
+
 TArrayC::TArrayC(Int_t n)
 {
-   // Create TArrayC object and set array size to n chars.
-
    fArray = 0;
    if (n > 0) Set(n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TArrayC object and initialize it with values of array.
+
 TArrayC::TArrayC(Int_t n, const Char_t *array)
 {
-   // Create TArrayC object and initialize it with values of array.
-
    fArray = 0;
    Set(n, array);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TArrayC::TArrayC(const TArrayC &array) : TArray(array)
 {
-   // Copy constructor.
-
    fArray = 0;
    Set(array.fN, array.fArray);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TArrayC assignment operator.
+
 TArrayC &TArrayC::operator=(const TArrayC &rhs)
 {
-   // TArrayC assignment operator.
-
    if (this != &rhs)
       Set(rhs.fN, rhs.fArray);
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete TArrayC object.
+
 TArrayC::~TArrayC()
 {
-   // Delete TArrayC object.
-
    delete [] fArray;
    fArray = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adopt array arr into TArrayC, i.e. don't copy arr but use it directly
+/// in TArrayC. User may not delete arr, TArrayC dtor will do it.
+
 void TArrayC::Adopt(Int_t n, Char_t *arr)
 {
-   // Adopt array arr into TArrayC, i.e. don't copy arr but use it directly
-   // in TArrayC. User may not delete arr, TArrayC dtor will do it.
-
    if (fArray)
       delete [] fArray;
 
@@ -90,23 +90,23 @@ void TArrayC::Adopt(Int_t n, Char_t *arr)
    fArray = arr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add char c at position i. Check for out of bounds.
+
 void TArrayC::AddAt(Char_t c, Int_t i)
 {
-   // Add char c at position i. Check for out of bounds.
-
    if (!BoundsOk("TArrayC::AddAt", i)) return;
    fArray[i] = c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of this array to n chars.
+/// A new array is created, the old contents copied to the new array,
+/// then the old array is deleted.
+/// This function should not be called if the array was declared via Adopt.
+
 void TArrayC::Set(Int_t n)
 {
-   // Set size of this array to n chars.
-   // A new array is created, the old contents copied to the new array,
-   // then the old array is deleted.
-   // This function should not be called if the array was declared via Adopt.
-
    if (n < 0) return;
    if (n != fN) {
       Char_t *temp = fArray;
@@ -125,12 +125,12 @@ void TArrayC::Set(Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of this array to n chars and set the contents.
+/// This function should not be called if the array was declared via Adopt.
+
 void TArrayC::Set(Int_t n, const Char_t *array)
 {
-   // Set size of this array to n chars and set the contents.
-   // This function should not be called if the array was declared via Adopt.
-
    if (fArray && fN != n) {
       delete [] fArray;
       fArray = 0;
@@ -142,11 +142,11 @@ void TArrayC::Set(Int_t n, const Char_t *array)
    memmove(fArray, array, n*sizeof(Char_t));
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a TArrayC object.
+
 void TArrayC::Streamer(TBuffer &b)
 {
-   // Stream a TArrayC object.
-
    if (b.IsReading()) {
       Int_t n;
       b >> n;

@@ -29,11 +29,11 @@
 
 ClassImp(TAlienDirectoryEntry)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse an Alien directory.
+
 void TAlienDirectoryEntry::Browse(TBrowser* b)
 {
-   // Browse an Alien directory.
-
    if (b) {
       TString alienname = "alien://";
       alienname += fLfn;
@@ -48,11 +48,11 @@ void TAlienDirectoryEntry::Browse(TBrowser* b)
 
 ClassImp(TAlienDirectory)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TAlienDirectory::TAlienDirectory(const char *ldn, const char *name)
 {
-   // Constructor.
-
    if (!gGrid->Cd(ldn)) {
       MakeZombie();
       return;
@@ -67,11 +67,11 @@ TAlienDirectory::TAlienDirectory(const char *ldn, const char *name)
    SetTitle(ldn);
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill directory entry list.
+
 void TAlienDirectory::Fill()
 {
-   // Fill directory entry list.
-
    if (!gGrid->Cd(GetTitle())) {
       MakeZombie();
       return;
@@ -103,11 +103,11 @@ void TAlienDirectory::Fill()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browser interface to ob status.
+
 void TAlienDirectory::Browse(TBrowser *b)
 {
-   // Browser interface to ob status.
-
    if (b) {
       Fill();
       TIter next(&fEntries);
@@ -124,10 +124,10 @@ void TAlienDirectory::Browse(TBrowser *b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TAlienDirectory::~TAlienDirectory()
 {
-   // Destructor.
-
    fEntries.Clear();
 }

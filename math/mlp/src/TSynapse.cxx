@@ -26,20 +26,22 @@
 
 ClassImp(TSynapse)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TSynapse::TSynapse()
 {
-   // Default constructor
    fpre    = 0;
    fpost   = 0;
    fweight = 1;
    fDEDw   = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor that connects two neurons
+
 TSynapse::TSynapse(TNeuron * pre, TNeuron * post, Double_t w)
 {
-   // Constructor that connects two neurons
    fpre    = pre;
    fpost   = post;
    fweight = w;
@@ -48,10 +50,11 @@ TSynapse::TSynapse(TNeuron * pre, TNeuron * post, Double_t w)
    post->AddPre(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the pre-neuron
+
 void TSynapse::SetPre(TNeuron * pre)
 {
-   // Sets the pre-neuron
    if (pre) {
       Error("SetPre","this synapse is already assigned to a pre-neuron.");
       return;
@@ -60,10 +63,11 @@ void TSynapse::SetPre(TNeuron * pre)
    pre->AddPost(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the post-neuron
+
 void TSynapse::SetPost(TNeuron * post)
 {
-   // Sets the post-neuron
    if (post) {
       Error("SetPost","this synapse is already assigned to a post-neuron.");
       return;
@@ -72,38 +76,42 @@ void TSynapse::SetPost(TNeuron * post)
    post->AddPre(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the value: weithted input
+
 Double_t TSynapse::GetValue() const
 {
-   // Returns the value: weithted input
    if (fpre)
       return (fweight * fpre->GetValue());
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes the derivative of the error wrt the synapse weight.
+
 Double_t TSynapse::GetDeDw() const
 {
-   // Computes the derivative of the error wrt the synapse weight.
    if (!(fpre && fpost))
       return 0;
    return (fpre->GetValue() * fpost->GetDeDw());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the weight of the synapse.
+/// This weight is the multiplying factor applied on the
+/// output of a neuron in the linear combination given as input
+/// of another neuron.
+
 void TSynapse::SetWeight(Double_t w)
 {
-   // Sets the weight of the synapse.
-   // This weight is the multiplying factor applied on the
-   // output of a neuron in the linear combination given as input
-   // of another neuron.
    fweight = w;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the derivative of the total error wrt the synapse weight
+
 void TSynapse::SetDEDw(Double_t in)
 {
-   // Sets the derivative of the total error wrt the synapse weight
    fDEDw = in;
 }
 

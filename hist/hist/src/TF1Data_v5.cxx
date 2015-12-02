@@ -19,11 +19,11 @@ namespace ROOT {
 
    namespace v5 {
       
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// F1 default constructor.
+
 TF1Data::TF1Data(): ROOT::v5::TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
-   // F1 default constructor.
-
    fXmin      = 0;
    fXmax      = 0;
    fNpx       = 100;
@@ -41,22 +41,22 @@ TF1Data::TF1Data(): ROOT::v5::TFormula(), TAttLine(), TAttFill(), TAttMarker()
    SetFillStyle(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TF1 default destructor.
+
 TF1Data::~TF1Data()
 {
-   // TF1 default destructor.
-
    if (fParMin)    delete [] fParMin;
    if (fParMax)    delete [] fParMax;
    if (fParErrors) delete [] fParErrors;
    if (fSave)      delete [] fSave;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a class object.
+
 void TF1Data::Streamer(TBuffer &b)
 {
-   // Stream a class object.
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
@@ -74,11 +74,11 @@ void TF1Data::Streamer(TBuffer &b)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// specialized streamer function being able to read old TF1 versions as TF1Data in memory
+
 void TF1Data::Streamer(TBuffer &b, Int_t v, UInt_t R__s, UInt_t R__c, const TClass *onfile_class)
 {
-   // specialized streamer function being able to read old TF1 versions as TF1Data in memory
-
    //printf("reading TF1Data ..- version  %d..\n",v);
    if (v > 4) {
       b.ReadClassBuffer(ROOT::v5::TF1Data::Class(), this, v, R__s, R__c, onfile_class);

@@ -25,33 +25,34 @@
 
 ClassImp(TGLCameraGuide);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLCameraGuide::TGLCameraGuide(Float_t x, Float_t y, Float_t s,
                                ERole role, EState state) :
    TGLOverlayElement(role, state),
    fXPos(x), fYPos(y), fSize(s),
    fSelAxis(-1), fInDrag(kFALSE)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has entered overlay area.
+
 Bool_t TGLCameraGuide::MouseEnter(TGLOvlSelectRecord& /*rec*/)
 {
-   // Mouse has entered overlay area.
-
    return kTRUE;
 }
 
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle overlay event.
+/// Return TRUE if event was handled.
+
 Bool_t TGLCameraGuide::Handle(TGLRnrCtx&          rnrCtx,
                               TGLOvlSelectRecord&  selRec,
                               Event_t*             event)
 {
-   // Handle overlay event.
-   // Return TRUE if event was handled.
-
    if (selRec.GetN() < 2) return kFALSE;
    Int_t recID = selRec.GetItem(1);
 
@@ -92,20 +93,20 @@ Bool_t TGLCameraGuide::Handle(TGLRnrCtx&          rnrCtx,
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has left overlay area.
+
 void TGLCameraGuide::MouseLeave()
 {
-   // Mouse has left overlay area.
-
    fSelAxis = -1;
    fInDrag  = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render the camera axis arrows.
+
 void TGLCameraGuide::Render(TGLRnrCtx& rnrCtx)
 {
-   // Render the camera axis arrows.
-
    TGLCapabilitySwitch lgt_off(GL_LIGHTING, kFALSE);
 
    rnrCtx.ProjectionMatrixPushIdentity();

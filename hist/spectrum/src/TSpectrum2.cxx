@@ -90,11 +90,11 @@ Int_t TSpectrum2::fgAverageWindow = 3;
 
 ClassImp(TSpectrum2)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TSpectrum2::TSpectrum2() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 {
-   // Constructor.
-
    Int_t n = 100;
    fMaxPeaks   = n;
    fPosition   = new Double_t[n];
@@ -106,16 +106,16 @@ TSpectrum2::TSpectrum2() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  maxpositions:  maximum number of peaks
+///  resolution:    determines resolution of the neighboring peaks
+///                 default value is 1 correspond to 3 sigma distance
+///                 between peaks. Higher values allow higher resolution
+///                 (smaller distance between peaks.
+///                 May be set later through SetResolution.
+
 TSpectrum2::TSpectrum2(Int_t maxpositions, Double_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder")
 {
-//  maxpositions:  maximum number of peaks
-//  resolution:    determines resolution of the neighboring peaks
-//                 default value is 1 correspond to 3 sigma distance
-//                 between peaks. Higher values allow higher resolution
-//                 (smaller distance between peaks.
-//                 May be set later through SetResolution.
-
    Int_t n = maxpositions;
    fMaxPeaks  = n;
    fPosition  = new Double_t[n];
@@ -127,11 +127,11 @@ TSpectrum2::TSpectrum2(Int_t maxpositions, Double_t resolution) :TNamed("Spectru
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TSpectrum2::~TSpectrum2()
 {
-   // Destructor.
-
    delete [] fPosition;
    delete [] fPositionX;
    delete [] fPositionY;
@@ -139,76 +139,77 @@ TSpectrum2::~TSpectrum2()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function: Set average window of searched peaks
+/// see TSpectrum2::SearchHighRes
+
 void TSpectrum2::SetAverageWindow(Int_t w)
 {
-  // static function: Set average window of searched peaks
-  // see TSpectrum2::SearchHighRes
-
    fgAverageWindow = w;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function: Set max number of decon iterations in deconvolution operation
+/// see TSpectrum2::SearchHighRes
+
 void TSpectrum2::SetDeconIterations(Int_t n)
 {
-  // static function: Set max number of decon iterations in deconvolution operation
-  // see TSpectrum2::SearchHighRes
-
    fgIterations = n;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+///   TWO-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION                        //
+///   This function calculates the background spectrum in the input histogram h.
+///   The background is returned as a histogram.
+///
+///   Function parameters:
+///   -h: input 2-d histogram
+///   -numberIterations, (default value = 20)
+///      Increasing numberIterations make the result smoother and lower.
+///   -option: may contain one of the following options
+///      - to set the direction parameter
+///        "BackIncreasingWindow". By default the direction is BackDecreasingWindow
+///      - filterOrder-order of clipping filter,  (default "BackOrder2"
+///                  -possible values= "BackOrder4"
+///                                    "BackOrder6"
+///                                    "BackOrder8"
+///      - "nosmoothing"- if selected, the background is not smoothed
+///           By default the background is smoothed.
+///      - smoothWindow-width of smoothing window, (default is "BackSmoothing3")
+///                  -possible values= "BackSmoothing5"
+///                                    "BackSmoothing7"
+///                                    "BackSmoothing9"
+///                                    "BackSmoothing11"
+///                                    "BackSmoothing13"
+///                                    "BackSmoothing15"
+///      - "Compton" if selected the estimation of Compton edge
+///                  will be included.
+///      - "same" : if this option is specified, the resulting background
+///                 histogram is superimposed on the picture in the current pad.
+///
+///  NOTE that the background is only evaluated in the current range of h.
+///  ie, if h has a bin range (set via h->GetXaxis()->SetRange(binmin,binmax),
+///  the returned histogram will be created with the same number of bins
+///  as the input histogram h, but only bins from binmin to binmax will be filled
+///  with the estimated background.
+///                                                                         //
+//////////////////////////////////////////////////////////////////////////////
+
 TH1 *TSpectrum2::Background(const TH1 * h, Int_t number_of_iterations,
                                    Option_t * option)
 {
-/////////////////////////////////////////////////////////////////////////////
-//   TWO-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION                        //
-//   This function calculates the background spectrum in the input histogram h.
-//   The background is returned as a histogram.
-//
-//   Function parameters:
-//   -h: input 2-d histogram
-//   -numberIterations, (default value = 20)
-//      Increasing numberIterations make the result smoother and lower.
-//   -option: may contain one of the following options
-//      - to set the direction parameter
-//        "BackIncreasingWindow". By default the direction is BackDecreasingWindow
-//      - filterOrder-order of clipping filter,  (default "BackOrder2"
-//                  -possible values= "BackOrder4"
-//                                    "BackOrder6"
-//                                    "BackOrder8"
-//      - "nosmoothing"- if selected, the background is not smoothed
-//           By default the background is smoothed.
-//      - smoothWindow-width of smoothing window, (default is "BackSmoothing3")
-//                  -possible values= "BackSmoothing5"
-//                                    "BackSmoothing7"
-//                                    "BackSmoothing9"
-//                                    "BackSmoothing11"
-//                                    "BackSmoothing13"
-//                                    "BackSmoothing15"
-//      - "Compton" if selected the estimation of Compton edge
-//                  will be included.
-//      - "same" : if this option is specified, the resulting background
-//                 histogram is superimposed on the picture in the current pad.
-//
-//  NOTE that the background is only evaluated in the current range of h.
-//  ie, if h has a bin range (set via h->GetXaxis()->SetRange(binmin,binmax),
-//  the returned histogram will be created with the same number of bins
-//  as the input histogram h, but only bins from binmin to binmax will be filled
-//  with the estimated background.
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
    Error("Background","function not yet implemented: h=%s, iter=%d, option=%sn"
         , h->GetName(), number_of_iterations, option);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the array of positions
+
 void TSpectrum2::Print(Option_t *) const
 {
-   // Print the array of positions
-
    printf("\nNumber of positions = %d\n",fNPeaks);
    for (Int_t i=0;i<fNPeaks;i++) {
       printf(" x[%d] = %g, y[%d] = %g\n",i,fPositionX[i],i,fPositionY[i]);
@@ -217,43 +218,43 @@ void TSpectrum2::Print(Option_t *) const
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+///   TWO-DIMENSIONAL PEAK SEARCH FUNCTION                                  //
+///   This function searches for peaks in source spectrum in hin            //
+///   The number of found peaks and their positions are written into        //
+///   the members fNpeaks and fPositionX.                                   //
+///   The search is performed in the current histogram range.               //
+///                                                                         //
+///   Function parameters:                                                  //
+///   hin:       pointer to the histogram of source spectrum                //
+///   sigma:   sigma of searched peaks, for details we refer to manual      //
+///   threshold: (default=0.05)  peaks with amplitude less than             //
+///       threshold*highest_peak are discarded.  0<threshold<1              //
+///                                                                         //
+///   By default, the background is removed before deconvolution.           //
+///   Specify the option "nobackground" to not remove the background.       //                //
+///                                                                         //
+///   By default the "Markov" chain algorithm is used.                      //
+///   Specify the option "noMarkov" to disable this algorithm               //
+///   Note that by default the source spectrum is replaced by a new spectrum//          //
+///                                                                         //
+///   By default a polymarker object is created and added to the list of    //
+///   functions of the histogram. The histogram is drawn with the specified //
+///   option and the polymarker object drawn on top of the histogram.       //
+///   The polymarker coordinates correspond to the npeaks peaks found in    //
+///   the histogram.                                                        //
+///   A pointer to the polymarker object can be retrieved later via:        //
+///    TList *functions = hin->GetListOfFunctions();                        //
+///    TPolyMarker *pm = (TPolyMarker*)functions->FindObject("TPolyMarker") //
+///   Specify the option "goff" to disable the storage and drawing of the   //
+///   polymarker.                                                           //
+///                                                                         //
+//////////////////////////////////////////////////////////////////////////////
+
 Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
                              Option_t * option, Double_t threshold)
 {
-/////////////////////////////////////////////////////////////////////////////
-//   TWO-DIMENSIONAL PEAK SEARCH FUNCTION                                  //
-//   This function searches for peaks in source spectrum in hin            //
-//   The number of found peaks and their positions are written into        //
-//   the members fNpeaks and fPositionX.                                   //
-//   The search is performed in the current histogram range.               //
-//                                                                         //
-//   Function parameters:                                                  //
-//   hin:       pointer to the histogram of source spectrum                //
-//   sigma:   sigma of searched peaks, for details we refer to manual      //
-//   threshold: (default=0.05)  peaks with amplitude less than             //
-//       threshold*highest_peak are discarded.  0<threshold<1              //
-//                                                                         //
-//   By default, the background is removed before deconvolution.           //
-//   Specify the option "nobackground" to not remove the background.       //                //
-//                                                                         //
-//   By default the "Markov" chain algorithm is used.                      //
-//   Specify the option "noMarkov" to disable this algorithm               //
-//   Note that by default the source spectrum is replaced by a new spectrum//          //
-//                                                                         //
-//   By default a polymarker object is created and added to the list of    //
-//   functions of the histogram. The histogram is drawn with the specified //
-//   option and the polymarker object drawn on top of the histogram.       //
-//   The polymarker coordinates correspond to the npeaks peaks found in    //
-//   the histogram.                                                        //
-//   A pointer to the polymarker object can be retrieved later via:        //
-//    TList *functions = hin->GetListOfFunctions();                        //
-//    TPolyMarker *pm = (TPolyMarker*)functions->FindObject("TPolyMarker") //
-//   Specify the option "goff" to disable the storage and drawing of the   //
-//   polymarker.                                                           //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
-
    if (hin == 0)
       return 0;
    Int_t dimension = hin->GetDimension();
@@ -325,14 +326,15 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  resolution: determines resolution of the neighboring peaks
+///              default value is 1 correspond to 3 sigma distance
+///              between peaks. Higher values allow higher resolution
+///              (smaller distance between peaks.
+///              May be set later through SetResolution.
+
 void TSpectrum2::SetResolution(Double_t resolution)
 {
-//  resolution: determines resolution of the neighboring peaks
-//              default value is 1 correspond to 3 sigma distance
-//              between peaks. Higher values allow higher resolution
-//              (smaller distance between peaks.
-//              May be set later through SetResolution.
    if (resolution > 1)
       fResolution = resolution;
    else
@@ -344,7 +346,31 @@ void TSpectrum2::SetResolution(Double_t resolution)
 //_____________________________________________________________________________
 
 /////////////////////NEW FUNCTIONS  JANUARY 2006
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+///   TWO-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION - RECTANGULAR RIDGES   //
+///   This function calculates background spectrum from source spectrum.    //
+///   The result is placed to the array pointed by spectrum pointer.        //
+///                                                                         //
+///   Function parameters:                                                  //
+///   spectrum-pointer to the array of source spectrum                      //
+///   ssizex-x length of spectrum                                           //
+///   ssizey-y length of spectrum                                           //
+///   numberIterationsX-maximal x width of clipping window                  //
+///   numberIterationsY-maximal y width of clipping window                  //
+///                           for details we refer to manual                //
+///   direction- direction of change of clipping window                     //
+///               - possible values=kBackIncreasingWindow                   //
+///                                 kBackDecreasingWindow                   //
+///   filterType-determines the algorithm of the filtering                  //
+///                  -possible values=kBackSuccessiveFiltering              //
+///                                   kBackOneStepFiltering                 //
+///                                                                         //
+///                                                                         //
+//////////////////////////////////////////////////////////////////////////////
+///
+///Begin_Html <!--
+
 const char *TSpectrum2::Background(Double_t **spectrum,
                        Int_t ssizex, Int_t ssizey,
                        Int_t numberIterationsX,
@@ -352,29 +378,6 @@ const char *TSpectrum2::Background(Double_t **spectrum,
                        Int_t direction,
                        Int_t filterType)
 {
-/////////////////////////////////////////////////////////////////////////////
-//   TWO-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION - RECTANGULAR RIDGES   //
-//   This function calculates background spectrum from source spectrum.    //
-//   The result is placed to the array pointed by spectrum pointer.        //
-//                                                                         //
-//   Function parameters:                                                  //
-//   spectrum-pointer to the array of source spectrum                      //
-//   ssizex-x length of spectrum                                           //
-//   ssizey-y length of spectrum                                           //
-//   numberIterationsX-maximal x width of clipping window                  //
-//   numberIterationsY-maximal y width of clipping window                  //
-//                           for details we refer to manual                //
-//   direction- direction of change of clipping window                     //
-//               - possible values=kBackIncreasingWindow                   //
-//                                 kBackDecreasingWindow                   //
-//   filterType-determines the algorithm of the filtering                  //
-//                  -possible values=kBackSuccessiveFiltering              //
-//                                   kBackOneStepFiltering                 //
-//                                                                         //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
-//
-//Begin_Html <!--
 /* -->
 <div class=Section1>
 
@@ -1001,24 +1004,25 @@ window&quot;,10,10,1000,700);</p>
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+///   TWO-DIMENSIONAL MARKOV SPECTRUM SMOOTHING FUNCTION
+///
+///   This function calculates smoothed spectrum from source spectrum
+///      based on Markov chain method.
+///   The result is placed in the array pointed by source pointer.
+///
+///   Function parameters:
+///   source-pointer to the array of source spectrum
+///   ssizex-x length of source
+///   ssizey-y length of source
+///   averWindow-width of averaging smoothing window
+///
+//////////////////////////////////////////////////////////////////////////////
+///Begin_Html <!--
+
 const char* TSpectrum2::SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssizey, Int_t averWindow)
 {
-/////////////////////////////////////////////////////////////////////////////
-//   TWO-DIMENSIONAL MARKOV SPECTRUM SMOOTHING FUNCTION
-//
-//   This function calculates smoothed spectrum from source spectrum
-//      based on Markov chain method.
-//   The result is placed in the array pointed by source pointer.
-//
-//   Function parameters:
-//   source-pointer to the array of source spectrum
-//   ssizex-x length of source
-//   ssizey-y length of source
-//   averWindow-width of averaging smoothing window
-//
-/////////////////////////////////////////////////////////////////////////////
-//Begin_Html <!--
 /* -->
 <div class=Section1>
 
@@ -1415,30 +1419,31 @@ source[i][j]);   </p>
    return 0;
 }
 
-//______________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+///   TWO-DIMENSIONAL DECONVOLUTION FUNCTION
+///   This function calculates deconvolution from source spectrum
+///   according to response spectrum
+///   The result is placed in the matrix pointed by source pointer.
+///
+///   Function parameters:
+///   source-pointer to the matrix of source spectrum
+///   resp-pointer to the matrix of response spectrum
+///   ssizex-x length of source and response spectra
+///   ssizey-y length of source and response spectra
+///   numberIterations, for details we refer to manual
+///   numberRepetitions, for details we refer to manual
+///   boost, boosting factor, for details we refer to manual
+///
+//////////////////////////////////////////////////////////////////////////////
+///Begin_Html <!--
+
 const char *TSpectrum2::Deconvolution(Double_t **source, Double_t **resp,
                                        Int_t ssizex, Int_t ssizey,
                                        Int_t numberIterations,
                                        Int_t numberRepetitions,
                                        Double_t boost)
 {
-/////////////////////////////////////////////////////////////////////////////
-//   TWO-DIMENSIONAL DECONVOLUTION FUNCTION
-//   This function calculates deconvolution from source spectrum
-//   according to response spectrum
-//   The result is placed in the matrix pointed by source pointer.
-//
-//   Function parameters:
-//   source-pointer to the matrix of source spectrum
-//   resp-pointer to the matrix of response spectrum
-//   ssizex-x length of source and response spectra
-//   ssizey-y length of source and response spectra
-//   numberIterations, for details we refer to manual
-//   numberRepetitions, for details we refer to manual
-//   boost, boosting factor, for details we refer to manual
-//
-/////////////////////////////////////////////////////////////////////////////
-//Begin_Html <!--
 /* -->
 <div class=Section1>
 
@@ -2134,7 +2139,8 @@ deconvolution&quot;,10,10,1000,700);</p>
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TSpectrum2::SearchHighRes(Double_t **source, Double_t **dest, Int_t ssizex, Int_t ssizey,
                                  Double_t sigma, Double_t threshold,
                                  Bool_t backgroundRemove,Int_t deconIterations,
@@ -3461,20 +3467,20 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
 
 // STATIC functions (called by TH1)
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///static function, interface to TSpectrum2::Search
+
 Int_t TSpectrum2::StaticSearch(const TH1 *hist, Double_t sigma, Option_t *option, Double_t threshold)
 {
-   //static function, interface to TSpectrum2::Search
-
    TSpectrum2 s;
    return s.Search(hist,sigma,option,threshold);
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///static function, interface to TSpectrum2::Background
+
 TH1 *TSpectrum2::StaticBackground(const TH1 *hist,Int_t niter, Option_t *option)
 {
-   //static function, interface to TSpectrum2::Background
-
    TSpectrum2 s;
    return s.Background(hist,niter,option);
 }

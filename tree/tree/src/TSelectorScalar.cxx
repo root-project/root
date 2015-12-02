@@ -26,20 +26,20 @@
 
 ClassImp(TSelectorScalar)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment scalar value by n.
+
 void TSelectorScalar::Inc(Long_t n)
 {
-   // Increment scalar value by n.
-
    SetVal(GetVal() + n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge scalars with scalars in the list. The scalar values are added.
+/// Returns the number of scalars that were in the list.
+
 Int_t TSelectorScalar::Merge(TCollection *list)
 {
-   // Merge scalars with scalars in the list. The scalar values are added.
-   // Returns the number of scalars that were in the list.
-
    TIter next(list);
    Int_t n = 0;
 

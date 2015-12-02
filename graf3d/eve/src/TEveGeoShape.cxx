@@ -83,61 +83,61 @@ ClassImp(TEveGeoShape);
 
 TGeoManager* TEveGeoShape::fgGeoMangeur = init_geo_mangeur();
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return static geo-manager that is used intenally to make shapes
+/// lead a happy life.
+/// Set gGeoManager to this object when creating TGeoShapes to be
+/// passed into TEveGeoShapes.
+
 TGeoManager* TEveGeoShape::GetGeoMangeur()
 {
-   // Return static geo-manager that is used intenally to make shapes
-   // lead a happy life.
-   // Set gGeoManager to this object when creating TGeoShapes to be
-   // passed into TEveGeoShapes.
-
    return fgGeoMangeur;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return static identity matrix in homogeneous representation.
+/// This is needed because TGeoCompositeShape::PaintComposite()
+/// assumes TGeoShape::fgTransform is a TGeoHMatrix and we need to pass in
+/// an identity matrix when painting a composite shape.
+
 TGeoHMatrix* TEveGeoShape::GetGeoHMatrixIdentity()
 {
-   // Return static identity matrix in homogeneous representation.
-   // This is needed because TGeoCompositeShape::PaintComposite()
-   // assumes TGeoShape::fgTransform is a TGeoHMatrix and we need to pass in
-   // an identity matrix when painting a composite shape.
-
    return &localGeoHMatrixIdentity;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveGeoShape::TEveGeoShape(const char* name, const char* title) :
    TEveShape       (name, title),
    fNSegments      (0),
    fShape          (0),
    fCompositeShape (0)
 {
-   // Constructor.
-
    InitMainTrans();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveGeoShape::~TEveGeoShape()
 {
-   // Destructor.
-
    SetShape(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create derived TEveGeoShape form a TGeoCompositeShape.
+
 TGeoShape* TEveGeoShape::MakePolyShape()
 {
-   // Create derived TEveGeoShape form a TGeoCompositeShape.
-
    return TEveGeoPolyShape::Construct(fCompositeShape, fNSegments);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set number of segments.
+
 void TEveGeoShape::SetNSegments(Int_t s)
 {
-   // Set number of segments.
-
    if (s != fNSegments && fCompositeShape != 0)
    {
       delete fShape;
@@ -146,18 +146,18 @@ void TEveGeoShape::SetNSegments(Int_t s)
    fNSegments = s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set TGeoShape shown by this object.
+///
+/// The shape is owned by TEveGeoShape but TGeoShape::fUniqueID is
+/// used for reference counting so you can pass the same shape to
+/// several TEveGeoShapes.
+///
+/// If it if is taken from an existing TGeoManager, manually
+/// increase the fUniqueID before passing it to TEveGeoShape.
+
 void TEveGeoShape::SetShape(TGeoShape* s)
 {
-   // Set TGeoShape shown by this object.
-   //
-   // The shape is owned by TEveGeoShape but TGeoShape::fUniqueID is
-   // used for reference counting so you can pass the same shape to
-   // several TEveGeoShapes.
-   //
-   // If it if is taken from an existing TGeoManager, manually
-   // increase the fUniqueID before passing it to TEveGeoShape.
-
    TEveGeoManagerHolder gmgr(fgGeoMangeur);
 
    if (fCompositeShape)
@@ -187,11 +187,11 @@ void TEveGeoShape::SetShape(TGeoShape* s)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding-box.
+
 void TEveGeoShape::ComputeBBox()
 {
-   // Compute bounding-box.
-
    TGeoBBox *bb = dynamic_cast<TGeoBBox*>(fShape);
    if (bb)
    {
@@ -206,11 +206,11 @@ void TEveGeoShape::ComputeBBox()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint object.
+
 void TEveGeoShape::Paint(Option_t* /*option*/)
 {
-   // Paint object.
-
    static const TEveException eh("TEveGeoShape::Paint ");
 
    if (fShape == 0)
@@ -281,23 +281,23 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the shape tree as TEveGeoShapeExtract.
+/// File is always recreated.
+/// This function is obsolete, use SaveExtractInstead().
+
 void TEveGeoShape::Save(const char* file, const char* name)
 {
-   // Save the shape tree as TEveGeoShapeExtract.
-   // File is always recreated.
-   // This function is obsolete, use SaveExtractInstead().
-
    Warning("Save()", "This function is deprecated, use SaveExtract() instead.");
    SaveExtract(file, name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the shape tree as TEveGeoShapeExtract.
+/// File is always recreated.
+
 void TEveGeoShape::SaveExtract(const char* file, const char* name)
 {
-   // Save the shape tree as TEveGeoShapeExtract.
-   // File is always recreated.
-
    TEveGeoShapeExtract* gse = DumpShapeTree(this, 0);
 
    TFile f(file, "RECREATE");
@@ -305,23 +305,23 @@ void TEveGeoShape::SaveExtract(const char* file, const char* name)
    f.Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the shape tree as TEveGeoShapeExtract to current directory.
+
 void TEveGeoShape::WriteExtract(const char* name)
 {
-   // Write the shape tree as TEveGeoShapeExtract to current directory.
-
    TEveGeoShapeExtract* gse = DumpShapeTree(this, 0);
    gse->Write(name);
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Export this shape and its descendants into a geoshape-extract.
+
 TEveGeoShapeExtract* TEveGeoShape::DumpShapeTree(TEveGeoShape* gsre,
                                                  TEveGeoShapeExtract* parent)
 {
-   // Export this shape and its descendants into a geoshape-extract.
-
    TEveGeoShapeExtract* she = new TEveGeoShapeExtract(gsre->GetName(), gsre->GetTitle());
    she->SetTrans(gsre->RefMainTrans().Array());
    {
@@ -371,12 +371,12 @@ TEveGeoShapeExtract* TEveGeoShape::DumpShapeTree(TEveGeoShape* gsre,
    return she;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Import a shape extract 'gse' under element 'parent'.
+
 TEveGeoShape* TEveGeoShape::ImportShapeExtract(TEveGeoShapeExtract* gse,
                                                TEveElement*         parent)
 {
-   // Import a shape extract 'gse' under element 'parent'.
-
    TEveGeoManagerHolder gmgr(fgGeoMangeur);
    TEveManager::TRedrawDisabler redrawOff(gEve);
    TEveGeoShape* gsre = SubImportShapeExtract(gse, parent);
@@ -385,12 +385,12 @@ TEveGeoShape* TEveGeoShape::ImportShapeExtract(TEveGeoShapeExtract* gse,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursive version for importing a shape extract tree.
+
 TEveGeoShape* TEveGeoShape::SubImportShapeExtract(TEveGeoShapeExtract* gse,
                                                   TEveElement*         parent)
 {
-   // Recursive version for importing a shape extract tree.
-
    TEveGeoShape* gsre = new TEveGeoShape(gse->GetName(), gse->GetTitle());
    gsre->RefMainTrans().SetFromArray(gse->GetTrans());
    const Float_t* rgba = gse->GetRGBA();
@@ -420,14 +420,14 @@ TEveGeoShape* TEveGeoShape::SubImportShapeExtract(TEveGeoShapeExtract* gse,
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return class for projected objects:
+///  - 2D projections: TEvePolygonSetProjected,
+///  - 3D projections: TEveGeoShapeProjected.
+/// Virtual from TEveProjectable.
+
 TClass* TEveGeoShape::ProjectedClass(const TEveProjection* p) const
 {
-   // Return class for projected objects:
-   //  - 2D projections: TEvePolygonSetProjected,
-   //  - 3D projections: TEveGeoShapeProjected.
-   // Virtual from TEveProjectable.
-
    if (p->Is2D())
       return TEvePolygonSetProjected::Class();
    else
@@ -436,12 +436,12 @@ TClass* TEveGeoShape::ProjectedClass(const TEveProjection* p) const
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TBuffer3D suitable for presentation of the shape.
+/// Transformation matrix is also applied.
+
 TBuffer3D* TEveGeoShape::MakeBuffer3D()
 {
-   // Create a TBuffer3D suitable for presentation of the shape.
-   // Transformation matrix is also applied.
-
    if (fShape == 0) return 0;
 
    if (dynamic_cast<TGeoShapeAssembly*>(fShape)) {
@@ -477,42 +477,43 @@ TBuffer3D* TEveGeoShape::MakeBuffer3D()
 
 ClassImp(TEveGeoShapeProjected);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveGeoShapeProjected::TEveGeoShapeProjected() :
    TEveShape("TEveGeoShapeProjected"),
    fBuff(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This should never be called as this class is only used for 3D
+/// projections.
+/// The implementation is required as this metod is abstract.
+/// Just emits a warning if called.
+
 void TEveGeoShapeProjected::SetDepthLocal(Float_t /*d*/)
 {
-   // This should never be called as this class is only used for 3D
-   // projections.
-   // The implementation is required as this metod is abstract.
-   // Just emits a warning if called.
-
    Warning("SetDepthLocal", "This function only exists to fulfill an abstract interface.");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is virtual method from base-class TEveProjected.
+
 void TEveGeoShapeProjected::SetProjection(TEveProjectionManager* mng,
                                           TEveProjectable* model)
 {
-   // This is virtual method from base-class TEveProjected.
-
    TEveProjected::SetProjection(mng, model);
 
    TEveGeoShape* gre = dynamic_cast<TEveGeoShape*>(fProjectable);
    CopyVizParams(gre);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is virtual method from base-class TEveProjected.
+
 void TEveGeoShapeProjected::UpdateProjection()
 {
-   // This is virtual method from base-class TEveProjected.
-
    TEveGeoShape   *gre = dynamic_cast<TEveGeoShape*>(fProjectable);
    TEveProjection *prj = fManager->GetProjection();
 
@@ -533,11 +534,11 @@ void TEveGeoShapeProjected::UpdateProjection()
    ResetBBox();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override of virtual method from TAttBBox.
+
 void TEveGeoShapeProjected::ComputeBBox()
 {
-   // Override of virtual method from TAttBBox.
-
    if (fBuff && fBuff->NbPnts() > 0)
    {
       BBoxInit();

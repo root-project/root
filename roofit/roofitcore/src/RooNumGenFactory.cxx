@@ -54,12 +54,12 @@ RooNumGenFactory* RooNumGenFactory::_instance = 0 ;
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. Register all known integrators by calling
+/// their static registration functions
+
 RooNumGenFactory::RooNumGenFactory()
 {
-  // Constructor. Register all known integrators by calling
-  // their static registration functions
-
   _instance = this ;
 
   RooAcceptReject::registerSampler(*this) ;
@@ -85,11 +85,11 @@ RooNumGenFactory::RooNumGenFactory()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooNumGenFactory::~RooNumGenFactory()
 {
-  // Destructor
-
   std::map<std::string,RooAbsNumGenerator*>::iterator iter = _map.begin() ;
   while (iter != _map.end()) {
     delete iter->second ;
@@ -98,19 +98,20 @@ RooNumGenFactory::~RooNumGenFactory()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooNumGenFactory::RooNumGenFactory(const RooNumGenFactory& other) : TObject(other)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning reference to singleton instance of factory
+
 RooNumGenFactory& RooNumGenFactory::instance()
 {
-  // Static method returning reference to singleton instance of factory
-
   if (_instance==0) {
     new RooNumGenFactory ;
     RooSentinel::activate() ;
@@ -119,11 +120,11 @@ RooNumGenFactory& RooNumGenFactory::instance()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup routine called by atexit() handler installed by RooSentinel
+
 void RooNumGenFactory::cleanup()
 {
-  // Cleanup routine called by atexit() handler installed by RooSentinel
-
   if (_instance) {
     delete _instance ;
     _instance = 0 ;
@@ -132,13 +133,13 @@ void RooNumGenFactory::cleanup()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method accepting registration of a prototype numeric integrator along with a RooArgSet of its
+/// default configuration options and an optional list of names of other numeric integrators
+/// on which this integrator depends. Returns true if integrator was previously registered
+
 Bool_t RooNumGenFactory::storeProtoSampler(RooAbsNumGenerator* proto, const RooArgSet& defConfig) 
 {
-  // Method accepting registration of a prototype numeric integrator along with a RooArgSet of its
-  // default configuration options and an optional list of names of other numeric integrators
-  // on which this integrator depends. Returns true if integrator was previously registered
-
   TString name = proto->IsA()->GetName() ;
 
   if (getProtoSampler(name)) {
@@ -157,11 +158,11 @@ Bool_t RooNumGenFactory::storeProtoSampler(RooAbsNumGenerator* proto, const RooA
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return prototype integrator with given (class) name
+
 const RooAbsNumGenerator* RooNumGenFactory::getProtoSampler(const char* name) 
 {
-  // Return prototype integrator with given (class) name
-
   if (_map.count(name)==0) {
     return 0 ;
   } 
@@ -171,17 +172,17 @@ const RooAbsNumGenerator* RooNumGenFactory::getProtoSampler(const char* name)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a numeric integrator instance that operates on function 'func' and is configured
+/// with 'config'. If ndimPreset is greater than zero that number is taken as the dimensionality
+/// of the integration, otherwise it is queried from 'func'. This function iterators over list
+/// of available prototype integrators and returns an clone attached to the given function of
+/// the first class that matches the specifications of the requested integration considering
+/// the number of dimensions, the nature of the limits (open ended vs closed) and the user
+/// preference stated in 'config'
+
 RooAbsNumGenerator* RooNumGenFactory::createSampler(RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& condVars, const RooNumGenConfig& config, Bool_t verbose, RooAbsReal* maxFuncVal) 
 {
-  // Construct a numeric integrator instance that operates on function 'func' and is configured
-  // with 'config'. If ndimPreset is greater than zero that number is taken as the dimensionality
-  // of the integration, otherwise it is queried from 'func'. This function iterators over list
-  // of available prototype integrators and returns an clone attached to the given function of
-  // the first class that matches the specifications of the requested integration considering
-  // the number of dimensions, the nature of the limits (open ended vs closed) and the user
-  // preference stated in 'config'
-
   // Find method defined configuration
   Int_t ndim = genVars.getSize() ;
   Bool_t cond = (condVars.getSize() > 0) ? kTRUE : kFALSE ;

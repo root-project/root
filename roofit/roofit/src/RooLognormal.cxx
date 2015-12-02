@@ -48,7 +48,8 @@ using namespace std;
 ClassImp(RooLognormal)
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooLognormal::RooLognormal(const char *name, const char *title,
 			 RooAbsReal& _x, RooAbsReal& _m0,
 			 RooAbsReal& _k) :
@@ -61,7 +62,8 @@ RooLognormal::RooLognormal(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooLognormal::RooLognormal(const RooLognormal& other, const char* name) : 
   RooAbsPdf(other,name), x("x",this,other.x), m0("m0",this,other.m0),
   k("k",this,other.k)
@@ -70,14 +72,14 @@ RooLognormal::RooLognormal(const RooLognormal& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ln(k)<1 would correspond to sigma < 0 in the parametrization
+/// resulting by transforming a normal random variable in its
+/// standard parametrization to a lognormal random variable
+/// => treat ln(k) as -ln(k) for k<1
+
 Double_t RooLognormal::evaluate() const
 {
-  // ln(k)<1 would correspond to sigma < 0 in the parametrization
-  // resulting by transforming a normal random variable in its
-  // standard parametrization to a lognormal random variable
-  // => treat ln(k) as -ln(k) for k<1
-
   Double_t xv = x;
   Double_t ln_k = TMath::Abs(TMath::Log(k));
   Double_t ln_m0 = TMath::Log(m0);
@@ -89,7 +91,8 @@ Double_t RooLognormal::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooLognormal::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
@@ -98,7 +101,8 @@ Int_t RooLognormal::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooLognormal::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   R__ASSERT(code==1) ;
@@ -114,7 +118,8 @@ Double_t RooLognormal::analyticalIntegral(Int_t code, const char* rangeName) con
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooLognormal::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;  
@@ -123,7 +128,8 @@ Int_t RooLognormal::getGenerator(const RooArgSet& directVars, RooArgSet &generat
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooLognormal::generateEvent(Int_t code)
 {
   R__ASSERT(code==1) ;

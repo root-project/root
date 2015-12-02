@@ -42,14 +42,14 @@ ClassImp(RooBinnedGenContext)
 ;
   
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooBinnedGenContext::RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet &vars, 
 				   const RooDataSet *prototype, const RooArgSet* auxProto,
 				   Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
-  // Constructor
-
   cxcoutI(Generation) << "RooBinnedGenContext::ctor() setting up event special generator context for sum p.d.f. " << model.GetName() 
 			<< " for generation of observable(s) " << vars ;
   if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
@@ -91,11 +91,11 @@ RooBinnedGenContext::RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Delete all owned subgenerator contexts
+
 RooBinnedGenContext::~RooBinnedGenContext()
 {
-  // Destructor. Delete all owned subgenerator contexts
-
   delete _vars ;
   delete _pdfSet ;
   delete _hist ;
@@ -103,39 +103,40 @@ RooBinnedGenContext::~RooBinnedGenContext()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Attach given set of variables to internal p.d.f. clone
+
 void RooBinnedGenContext::attach(const RooArgSet& args) 
 {
-  // Attach given set of variables to internal p.d.f. clone
-
   _pdf->recursiveRedirectServers(args) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// One-time initialization of generator contex. Attach theEvent
+/// to internal p.d.f clone and forward initialization call to 
+/// the component generators
+
 void RooBinnedGenContext::initGenerator(const RooArgSet &theEvent)
 {
-  // One-time initialization of generator contex. Attach theEvent
-  // to internal p.d.f clone and forward initialization call to 
-  // the component generators
-
   _pdf->recursiveRedirectServers(theEvent) ;
 
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooBinnedGenContext::setExpectedData(Bool_t flag) 
 {
   _expectedData = flag ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooDataSet *RooBinnedGenContext::generate(Double_t nEvt, Bool_t /*skipInit*/, Bool_t extended)
 {
-  
   // Scale to number of events and introduce Poisson fluctuations
   _hist->reset() ;
 
@@ -239,20 +240,21 @@ RooDataSet *RooBinnedGenContext::generate(Double_t nEvt, Bool_t /*skipInit*/, Bo
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// this method is not implemented for this context
+
 void RooBinnedGenContext::generateEvent(RooArgSet&, Int_t)
 {
-  // this method is not implemented for this context
   assert(0) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the details of the context
+
 void RooBinnedGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const 
 {
-  // Print the details of the context
-
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
   os << indent << "--- RooBinnedGenContext ---" << endl ;
   os << indent << "Using PDF ";

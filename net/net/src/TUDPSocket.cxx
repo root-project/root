@@ -42,19 +42,19 @@ ULong64_t TUDPSocket::fgBytesRecv = 0;
 
 ClassImp(TUDPSocket)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a socket. Connect to the named service at address addr.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Returns when connection has been accepted by remote side. Use IsValid()
+/// to check the validity of the socket. Every socket is added to the TROOT
+/// sockets list which will make sure that any open sockets are properly
+/// closed on program termination.
+
 TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
          : TNamed(addr.GetHostName(), service)
 {
-   // Create a socket. Connect to the named service at address addr.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Returns when connection has been accepted by remote side. Use IsValid()
-   // to check the validity of the socket. Every socket is added to the TROOT
-   // sockets list which will make sure that any open sockets are properly
-   // closed on program termination.
-
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
@@ -89,19 +89,19 @@ TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a socket. Connect to the specified port # at address addr.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Returns when connection has been accepted by remote side. Use IsValid()
+/// to check the validity of the socket. Every socket is added to the TROOT
+/// sockets list which will make sure that any open sockets are properly
+/// closed on program termination.
+
 TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
          : TNamed(addr.GetHostName(), "")
 {
-   // Create a socket. Connect to the specified port # at address addr.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Returns when connection has been accepted by remote side. Use IsValid()
-   // to check the validity of the socket. Every socket is added to the TROOT
-   // sockets list which will make sure that any open sockets are properly
-   // closed on program termination.
-
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
@@ -133,19 +133,19 @@ TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a socket. Connect to named service on the remote host.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Returns when connection has been accepted by remote side. Use IsValid()
+/// to check the validity of the socket. Every socket is added to the TROOT
+/// sockets list which will make sure that any open sockets are properly
+/// closed on program termination.
+
 TUDPSocket::TUDPSocket(const char *host, const char *service)
          : TNamed(host, service)
 {
-   // Create a socket. Connect to named service on the remote host.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Returns when connection has been accepted by remote side. Use IsValid()
-   // to check the validity of the socket. Every socket is added to the TROOT
-   // sockets list which will make sure that any open sockets are properly
-   // closed on program termination.
-
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
@@ -177,21 +177,21 @@ TUDPSocket::TUDPSocket(const char *host, const char *service)
       fSocket = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a socket; see CreateAuthSocket for the form of url.
+/// Connect to the specified port # on the remote host.
+/// If user is specified in url, try authentication as user.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Returns when connection has been accepted by remote side. Use IsValid()
+/// to check the validity of the socket. Every socket is added to the TROOT
+/// sockets list which will make sure that any open sockets are properly
+/// closed on program termination.
+
 TUDPSocket::TUDPSocket(const char *url, Int_t port)
          : TNamed(TUrl(url).GetHost(), "")
 {
-   // Create a socket; see CreateAuthSocket for the form of url.
-   // Connect to the specified port # on the remote host.
-   // If user is specified in url, try authentication as user.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Returns when connection has been accepted by remote side. Use IsValid()
-   // to check the validity of the socket. Every socket is added to the TROOT
-   // sockets list which will make sure that any open sockets are properly
-   // closed on program termination.
-
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
@@ -226,15 +226,15 @@ TUDPSocket::TUDPSocket(const char *url, Int_t port)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a socket in the Unix domain on 'sockpath'.
+/// Returns when connection has been accepted by the server. Use IsValid()
+/// to check the validity of the socket. Every socket is added to the TROOT
+/// sockets list which will make sure that any open sockets are properly
+/// closed on program termination.
+
 TUDPSocket::TUDPSocket(const char *sockpath) : TNamed(sockpath, "")
 {
-   // Create a socket in the Unix domain on 'sockpath'.
-   // Returns when connection has been accepted by the server. Use IsValid()
-   // to check the validity of the socket. Every socket is added to the TROOT
-   // sockets list which will make sure that any open sockets are properly
-   // closed on program termination.
-
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
@@ -261,12 +261,12 @@ TUDPSocket::TUDPSocket(const char *sockpath) : TNamed(sockpath, "")
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a socket. The socket will adopt previously opened TCP socket with
+/// descriptor desc.
+
 TUDPSocket::TUDPSocket(Int_t desc) : TNamed("", "")
 {
-   // Create a socket. The socket will adopt previously opened TCP socket with
-   // descriptor desc.
-
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
@@ -290,13 +290,13 @@ TUDPSocket::TUDPSocket(Int_t desc) : TNamed("", "")
       fSocket = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a socket. The socket will adopt previously opened Unix socket with
+/// descriptor desc. The sockpath arg is for info purposes only. Use
+/// this method to adopt e.g. a socket created via socketpair().
+
 TUDPSocket::TUDPSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
 {
-   // Create a socket. The socket will adopt previously opened Unix socket with
-   // descriptor desc. The sockpath arg is for info purposes only. Use
-   // this method to adopt e.g. a socket created via socketpair().
-
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
@@ -325,11 +325,11 @@ TUDPSocket::TUDPSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TUDPSocket copy ctor.
+
 TUDPSocket::TUDPSocket(const TUDPSocket &s) : TNamed(s)
 {
-   // TUDPSocket copy ctor.
-
    fSocket         = s.fSocket;
    fService        = s.fService;
    fAddress        = s.fAddress;
@@ -350,14 +350,14 @@ TUDPSocket::TUDPSocket(const TUDPSocket &s) : TNamed(s)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the socket. If option is "force", calls shutdown(id,2) to
+/// shut down the connection. This will close the connection also
+/// for the parent of this process. Also called via the dtor (without
+/// option "force", call explicitly Close("force") if this is desired).
+
 void TUDPSocket::Close(Option_t *option)
 {
-   // Close the socket. If option is "force", calls shutdown(id,2) to
-   // shut down the connection. This will close the connection also
-   // for the parent of this process. Also called via the dtor (without
-   // option "force", call explicitly Close("force") if this is desired).
-
    Bool_t force = option ? (!strcmp(option, "force") ? kTRUE : kFALSE) : kFALSE;
 
    if (fSocket != -1) {
@@ -371,12 +371,12 @@ void TUDPSocket::Close(Option_t *option)
    SafeDelete(fLastUsageMtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return internet address of local host to which the socket is bound.
+/// In case of error TInetAddress::IsValid() returns kFALSE.
+
 TInetAddress TUDPSocket::GetLocalInetAddress()
 {
-   // Return internet address of local host to which the socket is bound.
-   // In case of error TInetAddress::IsValid() returns kFALSE.
-
    if (IsValid()) {
       if (fLocalAddress.GetPort() == -1)
          fLocalAddress = gSystem->GetSockName(fSocket);
@@ -385,12 +385,12 @@ TInetAddress TUDPSocket::GetLocalInetAddress()
    return TInetAddress();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the local port # to which the socket is bound.
+/// In case of error return -1.
+
 Int_t TUDPSocket::GetLocalPort()
 {
-   // Return the local port # to which the socket is bound.
-   // In case of error return -1.
-
    if (IsValid()) {
       if (fLocalAddress.GetPort() == -1)
          GetLocalInetAddress();
@@ -399,18 +399,18 @@ Int_t TUDPSocket::GetLocalPort()
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Waits for this socket to change status. If interest=kRead,
+/// the socket will be watched to see if characters become available for
+/// reading; if interest=kWrite the socket will be watched to
+/// see if a write will not block.
+/// The argument 'timeout' specifies a maximum time to wait in millisec.
+/// Default no timeout.
+/// Returns 1 if a change of status of interest has been detected within
+/// timeout; 0 in case of timeout; < 0 if an error occured.
+
 Int_t TUDPSocket::Select(Int_t interest, Long_t timeout)
 {
-   // Waits for this socket to change status. If interest=kRead,
-   // the socket will be watched to see if characters become available for
-   // reading; if interest=kWrite the socket will be watched to
-   // see if a write will not block.
-   // The argument 'timeout' specifies a maximum time to wait in millisec.
-   // Default no timeout.
-   // Returns 1 if a change of status of interest has been detected within
-   // timeout; 0 in case of timeout; < 0 if an error occured.
-
    Int_t rc = 1;
 
    // Associate a TFileHandler to this socket
@@ -422,15 +422,15 @@ Int_t TUDPSocket::Select(Int_t interest, Long_t timeout)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a single message opcode. Use kind (opcode) to set the
+/// TMessage "what" field. Returns the number of bytes that were sent
+/// (always sizeof(Int_t)) and -1 in case of error. In case the kind has
+/// been or'ed with kMESS_ACK, the call will only return after having
+/// received an acknowledgement, making the sending process synchronous.
+
 Int_t TUDPSocket::Send(Int_t kind)
 {
-   // Send a single message opcode. Use kind (opcode) to set the
-   // TMessage "what" field. Returns the number of bytes that were sent
-   // (always sizeof(Int_t)) and -1 in case of error. In case the kind has
-   // been or'ed with kMESS_ACK, the call will only return after having
-   // received an acknowledgement, making the sending process synchronous.
-
    TMessage mess(kind);
 
    Int_t nsent;
@@ -440,15 +440,15 @@ Int_t TUDPSocket::Send(Int_t kind)
    return nsent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a status and a single message opcode. Use kind (opcode) to set the
+/// TMessage "what" field. Returns the number of bytes that were sent
+/// (always 2*sizeof(Int_t)) and -1 in case of error. In case the kind has
+/// been or'ed with kMESS_ACK, the call will only return after having
+/// received an acknowledgement, making the sending process synchronous.
+
 Int_t TUDPSocket::Send(Int_t status, Int_t kind)
 {
-   // Send a status and a single message opcode. Use kind (opcode) to set the
-   // TMessage "what" field. Returns the number of bytes that were sent
-   // (always 2*sizeof(Int_t)) and -1 in case of error. In case the kind has
-   // been or'ed with kMESS_ACK, the call will only return after having
-   // received an acknowledgement, making the sending process synchronous.
-
    TMessage mess(kind);
    mess << status;
 
@@ -459,15 +459,15 @@ Int_t TUDPSocket::Send(Int_t status, Int_t kind)
    return nsent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a character string buffer. Use kind to set the TMessage "what" field.
+/// Returns the number of bytes in the string str that were sent and -1 in
+/// case of error. In case the kind has been or'ed with kMESS_ACK, the call
+/// will only return after having received an acknowledgement, making the
+/// sending process synchronous.
+
 Int_t TUDPSocket::Send(const char *str, Int_t kind)
 {
-   // Send a character string buffer. Use kind to set the TMessage "what" field.
-   // Returns the number of bytes in the string str that were sent and -1 in
-   // case of error. In case the kind has been or'ed with kMESS_ACK, the call
-   // will only return after having received an acknowledgement, making the
-   // sending process synchronous.
-
    TMessage mess(kind);
    if (str) mess.WriteString(str);
 
@@ -478,18 +478,18 @@ Int_t TUDPSocket::Send(const char *str, Int_t kind)
    return nsent - sizeof(Int_t);    // - TMessage::What()
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a TMessage object. Returns the number of bytes in the TMessage
+/// that were sent and -1 in case of error. In case the TMessage::What
+/// has been or'ed with kMESS_ACK, the call will only return after having
+/// received an acknowledgement, making the sending process synchronous.
+/// Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
+/// Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
+/// support for streaming TStreamerInfo added by Rene Brun May 2008
+/// support for streaming TProcessID added by Rene Brun June 2008
+
 Int_t TUDPSocket::Send(const TMessage &mess)
 {
-   // Send a TMessage object. Returns the number of bytes in the TMessage
-   // that were sent and -1 in case of error. In case the TMessage::What
-   // has been or'ed with kMESS_ACK, the call will only return after having
-   // received an acknowledgement, making the sending process synchronous.
-   // Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
-   // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
-   // support for streaming TStreamerInfo added by Rene Brun May 2008
-   // support for streaming TProcessID added by Rene Brun June 2008
-
    TSystem::ResetErrno();
 
    if (fSocket == -1) return -1;
@@ -562,14 +562,14 @@ Int_t TUDPSocket::Send(const TMessage &mess)
    return nsent - sizeof(UInt_t);  //length - length header
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send an object. Returns the number of bytes sent and -1 in case of error.
+/// In case the "kind" has been or'ed with kMESS_ACK, the call will only
+/// return after having received an acknowledgement, making the sending
+/// synchronous.
+
 Int_t TUDPSocket::SendObject(const TObject *obj, Int_t kind)
 {
-   // Send an object. Returns the number of bytes sent and -1 in case of error.
-   // In case the "kind" has been or'ed with kMESS_ACK, the call will only
-   // return after having received an acknowledgement, making the sending
-   // synchronous.
-
    //stream object to message buffer
    TMessage mess(kind);
    mess.WriteObject(obj);
@@ -582,14 +582,14 @@ Int_t TUDPSocket::SendObject(const TObject *obj, Int_t kind)
    return nsent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a raw buffer of specified length. Using option kOob one can send
+/// OOB data. Returns the number of bytes sent or -1 in case of error.
+/// Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
+/// Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
+
 Int_t TUDPSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
 {
-   // Send a raw buffer of specified length. Using option kOob one can send
-   // OOB data. Returns the number of bytes sent or -1 in case of error.
-   // Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
-   // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
-
    TSystem::ResetErrno();
 
    if (fSocket == -1) return -1;
@@ -613,13 +613,13 @@ Int_t TUDPSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt
    return nsent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if TStreamerInfo must be sent. The list of TStreamerInfo of classes
+/// in the object in the message is in the fInfos list of the message.
+/// We send only the TStreamerInfos not yet sent on this socket.
+
 void TUDPSocket::SendStreamerInfos(const TMessage &mess)
 {
-   // Check if TStreamerInfo must be sent. The list of TStreamerInfo of classes
-   // in the object in the message is in the fInfos list of the message.
-   // We send only the TStreamerInfos not yet sent on this socket.
-
    if (mess.fInfos && mess.fInfos->GetEntries()) {
       TIter next(mess.fInfos);
       TStreamerInfo *info;
@@ -648,13 +648,13 @@ void TUDPSocket::SendStreamerInfos(const TMessage &mess)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if TProcessIDs must be sent. The list of TProcessIDs
+/// in the object in the message is found by looking in the TMessage bits.
+/// We send only the TProcessIDs not yet send on this socket.
+
 void TUDPSocket::SendProcessIDs(const TMessage &mess)
 {
-   // Check if TProcessIDs must be sent. The list of TProcessIDs
-   // in the object in the message is found by looking in the TMessage bits.
-   // We send only the TProcessIDs not yet send on this socket.
-
    if (mess.TestBitNumber(0)) {
       TObjArray *pids = TProcessID::GetPIDs();
       Int_t npids = pids->GetEntries();
@@ -689,15 +689,15 @@ void TUDPSocket::SendProcessIDs(const TMessage &mess)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a character string message of maximum max length. The expected
+/// message must be of type kMESS_STRING. Returns length of received string
+/// (can be 0 if otherside of connection is closed) or -1 in case of error
+/// or -4 in case a non-blocking socket would block (i.e. there is nothing
+/// to be read).
+
 Int_t TUDPSocket::Recv(char *str, Int_t max)
 {
-   // Receive a character string message of maximum max length. The expected
-   // message must be of type kMESS_STRING. Returns length of received string
-   // (can be 0 if otherside of connection is closed) or -1 in case of error
-   // or -4 in case a non-blocking socket would block (i.e. there is nothing
-   // to be read).
-
    Int_t n, kind;
 
    ResetBit(TUDPSocket::kBrokenConn);
@@ -718,14 +718,14 @@ Int_t TUDPSocket::Recv(char *str, Int_t max)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a character string message of maximum max length. Returns in
+/// kind the message type. Returns length of received string+4 (can be 0 if
+/// other side of connection is closed) or -1 in case of error or -4 in
+/// case a non-blocking socket would block (i.e. there is nothing to be read).
+
 Int_t TUDPSocket::Recv(char *str, Int_t max, Int_t &kind)
 {
-   // Receive a character string message of maximum max length. Returns in
-   // kind the message type. Returns length of received string+4 (can be 0 if
-   // other side of connection is closed) or -1 in case of error or -4 in
-   // case a non-blocking socket would block (i.e. there is nothing to be read).
-
    Int_t     n;
    TMessage *mess;
 
@@ -751,14 +751,14 @@ Int_t TUDPSocket::Recv(char *str, Int_t max, Int_t &kind)
    return n;   // number of bytes read (len of str + sizeof(kind)
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receives a status and a message type. Returns length of received
+/// integers, 2*sizeof(Int_t) (can be 0 if other side of connection
+/// is closed) or -1 in case of error or -4 in case a non-blocking
+/// socket would block (i.e. there is nothing to be read).
+
 Int_t TUDPSocket::Recv(Int_t &status, Int_t &kind)
 {
-   // Receives a status and a message type. Returns length of received
-   // integers, 2*sizeof(Int_t) (can be 0 if other side of connection
-   // is closed) or -1 in case of error or -4 in case a non-blocking
-   // socket would block (i.e. there is nothing to be read).
-
    Int_t     n;
    TMessage *mess;
 
@@ -779,15 +779,15 @@ Int_t TUDPSocket::Recv(Int_t &status, Int_t &kind)
    return n;   // number of bytes read (2 * sizeof(Int_t)
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a TMessage object. The user must delete the TMessage object.
+/// Returns length of message in bytes (can be 0 if other side of connection
+/// is closed) or -1 in case of error or -4 in case a non-blocking socket
+/// would block (i.e. there is nothing to be read) or -5 if pipe broken
+/// or reset by peer (EPIPE || ECONNRESET). In those case mess == 0.
+
 Int_t TUDPSocket::Recv(TMessage *&mess)
 {
-   // Receive a TMessage object. The user must delete the TMessage object.
-   // Returns length of message in bytes (can be 0 if other side of connection
-   // is closed) or -1 in case of error or -4 in case a non-blocking socket
-   // would block (i.e. there is nothing to be read) or -5 if pipe broken
-   // or reset by peer (EPIPE || ECONNRESET). In those case mess == 0.
-
    TSystem::ResetErrno();
 
    if (fSocket == -1) {
@@ -861,16 +861,16 @@ oncemore:
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a raw buffer of specified length bytes. Using option kPeek
+/// one can peek at incoming data. Returns number of received bytes.
+/// Returns -1 in case of error. In case of opt == kOob: -2 means
+/// EWOULDBLOCK and -3 EINVAL. In case of non-blocking mode (kNoBlock)
+/// -4 means EWOULDBLOCK. Returns -5 if pipe broken or reset by
+/// peer (EPIPE || ECONNRESET).
+
 Int_t TUDPSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
 {
-   // Receive a raw buffer of specified length bytes. Using option kPeek
-   // one can peek at incoming data. Returns number of received bytes.
-   // Returns -1 in case of error. In case of opt == kOob: -2 means
-   // EWOULDBLOCK and -3 EINVAL. In case of non-blocking mode (kNoBlock)
-   // -4 means EWOULDBLOCK. Returns -5 if pipe broken or reset by
-   // peer (EPIPE || ECONNRESET).
-
    TSystem::ResetErrno();
 
    if (fSocket == -1) return -1;
@@ -895,13 +895,13 @@ Int_t TUDPSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a message containing streamer infos. In case the message contains
+/// streamer infos they are imported, the message will be deleted and the
+/// method returns kTRUE.
+
 Bool_t TUDPSocket::RecvStreamerInfos(TMessage *mess)
 {
-   // Receive a message containing streamer infos. In case the message contains
-   // streamer infos they are imported, the message will be deleted and the
-   // method returns kTRUE.
-
    if (mess->What() == kMESS_STREAMERINFO) {
       TList *list = (TList*)mess->ReadObject(TList::Class());
       TIter next(list);
@@ -942,13 +942,13 @@ Bool_t TUDPSocket::RecvStreamerInfos(TMessage *mess)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a message containing process ids. In case the message contains
+/// process ids they are imported, the message will be deleted and the
+/// method returns kTRUE.
+
 Bool_t TUDPSocket::RecvProcessIDs(TMessage *mess)
 {
-   // Receive a message containing process ids. In case the message contains
-   // process ids they are imported, the message will be deleted and the
-   // method returns kTRUE.
-
    if (mess->What() == kMESS_PROCESSID) {
       TList *list = (TList*)mess->ReadObject(TList::Class());
       TIter next(list);
@@ -982,43 +982,44 @@ Bool_t TUDPSocket::RecvProcessIDs(TMessage *mess)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set socket options.
+
 Int_t TUDPSocket::SetOption(ESockOptions opt, Int_t val)
 {
-   // Set socket options.
-
    if (fSocket == -1) return -1;
 
    return gSystem->SetSockOpt(fSocket, opt, val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get socket options. Returns -1 in case of error.
+
 Int_t TUDPSocket::GetOption(ESockOptions opt, Int_t &val)
 {
-   // Get socket options. Returns -1 in case of error.
-
    if (fSocket == -1) return -1;
 
    return gSystem->GetSockOpt(fSocket, opt, &val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns error code. Meaning depends on context where it is called.
+/// If no error condition returns 0 else a value < 0.
+/// For example see TServerSocket ctor.
+
 Int_t TUDPSocket::GetErrorCode() const
 {
-   // Returns error code. Meaning depends on context where it is called.
-   // If no error condition returns 0 else a value < 0.
-   // For example see TServerSocket ctor.
-
    if (!IsValid())
       return fSocket;
 
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See comments for function SetCompressionSettings
+
 void TUDPSocket::SetCompressionAlgorithm(Int_t algorithm)
 {
-   // See comments for function SetCompressionSettings
    if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
    if (fCompress < 0) {
       // if the level is not defined yet use 1 as a default
@@ -1029,10 +1030,11 @@ void TUDPSocket::SetCompressionAlgorithm(Int_t algorithm)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See comments for function SetCompressionSettings
+
 void TUDPSocket::SetCompressionLevel(Int_t level)
 {
-   // See comments for function SetCompressionSettings
    if (level < 0) level = 0;
    if (level > 99) level = 99;
    if (fCompress < 0) {
@@ -1045,40 +1047,40 @@ void TUDPSocket::SetCompressionLevel(Int_t level)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Used to specify the compression level and algorithm:
+///  settings = 100 * algorithm + level
+///
+///  level = 0, objects written to this file will not be compressed.
+///  level = 1, minimal compression level but fast.
+///  ....
+///  level = 9, maximal compression level but slower and might use more memory.
+/// (For the currently supported algorithms, the maximum level is 9)
+/// If compress is negative it indicates the compression level is not set yet.
+///
+/// The enumeration ROOT::ECompressionAlgorithm associates each
+/// algorithm with a number. There is a utility function to help
+/// to set the value of the argument. For example,
+///   ROOT::CompressionSettings(ROOT::kLZMA, 1)
+/// will build an integer which will set the compression to use
+/// the LZMA algorithm and compression level 1.  These are defined
+/// in the header file Compression.h.
+///
+/// Note that the compression settings may be changed at any time.
+/// The new compression settings will only apply to branches created
+/// or attached after the setting is changed and other objects written
+/// after the setting is changed.
+
 void TUDPSocket::SetCompressionSettings(Int_t settings)
 {
-   // Used to specify the compression level and algorithm:
-   //  settings = 100 * algorithm + level
-   //
-   //  level = 0, objects written to this file will not be compressed.
-   //  level = 1, minimal compression level but fast.
-   //  ....
-   //  level = 9, maximal compression level but slower and might use more memory.
-   // (For the currently supported algorithms, the maximum level is 9)
-   // If compress is negative it indicates the compression level is not set yet.
-   //
-   // The enumeration ROOT::ECompressionAlgorithm associates each
-   // algorithm with a number. There is a utility function to help
-   // to set the value of the argument. For example,
-   //   ROOT::CompressionSettings(ROOT::kLZMA, 1)
-   // will build an integer which will set the compression to use
-   // the LZMA algorithm and compression level 1.  These are defined
-   // in the header file Compression.h.
-   //
-   // Note that the compression settings may be changed at any time.
-   // The new compression settings will only apply to branches created
-   // or attached after the setting is changed and other objects written
-   // after the setting is changed.
-
    fCompress = settings;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print error string depending on error code.
+
 void TUDPSocket::NetError(const char *where, Int_t err)
 {
-   // Print error string depending on error code.
-
    // Make sure it is in range
    err = (err < kErrError) ? ((err > -1) ? err : 0) : kErrError;
 
@@ -1086,18 +1088,18 @@ void TUDPSocket::NetError(const char *where, Int_t err)
       ::Error(where, "%s", gRootdErrStr[err]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get total number of bytes sent via all sockets.
+
 ULong64_t TUDPSocket::GetSocketBytesSent()
 {
-   // Get total number of bytes sent via all sockets.
-
    return fgBytesSent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get total number of bytes received via all sockets.
+
 ULong64_t TUDPSocket::GetSocketBytesRecv()
 {
-   // Get total number of bytes received via all sockets.
-
    return fgBytesRecv;
 }

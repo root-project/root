@@ -159,14 +159,16 @@ namespace Math {
    }
 
    std::string GSLRandomEngine::Name() const {
-      //----------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       assert ( fRng != 0);
       assert ( fRng->Rng() != 0 );
       return std::string( gsl_rng_name( fRng->Rng() ) );
    }
 
    unsigned int GSLRandomEngine::Size() const {
-      //----------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       assert (fRng != 0);
       return gsl_rng_size( fRng->Rng() );
    }
@@ -300,7 +302,8 @@ namespace Math {
    // generators
    //----------------------------------------------------
 
-   //----------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    GSLRngMT::GSLRngMT() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_mt19937));
@@ -337,44 +340,51 @@ namespace Math {
       SetType(new GSLRngWrapper(gsl_rng_ranlxd2) );
    }
 
-   //----------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    GSLRngTaus::GSLRngTaus() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_taus2) );
    }
 
-   //----------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    GSLRngGFSR4::GSLRngGFSR4() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_gfsr4) );
    }
 
-   //----------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    GSLRngCMRG::GSLRngCMRG() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_cmrg) );
    }
 
-   //----------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    GSLRngMRG::GSLRngMRG() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_mrg) );
    }
 
 
-   //----------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    GSLRngRand::GSLRngRand() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_rand) );
    }
 
-   //----------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    GSLRngRanMar::GSLRngRanMar() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranmar) );
    }
 
-   //----------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    GSLRngMinStd::GSLRngMinStd() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_minstd) );

@@ -32,20 +32,20 @@ Bool_t TMessage::fgEvolution = kFALSE;
 
 ClassImp(TMessage)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TMessage object for storing objects. The "what" integer
+/// describes the type of message. Predifined ROOT system message types
+/// can be found in MessageTypes.h. Make sure your own message types are
+/// unique from the ROOT defined message types (i.e. 0 - 10000 are
+/// reserved by ROOT). In case you OR "what" with kMESS_ACK, the message
+/// will wait for an acknowledgement from the remote side. This makes
+/// the sending process synchronous. In case you OR "what" with kMESS_ZIP,
+/// the message will be compressed in TSocket using the zip algorithm
+/// (only if message is > 256 bytes).
+
 TMessage::TMessage(UInt_t what, Int_t bufsiz) :
    TBufferFile(TBuffer::kWrite, bufsiz + 2*sizeof(UInt_t))
 {
-   // Create a TMessage object for storing objects. The "what" integer
-   // describes the type of message. Predifined ROOT system message types
-   // can be found in MessageTypes.h. Make sure your own message types are
-   // unique from the ROOT defined message types (i.e. 0 - 10000 are
-   // reserved by ROOT). In case you OR "what" with kMESS_ACK, the message
-   // will wait for an acknowledgement from the remote side. This makes
-   // the sending process synchronous. In case you OR "what" with kMESS_ZIP,
-   // the message will be compressed in TSocket using the zip algorithm
-   // (only if message is > 256 bytes).
-
    // space at the beginning of the message reserved for the message length
    UInt_t   reserved = 0;
    *this << reserved;
@@ -64,12 +64,12 @@ TMessage::TMessage(UInt_t what, Int_t bufsiz) :
    SetBit(kCannotHandleMemberWiseStreaming);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TMessage object for reading objects. The objects will be
+/// read from buf. Use the What() method to get the message type.
+
 TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsize, buf)
 {
-   // Create a TMessage object for reading objects. The objects will be
-   // read from buf. Use the What() method to get the message type.
-
    // skip space at the beginning of the message reserved for the message length
    fBufCur += sizeof(UInt_t);
 
@@ -100,49 +100,49 @@ TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsi
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up compression buffer.
+
 TMessage::~TMessage()
 {
-   // Clean up compression buffer.
-
    delete [] fBufComp;
    delete fInfos;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function enabling or disabling the automatic schema evolution.
+/// By default schema evolution support is off.
+
 void TMessage::EnableSchemaEvolutionForAll(Bool_t enable)
 {
-   // Static function enabling or disabling the automatic schema evolution.
-   // By default schema evolution support is off.
-
    fgEvolution = enable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning status of global schema evolution.
+
 Bool_t TMessage::UsesSchemaEvolutionForAll()
 {
-   // Static function returning status of global schema evolution.
-
    return fgEvolution;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Force writing the TStreamerInfo to the message.
+
 void TMessage::ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t /* force */)
 {
-   // Force writing the TStreamerInfo to the message.
-
    if (fgEvolution || fEvolution) {
       if (!fInfos) fInfos = new TList();
       fInfos->Add(info);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change a buffer that was received into one that can be send, i.e.
+/// forward a just received message.
+
 void TMessage::Forward()
 {
-   // Change a buffer that was received into one that can be send, i.e.
-   // forward a just received message.
-
    if (IsReading()) {
       SetWriteMode();
       SetBufferOffset(fBufSize);
@@ -154,22 +154,22 @@ void TMessage::Forward()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remember that the StreamerInfo is being used in writing.
+
 void TMessage::TagStreamerInfo(TVirtualStreamerInfo *info)
 {
-   // Remember that the StreamerInfo is being used in writing.
-
    if (fgEvolution || fEvolution) {
       if (!fInfos) fInfos = new TList();
       fInfos->Add(info);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the message buffer so we can use (i.e. fill) it again.
+
 void TMessage::Reset()
 {
-   // Reset the message buffer so we can use (i.e. fill) it again.
-
    SetBufferOffset(sizeof(UInt_t) + sizeof(fWhat));
    ResetMap();
 
@@ -181,12 +181,12 @@ void TMessage::Reset()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the message length at the beginning of the message buffer.
+/// This method is only called by TSocket::Send().
+
 void TMessage::SetLength() const
 {
-   // Set the message length at the beginning of the message buffer.
-   // This method is only called by TSocket::Send().
-
    if (IsWriting()) {
       char *buf = Buffer();
       tobuf(buf, (UInt_t)(Length() - sizeof(UInt_t)));
@@ -198,14 +198,14 @@ void TMessage::SetLength() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Using this method one can change the message type a-posteriory.
+/// In case you OR "what" with kMESS_ACK, the message will wait for
+/// an acknowledgement from the remote side. This makes the sending
+/// process synchronous.
+
 void TMessage::SetWhat(UInt_t what)
 {
-   // Using this method one can change the message type a-posteriory.
-   // In case you OR "what" with kMESS_ACK, the message will wait for
-   // an acknowledgement from the remote side. This makes the sending
-   // process synchronous.
-
    fWhat = what;
 
    char *buf = Buffer();
@@ -219,7 +219,8 @@ void TMessage::SetWhat(UInt_t what)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMessage::SetCompressionAlgorithm(Int_t algorithm)
 {
    if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
@@ -239,7 +240,8 @@ void TMessage::SetCompressionAlgorithm(Int_t algorithm)
    fCompress = newCompress;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMessage::SetCompressionLevel(Int_t level)
 {
    if (level < 0) level = 0;
@@ -261,7 +263,8 @@ void TMessage::SetCompressionLevel(Int_t level)
    fCompress = newCompress;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMessage::SetCompressionSettings(Int_t settings)
 {
    if (settings != fCompress && fBufComp) {
@@ -273,15 +276,15 @@ void TMessage::SetCompressionSettings(Int_t settings)
    fCompress = settings;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compress the message. The message will only be compressed if the
+/// compression level > 0 and the if the message is > 256 bytes.
+/// Returns -1 in case of error (when compression fails or
+/// when the message increases in size in some pathological cases),
+/// otherwise returns 0.
+
 Int_t TMessage::Compress()
 {
-   // Compress the message. The message will only be compressed if the
-   // compression level > 0 and the if the message is > 256 bytes.
-   // Returns -1 in case of error (when compression fails or
-   // when the message increases in size in some pathological cases),
-   // otherwise returns 0.
-
    Int_t compressionLevel = GetCompressionLevel();
    Int_t compressionAlgorithm = GetCompressionAlgorithm();
    if (compressionLevel <= 0) {
@@ -355,12 +358,12 @@ Int_t TMessage::Compress()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Uncompress the message. The message will only be uncompressed when
+/// kMESS_ZIP is set. Returns -1 in case of error, 0 otherwise.
+
 Int_t TMessage::Uncompress()
 {
-   // Uncompress the message. The message will only be uncompressed when
-   // kMESS_ZIP is set. Returns -1 in case of error, 0 otherwise.
-
    if (!fBufComp || !(fWhat & kMESS_ZIP))
       return -1;
 
@@ -402,18 +405,18 @@ Int_t TMessage::Uncompress()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write object to message buffer.
+/// When support for schema evolution is enabled the list of TStreamerInfo
+/// used to stream this object is kept in fInfos. This information is used
+/// by TSocket::Send that sends this list through the socket. This list is in
+/// turn used by TSocket::Recv to store the TStreamerInfo objects in the
+/// relevant TClass in case the TClass does not know yet about a particular
+/// class version. This feature is implemented to support clients and servers
+/// with either different ROOT versions or different user classes versions.
+
 void TMessage::WriteObject(const TObject *obj)
 {
-   // Write object to message buffer.
-   // When support for schema evolution is enabled the list of TStreamerInfo
-   // used to stream this object is kept in fInfos. This information is used
-   // by TSocket::Send that sends this list through the socket. This list is in
-   // turn used by TSocket::Recv to store the TStreamerInfo objects in the
-   // relevant TClass in case the TClass does not know yet about a particular
-   // class version. This feature is implemented to support clients and servers
-   // with either different ROOT versions or different user classes versions.
-
    if (fgEvolution || fEvolution) {
       if (fInfos)
          fInfos->Clear();
@@ -425,14 +428,14 @@ void TMessage::WriteObject(const TObject *obj)
    WriteObjectAny(obj, TObject::Class());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the ProcessID pid is already in the message.
+/// If not, then:
+///   - mark bit 0 of fBitsPIDs to indicate that a ProcessID has been found
+///   - mark bit uid+1 where uid id the uid of the ProcessID
+
 UShort_t TMessage::WriteProcessID(TProcessID *pid)
 {
-   // Check if the ProcessID pid is already in the message.
-   // If not, then:
-   //   - mark bit 0 of fBitsPIDs to indicate that a ProcessID has been found
-   //   - mark bit uid+1 where uid id the uid of the ProcessID
-
    if (fBitsPIDs.TestBitNumber(0)) return 0;
    if (!pid)
       pid = TProcessID::GetPID();

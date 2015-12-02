@@ -78,10 +78,11 @@
 
 ClassImp(TPolyLineShape)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TPolyLineShape::TPolyLineShape()
 {
-   //to be documented
    fShape = 0;
    fSmooth = kFALSE;
    fConnection= 0;
@@ -94,10 +95,11 @@ TPolyLineShape::TPolyLineShape()
    fLineFlag  = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  fShape       = new TTUBE("tube","tube","void",0.5,0.5);
+
 TPolyLineShape::TPolyLineShape(TPoints3DABC  *points,Option_t* option)
 {
-  //  fShape       = new TTUBE("tube","tube","void",0.5,0.5);
    fShape      = 0;
    fShapeType   = kNULL;
    fSmooth      = kFALSE;
@@ -117,25 +119,28 @@ TPolyLineShape::TPolyLineShape(TPoints3DABC  *points,Option_t* option)
    Create();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TPolyLineShape::~TPolyLineShape()
 {
-   //to be documented
    SafeDelete(fShape);
    SafeDelete(fSizeX3D);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TPolyLineShape::Create()
 {
-   //to be documented
    if (!fConnection) SetConnection(kBrik);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Size3D *TPolyLineShape::CreateX3DSize(Bool_t marker)
 {
-   //to be documented
    if (!fSizeX3D) fSizeX3D = new Size3D;
    fSizeX3D->numPoints = 0;
    fSizeX3D->numSegs   = 0;
@@ -160,10 +165,11 @@ Size3D *TPolyLineShape::CreateX3DSize(Bool_t marker)
    return fSizeX3D;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Int_t TPolyLineShape::SetConnection(EShapeTypes connection)
 {
-   //to be documented
    Float_t size = 0.5*GetWidthFactor()*GetLineWidth();
 
    if (fShapeType != connection) {
@@ -181,18 +187,18 @@ Int_t TPolyLineShape::SetConnection(EShapeTypes connection)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*Compute distance from point px,py to a 3-D polyline*-*-*-*-*-*-*
+///*-*            ===================================================
+///*-*
+///*-*  Compute the closest distance of approach from point px,py to each segment
+///*-*  of the polyline.
+///*-*  Returns when the distance found is below DistanceMaximum.
+///*-*  The distance is computed in pixels units.
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 Int_t TPolyLineShape::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*Compute distance from point px,py to a 3-D polyline*-*-*-*-*-*-*
-//*-*            ===================================================
-//*-*
-//*-*  Compute the closest distance of approach from point px,py to each segment
-//*-*  of the polyline.
-//*-*  Returns when the distance found is below DistanceMaximum.
-//*-*  The distance is computed in pixels units.
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
    if (fPoints) {
       Int_t ret = fPoints->DistancetoPrimitive( px, py);
       if (ret == -1) ret = PointDistancetoPrimitive(px, py);
@@ -201,19 +207,19 @@ Int_t TPolyLineShape::DistancetoPrimitive(Int_t px, Int_t py)
    return 999999;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*Compute distance from point px,py to a 3-D points *-*-*-*-*-*-*
+///*-*          =====================================================
+///*-*
+///*-*  Compute the closest distance of approach from point px,py to each segment
+///*-*  of the polyline.
+///*-*  Returns when the distance found is below DistanceMaximum.
+///*-*  The distance is computed in pixels units.
+///*-*
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 Int_t TPolyLineShape::PointDistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*Compute distance from point px,py to a 3-D points *-*-*-*-*-*-*
-//*-*          =====================================================
-//*-*
-//*-*  Compute the closest distance of approach from point px,py to each segment
-//*-*  of the polyline.
-//*-*  Returns when the distance found is below DistanceMaximum.
-//*-*  The distance is computed in pixels units.
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
    const Int_t inaxis = 7;
    Float_t dist = 999999;
 
@@ -250,66 +256,74 @@ END:
    return Int_t(dist);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TPolyLineShape::Draw(Option_t *)
 {
-   //to be documented
    Create();
    AppendPad();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// forward the ExecuteEvent call to the decorated object
+
 void TPolyLineShape::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // forward the ExecuteEvent call to the decorated object
    if (fPoints) fPoints->ExecuteEvent(event,px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Color_t TPolyLineShape::GetColorAttribute() const
 {
-   //to be documented
    return ((TPolyLineShape *)this)->GetLineColor();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// forward the GetName call to the decorated object
+
 const char  *TPolyLineShape::GetName()  const
 {
-   // forward the GetName call to the decorated object
    return fPoints ? fPoints->GetName() : TShape::GetName();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// forward the GetObjectInfo call to the decorated object
+
 char  *TPolyLineShape::GetObjectInfo(Int_t px, Int_t py) const
 {
-   // forward the GetObjectInfo call to the decorated object
    return fPoints ? fPoints->GetObjectInfo(px, py) : TShape::GetObjectInfo(px,py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Size_t TPolyLineShape::GetSizeAttribute() const
 {
-   //to be documented
    return ((TPolyLineShape *)this)->GetMarkerSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Style_t TPolyLineShape::GetStyleAttribute() const
 {
-   //to be documented
    return ((TPolyLineShape *)this)->GetLineStyle();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// forward the GetObjectInfo call to the decorated object
+
 const char  *TPolyLineShape::GetTitle() const
 {
-   // forward the GetObjectInfo call to the decorated object
    return fPoints ? fPoints->GetTitle() : TShape::GetTitle();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Double_t *start - coordinate of the start point of the current segment
+/// Double_t *end   - coordinate of the end   point of the current segment
+
 void TPolyLineShape::PaintNode(Float_t *start,Float_t *end,Option_t *option)
 {
-  // Double_t *start - coordinate of the start point of the current segment
-  // Double_t *end   - coordinate of the end   point of the current segment
-
   // Calculate the vector
    const Int_t kDimension = 3;
    Double_t vector[kDimension];
@@ -383,10 +397,11 @@ void TPolyLineShape::PaintNode(Float_t *start,Float_t *end,Option_t *option)
    node.PaintNodePosition(option, &position);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TPolyLineShape::Paint(Option_t *opt)
 {
-   //to be documented
    if (!GetPoints()) return;
 
    Bool_t rangeView = opt && opt[0] && strcmp(opt,"range")==0 ? kTRUE : kFALSE;
@@ -423,11 +438,12 @@ void TPolyLineShape::Paint(Option_t *opt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Draw this 3-D polyline with new coordinates*-*-*-*-*-*-*-*-*-*
+///*-*              ===========================================
+
 void  TPolyLineShape::PaintPoints(Int_t n, Float_t *, Option_t *)
 {
-//*-*-*-*-*-*-*-*-*Draw this 3-D polyline with new coordinates*-*-*-*-*-*-*-*-*-*
-//*-*              ===========================================
    if (n < 2) return;
 
    TAttLine::Modify();  //Change line attributes only if necessary
@@ -440,12 +456,12 @@ void  TPolyLineShape::PaintPoints(Int_t n, Float_t *, Option_t *)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Paint polymarker in CurrentPad World coordinates*-*-*-*-*-*-*-*
+///*-*              ================================================
+
 void TPolyLineShape::PaintPolyMarker(Int_t n, Float_t *, Marker_t, Option_t *)
 {
-//*-*-*-*-*-*-*-*-*Paint polymarker in CurrentPad World coordinates*-*-*-*-*-*-*-*
-//*-*              ================================================
-
    if (n <= 0) return;
 
    TView *view = gPad->GetView();      //Get current 3-D view
@@ -486,10 +502,11 @@ void TPolyLineShape::PaintPolyMarker(Int_t n, Float_t *, Marker_t, Option_t *)
    delete [] pxy;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TPolyLineShape::Paint3d(Option_t *opt)
 {
-   //to be documented
    if (!fPoints) return;
 
    Create();
@@ -503,10 +520,11 @@ void TPolyLineShape::Paint3d(Option_t *opt)
    fHasDrawn = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TPolyLineShape::PaintX3DLine(Option_t *)
 {
-   //to be documented
 #ifndef WIN32
    Int_t size = 0;
    if (fPoints) size = fPoints->Size();
@@ -552,10 +570,11 @@ void TPolyLineShape::PaintX3DLine(Option_t *)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TPolyLineShape::PaintX3DMarker(Option_t *)
 {
-   //to be documented
 #ifndef WIN32
    Int_t size = 0;
    if (fPoints) size = fPoints->Size();
@@ -625,45 +644,47 @@ void TPolyLineShape::PaintX3DMarker(Option_t *)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Float_t TPolyLineShape::Product(Float_t *v1, Float_t *v2,Int_t ndim)
 {
-   //to be documented
    Float_t p = 0;
    if (v1 && v2 && ndim > 0)
       for (Int_t i=0; i<ndim; i++) p+= v1[i]*v2[i];
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Double_t TPolyLineShape::Product(Double_t *v1, Double_t *v2,Int_t ndim)
 {
-   //to be documented
    Double_t p = 0;
    if (v1 && v2 && ndim > 0)
       for (Int_t i=0;i<ndim;i++) p+= v1[i]*v2[i];
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///************************************************************************
+///*                                                                      *
+///*   call gyrot(dirc,angp,trans,ntrans)                       vp 880722 *
+///*                                       revised              vp 921009 *
+///*                                       revised (f->c++)     vf 981006 *
+///*       routine for filling rotation transformation matrix             *
+///*       from axis and rotation angle around                            *
+///*                                                                      *
+///*   arguments:                                                         *
+///*       dirc    direct cosinuses (may be not normalised)               *
+///*       cosang, sinang - cos and sin of the rotation angle             *
+///*       tranz   rotation & shift matrix 3*3  (input/output)            *
+///*    ---------------------------------------------------------------   *
+///*  This code is provided by Victor Perevoztchikov                      *
+///************************************************************************
+
 Double_t *TPolyLineShape::Gyrot(Double_t *dirc, Double_t cosang, Double_t sinang, Double_t trans[3][3])
 {
-//************************************************************************
-//*                                                                      *
-//*   call gyrot(dirc,angp,trans,ntrans)                       vp 880722 *
-//*                                       revised              vp 921009 *
-//*                                       revised (f->c++)     vf 981006 *
-//*       routine for filling rotation transformation matrix             *
-//*       from axis and rotation angle around                            *
-//*                                                                      *
-//*   arguments:                                                         *
-//*       dirc    direct cosinuses (may be not normalised)               *
-//*       cosang, sinang - cos and sin of the rotation angle             *
-//*       tranz   rotation & shift matrix 3*3  (input/output)            *
-//*    ---------------------------------------------------------------   *
-//*  This code is provided by Victor Perevoztchikov                      *
-//************************************************************************
-
    Double_t ax[3];
 
    memcpy(ax,dirc,3*sizeof(Double_t));
@@ -697,10 +718,11 @@ Double_t *TPolyLineShape::Gyrot(Double_t *dirc, Double_t cosang, Double_t sinang
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Color_t TPolyLineShape::SetColorAttribute(Color_t color)
 {
-   //to be documented
    Color_t currentColor = GetColorAttribute();
    if (color != currentColor) {
       SetLineColor(color);
@@ -709,10 +731,11 @@ Color_t TPolyLineShape::SetColorAttribute(Color_t color)
    return currentColor;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Size_t TPolyLineShape::SetSizeAttribute(Size_t size)
 {
-   //to be documented
    Size_t currentSize = GetSizeAttribute();
    if (size != currentSize) {
       SetLineWidth(Width_t(size));
@@ -721,13 +744,14 @@ Size_t TPolyLineShape::SetSizeAttribute(Size_t size)
    return currentSize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SetStyleAttribute(Style_t style) - set new style for this line
+/// Returns:
+///          previous value of the line style
+///
+
 Style_t TPolyLineShape::SetStyleAttribute(Style_t style)
 {
-  // SetStyleAttribute(Style_t style) - set new style for this line
-  // Returns:
-  //          previous value of the line style
-  //
    Style_t s = 0;
    s = GetStyleAttribute();
    SetLineStyle(style);
@@ -735,26 +759,29 @@ Style_t TPolyLineShape::SetStyleAttribute(Style_t style)
    return s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TPolyLineShape::SetShape(TShape *shape)
 {
-   //to be documented
    SafeDelete(fShape)
    fShape = shape;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Int_t TPolyLineShape::Size() const
 {
-   //to be documented
    return fPoints ? fPoints->Size():0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*Return total X3D size of this shape with its attributes*-*-*-*-*-*
+///*-*          =======================================================
+
 void TPolyLineShape::Sizeof3D() const
 {
-//*-*-*-*-*-*-*Return total X3D size of this shape with its attributes*-*-*-*-*-*
-//*-*          =======================================================
    TPolyLineShape *line = (TPolyLineShape *)this;
    if (fLineFlag )
       line->CreateX3DSize(kFALSE);

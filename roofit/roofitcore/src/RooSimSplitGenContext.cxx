@@ -46,14 +46,14 @@ ClassImp(RooSimSplitGenContext)
 ;
   
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of specialized generator context for RooSimultaneous p.d.f.s. This
+/// context creates a dedicated context for each component p.d.f.s and delegates
+/// generation of events to the appropriate component generator context
+
 RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const RooArgSet &vars, Bool_t verbose, Bool_t autoBinned, const char* binnedTag) :
   RooAbsGenContext(model,vars,0,0,verbose), _pdf(&model)
 {
-  // Constructor of specialized generator context for RooSimultaneous p.d.f.s. This
-  // context creates a dedicated context for each component p.d.f.s and delegates
-  // generation of events to the appropriate component generator context
-
   // Determine if we are requested to generate the index category
   RooAbsCategory *idxCat = (RooAbsCategory*) model._indexCat.absArg() ;
   RooArgSet pdfVars(vars) ;
@@ -153,11 +153,11 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Delete all owned subgenerator contexts
+
 RooSimSplitGenContext::~RooSimSplitGenContext()
 {
-  // Destructor. Delete all owned subgenerator contexts
-
   delete[] _fracThresh ;
   delete _idxCatSet ;
   for (vector<RooAbsGenContext*>::iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
@@ -168,11 +168,11 @@ RooSimSplitGenContext::~RooSimSplitGenContext()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Attach the index category clone to the given event buffer
+
 void RooSimSplitGenContext::attach(const RooArgSet& args) 
 {
-  // Attach the index category clone to the given event buffer
-
   if (_idxCat->isDerived()) {
     _idxCat->recursiveRedirectServers(args,kTRUE) ;
   }
@@ -185,11 +185,11 @@ void RooSimSplitGenContext::attach(const RooArgSet& args)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform one-time initialization of generator context
+
 void RooSimSplitGenContext::initGenerator(const RooArgSet &theEvent)
 {
-  // Perform one-time initialization of generator context
-
   // Attach the index category clone to the event
   if (_idxCat->isDerived()) {
     _idxCat->recursiveRedirectServers(theEvent,kTRUE) ;
@@ -206,7 +206,8 @@ void RooSimSplitGenContext::initGenerator(const RooArgSet &theEvent)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooDataSet* RooSimSplitGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t extendedMode)
 {
   if(!isValid()) {
@@ -296,10 +297,11 @@ RooDataSet* RooSimSplitGenContext::generate(Double_t nEvents, Bool_t skipInit, B
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forward to components
+
 void RooSimSplitGenContext::setExpectedData(Bool_t flag) 
 {
-  // Forward to components
   for (vector<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
     (*iter)->setExpectedData(flag) ;
   }
@@ -307,38 +309,41 @@ void RooSimSplitGenContext::setExpectedData(Bool_t flag)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// this method is empty because it is not used by this context
+
 RooDataSet* RooSimSplitGenContext::createDataSet(const char* , const char* , const RooArgSet& )
 {
-  // this method is empty because it is not used by this context
   return 0 ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// this method is empty because it is not used in this type of context
+
 void RooSimSplitGenContext::generateEvent(RooArgSet &, Int_t )
 {
-  // this method is empty because it is not used in this type of context
   assert(0) ;
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// this method is empty because proto datasets are not supported by this context
+
 void RooSimSplitGenContext::setProtoDataOrder(Int_t* )
 {
-  // this method is empty because proto datasets are not supported by this context
   assert(0) ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Detailed printing interface
+
 void RooSimSplitGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const 
 {
-  // Detailed printing interface
-
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
   os << indent << "--- RooSimSplitGenContext ---" << endl ;
   os << indent << "Using PDF ";

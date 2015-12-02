@@ -34,7 +34,8 @@ ClassImp(PiecewiseInterpolation)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PiecewiseInterpolation::PiecewiseInterpolation()
 {
   _positiveDefinite=false;
@@ -43,7 +44,8 @@ PiecewiseInterpolation::PiecewiseInterpolation()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* title, const RooAbsReal& nominal,
 					       const RooArgList& lowSet, 
 					       const RooArgList& highSet,
@@ -120,7 +122,9 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 PiecewiseInterpolation::PiecewiseInterpolation(const PiecewiseInterpolation& other, const char* name) :
   RooAbsReal(other, name), 
   _nominal("!nominal",this,other._nominal),
@@ -130,29 +134,28 @@ PiecewiseInterpolation::PiecewiseInterpolation(const PiecewiseInterpolation& oth
   _positiveDefinite(other._positiveDefinite),
   _interpCode(other._interpCode)
 {
-  // Copy constructor
-
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 PiecewiseInterpolation::~PiecewiseInterpolation() 
 {
-  // Destructor
   TRACE_DESTROY
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return current value of self
+
 Double_t PiecewiseInterpolation::evaluate() const 
 {
-  // Calculate and return current value of self
-
   ///////////////////
   Double_t nominal = _nominal;
   Double_t sum(nominal) ;
@@ -304,10 +307,10 @@ Double_t PiecewiseInterpolation::evaluate() const
 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t PiecewiseInterpolation::setBinIntegrator(RooArgSet& allVars) 
 {
-
   if(allVars.getSize()==1){
     RooAbsReal* temp = const_cast<PiecewiseInterpolation*>(this);
     temp->specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator")  ;
@@ -321,12 +324,12 @@ Bool_t PiecewiseInterpolation::setBinIntegrator(RooArgSet& allVars)
   return false;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Advertise that all integrals can be handled internally.
+
 Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
 						      const RooArgSet* normSet, const char* /*rangeName*/) const 
 {
-  // Advertise that all integrals can be handled internally.
-
   /*
   cout << "---------------------------\nin PiecewiseInterpolation get analytic integral " <<endl;
   cout << "all vars = "<<endl;
@@ -414,12 +417,12 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement analytical integrations by doing appropriate weighting from  component integrals
+/// functions to integrators of components
+
 Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet2*/,const char* /*rangeName*/) const 
 {
-  // Implement analytical integrations by doing appropriate weighting from  component integrals
-  // functions to integrators of components
-
   /*
   cout <<"Enter analytic Integral"<<endl;
   printDirty(true);
@@ -599,9 +602,9 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
 }
 
 
-//_____________________________________________________________________________
-void PiecewiseInterpolation::setInterpCode(RooAbsReal& param, int code){
+////////////////////////////////////////////////////////////////////////////////
 
+void PiecewiseInterpolation::setInterpCode(RooAbsReal& param, int code){
   int index = _paramSet.index(&param);
   if(index<0){
       coutE(InputArguments) << "PiecewiseInterpolation::setInterpCode ERROR:  " << param.GetName() 
@@ -614,52 +617,55 @@ void PiecewiseInterpolation::setInterpCode(RooAbsReal& param, int code){
 }
 
 
-//_____________________________________________________________________________
-void PiecewiseInterpolation::setAllInterpCodes(int code){
+////////////////////////////////////////////////////////////////////////////////
 
+void PiecewiseInterpolation::setAllInterpCodes(int code){
   for(unsigned int i=0; i<_interpCode.size(); ++i){
     _interpCode.at(i) = code;
   }
 }
 
 
-//_____________________________________________________________________________
-void PiecewiseInterpolation::printAllInterpCodes(){
+////////////////////////////////////////////////////////////////////////////////
 
+void PiecewiseInterpolation::printAllInterpCodes(){
   for(unsigned int i=0; i<_interpCode.size(); ++i){
     coutI(InputArguments) <<"interp code for " << _paramSet.at(i)->GetName() << " = " << _interpCode.at(i) <<endl;
   }
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// WVE note: assumes nominal and alternates have identical structure, must add explicit check
+
 std::list<Double_t>* PiecewiseInterpolation::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
 {
-  // WVE note: assumes nominal and alternates have identical structure, must add explicit check
   return _nominal.arg().binBoundaries(obs,xlo,xhi) ;  
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// WVE note: assumes nominal and alternates have identical structure, must add explicit check
+
 Bool_t PiecewiseInterpolation::isBinnedDistribution(const RooArgSet& obs) const 
 {
-  // WVE note: assumes nominal and alternates have identical structure, must add explicit check
   return _nominal.arg().isBinnedDistribution(obs) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::list<Double_t>* PiecewiseInterpolation::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
 {
   return _nominal.arg().plotSamplingHint(obs,xlo,xhi) ;  
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class PiecewiseInterpolation.
+
 void PiecewiseInterpolation::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class PiecewiseInterpolation.
-
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(PiecewiseInterpolation::Class(),this);
       specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator") ;      
@@ -671,12 +677,12 @@ void PiecewiseInterpolation::Streamer(TBuffer &R__b)
 
 
 /*
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Customized printing of arguments of a PiecewiseInterpolation to more intuitively reflect the contents of the
+/// product operator construction
+
 void PiecewiseInterpolation::printMetaArgs(ostream& os) const 
 {
-  // Customized printing of arguments of a PiecewiseInterpolation to more intuitively reflect the contents of the
-  // product operator construction
-
   _lowIter->Reset() ;
   if (_highIter) {
     _highIter->Reset() ;

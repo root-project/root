@@ -45,10 +45,11 @@ typedef struct {
 // Function run in separate thread watching changes in session status
 // frequency
 //
-//--------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// This is an endless loop to periodically check the system
+
 void *XrdProofdPriorityCron(void *p)
 {
-   // This is an endless loop to periodically check the system
    XPDLOC(PMGR, "PriorityCron")
 
    XrdProofdPriorityMgr *mgr = (XrdProofdPriorityMgr *)p;
@@ -113,12 +114,13 @@ void *XrdProofdPriorityCron(void *p)
    return (void *)0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 XrdProofdPriorityMgr::XrdProofdPriorityMgr(XrdProofdManager *mgr,
                                            XrdProtocol_Config *pi, XrdSysError *e)
                     : XrdProofdConfig(pi->ConfigFN, e)
 {
-   // Constructor
    XPDLOC(PMGR, "XrdProofdPriorityMgr")
 
    fMgr = mgr;
@@ -136,10 +138,11 @@ XrdProofdPriorityMgr::XrdProofdPriorityMgr(XrdProofdManager *mgr,
    RegisterDirectives();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the priority on entries
+
 static int DumpPriorityChanges(const char *, XrdProofdPriority *p, void *s)
 {
-   // Reset the priority on entries
    XPDLOC(PMGR, "DumpPriorityChanges")
 
    XrdSysError *e = (XrdSysError *)s;
@@ -157,11 +160,12 @@ static int DumpPriorityChanges(const char *, XrdProofdPriority *p, void *s)
    return 1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run configuration and parse the entered config directives.
+/// Return 0 on success, -1 on error
+
 int XrdProofdPriorityMgr::Config(bool rcf)
 {
-   // Run configuration and parse the entered config directives.
-   // Return 0 on success, -1 on error
    XPDLOC(PMGR, "PriorityMgr::Config")
 
    // Run first the configurator
@@ -203,20 +207,21 @@ int XrdProofdPriorityMgr::Config(bool rcf)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register directives for configuration
+
 void XrdProofdPriorityMgr::RegisterDirectives()
 {
-   // Register directives for configuration
-
    Register("schedopt", new XrdProofdDirective("schedopt", this, &DoDirectiveClass));
    Register("priority", new XrdProofdDirective("priority", this, &DoDirectiveClass));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the priorities of the active sessions.
+
 int XrdProofdPriorityMgr::DoDirective(XrdProofdDirective *d,
                                   char *val, XrdOucStream *cfg, bool rcf)
 {
-   // Update the priorities of the active sessions.
    XPDLOC(PMGR, "PriorityMgr::DoDirective")
 
    if (!d)
@@ -232,11 +237,11 @@ int XrdProofdPriorityMgr::DoDirective(XrdProofdDirective *d,
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change group priority. Used when a master pushes a priority to a worker.
+
 void XrdProofdPriorityMgr::SetGroupPriority(const char *grp, int priority)
 {
-   // Change group priority. Used when a master pushes a priority to a worker.
-
    XrdProofGroup *g = fMgr->GroupsMgr()->GetGroup(grp);
    if (g)
       g->SetPriority((float)priority);
@@ -248,11 +253,11 @@ void XrdProofdPriorityMgr::SetGroupPriority(const char *grp, int priority)
    return;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the priority on entries
+
 static int ResetEntryPriority(const char *, XrdProofdSessionEntry *e, void *)
 {
-   // Reset the priority on entries
-
    if (e) {
       e->SetPriority();
       // Check next
@@ -263,10 +268,11 @@ static int ResetEntryPriority(const char *, XrdProofdSessionEntry *e, void *)
    return 1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run thorugh entries to create the sorted list of active entries
+
 static int CreateActiveList(const char *, XrdProofdSessionEntry *e, void *s)
 {
-   // Run thorugh entries to create the sorted list of active entries
    XPDLOC(PMGR, "CreateActiveList")
 
    XpdCreateActiveList_t *cal = (XpdCreateActiveList_t *)s;
@@ -316,16 +322,17 @@ static int CreateActiveList(const char *, XrdProofdSessionEntry *e, void *s)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recalculate nice values taking into account all active users
+/// and their priorities.
+/// The type of sessions considered depend on 'opt':
+///    0          all active sessions
+///    1          master sessions
+///    2          worker sessionsg21
+/// Return 0 on success, -1 otherwise.
+
 int XrdProofdPriorityMgr::SetNiceValues(int opt)
 {
-   // Recalculate nice values taking into account all active users
-   // and their priorities.
-   // The type of sessions considered depend on 'opt':
-   //    0          all active sessions
-   //    1          master sessions
-   //    2          worker sessionsg21
-   // Return 0 on success, -1 otherwise.
    XPDLOC(PMGR, "PriorityMgr::SetNiceValues")
 
    TRACE(REQ, "------------------- Start ----------------------");
@@ -409,11 +416,11 @@ int XrdProofdPriorityMgr::SetNiceValues(int opt)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'priority' directive
+
 int XrdProofdPriorityMgr::DoDirectivePriority(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'priority' directive
-
    if (!val || !cfg)
       // undefined inputs
       return -1;
@@ -432,10 +439,11 @@ int XrdProofdPriorityMgr::DoDirectivePriority(char *val, XrdOucStream *cfg, bool
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'schedopt' directive
+
 int XrdProofdPriorityMgr::DoDirectiveSchedOpt(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'schedopt' directive
    XPDLOC(PMGR, "PriorityMgr::DoDirectiveSchedOpt")
 
    if (!val || !cfg)
@@ -489,22 +497,22 @@ int XrdProofdPriorityMgr::DoDirectiveSchedOpt(char *val, XrdOucStream *cfg, bool
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove from the active list the session with ID pid.
+/// Return -ENOENT if not found, or 0.
+
 int XrdProofdPriorityMgr::RemoveSession(int pid)
 {
-   // Remove from the active list the session with ID pid.
-   // Return -ENOENT if not found, or 0.
-
    XrdOucString key; key += pid;
    return fSessions.Del(key.c_str());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to the active list a session with ID pid. Check for duplications.
+/// Returns 1 if the entry existed already and it has been replaced; or 0.
+
 int XrdProofdPriorityMgr::AddSession(const char *u, const char *g, int pid)
 {
-   // Add to the active list a session with ID pid. Check for duplications.
-   // Returns 1 if the entry existed already and it has been replaced; or 0.
-
    int rc = 0;
    XrdOucString key; key += pid;
    XrdProofdSessionEntry *oldent = fSessions.Find(key.c_str());
@@ -519,11 +527,12 @@ int XrdProofdPriorityMgr::AddSession(const char *u, const char *g, int pid)
    return rc;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change priority of process pid belonging to user, if needed.
+/// Return 0 on success, -errno in case of error
+
 int XrdProofdPriorityMgr::SetProcessPriority(int pid, const char *user, int &dp)
 {
-   // Change priority of process pid belonging to user, if needed.
-   // Return 0 on success, -errno in case of error
    XPDLOC(PMGR, "PriorityMgr::SetProcessPriority")
 
    // Change child process priority, if required
@@ -567,11 +576,12 @@ int XrdProofdPriorityMgr::SetProcessPriority(int pid, const char *user, int &dp)
 //
 // Small class to describe an active session
 //
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 XrdProofdSessionEntry::XrdProofdSessionEntry(const char *u, const char *g, int pid)
                      : fUser(u), fGroup(g), fPid(pid), fFracEff(0.)
 {
-   // Constructor
    XPDLOC(PMGR, "XrdProofdSessionEntry")
 
    fPriority = XPPM_NOPRIORITY;
@@ -585,18 +595,19 @@ XrdProofdSessionEntry::XrdProofdSessionEntry(const char *u, const char *g, int p
    fDefaultPriority = prio;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 XrdProofdSessionEntry::~XrdProofdSessionEntry()
 {
-   // Destructor
-
    SetPriority(fDefaultPriority);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change process priority
+
 int XrdProofdSessionEntry::SetPriority(int priority)
 {
-   // Change process priority
    XPDLOC(PMGR, "SessionEntry::SetPriority")
 
    if (priority != XPPM_NOPRIORITY)

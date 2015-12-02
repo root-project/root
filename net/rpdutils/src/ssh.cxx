@@ -50,13 +50,13 @@ extern int gDebug;
 
 namespace ROOT {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocates internal UNIX socket for SSH-like authentication.
+/// Sets socket ownership to user for later use.
+/// On success returns ID of allocated socket and related pipe, -1 otherwise.
+
 int SshToolAllocateSocket(unsigned int Uid, unsigned int Gid, char **pipe)
 {
-   // Allocates internal UNIX socket for SSH-like authentication.
-   // Sets socket ownership to user for later use.
-   // On success returns ID of allocated socket and related pipe, -1 otherwise.
-
    if (gDebug > 2)
       ErrorInfo("SshToolAllocateSocket: enter: Uid:%d Gid:%d", Uid, Gid);
 
@@ -181,11 +181,11 @@ tryagain:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Discards socket.
+
 void SshToolDiscardSocket(const char *pipe, int sockfd)
 {
-   // Discards socket.
-
    if (gDebug > 2)
       ErrorInfo
           ("SshToolDiscardSocket: discarding socket: pipe: %s, fd: %d",
@@ -202,11 +202,11 @@ void SshToolDiscardSocket(const char *pipe, int sockfd)
    close(sockfd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notifies failure of SSH authentication to relevant rootd/proofd process.
+
 int SshToolNotifyFailure(const char *Pipe)
 {
-   // Notifies failure of SSH authentication to relevant rootd/proofd process.
-
    if (gDebug > 2)
       ErrorInfo("SshToolNotifyFailure: notifying failure to pipe %s\n",
                 Pipe);
@@ -243,7 +243,8 @@ int SshToolNotifyFailure(const char *Pipe)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int SshToolGetAuth(int UnixFd, const char *User)
 {
    int auth = 0;

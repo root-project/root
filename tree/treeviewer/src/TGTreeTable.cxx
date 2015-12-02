@@ -39,25 +39,25 @@ ClassImp(TGTreeTable)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTreeTable constructor.
+
 TGTreeTable::TGTreeTable(TGWindow *p, Int_t id, TTree *tree,
                          const char *expression, const char *selection,
                          const char *option, UInt_t nrows, UInt_t ncolumns)
    : TGTable(p, id, 0, nrows, ncolumns)
 {
-   // TGTreeTable constructor.
-
    TTreeTableInterface *iface = new TTreeTableInterface(tree, expression,
                                                         selection, option);
    SetInterface(iface, nrows, ncolumns);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTreeTable destructor.
+
 TGTreeTable::~TGTreeTable()
 {
-   // TGTreeTable destructor.
-
    //FIXME this causes a double delete segfault, why???
 //    delete fInterface;
 }

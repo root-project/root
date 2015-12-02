@@ -57,13 +57,14 @@
 namespace
 {
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   ///User defines equations using names 'u' and 'v' for
+   ///parameters. But TF2 works with 'x' and 'y'. So,
+   ///find 'u' and 'v' (which are not parts of other names)
+   ///and replace them with 'x' and 'y' correspondingly.
+
    void ReplaceUVNames(TString &equation)
    {
-      //User defines equations using names 'u' and 'v' for
-      //parameters. But TF2 works with 'x' and 'y'. So,
-      //find 'u' and 'v' (which are not parts of other names)
-      //and replace them with 'x' and 'y' correspondingly.
       using namespace std;
       const Ssiz_t len = equation.Length();
       //TF2 requires 'y' in formula.
@@ -104,7 +105,12 @@ namespace
 
 ClassImp(TGLParametricEquation)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Surface is defined by three strings.
+///ROOT does not use exceptions in ctors,
+///so, I have to use MakeZombie to let
+///external user know about errors.
+
 TGLParametricEquation::TGLParametricEquation(const TString &name, const TString &xFun, const TString &yFun,
                              const TString &zFun, Double_t uMin, Double_t uMax,
                              Double_t vMin, Double_t vMax)
@@ -115,10 +121,6 @@ TGLParametricEquation::TGLParametricEquation(const TString &name, const TString 
                     fConstrained(kFALSE),
                     fModified(kFALSE)
 {
-   //Surface is defined by three strings.
-   //ROOT does not use exceptions in ctors,
-   //so, I have to use MakeZombie to let
-   //external user know about errors.
    if (!xFun.Length() || !yFun.Length() || !zFun.Length()) {
       Error("TGLParametricEquation", "One of string expressions iz empty");
       MakeZombie();
@@ -154,7 +156,9 @@ TGLParametricEquation::TGLParametricEquation(const TString &name, const TString 
       MakeZombie();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Surface defined by user's function (see ParametricEquation_t declaration in TGLParametricEquation.h)
+
 TGLParametricEquation::TGLParametricEquation(const TString &name, ParametricEquation_t equation,
                              Double_t uMin, Double_t uMax, Double_t vMin, Double_t vMax)
                   : TNamed(name, name),
@@ -164,59 +168,65 @@ TGLParametricEquation::TGLParametricEquation(const TString &name, ParametricEqua
                     fConstrained(kFALSE),
                     fModified(kFALSE)
 {
-   //Surface defined by user's function (see ParametricEquation_t declaration in TGLParametricEquation.h)
    if (!fEquation) {
       Error("TGLParametricEquation", "Function ptr is null");
       MakeZombie();
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///[uMin, uMax]
+
 Rgl::Range_t TGLParametricEquation::GetURange()const
 {
-   //[uMin, uMax]
    return fURange;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///[vMin, vMax]
+
 Rgl::Range_t TGLParametricEquation::GetVRange()const
 {
-   //[vMin, vMax]
    return fVRange;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Check is constrained.
+
 Bool_t TGLParametricEquation::IsConstrained()const
 {
-   //Check is constrained.
    return fConstrained;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set constrained.
+
 void TGLParametricEquation::SetConstrained(Bool_t c)
 {
-   //Set constrained.
    fConstrained = c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Something was changed in parametric equation (or constrained option was changed).
+
 Bool_t TGLParametricEquation::IsModified()const
 {
-   //Something was changed in parametric equation (or constrained option was changed).
    return fModified;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set modified.
+
 void TGLParametricEquation::SetModified(Bool_t m)
 {
-   //Set modified.
    fModified = m;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Calculate vertex.
+
 void TGLParametricEquation::EvalVertex(TGLVertex3 &newVertex, Double_t u, Double_t v)const
 {
-   //Calculate vertex.
    if (fEquation)
       return fEquation(newVertex, u, v);
 
@@ -228,36 +238,39 @@ void TGLParametricEquation::EvalVertex(TGLVertex3 &newVertex, Double_t u, Double
    newVertex.Z() = fZEquation->Eval(u, v);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Check, if parametric surface is under cursor.
+
 Int_t TGLParametricEquation::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   //Check, if parametric surface is under cursor.
    if (fPainter.get())
       return fPainter->DistancetoPrimitive(px, py);
    return 9999;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Pass event to painter.
+
 void TGLParametricEquation::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   //Pass event to painter.
    if (fPainter.get())
       return fPainter->ExecuteEvent(event, px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No object info yet.
+
 char *TGLParametricEquation::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
 {
-   //No object info yet.
-
    static char mess[] = { "parametric surface" };
    return mess;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate paint.
+
 void TGLParametricEquation::Paint(Option_t * /*option*/)
 {
-   //Delegate paint.
    if (!fPainter.get())
       fPainter.reset(new TGLHistPainter(this));
    fPainter->Paint("dummyoption");
@@ -265,7 +278,9 @@ void TGLParametricEquation::Paint(Option_t * /*option*/)
 
 ClassImp(TGLParametricPlot)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Constructor.
+
 TGLParametricPlot::TGLParametricPlot(TGLParametricEquation *eq,
                                      TGLPlotCamera *camera)
                       : TGLPlotPainter(camera),
@@ -274,7 +289,6 @@ TGLParametricPlot::TGLParametricPlot(TGLParametricEquation *eq,
                         fColorScheme(4),
                         fEquation(eq)
 {
-   //Constructor.
    fXAxis = &fCartesianXAxis;
    fYAxis = &fCartesianYAxis;
    fZAxis = &fCartesianZAxis;
@@ -285,14 +299,14 @@ TGLParametricPlot::TGLParametricPlot(TGLParametricEquation *eq,
    InitColors();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Build mesh. The surface is 'immutable':
+///the only reason to rebuild it - the change in size or
+///if one of equations contain reference to TF2 function, whose
+///parameters were changed.
+
 Bool_t TGLParametricPlot::InitGeometry()
 {
-   //Build mesh. The surface is 'immutable':
-   //the only reason to rebuild it - the change in size or
-   //if one of equations contain reference to TF2 function, whose
-   //parameters were changed.
-
    // const Bool_t constrained = kTRUE;//fEquation->IsConstrained();
 
    if (fMeshSize * fMeshSize != (Int_t)fMesh.size() || fEquation->IsModified()) {
@@ -385,21 +399,23 @@ Bool_t TGLParametricPlot::InitGeometry()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///User clicks right mouse button (in a pad).
+
 void TGLParametricPlot::StartPan(Int_t px, Int_t py)
 {
-   //User clicks right mouse button (in a pad).
    fMousePosition.fX = px;
    fMousePosition.fY = fCamera->GetHeight() - py;
    fCamera->StartPan(px, py);
    fBoxCut.StartMovement(px, fCamera->GetHeight() - py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///User's moving mouse cursor, with middle mouse button pressed (for pad).
+///Calculate 3d shift related to 2d mouse movement.
+
 void TGLParametricPlot::Pan(Int_t px, Int_t py)
 {
-   //User's moving mouse cursor, with middle mouse button pressed (for pad).
-   //Calculate 3d shift related to 2d mouse movement.
    if (fSelectedPart) {
       SaveModelviewMatrix();
       SaveProjectionMatrix();
@@ -419,26 +435,28 @@ void TGLParametricPlot::Pan(Int_t px, Int_t py)
    fUpdateSelection = kTRUE;//
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No object info yet.
+
 char *TGLParametricPlot::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 {
-   //No object info yet.
-
    static char mess[] = { "parametric surface" };
    return mess;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No additional options for parametric surfaces.
+
 void TGLParametricPlot::AddOption(const TString &/*option*/)
 {
-   //No additional options for parametric surfaces.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Change color/mesh size or switch on/off mesh/box cut.
+///Left double click - remove box cut.
+
 void TGLParametricPlot::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
-   //Change color/mesh size or switch on/off mesh/box cut.
-   //Left double click - remove box cut.
    if (event == kButton1Double && fBoxCut.IsActive()) {
       fBoxCut.TurnOnOff();
       if (!gVirtualX->IsCmdThread())
@@ -466,10 +484,11 @@ void TGLParametricPlot::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize gl state.
+
 void TGLParametricPlot::InitGL()const
 {
-   //Initialize gl state.
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
@@ -477,10 +496,11 @@ void TGLParametricPlot::InitGL()const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize gl state.
+
 void TGLParametricPlot::DeInitGL()const
 {
-   //Initialize gl state.
    glDisable(GL_DEPTH_TEST);
    glDisable(GL_LIGHTING);
    glDisable(GL_LIGHT0);
@@ -488,11 +508,11 @@ void TGLParametricPlot::DeInitGL()const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw parametric surface.
+
 void TGLParametricPlot::DrawPlot()const
 {
-   //Draw parametric surface.
-
    //Shift plot to point of origin.
    const Rgl::PlotTranslation trGuard(this);
 
@@ -599,12 +619,13 @@ void TGLParametricPlot::DrawPlot()const
       fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Calculate colors for vertices,
+///using one of 20 color themes.
+///-1 simple 'metal' surface.
+
 void TGLParametricPlot::InitColors()
 {
-   //Calculate colors for vertices,
-   //using one of 20 color themes.
-   //-1 simple 'metal' surface.
    if (fColorScheme == -1)
       return;
 
@@ -620,28 +641,32 @@ void TGLParametricPlot::InitColors()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No such sections.
+
 void TGLParametricPlot::DrawSectionXOZ()const
 {
-   //No such sections.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No such sections.
+
 void TGLParametricPlot::DrawSectionYOZ()const
 {
-   //No such sections.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No such sections.
+
 void TGLParametricPlot::DrawSectionXOY()const
 {
-   //No such sections.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set material properties.
+
 void TGLParametricPlot::SetSurfaceColor()const
 {
-   //Set material properties.
    const Float_t specular[] = {1.f, 1.f, 1.f, 1.f};
    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular);
    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 20.f);

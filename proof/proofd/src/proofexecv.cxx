@@ -68,11 +68,11 @@ int redirectoutput(const std::string &logfile);
 void start_ps(int argc, char **argv);
 void start_rootd(int argc, char **argv);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write info message to syslog.
+
 void Info(const char *va_(fmt), ...)
 {
-   // Write info message to syslog.
-
    char    buf[kMAXPATHLEN];
    va_list ap;
 
@@ -86,13 +86,13 @@ void Info(const char *va_(fmt), ...)
       fprintf(stderr, "proofexecv: %s\n", buf);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Program executed via system starting proofserv instances.
+/// It also performs other actions requiring a separate process, e.g.
+/// XrdProofAdmin file system requests.
+
 int main(int argc, char **argv)
 {
-   // Program executed via system starting proofserv instances.
-   // It also performs other actions requiring a separate process, e.g.
-   // XrdProofAdmin file system requests.
-
    // Default logger
    gLogger = stderr;
    if (argc < 3) {
@@ -123,11 +123,11 @@ int main(int argc, char **argv)
    exit(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a request to start a rootd server
+
 void start_rootd(int argc, char **argv)
 {
-   // Process a request to start a rootd server
-
    if (argc < 6) {
       Info("argc=%d: at least 5 additional arguments required - exit", argc);
       return;
@@ -188,11 +188,11 @@ void start_rootd(int argc, char **argv)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a request to start a proofserv process
+
 void start_ps(int argc, char **argv)
 {
-   // Process a request to start a proofserv process
-
    if (argc < 6) {
       Info("argc=%d: at least 5 additional arguments required - exit", argc);
       return;
@@ -429,11 +429,11 @@ void start_ps(int argc, char **argv)
    return;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Login the user in its space
+
 int loginuser(const std::string &home, const std::string &user, uid_t uid, gid_t gid)
 {
-   // Login the user in its space
-
    if (chdir(home.c_str()) != 0) {
       Info("loginuser: ERROR: can't change directory to %s, euid: %d, uid: %d; errno: %d",
            home.c_str(), geteuid(), getuid(), errno);
@@ -476,13 +476,13 @@ int loginuser(const std::string &home, const std::string &user, uid_t uid, gid_t
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that 'path' exists, it is owned by the entity
+/// described by {u,g} and its mode is 'mode'.
+/// Return 0 in case of success, -1 in case of error
+
 int assertdir(const std::string &path, uid_t u, gid_t g, unsigned int mode)
 {
-   // Make sure that 'path' exists, it is owned by the entity
-   // described by {u,g} and its mode is 'mode'.
-   // Return 0 in case of success, -1 in case of error
-
    if (path.length() <= 0) return -1;
 
    rpdprivguard pguard((uid_t)0, (gid_t)0);
@@ -506,13 +506,13 @@ int assertdir(const std::string &path, uid_t u, gid_t g, unsigned int mode)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move file form 'from' to 'to', making sure that it is owned by the entity
+/// described by {u,g} and its mode is 'mode' (at the final destination).
+/// Return 0 in case of success, -1 in case of error
+
 int mvfile(const std::string &from, const std::string &to, uid_t u, gid_t g, unsigned int mode)
 {
-   // Move file form 'from' to 'to', making sure that it is owned by the entity
-   // described by {u,g} and its mode is 'mode' (at the final destination).
-   // Return 0 in case of success, -1 in case of error
-
    if (from.length() <= 0 || to.length() <= 0) return -1;
 
    rpdprivguard pguard((uid_t)0, (gid_t)0);
@@ -543,12 +543,12 @@ int mvfile(const std::string &from, const std::string &to, uid_t u, gid_t g, uns
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finalize the rc file with the missing pieces
+
 int completercfile(const std::string &rcfile, const std::string &sessdir,
                    const std::string &stag, const std::string &adminpath)
 {
-   // Finalize the rc file with the missing pieces
-
    FILE *frc = fopen(rcfile.c_str(), "a");
    if (!frc) {
       Info("completercfile: ERROR: unable to open rc file: '%s' (errno: %d)", rcfile.c_str(), errno);
@@ -570,12 +570,12 @@ int completercfile(const std::string &rcfile, const std::string &sessdir,
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the environment following the content of 'envfile'
+
 int setproofservenv(const std::string &envfile,
                     const std::string &logfile, const std::string &rcfile)
 {
-   // Initialize the environment following the content of 'envfile'
-
    if (envfile.length() <= 0) return -1;
 
    int len = 0;
@@ -619,13 +619,13 @@ int setproofservenv(const std::string &envfile,
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Export the descriptor of 'conn' so that it can used in the execv application.
+/// Make sure it duplicates to a reasonable value first.
+/// Return 0 on success, -1 on error
+
 int exportsock(rpdunix *conn)
 {
-   // Export the descriptor of 'conn' so that it can used in the execv application.
-   // Make sure it duplicates to a reasonable value first.
-   // Return 0 on success, -1 on error
-
    // Check the input connection
    if (!conn || (conn && !conn->isvalid(0))) {
       Info("exportsock: ERROR: connection is %s", (conn ? "invalid" : "undefined"));
@@ -659,12 +659,12 @@ int exportsock(rpdunix *conn)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redirect stdout to 'logfile'
+/// On success return 0. Return -1 on failure.
+
 int redirectoutput(const std::string &logfile)
 {
-   // Redirect stdout to 'logfile'
-   // On success return 0. Return -1 on failure.
-
    if (gDebug > 0)
       Info("redirectoutput: enter: %s", logfile.c_str());
 
@@ -704,15 +704,15 @@ int redirectoutput(const std::string &logfile)
    return 0;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set user ownerships on some critical files or directories.
+/// Return 0 on success, -1 if enything goes wrong.
+
 int setownerships(int euid, const std::string &us, const std::string &gr,
                   const std::string &creds, const std::string &dsrcs,
                   const std::string &ddir, const std::string &ddiro,
                   const std::string &ord, const std::string &stag)
 {
-   // Set user ownerships on some critical files or directories.
-   // Return 0 on success, -1 if enything goes wrong.
-
    // Get identities
    struct passwd *pwad, *pwus;
    if (!(pwad = getpwuid(euid))) {
@@ -794,13 +794,13 @@ int setownerships(int euid, const std::string &us, const std::string &gr,
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the ownership of 'path' to the entity described by {u,g}.
+/// If 'path' is a directory, go through the paths inside it recursively.
+/// Return 0 in case of success, -1 in case of error
+
 int changeown(const std::string &path, uid_t u, gid_t g)
 {
-   // Change the ownership of 'path' to the entity described by {u,g}.
-   // If 'path' is a directory, go through the paths inside it recursively.
-   // Return 0 in case of success, -1 in case of error
-
    if (path.length() <= 0) return -1;
 
    // If is a directory apply this on it

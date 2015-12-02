@@ -70,7 +70,8 @@
 
 ClassImp(TEveDigitSet);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
    TEveElement     (fColor),
    TNamed          (n, t),
@@ -104,13 +105,13 @@ TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
    InitMainTrans();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+/// Unreference frame and palette. Destroy referenced objects if they
+/// are owned by the TEveDigitSet.
+
 TEveDigitSet::~TEveDigitSet()
 {
-   // Destructor.
-   // Unreference frame and palette. Destroy referenced objects if they
-   // are owned by the TEveDigitSet.
-
    SetFrame(0);
    SetPalette(0);
    if (fOwnIds)
@@ -120,22 +121,22 @@ TEveDigitSet::~TEveDigitSet()
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Protected method called whenever a new digit is added.
+
 TEveDigitSet::DigitBase_t* TEveDigitSet::NewDigit()
 {
-   // Protected method called whenever a new digit is added.
-
    fLastIdx   = fPlex.Size();
    fLastDigit = new (fPlex.NewAtom()) DigitBase_t(fDefaultValue);
    return fLastDigit;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Protected method. Release and delete the referenced objects, the
+/// ownership is *NOT* checked.
+
 void TEveDigitSet::ReleaseIds()
 {
-   // Protected method. Release and delete the referenced objects, the
-   // ownership is *NOT* checked.
-
    if (fDigitIds)
    {
       const Int_t N = fDigitIds->GetSize();
@@ -149,20 +150,20 @@ void TEveDigitSet::ReleaseIds()
 
 //------------------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Instruct digit-set to use single color for its digits.
+/// Call SetMainColor/Transparency to initialize it.
+
 void TEveDigitSet::UseSingleColor()
 {
-   // Instruct digit-set to use single color for its digits.
-   // Call SetMainColor/Transparency to initialize it.
-
    fSingleColor = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override from TEveElement, forward to Frame.
+
 void TEveDigitSet::SetMainColor(Color_t color)
 {
-   // Override from TEveElement, forward to Frame.
-
    if (fSingleColor)
    {
       TEveElement::SetMainColor(color);
@@ -174,32 +175,32 @@ void TEveDigitSet::SetMainColor(Color_t color)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual function called when both fSelected is false and
+/// fImpliedSelected is 0.
+
 void TEveDigitSet::UnSelected()
 {
-   // Virtual function called when both fSelected is false and
-   // fImpliedSelected is 0.
-
    fSelectedSet.clear();
    TEveElement::UnSelected();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual function called when both fHighlighted is false and
+/// fImpliedHighlighted is 0.
+
 void TEveDigitSet::UnHighlighted()
 {
-   // Virtual function called when both fHighlighted is false and
-   // fImpliedHighlighted is 0.
-
    fHighlightedSet.clear();
    TEveElement::UnHighlighted();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return tooltip for highlighted element if always-sec-select is set.
+/// Otherwise return the tooltip for this element.
+
 TString TEveDigitSet::GetHighlightTooltip()
 {
-   // Return tooltip for highlighted element if always-sec-select is set.
-   // Otherwise return the tooltip for this element.
-
    if (fHighlightedSet.empty()) return "";
 
    if (GetAlwaysSecSelect())
@@ -226,22 +227,22 @@ TString TEveDigitSet::GetHighlightTooltip()
 /******************************************************************************/
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Instruct underlying memory allocator to regroup itself into a
+/// contiguous memory chunk.
+
 void TEveDigitSet::RefitPlex()
 {
-   // Instruct underlying memory allocator to regroup itself into a
-   // contiguous memory chunk.
-
    fPlex.Refit();
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Iterate over the digits and detmine min and max signal values.
+
 void TEveDigitSet::ScanMinMaxValues(Int_t& min, Int_t& max)
 {
-   // Iterate over the digits and detmine min and max signal values.
-
    if (fValueIsColor || fPlex.Size() == 0)
    {
       min = max = 0;
@@ -268,81 +269,81 @@ void TEveDigitSet::ScanMinMaxValues(Int_t& min, Int_t& max)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current digit -- the one that will receive calls to
+/// DigitValue/Color/Id/UserData() functions.
+/// Note that various AddXyzz() functions set the current digit to the newly
+/// added one.
+
 void TEveDigitSet::SetCurrentDigit(Int_t idx)
 {
-   // Set current digit -- the one that will receive calls to
-   // DigitValue/Color/Id/UserData() functions.
-   // Note that various AddXyzz() functions set the current digit to the newly
-   // added one.
-
    fLastIdx   = idx;
    fLastDigit = GetDigit(idx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set signal value for the last digit added.
+
 void TEveDigitSet::DigitValue(Int_t value)
 {
-   // Set signal value for the last digit added.
-
    fLastDigit->fValue = value;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color for the last digit added.
+
 void TEveDigitSet::DigitColor(Color_t ci)
 {
-   // Set color for the last digit added.
-
    TEveUtil::ColorFromIdx(ci, (UChar_t*) & fLastDigit->fValue, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color for the last digit added.
+
 void TEveDigitSet::DigitColor(Color_t ci, Char_t transparency)
 {
-   // Set color for the last digit added.
-
    TEveUtil::ColorFromIdx(ci, (UChar_t*) & fLastDigit->fValue, transparency);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color for the last digit added.
+
 void TEveDigitSet::DigitColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
 {
-   // Set color for the last digit added.
-
    UChar_t* x = (UChar_t*) & fLastDigit->fValue;
    x[0] = r; x[1] = g; x[2] = b; x[3] = a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color for the last digit added.
+
 void TEveDigitSet::DigitColor(UChar_t* rgba)
 {
-   // Set color for the last digit added.
-
    UChar_t* x = (UChar_t*) & fLastDigit->fValue;
    x[0] = rgba[0]; x[1] = rgba[1]; x[2] = rgba[2]; x[3] = rgba[3];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set external object reference for the last digit added.
+
 void TEveDigitSet::DigitId(TObject* id)
 {
-   // Set external object reference for the last digit added.
-
    DigitId(fLastIdx, id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set user-data for the last digit added.
+
 void TEveDigitSet::DigitUserData(void* ud)
 {
-   // Set user-data for the last digit added.
-
    fLastDigit->fUserData = ud;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set external object reference for digit n.
+
 void TEveDigitSet::DigitId(Int_t n, TObject* id)
 {
-   // Set external object reference for digit n.
-
    if (!fDigitIds)
       fDigitIds = new TRefArray;
 
@@ -352,47 +353,47 @@ void TEveDigitSet::DigitId(Int_t n, TObject* id)
    fDigitIds->AddAtAndExpand(id, n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set user-data for digit n.
+
 void TEveDigitSet::DigitUserData(Int_t n, void* ud)
 {
-   // Set user-data for digit n.
-
    GetDigit(n)->fUserData = ud;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return external TObject associated with digit n.
+
 TObject* TEveDigitSet::GetId(Int_t n) const
 {
-   // Return external TObject associated with digit n.
-
    return fDigitIds ? fDigitIds->At(n) : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get user-data associated with digit n.
+
 void* TEveDigitSet::GetUserData(Int_t n) const
 {
-   // Get user-data associated with digit n.
-
    return GetDigit(n)->fUserData;
 }
 
 /******************************************************************************/
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this object. Only direct rendering is supported.
+
 void TEveDigitSet::Paint(Option_t*)
 {
-   // Paint this object. Only direct rendering is supported.
-
    PaintStandard(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called from renderer when a digit with index idx is selected.
+/// This is by-passed when always-secondary-select is active.
+
 void TEveDigitSet::DigitSelected(Int_t idx)
 {
-   // Called from renderer when a digit with index idx is selected.
-   // This is by-passed when always-secondary-select is active.
-
    DigitBase_t *qb  = GetDigit(idx);
    TObject     *obj = GetId(idx);
 
@@ -409,12 +410,12 @@ void TEveDigitSet::DigitSelected(Int_t idx)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit a SecSelected signal.
+/// This is by-passed when always-secondary-select is active.
+
 void TEveDigitSet::SecSelected(TEveDigitSet* qs, Int_t idx)
 {
-   // Emit a SecSelected signal.
-   // This is by-passed when always-secondary-select is active.
-
    Long_t args[2];
    args[0] = (Long_t) qs;
    args[1] = (Long_t) idx;
@@ -426,11 +427,11 @@ void TEveDigitSet::SecSelected(TEveDigitSet* qs, Int_t idx)
 // Getters / Setters for Frame, TEveRGBAPalette, TEveTrans
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set TEveFrameBox pointer.
+
 void TEveDigitSet::SetFrame(TEveFrameBox* b)
 {
-   // Set TEveFrameBox pointer.
-
    if (fFrame == b) return;
    if (fFrame) fFrame->DecRefCount(this);
    fFrame = b;
@@ -444,24 +445,24 @@ void TEveDigitSet::SetFrame(TEveFrameBox* b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set TEveRGBAPalette pointer.
+
 void TEveDigitSet::SetPalette(TEveRGBAPalette* p)
 {
-   // Set TEveRGBAPalette pointer.
-
    if (fPalette == p) return;
    if (fPalette) fPalette->DecRefCount();
    fPalette = p;
    if (fPalette) fPalette->IncRefCount();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure the TEveRGBAPalette pointer is not null.
+/// If it is not set, a new one is instantiated and the range is set
+/// to current min/max signal values.
+
 TEveRGBAPalette* TEveDigitSet::AssertPalette()
 {
-   // Make sure the TEveRGBAPalette pointer is not null.
-   // If it is not set, a new one is instantiated and the range is set
-   // to current min/max signal values.
-
    if (fPalette == 0) {
       fPalette = new TEveRGBAPalette;
       if (!fValueIsColor) {

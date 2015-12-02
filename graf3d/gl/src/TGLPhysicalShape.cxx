@@ -59,7 +59,14 @@
 
 ClassImp(TGLPhysicalShape)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a physical shape using arguments:
+///    ID             - unique drawable id.
+///    logicalShape   - bound logical shape
+///    transform      - transform for placement of logical drawing
+///    invertedWind   - use inverted face polygon winding?
+///    rgba           - basic four component (RGBA) diffuse color
+
 TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalShape,
                                    const TGLMatrix & transform, Bool_t invertedWind,
                                    const Float_t rgba[4]) :
@@ -74,13 +81,6 @@ TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalSha
    fModified     (kFALSE),
    fIsScaleForRnr(kFALSE)
 {
-   // Construct a physical shape using arguments:
-   //    ID             - unique drawable id.
-   //    logicalShape   - bound logical shape
-   //    transform      - transform for placement of logical drawing
-   //    invertedWind   - use inverted face polygon winding?
-   //    rgba           - basic four component (RGBA) diffuse color
-
    fLogicalShape->AddRef(this);
    UpdateBoundingBox();
 
@@ -88,7 +88,14 @@ TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalSha
    InitColor(rgba);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a physical shape using arguments:
+///    id             - unique drawable id.
+///    logicalShape   - bound logical shape
+///    transform      - 16 Double_t component transform for placement of logical drawing
+///    invertedWind   - use inverted face polygon winding?
+///    rgba           - basic four component (RGBA) diffuse color
+
 TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalShape,
                                    const Double_t * transform, Bool_t invertedWind,
                                    const Float_t rgba[4]) :
@@ -103,13 +110,6 @@ TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalSha
    fModified     (kFALSE),
    fIsScaleForRnr(kFALSE)
 {
-   // Construct a physical shape using arguments:
-   //    id             - unique drawable id.
-   //    logicalShape   - bound logical shape
-   //    transform      - 16 Double_t component transform for placement of logical drawing
-   //    invertedWind   - use inverted face polygon winding?
-   //    rgba           - basic four component (RGBA) diffuse color
-
    fLogicalShape->AddRef(this);
 
    // Temporary hack - invert the 3x3 part of martix as TGeo sends this
@@ -122,11 +122,11 @@ TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalSha
    InitColor(rgba);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy the physical shape.
+
 TGLPhysicalShape::~TGLPhysicalShape()
 {
-   // Destroy the physical shape.
-
    // If destroyed from the logical shape itself the pointer has already
    // been cleared.
    if (fLogicalShape) fLogicalShape->SubRef(this);
@@ -137,22 +137,22 @@ TGLPhysicalShape::~TGLPhysicalShape()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add reference ref.
+
 void TGLPhysicalShape::AddReference(TGLPShapeRef* ref)
 {
-   // Add reference ref.
-
    assert(ref != 0);
 
    ref->fNextPSRef = fFirstPSRef;
    fFirstPSRef = ref;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove reference ref.
+
 void TGLPhysicalShape::RemoveReference(TGLPShapeRef* ref)
 {
-   // Remove reference ref.
-
    assert(ref != 0);
 
    Bool_t found = kFALSE;
@@ -177,12 +177,12 @@ void TGLPhysicalShape::RemoveReference(TGLPShapeRef* ref)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call this after modifying the physical so that the information
+/// can be propagated to the object referencing it.
+
 void TGLPhysicalShape::Modified()
 {
-   // Call this after modifying the physical so that the information
-   // can be propagated to the object referencing it.
-
    fModified = kTRUE;
    TGLPShapeRef * ref = fFirstPSRef;
    while (ref) {
@@ -191,11 +191,11 @@ void TGLPhysicalShape::Modified()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update our internal bounding box (in global frame).
+
 void TGLPhysicalShape::UpdateBoundingBox()
 {
-   // Update our internal bounding box (in global frame).
-
    fBoundingBox.Set(fLogicalShape->BoundingBox());
    fBoundingBox.Transform(fTransform);
 
@@ -205,11 +205,11 @@ void TGLPhysicalShape::UpdateBoundingBox()
       fLogicalShape->GetScene()->InvalidateBoundingBox();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialise the colors, using basic RGBA diffuse material color supplied
+
 void TGLPhysicalShape::InitColor(const Float_t rgba[4])
 {
-   // Initialise the colors, using basic RGBA diffuse material color supplied
-
    // TODO: Make a color class
    fColor[0] = rgba[0];
    fColor[1] = rgba[1];
@@ -223,13 +223,13 @@ void TGLPhysicalShape::InitColor(const Float_t rgba[4])
    fColor[16] = 60.0f;                          //shininess
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set full color attributes - see OpenGL material documentation
+/// for full description.
+/// 0->3 diffuse, 4->7 ambient, 8->11 specular, 12->15 emission, 16 shininess
+
 void TGLPhysicalShape::SetColor(const Float_t color[17])
 {
-   // Set full color attributes - see OpenGL material documentation
-   // for full description.
-   // 0->3 diffuse, 4->7 ambient, 8->11 specular, 12->15 emission, 16 shininess
-
    // TODO: Make a color class
    for (UInt_t i = 0; i < 17; i++) {
       fColor[i] = color[i];
@@ -238,12 +238,12 @@ void TGLPhysicalShape::SetColor(const Float_t color[17])
    Modified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set full color attributes to all physicals sharing the same
+/// logical with this object.
+
 void TGLPhysicalShape::SetColorOnFamily(const Float_t color[17])
 {
-   // Set full color attributes to all physicals sharing the same
-   // logical with this object.
-
    TGLPhysicalShape* pshp = const_cast<TGLPhysicalShape*>(fLogicalShape->GetFirstPhysical());
    while (pshp)
    {
@@ -252,32 +252,32 @@ void TGLPhysicalShape::SetColorOnFamily(const Float_t color[17])
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color from ROOT color index and transparency [0,100].
+
 void TGLPhysicalShape::SetDiffuseColor(const Float_t rgba[4])
 {
-   // Set color from ROOT color index and transparency [0,100].
-
    for (Int_t i=0; i<4; ++i)
       fColor[i] = rgba[i];
    Modified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color from RGBA quadruplet.
+
 void TGLPhysicalShape::SetDiffuseColor(const UChar_t rgba[4])
 {
-   // Set color from RGBA quadruplet.
-
    for (Int_t i=0; i<4; ++i)
       fColor[i] = rgba[i]/255.0f;
    Modified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color from standard ROOT representation, that is color index
+/// + transparency in range [0, 100].
+
 void TGLPhysicalShape::SetDiffuseColor(Color_t ci, UChar_t transparency)
 {
-   // Set color from standard ROOT representation, that is color index
-   // + transparency in range [0, 100].
-
    if (ci < 0) ci = 1;
    TColor* c = gROOT->GetColor(ci);
    if (c) {
@@ -289,12 +289,12 @@ void TGLPhysicalShape::SetDiffuseColor(Color_t ci, UChar_t transparency)
    Modified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup colors - avoid setting things not required
+/// for current draw flags.
+
 void TGLPhysicalShape::SetupGLColors(TGLRnrCtx & rnrCtx, const Float_t* color) const
 {
-   // Setup colors - avoid setting things not required
-   // for current draw flags.
-
    if (color == 0) color = fColor;
 
    switch (rnrCtx.DrawPass()) {
@@ -336,11 +336,11 @@ void TGLPhysicalShape::SetupGLColors(TGLRnrCtx & rnrCtx, const Float_t* color) c
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw physical shape, using LOD flags, potential from display list cache
+
 void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
 {
-   // Draw physical shape, using LOD flags, potential from display list cache
-
    // Debug tracing
    if (gDebug > 4) {
       Info("TGLPhysicalShape::Draw", "this %ld (class %s) LOD %d",
@@ -419,21 +419,21 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
    glPopMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate shape-lod, suitible for use under
+/// projection defined by 'rnrCtx', taking account of which local
+/// axes of the shape support LOD adjustment, and the global
+/// 'sceneFlags' passed.
+///
+/// Returned shapeLOD component is from 0 (kLODPixel - lowest
+/// quality) to 100 (kLODHigh - highest quality).
+///
+/// Scene flags are not used. LOD quantization is not done.  RnrCtx
+/// is not modified as this is called via lodification stage of
+/// rendering.
+
 void TGLPhysicalShape::CalculateShapeLOD(TGLRnrCtx& rnrCtx, Float_t& pixSize, Short_t& shapeLOD) const
 {
-   // Calculate shape-lod, suitible for use under
-   // projection defined by 'rnrCtx', taking account of which local
-   // axes of the shape support LOD adjustment, and the global
-   // 'sceneFlags' passed.
-   //
-   // Returned shapeLOD component is from 0 (kLODPixel - lowest
-   // quality) to 100 (kLODHigh - highest quality).
-   //
-   // Scene flags are not used. LOD quantization is not done.  RnrCtx
-   // is not modified as this is called via lodification stage of
-   // rendering.
-
    TGLLogicalShape::ELODAxes lodAxes = fLogicalShape->SupportedLODAxes();
 
    if (lodAxes == TGLLogicalShape::kLODAxesNone)
@@ -498,21 +498,21 @@ void TGLPhysicalShape::CalculateShapeLOD(TGLRnrCtx& rnrCtx, Float_t& pixSize, Sh
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Factor in scene/vierer LOD and Quantize ... forward to
+/// logical shape.
+
 void TGLPhysicalShape::QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD, Short_t& quantLOD) const
 {
-   // Factor in scene/vierer LOD and Quantize ... forward to
-   // logical shape.
-
    quantLOD = fLogicalShape->QuantizeShapeLOD(shapeLOD, combiLOD);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Request creation of context menu on shape, attached to 'menu' at screen position
+/// 'x' 'y'
+
 void TGLPhysicalShape::InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const
 {
-   // Request creation of context menu on shape, attached to 'menu' at screen position
-   // 'x' 'y'
-
    // Just defer to our logical at present
    fLogicalShape->InvokeContextMenu(menu, x, y);
 }

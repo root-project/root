@@ -18,20 +18,21 @@
 
 ClassImp(TFoamCell);
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer
+
 TFoamCell::TFoamCell()
 {
-// Default constructor for streamer
-
    fParent  = 0;
    fDaught0 = 0;
    fDaught1 = 0;
 }
 
-//_________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User constructor allocating single empty Cell
+
 TFoamCell::TFoamCell(Int_t kDim)
 {
-// User constructor allocating single empty Cell
    if (  kDim >0) {
       //---------=========----------
       fDim     = kDim;
@@ -50,11 +51,11 @@ TFoamCell::TFoamCell(Int_t kDim)
       Error("TFoamCell","Dimension has to be >0 \n ");
 }
 
-//_________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor (not tested!)
+
 TFoamCell::TFoamCell(TFoamCell &From): TObject(From)
 {
-// Copy constructor (not tested!)
-
    Error("TFoamCell", "+++++ NEVER USE Copy constructor for TFoamCell \n");
    fStatus      = From.fStatus;
    fParent      = From.fParent;
@@ -68,17 +69,18 @@ TFoamCell::TFoamCell(TFoamCell &From): TObject(From)
    fPrimary     = From.fPrimary;
 }
 
-//___________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TFoamCell::~TFoamCell()
 {
-// Destructor
 }
 
-//___________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Substitution operator = (never used)
+
 TFoamCell& TFoamCell::operator=(const TFoamCell &From)
 {
-// Substitution operator = (never used)
-
    Info("TFoamCell", "operator=\n ");
    if (&From == this) return *this;
    fStatus      = From.fStatus;
@@ -95,11 +97,11 @@ TFoamCell& TFoamCell::operator=(const TFoamCell &From)
 }
 
 
-//___________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills in certain data into newly allocated cell
+
 void TFoamCell::Fill(Int_t Status, TFoamCell *Parent, TFoamCell *Daugh1, TFoamCell *Daugh2)
 {
-// Fills in certain data into newly allocated cell
-
    fStatus  = Status;
    fParent  = Parent;
    fDaught0 = Daugh1;
@@ -110,12 +112,13 @@ void TFoamCell::Fill(Int_t Status, TFoamCell *Parent, TFoamCell *Daugh1, TFoamCe
 //              GETTERS/SETTERS
 ////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Provides size and position of the cell
+/// These parameter are calculated by analyzing information in all parents
+/// cells up to the root cell. It takes time but saves memory.
+
 void    TFoamCell::GetHcub( TFoamVect &cellPosi, TFoamVect &cellSize)  const
 {
-// Provides size and position of the cell
-// These parameter are calculated by analyzing information in all parents
-// cells up to the root cell. It takes time but saves memory.
    if(fDim<1) return;
    const TFoamCell *pCell,*dCell;
    cellPosi = 0.0; cellSize=1.0; // load all components
@@ -138,12 +141,13 @@ void    TFoamCell::GetHcub( TFoamVect &cellPosi, TFoamVect &cellSize)  const
    }//while
 }//GetHcub
 
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Provides size of the cell
+/// Size parameters are calculated by analyzing information in all parents
+/// cells up to the root cell. It takes time but saves memory.
+
 void    TFoamCell::GetHSize( TFoamVect &cellSize)  const
 {
-// Provides size of the cell
-// Size parameters are calculated by analyzing information in all parents
-// cells up to the root cell. It takes time but saves memory.
    if(fDim<1) return;
    const TFoamCell *pCell,*dCell;
    cellSize=1.0; // load all components
@@ -164,11 +168,11 @@ void    TFoamCell::GetHSize( TFoamVect &cellSize)  const
    }//while
 }//GetHSize
 
-//_________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates volume of the cell using size params which are calculated
+
 void TFoamCell::CalcVolume(void)
 {
-// Calculates volume of the cell using size params which are calculated
-
    Int_t k;
    Double_t volu=1.0;
    if(fDim>0) {         // h-cubical subspace
@@ -179,11 +183,11 @@ void TFoamCell::CalcVolume(void)
    fVolume =volu;
 }
 
-//__________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Printout of the cell geometry parameters for the debug purpose
+
 void TFoamCell::Print(Option_t *option) const
 {
-// Printout of the cell geometry parameters for the debug purpose
-
    if(!option) Error("Print", "No option set\n");
 
    std::cout <<  " Status= "<<     fStatus   <<",";

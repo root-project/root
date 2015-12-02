@@ -44,12 +44,12 @@
 
 ClassImp(TGSpeedo)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGSpeedo widget constructor.
+
 TGSpeedo::TGSpeedo(const TGWindow *p, int id)
    : TGFrame(p, 1, 1), TGWidget (id), fImage(0), fImage2(0), fBase(0)
 {
-   // TGSpeedo widget constructor.
-
    fAngleMin = -133.5;
    fAngleMax =  133.5;
    fAngle    = -133.5;
@@ -75,14 +75,14 @@ TGSpeedo::TGSpeedo(const TGWindow *p, int id)
    AddInput(kButtonPressMask | kButtonReleaseMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGSpeedo widget constructor.
+
 TGSpeedo::TGSpeedo(const TGWindow *p, Float_t smin, Float_t smax,
                    const char *lbl1, const char *lbl2, const char *dsp1,
                    const char *dsp2, int id)
    : TGFrame(p, 1, 1), TGWidget (id), fImage(0), fImage2(0), fBase(0)
 {
-   // TGSpeedo widget constructor.
-
    fAngleMin = -133.5;
    fAngleMax =  133.5;
    fAngle    = -133.5;
@@ -112,11 +112,11 @@ TGSpeedo::TGSpeedo(const TGWindow *p, Float_t smin, Float_t smax,
    AddInput(kButtonPressMask | kButtonReleaseMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build TGSpeedo widget.
+
 void TGSpeedo::Build()
 {
-   // Build TGSpeedo widget.
-
    TString sc;
    Float_t step, mark[5];
    TString fp = gEnv->GetValue("Root.TTFontPath", "");
@@ -202,11 +202,11 @@ void TGSpeedo::Build()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGSpeedo widget Destructor.
+
 TGSpeedo::~TGSpeedo()
 {
-   // TGSpeedo widget Destructor.
-
    if (fImage && fImage->IsValid())
       delete fImage;
    if (fImage2 && fImage2->IsValid())
@@ -215,21 +215,21 @@ TGSpeedo::~TGSpeedo()
       fClient->FreePicture(fBase);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default dimension of the widget.
+
 TGDimension TGSpeedo::GetDefaultSize() const
 {
-   // Return default dimension of the widget.
-
    if (fBase)
       return TGDimension(fBase->GetWidth(), fBase->GetHeight());
    return TGDimension(100, 100);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make speedo glowing.
+
 void TGSpeedo::Glow(EGlowColor col)
 {
-   // Make speedo glowing.
-
    static EGlowColor act_col = kNoglow;
    TImage *glowImage = 0;
 
@@ -274,11 +274,11 @@ void TGSpeedo::Glow(EGlowColor col)
    DrawText();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event.
+
 Bool_t TGSpeedo::HandleButton(Event_t *event)
 {
-   // Handle mouse button event.
-
    if (fBase) {
       int xc = (fBase->GetWidth() + 1) / 2;
       int yc = (fBase->GetHeight() + 1) / 2;
@@ -301,11 +301,11 @@ Bool_t TGSpeedo::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set actual value of odo meter.
+
 void TGSpeedo::SetOdoValue(Int_t val)
 {
-   // Set actual value of odo meter.
-
    // avoid useless redraw
    if (val == fCounter)
       return;
@@ -314,11 +314,11 @@ void TGSpeedo::SetOdoValue(Int_t val)
    DrawNeedle();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set small display text (two lines).
+
 void TGSpeedo::SetDisplayText(const char *text1, const char *text2)
 {
-   // Set small display text (two lines).
-
    if (!(fDisplay1.CompareTo(text1)) &&
        !(fDisplay2.CompareTo(text2)))
       return;
@@ -328,11 +328,11 @@ void TGSpeedo::SetDisplayText(const char *text1, const char *text2)
    DrawNeedle();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set main label text (two lines).
+
 void TGSpeedo::SetLabelText(const char *text1, const char *text2)
 {
-   // Set main label text (two lines).
-
    if (fImage && fImage->IsValid())
       delete fImage;
    fLabel1 = text1;
@@ -344,11 +344,11 @@ void TGSpeedo::SetLabelText(const char *text1, const char *text2)
    DrawText();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set min and max scale values.
+
 void TGSpeedo::SetMinMaxScale(Float_t min, Float_t max)
 {
-   // Set min and max scale values.
-
    if (fImage && fImage->IsValid())
       delete fImage;
    fScaleMin = min;
@@ -360,11 +360,11 @@ void TGSpeedo::SetMinMaxScale(Float_t min, Float_t max)
    DrawText();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set actual scale (needle position) value.
+
 void TGSpeedo::SetScaleValue(Float_t val)
 {
-   // Set actual scale (needle position) value.
-
    // avoid useless redraw
    if (val == fValue)
       return;
@@ -398,11 +398,11 @@ void TGSpeedo::SetScaleValue(Float_t val)
    DrawNeedle();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set actual scale (needle position) value.
+
 void TGSpeedo::SetScaleValue(Float_t val, Int_t damping)
 {
-   // Set actual scale (needle position) value.
-
    Float_t i;
    Float_t old_val = fValue;
    Float_t step, new_val = val;
@@ -441,30 +441,30 @@ void TGSpeedo::SetScaleValue(Float_t val, Int_t damping)
    SetScaleValue(val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment/decrement scale (needle position) of "step" value.
+
 void TGSpeedo::StepScale(Float_t step)
 {
-   // Increment/decrement scale (needle position) of "step" value.
-
    SetScaleValue(fValue + step);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Translate distance from center and angle to xy coordinates.
+
 void TGSpeedo::Translate(Float_t val, Float_t angle, Int_t *x, Int_t *y)
 {
-   // Translate distance from center and angle to xy coordinates.
-
    Float_t xc = (Float_t)(fBase ? (fBase->GetWidth() + 1) / 2 : 96.0);
    Float_t yc = (Float_t)(fBase ? (fBase->GetHeight() + 1) / 2 : 96.0);
    *x = (Int_t)(xc + val * sin(angle * TMath::Pi() / 180) + 0.5);
    *y = (Int_t)(yc - val * cos(angle * TMath::Pi() / 180) + 0.5);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw needle in speedo widget.
+
 void TGSpeedo::DrawNeedle()
 {
-   // Draw needle in speedo widget.
-
    Int_t xch0, xch1, ych0, ych1;
    Int_t xpk0, ypk0, xpk1, ypk1;
    Int_t xmn0, ymn0, xmn1, ymn1;
@@ -509,11 +509,11 @@ void TGSpeedo::DrawNeedle()
    gVirtualX->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text in speedo widget.
+
 void TGSpeedo::DrawText()
 {
-   // Draw text in speedo widget.
-
    char sval[80];
    char dsval[80];
    Int_t strSize;
@@ -564,11 +564,11 @@ void TGSpeedo::DrawText()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw speedo widget.
+
 void TGSpeedo::DoRedraw()
 {
-   // Redraw speedo widget.
-
    char sval[80];
    char dsval[80];
    Int_t strSize;

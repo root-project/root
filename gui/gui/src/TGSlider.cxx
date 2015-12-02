@@ -57,13 +57,13 @@ ClassImp(TGVSlider)
 ClassImp(TGHSlider)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slider constructor.
+
 TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
                    UInt_t options, ULong_t back)
    : TGFrame(p, w, h, options, back)
 {
-   // Slider constructor.
-
    fDisabledPic = 0;
    fWidgetId    = id;
    fWidgetFlags = kWidgetWantFocus | kWidgetIsEnabled;
@@ -77,11 +77,11 @@ TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
    fSliderPic = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates disabled picture.
+
 void TGSlider::CreateDisabledPicture()
 {
-   // Creates disabled picture.
-
    if (!fSliderPic) return;
 
    TImage *img = TImage::Create();
@@ -106,11 +106,11 @@ void TGSlider::CreateDisabledPicture()
    delete img2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set state of widget. If kTRUE=enabled, kFALSE=disabled.
+
 void TGSlider::SetState(Bool_t state)
 {
-   // Set state of widget. If kTRUE=enabled, kFALSE=disabled.
-
    if (state) {
       SetFlags(kWidgetIsEnabled);
    } else {
@@ -119,13 +119,13 @@ void TGSlider::SetState(Bool_t state)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a vertical slider widget.
+
 TGVSlider::TGVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id,
                      UInt_t options, ULong_t back) :
    TGSlider(p, kSliderWidth, h, type, id, options, back)
 {
-   // Create a vertical slider widget.
-
    if ((fType & kSlider1))
       fSliderPic = fClient->GetPicture("slider1h.xpm");
    else
@@ -150,20 +150,20 @@ TGVSlider::TGVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete vertical slider widget.
+
 TGVSlider::~TGVSlider()
 {
-   // Delete vertical slider widget.
-
    if (fSliderPic) fClient->FreePicture(fSliderPic);
    if (fDisabledPic) fClient->FreePicture(fDisabledPic);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw vertical slider widget.
+
 void TGVSlider::DoRedraw()
 {
-   // Redraw vertical slider widget.
-
    // cleanup the drawable
    gVirtualX->ClearWindow(fId);
 
@@ -202,11 +202,11 @@ void TGVSlider::DoRedraw()
    if (pic) pic->Draw(fId, GetBckgndGC()(), fWidth/2-7, fRelPos-6);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in vertical slider.
+
 Bool_t TGVSlider::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in vertical slider.
-
    if (!IsEnabled()) return kTRUE;
    if (event->fCode == kButton4 || event->fCode == kButton5) {
       Int_t oldPos = fPos;
@@ -280,11 +280,11 @@ Bool_t TGVSlider::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in vertical slider.
+
 Bool_t TGVSlider::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event in vertical slider.
-
    if (fDragging) {
       int old = fPos;
       fPos = ((fVmax - fVmin) * (event->fY - fYp)) / ((int)fHeight-16) + fVmin;
@@ -304,23 +304,23 @@ Bool_t TGVSlider::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handles resize events for this widget.
+
 Bool_t TGVSlider::HandleConfigureNotify(Event_t* event)
 {
-   // Handles resize events for this widget.
-
    TGFrame::HandleConfigureNotify(event);
    fClient->NeedRedraw(this);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create horizontal slider widget.
+
 TGHSlider::TGHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t id,
                      UInt_t options, ULong_t back) :
    TGSlider(p, w, kSliderHeight, type, id, options, back)
 {
-   // Create horizontal slider widget.
-
    if ((fType & kSlider1))
       fSliderPic = fClient->GetPicture("slider1v.xpm");
    else
@@ -345,20 +345,20 @@ TGHSlider::TGHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t id,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a horizontal slider widget.
+
 TGHSlider::~TGHSlider()
 {
-   // Delete a horizontal slider widget.
-
    if (fSliderPic) fClient->FreePicture(fSliderPic);
    if (fDisabledPic) fClient->FreePicture(fDisabledPic);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw horizontal slider widget.
+
 void TGHSlider::DoRedraw()
 {
-   // Redraw horizontal slider widget.
-
    // cleanup drawable
    gVirtualX->ClearWindow(fId);
 
@@ -396,11 +396,11 @@ void TGHSlider::DoRedraw()
    if (pic) pic->Draw(fId, GetBckgndGC()(), fRelPos-6, fHeight/2-7);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in horizontal slider widget.
+
 Bool_t TGHSlider::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in horizontal slider widget.
-
    if (!IsEnabled()) return kTRUE;
    if (event->fCode == kButton4 || event->fCode == kButton5) {
       Int_t oldPos = fPos;
@@ -470,11 +470,11 @@ Bool_t TGHSlider::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in horizontal slide widget.
+
 Bool_t TGHSlider::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event in horizontal slide widget.
-
    if (fDragging) {
       int old = fPos;
       fPos = ((fVmax - fVmin) * (event->fX - fXp)) / ((int)fWidth-16) + fVmin;
@@ -494,21 +494,21 @@ Bool_t TGHSlider::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handles resize events for this widget.
+
 Bool_t TGHSlider::HandleConfigureNotify(Event_t* event)
 {
-   // Handles resize events for this widget.
-
    TGFrame::HandleConfigureNotify(event);
    fClient->NeedRedraw(this);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the slider type as a string - used in SavePrimitive().
+
 TString TGSlider::GetTypeString() const
 {
-   // Returns the slider type as a string - used in SavePrimitive().
-
    TString stype;
 
    if (fType) {
@@ -536,11 +536,11 @@ TString TGSlider::GetTypeString() const
    return stype;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save an horizontal slider as a C++ statement(s) on output stream out.
+
 void TGHSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save an horizontal slider as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out <<"   TGHSlider *";
@@ -573,11 +573,11 @@ void TGHSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "   " << GetName() <<"->SetState(kFALSE);" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save an horizontal slider as a C++ statement(s) on output stream out.
+
 void TGVSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save an horizontal slider as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out<<"   TGVSlider *";

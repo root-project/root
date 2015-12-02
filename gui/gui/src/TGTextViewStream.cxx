@@ -24,23 +24,23 @@
 
 ClassImp(TGTextViewStreamBuf)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTextViewStreamBuf constructor.
+
 TGTextViewStreamBuf::TGTextViewStreamBuf(TGTextView *textview) :
    fTextView(textview)
 {
-   // TGTextViewStreamBuf constructor.
-
    fInputbuffer.reserve(32);
    setg(&fInputbuffer[0], &fInputbuffer[0], &fInputbuffer[0]);
    setp(&fInputbuffer[0], &fInputbuffer[0]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method called to put a character into the controlled output sequence 
+/// without changing the current position.
+
 Int_t TGTextViewStreamBuf::overflow(Int_t c)
 {
-   // Method called to put a character into the controlled output sequence 
-   // without changing the current position.
-
    typedef std::char_traits<char> Tr;
    if (c == Tr::eof())
       return Tr::not_eof(c);
@@ -57,36 +57,36 @@ Int_t TGTextViewStreamBuf::overflow(Int_t c)
    return c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTextViewostream constructor.
+
 TGTextViewostream::TGTextViewostream(const TGWindow* parent, UInt_t w,
                                      UInt_t h,Int_t id, UInt_t sboptions,
                                      Pixel_t back) :
    TGTextView(parent, w, h, id, sboptions, back), std::ostream(&fStreambuffer),
    fStreambuffer(this)
 {
-   // TGTextViewostream constructor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTextViewostream constructor.
+
 TGTextViewostream::TGTextViewostream(const TGWindow *parent, UInt_t w,
                                      UInt_t h, TGText *text, Int_t id,
                                      UInt_t sboptions, ULong_t back):
    TGTextView(parent, w, h, text, id, sboptions, back),
    std::ostream(&fStreambuffer), fStreambuffer(this)
 {
-   // TGTextViewostream constructor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTextViewostream constructor.
+
 TGTextViewostream::TGTextViewostream(const TGWindow *parent, UInt_t w,
                                      UInt_t h,const char *string, Int_t id,
                                      UInt_t sboptions, ULong_t back):
    TGTextView(parent, w, h, string, id, sboptions, back),
    std::ostream(&fStreambuffer), fStreambuffer(this)
 {
-   // TGTextViewostream constructor.
-
 }
 

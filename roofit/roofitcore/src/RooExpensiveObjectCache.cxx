@@ -47,28 +47,30 @@ ClassImp(RooExpensiveObjectCache::ExpensiveObject)
 RooExpensiveObjectCache* RooExpensiveObjectCache::_instance = 0 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooExpensiveObjectCache::RooExpensiveObjectCache() : _nextUID(0)
 {
-  // Constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooExpensiveObjectCache::RooExpensiveObjectCache(const RooExpensiveObjectCache& other) :
   TObject(other), _nextUID(0)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. 
+
 RooExpensiveObjectCache::~RooExpensiveObjectCache() 
 {
-  // Destructor. 
-
   for (std::map<TString,ExpensiveObject*>::iterator iter = _map.begin() ; iter!=_map.end() ; ++iter) {
     delete iter->second ;
   }
@@ -81,11 +83,11 @@ RooExpensiveObjectCache::~RooExpensiveObjectCache()
  
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return reference to singleton instance 
+
 RooExpensiveObjectCache& RooExpensiveObjectCache::instance() 
 {
-  // Return reference to singleton instance 
-
   if (!_instance) {
     _instance = new RooExpensiveObjectCache() ;    
     RooSentinel::activate() ;    
@@ -96,24 +98,25 @@ RooExpensiveObjectCache& RooExpensiveObjectCache::instance()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function called by RooSentinel atexit() handler to cleanup at end of program
+
 void RooExpensiveObjectCache::cleanup() 
 {
-  // Static function called by RooSentinel atexit() handler to cleanup at end of program
   delete _instance ;
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register object associated with given name and given associated parameters with given values in cache.
+/// The cache will take _ownership_of_object_ and is indexed under the given name (which does not
+/// need to be the name of cacheObject and with given set of dependent parameters with validity for the
+/// current values of those parameters. It can be retrieved later by callin retrieveObject()
+
 Bool_t RooExpensiveObjectCache::registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, const RooArgSet& params) 
 {
-  // Register object associated with given name and given associated parameters with given values in cache.
-  // The cache will take _ownership_of_object_ and is indexed under the given name (which does not
-  // need to be the name of cacheObject and with given set of dependent parameters with validity for the
-  // current values of those parameters. It can be retrieved later by callin retrieveObject()
-
   TIterator* parIter = params.createIterator() ;
   Bool_t ret = registerObject(ownerName,objectName,cacheObject,parIter) ;
   delete parIter ;
@@ -123,14 +126,14 @@ Bool_t RooExpensiveObjectCache::registerObject(const char* ownerName, const char
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register object associated with given name and given associated parameters with given values in cache.
+/// The cache will take _ownership_of_object_ and is indexed under the given name (which does not
+/// need to be the name of cacheObject and with given set of dependent parameters with validity for the
+/// current values of those parameters. It can be retrieved later by callin retrieveObject()
+
 Bool_t RooExpensiveObjectCache::registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, TIterator* parIter) 
 {
-  // Register object associated with given name and given associated parameters with given values in cache.
-  // The cache will take _ownership_of_object_ and is indexed under the given name (which does not
-  // need to be the name of cacheObject and with given set of dependent parameters with validity for the
-  // current values of those parameters. It can be retrieved later by callin retrieveObject()
-
   // Delete any previous object
   ExpensiveObject* eo = _map[objectName] ;
   Int_t olduid(-1) ;
@@ -146,13 +149,13 @@ Bool_t RooExpensiveObjectCache::registerObject(const char* ownerName, const char
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve object from cache that was registered under given name with given parameters, _if_
+/// current parameter values match those that were stored in the registry for this object.
+/// The return object is owned by the cache instance.
+
 const TObject* RooExpensiveObjectCache::retrieveObject(const char* name, TClass* tc, const RooArgSet& params) 
 {
-  // Retrieve object from cache that was registered under given name with given parameters, _if_
-  // current parameter values match those that were stored in the registry for this object.
-  // The return object is owned by the cache instance.
-
   ExpensiveObject* eo = _map[name] ;
 
   // If no cache element found, return 0 ;
@@ -170,10 +173,11 @@ const TObject* RooExpensiveObjectCache::retrieveObject(const char* name, TClass*
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve payload object of cache element with given unique ID  
+
 const TObject* RooExpensiveObjectCache::getObj(Int_t uid) 
 {
-  // Retrieve payload object of cache element with given unique ID  
   for (std::map<TString,ExpensiveObject*>::iterator iter = _map.begin() ; iter !=_map.end() ; iter++) {
     if (iter->second->uid() == uid) {
       return iter->second->payload() ;
@@ -184,11 +188,12 @@ const TObject* RooExpensiveObjectCache::getObj(Int_t uid)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear cache element with given unique ID
+/// Retrieve payload object of cache element with given unique ID  
+
 Bool_t RooExpensiveObjectCache::clearObj(Int_t uid) 
 {
-  // Clear cache element with given unique ID
-  // Retrieve payload object of cache element with given unique ID  
   for (std::map<TString,ExpensiveObject*>::iterator iter = _map.begin() ; iter !=_map.end() ; iter++) {
     if (iter->second->uid() == uid) {
       _map.erase(iter->first) ;
@@ -200,12 +205,12 @@ Bool_t RooExpensiveObjectCache::clearObj(Int_t uid)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Place new payload object in cache element with given unique ID. Cache
+/// will take ownership of provided object!
+
 Bool_t RooExpensiveObjectCache::setObj(Int_t uid, TObject* obj) 
 {
-  // Place new payload object in cache element with given unique ID. Cache
-  // will take ownership of provided object!
-
   for (std::map<TString,ExpensiveObject*>::iterator iter = _map.begin() ; iter !=_map.end() ; iter++) {
     if (iter->second->uid() == uid) {
       iter->second->setPayload(obj) ;
@@ -217,10 +222,11 @@ Bool_t RooExpensiveObjectCache::setObj(Int_t uid, TObject* obj)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear all cache elements
+
 void RooExpensiveObjectCache::clearAll() 
 {
-  // Clear all cache elements
   _map.clear() ;
 }
 
@@ -229,12 +235,12 @@ void RooExpensiveObjectCache::clearAll()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct ExpensiveObject oject for inPayLoad and store reference values
+/// for all RooAbsReal and RooAbsCategory parameters in params.
+
 RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const char* inOwnerName, TObject& inPayload, TIterator* parIter) 
 {
-  // Construct ExpensiveObject oject for inPayLoad and store reference values
-  // for all RooAbsReal and RooAbsCategory parameters in params.
-
   _uid = uidIn ;
   _ownerName = inOwnerName;
 
@@ -260,7 +266,8 @@ RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const cha
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const ExpensiveObject& other) : 
   _uid(uidIn),
   _realRefParams(other._realRefParams), 
@@ -272,7 +279,8 @@ RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const Exp
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooExpensiveObjectCache::ExpensiveObject::~ExpensiveObject() 
 {
   delete _payload ;
@@ -282,10 +290,11 @@ RooExpensiveObjectCache::ExpensiveObject::~ExpensiveObject()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check object type ;
+
 Bool_t RooExpensiveObjectCache::ExpensiveObject::matches(TClass* tc, const RooArgSet& params) 
 {
-  // Check object type ;
   if (_payload->IsA() != tc) {
     return kFALSE; 
   }
@@ -318,7 +327,8 @@ Bool_t RooExpensiveObjectCache::ExpensiveObject::matches(TClass* tc, const RooAr
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooExpensiveObjectCache::print() const 
 {
   map<TString,ExpensiveObject*>::const_iterator iter = _map.begin() ;
@@ -332,7 +342,8 @@ void RooExpensiveObjectCache::print() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooExpensiveObjectCache::ExpensiveObject::print() 
 {
   cout << _payload->IsA()->GetName() << "::" << _payload->GetName() ;
@@ -356,7 +367,8 @@ void RooExpensiveObjectCache::ExpensiveObject::print()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooExpensiveObjectCache::importCacheObjects(RooExpensiveObjectCache& other, const char* ownerName, Bool_t verbose) 
 {
   map<TString,ExpensiveObject*>::const_iterator iter = other._map.begin() ;

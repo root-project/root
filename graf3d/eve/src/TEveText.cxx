@@ -31,7 +31,8 @@
 
 ClassImp(TEveText);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveText::TEveText(const char* txt) :
    TEveElement(fTextColor),
    TNamed("TEveText", ""),
@@ -59,11 +60,11 @@ TEveText::TEveText(const char* txt) :
    SetFontMode(TGLFont::kPixmap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set valid font size.
+
 void TEveText::SetFontSize(Int_t val, Bool_t validate)
 {
-   // Set valid font size.
-
    if (validate) {
       Int_t* fsp = &TGLFontManager::GetFontSizeArray()->front();
       Int_t  ns  = TGLFontManager::GetFontSizeArray()->size();
@@ -74,11 +75,11 @@ void TEveText::SetFontSize(Int_t val, Bool_t validate)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set font file regarding to static TGLFontManager fgFontFileArray.
+
 void TEveText::SetFontFile(const char* name)
 {
-   // Set font file regarding to static TGLFontManager fgFontFileArray.
-
    TObjArray* fa =TGLFontManager::GetFontFileArray();
    TIter  next_base(fa);
    TObjString* os;
@@ -92,11 +93,11 @@ void TEveText::SetFontFile(const char* name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set FTFont class ID.
+
 void TEveText::SetFontMode( Int_t mode)
 {
-   // Set FTFont class ID.
-
    fFontMode = mode;
 
    Bool_t edit = (fFontMode > TGLFont::kPixmap);
@@ -105,38 +106,38 @@ void TEveText::SetFontMode( Int_t mode)
    t.SetEditScale(edit);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the scale and units used to calculate depth values.
+/// See glPolygonOffset manual page.
+
 void TEveText::SetPolygonOffset(Float_t factor, Float_t units)
 {
-   // Set the scale and units used to calculate depth values.
-   // See glPolygonOffset manual page.
-
    fPolygonOffset[0] = factor;
    fPolygonOffset[1] = units;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this object. Only direct rendering is supported.
+
 void TEveText::Paint(Option_t*)
 {
-   // Paint this object. Only direct rendering is supported.
-
    PaintStandard(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill bounding-box information. Virtual from TAttBBox.
+/// If member 'TEveFrameBox* fFrame' is set, frame's corners are
+/// used as bbox.
+
 void TEveText::ComputeBBox()
 {
-   // Fill bounding-box information. Virtual from TAttBBox.
-   // If member 'TEveFrameBox* fFrame' is set, frame's corners are
-   // used as bbox.
-
    BBoxZero();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return TEveText icon.
+
 const TGPicture* TEveText::GetListTreeIcon(Bool_t)
 {
-   // Return TEveText icon.
-
    return TEveElement::fgListTreeIcons[5];
 }

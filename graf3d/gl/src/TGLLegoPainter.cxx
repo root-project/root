@@ -34,20 +34,22 @@
 
 ClassImp(TGLLegoPainter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Ctor.
+
 TGLLegoPainter::TGLLegoPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *coord)
                   : TGLPlotPainter(hist, cam, coord, kFALSE, kTRUE, kTRUE),
                     fLegoType(kColorSimple),
                     fMinZ(0.),
                     fDrawErrors(kFALSE)
 {
-   //Ctor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Obtain bin's info (i, j, value).
+
 char *TGLLegoPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 {
-   //Obtain bin's info (i, j, value).
    fBinInfo = "";
 
    if (fSelectedPart) {
@@ -68,11 +70,11 @@ char *TGLLegoPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
    return (Char_t *)fBinInfo.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Select method.
+
 Bool_t TGLLegoPainter::InitGeometry()
 {
-   //Select method.
-
    Bool_t ret = kFALSE;
    switch (fCoord->GetCoordType()) {
    case kGLCartesian:
@@ -90,10 +92,11 @@ Bool_t TGLLegoPainter::InitGeometry()
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Geometry for lego in cartesian coords.
+
 Bool_t TGLLegoPainter::InitGeometryCartesian()
 {
-   //Geometry for lego in cartesian coords.
    if (!fCoord->SetRanges(fHist, fDrawErrors, kFALSE))
       return kFALSE;
 
@@ -192,10 +195,11 @@ Bool_t TGLLegoPainter::InitGeometryCartesian()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Geometry for lego in polar coords.
+
 Bool_t TGLLegoPainter::InitGeometryPolar()
 {
-   //Geometry for lego in polar coords.
    if (!fCoord->SetRanges(fHist, kFALSE, kFALSE))
       return kFALSE;
 
@@ -251,10 +255,11 @@ Bool_t TGLLegoPainter::InitGeometryPolar()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Geometry for lego in cylindrical coords.
+
 Bool_t TGLLegoPainter::InitGeometryCylindrical()
 {
-   //Geometry for lego in cylindrical coords.
    if (!fCoord->SetRanges(fHist, kFALSE, kFALSE))
       return kFALSE;
 
@@ -313,10 +318,11 @@ Bool_t TGLLegoPainter::InitGeometryCylindrical()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Geometry for lego in spherical coords.
+
 Bool_t TGLLegoPainter::InitGeometrySpherical()
 {
-   //Geometry for lego in spherical coords.
    if (!fCoord->SetRanges(fHist, kFALSE, kFALSE))
       return kFALSE;
 
@@ -370,20 +376,22 @@ Bool_t TGLLegoPainter::InitGeometrySpherical()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///User clicks on a lego with middle mouse button (middle for pad).
+
 void TGLLegoPainter::StartPan(Int_t px, Int_t py)
 {
-   //User clicks on a lego with middle mouse button (middle for pad).
    fMousePosition.fX = px;
    fMousePosition.fY = fCamera->GetHeight() - py;
    fCamera->StartPan(px, py);
    fBoxCut.StartMovement(px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Move lego or section.
+
 void TGLLegoPainter::Pan(Int_t px, Int_t py)
 {
-   //Move lego or section.
    if (fSelectedPart >= fSelectionBase || fSelectedPart == 1) {
       SaveModelviewMatrix();
       SaveProjectionMatrix();
@@ -420,10 +428,11 @@ void TGLLegoPainter::Pan(Int_t px, Int_t py)
    fUpdateSelection = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Parse additional options.
+
 void TGLLegoPainter::AddOption(const TString &option)
 {
-   //Parse additional options.
    using namespace std;
    const Ssiz_t legoPos = option.Index("lego");//"lego" _already_ _exists_ in a string.
    if (legoPos + 4 < option.Length() && isdigit(option[legoPos + 4])) {
@@ -452,10 +461,11 @@ void TGLLegoPainter::AddOption(const TString &option)
    option.Index("z") == kNPOS ? fDrawPalette = kFALSE : fDrawPalette = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize some gl state variables.
+
 void TGLLegoPainter::InitGL()const
 {
-   //Initialize some gl state variables.
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
@@ -466,10 +476,11 @@ void TGLLegoPainter::InitGL()const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Return some gl states to original values.
+
 void TGLLegoPainter::DeInitGL()const
 {
-   //Return some gl states to original values.
    glDisable(GL_DEPTH_TEST);
    glDisable(GL_LIGHTING);
    glDisable(GL_LIGHT0);
@@ -477,11 +488,11 @@ void TGLLegoPainter::DeInitGL()const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Select method corresponding to coordinate system.
+
 void TGLLegoPainter::DrawPlot()const
 {
-   //Select method corresponding to coordinate system.
-
    //Shift plot to point of origin.
    const Rgl::PlotTranslation trGuard(this);
 
@@ -498,10 +509,11 @@ void TGLLegoPainter::DrawPlot()const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Lego in cartesian system.
+
 void TGLLegoPainter::DrawLegoCartesian()const
 {
-   //Lego in cartesian system.
    if (fCoord->GetCoordType() == kGLCartesian) {
       fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
       const TGLDisableGuard cullGuard(GL_CULL_FACE);
@@ -615,10 +627,11 @@ void TGLLegoPainter::DrawLegoCartesian()const
       DrawPalette();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Lego in polar system.
+
 void TGLLegoPainter::DrawLegoPolar()const
 {
-   //Lego in polar system.
    const Int_t nX = fCosSinTableX.size() - 1;
    const Int_t nY = fYEdges.size();
 
@@ -711,10 +724,11 @@ void TGLLegoPainter::DrawLegoPolar()const
       DrawPalette();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Lego in cylindrical system.
+
 void TGLLegoPainter::DrawLegoCylindrical()const
 {
-   //Lego in cylindrical system.
    const Int_t nX = fCosSinTableX.size() - 1;
    const Int_t nY = fYEdges.size();
    Double_t legoR = gStyle->GetLegoInnerR();
@@ -818,10 +832,11 @@ void TGLLegoPainter::DrawLegoCylindrical()const
       DrawPalette();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Lego in spherical system.
+
 void TGLLegoPainter::DrawLegoSpherical()const
 {
-   //Lego in spherical system.
    const Int_t nX = fCosSinTableX.size() - 1;
    const Int_t nY = fCosSinTableY.size() - 1;
    const Double_t rRange = fCoord->GetZLength();
@@ -954,10 +969,11 @@ void TGLLegoPainter::DrawLegoSpherical()const
       DrawPalette();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set lego's color.
+
 void TGLLegoPainter::SetLegoColor()const
 {
-   //Set lego's color.
    Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.15f};
 
    if (fLegoType != kColorLevel && fHist->GetFillColor() != kWhite)
@@ -970,10 +986,11 @@ void TGLLegoPainter::SetLegoColor()const
    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 70.f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///XOZ plane parallel section.
+
 void TGLLegoPainter::DrawSectionXOZ()const
 {
-   //XOZ plane parallel section.
    Int_t binY = -1;
 
    for (Int_t i = 0, e = fYEdges.size(); i < e; ++i) {
@@ -1005,10 +1022,11 @@ void TGLLegoPainter::DrawSectionXOZ()const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///YOZ plane parallel section.
+
 void TGLLegoPainter::DrawSectionYOZ()const
 {
-   //YOZ plane parallel section.
    Int_t binX = -1;
 
    for (Int_t i = 0, e = fXEdges.size(); i < e; ++i) {
@@ -1040,16 +1058,18 @@ void TGLLegoPainter::DrawSectionYOZ()const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Empty. No such sections for lego.
+
 void TGLLegoPainter::DrawSectionXOY()const
 {
-   //Empty. No such sections for lego.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Remove all sections and repaint.
+
 void TGLLegoPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
-   //Remove all sections and repaint.
    const TGLVertex3 *frame = fBackBox.Get3DBox();
    if (event == kButton1Double && (fXOZSectionPos > frame[0].Y() || fYOZSectionPos > frame[0].X())) {
       fXOZSectionPos = frame[0].Y();
@@ -1066,10 +1086,11 @@ void TGLLegoPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Clamp z value.
+
 Bool_t TGLLegoPainter::ClampZ(Double_t &zVal)const
 {
-   //Clamp z value.
    if (fCoord->GetZLog())
       if (zVal <= 0.)
          return kFALSE;
@@ -1088,10 +1109,11 @@ Bool_t TGLLegoPainter::ClampZ(Double_t &zVal)const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize color palette.
+
 Bool_t TGLLegoPainter::PreparePalette()const
 {
-   //Initialize color palette.
    if(fMinMaxVal.first == fMinMaxVal.second)
       return kFALSE;//must be std::abs(fMinMaxVal.second - fMinMaxVal.first) < ...
 
@@ -1106,12 +1128,13 @@ Bool_t TGLLegoPainter::PreparePalette()const
    return fPalette.GeneratePalette(paletteSize, Rgl::Range_t(fMinZ, fMinMaxVal.second));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw. Palette.
+///Originally, fCamera was never null.
+///It can be a null now because of gl-viewer.
+
 void TGLLegoPainter::DrawPalette()const
 {
-   //Draw. Palette.
-   //Originally, fCamera was never null.
-   //It can be a null now because of gl-viewer.
    if (!fCamera) {
       //Thank you, gl-viewer!
       return;
@@ -1125,10 +1148,11 @@ void TGLLegoPainter::DrawPalette()const
    fCamera->Apply(fPadPhi, fPadTheta);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw. Palette. Axis.
+
 void TGLLegoPainter::DrawPaletteAxis()const
 {
-   //Draw. Palette. Axis.
    gVirtualX->SetDrawMode(TVirtualX::kCopy);//TCanvas by default sets in kInverse
    Rgl::DrawPaletteAxis(fCamera, fMinMaxVal, fCoord->GetCoordType() == kGLCartesian ? fCoord->GetZLog() : kFALSE);
 }

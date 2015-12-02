@@ -41,7 +41,8 @@ ClassImp(TEveLegoEventHandler);
 // perspective camera when accumulated angle is more than transition theta.
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveLegoEventHandler::TEveLegoEventHandler(TGWindow *w, TObject *obj, TEveCaloLego *lego):
    TGLEventHandler(w, obj),
 
@@ -54,25 +55,25 @@ TEveLegoEventHandler::TEveLegoEventHandler(TGWindow *w, TObject *obj, TEveCaloLe
    // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TGLEventHandler.
+/// Free the camera when home is pressed.
+
 Bool_t TEveLegoEventHandler::HandleKey(Event_t *event)
 {
-   // Virtual from TGLEventHandler.
-   // Free the camera when home is pressed.
-
    if (event->fCode == kKey_Home)
       fMode = kFree;
 
    return TGLEventHandler::HandleKey(event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method to handle action TGLViewer::kDragCameraRotate. It switches from standard perspective
+/// view to bird-view bellow angle fTransTheta and restores view when accumulated theta is larger
+/// than transition angle.
+
 Bool_t TEveLegoEventHandler::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
 {
-   // Method to handle action TGLViewer::kDragCameraRotate. It switches from standard perspective
-   // view to bird-view bellow angle fTransTheta and restores view when accumulated theta is larger
-   // than transition angle.
-
    if ( !fLego ) return TGLEventHandler::Rotate(xDelta, yDelta, mod1, mod2);
 
    TGLCamera &cam =  fGLViewer->GetRnrCtx()->RefCamera();

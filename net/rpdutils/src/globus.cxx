@@ -37,11 +37,11 @@ namespace ROOT {
 
 //--- Globals ---------------------------------------------------------------
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle error ...
+
 void GlbsToolError(char *msg, int maj, int min, int tok)
 {
-   // Handle error ...
-
    char *e = 0;
 
    if (globus_gss_assist_display_status_str(&e, msg, maj, min, tok) || !e) {
@@ -54,13 +54,13 @@ void GlbsToolError(char *msg, int maj, int min, int tok)
    NetSend(kErrFatal, kROOTD_ERR);
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load information about available certificate and find our
+/// subject name (needed by the client).
+/// Returns 0 on success, 1 otherwise
+
 int GlbsToolCheckCert(char **subjname)
 {
-   // Load information about available certificate and find our
-   // subject name (needed by the client).
-   // Returns 0 on success, 1 otherwise
-
    if (gDebug > 2)
       ErrorInfo("GlbsToolCheckCert: enter");
 
@@ -204,12 +204,12 @@ int GlbsToolCheckCert(char **subjname)
    return ((rdir != 0 || rcer != 0) ? 1 : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks validity of security context exported in shared memory
+/// segment shmId. Returns 1 if valid, 0 othrwise.
+
 int GlbsToolCheckContext(int shmId)
 {
-   // Checks validity of security context exported in shared memory
-   // segment shmId. Returns 1 if valid, 0 othrwise.
-
    int retval = 0;
    OM_uint32 majstat = 0;
    OM_uint32 minstat = 0;
@@ -285,13 +285,13 @@ int GlbsToolCheckContext(int shmId)
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exports a security context for later use and stores in a shared memory
+/// segments. On success returns Id of the allocated shared memory segment,
+/// 0 otherwise.
+
 int GlbsToolStoreContext(gss_ctx_id_t context_handle, char *user)
 {
-   // Exports a security context for later use and stores in a shared memory
-   // segments. On success returns Id of the allocated shared memory segment,
-   // 0 otherwise.
-
    OM_uint32 majstat;
    OM_uint32 minstat;
    key_t shm_key = IPC_PRIVATE;
@@ -396,12 +396,12 @@ int GlbsToolStoreContext(gss_ctx_id_t context_handle, char *user)
    return shmId;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a shm and stores buffer in it.
+/// Returns 0 on success (shm id in shmId), >0 otherwise.
+
 int GlbsToolStoreToShm(gss_buffer_t buffer, int *shmId)
 {
-   // Creates a shm and stores buffer in it.
-   // Returns 0 on success (shm id in shmId), >0 otherwise.
-
    key_t shm_key = IPC_PRIVATE;
    int shm_flg = 0777;
    struct shmid_ds shm_ds;
@@ -453,13 +453,13 @@ int GlbsToolStoreToShm(gss_buffer_t buffer, int *shmId)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test is expansion is needed and return full path file name
+/// (expanded with $HOME).
+/// Returned string must be 'delete[] ed' by the caller.
+
 char *GlbsToolExpand(char *file)
 {
-   // Test is expansion is needed and return full path file name
-   // (expanded with $HOME).
-   // Returned string must be 'delete[] ed' by the caller.
-
    char *fret = 0;
 
    if (file) {
@@ -480,12 +480,12 @@ char *GlbsToolExpand(char *file)
    return fret;
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check existence and validity of user proxy
+/// Return 0 on success, 1 otherwise
+
 int GlbsToolCheckProxy(char **subjname)
 {
-   // Check existence and validity of user proxy
-   // Return 0 on success, 1 otherwise
-
    // Check if there is a proxy file associated with this user
    char pxy[256];
    SPrintf(pxy, 256, "/tmp/x509up_u%d", getuid());

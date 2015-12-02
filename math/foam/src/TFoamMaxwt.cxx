@@ -21,20 +21,22 @@
 
 ClassImp(TFoamMaxwt);
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for streamer
+
 TFoamMaxwt::TFoamMaxwt()
 {
-// Constructor for streamer
    fNent = 0;
    fnBin = 0;
    fWtHst1 = 0;
    fWtHst2 = 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Principal user constructor
+
 TFoamMaxwt::TFoamMaxwt(Double_t wmax, Int_t nBin)
 {
-// Principal user constructor
    fNent = 0;
    fnBin = nBin;
    fwmax = wmax;
@@ -44,10 +46,11 @@ TFoamMaxwt::TFoamMaxwt(Double_t wmax, Int_t nBin)
    fWtHst2->SetDirectory(0);// and enable deleting
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Explicit COPY CONSTRUCTOR (unused, so far)
+
 TFoamMaxwt::TFoamMaxwt(TFoamMaxwt &From): TObject(From)
 {
-// Explicit COPY CONSTRUCTOR (unused, so far)
    fnBin   = From.fnBin;
    fwmax   = From.fwmax;
    fWtHst1 = From.fWtHst1;
@@ -55,28 +58,31 @@ TFoamMaxwt::TFoamMaxwt(TFoamMaxwt &From): TObject(From)
    Error("TFoamMaxwt","COPY CONSTRUCTOR NOT TESTED!");
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TFoamMaxwt::~TFoamMaxwt()
 {
-// Destructor
    delete fWtHst1; // For this SetDirectory(0) is needed!
    delete fWtHst2; //
    fWtHst1=0;
    fWtHst2=0;
 }
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reseting weight analysis
+
 void TFoamMaxwt::Reset()
 {
-// Reseting weight analysis
    fNent = 0;
    fWtHst1->Reset();
    fWtHst2->Reset();
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// substitution =
+
 TFoamMaxwt& TFoamMaxwt::operator=(const TFoamMaxwt &From)
 {
-// substitution =
    if (&From == this) return *this;
    fnBin = From.fnBin;
    fwmax = From.fwmax;
@@ -85,21 +91,22 @@ TFoamMaxwt& TFoamMaxwt::operator=(const TFoamMaxwt &From)
    return *this;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Filling analyzed weight
+
 void TFoamMaxwt::Fill(Double_t wt)
 {
-// Filling analyzed weight
    fNent =  fNent+1.0;
    fWtHst1->Fill(wt,1.0);
    fWtHst2->Fill(wt,wt);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates Efficiency= aveWt/wtLim for a given tolerance level epsilon<<1
+/// To be called at the end of the MC run.
+
 void TFoamMaxwt::Make(Double_t eps, Double_t &MCeff)
 {
-// Calculates Efficiency= aveWt/wtLim for a given tolerance level epsilon<<1
-// To be called at the end of the MC run.
-
    Double_t wtLim,aveWt;
    GetMCeff(eps, MCeff, wtLim);
    aveWt = MCeff*wtLim;
@@ -109,13 +116,13 @@ void TFoamMaxwt::Make(Double_t eps, Double_t &MCeff)
    std::cout<< "00000000000000000000000000000000000000000000000000000000000000000000000"<<std::endl;
 }
 
-//_________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates Efficiency= aveWt/wtLim for a given tolerance level epsilon<<1
+/// using information stored in two histograms.
+/// To be called at the end of the MC run.
+
 void TFoamMaxwt::GetMCeff(Double_t eps, Double_t &MCeff, Double_t &wtLim)
 {
-// Calculates Efficiency= aveWt/wtLim for a given tolerance level epsilon<<1
-// using information stored in two histograms.
-// To be called at the end of the MC run.
-
    Int_t ib,ibX;
    Double_t lowEdge,bin,bin1;
    Double_t aveWt, aveWt1;
@@ -134,7 +141,8 @@ void TFoamMaxwt::GetMCeff(Double_t eps, Double_t &MCeff, Double_t &wtLim)
       std::cout<<"TFoamMaxwt::Make: zero content of histogram !!!,sum,sumWt ="<<sum<<sumWt<<std::endl;
    }
    aveWt = sumWt/sum;
-   //--------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    for( ibX=fnBin+1; ibX>0; ibX--) {
       lowEdge = (ibX-1.0)*fwmax/fnBin;
       sum   = 0.0;
@@ -149,7 +157,8 @@ void TFoamMaxwt::GetMCeff(Double_t eps, Double_t &MCeff, Double_t &wtLim)
       aveWt1 = sumWt/sum;
       if( TMath::Abs(1.0-aveWt1/aveWt) > eps ) break;
    }
-   //---------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    if(ibX == (fnBin+1) ) {
       wtLim = 1.0e200;
       MCeff   = 0.0;

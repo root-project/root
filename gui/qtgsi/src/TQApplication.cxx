@@ -27,53 +27,53 @@
 
 ClassImp(TQApplication)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Used by Dictionary()
+
 TQApplication::TQApplication()
    :TApplication()
 {
-   // Used by Dictionary()
-
    fCustomized=kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the root application and load the graphic libraries
+
 TQApplication::TQApplication(const char *appClassName,
                              Int_t *argc, char **argv, void *options, Int_t numOptions)
    : TApplication(appClassName,argc,argv,options,numOptions)
 {
-   // Create the root application and load the graphic libraries
-
    fCustomized=kFALSE;
    LoadGraphicsLibs();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete ROOT application environment.
+
 TQApplication::~TQApplication()
 {
-   // Delete ROOT application environment.
-
    if (gApplication)  gApplication->Terminate(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Here we overload the LoadGraphicsLibs() function.
+/// This function now just instantiates a QRootGuiFactory
+/// object and redirect the global pointer gGuiFactory to point
+/// to it.
+
 void TQApplication::LoadGraphicsLibs()
 {
-   // Here we overload the LoadGraphicsLibs() function.
-   // This function now just instantiates a QRootGuiFactory
-   // object and redirect the global pointer gGuiFactory to point
-   // to it.
-
    if (gROOT->IsBatch()) return;
    gROOT->LoadClass("TCanvas", "Gpad");
    gGuiFactory =  new TQRootGuiFactory();
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the custom flag
+
 void TQApplication::SetCustomized()
 {
-   // Set the custom flag
-
    fCustomized = kTRUE;
    if (fCustomized) ((TQRootGuiFactory*) gGuiFactory)->SetCustomFlag(kTRUE);
 }

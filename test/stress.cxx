@@ -235,10 +235,11 @@ void stress(Int_t nevent, Int_t style = 1,
    delete gBenchmark;
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Compute a function sum of 3 gaussians
+
 Double_t f1int(Double_t *x, Double_t *p)
 {
-   //Compute a function sum of 3 gaussians
    Double_t e1 = (x[0]-p[1])/p[2];
    Double_t e2 = (x[0]-p[4])/p[5];
    Double_t e3 = (x[0]-p[7])/p[8];
@@ -248,10 +249,11 @@ Double_t f1int(Double_t *x, Double_t *p)
    return f;
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print test program number and its title
+
 void Bprint(Int_t id, const char *title)
 {
-  // Print test program number and its title
    const Int_t kMAX = 65;
    char header[80];
    snprintf(header,80,"Test %2d : %s",id,title);
@@ -262,15 +264,15 @@ void Bprint(Int_t id, const char *title)
    printf("%s",header);
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Generate two functions supposed to produce the same result
+///One function "f1form" will be computed by the TFormula class
+///The second function "f1int" will be
+///   - compiled when running in batch mode
+///   - interpreted by CINT when running in interactive mode
+
 void stress1()
 {
-   //Generate two functions supposed to produce the same result
-   //One function "f1form" will be computed by the TFormula class
-   //The second function "f1int" will be
-   //   - compiled when running in batch mode
-   //   - interpreted by CINT when running in interactive mode
-
    Bprint(1,"Functions, Random Numbers, Histogram Fits");
 
    //Start with a function inline expression (managed by TFormula)
@@ -340,10 +342,11 @@ void stress1()
    // delete h1diff;
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///check length and compression factor in stress.root
+
 void stress2()
 {
-   //check length and compression factor in stress.root
    Bprint(2,"Check size & compression factor of a Root file");
    TFile f("stress.root");
    Long64_t last = f.GetEND();
@@ -361,12 +364,12 @@ void stress2()
    if (gPrintSubBench) { printf("Test  2 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Open stress.root, read all objects, save 10 times and purge
+///This function tests the generation and reuse of gaps in files
+
 void stress3()
 {
-   //Open stress.root, read all objects, save 10 times and purge
-   //This function tests the generation and reuse of gaps in files
-
    Bprint(3,"Purge, Reuse of gaps in TFile");
    TFile f("stress.root","update");
    f.ReadAll();
@@ -393,11 +396,11 @@ void stress3()
    if (gPrintSubBench) { printf("Test  3 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test of 2-d histograms, functions, 2-d fits
+
 void stress4()
 {
-// Test of 2-d histograms, functions, 2-d fits
-
    Bprint(4,"Test of 2-d histograms, functions, 2-d fits");
 
    Double_t f2params[15] = {100,-3,3,-3,3,160,0,0.8,0,0.9,40,4,0.7,4,0.7};
@@ -443,20 +446,20 @@ void stress4()
    if (gPrintSubBench) { printf("Test  4 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test of Postscript.
+/// Make a complex picture. Verify number of lines on ps file
+/// Testing automatically the graphics package is a complex problem.
+/// The best way we have found is to generate a Postscript image
+/// of a complex canvas containing many objects.
+/// The number of lines in the ps file is compared with a reference run.
+/// A few lines (up to 2 or 3) of difference may be expected because
+/// Postscript works with floats. The date and time of the run are also
+/// different.
+/// You can also inspect visually the ps file with a ps viewer.
+
 void stress5()
 {
-// Test of Postscript.
-// Make a complex picture. Verify number of lines on ps file
-// Testing automatically the graphics package is a complex problem.
-// The best way we have found is to generate a Postscript image
-// of a complex canvas containing many objects.
-// The number of lines in the ps file is compared with a reference run.
-// A few lines (up to 2 or 3) of difference may be expected because
-// Postscript works with floats. The date and time of the run are also
-// different.
-// You can also inspect visually the ps file with a ps viewer.
-
    Bprint(5,"Test graphics & Postscript");
 
    TCanvas *c1 = new TCanvas("c1","stress canvas",800,600);
@@ -507,12 +510,12 @@ void stress5()
 
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test subdirectories in a Root file
+/// Create many TH1S histograms, make operations between them
+
 void stress6()
 {
-// Test subdirectories in a Root file
-// Create many TH1S histograms, make operations between them
-
    Bprint(6,"Test subdirectories in a Root file");
 
    TFile f("stress.root","update");
@@ -592,15 +595,15 @@ void stress6()
    if (gPrintSubBench) { printf("Test  6 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test TNtuple class with several selection mechanisms
+/// Test expression cuts
+/// Test graphical cuts
+/// Test event lists and operations on event lists
+/// Compare results of TTree::Draw with results of an explict loop
+
 void stress7()
 {
-// Test TNtuple class with several selection mechanisms
-// Test expression cuts
-// Test graphical cuts
-// Test event lists and operations on event lists
-// Compare results of TTree::Draw with results of an explict loop
-
    Bprint(7,"TNtuple, selections, TCut, TCutG, TEventList");
 
    TFile f("stress.root","update");
@@ -736,13 +739,13 @@ void stress7()
    if (gPrintSubBench) { printf("Test  7 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Read the event file
+///  Loop on all events in the file (reading everything).
+///  Count number of bytes read
+
 Int_t stress8read(Int_t nevent)
 {
-//  Read the event file
-//  Loop on all events in the file (reading everything).
-//  Count number of bytes read
-
    TFile *hfile = new TFile("Event.root");
    TTree *tree; hfile->GetObject("T",tree);
    Event *event = 0;
@@ -767,13 +770,13 @@ Int_t stress8read(Int_t nevent)
 }
 
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Create the Event file in various modes
+/// comp = compression level
+/// split = 1 split mode, 0 = no split
+
 Int_t stress8write(Int_t nevent, Int_t comp, Int_t split)
 {
-//  Create the Event file in various modes
-   // comp = compression level
-   // split = 1 split mode, 0 = no split
-
    // Create the Event file, the Tree and the branches
    TFile *hfile = new TFile("Event.root","RECREATE","TTree benchmark ROOT file");
    hfile->SetCompressionLevel(comp);
@@ -804,11 +807,11 @@ Int_t stress8write(Int_t nevent, Int_t comp, Int_t split)
 }
 
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Run the $ROOTSYS/test/Event program in several configurations.
+
 void stress8(Int_t nevent)
 {
-//  Run the $ROOTSYS/test/Event program in several configurations.
-
    Bprint(8,"Trees split and compression modes");
 
   // First step: make sure the Event shared library exists
@@ -862,15 +865,15 @@ void stress8(Int_t nevent)
    if (gPrintSubBench) { printf("Test  8 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare histograms h1 and h2
+/// Check number of entries, mean and rms
+/// if means differ by more than 1/1000 of the range return -1
+/// if rms differs in percent by more than 1/1000 return -2
+/// Otherwise return difference of number of entries
+
 Int_t HistCompare(TH1 *h1, TH1 *h2)
 {
-// Compare histograms h1 and h2
-// Check number of entries, mean and rms
-// if means differ by more than 1/1000 of the range return -1
-// if rms differs in percent by more than 1/1000 return -2
-// Otherwise return difference of number of entries
-
    Int_t n1       = (Int_t)h1->GetEntries();
    Double_t mean1 = h1->GetMean();
    Double_t rms1  = h1->GetRMS();
@@ -883,16 +886,16 @@ Int_t HistCompare(TH1 *h1, TH1 *h2)
    return n1-n2;
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test selections via TreeFormula
+/// tree is a TTree when called by stress9
+/// tree is a TChain when called from stress11
+/// This is a quite complex test checking the results of TTree::Draw
+/// or TChain::Draw with an explicit loop on events.
+/// Also a good test for the interpreter
+
 void stress9tree(TTree *tree, Int_t realTestNum)
 {
-// Test selections via TreeFormula
-// tree is a TTree when called by stress9
-// tree is a TChain when called from stress11
-// This is a quite complex test checking the results of TTree::Draw
-// or TChain::Draw with an explicit loop on events.
-// Also a good test for the interpreter
-
    Event *event = 0;
    tree->SetBranchAddress("event",&event);
    gROOT->cd();
@@ -1155,11 +1158,11 @@ void stress9tree(TTree *tree, Int_t realTestNum)
    }
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Analyse the file Event.root generated in the last part of test8
+
 void stress9()
 {
-// Analyse the file Event.root generated in the last part of test8
-
    Bprint(9,"Analyze Event.root file of stress 8");
 
    gROOT->GetList()->Delete();
@@ -1178,15 +1181,15 @@ void stress9()
    delete hfile;
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make 10 Trees starting from the Event.root tree.
+/// Events for which event_number%10 == 0 go to Event_0.root
+/// Events for which event_number%10 == 1 go to Event_1.root
+///...
+/// Events for which event_number%10 == 9 go to Event_9.root
+
 void stress10()
 {
-// Make 10 Trees starting from the Event.root tree.
-// Events for which event_number%10 == 0 go to Event_0.root
-// Events for which event_number%10 == 1 go to Event_1.root
-//...
-// Events for which event_number%10 == 9 go to Event_9.root
-
    Bprint(10,"Create 10 files starting from Event.root");
 
    TFile *hfile = new TFile("Event.root");
@@ -1250,16 +1253,16 @@ void stress10()
    if (gPrintSubBench) { printf("Test 10 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test chains of Trees
+/// We make a TChain using the 10 files generated in test10
+/// We expect the same results when analyzing the chain than
+/// in the analysis of the original big file Event.root in test9.
+/// Because TChain derives from TTree, we can use the same
+/// analysis procedure "stress9tree"
+
 void stress11()
 {
-// Test chains of Trees
-// We make a TChain using the 10 files generated in test10
-// We expect the same results when analyzing the chain than
-// in the analysis of the original big file Event.root in test9.
-// Because TChain derives from TTree, we can use the same
-// analysis procedure "stress9tree"
-
    Bprint(11,"Test chains of Trees using the 10 files");
 
    gROOT->GetList()->Delete();
@@ -1281,11 +1284,11 @@ void stress11()
    ntotout += f.GetBytesWritten();
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare histograms of stress9 with stress11
+
 void stress12(Int_t testid)
 {
-// Compare histograms of stress9 with stress11
-
    if (testid == 12) Bprint(12,"Compare histograms of test 9 and 11");
 
    TFile f9("stress_test9.root");
@@ -1316,16 +1319,16 @@ void stress12(Int_t testid)
    if (gPrintSubBench) { printf("Test 12 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test of TChain::Merge
+/// The 10 small Tree files generated in stress10 are again merged
+/// into one single file.
+/// Should be the same as the file generated in stress8, except
+/// that events will be in a different order.
+/// But global analysis histograms should be identical (checked by stress14)
+
 void stress13()
 {
-// test of TChain::Merge
-// The 10 small Tree files generated in stress10 are again merged
-// into one single file.
-// Should be the same as the file generated in stress8, except
-// that events will be in a different order.
-// But global analysis histograms should be identical (checked by stress14)
-
    Bprint(13,"Test merging files of a chain");
 
    gROOT->GetList()->Delete();
@@ -1359,21 +1362,21 @@ void stress13()
    if (gPrintSubBench) { printf("Test 13 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Verify that stress13 has correctly rebuild the original Event.root
+
 void stress14()
 {
-// Verify that stress13 has correctly rebuild the original Event.root
-
    Bprint(14,"Check correct rebuilt of Event.root in test 13");
 
    stress12(14);
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divert some branches to separate files
+
 void stress15()
 {
-// Divert some branches to separate files
-
    Bprint(15,"Divert Tree branches to separate files");
 
    //Get old file, old tree and set top branch address

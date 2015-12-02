@@ -10,7 +10,8 @@
  *************************************************************************/
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>Graphical cut class</h2></center>
 A Graphical cut.
@@ -97,22 +98,22 @@ End_Html */
 ClassImp(TCutG)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TCutG default constructor.
+
 TCutG::TCutG() : TGraph()
 {
-   // TCutG default constructor.
-
    fObjectX  = 0;
    fObjectY  = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TCutG copy constructor
+
 TCutG::TCutG(const TCutG &cutg)
       :TGraph(cutg)
 {
-   // TCutG copy constructor
-
    fVarX    = cutg.fVarX;
    fVarY    = cutg.fVarY;
    fObjectX = cutg.fObjectX;
@@ -120,12 +121,12 @@ TCutG::TCutG(const TCutG &cutg)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TCutG normal constructor.
+
 TCutG::TCutG(const char *name, Int_t n)
       :TGraph(n)
 {
-   // TCutG normal constructor.
-
    fObjectX  = 0;
    fObjectY  = 0;
    SetName(name);
@@ -162,12 +163,12 @@ TCutG::TCutG(const char *name, Int_t n)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TCutG normal constructor.
+
 TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
       :TGraph(n,x,y)
 {
-   // TCutG normal constructor.
-
    fObjectX  = 0;
    fObjectY  = 0;
    SetName(name);
@@ -204,12 +205,12 @@ TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TCutG normal constructor.
+
 TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
       :TGraph(n,x,y)
 {
-   // TCutG normal constructor.
-
    fObjectX  = 0;
    fObjectY  = 0;
    SetName(name);
@@ -245,21 +246,21 @@ TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TCutG destructor.
+
 TCutG::~TCutG()
 {
-   // TCutG destructor.
-
    delete fObjectX;
    delete fObjectY;
    gROOT->GetListOfSpecials()->Remove(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TCutG &TCutG::operator=(const TCutG &rhs)
 {
-   // Assignment operator.
-
    if (this != &rhs) {
       TGraph::operator=(rhs);
       delete fObjectX;
@@ -270,13 +271,14 @@ TCutG &TCutG::operator=(const TCutG &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the area inside this TCutG
+/// The algorithm uses Stoke's theorem over the border of the closed polygon.
+/// Just as a reminder: Stoke's theorem reduces a surface integral
+/// to a line integral over the border of the surface integral.
+
 Double_t TCutG::Area() const
 {
-   // Compute the area inside this TCutG
-   // The algorithm uses Stoke's theorem over the border of the closed polygon.
-   // Just as a reminder: Stoke's theorem reduces a surface integral
-   // to a line integral over the border of the surface integral.
    Double_t a = 0;
    Int_t n = GetN();
    for (Int_t i=0;i<n-1;i++) {
@@ -286,13 +288,14 @@ Double_t TCutG::Area() const
    return a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the center x,y of this TCutG
+/// The algorithm uses Stoke's theorem over the border of the closed polygon.
+/// Just as a reminder: Stoke's theorem reduces a surface integral
+/// to a line integral over the border of the surface integral.
+
 void TCutG::Center(Double_t &cx, Double_t &cy) const
 {
-   // Compute the center x,y of this TCutG
-   // The algorithm uses Stoke's theorem over the border of the closed polygon.
-   // Just as a reminder: Stoke's theorem reduces a surface integral
-   // to a line integral over the border of the surface integral.
    Int_t n = GetN();
    Double_t a  = 0;
    cx = cy = 0;
@@ -308,13 +311,13 @@ void TCutG::Center(Double_t &cx, Double_t &cy) const
    cy *= 1./(6*a);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the integral of 2-d histogram h for all bins inside the cut
+/// if option "width" is specified, the integral is the sum of
+/// the bin contents multiplied by the bin width in x and in y.
+
 Double_t TCutG::IntegralHist(TH2 *h, Option_t *option) const
 {
-   // Compute the integral of 2-d histogram h for all bins inside the cut
-   // if option "width" is specified, the integral is the sum of
-   // the bin contents multiplied by the bin width in x and in y.
-
    if (!h) return 0;
    Int_t n = GetN();
    Double_t xmin= 1e200;
@@ -356,11 +359,11 @@ Double_t TCutG::IntegralHist(TH2 *h, Option_t *option) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out.
+
 void TCutG::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out.
-
    char quote = '"';
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TCutG::Class())) {
@@ -384,51 +387,51 @@ void TCutG::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       <<quote<<option<<quote<<");"<<std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the X object (and delete the previous one if any).
+
 void TCutG::SetObjectX(TObject *obj)
 {
-   // Set the X object (and delete the previous one if any).
-
    delete fObjectX;
    fObjectX = obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the Y object (and delete the previous one if any).
+
 void TCutG::SetObjectY(TObject *obj)
 {
-   // Set the Y object (and delete the previous one if any).
-
    delete fObjectY;
    fObjectY = obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set X variable.
+
 void TCutG::SetVarX(const char *varx)
 {
-   // Set X variable.
-
    fVarX = varx;
    delete fObjectX;
    fObjectX = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Y variable.
+
 void TCutG::SetVarY(const char *vary)
 {
-   // Set Y variable.
-
    fVarY = vary;
    delete fObjectY;
    fObjectY = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TCutG.
+
 void TCutG::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TCutG.
-
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(TCutG::Class(), this);
       gROOT->GetListOfSpecials()->Add(this);

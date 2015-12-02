@@ -22,10 +22,11 @@
 
 ClassImp(TEveMacro);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TEveMacro::TEveMacro() : TMacro()
 {
-   // Default constructor.
 }
 
 TEveMacro::TEveMacro(const TEveMacro& m) : TMacro(m)
@@ -56,11 +57,11 @@ TEveMacro::TEveMacro(const char* name) :
 
 #include "TTimer.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the macro.
+
 Long_t TEveMacro::Exec(const char* params, Int_t* error)
 {
-   // Execute the macro.
-
    Long_t retval = -1;
 
    if (gROOT->GetGlobalFunction(fName, 0, kTRUE) != 0)
@@ -114,11 +115,11 @@ Long_t TEveMacro::Exec(const char* params, Int_t* error)
 
 #include "TApplication.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call gROOT->Reset() via interpreter.
+
 void TEveMacro::ResetRoot()
 {
-   // Call gROOT->Reset() via interpreter.
-
    // printf ("TEveMacro::ResetRoot doing 'gROOT->Reset()'.\n");
    gROOT->GetApplication()->ProcessLine("gROOT->Reset()");
 }

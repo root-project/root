@@ -24,12 +24,12 @@
 ClassImp(TGridJob)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Must be implemented by actual GRID job implementation. Returns -1 in
+/// case of error, 0 otherwise.
+
 Int_t TGridJob::GetOutputSandbox(const char *, Option_t *)
 {
-   // Must be implemented by actual GRID job implementation. Returns -1 in
-   // case of error, 0 otherwise.
-
    MayNotUse("GetOutputSandbox");
    return -1;
 }

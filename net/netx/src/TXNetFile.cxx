@@ -70,50 +70,51 @@ Bool_t TXNetFile::fgInitDone = kFALSE;
 Bool_t TXNetFile::fgRootdBC = kTRUE;
 TFileStager *TXNetFile::fgFileStager = 0;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TXNetFile object. A TXNetFile object is the same as a TNetFile
+/// (from which the former derives) except that the protocol is extended to
+/// support dealing with new xrootd data server or xrootd load balancer
+/// server.
+///
+/// The "url" argument must be of the form
+///
+///   root://server1:port1[,server2:port2,...,serverN:portN]/pathfile,
+///
+/// Note that this means that multiple servers (>= 1) can be specified in
+/// the url. The connection will try to connect to the first server:port
+/// and if that does not succeed, it will try the second one, and so on
+/// until it finds a server that will respond.
+///
+/// See the TNetFile documentation for the description of the other arguments.
+///
+/// The creation consists of internal variable settings (most important is
+/// the client's domain), creation of a TXUrl array containing all specified
+/// urls (a single url is serverX:portX/pathfile), trying to connect to the
+/// servers calling Connect() method, getting a valid access to the remote
+/// server the client is connected to using GetAccessToSrv() method,
+/// recognizing the remote server (if an old rootd the TNetFile's Create
+/// method will be called).
+///
+/// The options field of the URL can be used for the following purposes:
+///   a. open a non-ROOT generic file
+///      "root://server1:port1[,server2:port2,...]/pathfile?filetype=raw"
+///   b. re-check the environment variables
+///      "root://server1:port1[,server2:port2,...]/pathfile?checkenv"
+///   c. set the cache size (in bytes)
+///      "root://server1:port1[,server2:port2,...]/pathfile?cachesz=20000000"
+///   d. set the read-ahead size (in bytes)
+///      "root://server1:port1[,server2:port2,...]/pathfile?readaheadsz=100000"
+///   e. set the cache remove policy
+///      "root://server1:port1[,server2:port2,...]/pathfile?rmpolicy=1"
+///   f. set the max number of redirections
+///      "root://server1:port1[,server2:port2,...]/pathfile?mxredir=2"
+/// (multiple options can be set concurrently)
+
 TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
                      Int_t compress, Int_t netopt, Bool_t parallelopen,
                      const char *logicalurl) :
             TNetFile((logicalurl ? logicalurl : url), ftitle, compress, kFALSE)
 {
-   // Create a TXNetFile object. A TXNetFile object is the same as a TNetFile
-   // (from which the former derives) except that the protocol is extended to
-   // support dealing with new xrootd data server or xrootd load balancer
-   // server.
-   //
-   // The "url" argument must be of the form
-   //
-   //   root://server1:port1[,server2:port2,...,serverN:portN]/pathfile,
-   //
-   // Note that this means that multiple servers (>= 1) can be specified in
-   // the url. The connection will try to connect to the first server:port
-   // and if that does not succeed, it will try the second one, and so on
-   // until it finds a server that will respond.
-   //
-   // See the TNetFile documentation for the description of the other arguments.
-   //
-   // The creation consists of internal variable settings (most important is
-   // the client's domain), creation of a TXUrl array containing all specified
-   // urls (a single url is serverX:portX/pathfile), trying to connect to the
-   // servers calling Connect() method, getting a valid access to the remote
-   // server the client is connected to using GetAccessToSrv() method,
-   // recognizing the remote server (if an old rootd the TNetFile's Create
-   // method will be called).
-   //
-   // The options field of the URL can be used for the following purposes:
-   //   a. open a non-ROOT generic file
-   //      "root://server1:port1[,server2:port2,...]/pathfile?filetype=raw"
-   //   b. re-check the environment variables
-   //      "root://server1:port1[,server2:port2,...]/pathfile?checkenv"
-   //   c. set the cache size (in bytes)
-   //      "root://server1:port1[,server2:port2,...]/pathfile?cachesz=20000000"
-   //   d. set the read-ahead size (in bytes)
-   //      "root://server1:port1[,server2:port2,...]/pathfile?readaheadsz=100000"
-   //   e. set the cache remove policy
-   //      "root://server1:port1[,server2:port2,...]/pathfile?rmpolicy=1"
-   //   f. set the max number of redirections
-   //      "root://server1:port1[,server2:port2,...]/pathfile?mxredir=2"
-   // (multiple options can be set concurrently)
    TUrl urlnoanchor(url);
    // Set debug level
    EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", 0));
@@ -149,11 +150,11 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
    CreateXClient(urlnoanchor.GetUrl(), option, netopt, parallelopen);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TXNetFile::~TXNetFile()
 {
-   // Destructor.
-
    if (IsOpen())
       Close(0);
 
@@ -163,11 +164,11 @@ TXNetFile::~TXNetFile()
    fInitMtx = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Form url for rootd socket.
+
 void TXNetFile::FormUrl(TUrl uu, TString &uus)
 {
-   // Form url for rootd socket.
-
    // Protocol
    uus = "root://";
 
@@ -192,12 +193,13 @@ void TXNetFile::FormUrl(TUrl uu, TString &uus)
    uus += "/";
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse input options for cache parameters
+
 Int_t TXNetFile::ParseOptions(const char *opts,
                               Int_t &cachesz, Int_t &readaheadsz,
                               Int_t &rmpolicy, Int_t &mxredir, Int_t &rastrategy, Int_t &readtrimblksz)
 {
-   // Parse input options for cache parameters
    static const char *keys[6] = { "cachesz=", "readaheadsz=", "rmpolicy=",
                                   "mxredir=", "readaheadstrategy=", "readtrimblksz=" };
    Int_t fo = 0;
@@ -243,12 +245,12 @@ Int_t TXNetFile::ParseOptions(const char *opts,
    return fo;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The real creation work is done here.
+
 void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
                               Bool_t parallelopen)
 {
-   // The real creation work is done here.
-
    Int_t cachesz = -1, readaheadsz = -1, rmpolicy = -1, mxredir = -1, np = 0;
    Int_t readaheadstrategy = -1, readtrimblksz = -1;
 
@@ -412,12 +414,12 @@ zombie:
    gDirectory = gROOT;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find out the remote rootd protocol version.
+/// Returns -1 in case of error.
+
 Int_t TXNetFile::GetRootdProtocol(TSocket *s)
 {
-   // Find out the remote rootd protocol version.
-   // Returns -1 in case of error.
-
    Int_t rproto = -1;
 
    UInt_t cproto = 0;
@@ -468,11 +470,11 @@ Int_t TXNetFile::GetRootdProtocol(TSocket *s)
    return rproto;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The real creation work is done here.
+
 Bool_t TXNetFile::Open(Option_t *option, Bool_t doitparallel)
 {
-   // The real creation work is done here.
-
    //
    // Parse options
    kXR_unt16 openOpt = 0;
@@ -582,12 +584,12 @@ Bool_t TXNetFile::Open(Option_t *option, Bool_t doitparallel)
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override TNetFile::ReadBuffer to deal with the xrootd server.
+/// Returns kTRUE in case of errors.
+
 Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
 {
-   // Override TNetFile::ReadBuffer to deal with the xrootd server.
-   // Returns kTRUE in case of errors.
-
    if (IsZombie()) {
       Error("ReadBuffer", "ReadBuffer is not possible because object"
             " is in 'zombie' state");
@@ -673,23 +675,23 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
    return result;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pass through to TNetFile implementation which will call back eventually
+/// to our ReadBuffer with 2 arguments to deal with xrootd errors.
+
 Bool_t TXNetFile::ReadBuffer(char *buffer, Long64_t pos, Int_t bufferLength)
 {
-   // Pass through to TNetFile implementation which will call back eventually
-   // to our ReadBuffer with 2 arguments to deal with xrootd errors.
-
    return TNetFile::ReadBuffer(buffer, pos, bufferLength);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implementation dealing with the xrootd server.
+/// Returns kTRUE in case of errors.
+/// This is the same as TXNetFile::ReadBuffer but using the async
+/// call from xrootd
+
 Bool_t TXNetFile::ReadBufferAsync(Long64_t offs, Int_t bufferLength)
 {
-   // Implementation dealing with the xrootd server.
-   // Returns kTRUE in case of errors.
-   // This is the same as TXNetFile::ReadBuffer but using the async
-   // call from xrootd
-
    if (IsZombie()) {
       Error("ReadBuffer", "ReadBuffer is not possible because object"
             " is in 'zombie' state");
@@ -745,18 +747,18 @@ Bool_t TXNetFile::ReadBufferAsync(Long64_t offs, Int_t bufferLength)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the nbuf blocks described in arrays pos and len,
+/// where pos[i] is the seek position of block i of length len[i].
+/// Note that for nbuf=1, this call is equivalent to TFile::ReadBuffer
+/// This function is overloaded by TNetFile, TWebFile, etc.
+/// Returns kTRUE in case of failure.
+/// Note: This is the overloading made in TXNetFile. If ReadBuffers
+/// is supported by xrootd it will try to get the whole list from one single
+/// call avoiding the latency of multiple calls
+
 Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 {
-   // Read the nbuf blocks described in arrays pos and len,
-   // where pos[i] is the seek position of block i of length len[i].
-   // Note that for nbuf=1, this call is equivalent to TFile::ReadBuffer
-   // This function is overloaded by TNetFile, TWebFile, etc.
-   // Returns kTRUE in case of failure.
-   // Note: This is the overloading made in TXNetFile. If ReadBuffers
-   // is supported by xrootd it will try to get the whole list from one single
-   // call avoiding the latency of multiple calls
-
    if (IsZombie()) {
       Error("ReadBuffers", "ReadBuffers is not possible because object"
             " is in 'zombie' state");
@@ -843,12 +845,12 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    else return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override TNetFile::WriteBuffer to deal with the xrootd server.
+/// Returns kTRUE in case of errors.
+
 Bool_t TXNetFile::WriteBuffer(const char *buffer, Int_t bufferLength)
 {
-   // Override TNetFile::WriteBuffer to deal with the xrootd server.
-   // Returns kTRUE in case of errors.
-
    if (IsZombie()) {
       Error("WriteBuffer", "WriteBuffer is not possible because object"
             " is in 'zombie' state");
@@ -903,12 +905,12 @@ Bool_t TXNetFile::WriteBuffer(const char *buffer, Int_t bufferLength)
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the file. Makes sure that the file is really open before
+/// calling TFile::Init. It may block.
+
 void TXNetFile::Init(Bool_t create)
 {
-   // Initialize the file. Makes sure that the file is really open before
-   // calling TFile::Init. It may block.
-
    if (fInitDone) {
       // TFile::Init already called once
       if (gDebug > 1)
@@ -967,11 +969,11 @@ void TXNetFile::Init(Bool_t create)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if the file is open, kFALSE otherwise.
+
 Bool_t TXNetFile::IsOpen() const
 {
-   // Return kTRUE if the file is open, kFALSE otherwise.
-
    if (fIsRootd) {
       if (gDebug > 1)
          Info("IsOpen","Calling TNetFile::IsOpen");
@@ -985,11 +987,11 @@ Bool_t TXNetFile::IsOpen() const
    return ((fClient && fInitDone) ? fClient->IsOpen() : kFALSE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return status of asynchronous request
+
 TFile::EAsyncOpenStatus TXNetFile::GetAsyncOpenStatus()
 {
-   // Return status of asynchronous request
-
    if (fAsyncOpenStatus != TFile::kAOSNotAsync) {
       if (fClient->IsOpen_inprogress()) {
          return TFile::kAOSInProgress;
@@ -1005,12 +1007,12 @@ TFile::EAsyncOpenStatus TXNetFile::GetAsyncOpenStatus()
    return TFile::kAOSNotAsync;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Re-open the file (see TNetFile::ReOpen() or TFile::ReOpen()
+/// for more details).
+
 Int_t TXNetFile::ReOpen(const Option_t *Mode)
 {
-   // Re-open the file (see TNetFile::ReOpen() or TFile::ReOpen()
-   // for more details).
-
    if (fIsRootd) {
       if (gDebug > 1)
          Info("ReOpen","Calling TNetFile::ReOpen");
@@ -1020,12 +1022,12 @@ Int_t TXNetFile::ReOpen(const Option_t *Mode)
    return TFile::ReOpen(Mode);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the file (see TNetFile::Close() or TFile::Close()
+/// for more details).
+
 void TXNetFile::Close(const Option_t *opt)
 {
-   // Close the file (see TNetFile::Close() or TFile::Close()
-   // for more details).
-
    if (fIsRootd) {
       if (gDebug > 1)
          Info("Close","Calling TNetFile::Close");
@@ -1045,10 +1047,11 @@ void TXNetFile::Close(const Option_t *opt)
    fD = -1;  // so TFile::IsOpen() returns false when in TFile::~TFile
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Flushes un-written data.
+
 void TXNetFile::Flush()
 {
-   // Flushes un-written data.
    if (IsZombie()) {
       Error("Flush", "Flush is not possible because object is"
             " in 'zombie' state");
@@ -1082,12 +1085,12 @@ void TXNetFile::Flush()
       Info("Flush", "XrdClient::Sync called.");
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override TNetFile::SysStat (see parent's method for more details).
+
 Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
                           Long_t *modtime)
 {
-   // Override TNetFile::SysStat (see parent's method for more details).
-
    if (IsZombie()) {
       Error("SysStat", "SysStat is not possible because object is"
             " in 'zombie' state");
@@ -1129,11 +1132,11 @@ Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override TNetFile::SysClose (see parent's method for more details).
+
 Int_t TXNetFile::SysClose(Int_t fd)
 {
-   // Override TNetFile::SysClose (see parent's method for more details).
-
    if (IsZombie()) {
       Error("SysClose", "SysClose is not possible because object is"
             " in 'zombie' state");
@@ -1153,11 +1156,11 @@ Int_t TXNetFile::SysClose(Int_t fd)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override TNetFile::SysOpen (see parent's method for more details).
+
 Int_t TXNetFile::SysOpen(const char* pathname, Int_t flags, UInt_t mode)
 {
-   // Override TNetFile::SysOpen (see parent's method for more details).
-
    if (fIsRootd) {
       if (gDebug > 1)
          Info("SysOpen", "Calling TNetFile::SysOpen");
@@ -1184,11 +1187,11 @@ Int_t TXNetFile::SysOpen(const char* pathname, Int_t flags, UInt_t mode)
    return -2;  // set as fD in ReOpen
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the relevant environment variables
+
 void TXNetFile::SetEnv()
 {
-   // Set the relevant environment variables
-
    // List of domains where redirection is allowed
    TString allowRE = gEnv->GetValue("XNet.RedirDomainAllowRE", "");
    if (allowRE.Length() > 0)
@@ -1366,12 +1369,12 @@ void TXNetFile::SetEnv()
    gSystem->IgnoreSignal(kSigPipe);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Synchronize the cache size
+/// Alternative purging policy
+
 void TXNetFile::SynchronizeCacheSize()
 {
-   // Synchronize the cache size
-   // Alternative purging policy
-
    if (fClient == 0) return;
 
    fClient->UseCache(TRUE);
@@ -1399,20 +1402,20 @@ void TXNetFile::SynchronizeCacheSize()
       fClient->SetCacheParameters(newbsz, 0, XrdClientReadCache::kRmBlk_FIFO);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the cache
+
 void TXNetFile::ResetCache()
 {
-   // Reset the cache
-
    if (fClient)
       fClient->RemoveAllDataFromCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Max number of bytes to prefetch.
+
 Int_t TXNetFile::GetBytesToPrefetch() const
 {
-   // Max number of bytes to prefetch.
-
    Int_t size;
    Long64_t bytessubmitted, byteshit, misscount, readreqcnt;
    Float_t  missrate, bytesusefulness;
@@ -1425,11 +1428,11 @@ Int_t TXNetFile::GetBytesToPrefetch() const
    return ((bytes < 0) ? 0 : bytes);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the local statistics.
+
 void TXNetFile::Print(Option_t *option) const
 {
-   // Print the local statistics.
-
    Printf("TXNetFile caching information:");
 
    Int_t size;

@@ -15,30 +15,30 @@
 
 ClassImp(TMySQLResult)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MySQL query result.
+
 TMySQLResult::TMySQLResult(void *result)
 {
-   // MySQL query result.
-
    fResult    = (MYSQL_RES *) result;
    fRowCount  = fResult ? mysql_num_rows(fResult) : 0;
    fFieldInfo = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup MySQL query result.
+
 TMySQLResult::~TMySQLResult()
 {
-   // Cleanup MySQL query result.
-
    if (fResult)
       Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close query result.
+
 void TMySQLResult::Close(Option_t *)
 {
-   // Close query result.
-
    if (!fResult)
       return;
 
@@ -48,11 +48,11 @@ void TMySQLResult::Close(Option_t *)
    fRowCount  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if result set is open and field index within range.
+
 Bool_t TMySQLResult::IsValid(Int_t field)
 {
-   // Check if result set is open and field index within range.
-
    if (!fResult) {
       Error("IsValid", "result set closed");
       return kFALSE;
@@ -64,11 +64,11 @@ Bool_t TMySQLResult::IsValid(Int_t field)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of fields in result.
+
 Int_t TMySQLResult::GetFieldCount()
 {
-   // Get number of fields in result.
-
    if (!fResult) {
       Error("GetFieldCount", "result set closed");
       return 0;
@@ -76,11 +76,11 @@ Int_t TMySQLResult::GetFieldCount()
    return mysql_num_fields(fResult);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get name of specified field.
+
 const char *TMySQLResult::GetFieldName(Int_t field)
 {
-   // Get name of specified field.
-
    if (!IsValid(field))
       return 0;
 
@@ -95,12 +95,12 @@ const char *TMySQLResult::GetFieldName(Int_t field)
    return fFieldInfo[field].name;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next query result row. The returned object must be
+/// deleted by the user.
+
 TSQLRow *TMySQLResult::Next()
 {
-   // Get next query result row. The returned object must be
-   // deleted by the user.
-
    MYSQL_ROW row;
 
    if (!fResult) {

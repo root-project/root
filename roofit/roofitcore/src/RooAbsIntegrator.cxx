@@ -39,28 +39,30 @@ ClassImp(RooAbsIntegrator)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooAbsIntegrator::RooAbsIntegrator() : _function(0), _valid(kFALSE), _printEvalCounter(kFALSE) 
 {
-  // Default constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAbsIntegrator::RooAbsIntegrator(const RooAbsFunc& function, Bool_t doPrintEvalCounter) :
   _function(&function), _valid(function.isValid()), _printEvalCounter(doPrintEvalCounter)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate integral value with given array of parameter values
+
 Double_t RooAbsIntegrator::calculate(const Double_t *yvec) 
 {
-  // Calculate integral value with given array of parameter values
-
   integrand()->resetNumCall() ;
 
   integrand()->saveXVec() ;
@@ -73,18 +75,20 @@ Double_t RooAbsIntegrator::calculate(const Double_t *yvec)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to set limits on integration
+
 Bool_t RooAbsIntegrator::setLimits(Double_t xmin, Double_t xmax) 
 { 
-  // Interface to set limits on integration
   return setLimits(&xmin,&xmax) ; 
 }
  
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface function that allows to defer limit definition to integrand definition
+
 Bool_t RooAbsIntegrator::setUseIntegrandLimits(Bool_t) 
 { 
-  // Interface function that allows to defer limit definition to integrand definition
   return kFALSE ; 
 } 

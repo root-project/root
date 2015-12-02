@@ -44,10 +44,11 @@ static bool doParallel = kFALSE;
 Int_t getProof(const char *where, Int_t verbose = 1);
 Int_t getDSMgr(const char *where);
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ShowCache wrapper
+
 void DataSetCache(bool clear, const char *ds)
 {
-   // ShowCache wrapper
    if (gIsProof) {
       doParallel = kFALSE;
       if (!gProof && getProof("DataSetCache", 0) != 0) return;
@@ -63,10 +64,11 @@ void DataSetCache(bool clear, const char *ds)
    return;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ShowDataSets wrapper
+
 void ShowDataSets(const char *ds, const char *opt)
 {
-   // ShowDataSets wrapper
    if (gIsProof) {
       doParallel = kFALSE;
       if (!gProof && getProof("ShowDataSets", 0) != 0) return;
@@ -79,10 +81,11 @@ void ShowDataSets(const char *ds, const char *opt)
    return;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GetDataSet wrapper
+
 TFileCollection *GetDataSet(const char *ds, const char *server)
 {
-   // GetDataSet wrapper
    TFileCollection *fc = 0;
    if (gIsProof) {
       doParallel = kFALSE;
@@ -96,10 +99,11 @@ TFileCollection *GetDataSet(const char *ds, const char *server)
    return fc;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GetDataSets wrapper
+
 TMap *GetDataSets(const char *owner, const char *server, const char *opt)
 {
-   // GetDataSets wrapper
    TMap *dss = 0;
    if (gIsProof) {
       doParallel = kFALSE;
@@ -143,10 +147,11 @@ TMap *GetDataSets(const char *owner, const char *server, const char *opt)
    return dss;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// RemoveDataSet wrapper
+
 Int_t RemoveDataSet(const char *dsname)
 {
-   // RemoveDataSet wrapper
    if (gIsProof) {
       doParallel = kFALSE;
       if (!gProof && getProof("RemoveDataSet") != 0) return -1;
@@ -159,11 +164,11 @@ Int_t RemoveDataSet(const char *dsname)
    return -1;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// VerifyDataSet wrapper
+
 Int_t VerifyDataSet(const char *dsname, const char *opt, const char *redir)
 {
-   // VerifyDataSet wrapper
-
    Int_t rc = -1;
    // Honour the 'redir' if required
    TString srvmaps;
@@ -202,10 +207,11 @@ Int_t VerifyDataSet(const char *dsname, const char *opt, const char *redir)
    return rc;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ExistsDataSet wrapper
+
 Bool_t ExistsDataSet(const char *dsname)
 {
-   // ExistsDataSet wrapper
    if (gIsProof) {
       doParallel = kFALSE;
       if (!gProof && getProof("ExistsDataSet") != 0) return kFALSE;
@@ -217,10 +223,11 @@ Bool_t ExistsDataSet(const char *dsname)
    return kFALSE;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// RegisterDataSet wrapper
+
 Int_t RegisterDataSet(const char *dsname, TFileCollection *fc, const char* opt)
 {
-   // RegisterDataSet wrapper
    if (gIsProof) {
       doParallel = kFALSE;
       if (!gProof && getProof("GetDataSet") != 0) return -1;
@@ -232,11 +239,11 @@ Int_t RegisterDataSet(const char *dsname, TFileCollection *fc, const char* opt)
    return -1;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a PROOF session at gUrl
+
 Int_t getProof(const char *where, Int_t verbose)
 {
-   // Open a PROOF session at gUrl
-
    {  redirguard rog(flog.Data(), "a", verbose);
       const char *popt = (doParallel) ? "" : "masteronly";
       TProof::Open(gUrl.GetUrl(), popt);
@@ -250,11 +257,11 @@ Int_t getProof(const char *where, Int_t verbose)
    return 0;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a dataset manager for gUrl
+
 Int_t getDSMgr(const char *where)
 {
-   // Open a dataset manager for gUrl
-
    Int_t rc = -1;
    if (gROOT->GetPluginManager()) {
       // Find the appropriate handler

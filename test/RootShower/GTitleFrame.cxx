@@ -21,14 +21,14 @@
 // GTitleFrame
 //______________________________________________________________________________
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GTitleFrame object, with TGWindow parent 'p', text 'mainText'
+/// with sub text 'subText'.
+
 GTitleFrame::GTitleFrame(const TGWindow *p, const char *mainText,
                          const char *subText, UInt_t w, UInt_t h,
                          UInt_t options) : TGCompositeFrame(p, w, h, options)
 {
-   // Create GTitleFrame object, with TGWindow parent 'p', text 'mainText'
-   // with sub text 'subText'.
-
    Pixel_t col;
    TString fontname("-*-times-bold-r-*-*-24-*-*-*-*-*-*-*");
    gClient->GetColorByName("red", col);
@@ -69,11 +69,11 @@ GTitleFrame::GTitleFrame(const TGWindow *p, const char *mainText,
    AddFrame(fTextFrame, fTextFrameLayout);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the right logo ( used for animation ).
+
 void GTitleFrame::ChangeRightLogo(Int_t frame)
 {
-   // Change the right logo ( used for animation ).
-
    Char_t name[12];
    TString theRightLogoFilename = StrDup(gProgPath);
    sprintf(name,"%02d.xpm",frame);
@@ -84,11 +84,11 @@ void GTitleFrame::ChangeRightLogo(Int_t frame)
    fRightIcon->SetPicture(fRightIconPicture);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy GTitleFrame object. Delete all created widgets.
+
 GTitleFrame::~GTitleFrame()
 {
-   // Destroy GTitleFrame object. Delete all created widgets.
-
    gClient->FreePicture(fLeftIconPicture);
    gClient->FreePicture(fRightIconPicture);
    delete fTextLabel1;

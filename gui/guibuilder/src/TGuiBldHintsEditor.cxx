@@ -50,13 +50,13 @@ public:
    void ChangeSelected(TGFrame *frame);
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGuiBldHintsManager::TGuiBldHintsManager(const TGWindow *p, TGuiBldEditor *e,
                                           TGuiBldHintsEditor *hints) :
                      TGVerticalFrame(p, 1, 1), fEditor(e), fHints(hints)
 {
-   // Constructor.
-
    fEditDisabled = kEditDisable;
    SetCleanup(kDeepCleanup);
    fRows = 0;
@@ -101,11 +101,11 @@ TGuiBldHintsManager::TGuiBldHintsManager(const TGWindow *p, TGuiBldEditor *e,
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// action whne selcted/grabbed frame was changed
+
 void TGuiBldHintsManager::ChangeSelected(TGFrame *frame)
 {
-   // action whne selcted/grabbed frame was changed
-
    fMatrix = 0;
 
    if (!frame) {
@@ -156,12 +156,12 @@ void TGuiBldHintsManager::ChangeSelected(TGFrame *frame)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ctor.
+
 TGuiBldHintsEditor::TGuiBldHintsEditor(const TGWindow *p, TGuiBldEditor *e) :
                      TGVerticalFrame(p, 1, 1), fEditor(e)
 {
-   // ctor.
-
    SetCleanup(kDeepCleanup);
 
    fBuilder = (TRootGuiBuilder*)TRootGuiBuilder::Instance();
@@ -290,11 +290,11 @@ TGuiBldHintsEditor::TGuiBldHintsEditor(const TGWindow *p, TGuiBldEditor *e) :
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change selected
+
 void  TGuiBldHintsEditor::ChangeSelected(TGFrame *frame)
 {
-   // Change selected
-
    if (!frame) {
       return;
    }
@@ -336,11 +336,11 @@ void  TGuiBldHintsEditor::ChangeSelected(TGFrame *frame)
    fPadBottom->SetIntNumber(fe->fLayout->GetPadBottom());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update state
+
 void TGuiBldHintsEditor::UpdateState()
 {
-   // Update state
-
    TGFrame *frame = fEditor->GetSelected();
 
    if (!frame) {
@@ -439,11 +439,11 @@ void TGuiBldHintsEditor::UpdateState()
    fEditor->UpdateSelected(frame);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the position of selected frame when adjusted by the right panel input.
+
 void TGuiBldHintsEditor::SetPosition()
 {
-   // Set the position of selected frame when adjusted by the right panel input.
-
    if (!fEditor) {
       return;
    }
@@ -470,11 +470,11 @@ void TGuiBldHintsEditor::SetPosition()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout subframes.
+
 void TGuiBldHintsEditor::LayoutSubframes(Bool_t on)
 {
-   // Layout subframes.
-
    if (!fEditor) {
       return;
    }
@@ -531,11 +531,11 @@ void TGuiBldHintsEditor::LayoutSubframes(Bool_t on)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set matrix layout separator.
+
 void TGuiBldHintsEditor::SetMatrixSep()
 {
-   // Set matrix layout separator.
-
    TGFrame *frame = fEditor->GetSelected();
 
    if (!frame) {
@@ -579,11 +579,11 @@ void TGuiBldHintsEditor::SetMatrixSep()
    fClient->NeedRedraw(frame, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply matrix layout.
+
 void TGuiBldHintsEditor::MatrixLayout()
 {
-   // Apply matrix layout.
-
    TGFrame *frame = fEditor->GetSelected();
 
    if (!frame) {

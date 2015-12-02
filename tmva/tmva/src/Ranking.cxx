@@ -38,47 +38,51 @@
 
 ClassImp(TMVA::Ranking)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TMVA::Ranking::Ranking() 
    : fRanking(),
      fContext(""),
      fRankingDiscriminatorName( "" ),
      fLogger( new MsgLogger("", kINFO) )
 {
-   // default constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::Ranking::Ranking( const TString& context, const TString& rankingDiscriminatorName ) 
    : fRanking(),
      fContext( context ),
      fRankingDiscriminatorName( rankingDiscriminatorName ),
      fLogger( new MsgLogger(fContext.Data(), kINFO) )
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::Ranking::~Ranking() 
 {
-   // destructor
    fRanking.clear();
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::Ranking::SetContext( const TString& context) 
 {
    fContext = context;
    fLogger->SetSource( fContext.Data() );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new rank
+/// take ownership of it
+
 void TMVA::Ranking::AddRank( const Rank& rank )
 {
-   // Add a new rank
-   // take ownership of it
-
    // sort according to rank value (descending)
    // Who the hell knows why this does not compile on windos.. write the sorting 
    // reversing myself... (means sorting in "descending" order)
@@ -99,10 +103,11 @@ void TMVA::Ranking::AddRank( const Rank& rank )
    for (UInt_t i=0; i<fRanking.size(); i++) fRanking[i].SetRank( i+1 );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get maximum length of variable names
+
 void TMVA::Ranking::Print() const
 {
-   // get maximum length of variable names
    Int_t maxL = 0; 
    for (std::vector<Rank>::const_iterator ir = fRanking.begin(); ir != fRanking.end(); ir++ ) 
       if ((*ir).GetVariable().Length() > maxL) maxL = (*ir).GetVariable().Length();
@@ -128,33 +133,37 @@ void TMVA::Ranking::Print() const
 
 // ===============================================================================================
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::Rank::Rank( const TString& variable, Double_t rankValue ) 
    : fVariable( variable ),
      fRankValue( rankValue ),
      fRank( -1 ) 
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::Rank::~Rank() 
 {
-   // destructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// comparison operator <
+
 Bool_t TMVA::Rank::operator< ( const Rank& other ) const
 { 
-   // comparison operator <
    if (fRankValue < other.fRankValue) return true;
    else                               return false;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// comparison operator >
+
 Bool_t TMVA::Rank::operator> ( const Rank& other ) const
 { 
-   // comparison operator >
    if (fRankValue > other.fRankValue) return true;
    else                               return false;
 }

@@ -25,15 +25,15 @@
 
 ClassImp(TProofProgressStatus)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main and default constructor
+
 TProofProgressStatus::TProofProgressStatus(Long64_t entries,
                                            Long64_t bytesRead,
                                            Long64_t readCalls,
                                            Double_t procTime,
                                            Double_t cpuTime): TObject()
 {
-   // Main and default constructor
-
    fLastEntries = 0;
    fEntries = entries;
    fBytesRead = bytesRead;
@@ -45,11 +45,11 @@ TProofProgressStatus::TProofProgressStatus(Long64_t entries,
    SetLastUpdate();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// '+=' operator
+
 TProofProgressStatus& TProofProgressStatus::operator+=(const TProofProgressStatus &st)
 {
-   // '+=' operator
-
    fLastEntries += st.fEntries;
    fEntries += st.fEntries;
    fBytesRead += st.fBytesRead;
@@ -63,11 +63,11 @@ TProofProgressStatus& TProofProgressStatus::operator+=(const TProofProgressStatu
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// '-=' operator
+
 TProofProgressStatus& TProofProgressStatus::operator-=(const TProofProgressStatus &st)
 {
-   // '-=' operator
-
    fEntries -= st.fEntries;
    fBytesRead -= st.fBytesRead;
    fReadCalls -= st.fReadCalls;
@@ -79,31 +79,31 @@ TProofProgressStatus& TProofProgressStatus::operator-=(const TProofProgressStatu
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// '-' operator
+
 TProofProgressStatus TProofProgressStatus::operator-(TProofProgressStatus &st)
 {
-   // '-' operator
-
    return TProofProgressStatus(*this) -= st;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump the content
+
 void TProofProgressStatus::Print(Option_t*option) const
 {
-   // Dump the content
-
    Printf("TProofProgressStatus:%s: Ents:(%lld,%lld), Bytes:%lld, Calls:%lld,"
           " Learn:%.3g s, Proc:(%.3g,%.3g) s, CPU:%.3g s",
           option, fEntries, fLastEntries, fBytesRead, fReadCalls,
           fLearnTime, fProcTime, fLastProcTime, fCPUTime);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update time stamp either with the passed value (if > 0) or with
+/// the current time
+
 void TProofProgressStatus::SetLastUpdate(Double_t updtTime)
 {
-   // Update time stamp either with the passed value (if > 0) or with
-   // the current time
-
    if (updtTime > 0) {
       fLastUpdate = updtTime;
    } else {
@@ -112,11 +112,11 @@ void TProofProgressStatus::SetLastUpdate(Double_t updtTime)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get current rate. Rteunr the average rate if the current is not defined
+
 Double_t TProofProgressStatus::GetCurrentRate() const
 {
-   // Get current rate. Rteunr the average rate if the current is not defined
-
    if (fLastProcTime > 0) {
       return fLastEntries / fLastProcTime;
    }

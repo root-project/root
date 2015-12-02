@@ -61,7 +61,8 @@ using namespace std;
 static volatile Int_t gProofServDebug = 1;
 
 //----- Interrupt signal handler -----------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TProofServLiteInterruptHandler : public TSignalHandler {
    TProofServLite  *fServ;
 public:
@@ -70,11 +71,11 @@ public:
    Bool_t  Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle urgent data
+
 Bool_t TProofServLiteInterruptHandler::Notify()
 {
-   // Handle urgent data
-
    fServ->HandleUrgentData();
    if (TROOT::Initialized()) {
       Throw(GetSignal());
@@ -83,7 +84,8 @@ Bool_t TProofServLiteInterruptHandler::Notify()
 }
 
 //----- SigPipe signal handler -------------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TProofServLiteSigPipeHandler : public TSignalHandler {
    TProofServLite  *fServ;
 public:
@@ -92,17 +94,18 @@ public:
    Bool_t  Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle sig pipe
+
 Bool_t TProofServLiteSigPipeHandler::Notify()
 {
-   // Handle sig pipe
-
    fServ->HandleSigPipe();
    return kTRUE;
 }
 
 //----- Termination signal handler ---------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TProofServLiteTerminationHandler : public TSignalHandler {
    TProofServLite  *fServ;
 public:
@@ -111,11 +114,11 @@ public:
    Bool_t  Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle termination
+
 Bool_t TProofServLiteTerminationHandler::Notify()
 {
-   // Handle termination
-
    Printf("TProofServLiteTerminationHandler::Notify: wake up!");
 
    fServ->HandleTermination();
@@ -123,7 +126,8 @@ Bool_t TProofServLiteTerminationHandler::Notify()
 }
 
 //----- Seg violation signal handler ---------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TProofServLiteSegViolationHandler : public TSignalHandler {
    TProofServLite  *fServ;
 public:
@@ -132,11 +136,11 @@ public:
    Bool_t  Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle seg violation
+
 Bool_t TProofServLiteSegViolationHandler::Notify()
 {
-   // Handle seg violation
-
    Printf("**** ");
    Printf("**** Segmentation violation: terminating ****");
    Printf("**** ");
@@ -145,7 +149,8 @@ Bool_t TProofServLiteSegViolationHandler::Notify()
 }
 
 //----- Input handler for messages from parent or master -----------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TProofServLiteInputHandler : public TFileHandler {
    TProofServLite  *fServ;
 public:
@@ -155,11 +160,11 @@ public:
    Bool_t ReadNotify() { return Notify(); }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle input on the socket
+
 Bool_t TProofServLiteInputHandler::Notify()
 {
-   // Handle input on the socket
-
    fServ->HandleSocketInput();
 
    return kTRUE;
@@ -174,23 +179,23 @@ extern "C" {
    { return new TProofServLite(argc, argv, flog); }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor
+
 TProofServLite::TProofServLite(Int_t *argc, char **argv, FILE *flog)
             : TProofServ(argc, argv, flog)
 {
-   // Main constructor
-
    fInterruptHandler = 0;
    fTerminated = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finalize the server setup. If master, create the TProof instance to talk
+/// the worker or submaster nodes.
+/// Return 0 on success, -1 on error
+
 Int_t TProofServLite::CreateServer()
 {
-   // Finalize the server setup. If master, create the TProof instance to talk
-   // the worker or submaster nodes.
-   // Return 0 on success, -1 on error
-
    if (gProofDebugLevel > 0)
       Info("CreateServer", "starting server creation");
 
@@ -295,37 +300,37 @@ Int_t TProofServLite::CreateServer()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup. Not really necessary since after this dtor there is no
+/// live anyway.
+
 TProofServLite::~TProofServLite()
 {
-   // Cleanup. Not really necessary since after this dtor there is no
-   // live anyway.
-
    delete fSocket;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when the client is not alive anymore; terminate the session.
+
 void TProofServLite::HandleSigPipe()
 {
-   // Called when the client is not alive anymore; terminate the session.
-
    Terminate(0);  // will not return from here....
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when the client is not alive anymore; terminate the session.
+
 void TProofServLite::HandleTermination()
 {
-   // Called when the client is not alive anymore; terminate the session.
-
    Terminate(0);  // will not return from here....
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the ProofServ logo on standard output.
+/// Return 0 on success, -1 on error
+
 Int_t TProofServLite::Setup()
 {
-   // Print the ProofServ logo on standard output.
-   // Return 0 on success, -1 on error
-
    char str[512];
 
    if (IsMaster()) {
@@ -413,10 +418,11 @@ Int_t TProofServLite::Setup()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminate the proof server.
+
 void TProofServLite::Terminate(Int_t status)
 {
-   // Terminate the proof server.
    if (fTerminated)
       // Avoid doubling the exit operations
       exit(1);
@@ -451,11 +457,11 @@ void TProofServLite::Terminate(Int_t status)
    Printf("Terminate: termination operations ended: quitting!");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cloning itself via fork.
+
 void TProofServLite::HandleFork(TMessage *mess)
 {
-   // Cloning itself via fork.
-
    if (!mess) {
       Error("HandleFork", "empty message!");
       return;
@@ -489,12 +495,12 @@ void TProofServLite::HandleFork(TMessage *mess)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finalize the server setup afetr forking.
+/// Return 0 on success, -1 on error
+
 Int_t TProofServLite::SetupOnFork(const char *ord)
 {
-   // Finalize the server setup afetr forking.
-   // Return 0 on success, -1 on error
-
    if (gProofDebugLevel > 0)
       Info("SetupOnFork", "finalizing setup of %s", ord);
 

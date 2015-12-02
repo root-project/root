@@ -48,29 +48,33 @@
 
 ClassImp(TGeoPgon)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGeoPgon::ThreadData_t::ThreadData_t() :
    fIntBuffer(0), fDblBuffer(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoPgon::ThreadData_t::~ThreadData_t()
 {
-   // Destructor.
    delete [] fIntBuffer;
    delete [] fDblBuffer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGeoPgon::ThreadData_t& TGeoPgon::GetThreadData() const
 {
    Int_t tid = TGeoManager::ThreadId();
    return *fThreadData[tid];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGeoPgon::ClearThreadData() const
 {
    TThread::Lock();
@@ -85,10 +89,11 @@ void TGeoPgon::ClearThreadData() const
    TThread::UnLock();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create thread data for n threads max.
+
 void TGeoPgon::CreateThreadData(Int_t nthreads)
 {
-// Create thread data for n threads max.
    if (fThreadSize) ClearThreadData();
    TThread::Lock();
    fThreadData.resize(nthreads);
@@ -103,51 +108,55 @@ void TGeoPgon::CreateThreadData(Int_t nthreads)
    TThread::UnLock();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dummy ctor
+
 TGeoPgon::TGeoPgon()
 {
-// dummy ctor
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = 0;
    fThreadSize = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoPgon::TGeoPgon(Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
          :TGeoPcon(phi, dphi, nz)
 {
-// Default constructor
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
    fThreadSize = 0;
    CreateThreadData(1);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoPgon::TGeoPgon(const char *name, Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
          :TGeoPcon(name, phi, dphi, nz)
 {
-// Default constructor
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
    fThreadSize = 0;
    CreateThreadData(1);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor in GEANT3 style
+/// param[0] = phi1
+/// param[1] = dphi
+/// param[2] = nedges
+/// param[3] = nz
+///
+/// param[4] = z1
+/// param[5] = Rmin1
+/// param[6] = Rmax1
+/// ...
+
 TGeoPgon::TGeoPgon(Double_t *param)
          :TGeoPcon()
 {
-// Default constructor in GEANT3 style
-// param[0] = phi1
-// param[1] = dphi
-// param[2] = nedges
-// param[3] = nz
-//
-// param[4] = z1
-// param[5] = Rmin1
-// param[6] = Rmax1
-// ...
    SetShapeBit(TGeoShape::kGeoPgon);
    SetDimensions(param);
    ComputeBBox();
@@ -155,17 +164,19 @@ TGeoPgon::TGeoPgon(Double_t *param)
    CreateThreadData(1);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoPgon::~TGeoPgon()
 {
-// destructor
    ClearThreadData();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes capacity of the shape in [length^3]
+
 Double_t TGeoPgon::Capacity() const
 {
-// Computes capacity of the shape in [length^3]
    Int_t ipl;
    Double_t rmin1, rmax1, rmin2, rmax2, dphi, dz;
    Double_t capacity = 0.;
@@ -184,11 +195,12 @@ Double_t TGeoPgon::Capacity() const
    return capacity;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute bounding box for a polygone
+/// Check if the sections are in increasing Z order
+
 void TGeoPgon::ComputeBBox()
 {
-// compute bounding box for a polygone
-   // Check if the sections are in increasing Z order
    for (Int_t isec=0; isec<fNz-1; isec++) {
       if (fZ[isec]>fZ[isec+1]) {
          InspectShape();
@@ -251,10 +263,11 @@ void TGeoPgon::ComputeBBox()
    SetShapeBit(kGeoClosedShape);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute normal to closest surface from POINT.
+
 void TGeoPgon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT.
    memset(norm,0,3*sizeof(Double_t));
    Double_t phi1=0, phi2=0, c1=0, s1=0, c2=0, s2=0;
    Double_t dz, rmin1, rmin2;
@@ -343,11 +356,12 @@ void TGeoPgon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if point is inside this shape
+/// check total z range
+
 Bool_t TGeoPgon::Contains(const Double_t *point) const
 {
-// test if point is inside this shape
-   // check total z range
    if (point[2]<fZ[0]) return kFALSE;
    if (point[2]>fZ[fNz-1]) return kFALSE;
    Double_t divphi = fDphi/fNedges;
@@ -389,11 +403,12 @@ Bool_t TGeoPgon::Contains(const Double_t *point) const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute distance from inside point to surface of the polygone
+/// first find out in which Z section the point is in
+
 Double_t TGeoPgon::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from inside point to surface of the polygone
-   // first find out in which Z section the point is in
    if (iact<3 && safe) {
       *safe = Safety(point, kTRUE);
       if (iact==0) return TGeoShape::Big();
@@ -485,20 +500,22 @@ Double_t TGeoPgon::DistFromInside(const Double_t *point, const Double_t *dir, In
    return 0.;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Locates index IPSEC of the phi sector containing POINT.
+
 void TGeoPgon::LocatePhi(const Double_t *point, Int_t &ipsec) const
 {
-// Locates index IPSEC of the phi sector containing POINT.
    Double_t phi = TMath::ATan2(point[1], point[0])*TMath::RadToDeg();
    while (phi<fPhi1) phi+=360.;
    ipsec = Int_t(fNedges*(phi-fPhi1)/fDphi); // [0, fNedges-1]
    if (ipsec>fNedges-1) ipsec = -1; // in gap
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns lists of PGON phi crossings for a ray starting from POINT.
+
 Int_t TGeoPgon::GetPhiCrossList(const Double_t *point, const Double_t *dir, Int_t istart, Double_t *sphi, Int_t *iphi, Double_t stepmax) const
 {
-// Returns lists of PGON phi crossings for a ray starting from POINT.
    Double_t rxy, phi, cph, sph;
    Int_t icrossed = 0;
    if ((1.-TMath::Abs(dir[2]))<1E-8) {
@@ -570,10 +587,11 @@ Int_t TGeoPgon::GetPhiCrossList(const Double_t *point, const Double_t *dir, Int_
    return icrossed;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs ray propagation between Z segments.
+
 Bool_t TGeoPgon::SliceCrossingInZ(const Double_t *point, const Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *stepphi, Double_t &snext, Double_t stepmax) const
 {
-// Performs ray propagation between Z segments.
    snext = 0.;
    if (!nphi) return kFALSE;
    Int_t i;
@@ -641,10 +659,11 @@ Bool_t TGeoPgon::SliceCrossingInZ(const Double_t *point, const Double_t *dir, In
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs ray propagation between Z segments.
+
 Bool_t TGeoPgon::SliceCrossingZ(const Double_t *point, const Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *stepphi, Double_t &snext, Double_t stepmax) const
 {
-// Performs ray propagation between Z segments.
    if (!nphi) return kFALSE;
    Int_t i;
    Double_t rmin, rmax;
@@ -718,12 +737,13 @@ Bool_t TGeoPgon::SliceCrossingZ(const Double_t *point, const Double_t *dir, Int_
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check boundary crossing inside phi slices. Return distance snext to first crossing
+/// if smaller than stepmax.
+/// Protection in case point is in phi gap or close to phi boundaries and exiting
+
 Bool_t TGeoPgon::SliceCrossingIn(const Double_t *point, const Double_t *dir, Int_t ipl, Int_t nphi, Int_t *iphi, Double_t *stepphi, Double_t &snext, Double_t stepmax) const
 {
-// Check boundary crossing inside phi slices. Return distance snext to first crossing
-// if smaller than stepmax.
-// Protection in case point is in phi gap or close to phi boundaries and exiting
    snext = 0.;
    if (!nphi) return kFALSE;
    Int_t i;
@@ -853,11 +873,12 @@ Bool_t TGeoPgon::SliceCrossingIn(const Double_t *point, const Double_t *dir, Int
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check boundary crossing inside phi slices. Return distance snext to first crossing
+/// if smaller than stepmax.
+
 Bool_t TGeoPgon::SliceCrossing(const Double_t *point, const Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *stepphi, Double_t &snext, Double_t stepmax) const
 {
-// Check boundary crossing inside phi slices. Return distance snext to first crossing
-// if smaller than stepmax.
    if (!nphi) return kFALSE;
    Int_t i;
    Double_t pt[3];
@@ -941,10 +962,11 @@ Bool_t TGeoPgon::SliceCrossing(const Double_t *point, const Double_t *dir, Int_t
    }
    return kFALSE;
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check crossing of a given pgon slice, from a starting point inside the slice
+
 Bool_t TGeoPgon::IsCrossingSlice(const Double_t *point, const Double_t *dir, Int_t iphi, Double_t sstart, Int_t &ipl, Double_t &snext, Double_t stepmax) const
 {
-// Check crossing of a given pgon slice, from a starting point inside the slice
    if (ipl<0 || ipl>fNz-2) return kFALSE;
    if (sstart>stepmax) return kFALSE;
    Double_t pt[3];
@@ -1039,10 +1061,11 @@ Bool_t TGeoPgon::IsCrossingSlice(const Double_t *point, const Double_t *dir, Int
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from outside point to surface of the polygone
+
 Double_t TGeoPgon::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// Compute distance from outside point to surface of the polygone
    if (iact<3 && safe) {
       *safe = Safety(point, kFALSE);
       if (iact==0) return TGeoShape::Big();               // just safety computed
@@ -1226,26 +1249,27 @@ Double_t TGeoPgon::DistFromOutside(const Double_t *point, const Double_t *dir, I
    return TGeoShape::Big();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute closest distance from point px,py to each corner
+
 Int_t TGeoPgon::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// compute closest distance from point px,py to each corner
    Int_t n = fNedges+1;
    const Int_t numPoints = 2*n*fNz;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Divide this polygone shape belonging to volume "voldiv" into ndiv volumes
+/// called divname, from start position with the given step. Returns pointer
+/// to created division cell volume in case of Z divisions. Phi divisions are
+/// allowed only if nedges%ndiv=0 and create polygone "segments" with nedges/ndiv edges.
+/// Z divisions can be performed if the divided range is in between two consecutive Z planes.
+/// In case a wrong division axis is supplied, returns pointer to volume that was divided.
+
 TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
                              Double_t start, Double_t step)
 {
-//--- Divide this polygone shape belonging to volume "voldiv" into ndiv volumes
-// called divname, from start position with the given step. Returns pointer
-// to created division cell volume in case of Z divisions. Phi divisions are
-// allowed only if nedges%ndiv=0 and create polygone "segments" with nedges/ndiv edges.
-// Z divisions can be performed if the divided range is in between two consecutive Z planes.
-// In case a wrong division axis is supplied, returns pointer to volume that was divided.
-
 //   printf("Dividing %s : nz=%d nedges=%d phi1=%g dphi=%g (ndiv=%d iaxis=%d start=%g step=%g)\n",
 //          voldiv->GetName(), fNz, fNedges, fPhi1, fDphi, ndiv, iaxis, start, step);
    TGeoShape *shape;           //--- shape to be created
@@ -1326,11 +1350,12 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// is the following : Rmin, Rmax, Phi1, Phi2
+
 void TGeoPgon::GetBoundingCylinder(Double_t *param) const
 {
-//--- Fill vector param[4] with the bounding cylinder parameters. The order
-// is the following : Rmin, Rmax, Phi1, Phi2
    param[0] = fRmin[0];           // Rmin
    param[1] = fRmax[0];           // Rmax
    for (Int_t i=1; i<fNz; i++) {
@@ -1350,21 +1375,22 @@ void TGeoPgon::GetBoundingCylinder(Double_t *param) const
    param[3] = param[2]+fDphi;                   // Phi2
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Inspect the PGON parameters.
+
 void TGeoPgon::InspectShape() const
 {
-// Inspect the PGON parameters.
    printf("*** Shape %s: TGeoPgon ***\n", GetName());
    printf("    Nedges = %i\n", fNedges);
    TGeoPcon::InspectShape();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a TBuffer3D describing *this* shape.
+/// Coordinates are in local reference frame.
+
 TBuffer3D *TGeoPgon::MakeBuffer3D() const
 {
-   // Creates a TBuffer3D describing *this* shape.
-   // Coordinates are in local reference frame.
-
    const Int_t n = GetNsegments()+1;
    Int_t nz = GetNz();
    if (nz < 2) return 0;
@@ -1387,10 +1413,11 @@ TBuffer3D *TGeoPgon::MakeBuffer3D() const
    return buff;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill TBuffer3D structure for segments and polygons.
+
 void TGeoPgon::SetSegsAndPols(TBuffer3D &buff) const
 {
-// Fill TBuffer3D structure for segments and polygons.
    Int_t i, j;
    const Int_t n = GetNsegments()+1;
    Int_t nz = GetNz();
@@ -1563,13 +1590,14 @@ void TGeoPgon::SetSegsAndPols(TBuffer3D &buff) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes projected pgon radius (inner or outer) corresponding to a given Z
+/// value. Fills corresponding coefficients of:
+///   Rpg(z) = a + b*z
+/// Note: ipl must be in range [0,fNz-2]
+
 Double_t TGeoPgon::Rpg(Double_t z, Int_t ipl, Bool_t inner, Double_t &a, Double_t &b) const
 {
-// Computes projected pgon radius (inner or outer) corresponding to a given Z
-// value. Fills corresponding coefficients of:
-//   Rpg(z) = a + b*z
-// Note: ipl must be in range [0,fNz-2]
    Double_t rpg;
    if (ipl<0 || ipl>fNz-2) {
       Fatal("Rpg", "Plane index parameter ipl=%i out of range\n", ipl);
@@ -1597,12 +1625,13 @@ Double_t TGeoPgon::Rpg(Double_t z, Int_t ipl, Bool_t inner, Double_t &a, Double_
    return (a+b*z);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes projected distance at a given Z for a given ray inside a given sector
+/// and fills coefficients:
+///   Rproj = a + b*z
+
 Double_t TGeoPgon::Rproj(Double_t z, const Double_t *point, const Double_t *dir, Double_t cphi, Double_t sphi, Double_t &a, Double_t &b) const
 {
-// Computes projected distance at a given Z for a given ray inside a given sector
-// and fills coefficients:
-//   Rproj = a + b*z
    if (TMath::Abs(dir[2])<TGeoShape::Tolerance()) {
       a =  b = TGeoShape::Big();
       return TGeoShape::Big();
@@ -1613,10 +1642,11 @@ Double_t TGeoPgon::Rproj(Double_t z, const Double_t *point, const Double_t *dir,
    return (a+b*z);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safety from POINT to segment between planes ipl, ipl+1 within safmin.
+
 Double_t TGeoPgon::SafetyToSegment(const Double_t *point, Int_t ipl, Int_t iphi, Bool_t in, Double_t safphi, Double_t safmin) const
 {
-// Compute safety from POINT to segment between planes ipl, ipl+1 within safmin.
    Double_t saf[3];
    Double_t safe;
    Int_t i;
@@ -1680,11 +1710,12 @@ Double_t TGeoPgon::SafetyToSegment(const Double_t *point, Int_t ipl, Int_t iphi,
    return safe;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes the closest distance from given point to this shape, according
+/// to option. The matching point on the shape is stored in spoint.
+
 Double_t TGeoPgon::Safety(const Double_t *point, Bool_t in) const
 {
-// computes the closest distance from given point to this shape, according
-// to option. The matching point on the shape is stored in spoint.
    Double_t safmin, saftmp, safphi;
    Double_t dz;
    Int_t ipl, iplane, iphi;
@@ -1755,10 +1786,11 @@ Double_t TGeoPgon::Safety(const Double_t *point, Bool_t in) const
    return safmin;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoPgon::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
    out << "   phi1    = " << fPhi1 << ";" << std::endl;
@@ -1776,10 +1808,11 @@ void TGeoPgon::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set PGON dimensions starting from an array.
+
 void TGeoPgon::SetDimensions(Double_t *param)
 {
-// Set PGON dimensions starting from an array.
    fPhi1    = param[0];
    fDphi    = param[1];
    fNedges  = (Int_t)param[2];
@@ -1801,10 +1834,11 @@ void TGeoPgon::SetDimensions(Double_t *param)
       DefineSection(i, param[4+3*i], param[5+3*i], param[6+3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create polygone mesh points
+
 void TGeoPgon::SetPoints(Double_t *points) const
 {
-// create polygone mesh points
    Double_t phi, dphi;
    Int_t n = fNedges + 1;
    dphi = fDphi/(n-1);
@@ -1830,10 +1864,11 @@ void TGeoPgon::SetPoints(Double_t *points) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create polygone mesh points
+
 void TGeoPgon::SetPoints(Float_t *points) const
 {
-// create polygone mesh points
    Double_t phi, dphi;
    Int_t n = fNedges + 1;
    dphi = fDphi/(n-1);
@@ -1859,10 +1894,11 @@ void TGeoPgon::SetPoints(Float_t *points) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns numbers of vertices, segments and polygons composing the shape mesh.
+
 void TGeoPgon::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
-// Returns numbers of vertices, segments and polygons composing the shape mesh.
    Int_t n = fNedges+1;
    Int_t nz = GetNz();
    nvert = nz*2*n;
@@ -1871,35 +1907,38 @@ void TGeoPgon::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
    npols = 2*(nz*n-1+(specialCase == kTRUE));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of vertices of the mesh representation
+
 Int_t TGeoPgon::GetNmeshVertices() const
 {
-// Return number of vertices of the mesh representation
    Int_t n = fNedges+1;
    Int_t numPoints = fNz*2*n;
    return numPoints;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////// fill size of this 3-D object
+////    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+////    if (!painter) return;
+////    Int_t n;
+////
+////    n = fNedges+1;
+////
+////    Int_t numPoints = fNz*2*n;
+////    Int_t numSegs   = 4*(fNz*n-1+(fDphi == 360));
+////    Int_t numPolys  = 2*(fNz*n-1+(fDphi == 360));
+////    painter->AddSize3D(numPoints, numSegs, numPolys);
+
 void TGeoPgon::Sizeof3D() const
 {
-///// fill size of this 3-D object
-///    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-///    if (!painter) return;
-///    Int_t n;
-///
-///    n = fNedges+1;
-///
-///    Int_t numPoints = fNz*2*n;
-///    Int_t numSegs   = 4*(fNz*n-1+(fDphi == 360));
-///    Int_t numPolys  = 2*(fNz*n-1+(fDphi == 360));
-///    painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills a static 3D buffer and returns a reference.
+
 const TBuffer3D & TGeoPgon::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
-// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
@@ -1932,43 +1971,48 @@ const TBuffer3D & TGeoPgon::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    return buffer;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the inside status for each of the points in the array.
+/// Input: Array of point coordinates + vector size
+/// Output: Array of Booleans for the inside of each point
+
 void TGeoPgon::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
 {
-// Check the inside status for each of the points in the array.
-// Input: Array of point coordinates + vector size
-// Output: Array of Booleans for the inside of each point
    for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the normal for an array o points so that norm.dot.dir is positive
+/// Input: Arrays of point coordinates and directions + vector size
+/// Output: Array of normal directions
+
 void TGeoPgon::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
 {
-// Compute the normal for an array o points so that norm.dot.dir is positive
-// Input: Arrays of point coordinates and directions + vector size
-// Output: Array of normal directions
    for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoPgon::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoPgon::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe distance from each of the points in the input array.
+/// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+/// Output: Safety values
+
 void TGeoPgon::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
 {
-// Compute safe distance from each of the points in the input array.
-// Input: Array of point coordinates, array of statuses for these points, size of the arrays
-// Output: Safety values
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }

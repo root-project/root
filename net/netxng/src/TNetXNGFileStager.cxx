@@ -27,32 +27,32 @@
 
 ClassImp( TNetXNGFileStager);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+///
+/// param url: the URL of the entry-point server
+
 TNetXNGFileStager::TNetXNGFileStager(const char *url) :
       TFileStager("xrd")
 {
-   // Constructor
-   //
-   // param url: the URL of the entry-point server
-
    fSystem = new TNetXNGSystem(url);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TNetXNGFileStager::~TNetXNGFileStager()
 {
-   // Destructor
-
    delete fSystem;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if a file is staged
+///
+/// param path: the URL of the file
+
 Bool_t TNetXNGFileStager::IsStaged(const char *path)
 {
-   // Check if a file is staged
-   //
-   // param path: the URL of the file
-
    FileStat_t st;
    if (fSystem->GetPathInfo(path, st) != 0) {
       if (gDebug > 0)
@@ -69,30 +69,30 @@ Bool_t TNetXNGFileStager::IsStaged(const char *path)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get actual endpoint URL
+///
+/// param path:    the entry-point URL
+/// param endpath: the actual endpoint URL
+/// returns:       0 in the case of success and 1 if any error occurred
+
 Int_t TNetXNGFileStager::Locate(const char *path, TString &url)
 {
-   // Get actual endpoint URL
-   //
-   // param path:    the entry-point URL
-   // param endpath: the actual endpoint URL
-   // returns:       0 in the case of success and 1 if any error occurred
-
    return fSystem->Locate(path, url);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bulk locate request for a collection of files
+///
+/// param fc:          collection of files to be located
+/// param addDummyUrl: append a dummy noop URL if the file is not staged or
+///                    redirector == endpoint
+/// returns:           < 0 in case of errors, number of files processed
+///                    otherwise
+
 Int_t TNetXNGFileStager::LocateCollection(TFileCollection *fc,
                                           Bool_t addDummyUrl)
 {
-   // Bulk locate request for a collection of files
-   //
-   // param fc:          collection of files to be located
-   // param addDummyUrl: append a dummy noop URL if the file is not staged or
-   //                    redirector == endpoint
-   // returns:           < 0 in case of errors, number of files processed
-   //                    otherwise
-
    if (!fc) {
       Error("LocateCollection", "No input collection given");
       return -1;
@@ -138,46 +138,46 @@ Int_t TNetXNGFileStager::LocateCollection(TFileCollection *fc,
    return numFiles;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if stager 's' is compatible with current stager. Avoids
+/// multiple instantiations of the potentially the same TNetXNGFileStager.
+
 Bool_t TNetXNGFileStager::Matches(const char *s)
 {
-   // Returns kTRUE if stager 's' is compatible with current stager. Avoids
-   // multiple instantiations of the potentially the same TNetXNGFileStager.
-
    return ((s && (fName == s)) ? kTRUE : kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Issue a stage request for a single file
+///
+/// param path: the path of the file to stage
+/// param opt:  defines 'option' and 'priority' for 'Prepare': the format is
+///             opt = "option=o priority=p"
+
 Bool_t TNetXNGFileStager::Stage(const char *path, Option_t *opt)
 {
-   // Issue a stage request for a single file
-   //
-   // param path: the path of the file to stage
-   // param opt:  defines 'option' and 'priority' for 'Prepare': the format is
-   //             opt = "option=o priority=p"
-
    Int_t priority = ParseStagePriority(opt);
    return fSystem->Stage(path, priority);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Issue stage requests for multiple files
+///
+/// param pathlist: list of paths of files to stage
+/// param opt:      defines 'option' and 'priority' for 'Prepare': the
+///                 format is opt = "option=o priority=p"
+
 Bool_t TNetXNGFileStager::Stage(TCollection *paths, Option_t *opt)
 {
-   // Issue stage requests for multiple files
-   //
-   // param pathlist: list of paths of files to stage
-   // param opt:      defines 'option' and 'priority' for 'Prepare': the
-   //                 format is opt = "option=o priority=p"
-
    Int_t priority = ParseStagePriority(opt);
    return fSystem->Stage(paths, priority);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a staging priority value from an option string
+
 UChar_t TNetXNGFileStager::ParseStagePriority(Option_t *opt)
 {
-   // Get a staging priority value from an option string
-
    UChar_t priority = 0;
    Ssiz_t from = 0;
    TString token;

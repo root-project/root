@@ -26,28 +26,28 @@
 // stored contained in other objects from TTree::Draw
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TVirtualRefProxy overload: Update (and propagate) cached information
+
 Bool_t TRefProxy::Update()
 {
-   // TVirtualRefProxy overload: Update (and propagate) cached information
-
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TVirtualRefProxy overload: Access to value class
+
 TClass* TRefProxy::GetValueClass(void* data) const
 {
-   // TVirtualRefProxy overload: Access to value class
-
    TObject* obj = (TObject*)data;
    return ( obj ) ? obj->IsA() : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Access referenced object(-data)
+
 void* TRefProxy::GetObject(TFormLeafInfoReference* info, void* data, int)
 {
-   // Access referenced object(-data)
-
    if ( data )  {
       TRef*      ref    = (TRef*)((char*)data + info->GetOffset());
       void* obj = ref->GetObject();

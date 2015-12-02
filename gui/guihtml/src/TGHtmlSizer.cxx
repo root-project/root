@@ -32,12 +32,12 @@
 #include "TGHtml.h"
 #include "TImage.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the current rendering style. In other words, get the style
+/// that is currently on the top of the style stack.
+
 SHtmlStyle_t TGHtml::GetCurrentStyle()
 {
-   // Get the current rendering style. In other words, get the style
-   // that is currently on the top of the style stack.
-
    SHtmlStyle_t style;
 
    if (fStyleStack) {
@@ -55,14 +55,14 @@ SHtmlStyle_t TGHtml::GetCurrentStyle()
    return style;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Push a new rendering style onto the stack.
+///
+///  tag   - Tag for this style. Normally the end-tag such as </h3> or </em>.
+///  style - The style to push
+
 void TGHtml::PushStyleStack(int tag, SHtmlStyle_t style)
 {
-   // Push a new rendering style onto the stack.
-   //
-   //  tag   - Tag for this style. Normally the end-tag such as </h3> or </em>.
-   //  style - The style to push
-
    SHtmlStyleStack_t *p;
 
    p = new SHtmlStyleStack_t;
@@ -72,18 +72,18 @@ void TGHtml::PushStyleStack(int tag, SHtmlStyle_t style)
    fStyleStack = p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pop a rendering style off of the stack.
+///
+/// The top-most style on the stack should have a tag equal to "tag".
+/// If not, then we have an HTML coding error.  Perhaps something
+/// like this:  "Some text <em>Enphasized</i> more text".  It is an
+/// interesting problem to figure out how to respond sanely to this
+/// kind of error.  Our solution is to keep popping the stack until
+/// we find the correct tag, or until the stack is empty.
+
 SHtmlStyle_t TGHtml::PopStyleStack(int tag)
 {
-   // Pop a rendering style off of the stack.
-   //
-   // The top-most style on the stack should have a tag equal to "tag".
-   // If not, then we have an HTML coding error.  Perhaps something
-   // like this:  "Some text <em>Enphasized</i> more text".  It is an
-   // interesting problem to figure out how to respond sanely to this
-   // kind of error.  Our solution is to keep popping the stack until
-   // we find the correct tag, or until the stack is empty.
-
    int i, type;
    SHtmlStyleStack_t *p;
    static Html_u8_t priority[Html_TypeCount+1];
@@ -120,11 +120,11 @@ SHtmlStyle_t TGHtml::PopStyleStack(int tag)
    return GetCurrentStyle();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the font size on the given style by the delta-amount given
+
 static void ScaleFont(SHtmlStyle_t *pStyle, int delta)
 {
-   // Change the font size on the given style by the delta-amount given
-
    int size = FontSize(pStyle->fFont) + delta;
 
    if (size < 0) {
@@ -136,11 +136,11 @@ static void ScaleFont(SHtmlStyle_t *pStyle, int delta)
    pStyle->fFont += delta;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the STY_Invisible style to every token between p_first and p_last.
+
 void TGHtml::MakeInvisible(TGHtmlElement *p_first, TGHtmlElement *p_last)
 {
-   // Add the STY_Invisible style to every token between p_first and p_last.
-
    if (p_first == 0) return;
    p_first = p_first->fPNext;
    while (p_first && p_first != p_last) {
@@ -149,21 +149,21 @@ void TGHtml::MakeInvisible(TGHtmlElement *p_first, TGHtmlElement *p_last)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For the markup <a href=XXX>, find out if the URL has been visited
+/// before or not.  Return COLOR_Visited or COLOR_Unvisited, as
+/// appropriate.
+
 int TGHtml::GetLinkColor(const char *zURL)
 {
-   // For the markup <a href=XXX>, find out if the URL has been visited
-   // before or not.  Return COLOR_Visited or COLOR_Unvisited, as
-   // appropriate.
-
    return IsVisited(zURL) ? COLOR_Visited : COLOR_Unvisited;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns coordinates of string str.
+
 static int *GetCoords(const char *str, int *nptr)
 {
-   // Returns coordinates of string str.
-
    const char *cp = str;
    char *ncp;
    int  *cr, i, n = 0, sz = 4;
@@ -189,30 +189,30 @@ static int *GetCoords(const char *str, int *nptr)
    return cr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine adds information to the input texts that doesn't change
+/// when the display is resized or when new fonts are selected, etc.
+/// Mostly this means adding style attributes.  But other constant
+/// information (such as numbering on <li> and images used for <IMG>)
+/// is also obtained.  The key is that this routine is only called
+/// once, where the sizer and layout routines can be called many times.
+///
+/// This routine is called whenever the list of elements grows.  The
+/// style stack is stored as part of the HTML widget so that we can
+/// always continue where we left off the last time.
+///
+/// In addition to adding style, this routine will invoke methods
+/// needed to acquire information about a markup. The IsVisitied()
+/// method is called for each <a> and the GetImage() is called
+/// for each <IMG> or for each <LI> that has a SRC= field.
+///
+/// When a markup is inserted or deleted from the token list, the
+/// style routine must be completely rerun from the beginning.  So
+/// what we said above, that this routine is only run once, is not
+/// strictly true.
+
 void TGHtml::AddStyle(TGHtmlElement *p)
 {
-   // This routine adds information to the input texts that doesn't change
-   // when the display is resized or when new fonts are selected, etc.
-   // Mostly this means adding style attributes.  But other constant
-   // information (such as numbering on <li> and images used for <IMG>)
-   // is also obtained.  The key is that this routine is only called
-   // once, where the sizer and layout routines can be called many times.
-   //
-   // This routine is called whenever the list of elements grows.  The
-   // style stack is stored as part of the HTML widget so that we can
-   // always continue where we left off the last time.
-   //
-   // In addition to adding style, this routine will invoke methods
-   // needed to acquire information about a markup. The IsVisitied()
-   // method is called for each <a> and the GetImage() is called
-   // for each <IMG> or for each <LI> that has a SRC= field.
-   //
-   // When a markup is inserted or deleted from the token list, the
-   // style routine must be completely rerun from the beginning.  So
-   // what we said above, that this routine is only run once, is not
-   // strictly true.
-
    SHtmlStyle_t style;       // Current style
    int size;                 // A new font size
    int i;                    // Loop counter
@@ -1014,11 +1014,11 @@ void TGHtml::AddStyle(TGHtmlElement *p)
    fFlags &= ~STYLER_RUNNING;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set background picture of a html table.
+
 void TGHtml::TableBgndImage(TGHtmlElement *p)
 {
-   // Set background picture of a html table.
-
    const char *z;
 
    z = p->MarkupArg("background", 0);
@@ -1054,25 +1054,25 @@ void TGHtml::TableBgndImage(TGHtmlElement *p)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the size of all elements in the widget. Assume that a style has
+/// already been assigned to all elements.
+///
+/// Some of the elements might have already been sized. Refer to the
+/// fLastSized and only compute sizes for elements that follow this one. If
+/// fLastSized is 0, then size everything.
+///
+/// This routine only computes the sizes of individual elements. The size of
+/// aggregate elements (like tables) are computed separately.
+///
+/// The HTML_Visible flag is also set on every element that results in ink on
+/// the page.
+///
+/// This routine may invoke a callback procedure which could delete the HTML
+/// widget.
+
 void TGHtml::Sizer()
 {
-   // Compute the size of all elements in the widget. Assume that a style has
-   // already been assigned to all elements.
-   //
-   // Some of the elements might have already been sized. Refer to the
-   // fLastSized and only compute sizes for elements that follow this one. If
-   // fLastSized is 0, then size everything.
-   //
-   // This routine only computes the sizes of individual elements. The size of
-   // aggregate elements (like tables) are computed separately.
-   //
-   // The HTML_Visible flag is also set on every element that results in ink on
-   // the page.
-   //
-   // This routine may invoke a callback procedure which could delete the HTML
-   // widget.
-
    TGHtmlElement *p;
    int iFont = -1;
    TGFont *font=0;

@@ -61,7 +61,8 @@
 namespace mathtext {
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    void font_embed_postscript_t::append_asciihex(
                                                  std::string &ascii, const unsigned char *buffer,
                                                  const size_t length)
@@ -83,7 +84,8 @@ namespace mathtext {
    }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    unsigned int font_embed_postscript_t::ascii85_line_count(
                                                             const uint8_t *buffer, const size_t length)
    {
@@ -122,7 +124,8 @@ namespace mathtext {
    }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    void font_embed_postscript_t::append_ascii85(
                                                 std::string &ascii, const uint8_t *buffer,
                                                 const size_t length)
@@ -208,13 +211,13 @@ namespace mathtext {
    }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Embed font type 1
+
    std::string font_embed_postscript_t::font_embed_type_1(
                                                           std::string &font_name,
                                                           const std::vector<unsigned char> &font_data)
    {
-      // Embed font type 1
-
       struct pfb_segment_header_s {
          char always_128;
          char type;
@@ -301,14 +304,14 @@ namespace mathtext {
    }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Embed an OpenType CFF font (Type 2) file in ASCII85 encoding
+/// with the PostScript syntax
+
    std::string font_embed_postscript_t::font_embed_type_2(
                                                           std::string &font_name,
                                                           const std::vector<unsigned char> &font_data)
    {
-      // Embed an OpenType CFF font (Type 2) file in ASCII85 encoding
-      // with the PostScript syntax
-
       unsigned short cid_encoding_id;
       unsigned int cff_offset;
       unsigned int cff_length;
@@ -349,13 +352,13 @@ namespace mathtext {
    }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Embed a TrueType font as Type 42 with the PostScript syntax
+
    std::string font_embed_postscript_t::font_embed_type_42(
                                                            std::string &font_name,
                                                            const std::vector<unsigned char> &font_data)
    {
-      // Embed a TrueType font as Type 42 with the PostScript syntax
-
       double font_bbox[4];
       std::map<wchar_t, uint16_t> cid_map;
       std::vector<std::string> char_strings;

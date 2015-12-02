@@ -31,23 +31,26 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 ClassImp(TVolumeViewIter)
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TVolumeViewIter::TVolumeViewIter(TVolumeView *view, Int_t depth, Bool_t dir):
            TDataSetIter(view,depth,dir),fPositions(0)
 {
-   //to be documented
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TVolumeViewIter::~TVolumeViewIter()
 {
-   //to be documented
    if (fPositions) { fPositions->Delete(); delete fPositions; }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 const TVolumePosition *TVolumeViewIter::GetPosition(Int_t level) const
 {
-   //to be documented
    const TVolumePosition *pos = 0;
    if (fPositions) {
       Int_t thisLevel = level;
@@ -57,10 +60,11 @@ const TVolumePosition *TVolumeViewIter::GetPosition(Int_t level) const
    return pos;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TVolumePosition *TVolumeViewIter::operator[](Int_t level)
 {
-   //to be documented
    const TVolumePosition *pos = GetPosition(level);
    if (pos) return new TVolumePosition(*pos);
    else {
@@ -69,10 +73,11 @@ TVolumePosition *TVolumeViewIter::operator[](Int_t level)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolumeViewIter::Notify(TDataSet *set)
 {
-   //to be documented
    if (!set) return;
    TVolumeView     *view         = (TVolumeView *) set;
    TVolumePosition *position     = 0;
@@ -80,10 +85,11 @@ void TVolumeViewIter::Notify(TDataSet *set)
    UpdateTempMatrix(position);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick the "old" position by pieces
+
 TVolumePosition *TVolumeViewIter::UpdateTempMatrix(TVolumePosition *curPosition)
 {
-   // Pick the "old" position by pieces
    TVolumePosition *newPosition = 0;
    TVolume *curNode = 0;
    UInt_t curPositionId    = 0;
@@ -140,11 +146,11 @@ TVolumePosition *TVolumeViewIter::UpdateTempMatrix(TVolumePosition *curPosition)
    return newPosition;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolumeViewIter::ResetPosition(Int_t level, TVolumePosition *newPosition)
 {
-   //to be documented
-
    Int_t thisLevel = level;
    if (!thisLevel) thisLevel = fDepth;
    TVolumePosition *thisPosition  =  (TVolumePosition *) GetPosition(level);
@@ -152,19 +158,19 @@ void TVolumeViewIter::ResetPosition(Int_t level, TVolumePosition *newPosition)
       *thisPosition =  *newPosition;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolumeViewIter::Reset(TDataSet *l,Int_t depth)
 {
-   //to be documented
-
    TDataSetIter::Reset(l,depth);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TVolumePosition *TVolumeViewIter::SetPositionAt(TVolume *node,Double_t x, Double_t y, Double_t z, TRotMatrix *matrix)
 {
-   //to be documented
-
    if (!fPositions)  fPositions = new TObjArray(100);
    TVolumePosition *position =  (TVolumePosition *) fPositions->At(fDepth);
    if (position) position->Reset(node,x,y,z,matrix);
@@ -175,11 +181,11 @@ TVolumePosition *TVolumeViewIter::SetPositionAt(TVolume *node,Double_t x, Double
    return position;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TVolumePosition *TVolumeViewIter::SetPositionAt(TVolumePosition &curPosition)
 {
-   //to be documented
-
    if (!fPositions)  fPositions = new TObjArray(100);
    TVolumePosition *position =  (TVolumePosition *) fPositions->At(fDepth);
    if (position) *position = curPosition;

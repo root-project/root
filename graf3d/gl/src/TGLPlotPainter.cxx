@@ -45,7 +45,9 @@
 
 ClassImp(TGLPlotPainter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///TGLPlotPainter's ctor.
+
 TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord,
                                Bool_t xoy, Bool_t xoz, Bool_t yoz)
                   : fPadColor(0),
@@ -71,14 +73,15 @@ TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordina
                     fDrawPalette(kFALSE),
                     fDrawAxes(kTRUE)
 {
-   //TGLPlotPainter's ctor.
    if (gPad) {
       fPadPhi   = gPad->GetPhi();
       fPadTheta = gPad->GetTheta();
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///TGLPlotPainter's ctor.
+
 TGLPlotPainter::TGLPlotPainter(TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
                   : fPadColor(0),
                     fPhysicalShapeColor(0),
@@ -103,14 +106,15 @@ TGLPlotPainter::TGLPlotPainter(TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlo
                     fDrawPalette(kFALSE),
                     fDrawAxes(kTRUE)
 {
-   //TGLPlotPainter's ctor.
    if (gPad) {
       fPadPhi   = gPad->GetPhi();
       fPadTheta = gPad->GetTheta();
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///TGLPlotPainter's ctor.
+
 TGLPlotPainter::TGLPlotPainter(TGLPlotCamera *camera)
                   : fPadColor(0),
                     fPhysicalShapeColor(0),
@@ -135,18 +139,17 @@ TGLPlotPainter::TGLPlotPainter(TGLPlotCamera *camera)
                     fDrawPalette(kFALSE),
                     fDrawAxes(kTRUE)
 {
-   //TGLPlotPainter's ctor.
    if (gPad) {
       fPadPhi   = gPad->GetPhi();
       fPadTheta = gPad->GetTheta();
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw lego/surf/whatever you can.
+
 void TGLPlotPainter::Paint()
 {
-   //Draw lego/surf/whatever you can.
-
    R__LOCKGUARD2(gROOTMutex);
 
    fHighColor = kFALSE;
@@ -224,10 +227,11 @@ void TGLPlotPainter::Paint()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate PS using gl2ps
+
 void TGLPlotPainter::PrintPlot()const
 {
-   // Generate PS using gl2ps
    using namespace std;
 
    TGLOutput::StartEmbeddedPS();
@@ -265,10 +269,11 @@ void TGLPlotPainter::PrintPlot()const
    glFlush();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Read color buffer content to find selected object
+
 Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
 {
-   //Read color buffer content to find selected object
    if (fUpdateSelection) {
       //Save projection and modelview matrix, used by glpad.
       glMatrixMode(GL_PROJECTION);//[1
@@ -329,39 +334,43 @@ Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
    return fSelectedPart ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Used in a pad.
+
 void TGLPlotPainter::SetPadColor(const TColor *c)
 {
-   //Used in a pad.
    fPadColor = c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set plot's back box color.
+
 void TGLPlotPainter::SetFrameColor(const TColor *c)
 {
-   //Set plot's back box color.
    fBackBox.SetFrameColor(c);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Selection must be updated.
+
 void TGLPlotPainter::InvalidateSelection()
 {
-   //Selection must be updated.
    fUpdateSelection = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Get pad color.
+
 const TColor *TGLPlotPainter::GetPadColor()const
 {
-   //Get pad color.
    return fPadColor;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Create dynamic profile using selected plane
+
 void TGLPlotPainter::MoveSection(Int_t px, Int_t py)
 {
-   //Create dynamic profile using selected plane
-
    //Coordinates are expected to be fixed for retina!
 
    const TGLVertex3 *frame = fBackBox.Get3DBox();
@@ -429,10 +438,11 @@ void TGLPlotPainter::MoveSection(Int_t px, Int_t py)
       fXOYSectionPos = newPoint[2];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw sections (if any).
+
 void TGLPlotPainter::DrawSections()const
 {
-   //Draw sections (if any).
    const TGLVertex3 *frame = fBackBox.Get3DBox();
 
    if (fXOZSectionPos > frame[0].Y()) {
@@ -553,7 +563,8 @@ void TGLPlotPainter::DrawSections()const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLPlotPainter::ClearBuffers()const
 {
 /*
@@ -566,34 +577,39 @@ void TGLPlotPainter::ClearBuffers()const
    */
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw. Palette. Axis.
+
 void TGLPlotPainter::DrawPaletteAxis()const
 {
-   //Draw. Palette. Axis.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLPlotPainter::SaveModelviewMatrix()const
 {
    glMatrixMode(GL_MODELVIEW);
    glPushMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLPlotPainter::SaveProjectionMatrix()const
 {
    glMatrixMode(GL_PROJECTION);
    glPushMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLPlotPainter::RestoreModelviewMatrix()const
 {
    glMatrixMode(GL_MODELVIEW);
    glPopMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLPlotPainter::RestoreProjectionMatrix()const
 {
    glMatrixMode(GL_PROJECTION);
@@ -607,7 +623,9 @@ void TGLPlotPainter::RestoreProjectionMatrix()const
 
 ClassImp(TGLPlotCoordinates)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Constructor.
+
 TGLPlotCoordinates::TGLPlotCoordinates()
                         : fCoordType(kGLCartesian),
                           fXScale(1.),
@@ -619,111 +637,116 @@ TGLPlotCoordinates::TGLPlotCoordinates()
                           fModified(kFALSE),
                           fFactor(1.)
 {
-   //Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Destructor.
+
 TGLPlotCoordinates::~TGLPlotCoordinates()
 {
-   //Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///If coord type was changed, plot must reset sections (if any),
+///set fModified.
+
 void TGLPlotCoordinates::SetCoordType(EGLCoordType type)
 {
-   //If coord type was changed, plot must reset sections (if any),
-   //set fModified.
    if (fCoordType != type) {
       fModified = kTRUE;
       fCoordType = type;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get coordinates type.
+
 EGLCoordType TGLPlotCoordinates::GetCoordType()const
 {
-   // Get coordinates type.
-
    return fCoordType;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///If log changed, sections must be reset,
+///set fModified.
+
 void TGLPlotCoordinates::SetXLog(Bool_t xLog)
 {
-   //If log changed, sections must be reset,
-   //set fModified.
    if (fXLog != xLog) {
       fXLog = xLog;
       fModified = kTRUE;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get X log.
+
 Bool_t TGLPlotCoordinates::GetXLog()const
 {
-   // Get X log.
-
    return fXLog;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///If log changed, sections must be reset,
+///set fModified.
+
 void TGLPlotCoordinates::SetYLog(Bool_t yLog)
 {
-   //If log changed, sections must be reset,
-   //set fModified.
    if (fYLog != yLog) {
       fYLog = yLog;
       fModified = kTRUE;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get Y log.
+
 Bool_t TGLPlotCoordinates::GetYLog()const
 {
-   // Get Y log.
-
    return fYLog;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///If log changed, sections must be reset,
+///set fModified.
+
 void TGLPlotCoordinates::SetZLog(Bool_t zLog)
 {
-   //If log changed, sections must be reset,
-   //set fModified.
    if (fZLog != zLog) {
       fZLog = zLog;
       fModified = kTRUE;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get Z log.
+
 Bool_t TGLPlotCoordinates::GetZLog()const
 {
-   // Get Z log.
-
    return fZLog;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset modified.
+
 void TGLPlotCoordinates::ResetModified()
 {
-   // Reset modified.
-
    fModified = !fModified;//kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Modified.
+
 Bool_t TGLPlotCoordinates::Modified()const
 {
-   // Modified.
-
    return fModified;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set bin ranges, ranges.
+
 Bool_t TGLPlotCoordinates::SetRanges(const TH1 *hist, Bool_t errors, Bool_t zBins)
 {
-   //Set bin ranges, ranges.
    switch (fCoordType) {
    case kGLPolar:
       return SetRangesPolar(hist);
@@ -737,118 +760,133 @@ Bool_t TGLPlotCoordinates::SetRanges(const TH1 *hist, Bool_t errors, Bool_t zBin
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Number of X bins.
+
 Int_t TGLPlotCoordinates::GetNXBins()const
 {
-   //Number of X bins.
    return fXBins.second - fXBins.first + 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Number of Y bins.
+
 Int_t TGLPlotCoordinates::GetNYBins()const
 {
-   //Number of Y bins.
    return fYBins.second - fYBins.first + 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Number of Z bins.
+
 Int_t TGLPlotCoordinates::GetNZBins()const
 {
-   //Number of Z bins.
    return fZBins.second - fZBins.first + 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///X bins range.
+
 const Rgl::BinRange_t &TGLPlotCoordinates::GetXBins()const
 {
-   //X bins range.
    return fXBins;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Y bins range.
+
 const Rgl::BinRange_t &TGLPlotCoordinates::GetYBins()const
 {
-   //Y bins range.
    return fYBins;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Z bins range.
+
 const Rgl::BinRange_t &TGLPlotCoordinates::GetZBins()const
 {
-   //Z bins range.
    return fZBins;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///X range.
+
 const Rgl::Range_t &TGLPlotCoordinates::GetXRange()const
 {
-   //X range.
    return fXRange;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///X length.
+
 Double_t TGLPlotCoordinates::GetXLength()const
 {
-   //X length.
    return fXRange.second - fXRange.first;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Y range.
+
 const Rgl::Range_t &TGLPlotCoordinates::GetYRange()const
 {
-   //Y range.
    return fYRange;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Y length.
+
 Double_t TGLPlotCoordinates::GetYLength()const
 {
-   //Y length.
    return fYRange.second - fYRange.first;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Z range.
+
 const Rgl::Range_t &TGLPlotCoordinates::GetZRange()const
 {
-   //Z range.
    return fZRange;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Z length.
+
 Double_t TGLPlotCoordinates::GetZLength()const
 {
-   //Z length.
    return fZRange.second - fZRange.first;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Scaled range.
+
 const Rgl::Range_t &TGLPlotCoordinates::GetXRangeScaled()const
 {
-   //Scaled range.
    return fXRangeScaled;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Scaled range.
+
 const Rgl::Range_t &TGLPlotCoordinates::GetYRangeScaled()const
 {
-   //Scaled range.
    return fYRangeScaled;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Scaled range.
+
 const Rgl::Range_t &TGLPlotCoordinates::GetZRangeScaled()const
 {
-   //Scaled range.
    return fZRangeScaled;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get factor.
+
 Double_t TGLPlotCoordinates::GetFactor()const
 {
-   // Get factor.
-
    return fFactor;
 }
 
@@ -863,10 +901,11 @@ Bool_t FindAxisRange(TH2Poly *hist, Bool_t zLog, Rgl::Range_t &zRange);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set bin ranges, ranges, etc.
+
 Bool_t TGLPlotCoordinates::SetRangesCartesian(const TH1 *hist, Bool_t errors, Bool_t zAsBins)
 {
-   //Set bin ranges, ranges, etc.
    Rgl::BinRange_t xBins;
    Rgl::Range_t    xRange;
    if (!FindAxisRange(hist->GetXaxis(), fXLog, xBins, xRange)) {
@@ -932,10 +971,11 @@ Bool_t TGLPlotCoordinates::SetRangesCartesian(const TH1 *hist, Bool_t errors, Bo
 }
 
 //
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set bin ranges, ranges, etc.
+
 Bool_t TGLPlotCoordinates::SetRanges(TH2Poly *hist)
 {
-   //Set bin ranges, ranges, etc.
    Rgl::BinRange_t xBins;
    Rgl::Range_t    xRange;
    FindAxisRange(hist->GetXaxis(), kFALSE, xBins, xRange);//kFALSE == never logarithmic.
@@ -982,10 +1022,11 @@ Bool_t TGLPlotCoordinates::SetRanges(TH2Poly *hist)
 }
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set bin ranges, ranges, etc.
+
 Bool_t TGLPlotCoordinates::SetRanges(const TAxis *xAxis, const TAxis *yAxis, const TAxis *zAxis)
 {
-   //Set bin ranges, ranges, etc.
    Rgl::BinRange_t xBins;
    Rgl::Range_t    xRange;
 
@@ -1037,10 +1078,11 @@ Bool_t TGLPlotCoordinates::SetRanges(const TAxis *xAxis, const TAxis *yAxis, con
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set bin ranges, ranges, etc.
+
 Bool_t TGLPlotCoordinates::SetRangesPolar(const TH1 *hist)
 {
-   //Set bin ranges, ranges, etc.
    Rgl::BinRange_t xBins;
    Rgl::Range_t phiRange;
    const TAxis *xAxis = hist->GetXaxis();
@@ -1091,11 +1133,11 @@ Bool_t TGLPlotCoordinates::SetRangesPolar(const TH1 *hist)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set ranges cylindrical.
+
 Bool_t TGLPlotCoordinates::SetRangesCylindrical(const TH1 *hist)
 {
-   // Set ranges cylindrical.
-
    Rgl::BinRange_t xBins, yBins;
    Rgl::Range_t angleRange, heightRange, radiusRange;
    const TAxis *xAxis = hist->GetXaxis();
@@ -1144,11 +1186,11 @@ Bool_t TGLPlotCoordinates::SetRangesCylindrical(const TH1 *hist)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set ranges spherical.
+
 Bool_t TGLPlotCoordinates::SetRangesSpherical(const TH1 *hist)
 {
-   // Set ranges spherical.
-
    Rgl::BinRange_t xBins;
    Rgl::Range_t phiRange;
    FindAxisRange(hist->GetXaxis(), kFALSE, xBins, phiRange);
@@ -1194,11 +1236,11 @@ Bool_t TGLPlotCoordinates::SetRangesSpherical(const TH1 *hist)
 
 namespace {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find minimal bin width.
+
 Double_t FindMinBinWidth(const TAxis *axis)
 {
-   // Find minimal bin width.
-
    Int_t currBin = axis->GetFirst();
    Double_t width = axis->GetBinWidth(currBin);
 
@@ -1213,19 +1255,19 @@ Double_t FindMinBinWidth(const TAxis *axis)
    return width;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///"Generic" function, can be used for X/Y/Z axis.
+///[low edge of first ..... up edge of last]
+///If log is true, at least up edge of last MUST be positive or function fails (1).
+///If log is true and low edge is negative, try to find bin with positive low edge, bin number
+///must be less or equal to last (2). If no such bin, function failes.
+///When looking for a such bin, I'm trying to find value which is 0.01 of
+///MINIMUM bin width (3) (if bins are equidimensional, first's bin width is OK).
+///But even such lookup can fail, so, it's a stupid idea to have negative ranges
+///and logarithmic scale :)
+
 Bool_t FindAxisRange(const TAxis *axis, Bool_t log, Rgl::BinRange_t &bins, Rgl::Range_t &range)
 {
-   //"Generic" function, can be used for X/Y/Z axis.
-   //[low edge of first ..... up edge of last]
-   //If log is true, at least up edge of last MUST be positive or function fails (1).
-   //If log is true and low edge is negative, try to find bin with positive low edge, bin number
-   //must be less or equal to last (2). If no such bin, function failes.
-   //When looking for a such bin, I'm trying to find value which is 0.01 of
-   //MINIMUM bin width (3) (if bins are equidimensional, first's bin width is OK).
-   //But even such lookup can fail, so, it's a stupid idea to have negative ranges
-   //and logarithmic scale :)
-
    bins.first = axis->GetFirst(), bins.second = axis->GetLast();
    range.first = axis->GetBinLowEdge(bins.first), range.second = axis->GetBinUpEdge(bins.second);
 
@@ -1257,12 +1299,13 @@ Bool_t FindAxisRange(const TAxis *axis, Bool_t log, Rgl::BinRange_t &bins, Rgl::
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///First, look through hist to find minimum and maximum values.
+
 Bool_t FindAxisRange(const TH1 *hist, Bool_t logZ, const Rgl::BinRange_t &xBins,
                      const Rgl::BinRange_t &yBins, Rgl::Range_t &zRange,
                      Double_t &factor, Bool_t errors)
 {
-   //First, look through hist to find minimum and maximum values.
    const Bool_t minimum = hist->GetMinimumStored() != -1111;
    const Bool_t maximum = hist->GetMaximumStored() != -1111;
    const Double_t margin = gStyle->GetHistTopMargin();
@@ -1327,10 +1370,11 @@ Bool_t FindAxisRange(const TH1 *hist, Bool_t logZ, const Rgl::BinRange_t &xBins,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///First, look through hist to find minimum and maximum values.
+
 Bool_t FindAxisRange(TH2Poly *hist, Bool_t logZ, Rgl::Range_t &zRange)
 {
-   //First, look through hist to find minimum and maximum values.
    TList *bins = hist->GetBins();
    if (!bins || !bins->GetEntries()) {
       Error("FindAxisRange", "TH2Poly returned empty list of bins");
@@ -1380,7 +1424,9 @@ Bool_t FindAxisRange(TH2Poly *hist, Bool_t logZ, Rgl::Range_t &zRange)
 
 ClassImp(TGLBoxCut)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Constructor.
+
 TGLBoxCut::TGLBoxCut(const TGLPlotBox *box)
                : fXLength(0.),
                  fYLength(0.),
@@ -1389,20 +1435,21 @@ TGLBoxCut::TGLBoxCut(const TGLPlotBox *box)
                  fActive(kFALSE),
                  fFactor(1.)
 {
-   //Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Destructor.
+
 TGLBoxCut::~TGLBoxCut()
 {
-   //Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Turn the box cut on/off.
+///If it's on, it will be placed in front point of a plot.
+
 void TGLBoxCut::TurnOnOff()
 {
-   //Turn the box cut on/off.
-   //If it's on, it will be placed in front point of a plot.
    fActive = !fActive;
 
    if (fActive) {
@@ -1410,20 +1457,21 @@ void TGLBoxCut::TurnOnOff()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Turn the box cut on/off.
+
 void TGLBoxCut::SetActive(Bool_t a)
 {
-   //Turn the box cut on/off.
    if (a == fActive)
       return;
    TurnOnOff();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set geometry using plot's back box.
+
 void TGLBoxCut::ResetBoxGeometry()
 {
-   //Set geometry using plot's back box.
-
    const Int_t frontPoint = fPlotBox->GetFrontPoint();
    const TGLVertex3 *box = fPlotBox->Get3DBox();
    const TGLVertex3 center((box[0].X() + box[1].X()) / 2, (box[0].Y() + box[2].Y()) / 2,
@@ -1455,10 +1503,11 @@ void TGLBoxCut::ResetBoxGeometry()
    AdjustBox();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw cut as a semi-transparent box.
+
 void TGLBoxCut::DrawBox(Bool_t selectionPass, Int_t selected)const
 {
-   //Draw cut as a semi-transparent box.
    if (!selectionPass) {
       glDisable(GL_LIGHTING);
       glLineWidth(3.f);
@@ -1524,18 +1573,20 @@ void TGLBoxCut::DrawBox(Bool_t selectionPass, Int_t selected)const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Start cut's movement
+
 void TGLBoxCut::StartMovement(Int_t px, Int_t py)
 {
-   //Start cut's movement
    fMousePos.fX = px;
    fMousePos.fY = py;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Move box cut along selected direction.
+
 void TGLBoxCut::MoveBox(Int_t px, Int_t py, Int_t axisID)
 {
-   //Move box cut along selected direction.
    Double_t mv[16] = {0.};
    glGetDoublev(GL_MODELVIEW_MATRIX, mv);
    Double_t pr[16] = {0.};
@@ -1594,10 +1645,11 @@ void TGLBoxCut::MoveBox(Int_t px, Int_t py, Int_t axisID)
    AdjustBox();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Box cut is limited by plot's sizes.
+
 void TGLBoxCut::AdjustBox()
 {
-   //Box cut is limited by plot's sizes.
    const TGLVertex3 *box = fPlotBox->Get3DBox();
 
    fXRange.first  = fCenter.X() - fXLength / 2.;
@@ -1623,11 +1675,12 @@ void TGLBoxCut::AdjustBox()
    fZRange.second = TMath::Max(fZRange.second, box[0].Z());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Check, if box defined by xmin/xmax etc. is in cut.
+
 Bool_t TGLBoxCut::IsInCut(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
                           Double_t zMin, Double_t zMax)const
 {
-   //Check, if box defined by xmin/xmax etc. is in cut.
    if (((xMin >= fXRange.first && xMin < fXRange.second) || (xMax > fXRange.first && xMax <= fXRange.second)) &&
        ((yMin >= fYRange.first && yMin < fYRange.second) || (yMax > fYRange.first && yMax <= fYRange.second)) &&
        ((zMin >= fZRange.first && zMin < fZRange.second) || (zMax > fZRange.first && zMax <= fZRange.second)))
@@ -1642,7 +1695,9 @@ Bool_t TGLBoxCut::IsInCut(Double_t xMin, Double_t xMax, Double_t yMin, Double_t 
 
 ClassImp(TGLTH3Slice)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLTH3Slice::TGLTH3Slice(const TString &name, const TH3 *hist, const TGLPlotCoordinates *coord,
                          const TGLPlotBox *box, ESliceAxis axis)
                : TNamed(name, name),
@@ -1654,11 +1709,12 @@ TGLTH3Slice::TGLTH3Slice(const TString &name, const TH3 *hist, const TGLPlotCoor
                  fHist(hist),
                  fF3(0)
 {
-   // Constructor.
    fAxis = fAxisType == kXOZ ? fHist->GetYaxis() : fAxisType == kYOZ ? fHist->GetXaxis() : fHist->GetZaxis();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLTH3Slice::TGLTH3Slice(const TString &name, const TH3 *hist, const TF3 *fun, const TGLPlotCoordinates *coord,
                          const TGLPlotBox *box, ESliceAxis axis)
                : TNamed(name, name),
@@ -1670,15 +1726,14 @@ TGLTH3Slice::TGLTH3Slice(const TString &name, const TH3 *hist, const TF3 *fun, c
                  fHist(hist),
                  fF3(fun)
 {
-   // Constructor.
    fAxis = fAxisType == kXOZ ? fHist->GetYaxis() : fAxisType == kYOZ ? fHist->GetXaxis() : fHist->GetZaxis();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Slice width.
+
 void TGLTH3Slice::SetSliceWidth(Int_t width)
 {
-   // Set Slice width.
-
    if (width <= 0)
       return;
 
@@ -1688,10 +1743,11 @@ void TGLTH3Slice::SetSliceWidth(Int_t width)
       fSliceWidth = width;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw slice.
+
 void TGLTH3Slice::DrawSlice(Double_t pos)const
 {
-   // Draw slice.
    Int_t bin = 0;
    for (Int_t i = fAxis->GetFirst(), e = fAxis->GetLast(); i <= e; ++i) {
       if (pos >= fAxis->GetBinLowEdge(i) && pos <= fAxis->GetBinUpEdge(i)) {
@@ -1727,10 +1783,11 @@ void TGLTH3Slice::DrawSlice(Double_t pos)const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find minimum and maximum for slice.
+
 void TGLTH3Slice::FindMinMax(Int_t /*low*/, Int_t /*up*/)const
 {
-   // Find minimum and maximum for slice.
   /* fMinMax.first = 0.;
 
    switch (fAxisType) {
@@ -1779,10 +1836,11 @@ void TGLTH3Slice::FindMinMax(Int_t /*low*/, Int_t /*up*/)const
    }*/
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize color palette.
+
 Bool_t TGLTH3Slice::PreparePalette()const
 {
-   //Initialize color palette.
    UInt_t paletteSize = ((TH1 *)fHist)->GetContour();
    if (!paletteSize && !(paletteSize = gStyle->GetNumberContours()))
       paletteSize = 20;
@@ -1790,10 +1848,11 @@ Bool_t TGLTH3Slice::PreparePalette()const
    return fPalette.GeneratePalette(paletteSize, fMinMax);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prepare TexCoords.
+
 void TGLTH3Slice::PrepareTexCoords(Double_t pos, Int_t low, Int_t up)const
 {
-   // Prepare TexCoords.
    switch (fAxisType) {
    case kXOZ:
       fTexCoords.resize(fCoord->GetNXBins() * fCoord->GetNZBins());
@@ -1875,11 +1934,11 @@ void TGLTH3Slice::PrepareTexCoords(Double_t pos, Int_t low, Int_t up)const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw slice textured.
+
 void TGLTH3Slice::DrawSliceTextured(Double_t pos)const
 {
-   // Draw slice textured.
-
    const Double_t xScale = fCoord->GetXScale();
    const Double_t yScale = fCoord->GetYScale();
    const Double_t zScale = fCoord->GetZScale();
@@ -1956,7 +2015,8 @@ void TGLTH3Slice::DrawSliceTextured(Double_t pos)const
 
 namespace {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void DrawBoxOutline(Double_t xMin, Double_t xMax, Double_t yMin,
                     Double_t yMax, Double_t zMin, Double_t zMax)
 {
@@ -1988,11 +2048,11 @@ void DrawBoxOutline(Double_t xMin, Double_t xMax, Double_t yMin,
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw slice frame.
+
 void TGLTH3Slice::DrawSliceFrame(Int_t low, Int_t up)const
 {
-   // Draw slice frame.
-
    glColor3d(1., 0., 0.);
    const TGLVertex3 *box = fBox->Get3DBox();
 
@@ -2020,7 +2080,8 @@ void TGLTH3Slice::DrawSliceFrame(Int_t low, Int_t up)const
 
 namespace Rgl {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PlotTranslation::PlotTranslation(const TGLPlotPainter *painter)
                    : fPainter(painter)
 {
@@ -2033,7 +2094,8 @@ PlotTranslation::PlotTranslation(const TGLPlotPainter *painter)
    glTranslated(-center[0], -center[1], -center[2]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PlotTranslation::~PlotTranslation()
 {
    fPainter->RestoreModelviewMatrix();
@@ -2047,10 +2109,11 @@ const Double_t rr = 0.9;
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw. Palette.
+
 void DrawPalette(const TGLPlotCamera * camera, const TGLLevelPalette & palette)
 {
-   //Draw. Palette.
    const TGLDisableGuard light(GL_LIGHTING);
    const TGLDisableGuard depth(GL_DEPTH_TEST);
    const TGLEnableGuard blend(GL_BLEND);
@@ -2095,11 +2158,12 @@ void DrawPalette(const TGLPlotCamera * camera, const TGLLevelPalette & palette)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw. Palette.
+
 void DrawPalette(const TGLPlotCamera * camera, const TGLLevelPalette & palette,
                  const std::vector<Double_t> & levels)
 {
-   //Draw. Palette.
    const TGLDisableGuard light(GL_LIGHTING);
    const TGLDisableGuard depth(GL_DEPTH_TEST);
    const TGLEnableGuard blend(GL_BLEND);
@@ -2152,7 +2216,8 @@ void DrawPalette(const TGLPlotCamera * camera, const TGLLevelPalette & palette,
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void DrawPaletteAxis(const TGLPlotCamera * camera, const Range_t & minMax, Bool_t logZ)
 {
    UInt_t pixelW = camera->GetWidth();

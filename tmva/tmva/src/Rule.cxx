@@ -52,7 +52,9 @@
 #include "TMVA/MethodRuleFit.h"
 #include "TMVA/Tools.h"
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the main constructor for a Rule
+
 TMVA::Rule::Rule( RuleEnsemble *re,
                   const std::vector< const Node * >& nodes )
    : fCut           ( 0 )
@@ -67,8 +69,6 @@ TMVA::Rule::Rule( RuleEnsemble *re,
    , fSSBNeve       ( 0 )
    , fLogger( new MsgLogger("RuleFit") )
 {
-   // the main constructor for a Rule
-
    //
    // input:
    //   nodes  - a vector of Node; from these all possible rules will be created
@@ -80,7 +80,9 @@ TMVA::Rule::Rule( RuleEnsemble *re,
    fSSBNeve = fCut->GetCutNeve();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the simple constructor
+
 TMVA::Rule::Rule( RuleEnsemble *re )
    : fCut           ( 0 )
    , fNorm          ( 1.0 )
@@ -94,10 +96,11 @@ TMVA::Rule::Rule( RuleEnsemble *re )
    , fSSBNeve       ( 0 )
    , fLogger( new MsgLogger("RuleFit") )
 {
-   // the simple constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the simple constructor
+
 TMVA::Rule::Rule()
    : fCut           ( 0 )
    , fNorm          ( 1.0 )
@@ -111,21 +114,22 @@ TMVA::Rule::Rule()
    , fSSBNeve       ( 0 )
    , fLogger( new MsgLogger("RuleFit") )
 {
-   // the simple constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::Rule::~Rule() 
 {
-   // destructor
    delete fCut;
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check if variable in node
+
 Bool_t TMVA::Rule::ContainsVariable(UInt_t iv) const
 {
-   // check if variable in node
    Bool_t found    = kFALSE;
    Bool_t doneLoop = kFALSE;
    UInt_t nvars    = fCut->GetNvars();
@@ -139,24 +143,26 @@ Bool_t TMVA::Rule::ContainsVariable(UInt_t iv) const
    return found;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::Rule::SetMsgType( EMsgType t ) 
 {
    fLogger->SetMinType(t);
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Compare two rules.
+/// useCutValue: true -> calculate a distance between the two rules based on the cut values
+///                      if the rule cuts are not equal, the distance is < 0 (-1.0)
+///                      return true if d<mindist
+///              false-> ignore mindist, return true if rules are equal, ignoring cut values
+/// mindist:     min distance allowed between rules; if < 0 => set useCutValue=false;
+///
+
 Bool_t TMVA::Rule::Equal( const Rule& other, Bool_t useCutValue, Double_t mindist ) const
 {
-   //
-   // Compare two rules.
-   // useCutValue: true -> calculate a distance between the two rules based on the cut values
-   //                      if the rule cuts are not equal, the distance is < 0 (-1.0)
-   //                      return true if d<mindist
-   //              false-> ignore mindist, return true if rules are equal, ignoring cut values
-   // mindist:     min distance allowed between rules; if < 0 => set useCutValue=false;
-   //
    Bool_t rval=kFALSE;
    if (mindist<0) useCutValue=kFALSE;
    Double_t d = RuleDist( other, useCutValue );
@@ -167,14 +173,15 @@ Bool_t TMVA::Rule::Equal( const Rule& other, Bool_t useCutValue, Double_t mindis
    return rval;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns:
+/// -1.0 : rules are NOT equal, i.e, variables and/or cut directions are wrong
+///   >=0: rules are equal apart from the cutvalue, returns d = sqrt(sum(c1-c2)^2)
+/// If not useCutValue, the distance is exactly zero if they are equal
+///
+
 Double_t TMVA::Rule::RuleDist( const Rule& other, Bool_t useCutValue ) const
 {
-   // Returns:
-   // -1.0 : rules are NOT equal, i.e, variables and/or cut directions are wrong
-   //   >=0: rules are equal apart from the cutvalue, returns d = sqrt(sum(c1-c2)^2)
-   // If not useCutValue, the distance is exactly zero if they are equal
-   //
    if (fCut->GetNvars()!=other.GetRuleCut()->GetNvars()) return -1.0; // check number of cuts
    //
    const UInt_t nvars  = fCut->GetNvars();
@@ -229,41 +236,44 @@ Double_t TMVA::Rule::RuleDist( const Rule& other, Bool_t useCutValue ) const
    return sumdc2;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// comparison operator ==
+
 Bool_t TMVA::Rule::operator==( const Rule& other ) const
 {
-   // comparison operator ==
-
    return this->Equal( other, kTRUE, 1e-3 );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// comparison operator <
+
 Bool_t TMVA::Rule::operator<( const Rule& other ) const
 {
-   // comparison operator <
    return (fImportance < other.GetImportance());
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// std::ostream operator
+
 std::ostream& TMVA::operator<< ( std::ostream& os, const Rule& rule )
 {
-   // std::ostream operator
    rule.Print( os );
    return os;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the name of a rule
+
 const TString & TMVA::Rule::GetVarName( Int_t i ) const
 {
-   // returns the name of a rule
-
    return fRuleEnsemble->GetMethodBase()->GetInputLabel(i);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy function
+
 void TMVA::Rule::Copy( const Rule& other )
 {
-   // copy function
    if(this != &other) {
       SetRuleEnsemble( other.GetRuleEnsemble() );
       fCut = new RuleCut( *(other.GetRuleCut()) );
@@ -278,10 +288,11 @@ void TMVA::Rule::Copy( const Rule& other )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print function
+
 void TMVA::Rule::Print( std::ostream& os ) const
 {
-   // print function
    const UInt_t nvars = fCut->GetNvars();
    if (nvars<1) os << "     *** WARNING - <EMPTY RULE> ***" << std::endl; // TODO: Fix this, use fLogger
    //
@@ -309,10 +320,11 @@ void TMVA::Rule::Print( std::ostream& os ) const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print function
+
 void TMVA::Rule::PrintLogger(const char *title) const
 {
-   // print function
    const UInt_t nvars = fCut->GetNvars();
    if (nvars<1) Log() << kWARNING << "BUG TRAP: EMPTY RULE!!!" << Endl;
    //
@@ -340,10 +352,11 @@ void TMVA::Rule::PrintLogger(const char *title) const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// extensive print function used to print info for the weight file
+
 void TMVA::Rule::PrintRaw( std::ostream& os ) const
 {
-   // extensive print function used to print info for the weight file
    Int_t dp = os.precision();
    const UInt_t nvars = fCut->GetNvars();
    os << "Parameters: "
@@ -371,7 +384,8 @@ void TMVA::Rule::PrintRaw( std::ostream& os ) const
    os << std::setprecision(dp);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void* TMVA::Rule::AddXMLTo( void* parent ) const 
 {
    void* rule = gTools().AddChild( parent, "Rule" );
@@ -399,10 +413,11 @@ void* TMVA::Rule::AddXMLTo( void* parent ) const
    return rule;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read rule from XML
+
 void TMVA::Rule::ReadFromXML( void* wghtnode )
 {
-   // read rule from XML
    TString nodeName = TString( gTools().GetName(wghtnode) );
    if (nodeName != "Rule") Log() << kFATAL << "<ReadFromXML> Unexpected node name: " << nodeName << Endl;
 
@@ -447,11 +462,11 @@ void TMVA::Rule::ReadFromXML( void* wghtnode )
    if (i != nvars) Log() << kFATAL << "<ReadFromXML> Mismatch in number of cuts: " << i << " != " << nvars << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read function (format is the same as written by PrintRaw)
+
 void TMVA::Rule::ReadRaw( std::istream& istr )
 {
-   // read function (format is the same as written by PrintRaw)
-
    TString dummy;
    UInt_t nvars;
    istr >> dummy

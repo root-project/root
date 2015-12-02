@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 BEGIN_HTML
 <p>
@@ -76,11 +77,12 @@ using namespace RooFit;
 using namespace RooStats;
 
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 ProfileLikelihoodCalculator::ProfileLikelihoodCalculator() : 
    CombinedCalculator(), fFitResult(0), fGlobalFitDone(false)
 {
-   // default constructor
 }
 
 ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest, 
@@ -102,12 +104,13 @@ ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data,  Mode
 }
 
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+/// cannot delete prod pdf because it will delete all the composing pdf's
+///    if (fOwnPdf) delete fPdf; 
+///    fPdf = 0; 
+
 ProfileLikelihoodCalculator::~ProfileLikelihoodCalculator(){
-   // destructor
-   // cannot delete prod pdf because it will delete all the composing pdf's
-//    if (fOwnPdf) delete fPdf; 
-//    fPdf = 0; 
    if (fFitResult) delete fFitResult; 
 }
 
@@ -209,11 +212,11 @@ RooFitResult * ProfileLikelihoodCalculator::DoMinimizeNLL(RooAbsReal * nll)  {
    return result;
 }
 
-//_______________________________________________________
-LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
-   // Main interface to get a RooStats::ConfInterval.  
-   // It constructs a profile likelihood ratio and uses that to construct a RooStats::LikelihoodInterval.
+////////////////////////////////////////////////////////////////////////////////
+/// Main interface to get a RooStats::ConfInterval.  
+/// It constructs a profile likelihood ratio and uses that to construct a RooStats::LikelihoodInterval.
 
+LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
 //    RooAbsPdf* pdf   = fWS->pdf(fPdfName);
 //    RooAbsData* data = fWS->data(fDataName);
    RooAbsPdf * pdf = GetPdf();
@@ -281,15 +284,15 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
    return interval;
 }
 
-//_______________________________________________________
-HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
-   // Main interface to get a HypoTestResult.
-   // It does two fits:
-   // the first lets the null parameters float, so it's a maximum likelihood estimate
-   // the second is to the null (fixing null parameters to their specified values): eg. a conditional maximum likelihood
-   // the ratio of the likelihood at the conditional MLE to the MLE is the profile likelihood ratio.
-   // Wilks' theorem is used to get p-values 
+////////////////////////////////////////////////////////////////////////////////
+/// Main interface to get a HypoTestResult.
+/// It does two fits:
+/// the first lets the null parameters float, so it's a maximum likelihood estimate
+/// the second is to the null (fixing null parameters to their specified values): eg. a conditional maximum likelihood
+/// the ratio of the likelihood at the conditional MLE to the MLE is the profile likelihood ratio.
+/// Wilks' theorem is used to get p-values 
 
+HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
 //    RooAbsPdf* pdf   = fWS->pdf(fPdfName);
 //    RooAbsData* data = fWS->data(fDataName);
    RooAbsPdf * pdf = GetPdf();

@@ -23,12 +23,12 @@
 #include "TROOT.h"
 #include "TError.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a PROOF player.
+
 TVirtualProofPlayer *TVirtualProofPlayer::Create(const char *player,
                                                  TProof *pr, TSocket *s)
 {
-   // Create a PROOF player.
-
    TPluginHandler *h;
    TVirtualProofPlayer *p = 0;
 

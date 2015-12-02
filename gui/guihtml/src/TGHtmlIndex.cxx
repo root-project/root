@@ -40,13 +40,13 @@
 #include "TGHtml.h"
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the Nth TGHtmlElement in the list. If there
+/// is no Nth element, return 0 if flag==0 and return either the first
+/// or last element (whichever is closest) if flag!=0
+
 TGHtmlElement *TGHtml::TokenByIndex(int N, int /*flag*/)
 {
-   // Return a pointer to the Nth TGHtmlElement in the list. If there
-   // is no Nth element, return 0 if flag==0 and return either the first
-   // or last element (whichever is closest) if flag!=0
-
    TGHtmlElement *p;
    int n;
 
@@ -73,11 +73,11 @@ TGHtmlElement *TGHtml::TokenByIndex(int N, int /*flag*/)
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the token number for the given TGHtmlElement
+
 int TGHtml::TokenNumber(TGHtmlElement *p)
 {
-   // Return the token number for the given TGHtmlElement
-
    //int n = 0;
 
    if (!p) return -1;
@@ -91,11 +91,11 @@ int TGHtml::TokenNumber(TGHtmlElement *p)
 ///  return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the maximum index for the given token
+
 void TGHtml::MaxIndex(TGHtmlElement *p, int *pIndex, int isLast)
 {
-   // Find the maximum index for the given token
-
    if (p == 0) {
       *pIndex = 0;
    } else {
@@ -119,19 +119,19 @@ void TGHtml::MaxIndex(TGHtmlElement *p, int *pIndex, int isLast)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given a Block and an x coordinate, find the Index of the character
+/// that is closest to the given x coordinate.
+///
+/// The x-coordinate might specify a point to the left of the block,
+/// in which case the procedure returns the first token and a character
+/// index of 0.  Or the x-coordinate might specify a point to the right
+/// of the block, in which case the last token is returned with an index
+/// equal to its last character.
+
 void TGHtml::FindIndexInBlock(TGHtmlBlock *pBlock, int x,
                               TGHtmlElement **ppToken, int *pIndex)
 {
-   // Given a Block and an x coordinate, find the Index of the character
-   // that is closest to the given x coordinate.
-   //
-   // The x-coordinate might specify a point to the left of the block,
-   // in which case the procedure returns the first token and a character
-   // index of 0.  Or the x-coordinate might specify a point to the right
-   // of the block, in which case the last token is returned with an index
-   // equal to its last character.
-
    TGHtmlElement *p;
    TGFont *font;
    int len;
@@ -198,17 +198,17 @@ void TGHtml::FindIndexInBlock(TGHtmlBlock *pBlock, int x,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert an Element-based index into a Block-based index.
+///
+/// In other words, given a pointer to an element and an index
+/// of a particular character within that element, compute a
+/// pointer to the TGHtmlBlock used to display that character and
+/// the index in the TGHtmlBlock of the character.
+
 void TGHtml::IndexToBlockIndex(SHtmlIndex_t sIndex,
                                TGHtmlBlock **ppBlock, int *piIndex)
 {
-   // Convert an Element-based index into a Block-based index.
-   //
-   // In other words, given a pointer to an element and an index
-   // of a particular character within that element, compute a
-   // pointer to the TGHtmlBlock used to display that character and
-   // the index in the TGHtmlBlock of the character.
-
    int n = sIndex.fI;
    TGHtmlElement *p;
 
@@ -245,11 +245,11 @@ void TGHtml::IndexToBlockIndex(SHtmlIndex_t sIndex,
    *piIndex = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Modify an index for both pointer and char +/-/=N
+
 int TGHtml::IndexMod(TGHtmlElement **pp, int *ip, char *cp)
 {
-   // Modify an index for both pointer and char +/-/=N
-
    char nbuf[50];
    int i, x, cnt, ccnt[2], cflag[2];
 
@@ -301,47 +301,47 @@ int TGHtml::IndexMod(TGHtmlElement **pp, int *ip, char *cp)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given a base index name (without any modifiers) return a pointer
+/// to the token described, and the character within that token.
+///
+/// Valid input forms include:
+///
+///       N.M          Token number N (with numbering starting at 1) and
+///                    character number M (with numbering starting at 0).
+///
+///       M.X          Like above, but token is markup and X is an attribute.
+///
+///       begin        The start of all text
+///
+///       end          The end of all text
+///
+///       N.last       Last character of token number N.
+///
+///       N.end        One past last character of token number N.
+///
+///       sel.first    First character of the selection.
+///
+///       sel.last     Last character of the selection.
+///
+///       sel.end      On past last character of the selection.
+///
+///       insert       The character holding the insertion cursor.
+///
+///       @X,Y         The character a location X,Y of the clipping window.
+///
+///       &DOM         The DOM Address of a token.
+///
+/// Zero is returned if we are successful and non-zero if there is
+/// any kind of error.
+///
+/// If the given token doesn't exist (for example if there are only 10
+/// tokens and 11.5 is requested) then *ppToken is left pointing to NULL.
+/// But the function still returns 0 for success.
+
 int TGHtml::DecodeBaseIndex(const char *baseIx,
                             TGHtmlElement **ppToken, int *pIndex)
 {
-   // Given a base index name (without any modifiers) return a pointer
-   // to the token described, and the character within that token.
-   //
-   // Valid input forms include:
-   //
-   //       N.M          Token number N (with numbering starting at 1) and
-   //                    character number M (with numbering starting at 0).
-   //
-   //       M.X          Like above, but token is markup and X is an attribute.
-   //
-   //       begin        The start of all text
-   //
-   //       end          The end of all text
-   //
-   //       N.last       Last character of token number N.
-   //
-   //       N.end        One past last character of token number N.
-   //
-   //       sel.first    First character of the selection.
-   //
-   //       sel.last     Last character of the selection.
-   //
-   //       sel.end      On past last character of the selection.
-   //
-   //       insert       The character holding the insertion cursor.
-   //
-   //       @X,Y         The character a location X,Y of the clipping window.
-   //
-   //       &DOM         The DOM Address of a token.
-   //
-   // Zero is returned if we are successful and non-zero if there is
-   // any kind of error.
-   //
-   // If the given token doesn't exist (for example if there are only 10
-   // tokens and 11.5 is requested) then *ppToken is left pointing to NULL.
-   // But the function still returns 0 for success.
-
    int i, n, x, y;
    TGHtmlElement *p = 0;
    TGHtmlBlock *pBlock;
@@ -531,12 +531,12 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine decodes a complete index specification. A complete
+/// index consists of the base specification followed by modifiers.
+
 int TGHtml::GetIndex(const char *zIndex,
                      TGHtmlElement **ppToken, int *pIndex)
 {
-   // This routine decodes a complete index specification. A complete
-   // index consists of the base specification followed by modifiers.
-
    return DecodeBaseIndex(zIndex, ppToken, pIndex);
 }

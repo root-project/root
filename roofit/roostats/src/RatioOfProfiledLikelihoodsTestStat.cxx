@@ -21,13 +21,13 @@ Bool_t RooStats::RatioOfProfiledLikelihoodsTestStat::fgAlwaysReuseNll = kTRUE ;
 
 void RooStats::RatioOfProfiledLikelihoodsTestStat::SetAlwaysReuseNLL(Bool_t flag) { fgAlwaysReuseNll = flag ; }
 
-    //__________________________________________
-Double_t RooStats::RatioOfProfiledLikelihoodsTestStat::ProfiledLikelihood(RooAbsData& data, RooArgSet& poi, RooAbsPdf& pdf) {
-   // returns -logL(poi, conditonal MLE of nuisance params)
-   // subtract off the global MLE or not depending on the option
-   // It is the numerator or the denominator of the ratio (depending on the pdf)
-   //L.M. : not sure why this method is needed now
+    ////////////////////////////////////////////////////////////////////////////
+    /// returns -logL(poi, conditonal MLE of nuisance params)
+    /// subtract off the global MLE or not depending on the option
+    /// It is the numerator or the denominator of the ratio (depending on the pdf)
+    ///L.M. : not sure why this method is needed now
 
+Double_t RooStats::RatioOfProfiledLikelihoodsTestStat::ProfiledLikelihood(RooAbsData& data, RooArgSet& poi, RooAbsPdf& pdf) {
    int type = (fSubtractMLE) ? 0 : 2; 
        
    // null
@@ -43,10 +43,10 @@ Double_t RooStats::RatioOfProfiledLikelihoodsTestStat::ProfiledLikelihood(RooAbs
       
 }
     
-//__________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// evaluate the ratio of profile likelihood
+
 Double_t  RooStats::RatioOfProfiledLikelihoodsTestStat::Evaluate(RooAbsData& data, RooArgSet& nullParamsOfInterest) {
-   // evaluate the ratio of profile likelihood
-   
    
    int type = (fSubtractMLE) ? 0 : 2; 
        

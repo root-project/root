@@ -37,11 +37,11 @@ ClassImp(RooRealAnalytic)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate our analytic integral at the specified values of the dependents.
+
 Double_t RooRealAnalytic::operator()(const Double_t xvector[]) const 
 {
-  // Evaluate our analytic integral at the specified values of the dependents.
-
   assert(isValid());
   loadValues(xvector);  
   _ncall++ ;

@@ -121,12 +121,12 @@ Bool_t PyROOT::TPyROOTApplication::CreatePyROOTApplication( Bool_t bLoadLibs )
    return kFALSE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup the basic ROOT globals gBenchmark, gStyle, gProgname, if not already
+/// set. Always returns true.
+
 Bool_t PyROOT::TPyROOTApplication::InitROOTGlobals()
 {
-// Setup the basic ROOT globals gBenchmark, gStyle, gProgname, if not already
-// set. Always returns true.
-
    if ( ! gBenchmark ) gBenchmark = new TBenchmark();
    if ( ! gStyle ) gStyle = new TStyle();
 
@@ -141,12 +141,12 @@ Bool_t PyROOT::TPyROOTApplication::InitROOTGlobals()
    return kTRUE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Install ROOT message handler which will turn ROOT error message into
+/// python exceptions. Always returns true.
+
 Bool_t PyROOT::TPyROOTApplication::InitROOTMessageCallback()
 {
-// Install ROOT message handler which will turn ROOT error message into
-// python exceptions. Always returns true.
-
    SetErrorHandler( (ErrorHandlerFunc_t)&Utility::ErrMsgHandler );
    return kTRUE;
 }

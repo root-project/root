@@ -41,12 +41,12 @@ static zoneFreeHookFunc_t m_pf;
 using namespace std;
 
 #if !defined(__APPLE__)
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GetMallocHook - a static function
+/// malloc function getter
+
 TMemStatHook::MallocHookFunc_t TMemStatHook::GetMallocHook()
 {
-   // GetMallocHook - a static function
-   // malloc function getter
-
 #if defined(SUPPORTS_MEMSTAT)
    return __malloc_hook;
 #else
@@ -54,12 +54,12 @@ TMemStatHook::MallocHookFunc_t TMemStatHook::GetMallocHook()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GetFreeHook - a static function
+/// free function getter
+
 TMemStatHook::FreeHookFunc_t TMemStatHook::GetFreeHook()
 {
-   // GetFreeHook - a static function
-   // free function getter
-
 #if defined(SUPPORTS_MEMSTAT)
    return __free_hook;
 #else
@@ -67,37 +67,37 @@ TMemStatHook::FreeHookFunc_t TMemStatHook::GetFreeHook()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SetMallocHook - a static function
+/// Set pointer to function replacing alloc function
+
 void TMemStatHook::SetMallocHook(MallocHookFunc_t p)
 {
-   // SetMallocHook - a static function
-   // Set pointer to function replacing alloc function
-
 #if defined(SUPPORTS_MEMSTAT)
    __malloc_hook = p;
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SetFreeHook - a static function
+/// Set pointer to function replacing free function
+
 void TMemStatHook::SetFreeHook(FreeHookFunc_t p)
 {
-   // SetFreeHook - a static function
-   // Set pointer to function replacing free function
-
 #if defined(SUPPORTS_MEMSTAT)
    __free_hook = p;
 #endif
 }
 #endif // !defined(__APPLE__)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// tracZoneMalloc - a static function
+/// override the default Mac OS X memory zone
+
 #if defined (__APPLE__)
 void TMemStatHook::trackZoneMalloc(zoneMallocHookFunc_t pm,
                                    zoneFreeHookFunc_t pf)
 {
-   // tracZoneMalloc - a static function
-   // override the default Mac OS X memory zone
-
    malloc_zone_t* zone = malloc_default_zone();
    if (!zone) {
       cerr << "Error: Can't get malloc_default_zone" << endl;
@@ -116,12 +116,12 @@ void TMemStatHook::trackZoneMalloc(zoneMallocHookFunc_t pm,
       zone->free_definite_size = &profile_free_definite_size;
 #endif
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// untrackZoneMalloc - a static function
+/// set the default Mac OS X memory zone to original
+
 void TMemStatHook::untrackZoneMalloc()
 {
-   // untrackZoneMalloc - a static function
-   // set the default Mac OS X memory zone to original
-
    malloc_zone_t* zone = malloc_default_zone();
    if (!zone) {
       cerr << "Error: Can't get malloc_default_zone" << endl;
@@ -129,51 +129,51 @@ void TMemStatHook::untrackZoneMalloc()
    }
    *zone = original_zone;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mac OS X profiler of malloc calls
+
 void* profile_malloc(malloc_zone_t *zone, size_t size)
 {
-   // Mac OS X profiler of malloc calls
-
    void* ptr = (*original_zone.malloc)(zone, size);
    m_pm(ptr, size);
    return ptr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mac OS X profiler of calloc calls
+
 void* profile_calloc(malloc_zone_t *zone, size_t num_items, size_t size)
 {
-   // Mac OS X profiler of calloc calls
-
    void* ptr = (*original_zone.calloc)(zone, num_items, size);
    m_pm(ptr, size);
    return ptr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mac OS X profiler of valloc calls
+
 void* profile_valloc(malloc_zone_t *zone, size_t size)
 {
-   // Mac OS X profiler of valloc calls
-
    void* ptr = (*original_zone.valloc)(zone, size);
    m_pm(ptr, size);
    return ptr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mac OS X profiler of free calls
+
 void profile_free(malloc_zone_t *zone, void *ptr)
 {
-   // Mac OS X profiler of free calls
-
    (*original_zone.free)(zone, ptr);
    m_pf(ptr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mac OS X profiler of free_definite_size calls
+
 #if defined(MAC_OS_X_VERSION_10_6)
 void profile_free_definite_size(malloc_zone_t *zone, void *ptr, size_t size)
 {
-   // Mac OS X profiler of free_definite_size calls
-
    (*original_zone.free_definite_size)(zone, ptr, size);
    m_pf(ptr);
 }

@@ -29,7 +29,9 @@ namespace {
    const Int_t  kMapOffset = 2;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TConvertClonesArrayToProxy::TConvertClonesArrayToProxy(
    TVirtualCollectionProxy *proxy,
    Bool_t isPointer, Bool_t isPrealloc) :
@@ -37,24 +39,22 @@ TConvertClonesArrayToProxy::TConvertClonesArrayToProxy(
       fIsPrealloc(isPrealloc),
       fCollectionClass(proxy?proxy->GetCollectionClass():0)
 {
-   // Constructor.
-
    if (isPointer) fOffset = sizeof(TClonesArray*);
    else fOffset = sizeof(TClonesArray*);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TConvertClonesArrayToProxy::~TConvertClonesArrayToProxy()
 {
-   // Destructor.
-
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a TClonesArray from the TBuffer b and load it into a (stl) collection
+
 void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t size)
 {
-   // Read a TClonesArray from the TBuffer b and load it into a (stl) collection
-
    // For thread-safety we need to go through TClass::GetCollectionProxy
    // to get a thread local proxy.
    TVirtualCollectionProxy *proxy = fCollectionClass->GetCollectionProxy();
@@ -219,7 +219,9 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TConvertMapToProxy::TConvertMapToProxy(TClassStreamer *streamer,
                                        Bool_t isPointer, Bool_t isPrealloc) :
    fIsPointer(isPointer),
@@ -227,8 +229,6 @@ TConvertMapToProxy::TConvertMapToProxy(TClassStreamer *streamer,
    fSizeOf(0),
    fCollectionClass(0)
 {
-   // Constructor.
-
    TCollectionClassStreamer *middleman = dynamic_cast<TCollectionClassStreamer*>(streamer);
    if (middleman) {
       TVirtualCollectionProxy *proxy = middleman->GetXYZ();
@@ -250,11 +250,11 @@ TConvertMapToProxy::TConvertMapToProxy(TClassStreamer *streamer,
 
 
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a std::map or std::multimap from the TBuffer b and load it into a (stl) collection
+
 void TConvertMapToProxy::operator()(TBuffer &b, void *pmember, Int_t size)
 {
-   // Read a std::map or std::multimap from the TBuffer b and load it into a (stl) collection
-
    R__ASSERT(b.IsReading());
    R__ASSERT(fCollectionClass);
 

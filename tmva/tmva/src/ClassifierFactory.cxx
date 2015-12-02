@@ -36,30 +36,30 @@
 ///
 TMVA::ClassifierFactory* TMVA::ClassifierFactory::fgInstance = 0;
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// access to the ClassifierFactory singleton
+/// creates the instance if needed
+
 TMVA::ClassifierFactory& TMVA::ClassifierFactory::Instance()
 {
-   // access to the ClassifierFactory singleton
-   // creates the instance if needed
-
    if (!fgInstance) fgInstance = new TMVA::ClassifierFactory();
 
    return *fgInstance;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destroy the singleton instance
+
 void TMVA::ClassifierFactory::DestroyInstance() 
 {
-   // destroy the singleton instance
-
    if (fgInstance!=0) delete fgInstance;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// registers a classifier creator function under the method type name
+
 Bool_t TMVA::ClassifierFactory::Register( const std::string &name, Creator creator ) 
 { 
-   // registers a classifier creator function under the method type name
-
    if(fCalls.find(name) != fCalls.end())
       {
          std::cerr << "ClassifierFactory<>::Register - " << name << " already exists" << std::endl;
@@ -69,24 +69,24 @@ Bool_t TMVA::ClassifierFactory::Register( const std::string &name, Creator creat
    return fCalls.insert(CallMap::value_type(name, creator)).second;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// unregisters a classifier type name
+
 Bool_t TMVA::ClassifierFactory::Unregister( const std::string &name ) 
 { 
-   // unregisters a classifier type name
-
    return fCalls.erase(name) == 1; 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates the method if needed based on the method name using the
+/// creator function the factory has stored
+
 TMVA::IMethod* TMVA::ClassifierFactory::Create( const std::string &name,
                                                 const TString& job,
                                                 const TString& title,
                                                 DataSetInfo& dsi,
                                                 const TString& option ) 
 {
-   // creates the method if needed based on the method name using the
-   // creator function the factory has stored
-
    // additional options are passed to the creator function (the
    // method constructor)
 
@@ -101,14 +101,14 @@ TMVA::IMethod* TMVA::ClassifierFactory::Create( const std::string &name,
    return (it->second)(job, title, dsi, option);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates the method if needed based on the method name using the
+/// creator function the factory has stored
+
 TMVA::IMethod* TMVA::ClassifierFactory::Create( const std::string &name,
                                                 DataSetInfo& dsi,
                                                 const TString& weightfile )
 {
-   // creates the method if needed based on the method name using the
-   // creator function the factory has stored
-
    // additional options are passed to the creator function (the
    // second method constructor)
 
@@ -123,11 +123,11 @@ TMVA::IMethod* TMVA::ClassifierFactory::Create( const std::string &name,
    return (it->second)("", "", dsi, weightfile);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns a vector of the method type names of registered methods
+
 const std::vector<std::string> TMVA::ClassifierFactory::List() const
 {
-   // returns a vector of the method type names of registered methods
-   
    std::vector<std::string> svec;
 
    CallMap::const_iterator it = fCalls.begin();
@@ -136,11 +136,11 @@ const std::vector<std::string> TMVA::ClassifierFactory::List() const
    return svec;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prints the registered method type names
+
 void TMVA::ClassifierFactory::Print() const
 {
-   // prints the registered method type names
-
    std::cout << "Print: ClassifierFactory<> knows about " << fCalls.size() << " objects" << std::endl;  
 
    CallMap::const_iterator it = fCalls.begin();

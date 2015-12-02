@@ -87,11 +87,11 @@ ClassImp(TButton)
 //End_Html
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Button default constructor.
+
 TButton::TButton(): TPad()
 {
-   // Button default constructor.
-
    fFraming = 0;
    fMethod  = "";
    fLogx    = kFALSE;
@@ -101,14 +101,14 @@ TButton::TButton(): TPad()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Button normal constructor.
+///
+///   Note that the button coordinates x1,y1,x2,y2 are always in the range [0,1]
+
 TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
            :TPad("button",title,x1,y1,x2,y2,18,2,1), TAttText(22,0,1,61,0.65)
 {
-   // Button normal constructor.
-   //
-   //   Note that the button coordinates x1,y1,x2,y2 are always in the range [0,1]
-
    fFraming=0;
    SetBit(kCanDelete);
    fModified = kTRUE;
@@ -124,31 +124,31 @@ TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Button default destructor.
+
 TButton::~TButton()
 {
-   // Button default destructor.
-
    if (fPrimitives) fPrimitives->Delete();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this button with its current attributes.
+
 void TButton::Draw(Option_t *option)
 {
-   // Draw this button with its current attributes.
-
    if (fCanvas) AppendPad(option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+///  This member function is called when a Button object is clicked.
+
 void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
-   //
-   //  This member function is called when a Button object is clicked.
-
    //check case where pressing a button deletes itself
    if (!TestBit(kNotDeleted)) return;
 
@@ -213,20 +213,20 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this button with its current attributes.
+
 void TButton::Paint(Option_t *option)
 {
-   // Paint this button with its current attributes.
-
    TPad::Paint(option);  //only called for Postscript print
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint is modified.
+
 void TButton::PaintModified()
 {
-   // Paint is modified.
-
    if (!fCanvas) return;
    if (!fPrimitives) fPrimitives = new TList();
    TObject *obj = GetListOfPrimitives()->First();
@@ -245,20 +245,20 @@ void TButton::PaintModified()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set world coordinate system for the pad.
+
 void TButton::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   // Set world coordinate system for the pad.
-
    TPad::Range(x1,y1,x2,y2);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    TPad *padsav = (TPad*)gPad;
    char quote = '"';
    if (gROOT->ClassSaved(TButton::Class())) {
@@ -320,11 +320,11 @@ void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// if framing is set, button will be highlighted
+
 void TButton::SetFraming(Bool_t f)
 {
-   // if framing is set, button will be highlighted
-
    fFraming=f;
    if (f) SetBit(kFraming);
    else   ResetBit(kFraming);

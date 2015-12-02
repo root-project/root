@@ -72,7 +72,9 @@ REGISTER_METHOD(SVM)
 
 ClassImp(TMVA::MethodSVM)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor
+
 TMVA::MethodSVM::MethodSVM( const TString& jobName, const TString& methodTitle, DataSetInfo& theData,
                             const TString& theOption, TDirectory* theTargetDir )
    : MethodBase( jobName, Types::kSVM, methodTitle, theData, theOption, theTargetDir )
@@ -93,10 +95,11 @@ TMVA::MethodSVM::MethodSVM( const TString& jobName, const TString& methodTitle, 
    , fTheta(0)
    , fKappa(0)
 {
-   // standard constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from weight file
+
 TMVA::MethodSVM::MethodSVM( DataSetInfo& theData, const TString& theWeightFile, TDirectory*  theTargetDir )
    : MethodBase( Types::kSVM, theData, theWeightFile, theTargetDir )
    , fCost(0)
@@ -116,33 +119,34 @@ TMVA::MethodSVM::MethodSVM( DataSetInfo& theData, const TString& theWeightFile, 
    , fTheta(0)
    , fKappa(0)
 {
-   // constructor from weight file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodSVM::~MethodSVM()
 {
-   // destructor
    if (fInputData !=0)       { delete fInputData; fInputData=0; }
    if (fSupportVectors !=0 ) { delete fSupportVectors; fSupportVectors = 0; }
    if (fWgSet !=0)           { delete fWgSet; fWgSet=0; }
    if (fSVKernelFunction !=0 ) { delete fSVKernelFunction; fSVKernelFunction = 0; }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SVM can handle classification with 2 classes and regression with one regression-target
+
 Bool_t TMVA::MethodSVM::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets )
 {
-   // SVM can handle classification with 2 classes and regression with one regression-target
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    if (type == Types::kRegression     && numberTargets == 1) return kTRUE;
    return kFALSE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default initialisation
+
 void TMVA::MethodSVM::Init()
 {
-   // default initialisation
-
    // SVM always uses normalised input variables
    SetNormalised( kTRUE );
 
@@ -153,11 +157,11 @@ void TMVA::MethodSVM::Init()
    fSupportVectors = new std::vector<TMVA::SVEvent*>(0);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// declare options available for this method
+
 void TMVA::MethodSVM::DeclareOptions()
 {
-   // declare options available for this method
-
    // for gaussian kernel parameter(s)
    DeclareOptionRef( fGamma = 1., "Gamma", "RBF kernel parameter: Gamma (size of the Kernel)");
 
@@ -172,10 +176,11 @@ void TMVA::MethodSVM::DeclareOptions()
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// options that are used ONLY for the READER to ensure backward compatibility
+
 void TMVA::MethodSVM::DeclareCompatibilityOptions()
 {
-   // options that are used ONLY for the READER to ensure backward compatibility
    MethodBase::DeclareCompatibilityOptions();
    DeclareOptionRef( fNSubSets  = 1,    "NSubSets", "Number of training subsets" );
    DeclareOptionRef( fTheKernel = "Gauss", "Kernel", "Uses kernel function");
@@ -188,10 +193,11 @@ void TMVA::MethodSVM::DeclareCompatibilityOptions()
    DeclareOptionRef( fKappa = 1., "Kappa", "Sigmoid Kernel parameter: kappa");
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// option post processing (if necessary)
+
 void TMVA::MethodSVM::ProcessOptions()
 {
-   // option post processing (if necessary)
    if (IgnoreEventsWithNegWeightsInTraining()) {
       Log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
             << GetMethodTypeName()
@@ -200,10 +206,11 @@ void TMVA::MethodSVM::ProcessOptions()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Train SVM
+
 void TMVA::MethodSVM::Train()
 {
-   // Train SVM
    Data()->SetCurrentType(Types::kTraining);
 
    Log() << kDEBUG << "Create event vector"<< Endl;
@@ -240,10 +247,11 @@ void TMVA::MethodSVM::Train()
    fInputData=0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write configuration to xml file
+
 void TMVA::MethodSVM::AddWeightsXMLTo( void* parent ) const
 {
-   // write configuration to xml file
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr(wght,"fBparm",fBparm);
    gTools().AddAttr(wght,"fGamma",fGamma);
@@ -269,7 +277,8 @@ void TMVA::MethodSVM::AddWeightsXMLTo( void* parent ) const
       gTools().AddAttr(minnode, "Var"+gTools().StringFromInt(ivar), GetXmin(ivar));
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodSVM::ReadWeightsFromXML( void* wghtnode )
 {
    gTools().ReadAttr( wghtnode, "fBparm",fBparm   );
@@ -319,14 +328,16 @@ void TMVA::MethodSVM::ReadWeightsFromXML( void* wghtnode )
    delete svector;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///TODO write IT
+/// write training sample (TTree) to file
+
 void TMVA::MethodSVM::WriteWeightsToStream( TFile& ) const
 {
-   //TODO write IT
-   // write training sample (TTree) to file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void  TMVA::MethodSVM::ReadWeightsFromStream( std::istream& istr )
 {
    if (fSupportVectors !=0) { delete fSupportVectors; fSupportVectors = 0;}
@@ -381,16 +392,18 @@ void  TMVA::MethodSVM::ReadWeightsFromStream( std::istream& istr )
    delete svector;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TODO write IT
+
 void TMVA::MethodSVM::ReadWeightsFromStream( TFile& /* fFin */ )
 {
-   // TODO write IT
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns MVA value for given event
+
 Double_t TMVA::MethodSVM::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // returns MVA value for given event
    Double_t myMVA = 0;
 
    // TODO: avoid creation of a new SVEvent every time (Joerg)
@@ -412,10 +425,10 @@ Double_t TMVA::MethodSVM::GetMvaValue( Double_t* err, Double_t* errUpper )
    // 08/12/09: changed sign here to make results agree with convention signal=1
    return 1.0/(1.0 + TMath::Exp(myMVA));
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const std::vector<Float_t>& TMVA::MethodSVM::GetRegressionValues()
 {
-
    if( fRegressionReturnVal == NULL )
       fRegressionReturnVal = new std::vector<Float_t>();
    fRegressionReturnVal->clear();
@@ -444,10 +457,11 @@ const std::vector<Float_t>& TMVA::MethodSVM::GetRegressionValues()
    return *fRegressionReturnVal;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write specific classifier response
+
 void TMVA::MethodSVM::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
-   // write specific classifier response
    const int fNsupv = fSupportVectors->size();
    fout << "   // not implemented for class: \"" << className << "\"" << std::endl;
    fout << "   float        fBparameter;" << std::endl;
@@ -520,13 +534,14 @@ void TMVA::MethodSVM::MakeClassSpecific( std::ostream& fout, const TString& clas
    fout << "};" << std::endl<< std::endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get help message text
+///
+/// typical length of text line:
+///         "|--------------------------------------------------------------|"
+
 void TMVA::MethodSVM::GetHelpMessage() const
 {
-   // get help message text
-   //
-   // typical length of text line:
-   //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;

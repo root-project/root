@@ -44,7 +44,8 @@ ClassImp(RooGExpModel)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn, 
 			   RooAbsReal& _sigma, RooAbsReal& _rlife, 
 			   Bool_t nlo, Type type) : 
@@ -59,7 +60,8 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn, 
 			   RooAbsReal& _sigma, RooAbsReal& _rlife, 
 			   RooAbsReal& _rsSF,
@@ -78,7 +80,8 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn, 
 			   RooAbsReal& _sigma, RooAbsReal& _rlife, 
 			   RooAbsReal& _sigmaSF, RooAbsReal& _rlifeSF,
@@ -97,7 +100,8 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGExpModel::RooGExpModel(const RooGExpModel& other, const char* name) : 
   RooResolutionModel(other,name),
   sigma("sigma",this,other.sigma),
@@ -113,15 +117,17 @@ RooGExpModel::RooGExpModel(const RooGExpModel& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooGExpModel::~RooGExpModel()
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooGExpModel::basisCode(const char* name) const 
 {
   if (!TString("exp(-@0/@1)").CompareTo(name)) return expBasisPlus ;
@@ -144,7 +150,8 @@ Int_t RooGExpModel::basisCode(const char* name) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooGExpModel::evaluate() const 
 {  
   static Double_t root2(sqrt(2.)) ;
@@ -284,10 +291,11 @@ Double_t RooGExpModel::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Approximation of the log of the complex error function
+
 Double_t RooGExpModel::logErfC(Double_t xx) const
 {
-  // Approximation of the log of the complex error function
   Double_t t,z,ans;
   z=fabs(xx);
   t=1.0/(1.0+0.5*z);
@@ -304,7 +312,8 @@ Double_t RooGExpModel::logErfC(Double_t xx) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::complex<Double_t> RooGExpModel::calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t omega, Double_t rtau, Double_t fsign) const
 {
   static Double_t root2(sqrt(2.)) ;
@@ -330,7 +339,8 @@ std::complex<Double_t> RooGExpModel::calcSinConv(Double_t sign, Double_t sig, Do
 
 // added FMV,08/18/03
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooGExpModel::calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t rtau, Double_t fsign) const
 {
   static Double_t root2(sqrt(2.)) ;
@@ -353,7 +363,8 @@ Double_t RooGExpModel::calcSinConv(Double_t sign, Double_t sig, Double_t tau, Do
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooGExpModel::calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau, Double_t fsign) const
 // modified FMV,08/13/03
 {
@@ -435,10 +446,10 @@ Double_t RooGExpModel::calcDecayConv(Double_t sign, Double_t tau, Double_t sig, 
 
 /* commented FMV, 07/24/03
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooGExpModel::calcCoshConv(Double_t sign, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const
 {
-  
   
   
   static Double_t root2(sqrt(2.)) ;
@@ -470,7 +481,8 @@ Double_t RooGExpModel::calcCoshConv(Double_t sign, Double_t tau, Double_t dgamma
 
 /* commented FMV, 07/24/03
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooGExpModel::calcSinhConv(Double_t sign, Double_t sign1, Double_t sign2, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const
 {
   static Double_t root2(sqrt(2.)) ;
@@ -503,7 +515,8 @@ Double_t RooGExpModel::calcSinhConv(Double_t sign, Double_t sign1, Double_t sign
 */
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooGExpModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   switch(_basisCode) {
@@ -546,7 +559,8 @@ Int_t RooGExpModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   static Double_t root2 = sqrt(2.) ;
@@ -697,14 +711,14 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) con
 
 // modified FMV, 07/24/03. Finite+asymtotic normalization
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  old code (asymptotic normalization only)
+///  std::complex<Double_t> z(1/tau,sign*omega);
+///  return z*2/(omega*omega+1/(tau*tau));
+
 std::complex<Double_t> RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau, Double_t omega, 
 					 Double_t sig, Double_t rtau, Double_t fsign, const char* rangeName) const
 {
-  //  old code (asymptotic normalization only)
-  //  std::complex<Double_t> z(1/tau,sign*omega);
-  //  return z*2/(omega*omega+1/(tau*tau));
-
   static Double_t root2(sqrt(2.)) ;
 
   Double_t smin1= x.min(rangeName)/tau;
@@ -729,7 +743,8 @@ std::complex<Double_t> RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau
 
 // added FMV, 08/17/03
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau, Double_t sig, Double_t rtau, Double_t fsign, const char* rangeName) const
 {
   static Double_t root2(sqrt(2.)) ;
@@ -762,7 +777,8 @@ Double_t RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau, Double_t sig
 
 
 // added FMV, 07/24/03
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::complex<Double_t> RooGExpModel::evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const
 {
   std::complex<Double_t> diff;
@@ -775,7 +791,8 @@ std::complex<Double_t> RooGExpModel::evalCerfInt(Double_t sign, Double_t wt, Dou
 }
 // added FMV, 08/17/03. Modified FMV, 08/30/03
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooGExpModel::evalCerfInt(Double_t sign, Double_t tau, Double_t umin, Double_t umax, Double_t c) const
 {
   Double_t diff;
@@ -794,13 +811,13 @@ Double_t RooGExpModel::evalCerfInt(Double_t sign, Double_t tau, Double_t umin, D
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// use the approximation: erf(z) = exp(-z*z)/(sqrt(pi)*z)
+/// to explicitly cancel the divergent exp(y*y) behaviour of
+/// CWERF for z = x + i y with large negative y
+
 std::complex<Double_t> RooGExpModel::evalCerfApprox(Double_t swt, Double_t u, Double_t c)
 {
-  // use the approximation: erf(z) = exp(-z*z)/(sqrt(pi)*z)
-  // to explicitly cancel the divergent exp(y*y) behaviour of
-  // CWERF for z = x + i y with large negative y
-
   static Double_t rootpi= sqrt(atan2(0.,-1.));
   std::complex<Double_t> z(swt*c,u+c);  
   std::complex<Double_t> zc(u+c,-swt*c);
@@ -812,7 +829,8 @@ std::complex<Double_t> RooGExpModel::evalCerfApprox(Double_t swt, Double_t u, Do
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooGExpModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ; 
@@ -821,7 +839,8 @@ Int_t RooGExpModel::getGenerator(const RooArgSet& directVars, RooArgSet &generat
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooGExpModel::generateEvent(Int_t code)
 {
   R__ASSERT(code==1) ;

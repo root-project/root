@@ -31,12 +31,12 @@
 
 ClassImp(TMethodArg)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TMethodArg ctor. TMethodArgs are constructed in TFunction
+/// via a call to TCling::CreateListOfMethodArgs().
+
 TMethodArg::TMethodArg(MethodArgInfo_t *info, TFunction *method) : TDictionary()
 {
-   // Default TMethodArg ctor. TMethodArgs are constructed in TFunction
-   // via a call to TCling::CreateListOfMethodArgs().
-
    fDataMember = 0;
    fInfo       = info;
    fMethod     = method;
@@ -46,91 +46,91 @@ TMethodArg::TMethodArg(MethodArgInfo_t *info, TFunction *method) : TDictionary()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TMethodArg dtor deletes adopted CINT MethodArgInfo object.
+
 TMethodArg::~TMethodArg()
 {
-   // TMethodArg dtor deletes adopted CINT MethodArgInfo object.
-
    if (fInfo) gCling->MethodArgInfo_Delete(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default value of method argument.
+
 const char *TMethodArg::GetDefault() const
 {
-   // Get default value of method argument.
-
    return gCling->MethodArgInfo_DefaultValue(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get type of method argument, e.g.: "class TDirectory*" -> "TDirectory"
+/// Result needs to be used or copied immediately.
+
 const char *TMethodArg::GetTypeName() const
 {
-   // Get type of method argument, e.g.: "class TDirectory*" -> "TDirectory"
-   // Result needs to be used or copied immediately.
-
    return gCling->TypeName(gCling->MethodArgInfo_TypeName(fInfo));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get full type description of method argument, e.g.: "class TDirectory*".
+
 const char *TMethodArg::GetFullTypeName() const
 {
-   // Get full type description of method argument, e.g.: "class TDirectory*".
-
    return gCling->MethodArgInfo_TypeName(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the normalized name of the return type.  A normalized name is fully
+/// qualified and has all typedef desugared except for the 'special' typedef
+/// which include Double32_t, Float16_t, [U]Long64_t and std::string.  It
+/// also has std:: removed [This is subject to change].
+///
+
 std::string TMethodArg::GetTypeNormalizedName() const
 {
-   // Get the normalized name of the return type.  A normalized name is fully
-   // qualified and has all typedef desugared except for the 'special' typedef
-   // which include Double32_t, Float16_t, [U]Long64_t and std::string.  It
-   // also has std:: removed [This is subject to change].
-   //
-
    return gCling->MethodArgInfo_TypeNormalizedName(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get property description word. For meaning of bits see EProperty.
+
 Long_t TMethodArg::Property() const
 {
-   // Get property description word. For meaning of bits see EProperty.
-
    return gCling->MethodArgInfo_Property(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns list of possible options - according to pointed datamember.
+/// If there is no datamember field assigned to this methodarg - returns 0.
+
 TList *TMethodArg::GetOptions() const
 {
-   // Returns list of possible options - according to pointed datamember.
-   // If there is no datamember field assigned to this methodarg - returns 0.
-
    return (TList*)(fDataMember ? fDataMember->GetOptions() : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns TDataMember pointed by this methodarg.
+/// If you want to specify list of options or current value for your
+/// MethodArg (i.e. it is used as initial values in argument-asking dialogs
+/// popped up from context-meny),you can get this value from one of data
+/// members of the class.
+/// The only restriction is, that this DataMember object must have its
+/// Getter/Setter methods set-up correctly - for details look at TDataMember.
+/// To learn how to specify the data member to which the argument should
+/// "point", look at TMethod. This is TMethod which sets up fDataMember,
+/// so it could work correctly.
+
 TDataMember *TMethodArg::GetDataMember() const
 {
-   // Returns TDataMember pointed by this methodarg.
-   // If you want to specify list of options or current value for your
-   // MethodArg (i.e. it is used as initial values in argument-asking dialogs
-   // popped up from context-meny),you can get this value from one of data
-   // members of the class.
-   // The only restriction is, that this DataMember object must have its
-   // Getter/Setter methods set-up correctly - for details look at TDataMember.
-   // To learn how to specify the data member to which the argument should
-   // "point", look at TMethod. This is TMethod which sets up fDataMember,
-   // so it could work correctly.
-
    return fDataMember;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update fInfo (to 0 for unloading and non-zero for reloading).
+/// This takes ownership of 'info'
+
 void TMethodArg::Update(MethodArgInfo_t *info)
 {
-   // Update fInfo (to 0 for unloading and non-zero for reloading).
-   // This takes ownership of 'info'
-
    if (fInfo) gCling->MethodArgInfo_Delete(fInfo);
    fInfo = info;
    if (fInfo) {

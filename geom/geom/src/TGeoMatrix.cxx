@@ -182,31 +182,35 @@ const Int_t kN9 = 9*sizeof(Double_t);
 
 ClassImp(TGeoMatrix)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dummy constructor
+
 TGeoMatrix::TGeoMatrix()
 {
-// dummy constructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor
+
 TGeoMatrix::TGeoMatrix(const TGeoMatrix &other)
            :TNamed(other)
 {
-// copy constructor
    ResetBit(kGeoRegistered);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TGeoMatrix::TGeoMatrix(const char *name)
            :TNamed(name, "")
 {
-// Constructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoMatrix::~TGeoMatrix()
 {
-// Destructor
    if (IsRegistered() && gGeoManager) {
       if (!gGeoManager->IsCleaning()) {
          gGeoManager->GetListOfMatrices()->Remove(this);
@@ -215,10 +219,11 @@ TGeoMatrix::~TGeoMatrix()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TGeoMatrix& TGeoMatrix::operator = (const TGeoMatrix &matrix)
 {
-// Assignment operator
    if (&matrix == this) return *this;
    Bool_t registered = TestBit(kGeoRegistered);
    TNamed::operator=(matrix);
@@ -226,20 +231,22 @@ TGeoMatrix& TGeoMatrix::operator = (const TGeoMatrix &matrix)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiplication
+
 TGeoMatrix &TGeoMatrix::operator*(const TGeoMatrix &right) const
 {
-// Multiplication
    static TGeoHMatrix h;
    h = *this;
    h.Multiply(&right);
    return h;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Is-equal operator
+
 Bool_t TGeoMatrix::operator ==(const TGeoMatrix &other) const
 {
-// Is-equal operator
    if (&other == this) return kTRUE;
    Int_t i;
    Bool_t tr1 = IsTranslation();
@@ -263,10 +270,11 @@ Bool_t TGeoMatrix::operator ==(const TGeoMatrix &other) const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if no rotation or the rotation is about Z axis
+
 Bool_t TGeoMatrix::IsRotAboutZ() const
 {
-// Returns true if no rotation or the rotation is about Z axis
    if (IsIdentity()) return kTRUE;
    const Double_t *rot = GetRotationMatrix();
    if (TMath::Abs(rot[6])>1E-9) return kFALSE;
@@ -275,10 +283,11 @@ Bool_t TGeoMatrix::IsRotAboutZ() const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get total size in bytes of this
+
 Int_t TGeoMatrix::GetByteCount() const
 {
-// Get total size in bytes of this
    Int_t count = 4+28+strlen(GetName())+strlen(GetTitle()); // fId + TNamed
    if (IsTranslation()) count += 12;
    if (IsScale()) count += 12;
@@ -286,29 +295,31 @@ Int_t TGeoMatrix::GetByteCount() const
    return count;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Provide a pointer name containing uid.
+
 char *TGeoMatrix::GetPointerName() const
 {
-// Provide a pointer name containing uid.
    static TString name;
    name = TString::Format("pMatrix%d", GetUniqueID());
    return (char*)name.Data();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The homogenous matrix associated with the transformation is used for
+/// piling up's and visualization. A homogenous matrix is a 4*4 array
+/// containing the translation, the rotation and the scale components
+///
+///          | R00*sx  R01    R02    dx |
+///          | R10    R11*sy  R12    dy |
+///          | R20     R21   R22*sz  dz |
+///          |  0       0      0      1 |
+///
+///   where Rij is the rotation matrix, (sx, sy, sz) is the scale
+/// transformation and (dx, dy, dz) is the translation.
+
 void TGeoMatrix::GetHomogenousMatrix(Double_t *hmat) const
 {
-// The homogenous matrix associated with the transformation is used for
-// piling up's and visualization. A homogenous matrix is a 4*4 array
-// containing the translation, the rotation and the scale components
-//
-//          | R00*sx  R01    R02    dx |
-//          | R10    R11*sy  R12    dy |
-//          | R20     R21   R22*sz  dz |
-//          |  0       0      0      1 |
-//
-//   where Rij is the rotation matrix, (sx, sy, sz) is the scale
-// transformation and (dx, dy, dz) is the translation.
    Double_t *hmatrix = hmat;
    const Double_t *mat = GetRotationMatrix();
    for (Int_t i=0; i<3; i++) {
@@ -328,10 +339,11 @@ void TGeoMatrix::GetHomogenousMatrix(Double_t *hmat) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a point by multiplying its column vector (x, y, z, 1) to matrix inverse
+
 void TGeoMatrix::LocalToMaster(const Double_t *local, Double_t *master) const
 {
-// convert a point by multiplying its column vector (x, y, z, 1) to matrix inverse
    if (IsIdentity()) {
       memcpy(master, local, kN3);
       return;
@@ -351,10 +363,11 @@ void TGeoMatrix::LocalToMaster(const Double_t *local, Double_t *master) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a vector by multiplying its column vector (x, y, z, 1) to matrix inverse
+
 void TGeoMatrix::LocalToMasterVect(const Double_t *local, Double_t *master) const
 {
-// convert a vector by multiplying its column vector (x, y, z, 1) to matrix inverse
    if (!IsRotation()) {
       memcpy(master, local, kN3);
       return;
@@ -367,10 +380,11 @@ void TGeoMatrix::LocalToMasterVect(const Double_t *local, Double_t *master) cons
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a point by multiplying its column vector (x, y, z, 1) to matrix inverse
+
 void TGeoMatrix::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
-// convert a point by multiplying its column vector (x, y, z, 1) to matrix inverse
    if (IsIdentity()) {
       memcpy(master, local, kN3);
       return;
@@ -392,10 +406,11 @@ void TGeoMatrix::LocalToMasterBomb(const Double_t *local, Double_t *master) cons
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a point by multiplying its column vector (x, y, z, 1) to matrix
+
 void TGeoMatrix::MasterToLocal(const Double_t *master, Double_t *local) const
 {
-// convert a point by multiplying its column vector (x, y, z, 1) to matrix
    if (IsIdentity()) {
       memcpy(local, master, kN3);
       return;
@@ -416,10 +431,11 @@ void TGeoMatrix::MasterToLocal(const Double_t *master, Double_t *local) const
    local[2] = mt0*rot[2] + mt1*rot[5] + mt2*rot[8];
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a point by multiplying its column vector (x, y, z, 1) to matrix
+
 void TGeoMatrix::MasterToLocalVect(const Double_t *master, Double_t *local) const
 {
-// convert a point by multiplying its column vector (x, y, z, 1) to matrix
    if (!IsRotation()) {
       memcpy(local, master, kN3);
       return;
@@ -432,10 +448,11 @@ void TGeoMatrix::MasterToLocalVect(const Double_t *master, Double_t *local) cons
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a point by multiplying its column vector (x, y, z, 1) to matrix
+
 void TGeoMatrix::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
-// convert a point by multiplying its column vector (x, y, z, 1) to matrix
    if (IsIdentity()) {
       memcpy(local, master, kN3);
       return;
@@ -456,10 +473,11 @@ void TGeoMatrix::MasterToLocalBomb(const Double_t *master, Double_t *local) cons
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normalize a vector.
+
 void TGeoMatrix::Normalize(Double_t *vect)
 {
-// Normalize a vector.
    Double_t normfactor = vect[0]*vect[0] + vect[1]*vect[1] + vect[2]*vect[2];
    if (normfactor <= 1E-10) return;
    normfactor = 1./TMath::Sqrt(normfactor);
@@ -468,10 +486,11 @@ void TGeoMatrix::Normalize(Double_t *vect)
    vect[2] *= normfactor;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print the matrix in 4x4 format
+
 void TGeoMatrix::Print(Option_t *) const
 {
-// print the matrix in 4x4 format
    const Double_t *rot = GetRotationMatrix();
    const Double_t *tr  = GetTranslation();
    printf("matrix %s - tr=%d  rot=%d  refl=%d  scl=%d\n", GetName(),(Int_t)IsTranslation(),
@@ -485,28 +504,32 @@ void TGeoMatrix::Print(Option_t *) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply by a reflection respect to YZ.
+
 void TGeoMatrix::ReflectX(Bool_t, Bool_t)
 {
-// Multiply by a reflection respect to YZ.
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply by a reflection respect to ZX.
+
 void TGeoMatrix::ReflectY(Bool_t, Bool_t)
 {
-// Multiply by a reflection respect to ZX.
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply by a reflection respect to XY.
+
 void TGeoMatrix::ReflectZ(Bool_t, Bool_t)
 {
-// Multiply by a reflection respect to XY.
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register the matrix in the current manager, which will become the owner.
+
 void TGeoMatrix::RegisterYourself()
 {
-// Register the matrix in the current manager, which will become the owner.
    if (!gGeoManager) {
       Warning("RegisterYourself", "cannot register without geometry");
       return;
@@ -517,18 +540,19 @@ void TGeoMatrix::RegisterYourself()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If no name was supplied in the ctor, the type of transformation is checked.
+/// A letter will be prepended to the name :
+///   t - translation
+///   r - rotation
+///   s - scale
+///   c - combi (translation + rotation)
+///   g - general (tr+rot+scale)
+/// The index of the transformation in gGeoManager list of transformations will
+/// be appended.
+
 void TGeoMatrix::SetDefaultName()
 {
-// If no name was supplied in the ctor, the type of transformation is checked.
-// A letter will be prepended to the name :
-//   t - translation
-//   r - rotation
-//   s - scale
-//   c - combi (translation + rotation)
-//   g - general (tr+rot+scale)
-// The index of the transformation in gGeoManager list of transformations will
-// be appended.
    if (!gGeoManager) return;
    if (strlen(GetName())) return;
    char type = 'n';
@@ -547,61 +571,68 @@ void TGeoMatrix::SetDefaultName()
 
 ClassImp(TGeoTranslation)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoTranslation::TGeoTranslation()
 {
-// Default constructor
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TGeoTranslation::TGeoTranslation(const TGeoTranslation &other)
                 :TGeoMatrix(other)
 {
-// Copy ctor.
    SetTranslation(other);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ctor. based on a general matrix
+
 TGeoTranslation::TGeoTranslation(const TGeoMatrix &other)
                 :TGeoMatrix(other)
 {
-// Ctor. based on a general matrix
    SetTranslation(other);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor defining the translation
+
 TGeoTranslation::TGeoTranslation(Double_t dx, Double_t dy, Double_t dz)
                 :TGeoMatrix("")
 {
-// Default constructor defining the translation
    if (dx || dy || dz) SetBit(kGeoTranslation);
    SetTranslation(dx, dy, dz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor defining the translation
+
 TGeoTranslation::TGeoTranslation(const char *name, Double_t dx, Double_t dy, Double_t dz)
                 :TGeoMatrix(name)
 {
-// Default constructor defining the translation
    if (dx || dy || dz) SetBit(kGeoTranslation);
    SetTranslation(dx, dy, dz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment from a general matrix
+
 TGeoTranslation& TGeoTranslation::operator = (const TGeoMatrix &matrix)
 {
-// Assignment from a general matrix
    if (&matrix == this) return *this;
    TGeoMatrix::operator=(matrix);
    SetTranslation(matrix);
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a temporary inverse of this.
+
 TGeoMatrix& TGeoTranslation::Inverse() const
 {
-// Return a temporary inverse of this.
    static TGeoHMatrix h;
    h = *this;
    Double_t tr[3];
@@ -612,57 +643,64 @@ TGeoMatrix& TGeoTranslation::Inverse() const
    return h;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adding a translation to this one
+
 void TGeoTranslation::Add(const TGeoTranslation *other)
 {
-// Adding a translation to this one
    const Double_t *trans = other->GetTranslation();
    for (Int_t i=0; i<3; i++)
       fTranslation[i] += trans[i];
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a clone of this matrix.
+
 TGeoMatrix *TGeoTranslation::MakeClone() const
 {
-// Make a clone of this matrix.
    TGeoMatrix *matrix = new TGeoTranslation(*this);
    return matrix;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate about X axis of the master frame with angle expressed in degrees.
+
 void TGeoTranslation::RotateX(Double_t /*angle*/)
 {
-// Rotate about X axis of the master frame with angle expressed in degrees.
    Warning("RotateX", "Not implemented. Use TGeoCombiTrans instead");
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate about Y axis of the master frame with angle expressed in degrees.
+
 void TGeoTranslation::RotateY(Double_t /*angle*/)
 {
-// Rotate about Y axis of the master frame with angle expressed in degrees.
    Warning("RotateY", "Not implemented. Use TGeoCombiTrans instead");
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate about Z axis of the master frame with angle expressed in degrees.
+
 void TGeoTranslation::RotateZ(Double_t /*angle*/)
 {
-// Rotate about Z axis of the master frame with angle expressed in degrees.
    Warning("RotateZ", "Not implemented. Use TGeoCombiTrans instead");
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Subtracting a translation from this one
+
 void TGeoTranslation::Subtract(const TGeoTranslation *other)
 {
-// Subtracting a translation from this one
    const Double_t *trans = other->GetTranslation();
    for (Int_t i=0; i<3; i++)
       fTranslation[i] -= trans[i];
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set translation components
+
 void TGeoTranslation::SetTranslation(Double_t dx, Double_t dy, Double_t dz)
 {
-// Set translation components
    fTranslation[0] = dx;
    fTranslation[1] = dy;
    fTranslation[2] = dz;
@@ -670,35 +708,39 @@ void TGeoTranslation::SetTranslation(Double_t dx, Double_t dy, Double_t dz)
    else                ResetBit(kGeoTranslation);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set translation components
+
 void TGeoTranslation::SetTranslation(const TGeoMatrix &other)
 {
-// Set translation components
    SetBit(kGeoTranslation, other.IsTranslation());
    const Double_t *transl = other.GetTranslation();
    memcpy(fTranslation, transl, kN3);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a point by multiplying its column vector (x, y, z, 1) to matrix inverse
+
 void TGeoTranslation::LocalToMaster(const Double_t *local, Double_t *master) const
 {
-// convert a point by multiplying its column vector (x, y, z, 1) to matrix inverse
    const Double_t *tr = GetTranslation();
    for (Int_t i=0; i<3; i++)
       master[i] = tr[i] + local[i];
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a vector to MARS
+
 void TGeoTranslation::LocalToMasterVect(const Double_t *local, Double_t *master) const
 {
-// convert a vector to MARS
    memcpy(master, local, kN3);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a point by multiplying its column vector (x, y, z, 1) to matrix inverse
+
 void TGeoTranslation::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
-// convert a point by multiplying its column vector (x, y, z, 1) to matrix inverse
    const Double_t *tr = GetTranslation();
    Double_t bombtr[3] = {0.,0.,0.};
    gGeoManager->BombTranslation(tr, &bombtr[0]);
@@ -706,26 +748,29 @@ void TGeoTranslation::LocalToMasterBomb(const Double_t *local, Double_t *master)
       master[i] = bombtr[i] + local[i];
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a point by multiplying its column vector (x, y, z, 1) to matrix
+
 void TGeoTranslation::MasterToLocal(const Double_t *master, Double_t *local) const
 {
-// convert a point by multiplying its column vector (x, y, z, 1) to matrix
    const Double_t *tr = GetTranslation();
    for (Int_t i=0; i<3; i++)
       local[i] =  master[i]-tr[i];
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a vector from MARS to local
+
 void TGeoTranslation::MasterToLocalVect(const Double_t *master, Double_t *local) const
 {
-// convert a vector from MARS to local
    memcpy(local, master, kN3);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a point by multiplying its column vector (x, y, z, 1) to matrix
+
 void TGeoTranslation::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
-// convert a point by multiplying its column vector (x, y, z, 1) to matrix
    const Double_t *tr = GetTranslation();
    Double_t bombtr[3] = {0.,0.,0.};
    gGeoManager->UnbombTranslation(tr, &bombtr[0]);
@@ -733,10 +778,11 @@ void TGeoTranslation::MasterToLocalBomb(const Double_t *master, Double_t *local)
       local[i] =  master[i]-bombtr[i];
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoTranslation::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(kGeoSavePrimitive)) return;
    out << "   // Translation: " << GetName() << std::endl;
    out << "   dx = " << fTranslation[0] << ";" << std::endl;
@@ -750,82 +796,90 @@ void TGeoTranslation::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*=
 
 ClassImp(TGeoRotation)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TGeoRotation::TGeoRotation()
 {
-// Default constructor.
    for (Int_t i=0; i<9; i++) {
       if (i%4) fRotationMatrix[i] = 0;
       else fRotationMatrix[i] = 1.0;
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TGeoRotation::TGeoRotation(const TGeoRotation &other)
              :TGeoMatrix(other)
 {
-// Copy ctor.
    SetRotation(other);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TGeoRotation::TGeoRotation(const TGeoMatrix &other)
              :TGeoMatrix(other)
 {
-// Copy ctor.
    SetRotation(other);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Named rotation constructor
+
 TGeoRotation::TGeoRotation(const char *name)
              :TGeoMatrix(name)
 {
-// Named rotation constructor
    for (Int_t i=0; i<9; i++) {
       if (i%4) fRotationMatrix[i] = 0;
       else fRotationMatrix[i] = 1.0;
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default rotation constructor with Euler angles. Phi is the rotation angle about
+/// Z axis  and is done first, theta is the rotation about new Y and is done
+/// second, psi is the rotation angle about new Z and is done third. All angles are in
+/// degrees.
+
 TGeoRotation::TGeoRotation(const char *name, Double_t phi, Double_t theta, Double_t psi)
              :TGeoMatrix(name)
 {
-// Default rotation constructor with Euler angles. Phi is the rotation angle about
-// Z axis  and is done first, theta is the rotation about new Y and is done
-// second, psi is the rotation angle about new Z and is done third. All angles are in
-// degrees.
    SetAngles(phi, theta, psi);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotation constructor a la GEANT3. Angles theta(i), phi(i) are the polar and azimuthal
+/// angles of the (i) axis of the rotated system with respect to the initial non-rotated
+/// system.
+///   Example : the identity matrix (no rotation) is composed by
+///      theta1=90, phi1=0, theta2=90, phi2=90, theta3=0, phi3=0
+///   SetBit(kGeoRotation);
+
 TGeoRotation::TGeoRotation(const char *name, Double_t theta1, Double_t phi1, Double_t theta2, Double_t phi2,
                            Double_t theta3, Double_t phi3)
              :TGeoMatrix(name)
 {
-// Rotation constructor a la GEANT3. Angles theta(i), phi(i) are the polar and azimuthal
-// angles of the (i) axis of the rotated system with respect to the initial non-rotated
-// system.
-//   Example : the identity matrix (no rotation) is composed by
-//      theta1=90, phi1=0, theta2=90, phi2=90, theta3=0, phi3=0
-//   SetBit(kGeoRotation);
    SetAngles(theta1, phi1, theta2, phi2, theta3, phi3);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment from a general matrix
+
 TGeoRotation& TGeoRotation::operator = (const TGeoMatrix &other)
 {
-// Assignment from a general matrix
    if (&other == this) return *this;
    TGeoMatrix::operator=(other);
    SetRotation(other);
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a temporary inverse of this.
+
 TGeoMatrix& TGeoRotation::Inverse() const
 {
-// Return a temporary inverse of this.
    static TGeoHMatrix h;
    h = *this;
    Double_t newrot[9];
@@ -842,10 +896,11 @@ TGeoMatrix& TGeoRotation::Inverse() const
    return h;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform orthogonality test for rotation.
+
 Bool_t TGeoRotation::IsValid() const
 {
-// Perform orthogonality test for rotation.
    const Double_t *r = fRotationMatrix;
    Double_t cij;
    for (Int_t i=0; i<2; i++) {
@@ -861,18 +916,20 @@ Bool_t TGeoRotation::IsValid() const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reset data members
+
 void TGeoRotation::Clear(Option_t *)
 {
-// reset data members
    memcpy(fRotationMatrix,kIdentityMatrix,kN9);
    ResetBit(kGeoRotation);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a rotation about Z having the sine/cosine of the rotation angle.
+
 void TGeoRotation::FastRotZ(const Double_t *sincos)
 {
-// Perform a rotation about Z having the sine/cosine of the rotation angle.
    fRotationMatrix[0] = sincos[1];
    fRotationMatrix[1] = -sincos[0];
    fRotationMatrix[3] = sincos[0];
@@ -880,23 +937,25 @@ void TGeoRotation::FastRotZ(const Double_t *sincos)
    SetBit(kGeoRotation);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Returns rotation angle about Z axis in degrees. If the rotation is a pure
+///    rotation about Z, fixX parameter does not matter, otherwise its meaning is:
+///    - fixX = true  : result is the phi angle of the projection of the rotated X axis in the un-rotated XY
+///    - fixX = false : result is the phi angle of the projection of the rotated Y axis - 90 degrees
+
 Double_t TGeoRotation::GetPhiRotation(Bool_t fixX) const
 {
-//--- Returns rotation angle about Z axis in degrees. If the rotation is a pure
-//    rotation about Z, fixX parameter does not matter, otherwise its meaning is:
-//    - fixX = true  : result is the phi angle of the projection of the rotated X axis in the un-rotated XY
-//    - fixX = false : result is the phi angle of the projection of the rotated Y axis - 90 degrees
    Double_t phi;
    if (fixX) phi = 180.*TMath::ATan2(-fRotationMatrix[1],fRotationMatrix[4])/TMath::Pi();
    else      phi = 180.*TMath::ATan2(fRotationMatrix[3], fRotationMatrix[0])/TMath::Pi();
    return phi;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a point by multiplying its column vector (x, y, z, 1) to matrix inverse
+
 void TGeoRotation::LocalToMaster(const Double_t *local, Double_t *master) const
 {
-// convert a point by multiplying its column vector (x, y, z, 1) to matrix inverse
    const Double_t *rot = GetRotationMatrix();
    for (Int_t i=0; i<3; i++) {
       master[i] = local[0]*rot[3*i]
@@ -905,10 +964,11 @@ void TGeoRotation::LocalToMaster(const Double_t *local, Double_t *master) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a point by multiplying its column vector (x, y, z, 1) to matrix
+
 void TGeoRotation::MasterToLocal(const Double_t *master, Double_t *local) const
 {
-// convert a point by multiplying its column vector (x, y, z, 1) to matrix
    const Double_t *rot = GetRotationMatrix();
    for (Int_t i=0; i<3; i++) {
       local[i] = master[0]*rot[i]
@@ -917,18 +977,20 @@ void TGeoRotation::MasterToLocal(const Double_t *master, Double_t *local) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a clone of this matrix.
+
 TGeoMatrix *TGeoRotation::MakeClone() const
 {
-// Make a clone of this matrix.
    TGeoMatrix *matrix = new TGeoRotation(*this);
    return matrix;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate about X axis of the master frame with angle expressed in degrees.
+
 void TGeoRotation::RotateX(Double_t angle)
 {
-// Rotate about X axis of the master frame with angle expressed in degrees.
    SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
@@ -947,10 +1009,11 @@ void TGeoRotation::RotateX(Double_t angle)
    memcpy(fRotationMatrix, v, kN9);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate about Y axis of the master frame with angle expressed in degrees.
+
 void TGeoRotation::RotateY(Double_t angle)
 {
-// Rotate about Y axis of the master frame with angle expressed in degrees.
    SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
@@ -969,10 +1032,11 @@ void TGeoRotation::RotateY(Double_t angle)
    memcpy(fRotationMatrix, v, kN9);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate about Z axis of the master frame with angle expressed in degrees.
+
 void TGeoRotation::RotateZ(Double_t angle)
 {
-// Rotate about Z axis of the master frame with angle expressed in degrees.
    SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
@@ -991,10 +1055,11 @@ void TGeoRotation::RotateZ(Double_t angle)
    memcpy(&fRotationMatrix[0],v,kN9);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply by a reflection respect to YZ.
+
 void TGeoRotation::ReflectX(Bool_t leftside, Bool_t)
 {
-// Multiply by a reflection respect to YZ.
    if (leftside) {
       fRotationMatrix[0]=-fRotationMatrix[0];
       fRotationMatrix[1]=-fRotationMatrix[1];
@@ -1008,10 +1073,11 @@ void TGeoRotation::ReflectX(Bool_t leftside, Bool_t)
    SetBit(kGeoReflection, !IsReflection());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply by a reflection respect to ZX.
+
 void TGeoRotation::ReflectY(Bool_t leftside, Bool_t)
 {
-// Multiply by a reflection respect to ZX.
    if (leftside) {
       fRotationMatrix[3]=-fRotationMatrix[3];
       fRotationMatrix[4]=-fRotationMatrix[4];
@@ -1025,10 +1091,11 @@ void TGeoRotation::ReflectY(Bool_t leftside, Bool_t)
    SetBit(kGeoReflection, !IsReflection());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply by a reflection respect to XY.
+
 void TGeoRotation::ReflectZ(Bool_t leftside, Bool_t)
 {
-// Multiply by a reflection respect to XY.
    if (leftside) {
       fRotationMatrix[6]=-fRotationMatrix[6];
       fRotationMatrix[7]=-fRotationMatrix[7];
@@ -1042,10 +1109,11 @@ void TGeoRotation::ReflectZ(Bool_t leftside, Bool_t)
    SetBit(kGeoReflection, !IsReflection());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoRotation::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(kGeoSavePrimitive)) return;
    out << "   // Rotation: " << GetName() << std::endl;
    Double_t th1,ph1,th2,ph2,th3,ph3;
@@ -1057,19 +1125,21 @@ void TGeoRotation::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""
    TObject::SetBit(kGeoSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy rotation elements from other rotation matrix.
+
 void TGeoRotation::SetRotation(const TGeoMatrix &other)
 {
-// Copy rotation elements from other rotation matrix.
    SetBit(kGeoRotation, other.IsRotation());
    const Double_t *rot = other.GetRotationMatrix();
    SetMatrix(rot);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set matrix elements according to Euler angles
+
 void TGeoRotation::SetAngles(Double_t phi, Double_t theta, Double_t psi)
 {
-// Set matrix elements according to Euler angles
    Double_t degrad = TMath::Pi()/180.;
    Double_t sinphi = TMath::Sin(degrad*phi);
    Double_t cosphi = TMath::Cos(degrad*phi);
@@ -1092,11 +1162,12 @@ void TGeoRotation::SetAngles(Double_t phi, Double_t theta, Double_t psi)
    CheckMatrix();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set matrix elements in the GEANT3 way
+
 void TGeoRotation::SetAngles(Double_t theta1, Double_t phi1, Double_t theta2, Double_t phi2,
                              Double_t theta3, Double_t phi3)
 {
-// Set matrix elements in the GEANT3 way
    Double_t degrad = TMath::Pi()/180.;
    fRotationMatrix[0] = TMath::Cos(degrad*phi1)*TMath::Sin(degrad*theta1);
    fRotationMatrix[3] = TMath::Sin(degrad*phi1)*TMath::Sin(degrad*theta1);
@@ -1118,11 +1189,12 @@ void TGeoRotation::SetAngles(Double_t theta1, Double_t phi1, Double_t theta2, Do
    CheckMatrix();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retreive rotation angles
+
 void TGeoRotation::GetAngles(Double_t &theta1, Double_t &phi1, Double_t &theta2, Double_t &phi2,
                              Double_t &theta3, Double_t &phi3) const
 {
-// Retreive rotation angles
    Double_t raddeg = 180./TMath::Pi();
    theta1 = raddeg*TMath::ACos(fRotationMatrix[6]);
    theta2 = raddeg*TMath::ACos(fRotationMatrix[7]);
@@ -1138,10 +1210,11 @@ void TGeoRotation::GetAngles(Double_t &theta1, Double_t &phi1, Double_t &theta2,
    if (phi3<0) phi3+=360.;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retreive Euler angles.
+
 void TGeoRotation::GetAngles(Double_t &phi, Double_t &theta, Double_t &psi) const
 {
-// Retreive Euler angles.
    const Double_t *m = fRotationMatrix;
    // Check if theta is 0 or 180.
    if (TMath::Abs(1.-TMath::Abs(m[8]))<1.e-9) {
@@ -1159,10 +1232,11 @@ void TGeoRotation::GetAngles(Double_t &phi, Double_t &theta, Double_t &psi) cons
    psi = TMath::ATan2(m[6],m[7])*TMath::RadToDeg();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes determinant of the rotation matrix
+
 Double_t TGeoRotation::Determinant() const
 {
-// computes determinant of the rotation matrix
    Double_t
    det = fRotationMatrix[0]*fRotationMatrix[4]*fRotationMatrix[8] +
          fRotationMatrix[3]*fRotationMatrix[7]*fRotationMatrix[2] +
@@ -1173,21 +1247,23 @@ Double_t TGeoRotation::Determinant() const
    return det;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// performes an orthogonality check and finds if the matrix is a reflection
+///   Warning("CheckMatrix", "orthogonality check not performed yet");
+
 void TGeoRotation::CheckMatrix()
 {
-   // performes an orthogonality check and finds if the matrix is a reflection
-//   Warning("CheckMatrix", "orthogonality check not performed yet");
    if (Determinant() < 0) SetBit(kGeoReflection);
    Double_t dd = fRotationMatrix[0] + fRotationMatrix[4] + fRotationMatrix[8] - 3.;
    if (TMath::Abs(dd) < 1.E-12) ResetBit(kGeoRotation);
    else                         SetBit(kGeoRotation);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the inverse rotation matrix (which is simply the transpose)
+
 void TGeoRotation::GetInverse(Double_t *invmat) const
 {
-// Get the inverse rotation matrix (which is simply the transpose)
    if (!invmat) {
       Error("GetInverse", "no place to store the inverse matrix");
       return;
@@ -1199,12 +1275,13 @@ void TGeoRotation::GetInverse(Double_t *invmat) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply this rotation with the one specified by ROT.
+/// -   after=TRUE (default): THIS*ROT
+/// -   after=FALSE         : ROT*THIS
+
 void TGeoRotation::MultiplyBy(TGeoRotation *rot, Bool_t after)
 {
-// Multiply this rotation with the one specified by ROT.
-// -   after=TRUE (default): THIS*ROT
-// -   after=FALSE         : ROT*THIS
    const Double_t *matleft, *matright;
    SetBit(kGeoRotation);
    Double_t  newmat[9] = {0};
@@ -1228,19 +1305,21 @@ void TGeoRotation::MultiplyBy(TGeoRotation *rot, Bool_t after)
 
 ClassImp(TGeoScale)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TGeoScale::TGeoScale()
 {
-// default constructor
    SetBit(kGeoScale);
    for (Int_t i=0; i<3; i++) fScale[i] = 1.;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TGeoScale::TGeoScale(const TGeoScale &other)
           :TGeoMatrix(other)
 {
-// Copy constructor
    SetBit(kGeoScale);
    const Double_t *scl =  other.GetScale();
    memcpy(fScale, scl, kN3);
@@ -1248,34 +1327,38 @@ TGeoScale::TGeoScale(const TGeoScale &other)
    else SetBit(kGeoReflection, kFALSE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TGeoScale::TGeoScale(Double_t sx, Double_t sy, Double_t sz)
           :TGeoMatrix("")
 {
-// default constructor
    SetBit(kGeoScale);
    SetScale(sx, sy, sz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TGeoScale::TGeoScale(const char *name, Double_t sx, Double_t sy, Double_t sz)
           :TGeoMatrix(name)
 {
-// default constructor
    SetBit(kGeoScale);
    SetScale(sx, sy, sz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoScale::~TGeoScale()
 {
-// destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TGeoScale &TGeoScale::operator=(const TGeoScale &other)
 {
-// Assignment operator
    if (&other == this) return *this;
    SetBit(kGeoScale);
    const Double_t *scl =  other.GetScale();
@@ -1285,10 +1368,11 @@ TGeoScale &TGeoScale::operator=(const TGeoScale &other)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a temporary inverse of this.
+
 TGeoMatrix& TGeoScale::Inverse() const
 {
-// Return a temporary inverse of this.
    static TGeoHMatrix h;
    h = *this;
    Double_t scale[3];
@@ -1299,10 +1383,11 @@ TGeoMatrix& TGeoScale::Inverse() const
    return h;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// scale setter
+
 void TGeoScale::SetScale(Double_t sx, Double_t sy, Double_t sz)
 {
-// scale setter
    if (TMath::Abs(sx*sy*sz) < 1.E-10) {
       Error("SetScale", "Invalid scale %f, %f, %f for transformation %s",sx,sy,sx,GetName());
       return;
@@ -1314,21 +1399,23 @@ void TGeoScale::SetScale(Double_t sx, Double_t sy, Double_t sz)
    else            SetBit(kGeoReflection, kFALSE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a local point to the master frame.
+
 void TGeoScale::LocalToMaster(const Double_t *local, Double_t *master) const
 {
-// Convert a local point to the master frame.
    master[0] = local[0]*fScale[0];
    master[1] = local[1]*fScale[1];
    master[2] = local[2]*fScale[2];
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert the local distance along unit vector DIR to master frame. If DIR
+/// is not specified perform a conversion such as the returned distance is the
+/// the minimum for all possible directions.
+
 Double_t TGeoScale::LocalToMaster(Double_t dist, const Double_t *dir) const
 {
-// Convert the local distance along unit vector DIR to master frame. If DIR
-// is not specified perform a conversion such as the returned distance is the
-// the minimum for all possible directions.
    Double_t scale;
    if (!dir) {
       scale = TMath::Abs(fScale[0]);
@@ -1343,29 +1430,32 @@ Double_t TGeoScale::LocalToMaster(Double_t dist, const Double_t *dir) const
    return scale*dist;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a clone of this matrix.
+
 TGeoMatrix *TGeoScale::MakeClone() const
 {
-// Make a clone of this matrix.
    TGeoMatrix *matrix = new TGeoScale(*this);
    return matrix;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a global point to local frame.
+
 void TGeoScale::MasterToLocal(const Double_t *master, Double_t *local) const
 {
-// Convert a global point to local frame.
    local[0] = master[0]/fScale[0];
    local[1] = master[1]/fScale[1];
    local[2] = master[2]/fScale[2];
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert the distance along unit vector DIR to local frame. If DIR
+/// is not specified perform a conversion such as the returned distance is the
+/// the minimum for all possible directions.
+
 Double_t TGeoScale::MasterToLocal(Double_t dist, const Double_t *dir) const
 {
-// Convert the distance along unit vector DIR to local frame. If DIR
-// is not specified perform a conversion such as the returned distance is the
-// the minimum for all possible directions.
    Double_t scale;
    if (!dir) {
       scale = TMath::Abs(fScale[0]);
@@ -1385,19 +1475,21 @@ Double_t TGeoScale::MasterToLocal(Double_t dist, const Double_t *dir) const
 
 ClassImp(TGeoCombiTrans)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dummy ctor
+
 TGeoCombiTrans::TGeoCombiTrans()
 {
-// dummy ctor
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
    fRotation = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor
+
 TGeoCombiTrans::TGeoCombiTrans(const TGeoCombiTrans &other)
                :TGeoMatrix(other)
 {
-// Copy ctor
    Int_t i;
    if (other.IsTranslation()) {
       const Double_t *trans = other.GetTranslation();
@@ -1413,11 +1505,12 @@ TGeoCombiTrans::TGeoCombiTrans(const TGeoCombiTrans &other)
    else fRotation = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TGeoCombiTrans::TGeoCombiTrans(const TGeoMatrix &other)
                :TGeoMatrix(other)
 {
-// Copy ctor.
    Int_t i;
    if (other.IsTranslation()) {
       SetBit(kGeoTranslation);
@@ -1433,10 +1526,11 @@ TGeoCombiTrans::TGeoCombiTrans(const TGeoMatrix &other)
    else fRotation = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a translation and a rotation.
+
 TGeoCombiTrans::TGeoCombiTrans(const TGeoTranslation &tr, const TGeoRotation &rot)
 {
-// Constructor from a translation and a rotation.
    if (tr.IsTranslation()) {
       SetBit(kGeoTranslation);
       const Double_t *trans = tr.GetTranslation();
@@ -1453,39 +1547,43 @@ TGeoCombiTrans::TGeoCombiTrans(const TGeoTranslation &tr, const TGeoRotation &ro
    else fRotation = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Named ctor.
+
 TGeoCombiTrans::TGeoCombiTrans(const char *name)
                :TGeoMatrix(name)
 {
-// Named ctor.
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
    fRotation = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a translation specified by X,Y,Z and a pointer to a rotation. The rotation will not be owned by this.
+
 TGeoCombiTrans::TGeoCombiTrans(Double_t dx, Double_t dy, Double_t dz, TGeoRotation *rot)
                :TGeoMatrix("")
 {
-// Constructor from a translation specified by X,Y,Z and a pointer to a rotation. The rotation will not be owned by this.
    SetTranslation(dx, dy, dz);
    fRotation = 0;
    SetRotation(rot);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Named ctor
+
 TGeoCombiTrans::TGeoCombiTrans(const char *name, Double_t dx, Double_t dy, Double_t dz, TGeoRotation *rot)
                :TGeoMatrix(name)
 {
-// Named ctor
    SetTranslation(dx, dy, dz);
    fRotation = 0;
    SetRotation(rot);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TGeoCombiTrans &TGeoCombiTrans::operator=(const TGeoMatrix &matrix)
 {
-// Assignment operator.
    if (&matrix == this) return *this;
    Clear();
    TGeoMatrix::operator=(matrix);
@@ -1516,19 +1614,21 @@ TGeoCombiTrans &TGeoCombiTrans::operator=(const TGeoMatrix &matrix)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoCombiTrans::~TGeoCombiTrans()
 {
-// destructor
    if (fRotation) {
       if(TestBit(TGeoMatrix::kGeoMatrixOwned) && !fRotation->IsRegistered()) delete fRotation;
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset translation/rotation to identity
+
 void TGeoCombiTrans::Clear(Option_t *)
 {
-// Reset translation/rotation to identity
    if (IsTranslation()) {
       ResetBit(kGeoTranslation);
       memset(fTranslation, 0, kN3);
@@ -1542,10 +1642,11 @@ void TGeoCombiTrans::Clear(Option_t *)
    ResetBit(kGeoMatrixOwned);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a temporary inverse of this.
+
 TGeoMatrix& TGeoCombiTrans::Inverse() const
 {
-// Return a temporary inverse of this.
    static TGeoHMatrix h;
    h = *this;
    Bool_t is_tr = IsTranslation();
@@ -1572,26 +1673,29 @@ TGeoMatrix& TGeoCombiTrans::Inverse() const
    return h;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a clone of this matrix.
+
 TGeoMatrix *TGeoCombiTrans::MakeClone() const
 {
-// Make a clone of this matrix.
    TGeoMatrix *matrix = new TGeoCombiTrans(*this);
    return matrix;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register the matrix in the current manager, which will become the owner.
+
 void TGeoCombiTrans::RegisterYourself()
 {
-// Register the matrix in the current manager, which will become the owner.
    TGeoMatrix::RegisterYourself();
    if (fRotation && fRotation->IsRotation()) fRotation->RegisterYourself();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate about X axis with angle expressed in degrees.
+
 void TGeoCombiTrans::RotateX(Double_t angle)
 {
-// Rotate about X axis with angle expressed in degrees.
    if (!fRotation || !TestBit(kGeoMatrixOwned)) {
       if (fRotation) fRotation = new TGeoRotation(*fRotation);
       else fRotation = new TGeoRotation();
@@ -1621,10 +1725,11 @@ void TGeoCombiTrans::RotateX(Double_t angle)
    memcpy(fTranslation,v,kN3);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate about Y axis with angle expressed in degrees.
+
 void TGeoCombiTrans::RotateY(Double_t angle)
 {
-// Rotate about Y axis with angle expressed in degrees.
    if (!fRotation || !TestBit(kGeoMatrixOwned)) {
       if (fRotation) fRotation = new TGeoRotation(*fRotation);
       else fRotation = new TGeoRotation();
@@ -1654,10 +1759,11 @@ void TGeoCombiTrans::RotateY(Double_t angle)
    memcpy(fTranslation,v,kN3);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate about Z axis with angle expressed in degrees.
+
 void TGeoCombiTrans::RotateZ(Double_t angle)
 {
-// Rotate about Z axis with angle expressed in degrees.
    if (!fRotation || !TestBit(kGeoMatrixOwned)) {
       if (fRotation) fRotation = new TGeoRotation(*fRotation);
       else fRotation = new TGeoRotation();
@@ -1687,10 +1793,11 @@ void TGeoCombiTrans::RotateZ(Double_t angle)
    memcpy(fTranslation,v,kN3);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply by a reflection respect to YZ.
+
 void TGeoCombiTrans::ReflectX(Bool_t leftside, Bool_t rotonly)
 {
-// Multiply by a reflection respect to YZ.
    if (leftside && !rotonly) fTranslation[0] = -fTranslation[0];
    if (!fRotation || !TestBit(kGeoMatrixOwned)) {
       if (fRotation) fRotation = new TGeoRotation(*fRotation);
@@ -1702,10 +1809,11 @@ void TGeoCombiTrans::ReflectX(Bool_t leftside, Bool_t rotonly)
    SetBit(kGeoReflection, !IsReflection());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply by a reflection respect to ZX.
+
 void TGeoCombiTrans::ReflectY(Bool_t leftside, Bool_t rotonly)
 {
-// Multiply by a reflection respect to ZX.
    if (leftside && !rotonly) fTranslation[1] = -fTranslation[1];
    if (!fRotation || !TestBit(kGeoMatrixOwned)) {
       if (fRotation) fRotation = new TGeoRotation(*fRotation);
@@ -1717,10 +1825,11 @@ void TGeoCombiTrans::ReflectY(Bool_t leftside, Bool_t rotonly)
    SetBit(kGeoReflection, !IsReflection());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply by a reflection respect to XY.
+
 void TGeoCombiTrans::ReflectZ(Bool_t leftside, Bool_t rotonly)
 {
-// Multiply by a reflection respect to XY.
    if (leftside && !rotonly) fTranslation[2] = -fTranslation[2];
    if (!fRotation || !TestBit(kGeoMatrixOwned)) {
       if (fRotation) fRotation = new TGeoRotation(*fRotation);
@@ -1732,10 +1841,11 @@ void TGeoCombiTrans::ReflectZ(Bool_t leftside, Bool_t rotonly)
    SetBit(kGeoReflection, !IsReflection());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoCombiTrans::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(kGeoSavePrimitive)) return;
    out << "   // Combi transformation: " << GetName() << std::endl;
    out << "   dx = " << fTranslation[0] << ";" << std::endl;
@@ -1752,10 +1862,11 @@ void TGeoCombiTrans::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TObject::SetBit(kGeoSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign a foreign rotation to the combi. The rotation is NOT owned by this.
+
 void TGeoCombiTrans::SetRotation(const TGeoRotation *rot)
 {
-// Assign a foreign rotation to the combi. The rotation is NOT owned by this.
    if (fRotation && TestBit(kGeoMatrixOwned)) delete fRotation;
    fRotation = 0;
    ResetBit(TGeoMatrix::kGeoMatrixOwned);
@@ -1770,10 +1881,11 @@ void TGeoCombiTrans::SetRotation(const TGeoRotation *rot)
    fRotation = rr;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the rotation from another one.
+
 void TGeoCombiTrans::SetRotation(const TGeoRotation &rot)
 {
-// Copy the rotation from another one.
    if (fRotation && TestBit(kGeoMatrixOwned)) delete fRotation;
    fRotation = 0;
    if (!rot.IsRotation()) {
@@ -1789,10 +1901,11 @@ void TGeoCombiTrans::SetRotation(const TGeoRotation &rot)
    SetBit(kGeoMatrixOwned);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy the translation component
+
 void TGeoCombiTrans::SetTranslation(const TGeoTranslation &tr)
 {
-// copy the translation component
    if (tr.IsTranslation()) {
       SetBit(kGeoTranslation);
       const Double_t *trans = tr.GetTranslation();
@@ -1804,10 +1917,11 @@ void TGeoCombiTrans::SetTranslation(const TGeoTranslation &tr)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the translation component
+
 void TGeoCombiTrans::SetTranslation(Double_t dx, Double_t dy, Double_t dz)
 {
-// set the translation component
    fTranslation[0] = dx;
    fTranslation[1] = dy;
    fTranslation[2] = dz;
@@ -1815,10 +1929,11 @@ void TGeoCombiTrans::SetTranslation(Double_t dx, Double_t dy, Double_t dz)
    else ResetBit(kGeoTranslation);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the translation component
+
 void TGeoCombiTrans::SetTranslation(Double_t *vect)
 {
-// set the translation component
    fTranslation[0] = vect[0];
    fTranslation[1] = vect[1];
    fTranslation[2] = vect[2];
@@ -1826,10 +1941,11 @@ void TGeoCombiTrans::SetTranslation(Double_t *vect)
    else ResetBit(kGeoTranslation);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the rotation array
+
 const Double_t *TGeoCombiTrans::GetRotationMatrix() const
 {
-// get the rotation array
    if (!fRotation) return kIdentityMatrix;
    return fRotation->GetRotationMatrix();
 }
@@ -1837,70 +1953,77 @@ const Double_t *TGeoCombiTrans::GetRotationMatrix() const
 
 ClassImp(TGeoGenTrans)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dummy ctor
+
 TGeoGenTrans::TGeoGenTrans()
 {
-// dummy ctor
    SetBit(kGeoGenTrans);
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
    for (Int_t j=0; j<3; j++) fScale[j] = 1.0;
    fRotation = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGeoGenTrans::TGeoGenTrans(const char *name)
              :TGeoCombiTrans(name)
 {
-// constructor
    SetBit(kGeoGenTrans);
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
    for (Int_t j=0; j<3; j++) fScale[j] = 1.0;
    fRotation = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGeoGenTrans::TGeoGenTrans(Double_t dx, Double_t dy, Double_t dz,
                            Double_t sx, Double_t sy, Double_t sz, TGeoRotation *rot)
              :TGeoCombiTrans("")
 {
-// constructor
    SetBit(kGeoGenTrans);
    SetTranslation(dx, dy, dz);
    SetScale(sx, sy, sz);
    SetRotation(rot);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGeoGenTrans::TGeoGenTrans(const char *name, Double_t dx, Double_t dy, Double_t dz,
                            Double_t sx, Double_t sy, Double_t sz, TGeoRotation *rot)
              :TGeoCombiTrans(name)
 {
-// constructor
    SetBit(kGeoGenTrans);
    SetTranslation(dx, dy, dz);
    SetScale(sx, sy, sz);
    SetRotation(rot);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoGenTrans::~TGeoGenTrans()
 {
-// destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// clear the fields of this transformation
+
 void TGeoGenTrans::Clear(Option_t *)
 {
-// clear the fields of this transformation
    memset(&fTranslation[0], 0, kN3);
    memset(&fScale[0], 0, kN3);
    if (fRotation) fRotation->Clear();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the scale
+
 void TGeoGenTrans::SetScale(Double_t sx, Double_t sy, Double_t sz)
 {
-// set the scale
    if (sx<1.E-5 || sy<1.E-5 || sz<1.E-5) {
       Error("ctor", "Invalid scale");
       return;
@@ -1910,20 +2033,22 @@ void TGeoGenTrans::SetScale(Double_t sx, Double_t sy, Double_t sz)
    fScale[2] = sz;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a temporary inverse of this.
+
 TGeoMatrix& TGeoGenTrans::Inverse() const
 {
-// Return a temporary inverse of this.
    Error("Inverse", "not implemented");
    static TGeoHMatrix h;
    h = *this;
    return h;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A scale transformation should be normalized by sx*sy*sz factor
+
 Bool_t TGeoGenTrans::Normalize()
 {
-// A scale transformation should be normalized by sx*sy*sz factor
    Double_t normfactor = fScale[0]*fScale[1]*fScale[2];
    if (normfactor <= 1E-5) return kFALSE;
    for (Int_t i=0; i<3; i++)
@@ -1934,27 +2059,30 @@ Bool_t TGeoGenTrans::Normalize()
 
 ClassImp(TGeoIdentity)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dummy ctor
+
 TGeoIdentity::TGeoIdentity()
 {
-// dummy ctor
    if (!gGeoIdentity) gGeoIdentity = this;
    RegisterYourself();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGeoIdentity::TGeoIdentity(const char *name)
              :TGeoMatrix(name)
 {
-// constructor
    if (!gGeoIdentity) gGeoIdentity = this;
    RegisterYourself();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a temporary inverse of this.
+
 TGeoMatrix &TGeoIdentity::Inverse() const
 {
-// Return a temporary inverse of this.
    return *gGeoIdentity;
 }
 
@@ -1969,30 +2097,33 @@ TGeoMatrix &TGeoIdentity::Inverse() const
 
 ClassImp(TGeoHMatrix)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dummy ctor
+
 TGeoHMatrix::TGeoHMatrix()
 {
-// dummy ctor
    memset(&fTranslation[0], 0, kN3);
    memcpy(fRotationMatrix,kIdentityMatrix,kN9);
    memcpy(fScale,kUnitScale,kN3);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGeoHMatrix::TGeoHMatrix(const char* name)
             :TGeoMatrix(name)
 {
-// constructor
    memset(&fTranslation[0], 0, kN3);
    memcpy(fRotationMatrix,kIdentityMatrix,kN9);
    memcpy(fScale,kUnitScale,kN3);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assignment
+
 TGeoHMatrix::TGeoHMatrix(const TGeoMatrix &matrix)
             :TGeoMatrix(matrix)
 {
-   // assignment
    if (matrix.IsTranslation()) {
       SetBit(kGeoTranslation);
       SetTranslation(matrix.GetTranslation());
@@ -2013,16 +2144,18 @@ TGeoHMatrix::TGeoHMatrix(const TGeoMatrix &matrix)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoHMatrix::~TGeoHMatrix()
 {
-// destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assignment
+
 TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix *matrix)
 {
-   // assignment
    if (matrix == this) return *this;
    Clear();
    if (matrix == 0) return *this;
@@ -2043,10 +2176,11 @@ TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix *matrix)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assignment
+
 TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix &matrix)
 {
-   // assignment
    if (&matrix == this) return *this;
    Clear();
    TGeoMatrix::operator=(matrix);
@@ -2072,10 +2206,11 @@ TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix &matrix)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fast copy method.
+
 void TGeoHMatrix::CopyFrom(const TGeoMatrix *other)
 {
-// Fast copy method.
    SetBit(kGeoTranslation, other->IsTranslation());
    SetBit(kGeoRotation, other->IsRotation());
    SetBit(kGeoReflection, other->IsReflection());
@@ -2083,10 +2218,11 @@ void TGeoHMatrix::CopyFrom(const TGeoMatrix *other)
    memcpy(fRotationMatrix,other->GetRotationMatrix(),kN9);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// clear the data for this matrix
+
 void TGeoHMatrix::Clear(Option_t *)
 {
-// clear the data for this matrix
    SetBit(kGeoReflection, kFALSE);
    if (IsIdentity()) return;
    if (IsTranslation()) {
@@ -2103,18 +2239,20 @@ void TGeoHMatrix::Clear(Option_t *)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a clone of this matrix.
+
 TGeoMatrix *TGeoHMatrix::MakeClone() const
 {
-// Make a clone of this matrix.
    TGeoMatrix *matrix = new TGeoHMatrix(*this);
    return matrix;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a rotation about Z having the sine/cosine of the rotation angle.
+
 void TGeoHMatrix::FastRotZ(const Double_t *sincos)
 {
-// Perform a rotation about Z having the sine/cosine of the rotation angle.
    fRotationMatrix[0] = sincos[1];
    fRotationMatrix[1] = -sincos[0];
    fRotationMatrix[3] = sincos[0];
@@ -2122,10 +2260,11 @@ void TGeoHMatrix::FastRotZ(const Double_t *sincos)
    SetBit(kGeoRotation);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a temporary inverse of this.
+
 TGeoMatrix& TGeoHMatrix::Inverse() const
 {
-// Return a temporary inverse of this.
    static TGeoHMatrix h;
    h = *this;
    if (IsTranslation()) {
@@ -2158,10 +2297,11 @@ TGeoMatrix& TGeoHMatrix::Inverse() const
    return h;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes determinant of the rotation matrix
+
 Double_t TGeoHMatrix::Determinant() const
 {
-// computes determinant of the rotation matrix
    Double_t
    det = fRotationMatrix[0]*fRotationMatrix[4]*fRotationMatrix[8] +
          fRotationMatrix[3]*fRotationMatrix[7]*fRotationMatrix[2] +
@@ -2172,11 +2312,12 @@ Double_t TGeoHMatrix::Determinant() const
    return det;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// multiply to the right with an other transformation
+/// if right is identity matrix, just return
+
 void TGeoHMatrix::Multiply(const TGeoMatrix *right)
 {
-// multiply to the right with an other transformation
-   // if right is identity matrix, just return
    if (right->IsIdentity()) return;
    const Double_t *r_tra = right->GetTranslation();
    const Double_t *r_rot = right->GetRotationMatrix();
@@ -2232,11 +2373,12 @@ void TGeoHMatrix::Multiply(const TGeoMatrix *right)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// multiply to the left with an other transformation
+/// if right is identity matrix, just return
+
 void TGeoHMatrix::MultiplyLeft(const TGeoMatrix *left)
 {
-// multiply to the left with an other transformation
-   // if right is identity matrix, just return
    if (left == gGeoIdentity) return;
    const Double_t *l_tra = left->GetTranslation();
    const Double_t *l_rot = left->GetRotationMatrix();
@@ -2295,10 +2437,11 @@ void TGeoHMatrix::MultiplyLeft(const TGeoMatrix *left)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate about X axis with angle expressed in degrees.
+
 void TGeoHMatrix::RotateX(Double_t angle)
 {
-// Rotate about X axis with angle expressed in degrees.
    SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
@@ -2321,10 +2464,11 @@ void TGeoHMatrix::RotateX(Double_t angle)
    memcpy(fTranslation,v,kN3);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate about Y axis with angle expressed in degrees.
+
 void TGeoHMatrix::RotateY(Double_t angle)
 {
-// Rotate about Y axis with angle expressed in degrees.
    SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
@@ -2347,10 +2491,11 @@ void TGeoHMatrix::RotateY(Double_t angle)
    memcpy(fTranslation,v,kN3);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate about Z axis with angle expressed in degrees.
+
 void TGeoHMatrix::RotateZ(Double_t angle)
 {
-// Rotate about Z axis with angle expressed in degrees.
    SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
@@ -2373,10 +2518,11 @@ void TGeoHMatrix::RotateZ(Double_t angle)
    memcpy(fTranslation,v,kN3);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply by a reflection respect to YZ.
+
 void TGeoHMatrix::ReflectX(Bool_t leftside, Bool_t rotonly)
 {
-// Multiply by a reflection respect to YZ.
    if (leftside && !rotonly) fTranslation[0] = -fTranslation[0];
    if (leftside) {
       fRotationMatrix[0]=-fRotationMatrix[0];
@@ -2391,10 +2537,11 @@ void TGeoHMatrix::ReflectX(Bool_t leftside, Bool_t rotonly)
    SetBit(kGeoReflection, !IsReflection());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply by a reflection respect to ZX.
+
 void TGeoHMatrix::ReflectY(Bool_t leftside, Bool_t rotonly)
 {
-// Multiply by a reflection respect to ZX.
    if (leftside && !rotonly) fTranslation[1] = -fTranslation[1];
    if (leftside) {
       fRotationMatrix[3]=-fRotationMatrix[3];
@@ -2409,10 +2556,11 @@ void TGeoHMatrix::ReflectY(Bool_t leftside, Bool_t rotonly)
    SetBit(kGeoReflection, !IsReflection());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply by a reflection respect to XY.
+
 void TGeoHMatrix::ReflectZ(Bool_t leftside, Bool_t rotonly)
 {
-// Multiply by a reflection respect to XY.
    if (leftside && !rotonly) fTranslation[2] = -fTranslation[2];
    if (leftside) {
       fRotationMatrix[6]=-fRotationMatrix[6];
@@ -2427,10 +2575,11 @@ void TGeoHMatrix::ReflectZ(Bool_t leftside, Bool_t rotonly)
    SetBit(kGeoReflection, !IsReflection());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoHMatrix::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(kGeoSavePrimitive)) return;
    const Double_t *tr = fTranslation;
    const Double_t *rot = fRotationMatrix;

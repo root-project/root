@@ -48,12 +48,13 @@ enum ETGeoTubeWid {
    kTUBE_APPLY, kTUBE_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for tube editor
+
 TGeoTubeEditor::TGeoTubeEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for tube editor
    fShape   = 0;
    fRmini = fRmaxi = fDzi = 0.0;
    fNamei = "";
@@ -128,10 +129,11 @@ TGeoTubeEditor::TGeoTubeEditor(const TGWindow *p, Int_t width,
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoTubeEditor::~TGeoTubeEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -141,10 +143,11 @@ TGeoTubeEditor::~TGeoTubeEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoTubeEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoTubeEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoTubeEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoTubeEditor", this, "DoModified()");
@@ -158,10 +161,11 @@ void TGeoTubeEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoTubeEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoTube::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -182,24 +186,27 @@ void TGeoTubeEditor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shape drawing is delayed.
+
 Bool_t TGeoTubeEditor::IsDelayed() const
 {
-// Check if shape drawing is delayed.
    return (fDelayed->GetState() == kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform name change.
+
 void TGeoTubeEditor::DoName()
 {
-// Perform name change.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoTubeEditor::DoApply()
 {
-// Slot for applying modifications.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t rmin = fERmin->GetNumber();
@@ -217,17 +224,19 @@ void TGeoTubeEditor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for signaling modifications.
+
 void TGeoTubeEditor::DoModified()
 {
-// Slot for signaling modifications.
    fApply->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoTubeEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fERmin->SetNumber(fRmini);
    fERmax->SetNumber(fRmaxi);
    fEDz->SetNumber(fDzi);
@@ -236,10 +245,11 @@ void TGeoTubeEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
    
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for rmin.
+
 void TGeoTubeEditor::DoRmin()
 {
-// Slot for rmin.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    if (rmax<rmin+1.e-10) {
@@ -250,10 +260,11 @@ void TGeoTubeEditor::DoRmin()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for rmax.
+
 void TGeoTubeEditor::DoRmax()
 {
-// Slot for rmax.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    if (rmax <= 0.) {
@@ -268,10 +279,11 @@ void TGeoTubeEditor::DoRmax()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for dz.
+
 void TGeoTubeEditor::DoDz()
 {
-// Slot for dz.
    Double_t dz = fEDz->GetNumber();
    if (dz<=0) {
       dz = 0.1;
@@ -303,12 +315,13 @@ enum ETGeoTubeSegWid {
    kTUBESEG_PHI1, kTUBESEG_PHI2, kTUBESEG_PHI
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for tube segment editor
+
 TGeoTubeSegEditor::TGeoTubeSegEditor(const TGWindow *p, Int_t width,
                                      Int_t height, UInt_t options, Pixel_t back)
   : TGeoTubeEditor(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for tube segment editor
    fLock = kFALSE;
    MakeTitle("Phi range");
    TGTextEntry *nef;
@@ -344,10 +357,11 @@ TGeoTubeSegEditor::TGeoTubeSegEditor(const TGWindow *p, Int_t width,
    TGeoTabManager::MoveFrame(fBFrame, this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoTubeSegEditor::~TGeoTubeSegEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -357,10 +371,11 @@ TGeoTubeSegEditor::~TGeoTubeSegEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoTubeSegEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    TGeoTubeEditor::ConnectSignals2Slots();
    Disconnect(fApply, "Clicked()",(TGeoTubeEditor*)this, "DoApply()");
    Disconnect(fUndo, "Clicked()",(TGeoTubeEditor*)this, "DoUndo()");
@@ -373,10 +388,11 @@ void TGeoTubeSegEditor::ConnectSignals2Slots()
    fSPhi->Connect("PositionChanged()","TGeoTubeSegEditor", this, "DoPhi()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoTubeSegEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoTubeSeg::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -402,10 +418,11 @@ void TGeoTubeSegEditor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi1.
+
 void TGeoTubeSegEditor::DoPhi1()
 {
-// Slot for phi1.
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
    if (phi1 > 360-1.e-10) {
@@ -424,10 +441,11 @@ void TGeoTubeSegEditor::DoPhi1()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi2.
+
 void TGeoTubeSegEditor::DoPhi2()
 {
-// Slot for phi2.
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
    if (phi2-phi1 > 360.) {
@@ -446,10 +464,11 @@ void TGeoTubeSegEditor::DoPhi2()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi slider.
+
 void TGeoTubeSegEditor::DoPhi()
 {
-// Slot for phi slider.
    if (!fLock) {
       DoModified();
       fLock = kTRUE;
@@ -460,10 +479,11 @@ void TGeoTubeSegEditor::DoPhi()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoTubeSegEditor::DoApply()
 {
-// Slot for applying modifications.
    fApply->SetEnabled(kFALSE);
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
@@ -493,10 +513,11 @@ void TGeoTubeSegEditor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoTubeSegEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fERmin->SetNumber(fRmini);
    fERmax->SetNumber(fRmaxi);
    fEDz->SetNumber(fDzi);
@@ -530,12 +551,13 @@ enum ETGeoCtubSegWid {
    kCTUB_THLO, kCTUB_PHLO, kCTUB_THHI, kCTUB_PHHI
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for cut tube editor
+
 TGeoCtubEditor::TGeoCtubEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
   : TGeoTubeSegEditor(p, width, height, options, back)
 {
-   // Constructor for cut tube editor
    MakeTitle("Theta/phi low");
    TGTextEntry *nef;
    // Number entry for theta/phi of the lower normal
@@ -600,10 +622,11 @@ TGeoCtubEditor::TGeoCtubEditor(const TGWindow *p, Int_t width,
    TGeoTabManager::MoveFrame(fBFrame, this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoCtubEditor::~TGeoCtubEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -613,10 +636,11 @@ TGeoCtubEditor::~TGeoCtubEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoCtubEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoCtub::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -653,10 +677,11 @@ void TGeoCtubEditor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi1.
+
 void TGeoCtubEditor::DoThlo()
 {
-// Slot for phi1.
    Double_t thlo = fEThlo->GetNumber();
    if (thlo <= 90.) {thlo = 91.; fEThlo->SetNumber(thlo);}
    if (thlo > 180.) {thlo = 180.; fEThlo->SetNumber(thlo);}
@@ -664,10 +689,11 @@ void TGeoCtubEditor::DoThlo()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi1.
+
 void TGeoCtubEditor::DoPhlo()
 {
-// Slot for phi1.
    Double_t phlo = fEPhlo->GetNumber();
    if (phlo >= 360.) {
       phlo = 0.; 
@@ -677,20 +703,22 @@ void TGeoCtubEditor::DoPhlo()
    if (!IsDelayed()) DoApply();
 }
    
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi1.
+
 void TGeoCtubEditor::DoThhi()
 {
-// Slot for phi1.
    Double_t thhi = fEThhi->GetNumber();
    if (thhi >= 90.) {thhi = 89.; fEThhi->SetNumber(thhi);}
    DoModified();
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi1.
+
 void TGeoCtubEditor::DoPhhi()
 {
-// Slot for phi1.
    Double_t phhi = fEPhhi->GetNumber();
    if (phhi >= 360.) {
       phhi = 0.; 
@@ -700,10 +728,11 @@ void TGeoCtubEditor::DoPhhi()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoCtubEditor::DoApply()
 {
-// Slot for applying modifications.
    fApply->SetEnabled(kFALSE);
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
@@ -743,10 +772,11 @@ void TGeoCtubEditor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoCtubEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fERmin->SetNumber(fRmini);
    fERmax->SetNumber(fRmaxi);
    fEDz->SetNumber(fDzi);

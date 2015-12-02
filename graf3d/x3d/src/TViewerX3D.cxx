@@ -125,12 +125,12 @@ public:
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a canvas container.
+
 TX3DContainer::TX3DContainer(TViewerX3D *c, Window_t id, const TGWindow *p)
    : TGCompositeFrame(gClient, id, p)
 {
-   // Create a canvas container.
-
    fViewer = c;
 }
 
@@ -138,7 +138,9 @@ TX3DContainer::TX3DContainer(TViewerX3D *c, Window_t id, const TGWindow *p)
 ClassImp(TViewerX3D)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create ROOT X3D viewer.
+
 TViewerX3D::TViewerX3D(TVirtualPad *pad)
    : TVirtualViewer3D(),
      fCanvas(0), fContainer(0), fMenuBar(0), fFileMenu(0),
@@ -146,7 +148,6 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad)
      fMenuBarHelpLayout(0), fCanvasLayout(0),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
-   // Create ROOT X3D viewer.
    fMainFrame = new TX3DFrame(*this, gClient->GetRoot(), 800, 600);
    fOption = "x3d";
    fX3DWin = 0;
@@ -158,7 +159,9 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create ROOT X3D viewer.
+
 TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
                        UInt_t width, UInt_t height)
    : TVirtualViewer3D(),
@@ -167,7 +170,6 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
      fMenuBarHelpLayout(0), fCanvasLayout(0),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
-   // Create ROOT X3D viewer.
    fMainFrame = new TX3DFrame(*this, gClient->GetRoot(), 800, 600);
    fOption = option;
    fX3DWin = 0;
@@ -179,7 +181,9 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create ROOT X3D viewer.
+
 TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
                        Int_t x, Int_t y, UInt_t width, UInt_t height)
    : TVirtualViewer3D(),
@@ -188,7 +192,6 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
      fMenuBarHelpLayout(0), fCanvasLayout(0),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
-   // Create ROOT X3D viewer.
    fMainFrame = new TX3DFrame(*this, gClient->GetRoot(), 800, 600);
    fOption = option;
    fX3DWin = 0;
@@ -200,11 +203,11 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete ROOT X3D viewer.
+
 TViewerX3D::~TViewerX3D()
 {
-   // Delete ROOT X3D viewer.
-
    if (!fPad) return;
 
    if (fgCreated) {
@@ -224,21 +227,22 @@ TViewerX3D::~TViewerX3D()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close X3D Viewer
+
 void TViewerX3D::Close()
 {
-   // Close X3D Viewer
    assert(!fBuildingScene);
    fPad->ReleaseViewer3D();
    delete this;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the actual canvas.
+
 void TViewerX3D::CreateViewer(const char *name)
 {
-   // Create the actual canvas.
-
    // Create menus
    fFileMenu = new TGPopupMenu(fMainFrame->GetClient()->GetRoot());
    fFileMenu->AddEntry("&New Viewer",         kFileNewViewer);
@@ -310,11 +314,11 @@ void TViewerX3D::CreateViewer(const char *name)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup geometry and initialize X3D.
+
 void TViewerX3D::InitX3DWindow()
 {
-   // Setup geometry and initialize X3D.
-
    TView *view = fPad->GetView();
    if (!view) {
       Error("InitX3DWindow", "view is not set");
@@ -334,10 +338,11 @@ void TViewerX3D::InitX3DWindow()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The x3d viewer cannot rebuild a scene once created
+
 void TViewerX3D::BeginScene()
 {
-   // The x3d viewer cannot rebuild a scene once created
    if (fgCreated) {
       return;
    }
@@ -352,10 +357,11 @@ void TViewerX3D::BeginScene()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The x3d viewer cannot rebuild a scene once created
+
 void  TViewerX3D::EndScene()
 {
-   // The x3d viewer cannot rebuild a scene once created
    if (fgCreated) {
       return;
    }
@@ -388,10 +394,11 @@ void  TViewerX3D::EndScene()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The x3d viewer cannot rebuild a scene once created
+
 Int_t TViewerX3D::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 {
-   // The x3d viewer cannot rebuild a scene once created
    if (fgCreated) {
       if (addChildren) {
          *addChildren = kFALSE;
@@ -450,18 +457,20 @@ Int_t TViewerX3D::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// We don't support placed IDs - discard
+
 Int_t TViewerX3D::AddObject(UInt_t /* placedID */, const TBuffer3D & buffer, Bool_t * addChildren)
 {
-   // We don't support placed IDs - discard
    return AddObject(buffer,addChildren);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint 3D PolyMarker
+
 void TViewerX3D::PaintPolyMarker(const TBuffer3D & buffer) const
 {
-   // Paint 3D PolyMarker
    if (fgCreated) {
       return;
    }
@@ -516,33 +525,34 @@ void TViewerX3D::PaintPolyMarker(const TBuffer3D & buffer) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function may be called from a script to animate an X3D picture
+/// px, py  mouse position
+///command = 0       --- move to px,py
+///        = w       --- wireframe mode
+///        = e       --- hidden line mode
+///        = r       --- hidden surface mode
+///        = u       --- move object down
+///        = i       --- move object up
+///        = o       --- toggle controls style
+///        = s       --- toggle stereo display
+///        = d       --- toggle blue stereo view
+///        = f       --- toggle double buffer
+///        = h       --- move object right
+///        = j       --- move object forward
+///        = k       --- move object backward
+///        = l       --- move object left
+///        = x a     --- rotate about x
+///        = y b     --- rotate about y
+///        = z c     --- rotate about z
+///        = 1 2 3   --- autorotate about x
+///        = 4 5 6   --- autorotate about y
+///        = 7 8 9   --- autorotate about z
+///        = [ ] { } --- adjust focus
+/// Example:
+
 Int_t TViewerX3D::ExecCommand(Int_t px, Int_t py, char command)
 {
-// This function may be called from a script to animate an X3D picture
-// px, py  mouse position
-//command = 0       --- move to px,py
-//        = w       --- wireframe mode
-//        = e       --- hidden line mode
-//        = r       --- hidden surface mode
-//        = u       --- move object down
-//        = i       --- move object up
-//        = o       --- toggle controls style
-//        = s       --- toggle stereo display
-//        = d       --- toggle blue stereo view
-//        = f       --- toggle double buffer
-//        = h       --- move object right
-//        = j       --- move object forward
-//        = k       --- move object backward
-//        = l       --- move object left
-//        = x a     --- rotate about x
-//        = y b     --- rotate about y
-//        = z c     --- rotate about z
-//        = 1 2 3   --- autorotate about x
-//        = 4 5 6   --- autorotate about y
-//        = 7 8 9   --- autorotate about z
-//        = [ ] { } --- adjust focus
-// Example:
 /*
 {
    gSystem->Load("libX3d");
@@ -566,36 +576,37 @@ Int_t TViewerX3D::ExecCommand(Int_t px, Int_t py, char command)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get position
+
 void TViewerX3D::GetPosition(Float_t &longitude, Float_t &latitude, Float_t &psi)
 {
-   // Get position
    x3d_get_position(&longitude, &latitude, &psi);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close X3D window.
+
 void TViewerX3D::DeleteX3DWindow()
 {
-   // Close X3D window.
-
    x3d_terminate();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update X3D viewer.
+
 void TViewerX3D::Update()
 {
-   // Update X3D viewer.
-
    x3d_update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle menu and other command generated by the user.
+
 Bool_t TViewerX3D::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Handle menu and other command generated by the user.
-
    TRootHelpDialog *hd;
 
    switch (GET_MSG(msg)) {
@@ -646,11 +657,11 @@ Bool_t TViewerX3D::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// After button release get current position and update associated pad.
+
 Bool_t TViewerX3D::HandleContainerButton(Event_t * /*ev */ )
 {
-   // After button release get current position and update associated pad.
-
    // Currently disabled as only drawing into one view at a time
    // Re-enalbe when multiple viewer implemented on pad
    /*if (ev->fType == kButtonRelease) {

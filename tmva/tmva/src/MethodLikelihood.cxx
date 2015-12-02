@@ -28,7 +28,8 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 
   Likelihood analysis ("non-parametric approach")
@@ -126,7 +127,9 @@ REGISTER_METHOD(Likelihood)
 
 ClassImp(TMVA::MethodLikelihood)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor
+
 TMVA::MethodLikelihood::MethodLikelihood( const TString& jobName,
                                           const TString& methodTitle,
                                           DataSetInfo& theData,
@@ -152,10 +155,11 @@ TMVA::MethodLikelihood::MethodLikelihood( const TString& jobName,
    fKDEfineFactor ( 0 ),
    fInterpolateString(0)
 {
-   // standard constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// construct likelihood references from file
+
 TMVA::MethodLikelihood::MethodLikelihood( DataSetInfo& theData,
                                           const TString& theWeightFile,
                                           TDirectory* theTargetDir ) :
@@ -179,13 +183,13 @@ TMVA::MethodLikelihood::MethodLikelihood( DataSetInfo& theData,
    fKDEfineFactor ( 0 ),
    fInterpolateString(0)
 {
-   // construct likelihood references from file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodLikelihood::~MethodLikelihood( void )
 {
-   // destructor
    if (NULL != fDefaultPDFLik)  delete fDefaultPDFLik;
    if (NULL != fHistSig)        delete fHistSig;
    if (NULL != fHistBgd)        delete fHistBgd;
@@ -199,20 +203,21 @@ TMVA::MethodLikelihood::~MethodLikelihood( void )
    if (NULL != fPDFBgd)         delete fPDFBgd;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// FDA can handle classification with 2 classes
+
 Bool_t TMVA::MethodLikelihood::HasAnalysisType( Types::EAnalysisType type,
                                                 UInt_t numberClasses, UInt_t /*numberTargets*/ )
 {
-   // FDA can handle classification with 2 classes
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    return kFALSE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default initialisation called by all constructors
+
 void TMVA::MethodLikelihood::Init( void )
 {
-   // default initialisation called by all constructors
-
    // no ranking test
    fDropVariable   = -1;
    fHistSig        = new std::vector<TH1*>      ( GetNvar(), (TH1*)0 );
@@ -223,12 +228,12 @@ void TMVA::MethodLikelihood::Init( void )
    fPDFBgd         = new std::vector<TMVA::PDF*>( GetNvar(), (TMVA::PDF*)0 );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define the options (their key words) that can be set in the option string
+/// TransformOutput   <bool>   transform (often strongly peaked) likelihood output through sigmoid inversion
+
 void TMVA::MethodLikelihood::DeclareOptions()
 {
-   // define the options (their key words) that can be set in the option string
-   // TransformOutput   <bool>   transform (often strongly peaked) likelihood output through sigmoid inversion
-
    DeclareOptionRef( fTransformLikelihoodOutput = kFALSE, "TransformOutput",
                      "Transform likelihood output by inverse sigmoid function" );
 
@@ -299,10 +304,10 @@ void TMVA::MethodLikelihood::DeclareCompatibilityOptions()
 
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodLikelihood::ProcessOptions()
 {
-
    // process user options
    // reference cut value to distingiush signal-like from background-like events
    SetSignalReferenceCut( TransformLikelihoodOutput( 0.5, 0.5 ) );
@@ -314,15 +319,16 @@ void TMVA::MethodLikelihood::ProcessOptions()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create reference distributions (PDFs) from signal and background events:
+/// fill histograms and smooth them; if decorrelation is required, compute
+/// corresponding square-root matrices
+/// the reference histograms require the correct boundaries. Since in Likelihood classification
+/// the transformations are applied using both classes, also the corresponding boundaries
+/// need to take this into account
+
 void TMVA::MethodLikelihood::Train( void )
 {
-   // create reference distributions (PDFs) from signal and background events:
-   // fill histograms and smooth them; if decorrelation is required, compute
-   // corresponding square-root matrices
-   // the reference histograms require the correct boundaries. Since in Likelihood classification
-   // the transformations are applied using both classes, also the corresponding boundaries
-   // need to take this into account
    UInt_t nvar=GetNvar();
    std::vector<Double_t> xmin(nvar), xmax(nvar);
    for (UInt_t ivar=0; ivar<nvar; ivar++) {xmin[ivar]=1e30; xmax[ivar]=-1e30;}
@@ -433,11 +439,12 @@ void TMVA::MethodLikelihood::Train( void )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the likelihood estimator for signal
+/// fill a new Likelihood branch into the testTree
+
 Double_t TMVA::MethodLikelihood::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // returns the likelihood estimator for signal
-   // fill a new Likelihood branch into the testTree
    UInt_t ivar;
 
    // cannot determine error
@@ -515,10 +522,11 @@ Double_t TMVA::MethodLikelihood::GetMvaValue( Double_t* err, Double_t* errUpper 
    return TransformLikelihoodOutput( ps, pb );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns transformed or non-transformed output
+
 Double_t TMVA::MethodLikelihood::TransformLikelihoodOutput( Double_t ps, Double_t pb ) const
 {
-   // returns transformed or non-transformed output
    if (ps < fEpsilon) ps = fEpsilon;
    if (pb < fEpsilon) pb = fEpsilon;
    Double_t r = ps/(ps + pb);
@@ -538,10 +546,11 @@ Double_t TMVA::MethodLikelihood::TransformLikelihoodOutput( Double_t ps, Double_
    return r;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write options to stream
+
 void TMVA::MethodLikelihood::WriteOptionsToStream( std::ostream& o, const TString& prefix ) const
 {
-   // write options to stream
    Configurable::WriteOptionsToStream( o, prefix);
 
    // writing the options defined for the different pdfs
@@ -561,10 +570,11 @@ void TMVA::MethodLikelihood::WriteOptionsToStream( std::ostream& o, const TStrin
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write weights to XML
+
 void TMVA::MethodLikelihood::AddWeightsXMLTo( void* parent ) const
 {
-   // write weights to XML
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr(wght, "NVariables", GetNvar());
    gTools().AddAttr(wght, "NClasses", 2);
@@ -584,11 +594,11 @@ void TMVA::MethodLikelihood::AddWeightsXMLTo( void* parent ) const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes ranking of input variables
+
 const TMVA::Ranking* TMVA::MethodLikelihood::CreateRanking()
 {
-   // computes ranking of input variables
-
    // create the ranking object
    if (fRanking) delete fRanking;
    fRanking = new Ranking( GetName(), "Delta Separation" );
@@ -634,20 +644,22 @@ const TMVA::Ranking* TMVA::MethodLikelihood::CreateRanking()
    return fRanking;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write reference PDFs to ROOT file
+
 void  TMVA::MethodLikelihood::WriteWeightsToStream( TFile& ) const
 {
-   // write reference PDFs to ROOT file
    TString pname = "PDF_";
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
       (*fPDFSig)[ivar]->Write( pname + GetInputVar( ivar ) + "_S" );
       (*fPDFBgd)[ivar]->Write( pname + GetInputVar( ivar ) + "_B" );
    }
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read weights from XML
+
 void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
 {
-   // read weights from XML
    TString pname = "PDF_";
    Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
@@ -671,11 +683,12 @@ void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
    }
    TH1::AddDirectory(addDirStatus);
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read weight info from file
+/// nothing to do for this method
+
 void  TMVA::MethodLikelihood::ReadWeightsFromStream( std::istream & istr )
 {
-   // read weight info from file
-   // nothing to do for this method
    TString pname = "PDF_";
    Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
@@ -693,10 +706,11 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( std::istream & istr )
    TH1::AddDirectory(addDirStatus);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read reference PDF from ROOT file
+
 void  TMVA::MethodLikelihood::ReadWeightsFromStream( TFile& rf )
 {
-   // read reference PDF from ROOT file
    TString pname = "PDF_";
    Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
@@ -707,11 +721,11 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( TFile& rf )
    TH1::AddDirectory(addDirStatus);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write histograms and PDFs to file for monitoring purposes
+
 void  TMVA::MethodLikelihood::WriteMonitoringHistosToFile( void ) const
 {
-   // write histograms and PDFs to file for monitoring purposes
-
    Log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
    BaseDir()->cd();
 
@@ -755,18 +769,20 @@ void  TMVA::MethodLikelihood::WriteMonitoringHistosToFile( void ) const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write specific header of the classifier (mostly include files)
+
 void TMVA::MethodLikelihood::MakeClassSpecificHeader( std::ostream& fout, const TString& ) const
 {
-   // write specific header of the classifier (mostly include files)
    fout << "#include <math.h>" << std::endl;
    fout << "#include <cstdlib>" << std::endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write specific classifier response
+
 void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
-   // write specific classifier response
    Int_t dp = fout.precision();
    fout << "   double       fEpsilon;" << std::endl;
 
@@ -963,13 +979,14 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    delete[] nbin;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get help message text
+///
+/// typical length of text line:
+///         "|--------------------------------------------------------------|"
+
 void TMVA::MethodLikelihood::GetHelpMessage() const
 {
-   // get help message text
-   //
-   // typical length of text line:
-   //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;

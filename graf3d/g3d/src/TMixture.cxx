@@ -20,11 +20,11 @@ ClassImp(TMixture)
 //
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mixture default constructor.
+
 TMixture::TMixture()
 {
-   // Mixture default constructor.
-
    fAmixt = 0;
    fZmixt = 0;
    fWmixt = 0;
@@ -32,26 +32,26 @@ TMixture::TMixture()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mixture normal constructor
+///
+///       Defines mixture OR COMPOUND as composed by
+///       the basic nmixt materials defined later by DefineElement.
+///
+///       If nmixt > 0 then Wmixt contains the PROPORTION BY WEIGHTS
+///       of each basic material in the mixture.
+///
+///       If nmixt < 0 then Wmixt contains the number of atoms
+///       of a given kind into the molecule of the COMPOUND
+///       In this case, Wmixt is changed to relative weights.
+///
+///       nb : the radiation length is computed according
+///            the EGS manual slac-210 uc-32 June-78
+///                          formula  2-6-8 (37)
+
 TMixture::TMixture(const char *name, const char *title, Int_t nmixt)
            :TMaterial(name,title,0,0,0)
 {
-   // Mixture normal constructor
-   //
-   //       Defines mixture OR COMPOUND as composed by
-   //       the basic nmixt materials defined later by DefineElement.
-   //
-   //       If nmixt > 0 then Wmixt contains the PROPORTION BY WEIGHTS
-   //       of each basic material in the mixture.
-   //
-   //       If nmixt < 0 then Wmixt contains the number of atoms
-   //       of a given kind into the molecule of the COMPOUND
-   //       In this case, Wmixt is changed to relative weights.
-   //
-   //       nb : the radiation length is computed according
-   //            the EGS manual slac-210 uc-32 June-78
-   //                          formula  2-6-8 (37)
-
    if (nmixt == 0) {
       fAmixt = 0;
       fZmixt = 0;
@@ -68,11 +68,11 @@ TMixture::TMixture(const char *name, const char *title, Int_t nmixt)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mixture default destructor.
+
 TMixture::~TMixture()
 {
-   // Mixture default destructor.
-
    delete [] fAmixt;
    delete [] fZmixt;
    delete [] fWmixt;
@@ -82,11 +82,11 @@ TMixture::~TMixture()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define one mixture element.
+
 void TMixture::DefineElement(Int_t n, Float_t a, Float_t z, Float_t w)
 {
-   // Define one mixture element.
-
    if (n < 0 || n >= TMath::Abs(fNmixt)) return;
    fAmixt[n] = a;
    fZmixt[n] = z;
@@ -94,11 +94,11 @@ void TMixture::DefineElement(Int_t n, Float_t a, Float_t z, Float_t w)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a class object.
+
 void TMixture::Streamer(TBuffer &b)
 {
-   // Stream a class object.
-
    UInt_t R__s, R__c;
    if (b.IsReading()) {
       b.ReadVersion(&R__s, &R__c);

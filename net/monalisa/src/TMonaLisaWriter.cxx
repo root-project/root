@@ -160,114 +160,114 @@ public:
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create MonaLisa write object.
+
 TMonaLisaWriter::TMonaLisaWriter(const char *monserver, const char *montag,
                                  const char *monid, const char *monsubid,
                                  const char *option)
 {
-   // Create MonaLisa write object.
-
    fMonInfoRepo = new std::map<UInt_t, MonitoredTFileInfo *>;
 
    Init(monserver, montag, monid, monsubid, option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a TMonaLisaWriter object to send monitoring information to a
+/// MonaLisa server using the MonaLisa ApMon package (libapmoncpp.so/UDP
+/// packets). The MonaLisa ApMon library for C++ can be downloaded at
+/// http://monalisa.cacr.caltech.edu/monalisa__Download__ApMon.html,
+/// current version:
+/// http://monalisa.cacr.caltech.edu/download/apmon/ApMon_cpp-2.0.6.tar.gz
+///
+/// The ROOT implementation is primary optimized for process/job monitoring,
+/// although all other generic MonaLisa ApMon functionality can be exploited
+/// through the ApMon class directly (gMonitoringWriter->GetApMon()).
+///
+/// Monitoring information in MonaLisa is structured in the following tree
+/// structure:
+/// <farmname>
+///    |
+///    ---> <nodename1>
+///              |
+///              ---> <key1> - <value1>
+///              ---> <key2> - <value2>
+///    ---> <nodename2>
+///              |
+///              ---> <key3> - <value3>
+///              ---> <key4> - <value4>
+///
+/// The parameter monid is equivalent to the MonaLisa node name, for the
+/// case of process monitoring it can be just an identifier to classify
+/// the type of jobs e.g. "PROOF_PROCESSING".
+/// If monid is not specified, TMonaLisaWriter tries to set it in this order
+/// from environment variables:
+/// - PROOF_JOB_ID
+/// - GRID_JOB_ID
+/// - LCG_JOB_ID
+/// - ALIEN_MASTERJOB_ID
+/// - ALIEN_PROC_ID
+///
+/// The parameter montag is equivalent to the MonaLisa farm name, for the
+/// case of process monitoring it can be a process identifier e.g. a PROOF
+/// session ID.
+///
+/// The parameter monserver specifies the server to whom to send the
+/// monitoring UDP packets. If not specified, the hostname (the port is
+/// a default one) is specified in the environment variable APMON_CONFIG.
+///
+/// To use TMonaLisaWriter, libMonaLisa.so has to be loaded.
+///
+/// According to the fact, that the deepness of the MonaLisa naming scheme
+/// is only 3 (<farm><node><value>), a special naming scheme is used for
+/// process monitoring. There is a high-level method to send progress
+/// information of Tree analysis (# of events, datasize).
+/// To distinguish individual nodes running the processing, part of the
+/// information is kept in the <value> parameter of ML.
+/// <value> is named as:
+///    <site-name>:<host-name>:<pid>:<valuetag>
+/// <site-name> is taken from an environment variable in the following order:
+/// - PROOF_SITE
+/// - GRID_SITE
+/// - ALIEN_SITE
+/// - default 'none'
+/// <host-name> is taken from gSystem->Hostname()
+/// <pid> is the process ID of the ROOT process
+///
+/// Example of use for Process Monitoring:
+///   new TMonaLisaWriter("BATCH_ANALYSIS","AnalysisLoop-00001","lxplus050.cern.ch");
+/// Once when you create an analysis task, execute
+///   gMonitoringWriter->SendInfoUser("myname");
+///   gMonitoringWriter->SendInfoDescription("My first Higgs analysis");
+///   gMonitoringWriter->SendInfoTime();
+///   gMonitoringWriter->SendInfoStatus("Submitted");
+///
+/// On each node executing a subtask, you can set the status of this subtask:
+///   gMonitoringWriter->SendProcessingStatus("Started");
+/// During the processing of your analysis you can send progress updates:
+///   gMonitoringWriter->SendProcessProgress(100,1000000); <= 100 events, 1MB processed
+///   ....
+///   gMonitoringWriter-SendProcessingStatus("Finished");
+///   delete gMonitoringWriter; gMonitoringWriter=0;
+///
+/// Example of use for any Generic Monitoring information:
+///   TList *valuelist = new TList();
+///   valuelist->SetOwner(kTRUE);
+///   // append a text object
+///   TMonaLisaText *valtext = new TMonaLisaText("decaychannel","K->eeg");
+///   valuelist->Add(valtext);
+///   // append a double value
+///   TMonaLisaValue* valdouble = new TMonaLisaValue("n-gamma",5);
+///   valuelist->Add(valdouble);
+///   Bool_t success = SendParameters(valuelist);
+///   delete valuelist;
+///
+/// option:
+/// "global": gMonitoringWriter is initialized with this instance
+
 void TMonaLisaWriter::Init(const char *monserver, const char *montag, const char *monid,
                            const char *monsubid, const char *option)
 {
-   // Creates a TMonaLisaWriter object to send monitoring information to a
-   // MonaLisa server using the MonaLisa ApMon package (libapmoncpp.so/UDP
-   // packets). The MonaLisa ApMon library for C++ can be downloaded at
-   // http://monalisa.cacr.caltech.edu/monalisa__Download__ApMon.html,
-   // current version:
-   // http://monalisa.cacr.caltech.edu/download/apmon/ApMon_cpp-2.0.6.tar.gz
-   //
-   // The ROOT implementation is primary optimized for process/job monitoring,
-   // although all other generic MonaLisa ApMon functionality can be exploited
-   // through the ApMon class directly (gMonitoringWriter->GetApMon()).
-   //
-   // Monitoring information in MonaLisa is structured in the following tree
-   // structure:
-   // <farmname>
-   //    |
-   //    ---> <nodename1>
-   //              |
-   //              ---> <key1> - <value1>
-   //              ---> <key2> - <value2>
-   //    ---> <nodename2>
-   //              |
-   //              ---> <key3> - <value3>
-   //              ---> <key4> - <value4>
-   //
-   // The parameter monid is equivalent to the MonaLisa node name, for the
-   // case of process monitoring it can be just an identifier to classify
-   // the type of jobs e.g. "PROOF_PROCESSING".
-   // If monid is not specified, TMonaLisaWriter tries to set it in this order
-   // from environment variables:
-   // - PROOF_JOB_ID
-   // - GRID_JOB_ID
-   // - LCG_JOB_ID
-   // - ALIEN_MASTERJOB_ID
-   // - ALIEN_PROC_ID
-   //
-   // The parameter montag is equivalent to the MonaLisa farm name, for the
-   // case of process monitoring it can be a process identifier e.g. a PROOF
-   // session ID.
-   //
-   // The parameter monserver specifies the server to whom to send the
-   // monitoring UDP packets. If not specified, the hostname (the port is
-   // a default one) is specified in the environment variable APMON_CONFIG.
-   //
-   // To use TMonaLisaWriter, libMonaLisa.so has to be loaded.
-   //
-   // According to the fact, that the deepness of the MonaLisa naming scheme
-   // is only 3 (<farm><node><value>), a special naming scheme is used for
-   // process monitoring. There is a high-level method to send progress
-   // information of Tree analysis (# of events, datasize).
-   // To distinguish individual nodes running the processing, part of the
-   // information is kept in the <value> parameter of ML.
-   // <value> is named as:
-   //    <site-name>:<host-name>:<pid>:<valuetag>
-   // <site-name> is taken from an environment variable in the following order:
-   // - PROOF_SITE
-   // - GRID_SITE
-   // - ALIEN_SITE
-   // - default 'none'
-   // <host-name> is taken from gSystem->Hostname()
-   // <pid> is the process ID of the ROOT process
-   //
-   // Example of use for Process Monitoring:
-   //   new TMonaLisaWriter("BATCH_ANALYSIS","AnalysisLoop-00001","lxplus050.cern.ch");
-   // Once when you create an analysis task, execute
-   //   gMonitoringWriter->SendInfoUser("myname");
-   //   gMonitoringWriter->SendInfoDescription("My first Higgs analysis");
-   //   gMonitoringWriter->SendInfoTime();
-   //   gMonitoringWriter->SendInfoStatus("Submitted");
-   //
-   // On each node executing a subtask, you can set the status of this subtask:
-   //   gMonitoringWriter->SendProcessingStatus("Started");
-   // During the processing of your analysis you can send progress updates:
-   //   gMonitoringWriter->SendProcessProgress(100,1000000); <= 100 events, 1MB processed
-   //   ....
-   //   gMonitoringWriter-SendProcessingStatus("Finished");
-   //   delete gMonitoringWriter; gMonitoringWriter=0;
-   //
-   // Example of use for any Generic Monitoring information:
-   //   TList *valuelist = new TList();
-   //   valuelist->SetOwner(kTRUE);
-   //   // append a text object
-   //   TMonaLisaText *valtext = new TMonaLisaText("decaychannel","K->eeg");
-   //   valuelist->Add(valtext);
-   //   // append a double value
-   //   TMonaLisaValue* valdouble = new TMonaLisaValue("n-gamma",5);
-   //   valuelist->Add(valdouble);
-   //   Bool_t success = SendParameters(valuelist);
-   //   delete valuelist;
-   //
-   // option:
-   // "global": gMonitoringWriter is initialized with this instance
-
    SetName(montag);
    SetTitle(montag);
 
@@ -374,10 +374,11 @@ void TMonaLisaWriter::Init(const char *monserver, const char *montag, const char
       gMonitoringWriter = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TMonaLisaWriter::~TMonaLisaWriter()
 {
-   // Cleanup.
    if (fMonInfoRepo) {
 
       std::map<UInt_t, MonitoredTFileInfo *>::iterator iter = fMonInfoRepo->begin();
@@ -395,14 +396,14 @@ TMonaLisaWriter::~TMonaLisaWriter()
       gMonitoringWriter = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sends a <status> text to MonaLisa following the process scheme:
+///    <site> --> <jobid> --> 'status' = <status>
+/// Used to set a global status for a groupjob, e.g.
+/// a master-job or the general status of PROOF processing.
+
 Bool_t TMonaLisaWriter::SendInfoStatus(const char *status)
 {
-   // Sends a <status> text to MonaLisa following the process scheme:
-   //    <site> --> <jobid> --> 'status' = <status>
-   // Used to set a global status for a groupjob, e.g.
-   // a master-job or the general status of PROOF processing.
-
    if (!fInitialized) {
       Error("SendInfoStatus", "Monitoring is not properly initialized!");
       return kFALSE;
@@ -424,12 +425,12 @@ Bool_t TMonaLisaWriter::SendInfoStatus(const char *status)
    return success;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sends the <user> text to MonaLisa following the process scheme:
+///    <site> --> <jobid> --> 'user' = <user>
+
 Bool_t TMonaLisaWriter::SendInfoUser(const char *user)
 {
-   // Sends the <user> text to MonaLisa following the process scheme:
-   //    <site> --> <jobid> --> 'user' = <user>
-
    if (!fInitialized) {
       Error("TMonaLisaWriter",
             "Monitoring initialization has failed - you can't send to MonaLisa!");
@@ -463,12 +464,12 @@ Bool_t TMonaLisaWriter::SendInfoUser(const char *user)
    return success;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sends the description <jobtag> following the processing scheme:
+///    <site> --> <jobid> --> 'jobname' = <jobtag>
+
 Bool_t TMonaLisaWriter::SendInfoDescription(const char *jobtag)
 {
-   // Sends the description <jobtag> following the processing scheme:
-   //    <site> --> <jobid> --> 'jobname' = <jobtag>
-
    if (!fInitialized) {
       Error("SendInfoDescription",
             "Monitoring is not properly initialized!");
@@ -491,12 +492,12 @@ Bool_t TMonaLisaWriter::SendInfoDescription(const char *jobtag)
    return success;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sends the current time to MonaLisa following the processing scheme
+///    <site> --> <jobid> --> 'time' = >unixtimestamp<
+
 Bool_t TMonaLisaWriter::SendInfoTime()
 {
-   // Sends the current time to MonaLisa following the processing scheme
-   //    <site> --> <jobid> --> 'time' = >unixtimestamp<
-
    if (!fInitialized) {
       Error("SendInfoTime", "Monitoring is not properly initialized!");
       return kFALSE;
@@ -520,16 +521,16 @@ Bool_t TMonaLisaWriter::SendInfoTime()
    return success;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send the procesing status 'status' to MonaLisa following the
+/// processing scheme:
+///    <site> --> <jobid> --> 'status' = <status>
+/// Used, to set the processing status of individual subtaks e.g. the
+/// status of a batch (sub-)job or the status of a PROOF slave
+/// participating in query <jobid>
+
 Bool_t TMonaLisaWriter::SendProcessingStatus(const char *status, Bool_t restarttimer)
 {
-   // Send the procesing status 'status' to MonaLisa following the
-   // processing scheme:
-   //    <site> --> <jobid> --> 'status' = <status>
-   // Used, to set the processing status of individual subtaks e.g. the
-   // status of a batch (sub-)job or the status of a PROOF slave
-   // participating in query <jobid>
-
    if (restarttimer) {
       fStopwatch.Start(kTRUE);
    }
@@ -562,11 +563,11 @@ Bool_t TMonaLisaWriter::SendProcessingStatus(const char *status, Bool_t restartt
    return success;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send the procesing progress to MonaLisa.
+
 Bool_t TMonaLisaWriter::SendProcessingProgress(Double_t nevent, Double_t nbytes, Bool_t force)
 {
-   // Send the procesing progress to MonaLisa.
-
    if (!force && (time(0)-fLastProgressTime) < fReportInterval) {
      // if the progress is not forced, we send maximum < fReportInterval per second!
      return kFALSE;
@@ -651,20 +652,20 @@ Bool_t TMonaLisaWriter::SendProcessingProgress(Double_t nevent, Double_t nbytes,
    return success;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send the fileopen progress to MonaLisa.
+/// If openphases=0 it means that the information is to be stored
+/// in a temp space, since there is not yet an object where to attach it to.
+/// This is typical in the static Open calls.
+/// The temp openphases are put into a list as soon as one is specified.
+///
+/// If thisopenphasename=0 it means that the stored phases (temp and object)
+/// have to be cleared.
+
 Bool_t TMonaLisaWriter::SendFileOpenProgress(TFile *file, TList *openphases,
                                              const char *openphasename,
                                              Bool_t forcesend)
 {
-   // Send the fileopen progress to MonaLisa.
-   // If openphases=0 it means that the information is to be stored
-   // in a temp space, since there is not yet an object where to attach it to.
-   // This is typical in the static Open calls.
-   // The temp openphases are put into a list as soon as one is specified.
-   //
-   // If thisopenphasename=0 it means that the stored phases (temp and object)
-   // have to be cleared.
-
    if (!fInitialized) {
       Error("SendFileOpenProgress",
             "Monitoring is not properly initialized!");
@@ -757,7 +758,8 @@ Bool_t TMonaLisaWriter::SendFileOpenProgress(TFile *file, TList *openphases,
    return success;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMonaLisaWriter::SendFileCloseEvent(TFile *file) {
    if (!fInitialized) {
       Error("SendFileCloseEvent",
@@ -847,15 +849,18 @@ Bool_t TMonaLisaWriter::SendFileCloseEvent(TFile *file) {
    delete valuelist;
    return success;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMonaLisaWriter::SendFileReadProgress(TFile *file) {
    return SendFileCheckpoint(file);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMonaLisaWriter::SendFileWriteProgress(TFile *file) {
    return SendFileCheckpoint(file);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMonaLisaWriter::SendFileCheckpoint(TFile *file)
 {
    if (!fInitialized) {
@@ -982,11 +987,11 @@ Bool_t TMonaLisaWriter::SendFileCheckpoint(TFile *file)
    return success;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send the parameters to MonaLisa.
+
 Bool_t TMonaLisaWriter::SendParameters(TList *valuelist, const char *identifier)
 {
-   // Send the parameters to MonaLisa.
-
    if (!fInitialized) {
       Error("SendParameters", "Monitoring is not properly initialized!");
       return kFALSE;
@@ -1143,19 +1148,19 @@ Bool_t TMonaLisaWriter::SendParameters(TList *valuelist, const char *identifier)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set MonaLisa log level.
+
 void TMonaLisaWriter::SetLogLevel(const char *loglevel)
 {
-   // Set MonaLisa log level.
-
    ((ApMon *) fApmon)->setLogLevel((char *) loglevel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print info about MonaLisa object.
+
 void TMonaLisaWriter::Print(Option_t *) const
 {
-   // Print info about MonaLisa object.
-
    std::cout << "Site     (Farm) : " << fName << std::endl;
    std::cout << "JobId    (Node) : " << fJobId << std::endl;
    std::cout << "SubJobId (Node) : " << fSubJobId << std::endl;

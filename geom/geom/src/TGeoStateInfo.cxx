@@ -15,7 +15,9 @@
 #include "TGeoManager.h"
 
 ClassImp(TGeoStateInfo)
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TGeoStateInfo::TGeoStateInfo(Int_t maxdaughters)
               :fNode(0),
                fAsmCurrent(0),
@@ -36,7 +38,6 @@ TGeoStateInfo::TGeoStateInfo(Int_t maxdaughters)
                fXtruYc(0),
                fXtruPoly(0)
 {
-// Constructor
    Int_t maxDaughters = (maxdaughters>0) ? maxdaughters : TGeoManager::GetMaxDaughters();
    Int_t maxXtruVert  = TGeoManager::GetMaxXtruVert();
    fVoxCheckList = new Int_t[maxDaughters];
@@ -49,17 +50,20 @@ TGeoStateInfo::TGeoStateInfo(Int_t maxdaughters)
    fVoxLimits[0] = fVoxLimits[1] = fVoxLimits[2] = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoStateInfo::~TGeoStateInfo()
 {
-// Destructor
    delete [] fVoxCheckList;
    delete [] fVoxBits1;
    delete [] fXtruXc;
    delete [] fXtruYc;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TGeoStateInfo::TGeoStateInfo(const TGeoStateInfo &other)
               :fNode(other.fNode),
                fAsmCurrent(other.fAsmCurrent),
@@ -80,7 +84,6 @@ TGeoStateInfo::TGeoStateInfo(const TGeoStateInfo &other)
                fXtruYc(0),
                fXtruPoly(other.fXtruPoly)
 {
-// Copy constructor.
    Int_t maxDaughters = TGeoManager::GetMaxDaughters();
    Int_t maxXtruVert  = TGeoManager::GetMaxXtruVert();
    fVoxCheckList = new Int_t[maxDaughters];
@@ -93,10 +96,11 @@ TGeoStateInfo::TGeoStateInfo(const TGeoStateInfo &other)
    fVoxLimits[0] = fVoxLimits[1] = fVoxLimits[2] = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment
+
 TGeoStateInfo &TGeoStateInfo::operator=(const TGeoStateInfo &other)
 {
-// Assignment
    if (this==&other) return *this;
    fNode = other.fNode;
    fAsmCurrent = other.fAsmCurrent;

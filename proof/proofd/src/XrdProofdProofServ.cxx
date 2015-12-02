@@ -21,11 +21,11 @@
 // Tracing utils
 #include "XrdProofdTrace.h"
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 XrdProofdProofServ::XrdProofdProofServ()
 {
-   // Constructor
-
    fMutex = new XrdSysRecMutex;
    fResponse = 0;
    fProtocol = 0;
@@ -60,11 +60,11 @@ XrdProofdProofServ::XrdProofdProofServ()
    fQueries.clear();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 XrdProofdProofServ::~XrdProofdProofServ()
 {
-   // Destructor
-
    SafeDel(fStartMsg);
    SafeDel(fPingSem);
 
@@ -86,10 +86,11 @@ XrdProofdProofServ::~XrdProofdProofServ()
    SafeDel(fMutex);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decrease active session counters on worker w
+
 static int DecreaseWorkerCounters(const char *, XrdProofWorker *w, void *x)
 {
-   // Decrease active session counters on worker w
    XPDLOC(PMGR, "DecreaseWorkerCounters")
 
    XrdProofdProofServ *xps = (XrdProofdProofServ *)x;
@@ -105,10 +106,11 @@ static int DecreaseWorkerCounters(const char *, XrdProofWorker *w, void *x)
    return 1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decrease active session counters on worker w
+
 static int DumpWorkerCounters(const char *k, XrdProofWorker *w, void *)
 {
-   // Decrease active session counters on worker w
    XPDLOC(PMGR, "DumpWorkerCounters")
 
    if (w) {
@@ -121,11 +123,11 @@ static int DumpWorkerCounters(const char *k, XrdProofWorker *w, void *)
    return 1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decrease worker counters and clean-up the list
+
 void XrdProofdProofServ::ClearWorkers()
 {
-   // Decrease worker counters and clean-up the list
-
    XrdSysMutexHelper mhp(fMutex);
 
    // Decrease workers' counters and remove this from workers
@@ -133,11 +135,11 @@ void XrdProofdProofServ::ClearWorkers()
    fWorkers.Purge();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a worker assigned to this session with label 'o'
+
 void XrdProofdProofServ::AddWorker(const char *o, XrdProofWorker *w)
 {
-   // Add a worker assigned to this session with label 'o'
-
    if (!o || !w) return;
 
    XrdSysMutexHelper mhp(fMutex);
@@ -145,10 +147,11 @@ void XrdProofdProofServ::AddWorker(const char *o, XrdProofWorker *w)
    fWorkers.Add(o, w, 0, Hash_keepdata);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release worker assigned to this session with label 'o'
+
 void XrdProofdProofServ::RemoveWorker(const char *o)
 {
-   // Release worker assigned to this session with label 'o'
    XPDLOC(SMGR, "ProofServ::RemoveWorker")
 
    if (!o) return;
@@ -163,11 +166,12 @@ void XrdProofdProofServ::RemoveWorker(const char *o)
    if (TRACING(HDBG)) fWorkers.Apply(DumpWorkerCounters, 0);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this instance, broadcasting a message to the clients.
+/// return 1 if top master, 0 otherwise
+
 int XrdProofdProofServ::Reset(const char *msg, int type)
 {
-   // Reset this instance, broadcasting a message to the clients.
-   // return 1 if top master, 0 otherwise
    XPDLOC(SMGR, "ProofServ::Reset")
 
    int rc = 0;
@@ -202,10 +206,11 @@ int XrdProofdProofServ::Reset(const char *msg, int type)
    return rc;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this instance
+
 void XrdProofdProofServ::Reset()
 {
-   // Reset this instance
    XrdSysMutexHelper mhp(fMutex);
 
    fResponse = 0;
@@ -244,21 +249,21 @@ void XrdProofdProofServ::Reset()
    DeleteUNIXSock();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the current UNIX socket
+
 void XrdProofdProofServ::DeleteUNIXSock()
 {
-   // Delete the current UNIX socket
-
    SafeDel(fUNIXSock);
    unlink(fUNIXSockPath.c_str());
    fUNIXSockPath = "";
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the value of fSkipCheck and reset it to false
+
 bool XrdProofdProofServ::SkipCheck()
 {
-   // Return the value of fSkipCheck and reset it to false
-
    XrdSysMutexHelper mhp(fMutex);
 
    bool rc = fSkipCheck;
@@ -266,10 +271,11 @@ bool XrdProofdProofServ::SkipCheck()
    return rc;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get instance corresponding to cid
+
 XrdClientID *XrdProofdProofServ::GetClientID(int cid)
 {
-   // Get instance corresponding to cid
    XPDLOC(SMGR, "ProofServ::GetClientID")
 
    XrdClientID *csid = 0;
@@ -319,10 +325,11 @@ XrdClientID *XrdProofdProofServ::GetClientID(int cid)
    return csid;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free instance corresponding to protocol connecting process 'pid'
+
 int XrdProofdProofServ::FreeClientID(int pid)
 {
-   // Free instance corresponding to protocol connecting process 'pid'
    XPDLOC(SMGR, "ProofServ::FreeClientID")
 
    TRACE(DBG, "svrPID: "<<fSrvPID<< ", pid: "<<pid<<", session status: "<<
@@ -366,12 +373,12 @@ int XrdProofdProofServ::FreeClientID(int pid)
    return rc;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the number of connected clients. If check is true check that
+/// they are still valid ones and free the slots for the invalid ones
+
 int XrdProofdProofServ::GetNClients(bool check)
 {
-   // Get the number of connected clients. If check is true check that
-   // they are still valid ones and free the slots for the invalid ones
-
    XrdSysMutexHelper mhp(fMutex);
 
    if (check) {
@@ -387,12 +394,12 @@ int XrdProofdProofServ::GetNClients(bool check)
    return fNClients;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the time (in secs) all clients have been disconnected.
+/// Return -1 if the session is running
+
 int XrdProofdProofServ::DisconnectTime()
 {
-   // Return the time (in secs) all clients have been disconnected.
-   // Return -1 if the session is running
-
    XrdSysMutexHelper mhp(fMutex);
 
    int disct = -1;
@@ -401,12 +408,12 @@ int XrdProofdProofServ::DisconnectTime()
    return ((disct > 0) ? disct : -1);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the time (in secs) the session has been idle.
+/// Return -1 if the session is running
+
 int XrdProofdProofServ::IdleTime()
 {
-   // Return the time (in secs) the session has been idle.
-   // Return -1 if the session is running
-
    XrdSysMutexHelper mhp(fMutex);
 
    int idlet = -1;
@@ -415,34 +422,35 @@ int XrdProofdProofServ::IdleTime()
    return ((idlet > 0) ? idlet : -1);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set status to idle and update the related time stamp
+///
+
 void XrdProofdProofServ::SetIdle()
 {
-   // Set status to idle and update the related time stamp
-   //
-
    XrdSysMutexHelper mhp(fMutex);
 
    fStatus = kXPD_idle;
    fSetIdleTime = time(0);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set status to running and reset the related time stamp
+///
+
 void XrdProofdProofServ::SetRunning()
 {
-   // Set status to running and reset the related time stamp
-   //
-
    XrdSysMutexHelper mhp(fMutex);
 
    fStatus = kXPD_running;
    fSetIdleTime = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast message 'msg' at 'type' to the attached clients
+
 void XrdProofdProofServ::Broadcast(const char *msg, int type)
 {
-   // Broadcast message 'msg' at 'type' to the attached clients
    XPDLOC(SMGR, "ProofServ::Broadcast")
 
    // Backward-compatibility check
@@ -479,15 +487,16 @@ void XrdProofdProofServ::Broadcast(const char *msg, int type)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminate the associated process.
+/// A shutdown interrupt message is forwarded.
+/// If add is TRUE (default) the pid is added to the list of processes
+/// requested to terminate.
+/// Return the pid of tyhe terminated process on success, -1 if not allowed
+/// or other errors occured.
+
 int XrdProofdProofServ::TerminateProofServ(bool changeown)
 {
-   // Terminate the associated process.
-   // A shutdown interrupt message is forwarded.
-   // If add is TRUE (default) the pid is added to the list of processes
-   // requested to terminate.
-   // Return the pid of tyhe terminated process on success, -1 if not allowed
-   // or other errors occured.
    XPDLOC(SMGR, "ProofServ::TerminateProofServ")
 
    int pid = fSrvPID;
@@ -508,16 +517,17 @@ int XrdProofdProofServ::TerminateProofServ(bool changeown)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the associated proofserv process is alive. This is done
+/// asynchronously by asking the process to callback and proof its vitality.
+/// We do not block here: the caller may setup a waiting structure if
+/// required.
+/// If forward is true, the process will forward the request to the following
+/// tiers.
+/// Return 0 if the request was send successfully, -1 in case of error.
+
 int XrdProofdProofServ::VerifyProofServ(bool forward)
 {
-   // Check if the associated proofserv process is alive. This is done
-   // asynchronously by asking the process to callback and proof its vitality.
-   // We do not block here: the caller may setup a waiting structure if
-   // required.
-   // If forward is true, the process will forward the request to the following
-   // tiers.
-   // Return 0 if the request was send successfully, -1 in case of error.
    XPDLOC(SMGR, "ProofServ::VerifyProofServ")
 
    TRACE(DBG, "ord: " << fOrdinal<< ", pid: " << fSrvPID);
@@ -551,11 +561,12 @@ int XrdProofdProofServ::VerifyProofServ(bool forward)
    return rc;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast a new group priority value to the worker servers.
+/// Called by masters.
+
 int XrdProofdProofServ::BroadcastPriority(int priority)
 {
-   // Broadcast a new group priority value to the worker servers.
-   // Called by masters.
    XPDLOC(SMGR, "ProofServ::BroadcastPriority")
 
    XrdSysMutexHelper mhp(fMutex);
@@ -579,10 +590,11 @@ int XrdProofdProofServ::BroadcastPriority(int priority)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send data to client cid.
+
 int XrdProofdProofServ::SendData(int cid, void *buff, int len)
 {
-   // Send data to client cid.
    XPDLOC(SMGR, "ProofServ::SendData")
 
    TRACE(HDBG, "length: "<<len<<" bytes (cid: "<<cid<<")");
@@ -621,11 +633,12 @@ int XrdProofdProofServ::SendData(int cid, void *buff, int len)
    return rs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send data over the open client links of this session.
+/// Used when all the connected clients are eligible to receive the message.
+
 int XrdProofdProofServ::SendDataN(void *buff, int len)
 {
-   // Send data over the open client links of this session.
-   // Used when all the connected clients are eligible to receive the message.
    XPDLOC(SMGR, "ProofServ::SendDataN")
 
    TRACE(HDBG, "length: "<<len<<" bytes");
@@ -649,10 +662,11 @@ int XrdProofdProofServ::SendDataN(void *buff, int len)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill buf with relevant info about this session
+
 void XrdProofdProofServ::ExportBuf(XrdOucString &buf)
 {
-   // Fill buf with relevant info about this session
    XPDLOC(SMGR, "ProofServ::ExportBuf")
 
    buf = "";
@@ -671,10 +685,11 @@ void XrdProofdProofServ::ExportBuf(XrdOucString &buf)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create UNIX socket for internal connections
+
 int XrdProofdProofServ::CreateUNIXSock(XrdSysError *edest)
 {
-   // Create UNIX socket for internal connections
    XPDLOC(SMGR, "ProofServ::CreateUNIXSock")
 
    TRACE(DBG, "enter");
@@ -742,11 +757,11 @@ int XrdProofdProofServ::CreateUNIXSock(XrdSysError *edest)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the admin path and make sure the file exists
+
 int XrdProofdProofServ::SetAdminPath(const char *a, bool assert, bool setown)
 {
-   // Set the admin path and make sure the file exists
-
    XPDLOC(SMGR, "ProofServ::SetAdminPath")
 
    XrdSysMutexHelper mhp(fMutex);
@@ -793,12 +808,13 @@ int XrdProofdProofServ::SetAdminPath(const char *a, bool assert, bool setown)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a resume message to the this session. It is assumed that the session
+/// has at least one async query to process and will immediately send
+/// a getworkers request (the workers are already assigned).
+
 int XrdProofdProofServ::Resume()
 {
-   // Send a resume message to the this session. It is assumed that the session
-   // has at least one async query to process and will immediately send
-   // a getworkers request (the workers are already assigned).
    XPDLOC(SMGR, "ProofServ::Resume")
 
    TRACE(REQ, "ord: " << fOrdinal<< ", pid: " << fSrvPID);
@@ -822,10 +838,11 @@ int XrdProofdProofServ::Resume()
    return rc;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decrease active session counters on worker w
+
 static int ExportWorkerDescription(const char *k, XrdProofWorker *w, void *s)
 {
-   // Decrease active session counters on worker w
    XPDLOC(PMGR, "ExportWorkerDescription")
 
    XrdOucString *wrks = (XrdOucString *)s;
@@ -850,20 +867,21 @@ static int ExportWorkerDescription(const char *k, XrdProofWorker *w, void *s)
    return 1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Export the assigned workers in the format understood by proofserv
+
 void XrdProofdProofServ::ExportWorkers(XrdOucString &wrks)
 {
-   // Export the assigned workers in the format understood by proofserv
-
    XrdSysMutexHelper mhp(fMutex);
    wrks = "";
    fWorkers.Apply(ExportWorkerDescription, (void *)&wrks);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Export the assigned workers in the format understood by proofserv
+
 void XrdProofdProofServ::DumpQueries()
 {
-   // Export the assigned workers in the format understood by proofserv
    XPDLOC(PMGR, "DumpQueries")
 
    XrdSysMutexHelper mhp(fMutex);
@@ -881,10 +899,11 @@ void XrdProofdProofServ::DumpQueries()
    TRACE(ALL," ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ");
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get query with tag form the list of queries
+
 XrdProofQuery *XrdProofdProofServ::GetQuery(const char *tag)
 {
-   // Get query with tag form the list of queries
    XrdProofQuery *q = 0;
    if (!tag || strlen(tag) <= 0) return q;
 
@@ -902,10 +921,11 @@ XrdProofQuery *XrdProofdProofServ::GetQuery(const char *tag)
    return q;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// remove query with tag form the list of queries
+
 void XrdProofdProofServ::RemoveQuery(const char *tag)
 {
-   // remove query with tag form the list of queries
    XrdProofQuery *q = 0;
    if (!tag || strlen(tag) <= 0) return;
 
@@ -929,11 +949,11 @@ void XrdProofdProofServ::RemoveQuery(const char *tag)
    return;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decrease active session counters on worker w
+
 static int CountEffectiveSessions(const char *, XrdProofWorker *w, void *s)
 {
-   // Decrease active session counters on worker w
-
    int *actw = (int *)s;
    if (w && actw) {
       *actw += w->GetNActiveSessions();
@@ -945,12 +965,13 @@ static int CountEffectiveSessions(const char *, XrdProofWorker *w, void *s)
    return 1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the effective number of users on this session nodes
+/// and communicate it to the master together with the total number
+/// of sessions and the number of active sessions. for monitoring issues.
+
 void XrdProofdProofServ::SendClusterInfo(int nsess, int nacti)
 {
-   // Calculate the effective number of users on this session nodes
-   // and communicate it to the master together with the total number
-   // of sessions and the number of active sessions. for monitoring issues.
    XPDLOC(PMGR, "SendClusterInfo")
 
    // Only if we are active
@@ -987,13 +1008,14 @@ void XrdProofdProofServ::SendClusterInfo(int nsess, int nacti)
    SafeDelArray(buf);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the effective number of users on this session nodes
+/// and communicate it to the master together with the total number
+/// of sessions and the number of active sessions. for monitoring issues.
+
 int XrdProofdProofServ::CheckSession(bool oldvers, bool isrec,
                                       int shutopt, int shutdel, bool changeown, int &nc)
 {
-   // Calculate the effective number of users on this session nodes
-   // and communicate it to the master together with the total number
-   // of sessions and the number of active sessions. for monitoring issues.
    XPDLOC(PMGR, "SendClusterInfo")
 
    XrdOucString emsg;

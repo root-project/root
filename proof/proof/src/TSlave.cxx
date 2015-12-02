@@ -43,7 +43,9 @@ ClassImp(TSlave)
 // Hook for the TXSlave constructor
 TSlave_t TSlave::fgTXSlaveHook = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a PROOF slave object. Called via the TProof ctor.
+
 TSlave::TSlave(const char *url, const char *ord, Int_t perf,
                const char *image, TProof *proof, Int_t stype,
                const char *workdir, const char *msd, Int_t)
@@ -55,18 +57,17 @@ TSlave::TSlave(const char *url, const char *ord, Int_t perf,
     fCpuTime(0), fSlaveType((ESlaveType)stype), fStatus(TSlave::kInvalid),
     fParallel(0), fMsd(msd)
 {
-   // Create a PROOF slave object. Called via the TProof ctor.
    fName = TUrl(url).GetHostFQDN();
    fPort = TUrl(url).GetPort();
 
    Init(url, -1, stype);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor used by derived classes
+
 TSlave::TSlave()
 {
-   // Default constructor used by derived classes
-
    fPort      = -1;
    fOrdinal   = "-1";
    fPerfIdx   = -1;
@@ -82,13 +83,13 @@ TSlave::TSlave()
    fParallel  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init a PROOF slave object. Called via the TSlave ctor.
+/// The Init method is technology specific and is overwritten by derived
+/// classes.
+
 void TSlave::Init(const char *host, Int_t port, Int_t stype)
 {
-   // Init a PROOF slave object. Called via the TSlave ctor.
-   // The Init method is technology specific and is overwritten by derived
-   // classes.
-
    // The url contains information about the server type: make sure
    // it is 'proofd' or alike
    TString proto = fProof->fUrl.GetProtocol();
@@ -175,13 +176,13 @@ void TSlave::Init(const char *host, Int_t port, Int_t stype)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init a PROOF slave object. Called via the TSlave ctor.
+/// The Init method is technology specific and is overwritten by derived
+/// classes.
+
 Int_t TSlave::SetupServ(Int_t stype, const char *conffile)
 {
-   // Init a PROOF slave object. Called via the TSlave ctor.
-   // The Init method is technology specific and is overwritten by derived
-   // classes.
-
    // get back startup message of proofserv (we are now talking with
    // the real proofserver and not anymore with the proofd front-end)
    Int_t what;
@@ -257,29 +258,29 @@ Int_t TSlave::SetupServ(Int_t stype, const char *conffile)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init a PROOF slave object using the connection opened via s. Used to
+/// avoid double opening when an attempt via TXSlave found a remote proofd.
+
 void TSlave::Init(TSocket *s, Int_t stype)
 {
-   // Init a PROOF slave object using the connection opened via s. Used to
-   // avoid double opening when an attempt via TXSlave found a remote proofd.
-
    fSocket = s;
    TSlave::Init(s->GetInetAddress().GetHostName(), s->GetPort(), stype);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy slave.
+
 TSlave::~TSlave()
 {
-   // Destroy slave.
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close slave socket.
+
 void TSlave::Close(Option_t *opt)
 {
-   // Close slave socket.
-
    if (fSocket) {
 
       // If local client ...
@@ -308,11 +309,11 @@ void TSlave::Close(Option_t *opt)
    SafeDelete(fSocket);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Used to sort slaves by performance index.
+
 Int_t TSlave::Compare(const TObject *obj) const
 {
-   // Used to sort slaves by performance index.
-
    const TSlave *sl = dynamic_cast<const TSlave*>(obj);
 
    if (!sl) {
@@ -339,11 +340,11 @@ Int_t TSlave::Compare(const TObject *obj) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Printf info about slave.
+
 void TSlave::Print(Option_t *) const
 {
-   // Printf info about slave.
-
    TString sc;
 
    const char *sst[] = { "invalid" , "valid", "inactive" };
@@ -391,21 +392,22 @@ void TSlave::Print(Option_t *) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adopt and register input handler for this slave. Handler will be deleted
+/// by the slave.
+
 void TSlave::SetInputHandler(TFileHandler *ih)
 {
-   // Adopt and register input handler for this slave. Handler will be deleted
-   // by the slave.
-
    fInput = ih;
    fInput->Add();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup authentication related stuff for old versions.
+/// Provided for backward compatibility.
+
 Int_t TSlave::OldAuthSetup(Bool_t master, TString wconf)
 {
-   // Setup authentication related stuff for old versions.
-   // Provided for backward compatibility.
    static OldSlaveAuthSetup_t oldAuthSetupHook = 0;
 
    if (!oldAuthSetupHook) {
@@ -443,14 +445,14 @@ Int_t TSlave::OldAuthSetup(Bool_t master, TString wconf)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the appropriate TSlave object for the remote
+/// server.
+
 TSlave *TSlave::Create(const char *url, const char *ord, Int_t perf,
                        const char *image, TProof *proof, Int_t stype,
                        const char *workdir, const char *msd, Int_t nwk)
 {
-   // Static method returning the appropriate TSlave object for the remote
-   // server.
-
    TSlave *s = 0;
 
    // Check if we are setting up a lite version
@@ -495,12 +497,12 @@ TSlave *TSlave::Create(const char *url, const char *ord, Int_t perf,
    return s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ping the remote master or slave servers.
+/// Returns 0 if ok, -1 in case of error
+
 Int_t TSlave::Ping()
 {
-   // Ping the remote master or slave servers.
-   // Returns 0 if ok, -1 in case of error
-
    if (!IsValid()) return -1;
 
    TMessage mess(kPROOF_PING | kMESS_ACK);
@@ -512,12 +514,12 @@ Int_t TSlave::Ping()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send interrupt OOB byte to master or slave servers.
+/// Returns 0 if ok, -1 in case of error
+
 void TSlave::Interrupt(Int_t type)
 {
-   // Send interrupt OOB byte to master or slave servers.
-   // Returns 0 if ok, -1 in case of error
-
    if (!IsValid()) return;
 
    char oobc = (char) type;
@@ -632,11 +634,11 @@ void TSlave::Interrupt(Int_t type)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sent stop/abort request to PROOF server.
+
 void TSlave::StopProcess(Bool_t abort, Int_t timeout)
 {
-   // Sent stop/abort request to PROOF server.
-
    // Notify the remote counterpart
    TMessage msg(kPROOF_STOPPROCESS);
    msg << abort;
@@ -645,32 +647,33 @@ void TSlave::StopProcess(Bool_t abort, Int_t timeout)
    fSocket->Send(msg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send message to intermediate coordinator. Only meaningful when there is one,
+/// i.e. in XPD framework
+
 TObjString *TSlave::SendCoordinator(Int_t, const char *, Int_t)
 {
-   // Send message to intermediate coordinator. Only meaningful when there is one,
-   // i.e. in XPD framework
-
    if (gDebug > 0)
       Info("SendCoordinator","method not implemented for this communication layer");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set an alias for this session. If reconnection is supported, the alias
+/// will be communicated to the remote coordinator so that it can be recovered
+/// when reconnecting
+
 void TSlave::SetAlias(const char *)
 {
-   // Set an alias for this session. If reconnection is supported, the alias
-   // will be communicated to the remote coordinator so that it can be recovered
-   // when reconnecting
-
    if (gDebug > 0)
       Info("SetAlias","method not implemented for this communication layer");
    return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set hook to TXSlave ctor
+
 void TSlave::SetTXSlaveHook(TSlave_t xslavehook)
 {
-   // Set hook to TXSlave ctor
    fgTXSlaveHook = xslavehook;
 }

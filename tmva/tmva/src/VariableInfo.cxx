@@ -34,7 +34,9 @@
 
 #include "TMath.h"
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& title, const TString& unit,
                                   Int_t varCounter,
                                   char varType, void* external,
@@ -49,8 +51,6 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& titl
      fExternalData( external ),
      fVarCounter  ( varCounter )
 {
-   // constructor
-
    if ( TMath::Abs(max - min) <= FLT_MIN ) {
       fXminNorm =  FLT_MAX;
       fXmaxNorm = -FLT_MAX;
@@ -73,7 +73,9 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& titl
    fInternalName = gTools().ReplaceRegularExpressions( fLabel, "_" );   
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TMVA::VariableInfo::VariableInfo() 
    : fExpression  (""),
      fVarType     ('\0'),
@@ -83,7 +85,6 @@ TMVA::VariableInfo::VariableInfo()
      fExternalData( 0 ),
      fVarCounter  ( 0 )
 {
-   // default constructor
    fXminNorm     =  1e30;
    fXmaxNorm     = -1e30;
    fLabel        = GetExpression();
@@ -92,7 +93,9 @@ TMVA::VariableInfo::VariableInfo()
    fInternalName = gTools().ReplaceRegularExpressions( fLabel, "_" );   
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor
+
 TMVA::VariableInfo::VariableInfo( const VariableInfo& other ) 
    : fExpression  ( other.fExpression ),
      fInternalName( other.fInternalName ),
@@ -108,13 +111,13 @@ TMVA::VariableInfo::VariableInfo( const VariableInfo& other )
      fExternalData( other.fExternalData ),
      fVarCounter  ( other.fVarCounter )
 {
-   // copy constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// comparison operator
+
 TMVA::VariableInfo& TMVA::VariableInfo::operator=(const VariableInfo& rhs)
 {
-   // comparison operator
    if (this !=& rhs) {
       fExpression       = rhs.fExpression;
       fInternalName     = rhs.fInternalName;
@@ -125,10 +128,11 @@ TMVA::VariableInfo& TMVA::VariableInfo::operator=(const VariableInfo& rhs)
    return *this;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write VariableInfo to stream 
+
 void TMVA::VariableInfo::WriteToStream( std::ostream& o ) const
 {
-   // write VariableInfo to stream 
    UInt_t nc = TMath::Max( 30, TMath::Max( GetExpression().Length()+1, GetInternalName().Length()+1 ) );
    TString expBr(Form("\'%s\'",GetExpression().Data()));
    o << std::setw(nc) << GetExpression();
@@ -140,10 +144,10 @@ void TMVA::VariableInfo::WriteToStream( std::ostream& o ) const
    o << "[" << std::setprecision(12) << GetMin() << "," << std::setprecision(12) << GetMax() << "]" << std::endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::VariableInfo::ReadFromStream( std::istream& istr )
 {
-
    // read VariableInfo from stream
 
    // PLEASE do not modify this, it does not have to correspond to WriteToStream
@@ -170,10 +174,11 @@ void TMVA::VariableInfo::ReadFromStream( std::istream& istr )
    SetMax            ( max );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write class to XML
+
 void TMVA::VariableInfo::AddToXML( void* varnode )
 {
-   // write class to XML
    gTools().AddAttr( varnode, "Expression", GetExpression() );
    gTools().AddAttr( varnode, "Label",      GetLabel() );
    gTools().AddAttr( varnode, "Title",      GetTitle() );
@@ -187,10 +192,11 @@ void TMVA::VariableInfo::AddToXML( void* varnode )
    gTools().AddAttr( varnode, "Max", gTools().StringFromDouble(GetMax()) );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read VariableInfo from stream
+
 void TMVA::VariableInfo::ReadFromXML( void* varnode ) 
 {
-   // read VariableInfo from stream
    TString type;
    gTools().ReadAttr( varnode, "Expression", fExpression );
    gTools().ReadAttr( varnode, "Label",      fLabel );

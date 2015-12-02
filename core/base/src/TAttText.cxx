@@ -23,7 +23,8 @@
 ClassImp(TAttText)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>Text Attributes class</h2></center>
 
@@ -233,13 +234,13 @@ fonts.C
 End_Macro */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// AttText default constructor.
+///
+/// Default text attributes are taken from the current style.
+
 TAttText::TAttText()
 {
-   // AttText default constructor.
-   //
-   // Default text attributes are taken from the current style.
-
    if (!gStyle) {
       ResetAttText();
       return;
@@ -252,13 +253,13 @@ TAttText::TAttText()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// AttText normal constructor.
+///
+/// Text attributes are taken from the argument list.
+
 TAttText::TAttText(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize)
 {
-   // AttText normal constructor.
-   //
-   // Text attributes are taken from the argument list.
-
    fTextAlign = align;
    fTextAngle = angle;
    fTextColor = color;
@@ -267,18 +268,19 @@ TAttText::TAttText(Int_t align, Float_t angle, Color_t color, Style_t font, Floa
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// AttText destructor.
+
 TAttText::~TAttText()
 {
-   // AttText destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this text attributes to a new TAttText.
+
 void TAttText::Copy(TAttText &atttext) const
 {
-   // Copy this text attributes to a new TAttText.
-
    atttext.fTextAlign  = fTextAlign;
    atttext.fTextAngle  = fTextAngle;
    atttext.fTextColor  = fTextColor;
@@ -287,11 +289,11 @@ void TAttText::Copy(TAttText &atttext) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change current text attributes if necessary.
+
 void TAttText::Modify()
 {
-   // Change current text attributes if necessary.
-
    if (!gPad) return;
 
    // Do we need to change font?
@@ -317,11 +319,11 @@ void TAttText::Modify()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this text attributes to default values.
+
 void TAttText::ResetAttText(Option_t *)
 {
-   // Reset this text attributes to default values.
-
    fTextAlign  = 11;
    fTextAngle  = 0;
    fTextColor  = 1;
@@ -330,13 +332,13 @@ void TAttText::ResetAttText(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save text attributes as C++ statement(s) on output stream out.
+
 void TAttText::SaveTextAttributes(std::ostream &out, const char *name, Int_t alidef,
                                   Float_t angdef, Int_t coldef, Int_t fondef,
                                   Float_t sizdef)
 {
-   // Save text attributes as C++ statement(s) on output stream out.
-
    if (fTextAlign != alidef) {
       out<<"   "<<name<<"->SetTextAlign("<<fTextAlign<<");"<<std::endl;
    }
@@ -359,33 +361,33 @@ void TAttText::SaveTextAttributes(std::ostream &out, const char *name, Int_t ali
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the DialogCanvas Text attributes.
+
 void TAttText::SetTextAttributes()
 {
-   // Invoke the DialogCanvas Text attributes.
-
    TVirtualPadEditor::UpdateTextAttributes(fTextAlign,fTextAngle,fTextColor,
                                            fTextFont,fTextSize);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a transparent marker color. talpha defines the percentage of
+/// the color opacity from 0. (fully transparent) to 1. (fully opaque).
+
 void TAttText::SetTextColorAlpha(Color_t tcolor, Float_t talpha)
 {
-   // Set a transparent marker color. talpha defines the percentage of
-   // the color opacity from 0. (fully transparent) to 1. (fully opaque).
-
    fTextColor = TColor::GetColorTransparent(tcolor, talpha);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the text size in pixels.
+/// If the font precision is greater than 2, the text size is set to npixels,
+/// otherwise the text size is computed as a percent of the pad size.
+
 void TAttText::SetTextSizePixels(Int_t npixels)
 {
-   // Set the text size in pixels.
-   // If the font precision is greater than 2, the text size is set to npixels,
-   // otherwise the text size is computed as a percent of the pad size.
-
    if (fTextFont%10 > 2) {
       fTextSize = Float_t(npixels);
    } else {

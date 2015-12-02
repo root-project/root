@@ -35,11 +35,11 @@
 ClassImp(TEvePathMarkT<Float_t>);
 ClassImp(TEvePathMarkT<Double_t>);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the name of path-mark type.
+
 template<typename TT> const char* TEvePathMarkT<TT>::TypeName()
 {
-   // Return the name of path-mark type.
-
    switch (fType)
    {
       case kDaughter:    return "Daughter";

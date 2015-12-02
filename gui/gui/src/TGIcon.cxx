@@ -41,11 +41,11 @@
 
 ClassImp(TGIcon)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create icon.
+
 TGIcon::TGIcon(const TGWindow *p, const char *image) : TGFrame(p, 1, 1)
 {
-   // Create icon.
-
    fPic = 0;
    char *path;
 
@@ -66,29 +66,29 @@ TGIcon::TGIcon(const TGWindow *p, const char *image) : TGFrame(p, 1, 1)
    delete [] path;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete icon and free picture.
+
 TGIcon::~TGIcon()
 {
-   // Delete icon and free picture.
-
    if (fPic) fClient->FreePicture(fPic);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set icon picture.
+
 void TGIcon::SetPicture(const TGPicture *pic)
 {
-   // Set icon picture.
-
    fPic = pic;
    gVirtualX->ClearWindow(fId);
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set icon image.
+
 void TGIcon::SetImage(const char *img)
 {
-   // Set icon image.
-
    //delete fImage;
    TImage *i = TImage::Open(img);
    fPath = gSystem->DirName(img);
@@ -96,11 +96,11 @@ void TGIcon::SetImage(const char *img)
    SetImage(i);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change icon image.
+
 void TGIcon::SetImage(TImage *img)
 {
-   // Change icon image.
-
    if (!img) {
       return;
    }
@@ -112,20 +112,20 @@ void TGIcon::SetImage(TImage *img)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return size of icon.
+
 TGDimension TGIcon::GetDefaultSize() const
 {
-   // Return size of icon.
-
    return TGDimension((fPic) ? fPic->GetWidth()  : fWidth,
                       (fPic) ? fPic->GetHeight() : fHeight);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw picture.
+
 void TGIcon::DoRedraw()
 {
-   // Redraw picture.
-
    Bool_t border = (GetOptions() & kRaisedFrame) ||
                    (GetOptions() & kSunkenFrame) ||
                    (GetOptions() & kDoubleBorder);
@@ -134,11 +134,11 @@ void TGIcon::DoRedraw()
    if (border)  DrawBorder();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize.
+
 void TGIcon::Resize(UInt_t w, UInt_t h)
 {
-   // Resize.
-
    TGFrame::Resize(w, h);
 
    // allow scaled resize for icons with TImage
@@ -161,20 +161,20 @@ void TGIcon::Resize(UInt_t w, UInt_t h)
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move icon to (x,y) and resize it to (w,h).
+
 void TGIcon::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Move icon to (x,y) and resize it to (w,h).
-
    Move(x, y);
    Resize(w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset icon to original image. It can be used only via context menu.
+
 void TGIcon::Reset()
 {
-   // Reset icon to original image. It can be used only via context menu.
-
    if (!fImage || !fClient->IsEditable()) return;
 
    TString name = fImage->GetName();
@@ -185,22 +185,22 @@ void TGIcon::Reset()
    delete [] path;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set directory where image is located
+
 void TGIcon::SetImagePath(const char *path)
 {
-   // Set directory where image is located
-
    if (!path) {
       return;
    }
    fPath = gSystem->ExpandPathName(gSystem->UnixPathName(path));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save an icon widget as a C++ statement(s) on output stream out.
+
 void TGIcon::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save an icon widget as a C++ statement(s) on output stream out.
-
    char quote = '"';
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);

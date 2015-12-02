@@ -28,11 +28,11 @@
 
 ClassImp(TExMap)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TExMap.
+
 TExMap::TExMap(Int_t mapSize)
 {
-   // Create a TExMap.
-
    // needed for automatic resizing to guarantee that one slot is always empty
    if (mapSize < 4) mapSize = 5;
 
@@ -49,22 +49,22 @@ TExMap::TExMap(Int_t mapSize)
    fTally = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TExMap::TExMap(const TExMap &map) : TObject(map)
 {
-   // Copy constructor.
-
    fSize  = map.fSize;
    fTally = map.fTally;
    fTable = new Assoc_t [fSize];
    memcpy(fTable, map.fTable, fSize*sizeof(Assoc_t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignement operator.
+
 TExMap& TExMap::operator=(const TExMap &map)
 {
-   // Assignement operator.
-
    if (this != &map) {
       TObject::operator=(map);
       fSize  = map.fSize;
@@ -75,19 +75,19 @@ TExMap& TExMap::operator=(const TExMap &map)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete TExMap.
+
 TExMap::~TExMap()
 {
-   // Delete TExMap.
-
    delete [] fTable; fTable = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an (key,value) pair to the table. The key should be unique.
+
 void TExMap::Add(ULong64_t hash, Long64_t key, Long64_t value)
 {
-   // Add an (key,value) pair to the table. The key should be unique.
-
    if (!fTable) return;
 
    Int_t slot = FindElement(hash, key);
@@ -102,19 +102,19 @@ void TExMap::Add(ULong64_t hash, Long64_t key, Long64_t value)
       Error("Add", "key %lld is not unique", key);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an (key,value) pair to the table. The key should be unique.
+/// If the 'slot' is open, use it to store the value,
+/// otherwise revert to Add(hash,key,value)
+/// This is usually used in conjuction with GetValue wiht 3 parameters:
+/// if ((idx = (ULong64_t)fMap->GetValue(hash, key, slot)) != 0) {
+///    ...
+/// } else {
+///    fMap->AddAt(slot,hash,key,value);
+/// }
+
 void TExMap::AddAt(UInt_t slot, ULong64_t hash, Long64_t key, Long64_t value)
 {
-   // Add an (key,value) pair to the table. The key should be unique.
-   // If the 'slot' is open, use it to store the value,
-   // otherwise revert to Add(hash,key,value)
-   // This is usually used in conjuction with GetValue wiht 3 parameters:
-   // if ((idx = (ULong64_t)fMap->GetValue(hash, key, slot)) != 0) {
-   //    ...
-   // } else {
-   //    fMap->AddAt(slot,hash,key,value);
-   // }
-
    if (!fTable) return;
 
    if (!fTable[slot].InUse()) {
@@ -129,14 +129,14 @@ void TExMap::AddAt(UInt_t slot, ULong64_t hash, Long64_t key, Long64_t value)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a reference to the value belonging to the key with the
+/// specified hash value. If the key does not exist it will be added.
+/// NOTE: the reference will be invalidated an Expand() triggered by
+/// an Add() or another operator() call.
+
 Long64_t &TExMap::operator()(ULong64_t hash, Long64_t key)
 {
-   // Return a reference to the value belonging to the key with the
-   // specified hash value. If the key does not exist it will be added.
-   // NOTE: the reference will be invalidated an Expand() triggered by
-   // an Add() or another operator() call.
-
    static Long64_t err;
    if (!fTable) {
       Error("operator()", "fTable==0, should never happen");
@@ -157,21 +157,21 @@ Long64_t &TExMap::operator()(ULong64_t hash, Long64_t key)
    return fTable[slot].fValue;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete all entries stored in the TExMap.
+
 void TExMap::Delete(Option_t *)
 {
-   // Delete all entries stored in the TExMap.
-
    memset(fTable,0,sizeof(Assoc_t)*fSize);
    fTally = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the value belonging to specified key and hash value. If key not
+/// found return 0.
+
 Long64_t TExMap::GetValue(ULong64_t hash, Long64_t key)
 {
-   // Return the value belonging to specified key and hash value. If key not
-   // found return 0.
-
    if (!fTable) return 0;
 
    hash |= 0x1;
@@ -187,14 +187,14 @@ Long64_t TExMap::GetValue(ULong64_t hash, Long64_t key)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the value belonging to specified key and hash value. If key not
+/// found return 0.
+/// In 'slot', return the index of the slot used or the first empty slot.
+/// (to be used with AddAt).
+
 Long64_t TExMap::GetValue(ULong64_t hash, Long64_t key, UInt_t &slot)
 {
-   // Return the value belonging to specified key and hash value. If key not
-   // found return 0.
-   // In 'slot', return the index of the slot used or the first empty slot.
-   // (to be used with AddAt).
-
    if (!fTable) { slot = 0; return 0; }
 
    hash |= 0x1;
@@ -210,11 +210,11 @@ Long64_t TExMap::GetValue(ULong64_t hash, Long64_t key, UInt_t &slot)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove entry with specified key from the TExMap.
+
 void TExMap::Remove(ULong64_t hash, Long64_t key)
 {
-   // Remove entry with specified key from the TExMap.
-
    if (!fTable)
       return;
 
@@ -229,12 +229,12 @@ void TExMap::Remove(ULong64_t hash, Long64_t key)
    fTally--;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find an entry with specified hash and key in the TExMap.
+/// Returns the slot of the key or the next empty slot.
+
 Int_t TExMap::FindElement(ULong64_t hash, Long64_t key)
 {
-   // Find an entry with specified hash and key in the TExMap.
-   // Returns the slot of the key or the next empty slot.
-
    if (!fTable) return 0;
 
    hash |= 0x1;
@@ -250,11 +250,11 @@ Int_t TExMap::FindElement(ULong64_t hash, Long64_t key)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rehash the map in case an entry has been removed.
+
 void TExMap::FixCollisions(Int_t index)
 {
-   // Rehash the map in case an entry has been removed.
-
    Int_t oldIndex, nextIndex;
    Assoc_t nextObject;
 
@@ -272,11 +272,11 @@ void TExMap::FixCollisions(Int_t index)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand the TExMap.
+
 void TExMap::Expand(Int_t newSize)
 {
-   // Expand the TExMap.
-
    Int_t i;
    Assoc_t *oldTable = fTable;
    Int_t oldsize = fSize;
@@ -299,11 +299,11 @@ void TExMap::Expand(Int_t newSize)
    delete [] oldTable;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream all objects in the collection to or from the I/O buffer.
+
 void TExMap::Streamer(TBuffer &b)
 {
-   // Stream all objects in the collection to or from the I/O buffer.
-
    Int_t i;
    UInt_t R__s, R__c;
 
@@ -386,17 +386,18 @@ void TExMap::Streamer(TBuffer &b)
 
 ClassImp(TExMapIter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TExMap iterator.
+
 TExMapIter::TExMapIter(const TExMap *map) : fMap(map), fCursor(0)
 {
-   // Create TExMap iterator.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overloaded assignment operator.
+
 TExMapIter &TExMapIter::operator=(const TExMapIter &rhs)
 {
-   // Overloaded assignment operator.
-
    if (this != &rhs) {
       fMap    = rhs.fMap;
       fCursor = rhs.fCursor;
@@ -404,11 +405,11 @@ TExMapIter &TExMapIter::operator=(const TExMapIter &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next entry from TExMap. Returns kFALSE at end of map.
+
 Bool_t TExMapIter::Next(ULong64_t &hash, Long64_t &key, Long64_t &value)
 {
-   // Get next entry from TExMap. Returns kFALSE at end of map.
-
    while (fCursor < fMap->fSize && !fMap->fTable[fCursor].InUse())
       fCursor++;
 
@@ -423,11 +424,11 @@ Bool_t TExMapIter::Next(ULong64_t &hash, Long64_t &key, Long64_t &value)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next entry from TExMap. Returns kFALSE at end of map.
+
 Bool_t TExMapIter::Next(Long64_t &key, Long64_t &value)
 {
-   // Get next entry from TExMap. Returns kFALSE at end of map.
-
    ULong64_t hash;
    return Next(hash, key, value);
 }

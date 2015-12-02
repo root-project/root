@@ -92,7 +92,9 @@ REGISTER_METHOD(PDERS)
 
 ClassImp(TMVA::MethodPDERS)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor for the PDERS method
+
 TMVA::MethodPDERS::MethodPDERS( const TString& jobName,
                                 const TString& methodTitle,
                                 DataSetInfo& theData,
@@ -121,10 +123,11 @@ TMVA::MethodPDERS::MethodPDERS( const TString& jobName,
    fPrinted(0),
    fNormTree(0)
 {
-   // standard constructor for the PDERS method
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// construct MethodPDERS through from file
+
 TMVA::MethodPDERS::MethodPDERS( DataSetInfo& theData,
                                 const TString& theWeightFile,
                                 TDirectory* theTargetDir ) :
@@ -151,23 +154,23 @@ TMVA::MethodPDERS::MethodPDERS( DataSetInfo& theData,
    fPrinted(0),
    fNormTree(0)
 {
-   // construct MethodPDERS through from file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PDERS can handle classification with 2 classes and regression with one or more regression-targets
+
 Bool_t TMVA::MethodPDERS::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
 {
-   // PDERS can handle classification with 2 classes and regression with one or more regression-targets
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    if (type == Types::kRegression) return kTRUE;
    return kFALSE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default initialisation routine called by all constructors
+
 void TMVA::MethodPDERS::Init( void )
 {
-   // default initialisation routine called by all constructors
-
    fBinaryTree = NULL;
 
    UpdateThis();
@@ -195,50 +198,52 @@ void TMVA::MethodPDERS::Init( void )
    SetSignalReferenceCut( 0.0 );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodPDERS::~MethodPDERS( void )
 {
-   // destructor
    if (fDelta) delete fDelta;
    if (fShift) delete fShift;
 
    if (NULL != fBinaryTree) delete fBinaryTree;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define the options (their key words) that can be set in the option string
+/// know options:
+/// VolumeRangeMode   <string>  Method to determine volume range
+///    available values are:        MinMax
+///                                 Unscaled
+///                                 RMS
+///                                 kNN
+///                                 Adaptive <default>
+///
+/// KernelEstimator   <string>  Kernel estimation function
+///    available values are:        Box <default>
+///                                 Sphere
+///                                 Teepee
+///                                 Gauss
+///                                 Sinc3
+///                                 Sinc5
+///                                 Sinc7
+///                                 Sinc9
+///                                 Sinc11
+///                                 Lanczos2
+///                                 Lanczos3
+///                                 Lanczos5
+///                                 Lanczos8
+///                                 Trim
+///
+/// DeltaFrac         <float>   Ratio of #EventsMin/#EventsMax for MinMax and RMS volume range
+/// NEventsMin        <int>     Minimum number of events for adaptive volume range
+/// NEventsMax        <int>     Maximum number of events for adaptive volume range
+/// MaxVIterations    <int>     Maximum number of iterations for adaptive volume range
+/// InitialScale      <float>   Initial scale for adaptive volume range
+/// GaussSigma        <float>   Width with respect to the volume size of Gaussian kernel estimator
+
 void TMVA::MethodPDERS::DeclareOptions()
 {
-   // define the options (their key words) that can be set in the option string
-   // know options:
-   // VolumeRangeMode   <string>  Method to determine volume range
-   //    available values are:        MinMax
-   //                                 Unscaled
-   //                                 RMS
-   //                                 kNN
-   //                                 Adaptive <default>
-   //
-   // KernelEstimator   <string>  Kernel estimation function
-   //    available values are:        Box <default>
-   //                                 Sphere
-   //                                 Teepee
-   //                                 Gauss
-   //                                 Sinc3
-   //                                 Sinc5
-   //                                 Sinc7
-   //                                 Sinc9
-   //                                 Sinc11
-   //                                 Lanczos2
-   //                                 Lanczos3
-   //                                 Lanczos5
-   //                                 Lanczos8
-   //                                 Trim
-   //
-   // DeltaFrac         <float>   Ratio of #EventsMin/#EventsMax for MinMax and RMS volume range
-   // NEventsMin        <int>     Minimum number of events for adaptive volume range
-   // NEventsMax        <int>     Maximum number of events for adaptive volume range
-   // MaxVIterations    <int>     Maximum number of iterations for adaptive volume range
-   // InitialScale      <float>   Initial scale for adaptive volume range
-   // GaussSigma        <float>   Width with respect to the volume size of Gaussian kernel estimator
    DeclareOptionRef(fVolumeRange="Adaptive", "VolumeRangeMode", "Method to determine volume size");
    AddPreDefVal(TString("Unscaled"));
    AddPreDefVal(TString("MinMax"));
@@ -271,11 +276,11 @@ void TMVA::MethodPDERS::DeclareOptions()
    DeclareOptionRef(fNormTree      , "NormTree",       "Normalize binary search tree");
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// process the options specified by the user
+
 void TMVA::MethodPDERS::ProcessOptions()
 {
-   // process the options specified by the user
-
    if (IgnoreEventsWithNegWeightsInTraining()) {
       Log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
             << GetMethodTypeName()
@@ -329,14 +334,14 @@ void TMVA::MethodPDERS::ProcessOptions()
    Log() << kVERBOSE << "KernelEstimator = " << fKernelString << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// this is a dummy training: the preparation work to do is the construction
+/// of the binary tree as a pointer chain. It is easier to directly save the
+/// trainingTree in the weight file, and to rebuild the binary tree in the
+/// test phase from scratch
+
 void TMVA::MethodPDERS::Train( void )
 {
-   // this is a dummy training: the preparation work to do is the construction
-   // of the binary tree as a pointer chain. It is easier to directly save the
-   // trainingTree in the weight file, and to rebuild the binary tree in the
-   // test phase from scratch
-
    if (IsNormalised()) Log() << kFATAL << "\"Normalise\" option cannot be used with PDERS; "
                                << "please remove the option from the configuration string, or "
                                << "use \"!Normalise\""
@@ -350,11 +355,12 @@ void TMVA::MethodPDERS::Train( void )
    fInitializedVolumeEle = kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// init the size of a volume element using a defined fraction of the
+/// volume containing the entire events
+
 Double_t TMVA::MethodPDERS::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // init the size of a volume element using a defined fraction of the
-   // volume containing the entire events
    if (fInitializedVolumeEle == kFALSE) {
       fInitializedVolumeEle = kTRUE;
 
@@ -371,7 +377,8 @@ Double_t TMVA::MethodPDERS::GetMvaValue( Double_t* err, Double_t* errUpper )
    return this->CRScalc( *GetEvent() );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const std::vector< Float_t >& TMVA::MethodPDERS::GetRegressionValues()
 {
    if (fRegressionReturnVal == 0) fRegressionReturnVal = new std::vector<Float_t>;
@@ -412,10 +419,11 @@ const std::vector< Float_t >& TMVA::MethodPDERS::GetRegressionValues()
    return (*fRegressionReturnVal);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute also average RMS values required for adaptive Gaussian
+
 void TMVA::MethodPDERS::CalcAverages()
 {
-   // compute also average RMS values required for adaptive Gaussian
    if (fVRangeMode == kAdaptive || fVRangeMode == kRMS || fVRangeMode == kkNN  ) {
       fAverageRMS.clear();
       fBinaryTree->CalcStatistics();
@@ -433,10 +441,11 @@ void TMVA::MethodPDERS::CalcAverages()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create binary search trees for signal and background
+
 void TMVA::MethodPDERS::CreateBinarySearchTree( Types::ETreeType type )
 {
-   // create binary search trees for signal and background
    if (NULL != fBinaryTree) delete fBinaryTree;
    fBinaryTree = new BinarySearchTree();
    if (fNormTree) {
@@ -458,10 +467,10 @@ void TMVA::MethodPDERS::CreateBinarySearchTree( Types::ETreeType type )
    }
 }
 
-//_______________________________________________________________________
-void TMVA::MethodPDERS::SetVolumeElement( void ) {
-   // defines volume dimensions
+////////////////////////////////////////////////////////////////////////////////
+/// defines volume dimensions
 
+void TMVA::MethodPDERS::SetVolumeElement( void ) {
    if (GetNvar()==0) {
       Log() << kFATAL << "GetNvar() == 0" << Endl;
       return;
@@ -506,18 +515,19 @@ void TMVA::MethodPDERS::SetVolumeElement( void ) {
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to RootFinder
+
 Double_t TMVA::MethodPDERS::IGetVolumeContentForRoot( Double_t scale )
 {
-   // Interface to RootFinder
    return ThisPDERS()->GetVolumeContentForRoot( scale );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// count number of events in rescaled volume
+
 Double_t TMVA::MethodPDERS::GetVolumeContentForRoot( Double_t scale )
 {
-   // count number of events in rescaled volume
-
    Volume v( *fHelpVolume );
    v.ScaleInterval( scale );
 
@@ -755,7 +765,8 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
    // -----------------------------------------------------------------------
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::MethodPDERS::CRScalc( const Event& e )
 {
    std::vector<const BinarySearchTreeNode*> events;
@@ -783,7 +794,8 @@ Double_t TMVA::MethodPDERS::CRScalc( const Event& e )
    return count;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodPDERS::RRScalc( const Event& e, std::vector<Float_t>* count )
 {
    std::vector<const BinarySearchTreeNode*> events;
@@ -808,11 +820,12 @@ void TMVA::MethodPDERS::RRScalc( const Event& e, std::vector<Float_t>* count )
 
    return;
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// normalization factors so we can work with radius 1 hyperspheres
+
 Double_t TMVA::MethodPDERS::CKernelEstimate( const Event & event,
                                              std::vector<const BinarySearchTreeNode*>& events, Volume& v )
 {
-   // normalization factors so we can work with radius 1 hyperspheres
    Double_t *dim_normalization = new Double_t[GetNvar()];
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++)
       dim_normalization [ivar] = 2 / ((*v.fUpper)[ivar] - (*v.fLower)[ivar]);
@@ -848,12 +861,13 @@ Double_t TMVA::MethodPDERS::CKernelEstimate( const Event & event,
    return 1.0/(r + 1.0);   // TODO: propagate errors from here
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// normalization factors so we can work with radius 1 hyperspheres
+
 void TMVA::MethodPDERS::RKernelEstimate( const Event & event,
                                          std::vector<const BinarySearchTreeNode*>& events, Volume& v,
                                          std::vector<Float_t>* pdfSum )
 {
-   // normalization factors so we can work with radius 1 hyperspheres
    Double_t *dim_normalization = new Double_t[GetNvar()];
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++)
       dim_normalization [ivar] = 2 / ((*v.fUpper)[ivar] - (*v.fLower)[ivar]);
@@ -893,11 +907,12 @@ void TMVA::MethodPDERS::RKernelEstimate( const Event & event,
    return;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// from the normalized euclidean distance calculate the distance
+/// for a certain kernel
+
 Double_t TMVA::MethodPDERS::ApplyKernelFunction (Double_t normalized_distance)
 {
-   // from the normalized euclidean distance calculate the distance
-   // for a certain kernel
    switch (fKernelEstimator) {
    case kBox:
    case kSphere:
@@ -944,12 +959,12 @@ Double_t TMVA::MethodPDERS::ApplyKernelFunction (Double_t normalized_distance)
    return 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculating the normalization factor only once (might need a reset at some point.
+/// Can the method be restarted with different params?)
+
 Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf)
 {
-   // Calculating the normalization factor only once (might need a reset at some point.
-   // Can the method be restarted with different params?)
-
    // Caching jammed to disable function.
    // It's not really useful afterall, badly implemented and untested :-)
    TTHREAD_TLS(Double_t) ret = 1.0;
@@ -993,12 +1008,13 @@ Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf)
    return ret*pdf;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// We use Euclidian metric here. Might not be best or most efficient.
+
 Double_t TMVA::MethodPDERS::GetNormalizedDistance ( const Event &base_event,
                                                     const BinarySearchTreeNode &sample_event,
                                                     Double_t *dim_normalization)
 {
-   // We use Euclidian metric here. Might not be best or most efficient.
    Double_t ret=0;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       Double_t dist = dim_normalization[ivar] * (sample_event.GetEventV()[ivar] - base_event.GetValue(ivar));
@@ -1009,10 +1025,11 @@ Double_t TMVA::MethodPDERS::GetNormalizedDistance ( const Event &base_event,
    return TMath::Sqrt (ret);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// NormSinc
+
 Double_t TMVA::MethodPDERS::NormSinc (Double_t x)
 {
-   // NormSinc
    if (x < 10e-10 && x > -10e-10) {
       return 1; // Poor man's l'Hopital
    }
@@ -1029,10 +1046,11 @@ Double_t TMVA::MethodPDERS::NormSinc (Double_t x)
    return ret;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lanczos Filter
+
 Double_t TMVA::MethodPDERS::LanczosFilter (Int_t level, Double_t x)
 {
-   // Lanczos Filter
    if (x < 10e-10 && x > -10e-10) {
       return 1; // Poor man's l'Hopital
    }
@@ -1048,12 +1066,12 @@ Double_t TMVA::MethodPDERS::LanczosFilter (Int_t level, Double_t x)
    return ret;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// statistical error estimate for RS estimator
+
 Float_t TMVA::MethodPDERS::GetError( Float_t countS, Float_t countB,
                                      Float_t sumW2S, Float_t sumW2B ) const
 {
-   // statistical error estimate for RS estimator
-
    Float_t c = fScaleB/fScaleS;
    Float_t d = countS + c*countB; d *= d;
 
@@ -1067,10 +1085,11 @@ Float_t TMVA::MethodPDERS::GetError( Float_t countS, Float_t countB,
    return sqrt(err);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write weights to xml file
+
 void TMVA::MethodPDERS::AddWeightsXMLTo( void* parent ) const
 {
-   // write weights to xml file
    void* wght = gTools().AddChild(parent, "Weights");
    if (fBinaryTree)
       fBinaryTree->AddXMLTo(wght);
@@ -1079,7 +1098,8 @@ void TMVA::MethodPDERS::AddWeightsXMLTo( void* parent ) const
    //Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodPDERS::ReadWeightsFromXML( void* wghtnode)
 {
    if (NULL != fBinaryTree) delete fBinaryTree;
@@ -1104,10 +1124,11 @@ void TMVA::MethodPDERS::ReadWeightsFromXML( void* wghtnode)
    fInitializedVolumeEle = kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read weight info from file
+
 void TMVA::MethodPDERS::ReadWeightsFromStream( std::istream& istr)
 {
-   // read weight info from file
    if (NULL != fBinaryTree) delete fBinaryTree;
 
    fBinaryTree = new BinarySearchTree();
@@ -1133,46 +1154,52 @@ void TMVA::MethodPDERS::ReadWeightsFromStream( std::istream& istr)
    fInitializedVolumeEle = kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write training sample (TTree) to file
+
 void TMVA::MethodPDERS::WriteWeightsToStream( TFile& ) const
 {
-   // write training sample (TTree) to file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read training sample from file
+
 void TMVA::MethodPDERS::ReadWeightsFromStream( TFile& /*rf*/ )
 {
-   // read training sample from file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static pointer to this object
+
 TMVA::MethodPDERS* TMVA::MethodPDERS::ThisPDERS( void )
 {
-   // static pointer to this object
    return GetMethodPDERSThreadLocal();
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// update static this pointer
+
 void TMVA::MethodPDERS::UpdateThis( void )
 {
-   // update static this pointer
    GetMethodPDERSThreadLocal() = this;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write specific classifier response
+
 void TMVA::MethodPDERS::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
-   // write specific classifier response
    fout << "   // not implemented for class: \"" << className << "\"" << std::endl;
    fout << "};" << std::endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get help message text
+///
+/// typical length of text line:
+///         "|--------------------------------------------------------------|"
+
 void TMVA::MethodPDERS::GetHelpMessage() const
 {
-   // get help message text
-   //
-   // typical length of text line:
-   //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;

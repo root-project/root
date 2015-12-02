@@ -246,7 +246,9 @@ templateClassImp(TKDTree)
 //////////////////////////////////////////////////////////////////////////
 
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor. Nothing is built
+
 template <typename  Index, typename Value>
 TKDTree<Index, Value>::TKDTree() :
    TObject()
@@ -267,7 +269,6 @@ TKDTree<Index, Value>::TKDTree() :
    ,fCrossNode(0)
    ,fOffset(0)
 {
-// Default constructor. Nothing is built
 }
 
 template <typename  Index, typename Value>
@@ -298,7 +299,30 @@ TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize) :
 
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a kd-tree from the provided data array. This function only sets the data,
+/// call Build() to build the tree!!!
+/// Parameteres:
+/// - npoints - total number of points. Adding points after the tree is built is not supported
+/// - ndim    - number of dimensions
+/// - bsize   - maximal number of points in the terminal nodes
+/// - data    - the data array
+///
+/// The data should be placed columnwise (like in a TTree).
+/// The columnwise orientation is chosen to simplify the usage together with TTree::GetV1() like functions.
+/// An example of filling such an array for a 2d case:
+/// Double_t **data = new Double_t*[2];
+/// data[0] = new Double_t[npoints];
+/// data[1] = new Double_t[npoints];
+/// for (Int_t i=0; i<npoints; i++){
+///    data[0][i]=gRandom->Uniform(-1, 1); //fill the x-coordinate
+///    data[1][i]=gRandom->Uniform(-1, 1); //fill the y-coordinate
+/// }
+///
+/// By default, the kd-tree doesn't own the data. If you want the kd-tree to delete the data array, call
+/// kdtree->SetOwner(kTRUE).
+///
+
 template <typename  Index, typename Value>
 TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **data) :
    TObject()
@@ -319,41 +343,18 @@ TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **
    ,fCrossNode(0)
    ,fOffset(0)
 {
-   // Create a kd-tree from the provided data array. This function only sets the data,
-   // call Build() to build the tree!!!
-   // Parameteres:
-   // - npoints - total number of points. Adding points after the tree is built is not supported
-   // - ndim    - number of dimensions
-   // - bsize   - maximal number of points in the terminal nodes
-   // - data    - the data array
-   //
-   // The data should be placed columnwise (like in a TTree).
-   // The columnwise orientation is chosen to simplify the usage together with TTree::GetV1() like functions.
-   // An example of filling such an array for a 2d case:
-   // Double_t **data = new Double_t*[2];
-   // data[0] = new Double_t[npoints];
-   // data[1] = new Double_t[npoints];
-   // for (Int_t i=0; i<npoints; i++){
-   //    data[0][i]=gRandom->Uniform(-1, 1); //fill the x-coordinate
-   //    data[1][i]=gRandom->Uniform(-1, 1); //fill the y-coordinate
-   // }
-   //
-   // By default, the kd-tree doesn't own the data. If you want the kd-tree to delete the data array, call
-   // kdtree->SetOwner(kTRUE).
-   //
-
 
    //Build();
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+/// By default, the original data is not owned by kd-tree and is not deleted with it.
+/// If you want to delete the data along with the kd-tree, call SetOwner(kTRUE).
+
 template <typename  Index, typename Value>
 TKDTree<Index, Value>::~TKDTree()
 {
-   // Destructor
-   // By default, the original data is not owned by kd-tree and is not deleted with it.
-   // If you want to delete the data along with the kd-tree, call SetOwner(kTRUE).
-
    if (fAxis) delete [] fAxis;
    if (fValue) delete [] fValue;
    if (fIndPoints) delete [] fIndPoints;
@@ -376,22 +377,22 @@ TKDTree<Index, Value>::~TKDTree()
 }
 
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Build the kd-tree
+///
+/// 1. calculate number of nodes
+/// 2. calculate first terminal row
+/// 3. initialize index array
+/// 4. non recursive building of the binary tree
+///
+///
+/// The tree is divided recursively. See class description, section 4b for the details
+/// of the division alogrithm
+
 template <typename  Index, typename Value>
 void TKDTree<Index, Value>::Build()
 {
-   //
-   // Build the kd-tree
-   //
-   // 1. calculate number of nodes
-   // 2. calculate first terminal row
-   // 3. initialize index array
-   // 4. non recursive building of the binary tree
-   //
-   //
-   // The tree is divided recursively. See class description, section 4b for the details
-   // of the division alogrithm
-
    //1.
    fNNodes = fNPoints/fBucketSize-1;
    if (fNPoints%fBucketSize) fNNodes++;
@@ -521,14 +522,14 @@ void TKDTree<Index, Value>::Build()
    }
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Find kNN nearest neighbors to the point in the first argument
+///Returns 1 on success, 0 on failure
+///Arrays ind and dist are provided by the user and are assumed to be at least kNN elements long
+
 template <typename  Index, typename Value>
 void TKDTree<Index, Value>::FindNearestNeighbors(const Value *point, const Int_t kNN, Index *ind, Value *dist)
 {
-   //Find kNN nearest neighbors to the point in the first argument
-   //Returns 1 on success, 0 on failure
-   //Arrays ind and dist are provided by the user and are assumed to be at least kNN elements long
-
 
    if (!ind || !dist) {
       Error("FindNearestNeighbors", "Working arrays must be allocated by the user!");
@@ -543,12 +544,12 @@ void TKDTree<Index, Value>::FindNearestNeighbors(const Value *point, const Int_t
 
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Update the nearest neighbors values by examining the node inode
+
 template <typename Index, typename Value>
 void TKDTree<Index, Value>::UpdateNearestNeighbors(Index inode, const Value *point, Int_t kNN, Index *ind, Value *dist)
 {
-   //Update the nearest neighbors values by examining the node inode
-
    Value min=0;
    Value max=0;
    DistanceToNode(point, inode, min, max);
@@ -589,13 +590,13 @@ void TKDTree<Index, Value>::UpdateNearestNeighbors(Index inode, const Value *poi
    }
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Find the distance between point of the first argument and the point at index value ind
+///Type argument specifies the metric: type=2 - L2 metric, type=1 - L1 metric
+
 template <typename Index, typename Value>
 Double_t TKDTree<Index, Value>::Distance(const Value *point, Index ind, Int_t type) const
 {
-//Find the distance between point of the first argument and the point at index value ind
-//Type argument specifies the metric: type=2 - L2 metric, type=1 - L1 metric
-
    Double_t dist = 0;
    if (type==2){
       for (Int_t idim=0; idim<fNDim; idim++){
@@ -613,14 +614,14 @@ Double_t TKDTree<Index, Value>::Distance(const Value *point, Index ind, Int_t ty
 
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Find the minimal and maximal distance from a given point to a given node.
+///Type argument specifies the metric: type=2 - L2 metric, type=1 - L1 metric
+///If the point is inside the node, both min and max are set to 0.
+
 template <typename Index, typename Value>
 void TKDTree<Index, Value>::DistanceToNode(const Value *point, Index inode, Value &min, Value &max, Int_t type)
 {
-//Find the minimal and maximal distance from a given point to a given node.
-//Type argument specifies the metric: type=2 - L2 metric, type=1 - L1 metric
-//If the point is inside the node, both min and max are set to 0.
-
    Value *bound = GetBoundaryExact(inode);
    min = 0;
    max = 0;
@@ -650,14 +651,14 @@ void TKDTree<Index, Value>::DistanceToNode(const Value *point, Index inode, Valu
    }
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the index of the terminal node to which point belongs
+/// (index in the fAxis, fValue, etc arrays)
+/// returns -1 in case of failure
+
 template <typename  Index, typename Value>
 Index TKDTree<Index, Value>::FindNode(const Value * point) const
 {
-   // returns the index of the terminal node to which point belongs
-   // (index in the fAxis, fValue, etc arrays)
-   // returns -1 in case of failure
-
    Index stackNode[128], inode;
    Int_t currentIndex =0;
    stackNode[0] = 0;
@@ -681,13 +682,13 @@ Index TKDTree<Index, Value>::FindNode(const Value * point) const
 
 
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// find the index of point
+/// works only if we keep fData pointers
+
 template <typename  Index, typename Value>
 void TKDTree<Index, Value>::FindPoint(Value * point, Index &index, Int_t &iter){
-  //
-  // find the index of point
-  // works only if we keep fData pointers
-
    Int_t stackNode[128];
    Int_t currentIndex =0;
    stackNode[0] = 0;
@@ -726,25 +727,25 @@ void TKDTree<Index, Value>::FindPoint(Value * point, Index &index, Int_t &iter){
   //  printf("Iter\t%d\n",iter);
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Find all points in the sphere of a given radius "range" around the given point
+///1st argument - the point
+///2nd argument - radius of the shere
+///3rd argument - a vector, in which the results will be returned
+
 template <typename  Index, typename Value>
 void TKDTree<Index, Value>::FindInRange(Value * point, Value range, std::vector<Index> &res)
 {
-//Find all points in the sphere of a given radius "range" around the given point
-//1st argument - the point
-//2nd argument - radius of the shere
-//3rd argument - a vector, in which the results will be returned
-
    MakeBoundariesExact();
    UpdateRange(0, point, range, res);
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Internal recursive function with the implementation of range searches
+
 template <typename  Index, typename Value>
 void TKDTree<Index, Value>::UpdateRange(Index inode, Value* point, Value range, std::vector<Index> &res)
 {
-//Internal recursive function with the implementation of range searches
-
    Value min, max;
    DistanceToNode(point, inode, min, max);
    if (min>range) {
@@ -790,14 +791,14 @@ void TKDTree<Index, Value>::UpdateRange(Index inode, Value* point, Value range, 
    }
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return the indices of the points in that terminal node
+///for all the nodes except last, the size is fBucketSize
+///for the last node it's fOffset%fBucketSize
+
 template <typename Index, typename Value>
 Index*  TKDTree<Index, Value>::GetPointsIndexes(Int_t node) const
 {
-   //return the indices of the points in that terminal node
-   //for all the nodes except last, the size is fBucketSize
-   //for the last node it's fOffset%fBucketSize
-
    if (!IsTerminal(node)){
       printf("GetPointsIndexes() only for terminal nodes, use GetNodePointsIndexes() instead\n");
       return 0;
@@ -806,27 +807,27 @@ Index*  TKDTree<Index, Value>::GetPointsIndexes(Int_t node) const
    return &fIndPoints[offset];
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Return the indices of points in that node
+///Indices are returned as the first and last value of the part of indices array, that belong to this node
+///Sometimes points are in 2 intervals, then the first and last value for the second one are returned in
+///third and fourth parameter, otherwise first2 is set to 0 and last2 is set to -1
+///To iterate over all the points of the node #inode, one can do, for example:
+///Index *indices = kdtree->GetPointsIndexes();
+///Int_t first1, last1, first2, last2;
+///kdtree->GetPointsIndexes(inode, first1, last1, first2, last2);
+///for (Int_t ipoint=first1; ipoint<=last1; ipoint++){
+///   point = indices[ipoint];
+///   //do something with point;
+///}
+///for (Int_t ipoint=first2; ipoint<=last2; ipoint++){
+///   point = indices[ipoint];
+///   //do something with point;
+///}
+
 template <typename Index, typename Value>
 void  TKDTree<Index, Value>::GetNodePointsIndexes(Int_t node, Int_t &first1, Int_t &last1, Int_t &first2, Int_t &last2) const
 {
-   //Return the indices of points in that node
-   //Indices are returned as the first and last value of the part of indices array, that belong to this node
-   //Sometimes points are in 2 intervals, then the first and last value for the second one are returned in
-   //third and fourth parameter, otherwise first2 is set to 0 and last2 is set to -1
-   //To iterate over all the points of the node #inode, one can do, for example:
-   //Index *indices = kdtree->GetPointsIndexes();
-   //Int_t first1, last1, first2, last2;
-   //kdtree->GetPointsIndexes(inode, first1, last1, first2, last2);
-   //for (Int_t ipoint=first1; ipoint<=last1; ipoint++){
-   //   point = indices[ipoint];
-   //   //do something with point;
-   //}
-   //for (Int_t ipoint=first2; ipoint<=last2; ipoint++){
-   //   point = indices[ipoint];
-   //   //do something with point;
-   //}
-
 
    if (IsTerminal(node)){
       //the first point in the node is computed by the following formula:
@@ -873,14 +874,14 @@ void  TKDTree<Index, Value>::GetNodePointsIndexes(Int_t node, Int_t &first1, Int
    }
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Get number of points in this node
+///for all the terminal nodes except last, the size is fBucketSize
+///for the last node it's fOffset%fBucketSize, or if fOffset%fBucketSize==0, it's also fBucketSize
+
 template <typename Index, typename Value>
 Index TKDTree<Index, Value>::GetNPointsNode(Int_t inode) const
 {
-   //Get number of points in this node
-   //for all the terminal nodes except last, the size is fBucketSize
-   //for the last node it's fOffset%fBucketSize, or if fOffset%fBucketSize==0, it's also fBucketSize
-
    if (IsTerminal(inode)){
 
       if (inode!=fTotalNodes-1) return fBucketSize;
@@ -898,12 +899,12 @@ Index TKDTree<Index, Value>::GetNPointsNode(Int_t inode) const
 }
 
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the data array. See the constructor function comments for details
+
 template <typename  Index, typename Value>
 void TKDTree<Index, Value>::SetData(Index npoints, Index ndim, UInt_t bsize, Value **data)
 {
-// Set the data array. See the constructor function comments for details
-
 // TO DO
 //
 // Check reconstruction/reallocation of memory of data. Maybe it is not
@@ -920,15 +921,15 @@ void TKDTree<Index, Value>::SetData(Index npoints, Index ndim, UInt_t bsize, Val
    Build();
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set the coordinate #ndim of all points (the column #ndim of the data matrix)
+///After setting all the data columns, proceed by calling Build() function
+///Note, that calling this function after Build() is not possible
+///Note also, that no checks on the array sizes is performed anywhere
+
 template <typename  Index, typename Value>
 Int_t TKDTree<Index, Value>::SetData(Index idim, Value *data)
 {
-   //Set the coordinate #ndim of all points (the column #ndim of the data matrix)
-   //After setting all the data columns, proceed by calling Build() function
-   //Note, that calling this function after Build() is not possible
-   //Note also, that no checks on the array sizes is performed anywhere
-
    if (fAxis || fValue) {
       Error("SetData", "The tree has already been built, no updates possible");
       return 0;
@@ -943,12 +944,12 @@ Int_t TKDTree<Index, Value>::SetData(Index idim, Value *data)
 }
 
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Calculate spread of the array a
+
 template <typename  Index, typename Value>
 void TKDTree<Index, Value>::Spread(Index ntotal, Value *a, Index *index, Value &min, Value &max) const
 {
-   //Calculate spread of the array a
-
    Index i;
    min = a[index[0]];
    max = a[index[0]];
@@ -959,13 +960,13 @@ void TKDTree<Index, Value>::Spread(Index ntotal, Value *a, Index *index, Value &
 }
 
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///copy of the TMath::KOrdStat because I need an Index work array
+
 template <typename  Index, typename Value>
 Value TKDTree<Index, Value>::KOrdStat(Index ntotal, Value *a, Index k, Index *index) const
 {
-   //
-   //copy of the TMath::KOrdStat because I need an Index work array
-
    Index i, ir, j, l, mid;
    Index arr;
    Index temp;
@@ -1008,18 +1009,18 @@ Value TKDTree<Index, Value>::KOrdStat(Index ntotal, Value *a, Index k, Index *in
    }
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build boundaries for each node. Note, that the boundaries here are built
+/// based on the splitting planes of the kd-tree, and don't necessarily pass
+/// through the points of the original dataset. For the latter functionality
+/// see function MakeBoundariesExact()
+/// Boundaries can be retrieved by calling GetBoundary(inode) function that would
+/// return an array of boundaries for the specified node, or GetBoundaries() function
+/// that would return the complete array.
+
 template <typename Index, typename Value>
 void TKDTree<Index, Value>::MakeBoundaries(Value *range)
 {
-// Build boundaries for each node. Note, that the boundaries here are built
-// based on the splitting planes of the kd-tree, and don't necessarily pass
-// through the points of the original dataset. For the latter functionality
-// see function MakeBoundariesExact()
-// Boundaries can be retrieved by calling GetBoundary(inode) function that would
-// return an array of boundaries for the specified node, or GetBoundaries() function
-// that would return the complete array.
-
 
    if(range) memcpy(fRange, range, fNDimm*sizeof(Value));
    // total number of nodes including terminal nodes
@@ -1049,11 +1050,12 @@ void TKDTree<Index, Value>::MakeBoundaries(Value *range)
    }
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define index of this terminal node
+
 template <typename Index, typename Value>
 void TKDTree<Index, Value>::CookBoundaries(const Int_t node, Bool_t LEFT)
 {
-   // define index of this terminal node
    Int_t index = (node<<1) + (LEFT ? 1 : 2);
    //Info("CookBoundaries()", Form("Node %d", index));
 
@@ -1087,18 +1089,18 @@ void TKDTree<Index, Value>::CookBoundaries(const Int_t node, Bool_t LEFT)
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build boundaries for each node. Unlike MakeBoundaries() function
+/// the boundaries built here always pass through a point of the original dataset
+/// So, for example, for a terminal node with just one point minimum and maximum for each
+/// dimension are the same.
+/// Boundaries can be retrieved by calling GetBoundaryExact(inode) function that would
+/// return an array of boundaries for the specified node, or GetBoundaries() function
+/// that would return the complete array.
+
 template <typename Index, typename Value>
 void TKDTree<Index, Value>::MakeBoundariesExact()
 {
-// Build boundaries for each node. Unlike MakeBoundaries() function
-// the boundaries built here always pass through a point of the original dataset
-// So, for example, for a terminal node with just one point minimum and maximum for each
-// dimension are the same.
-// Boundaries can be retrieved by calling GetBoundaryExact(inode) function that would
-// return an array of boundaries for the specified node, or GetBoundaries() function
-// that would return the complete array.
-
 
    // total number of nodes including terminal nodes
    //Int_t totNodes = fNNodes + fNPoints/fBucketSize + ((fNPoints%fBucketSize)?1:0);
@@ -1150,12 +1152,13 @@ void TKDTree<Index, Value>::MakeBoundariesExact()
    }
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// find the smallest node covering the full range - start
+///
+
 template <typename  Index, typename Value>
    void TKDTree<Index, Value>::FindBNodeA(Value *point, Value *delta, Int_t &inode){
-   //
-   // find the smallest node covering the full range - start
-   //
    inode =0;
    for (;inode<fNNodes;){
       if (TMath::Abs(point[fAxis[inode]] - fValue[inode])<delta[fAxis[inode]]) break;
@@ -1163,49 +1166,54 @@ template <typename  Index, typename Value>
    }
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the boundaries
+
 template <typename  Index, typename Value>
    Value* TKDTree<Index, Value>::GetBoundaries()
 {
-   // Get the boundaries
    if(!fBoundaries) MakeBoundaries();
    return fBoundaries;
 }
 
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the boundaries
+
 template <typename  Index, typename Value>
    Value* TKDTree<Index, Value>::GetBoundariesExact()
 {
-   // Get the boundaries
    if(!fBoundaries) MakeBoundariesExact();
    return fBoundaries;
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a boundary
+
 template <typename  Index, typename Value>
    Value* TKDTree<Index, Value>::GetBoundary(const Int_t node)
 {
-   // Get a boundary
    if(!fBoundaries) MakeBoundaries();
    return &fBoundaries[node*2*fNDim];
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a boundary
+
 template <typename  Index, typename Value>
 Value* TKDTree<Index, Value>::GetBoundaryExact(const Int_t node)
 {
-   // Get a boundary
    if(!fBoundaries) MakeBoundariesExact();
    return &fBoundaries[node*2*fNDim];
 }
 
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Example function to
+///
+
 TKDTreeIF *TKDTreeTestBuild(const Int_t npoints, const Int_t bsize){
-   //
-   // Example function to
-   //
    Float_t *data0 =  new Float_t[npoints*2];
    Float_t *data[2];
    data[0] = &data0[0];

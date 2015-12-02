@@ -49,44 +49,47 @@
 
 ClassImp(TMVA::PDEFoamTarget)
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer, user should not use it.
+
 TMVA::PDEFoamTarget::PDEFoamTarget()
    : PDEFoam()
    , fTarget(0)
 {
-   // Default constructor for streamer, user should not use it.
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User constructor
+///
+/// Parameters:
+///
+/// - name - name of PDEFoam object
+///
+/// - target - target number to range-search for
+
 TMVA::PDEFoamTarget::PDEFoamTarget(const TString& name, UInt_t target)
    : PDEFoam(name)
    , fTarget(target)
 {
-   // User constructor
-   //
-   // Parameters:
-   //
-   // - name - name of PDEFoam object
-   //
-   // - target - target number to range-search for
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy Constructor  NOT IMPLEMENTED (NEVER USED)
+
 TMVA::PDEFoamTarget::PDEFoamTarget(const PDEFoamTarget &from)
    : PDEFoam(from)
    , fTarget(from.fTarget)
 {
-   // Copy Constructor  NOT IMPLEMENTED (NEVER USED)
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function fills an event into the discriminant PDEFoam.  The
+/// weight 'wt' is filled into cell element 0 if the event is of
+/// class 'fTarget', and filled into cell element 1 otherwise.
+
 void TMVA::PDEFoamTarget::FillFoamCells(const Event* ev, Float_t wt)
 {
-   // This function fills an event into the discriminant PDEFoam.  The
-   // weight 'wt' is filled into cell element 0 if the event is of
-   // class 'fTarget', and filled into cell element 1 otherwise.
-
    // find corresponding foam cell
    std::vector<Float_t> values  = ev->GetValues();
    std::vector<Float_t> tvalues = VarTransform(values);
@@ -99,13 +102,13 @@ void TMVA::PDEFoamTarget::FillFoamCells(const Event* ev, Float_t wt)
    SetCellElement(cell, 1, GetCellElement(cell, 1) + wt * targets.at(fTarget));
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate average cell target in every cell and save them to the
+/// cell.  Cell element 0 will contain the average target and cell
+/// element 1 will contain the error on the target.
+
 void TMVA::PDEFoamTarget::Finalize()
 {
-   // Calculate average cell target in every cell and save them to the
-   // cell.  Cell element 0 will contain the average target and cell
-   // element 1 will contain the error on the target.
-
    // loop over cells
    for (Long_t iCell = 0; iCell <= fLastCe; iCell++) {
       if (!(fCells[iCell]->GetStat()))
@@ -124,25 +127,26 @@ void TMVA::PDEFoamTarget::Finalize()
    }
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true, if the target error equals -1, as set in
+/// Finalize() in case of no events in the cell
+
 Bool_t TMVA::PDEFoamTarget::CellValueIsUndefined(PDEFoamCell* cell)
 {
-   // Returns true, if the target error equals -1, as set in
-   // Finalize() in case of no events in the cell
    return GetCellValue(cell, kValueError) == -1;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function finds the cell, which corresponds to the given
+/// untransformed event vector 'xvec' and return its value, which is
+/// given by the parameter 'cv'.
+///
+/// If cv == kValue, it is checked wether the cell value is
+/// undefined.  If this is the case, then the mean of the neighbor's
+/// target values is returned, using GetAverageNeighborsValue().
+
 Float_t TMVA::PDEFoamTarget::GetCellValue(const std::vector<Float_t> &xvec, ECellValue cv, PDEFoamKernelBase *kernel)
 {
-   // This function finds the cell, which corresponds to the given
-   // untransformed event vector 'xvec' and return its value, which is
-   // given by the parameter 'cv'.
-   //
-   // If cv == kValue, it is checked wether the cell value is
-   // undefined.  If this is the case, then the mean of the neighbor's
-   // target values is returned, using GetAverageNeighborsValue().
-
    std::vector<Float_t> txvec(VarTransform(xvec));
    PDEFoamCell *cell = FindCell(txvec);
 
@@ -157,18 +161,18 @@ Float_t TMVA::PDEFoamTarget::GetCellValue(const std::vector<Float_t> &xvec, ECel
       return GetAverageNeighborsValue(txvec, kValue);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function returns the average value 'cv' of only nearest
+/// neighbor cells.  It is used in cases, where empty cells shall
+/// not be evaluated.
+///
+/// Parameters:
+/// - txvec - event vector, transformed into foam coordinates [0, 1]
+/// - cv - cell value, see definition of ECellValue
+
 Float_t TMVA::PDEFoamTarget::GetAverageNeighborsValue(std::vector<Float_t> &txvec,
                                                       ECellValue cv)
 {
-   // This function returns the average value 'cv' of only nearest
-   // neighbor cells.  It is used in cases, where empty cells shall
-   // not be evaluated.
-   //
-   // Parameters:
-   // - txvec - event vector, transformed into foam coordinates [0, 1]
-   // - cv - cell value, see definition of ECellValue
-
    const Float_t xoffset = 1.e-6;
    Float_t norm   = 0; // normalisation
    Float_t result = 0; // return value

@@ -28,7 +28,8 @@
 
 ClassImp(TEveStraightLineSetEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveStraightLineSetEditor::TEveStraightLineSetEditor(const TGWindow *p, Int_t width, Int_t height,
                                                      UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
@@ -58,11 +59,11 @@ TEveStraightLineSetEditor::TEveStraightLineSetEditor(const TGWindow *p, Int_t wi
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveStraightLineSetEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveStraightLineSet*>(obj);
 
    // Set values of widgets
@@ -74,20 +75,20 @@ void TEveStraightLineSetEditor::SetModel(TObject* obj)
 
 // Implements callback/slot methods
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrMarkers.
+
 void TEveStraightLineSetEditor::DoRnrMarkers()
 {
-   // Slot for RnrMarkers.
-
    fM->SetRnrMarkers(fRnrMarkers->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrLines.
+
 void TEveStraightLineSetEditor::DoRnrLines()
 {
-   // Slot for RnrLines.
-
    fM->SetRnrLines(fRnrLines->IsOn());
    Update();
 }

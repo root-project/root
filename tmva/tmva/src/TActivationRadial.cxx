@@ -42,47 +42,47 @@ static const Int_t  UNINITIALIZED = -1;
 
 ClassImp(TMVA::TActivationRadial)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor for gaussian with center 0, width 1
+
 TMVA::TActivationRadial::TActivationRadial()
 {
-   // constructor for gaussian with center 0, width 1
-
    fEqn           = new TFormula("Gaussian",   "TMath::Exp(-x^2/2.0)");
    fEqnDerivative = new TFormula("derivative", "-x*TMath::Exp(-x^2/2.0)");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::TActivationRadial::~TActivationRadial()
 {
-   // destructor
-
    if (fEqn != NULL) delete fEqn;
    if (fEqnDerivative != NULL) delete fEqnDerivative;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// evaluate gaussian
+
 Double_t TMVA::TActivationRadial::Eval(Double_t arg)
 {
-   // evaluate gaussian
-
    if (fEqn == NULL) return UNINITIALIZED;
    return fEqn->Eval(arg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// evaluate derivative
+
 Double_t TMVA::TActivationRadial::EvalDerivative(Double_t arg)
 {
-   // evaluate derivative
-
    if (fEqnDerivative == NULL) return UNINITIALIZED;
    return fEqnDerivative->Eval(arg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get expressions for the gaussian and its derivatives
+
 TString TMVA::TActivationRadial::GetExpression()
 {
-   // get expressions for the gaussian and its derivatives
-
    TString expr = "";
 
    if (fEqn == NULL) expr += "<null>";
@@ -96,10 +96,11 @@ TString TMVA::TActivationRadial::GetExpression()
    return expr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// writes the sigmoid activation function source code
+
 void TMVA::TActivationRadial::MakeFunction( std::ostream& fout, const TString& fncName ) 
 {
-   // writes the sigmoid activation function source code
    fout << "double " << fncName << "(double x) const {" << std::endl;
    fout << "   // radial" << std::endl;
    fout << "   return exp(-x*x/2.0);" << std::endl;

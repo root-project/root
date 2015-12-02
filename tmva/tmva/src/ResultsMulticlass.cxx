@@ -37,7 +37,9 @@
 #include "TMVA/GeneticAlgorithm.h"
 #include "TMVA/GeneticFitter.h"
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::ResultsMulticlass::ResultsMulticlass( const DataSetInfo* dsi, TString resultsName  ) 
    : Results( dsi, resultsName  ),
      IFitterTarget(),
@@ -47,17 +49,18 @@ TMVA::ResultsMulticlass::ResultsMulticlass( const DataSetInfo* dsi, TString resu
      fAchievablePur(dsi->GetNClasses()),
      fBestCuts(dsi->GetNClasses(),std::vector<Double_t>(dsi->GetNClasses()))
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::ResultsMulticlass::~ResultsMulticlass() 
 {
-   // destructor
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::ResultsMulticlass::SetValue( std::vector<Float_t>& value, Int_t ievt )
 {
    if (ievt >= (Int_t)fMultiClassValues.size()) fMultiClassValues.resize( ievt+1 );

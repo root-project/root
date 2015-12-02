@@ -51,14 +51,14 @@ ClassImp(RooSuperCategory)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a lvalue product of the given set of input RooAbsCategoryLValues in 'inInputCatList'
+/// The state names of this product category are {S1;S2,S3,...Sn} where Si are the state names
+/// of the input categories. A RooSuperCategory is an lvalue.
+
 RooSuperCategory::RooSuperCategory(const char *name, const char *title, const RooArgSet& inInputCatList) :
   RooAbsCategoryLValue(name, title), _catSet("input","Input category set",this,kTRUE,kTRUE)
 {  
-  // Construct a lvalue product of the given set of input RooAbsCategoryLValues in 'inInputCatList'
-  // The state names of this product category are {S1;S2,S3,...Sn} where Si are the state names
-  // of the input categories. A RooSuperCategory is an lvalue.
-
   // Copy category list
   TIterator* iter = inInputCatList.createIterator() ;
   RooAbsArg* arg ;
@@ -77,12 +77,12 @@ RooSuperCategory::RooSuperCategory(const char *name, const char *title, const Ro
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *name) :
   RooAbsCategoryLValue(other,name), _catSet("input",this,other._catSet)
 {
-  // Copy constructor
-
   _catIter = _catSet.createIterator() ;
   updateIndexList() ;
   setIndex(other.getIndex()) ;
@@ -90,32 +90,32 @@ RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *na
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooSuperCategory::~RooSuperCategory() 
 {
-  // Destructor
-
   delete _catIter ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make an iterator over all state permutations of 
+/// the input categories of this supercategory
+
 TIterator* RooSuperCategory::MakeIterator() const 
 {
-  // Make an iterator over all state permutations of 
-  // the input categories of this supercategory
-
   return new RooMultiCatIter(_catSet) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the list of possible states of this super category
+
 void RooSuperCategory::updateIndexList()
 {
-  // Update the list of possible states of this super category
-  
   clearTypes() ;
 
   RooMultiCatIter mcIter(_catSet) ;
@@ -132,12 +132,12 @@ void RooSuperCategory::updateIndexList()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the name of the current state, 
+/// constructed from the state names of the input categories
+
 TString RooSuperCategory::currentLabel() const
 {
-  // Return the name of the current state, 
-  // constructed from the state names of the input categories
-
   _catIter->Reset() ;
 
   // Construct composite label name
@@ -156,11 +156,11 @@ TString RooSuperCategory::currentLabel() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return the current value 
+
 RooCatType RooSuperCategory::evaluate() const
 {
-  // Calculate and return the current value 
-
   if (isShapeDirty()) {
     const_cast<RooSuperCategory*>(this)->updateIndexList() ;
   }
@@ -175,12 +175,12 @@ RooCatType RooSuperCategory::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the super category by specifying the state index code
+/// by setting the states of the corresponding input category lvalues
+
 Bool_t RooSuperCategory::setIndex(Int_t index, Bool_t /*printError*/) 
 {
-  // Set the value of the super category by specifying the state index code
-  // by setting the states of the corresponding input category lvalues
-
   const RooCatType* type = lookupType(index,kTRUE) ;
   if (!type) return kTRUE ;
   return setType(type) ;
@@ -188,12 +188,12 @@ Bool_t RooSuperCategory::setIndex(Int_t index, Bool_t /*printError*/)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the super category by specifying the state name
+/// by setting the state names of the corresponding input category lvalues
+
 Bool_t RooSuperCategory::setLabel(const char* label, Bool_t /*printError*/) 
 {
-  // Set the value of the super category by specifying the state name
-  // by setting the state names of the corresponding input category lvalues
-
   const RooCatType* type = lookupType(label,kTRUE) ;
   if (!type) return kTRUE ;
   return setType(type) ;
@@ -201,12 +201,12 @@ Bool_t RooSuperCategory::setLabel(const char* label, Bool_t /*printError*/)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the super category by specifying the state object
+/// by setting the state names of the corresponding input category lvalues
+
 Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t /*printError*/)
 {
-  // Set the value of the super category by specifying the state object
-  // by setting the state names of the corresponding input category lvalues
-
   char buf[1024] ;
   strlcpy(buf,type->GetName(),1024) ;
 
@@ -249,11 +249,11 @@ Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t /*printError*/)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the state of this object to the specified output stream.
+
 void RooSuperCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
-  // Print the state of this object to the specified output stream.
-
   RooAbsCategory::printMultiline(os,content,verbose,indent) ;
   
   if (verbose) {     
@@ -266,31 +266,31 @@ void RooSuperCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read object contents from given stream
+
 Bool_t RooSuperCategory::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/) 
 {
-  // Read object contents from given stream
-
   return kTRUE ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write object contents to given stream
+
 void RooSuperCategory::writeToStream(ostream& os, Bool_t compact) const
 {
-  // Write object contents to given stream
-
   RooAbsCategory::writeToStream(os,compact) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true of all of the input category states are in the given range
+
 Bool_t RooSuperCategory::inRange(const char* rangeName) const 
 {
-  // Return true of all of the input category states are in the given range
-
   _catIter->Reset() ;
   RooAbsCategoryLValue* cat ;
   while((cat = (RooAbsCategoryLValue*)_catIter->Next())) {
@@ -303,12 +303,12 @@ Bool_t RooSuperCategory::inRange(const char* rangeName) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if any of the input categories has a range
+/// named 'rangeName'
+
 Bool_t RooSuperCategory::hasRange(const char* rangeName) const 
 {
-  // Return true if any of the input categories has a range
-  // named 'rangeName'
-
   _catIter->Reset() ;
   RooAbsCategoryLValue* cat ;
   while((cat = (RooAbsCategoryLValue*)_catIter->Next())) {

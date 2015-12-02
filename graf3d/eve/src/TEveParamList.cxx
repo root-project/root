@@ -33,21 +33,21 @@
 
 ClassImp(TEveParamList);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveParamList::TEveParamList(const char* n, const char* t, Bool_t doColor) :
    TNamed(n, t),
    fColor(0)
 {
-   // Constructor.
-
    if (doColor) SetMainColorPtr(&fColor);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get config-struct for float parameter 'name'.
+
 TEveParamList::FloatConfig_t TEveParamList::GetFloatParameter(const TString& name)
 {
-   // Get config-struct for float parameter 'name'.
-
    static const TEveException eh("TEveParamList::GetFloatParameter ");
 
    for (FloatConfigVec_ci itr = fFloatParameters.begin(); itr != fFloatParameters.end(); ++itr)
@@ -56,11 +56,11 @@ TEveParamList::FloatConfig_t TEveParamList::GetFloatParameter(const TString& nam
    return FloatConfig_t();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get config-struct for int parameter 'name'.
+
 TEveParamList::IntConfig_t TEveParamList::GetIntParameter(const TString& name)
 {
-   // Get config-struct for int parameter 'name'.
-
    static const TEveException eh("TEveParamList::GetIntParameter ");
 
    for (IntConfigVec_ci itr = fIntParameters.begin(); itr != fIntParameters.end(); ++itr)
@@ -69,11 +69,11 @@ TEveParamList::IntConfig_t TEveParamList::GetIntParameter(const TString& name)
    return IntConfig_t();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get value for bool parameter 'name'.
+
 Bool_t TEveParamList::GetBoolParameter(const TString& name)
 {
-   // Get value for bool parameter 'name'.
-
    static const TEveException eh("TEveParamList::GetBoolParameter ");
 
    for (BoolConfigVec_ci itr = fBoolParameters.begin(); itr != fBoolParameters.end(); ++itr)
@@ -82,11 +82,11 @@ Bool_t TEveParamList::GetBoolParameter(const TString& name)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit ParamChanged() signal.
+
 void TEveParamList::ParamChanged(const char* name)
 {
-   // Emit ParamChanged() signal.
-
    Emit("ParamChanged(char*)", name);
 }
 
@@ -110,23 +110,23 @@ void TEveParamList::ParamChanged(const char* name)
 
 ClassImp(TEveParamListEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveParamListEditor::TEveParamListEditor(const TGWindow *p, Int_t width, Int_t height,
                                          UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM          (0),
    fParamFrame (0)
 {
-   // Constructor.
-
    MakeTitle("TEveParamList");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize widgets when a new object is selected.
+
 void TEveParamListEditor::InitModel(TObject* obj)
 {
-   // Initialize widgets when a new object is selected.
-
    fM = dynamic_cast<TEveParamList*>(obj);
 
    if (fParamFrame) {
@@ -210,11 +210,11 @@ void TEveParamListEditor::InitModel(TObject* obj)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveParamListEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    InitModel(obj);
 
    for (UInt_t i = 0; i < fIntParameters.size(); ++i)
@@ -229,11 +229,11 @@ void TEveParamListEditor::SetModel(TObject* obj)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for integer parameter update.
+
 void TEveParamListEditor::DoIntUpdate()
 {
-   // Slot for integer parameter update.
-
    TGNumberEntry *widget = (TGNumberEntry*) gTQSender;
    Int_t id = widget->WidgetId();
    if (id < 0 || id >= (int) fM->fIntParameters.size()) return;
@@ -243,11 +243,11 @@ void TEveParamListEditor::DoIntUpdate()
    gTQSender = (void*) widget;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for float parameter update.
+
 void TEveParamListEditor::DoFloatUpdate()
 {
-   // Slot for float parameter update.
-
    TGNumberEntry *widget = (TGNumberEntry*) gTQSender;
    Int_t id = widget->WidgetId();
    if (id < 0 || id >= (int) fM->fFloatParameters.size()) return;
@@ -257,11 +257,11 @@ void TEveParamListEditor::DoFloatUpdate()
    gTQSender = (void*) widget;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for bool parameter update.
+
 void TEveParamListEditor::DoBoolUpdate()
 {
-   // Slot for bool parameter update.
-
    TGCheckButton *widget = (TGCheckButton*) gTQSender;
    Int_t id = widget->WidgetId();
    if (id < 0 || id >= (int) fM->fBoolParameters.size()) return;

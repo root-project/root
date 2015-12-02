@@ -43,7 +43,8 @@ const Int_t kHori = BIT(9); //defined in TPad
 ClassImp(TGaxis)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>The axis painter class</h2></center>
 
@@ -459,7 +460,8 @@ Begin_Html
 End_Html */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
 {
    /* Begin_html
@@ -487,7 +489,8 @@ TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
                Double_t wmin, Double_t wmax, Int_t ndiv,   Option_t *chopt,
                Double_t gridlength)
@@ -519,7 +522,8 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
                const char *funcname, Int_t ndiv,   Option_t *chopt,
                Double_t gridlength)
@@ -556,7 +560,8 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGaxis::TGaxis(const TGaxis& ax) :
   TLine(ax),
   TAttText(ax),
@@ -585,7 +590,8 @@ TGaxis::TGaxis(const TGaxis& ax) :
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGaxis& TGaxis::operator=(const TGaxis& ax)
 {
    /* Begin_html
@@ -618,7 +624,8 @@ TGaxis& TGaxis::operator=(const TGaxis& ax)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGaxis::~TGaxis()
 {
    /* Begin_html
@@ -627,7 +634,8 @@ TGaxis::~TGaxis()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::CenterLabels(Bool_t center)
 {
    /* Begin_html
@@ -641,7 +649,8 @@ void TGaxis::CenterLabels(Bool_t center)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::CenterTitle(Bool_t center)
 {
    /* Begin_html
@@ -654,7 +663,8 @@ void TGaxis::CenterTitle(Bool_t center)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
                       Double_t wmin, Double_t wmax, Int_t ndiv,   Option_t *chopt,
                       Double_t gridlength)
@@ -686,7 +696,8 @@ void TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TGaxis::GetMaxDigits()
 {
    /* Begin_html
@@ -697,7 +708,8 @@ Int_t TGaxis::GetMaxDigits()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::ImportAxisAttributes(TAxis *axis)
 {
    /* Begin_html
@@ -728,7 +740,8 @@ void TGaxis::ImportAxisAttributes(TAxis *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::Paint(Option_t *)
 {
    /* Begin_html
@@ -749,7 +762,8 @@ void TGaxis::Paint(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
                        Double_t &wmin, Double_t &wmax, Int_t &ndiv,   Option_t *chopt,
                        Double_t gridlength, Bool_t drawGridOnly)
@@ -2121,7 +2135,8 @@ L210:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::AdjustBinSize(Double_t A1,  Double_t A2,  Int_t nold
                           ,Double_t &binLow, Double_t &binHigh, Int_t &nbins, Double_t &binWidth)
 {
@@ -2167,7 +2182,8 @@ void TGaxis::AdjustBinSize(Double_t A1,  Double_t A2,  Int_t nold
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::LabelsLimits(const char *label, Int_t &first, Int_t &last)
 {
    /* Begin_html
@@ -2182,7 +2198,8 @@ void TGaxis::LabelsLimits(const char *label, Int_t &first, Int_t &last)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
                    ,Double_t XT, Double_t YT, Double_t &U,   Double_t &V)
 {
@@ -2195,7 +2212,8 @@ void TGaxis::Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    /* Begin_html
@@ -2260,7 +2278,8 @@ void TGaxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::SetDecimals(Bool_t dot)
 {
    /* Begin_html
@@ -2276,7 +2295,8 @@ void TGaxis::SetDecimals(Bool_t dot)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::SetFunction(const char *funcname)
 {
    /* Begin_html
@@ -2298,7 +2318,8 @@ void TGaxis::SetFunction(const char *funcname)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::SetMaxDigits(Int_t maxd)
 {
    /* Begin_html
@@ -2314,7 +2335,8 @@ void TGaxis::SetMaxDigits(Int_t maxd)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::SetName(const char *name)
 {
    /* Begin_html
@@ -2325,7 +2347,8 @@ void TGaxis::SetName(const char *name)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::SetMoreLogLabels(Bool_t more)
 {
    /* Begin_html
@@ -2339,7 +2362,8 @@ void TGaxis::SetMoreLogLabels(Bool_t more)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::SetNoExponent(Bool_t noExponent)
 {
    /* Begin_html
@@ -2353,7 +2377,8 @@ void TGaxis::SetNoExponent(Bool_t noExponent)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::SetOption(Option_t *option)
 {
    /* Begin_html
@@ -2364,7 +2389,8 @@ void TGaxis::SetOption(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::SetTitle(const char *title)
 {
    /* Begin_html
@@ -2375,7 +2401,8 @@ void TGaxis::SetTitle(const char *title)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::SetTimeFormat(const char *tformat)
 {
    /* Begin_html
@@ -2422,7 +2449,8 @@ void TGaxis::SetTimeFormat(const char *tformat)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
 {
    /* Begin_html
@@ -2458,7 +2486,8 @@ void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::SetExponentOffset(Float_t xoff, Float_t yoff, Option_t *axis)
 {
    /* Begin_html
@@ -2482,7 +2511,8 @@ void TGaxis::SetExponentOffset(Float_t xoff, Float_t yoff, Option_t *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGaxis::Streamer(TBuffer &R__b)
 {
    /* Begin_html

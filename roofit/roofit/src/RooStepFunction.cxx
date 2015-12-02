@@ -46,10 +46,11 @@ ClassImp(RooStepFunction)
   ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooStepFunction::RooStepFunction()
 {
-  // Constructor
   _coefIter = _coefList.createIterator() ;
   _boundIter = _boundaryList.createIterator() ;
   _interpolate = kFALSE ;
@@ -57,7 +58,9 @@ RooStepFunction::RooStepFunction()
 				 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooStepFunction::RooStepFunction(const char* name, const char* title, 
 				 RooAbsReal& x, const RooArgList& coefList, const RooArgList& boundaryList, Bool_t interpolate) :
   RooAbsReal(name, title),
@@ -66,8 +69,6 @@ RooStepFunction::RooStepFunction(const char* name, const char* title,
   _boundaryList("boundaryList","List of boundaries",this),
   _interpolate(interpolate)
 {
-  // Constructor
-
   _coefIter = _coefList.createIterator() ;
   TIterator* coefIter = coefList.createIterator() ;
   RooAbsArg* coef ;
@@ -102,7 +103,9 @@ RooStepFunction::RooStepFunction(const char* name, const char* title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooStepFunction::RooStepFunction(const RooStepFunction& other, const char* name) :
   RooAbsReal(other, name), 
   _x("x", this, other._x), 
@@ -110,27 +113,28 @@ RooStepFunction::RooStepFunction(const RooStepFunction& other, const char* name)
   _boundaryList("boundaryList",this,other._boundaryList),
   _interpolate(other._interpolate)
 {
-  // Copy constructor
   _coefIter = _coefList.createIterator();
   _boundIter = _boundaryList.createIterator();
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooStepFunction::~RooStepFunction()
 {
-  // Destructor
   delete _coefIter ;
   delete _boundIter ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transfer contents to vector for use below
+
 Double_t RooStepFunction::evaluate() const 
 {
-  // Transfer contents to vector for use below
   vector<double> b(_boundaryList.getSize()) ;
   vector<double> c(_coefList.getSize()+3) ;
   Int_t nb(0) ;

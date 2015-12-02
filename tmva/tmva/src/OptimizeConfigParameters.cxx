@@ -41,7 +41,9 @@
 
 ClassImp(TMVA::OptimizeConfigParameters)
    
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor which sets either "Classification or Regression"
+
 TMVA::OptimizeConfigParameters::OptimizeConfigParameters(MethodBase * const method, std::map<TString,TMVA::Interval*> tuneParameters, TString fomType, TString optimizationFitType) 
 :  fMethod(method),
    fTuneParameters(tuneParameters),
@@ -53,7 +55,6 @@ TMVA::OptimizeConfigParameters::OptimizeConfigParameters(MethodBase * const meth
    fMvaBkgFineBin(NULL),
    fNotDoneYet(kFALSE)
 {
-   // Constructor which sets either "Classification or Regression"
   std::string name = "OptimizeConfigParameters_";
   name += std::string(GetMethod()->GetName());
   fLogger = new MsgLogger(name);
@@ -79,11 +80,11 @@ TMVA::OptimizeConfigParameters::OptimizeConfigParameters(MethodBase * const meth
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the destructor (delete the OptimizeConfigParameters, store the graph and .. delete it)
+
 TMVA::OptimizeConfigParameters::~OptimizeConfigParameters() 
 {
-   // the destructor (delete the OptimizeConfigParameters, store the graph and .. delete it)
-   
    GetMethod()->BaseDir()->cd();
    Int_t n=Int_t(fFOMvsIter.size());
    Float_t *x = new Float_t[n];
@@ -110,7 +111,8 @@ TMVA::OptimizeConfigParameters::~OptimizeConfigParameters()
    delete [] y;
    // delete fFOMvsIter;
 } 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::map<TString,Double_t> TMVA::OptimizeConfigParameters::optimize()
 {
    if      (fOptimizationFitType == "Scan"    ) this->optimizeScan();
@@ -129,10 +131,11 @@ std::map<TString,Double_t> TMVA::OptimizeConfigParameters::optimize()
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// helper function to scan through the all the combinations in the
+/// parameter space
+
 std::vector< int > TMVA::OptimizeConfigParameters::GetScanIndices( int val, std::vector<int> base){
-   // helper function to scan through the all the combinations in the
-   // parameter space
    std::vector < int > indices;
    for (UInt_t i=0; i< base.size(); i++){
       indices.push_back(val % base[i] );
@@ -141,14 +144,14 @@ std::vector< int > TMVA::OptimizeConfigParameters::GetScanIndices( int val, std:
    return indices;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// do the actual optimization using a simple scan method, 
+/// i.e. calcualte the FOM for 
+/// different tuning paraemters and remember which one is
+/// gave the best FOM
+
 void TMVA::OptimizeConfigParameters::optimizeScan()
 {
-   // do the actual optimization using a simple scan method, 
-   // i.e. calcualte the FOM for 
-   // different tuning paraemters and remember which one is
-   // gave the best FOM
-
 
    Double_t      bestFOM=-1000000, currentFOM;
 
@@ -281,11 +284,11 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
       
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the estimator (from current FOM) for the fitting interface
+
 Double_t TMVA::OptimizeConfigParameters::EstimatorFunction( std::vector<Double_t> & pars)
 {
-   // return the estimator (from current FOM) for the fitting interface
-
    std::map< std::vector<Double_t> , Double_t>::const_iterator iter;
    iter = fAlreadyTrainedParCombination.find(pars);
 
@@ -323,12 +326,12 @@ Double_t TMVA::OptimizeConfigParameters::EstimatorFunction( std::vector<Double_t
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the Figure of Merit (FOM) used in the parameter 
+///  optimization process
+
 Double_t TMVA::OptimizeConfigParameters::GetFOM()
 {
-  // Return the Figure of Merit (FOM) used in the parameter 
-  //  optimization process
-  
    Double_t fom=0;
    if (fMethod->DoRegression()){
       std::cout << " ERROR: Sorry, Regression is not yet implement for automatic parameter optimisation"
@@ -353,11 +356,11 @@ Double_t TMVA::OptimizeConfigParameters::GetFOM()
    return fom;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// fill the private histograms with the mva distributinos for sig/bkg
+
 void TMVA::OptimizeConfigParameters::GetMVADists()
 {
-   // fill the private histograms with the mva distributinos for sig/bkg
-
    if (fMvaSig) fMvaSig->Delete();
    if (fMvaBkg) fMvaBkg->Delete();
    if (fMvaSigFineBin) fMvaSigFineBin->Delete();
@@ -393,11 +396,12 @@ void TMVA::OptimizeConfigParameters::GetMVADists()
       }
    }
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the searation between the signal and background 
+/// MVA ouput distribution
+
 Double_t TMVA::OptimizeConfigParameters::GetSeparation()
 {
-   // return the searation between the signal and background 
-   // MVA ouput distribution
    GetMVADists();
    if (1){
       PDF *splS = new PDF( " PDF Sig", fMvaSig, PDF::kSpline2 );
@@ -410,19 +414,19 @@ Double_t TMVA::OptimizeConfigParameters::GetSeparation()
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the area (integral) under the ROC curve as a
+/// overall quality measure of the classification
+///
+/// makeing pdfs out of the MVA-ouput distributions doesn't work
+/// reliably for cases where the MVA-ouput isn't a smooth distribution.
+/// this happens "frequently" in BDTs for example when the number of
+/// trees is small resulting in only some discrete possible MVA ouput values.
+/// (I still leave the code here, but use this with care!!! The default
+/// however is to use the distributions!!!
+
 Double_t TMVA::OptimizeConfigParameters::GetROCIntegral() 
 {
-   // calculate the area (integral) under the ROC curve as a
-   // overall quality measure of the classification
-   //
-   // makeing pdfs out of the MVA-ouput distributions doesn't work
-   // reliably for cases where the MVA-ouput isn't a smooth distribution.
-   // this happens "frequently" in BDTs for example when the number of
-   // trees is small resulting in only some discrete possible MVA ouput values.
-   // (I still leave the code here, but use this with care!!! The default
-   // however is to use the distributions!!!
-
    GetMVADists();
 
    Double_t integral = 0;
@@ -470,11 +474,11 @@ Double_t TMVA::OptimizeConfigParameters::GetROCIntegral()
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the signal efficiency for a given background efficiency 
+
 Double_t TMVA::OptimizeConfigParameters::GetSigEffAtBkgEff(Double_t bkgEff) 
 {
-   // calculate the signal efficiency for a given background efficiency 
-
    GetMVADists();
    Double_t sigEff=0;
 
@@ -506,11 +510,11 @@ Double_t TMVA::OptimizeConfigParameters::GetSigEffAtBkgEff(Double_t bkgEff)
 
 
 //__adaptated_by_marc-olivier.bettler@cern.ch__________________________
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the background efficiency for a given signal efficiency 
+
 Double_t TMVA::OptimizeConfigParameters::GetBkgEffAtSigEff(Double_t sigEff) 
 {
-   // calculate the background efficiency for a given signal efficiency 
-
    GetMVADists();
    Double_t bkgEff=0;
 
@@ -542,11 +546,11 @@ Double_t TMVA::OptimizeConfigParameters::GetBkgEffAtSigEff(Double_t sigEff)
 }
 
 //__adaptated_by_marc-olivier.bettler@cern.ch__________________________
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the background rejection for a given signal efficiency 
+
 Double_t TMVA::OptimizeConfigParameters::GetBkgRejAtSigEff(Double_t sigEff) 
 {
-   // calculate the background rejection for a given signal efficiency 
-
    GetMVADists();
    Double_t bkgRej=0;
 

@@ -89,13 +89,13 @@ public:
 
 ClassImp(TPacketizerFile)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TPacketizerFile::TPacketizerFile(TList *workers, Long64_t, TList *input,
                                  TProofProgressStatus *st)
                 : TVirtualPacketizer(input, st)
 {
-   // Constructor
-
    PDB(kPacketizer,1) Info("TPacketizerFile", "enter");
    ResetBit(TObject::kInvalidObject);
    fValid = kFALSE;
@@ -213,11 +213,11 @@ TPacketizerFile::TPacketizerFile(TList *workers, Long64_t, TList *input,
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TPacketizerFile::~TPacketizerFile()
 {
-   // Destructor.
-
    if (fNotAssigned) fNotAssigned->SetOwner(kFALSE);
    SafeDelete(fNotAssigned);
    if (fIters) fIters->SetOwner(kTRUE);
@@ -225,22 +225,22 @@ TPacketizerFile::~TPacketizerFile()
    SafeDelete(fStopwatch);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get current time
+
 Double_t TPacketizerFile::GetCurrentTime()
 {
-   // Get current time
-
    Double_t retValue = fStopwatch->RealTime();
    fStopwatch->Continue();
    return retValue;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get Estimation of the current rate; just summing the current rates of
+/// the active workers
+
 Float_t TPacketizerFile::GetCurrentRate(Bool_t &all)
 {
-   // Get Estimation of the current rate; just summing the current rates of
-   // the active workers
-
    all = kTRUE;
    // Loop over the workers
    Float_t currate = 0.;
@@ -261,11 +261,11 @@ Float_t TPacketizerFile::GetCurrentRate(Bool_t &all)
    return currate;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next packet
+
 TDSetElement *TPacketizerFile::GetNextPacket(TSlave *wrk, TMessage *r)
 {
-   // Get next packet
-
    TDSetElement *elem = 0;
    if (!fValid)  return elem;
 
@@ -413,13 +413,13 @@ TDSetElement *TPacketizerFile::GetNextPacket(TSlave *wrk, TMessage *r)
 
 //------------------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor
+
 TPacketizerFile::TSlaveStat::TSlaveStat(TSlave *slave, TList *input)
                             : fLastProcessed(0),
                               fSpeed(0), fTimeInstant(0), fCircLvl(5)
 {
-   // Main constructor
-
    // Initialize the circularity ntple for speed calculations
    fCircNtp = new TNtupleD("Speed Circ Ntp", "Circular process info","tm:ev");
    TProof::GetParameter(input, "PROOF_TPacketizerFileCircularity", fCircLvl);
@@ -429,19 +429,19 @@ TPacketizerFile::TSlaveStat::TSlaveStat(TSlave *slave, TList *input)
    fStatus = new TProofProgressStatus();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TPacketizerFile::TSlaveStat::~TSlaveStat()
 {
-   // Destructor
-
    SafeDelete(fCircNtp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the circular ntple
+
 void TPacketizerFile::TSlaveStat::UpdatePerformance(Double_t time)
 {
-   // Update the circular ntple
-
    Double_t ttot = time;
    Double_t *ar = fCircNtp->GetArgs();
    Int_t ne = fCircNtp->GetEntries();
@@ -467,12 +467,12 @@ void TPacketizerFile::TSlaveStat::UpdatePerformance(Double_t time)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the status info to the 'st'.
+/// return the difference (*st - *fStatus)
+
 TProofProgressStatus *TPacketizerFile::TSlaveStat::AddProcessed(TProofProgressStatus *st)
 {
-   // Update the status info to the 'st'.
-   // return the difference (*st - *fStatus)
-
    if (st) {
       // The entriesis not correct in 'st'
       Long64_t lastEntries = st->GetEntries() - fStatus->GetEntries();
@@ -490,11 +490,11 @@ TProofProgressStatus *TPacketizerFile::TSlaveStat::AddProcessed(TProofProgressSt
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Printf info
+
 void TPacketizerFile::TIterObj::Print(Option_t *) const
 {
-   // Printf info
-
    Printf("Iterator '%s' controls %d units", GetName(),
           ((GetIter() && GetIter()->GetCollection()) ? GetIter()->GetCollection()->GetSize()
                                                      : -1));

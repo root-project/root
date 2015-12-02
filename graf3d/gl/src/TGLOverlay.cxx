@@ -23,12 +23,12 @@
 
 ClassImp(TGLOverlayElement);
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has enetered this element.
+/// Return TRUE if you want additional events.
+
 Bool_t TGLOverlayElement::MouseEnter(TGLOvlSelectRecord& /*selRec*/)
 {
-   // Mouse has enetered this element.
-   // Return TRUE if you want additional events.
-
    return kFALSE;
 }
 
@@ -44,21 +44,22 @@ Bool_t TGLOverlayElement::MouseStillInside(TGLOvlSelectRecord& /*selRec*/)
    return kTRUE;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle overlay event.
+/// Return TRUE if event was handled.
+
 Bool_t TGLOverlayElement::Handle(TGLRnrCtx          & /*rnrCtx*/,
                                  TGLOvlSelectRecord & /*selRec*/,
                                  Event_t            * /*event*/)
 {
-   // Handle overlay event.
-   // Return TRUE if event was handled.
-
    return kFALSE;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has left the element.
+
 void TGLOverlayElement::MouseLeave()
 {
-   // Mouse has left the element.
 }
 
 

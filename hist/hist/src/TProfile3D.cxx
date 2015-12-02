@@ -69,79 +69,80 @@ ClassImp(TProfile3D)
 //
 // NOTE: A TProfile3D is drawn as it was a simple TH3
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Default constructor for Profile3D histograms*-*-*-*-*-*-*-*-*
+///*-*        ============================================
+
 TProfile3D::TProfile3D() : TH3D()
 {
-//*-*-*-*-*-*Default constructor for Profile3D histograms*-*-*-*-*-*-*-*-*
-//*-*        ============================================
    fTsumwt = fTsumwt2 = 0;
    fScaling = kFALSE;
    BuildOptions(0,0,"");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Default destructor for Profile3D histograms*-*-*-*-*-*-*-*-*
+///*-*        ===========================================
+
 TProfile3D::~TProfile3D()
 {
-//*-*-*-*-*-*Default destructor for Profile3D histograms*-*-*-*-*-*-*-*-*
-//*-*        ===========================================
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Normal Constructor for Profile histograms*-*-*-*-*-*-*-*-*-*
+///*-*        ==========================================
+///
+///  The first eleven parameters are similar to TH3D::TH3D.
+///  All values of t are accepted at filling time.
+///  To fill a profile3D histogram, one must use TProfile3D::Fill function.
+///
+///  Note that when filling the profile histogram the function Fill
+///  checks if the variable t is betyween fTmin and fTmax.
+///  If a minimum or maximum value is set for the T scale before filling,
+///  then all values below tmin or above tmax will be discarded.
+///  Setting the minimum or maximum value for the T scale before filling
+///  has the same effect as calling the special TProfile3D constructor below
+///  where tmin and tmax are specified.
+///
+///  H(I,J,K) is printed as the cell contents. The errors computed are s(I,J,K) if CHOPT='S'
+///  (spread option), or e(I,J,K) if CHOPT=' ' (error on mean).
+///
+///        See TProfile3D::BuildOptions for explanation of parameters
+///
+///   see other constructors below with all possible combinations of
+///   fix and variable bin size like in TH3D.
+
 TProfile3D::TProfile3D(const char *name,const char *title,Int_t nx,Double_t xlow,Double_t xup,Int_t ny,Double_t ylow,Double_t yup,Int_t nz, Double_t zlow,Double_t zup,Option_t *option)
     : TH3D(name,title,nx,xlow,xup,ny,ylow,yup,nz,zlow,zup)
 {
-//*-*-*-*-*-*Normal Constructor for Profile histograms*-*-*-*-*-*-*-*-*-*
-//*-*        ==========================================
-//
-//  The first eleven parameters are similar to TH3D::TH3D.
-//  All values of t are accepted at filling time.
-//  To fill a profile3D histogram, one must use TProfile3D::Fill function.
-//
-//  Note that when filling the profile histogram the function Fill
-//  checks if the variable t is betyween fTmin and fTmax.
-//  If a minimum or maximum value is set for the T scale before filling,
-//  then all values below tmin or above tmax will be discarded.
-//  Setting the minimum or maximum value for the T scale before filling
-//  has the same effect as calling the special TProfile3D constructor below
-//  where tmin and tmax are specified.
-//
-//  H(I,J,K) is printed as the cell contents. The errors computed are s(I,J,K) if CHOPT='S'
-//  (spread option), or e(I,J,K) if CHOPT=' ' (error on mean).
-//
-//        See TProfile3D::BuildOptions for explanation of parameters
-//
-//   see other constructors below with all possible combinations of
-//   fix and variable bin size like in TH3D.
-
    BuildOptions(0,0,option);
    if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Create a 3-D Profile with variable bins in X , Y and Z
+
 TProfile3D::TProfile3D(const char *name,const char *title,Int_t nx,const Double_t *xbins,Int_t ny,const Double_t *ybins,Int_t nz,const Double_t *zbins,Option_t *option)
     : TH3D(name,title,nx,xbins,ny,ybins,nz,zbins)
 {
-//  Create a 3-D Profile with variable bins in X , Y and Z
-
    BuildOptions(0,0,option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*Set Profile3D histogram structure and options*-*-*-*-*-*-*-*-*
+///*-*          =============================================
+///
+///    tmin:  minimum value allowed for t
+///    tmax:  maximum value allowed for t
+///            if (tmin = tmax = 0) there are no limits on the allowed t values (tmin = -inf, tmax = +inf)
+///
+///    option:  this is the option for the computation of the t error of the profile ( TProfile3D::GetBinError )
+///             possible values for the options are documented in TProfile3D::SetErrorOption
+///
+///    see also TProfile::BuildOptions for a detailed description
+
 void TProfile3D::BuildOptions(Double_t tmin, Double_t tmax, Option_t *option)
 {
-//*-*-*-*-*-*-*Set Profile3D histogram structure and options*-*-*-*-*-*-*-*-*
-//*-*          =============================================
-//
-//    tmin:  minimum value allowed for t
-//    tmax:  maximum value allowed for t
-//            if (tmin = tmax = 0) there are no limits on the allowed t values (tmin = -inf, tmax = +inf)
-//
-//    option:  this is the option for the computation of the t error of the profile ( TProfile3D::GetBinError )
-//             possible values for the options are documented in TProfile3D::SetErrorOption
-//
-//    see also TProfile::BuildOptions for a detailed description
-
    SetErrorOption(option);
 
    // create extra profile data structire (bin entries/ y^2 and sum of weight square)
@@ -153,29 +154,30 @@ void TProfile3D::BuildOptions(Double_t tmin, Double_t tmax, Option_t *option)
    fTsumwt  = fTsumwt2 = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TProfile3D::TProfile3D(const TProfile3D &profile) : TH3D()
 {
-   //copy constructor
    ((TProfile3D&)profile).Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: this = this + c1*f1
+
 Bool_t TProfile3D::Add(TF1 *, Double_t , Option_t*)
 {
-   // Performs the operation: this = this + c1*f1
-
    Error("Add","Function not implemented for TProfile3D");
    return kFALSE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: this = this + c1*h1
+
 Bool_t TProfile3D::Add(const TH1 *h1, Double_t c1)
 {
-   // Performs the operation: this = this + c1*h1
-
    if (!h1) {
       Error("Add","Attempt to add a non-existing profile");
       return kFALSE;
@@ -188,15 +190,15 @@ Bool_t TProfile3D::Add(const TH1 *h1, Double_t c1)
    return TProfileHelper::Add(this, this, h1, 1, c1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*Replace contents of this profile3D by the addition of h1 and h2*-*-*
+///*-*      ===============================================================
+///
+///   this = c1*h1 + c2*h2
+///
+
 Bool_t TProfile3D::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 {
-//*-*-*-*-*Replace contents of this profile3D by the addition of h1 and h2*-*-*
-//*-*      ===============================================================
-//
-//   this = c1*h1 + c2*h2
-//
-
    if (!h1 || !h2) {
       Error("Add","Attempt to add a non-existing profile");
       return kFALSE;
@@ -214,32 +216,32 @@ Bool_t TProfile3D::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///     static function
+/// set the fgApproximate flag. When the flag is true, the function GetBinError
+/// will approximate the bin error with the average profile error on all bins
+/// in the following situation only
+///  - the number of bins in the profile3D is less than 10404 (eg 100x100x100)
+///  - the bin number of entries is small ( <5)
+///  - the estimated bin error is extremely small compared to the bin content
+///  (see TProfile3D::GetBinError)
+
 void TProfile3D::Approximate(Bool_t approx)
 {
-//     static function
-// set the fgApproximate flag. When the flag is true, the function GetBinError
-// will approximate the bin error with the average profile error on all bins
-// in the following situation only
-//  - the number of bins in the profile3D is less than 10404 (eg 100x100x100)
-//  - the bin number of entries is small ( <5)
-//  - the estimated bin error is extremely small compared to the bin content
-//  (see TProfile3D::GetBinError)
-
    fgApproximate = approx;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill histogram with all entries in the buffer.
+/// action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
+/// action =  0 histogram is filled from the buffer
+/// action =  1 histogram is filled and buffer is deleted
+///             The buffer is automatically deleted when the number of entries
+///             in the buffer is greater than the number of entries in the histogram
+
 Int_t TProfile3D::BufferEmpty(Int_t action)
 {
-// Fill histogram with all entries in the buffer.
-// action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
-// action =  0 histogram is filled from the buffer
-// action =  1 histogram is filled and buffer is deleted
-//             The buffer is automatically deleted when the number of entries
-//             in the buffer is greater than the number of entries in the histogram
-
    // do we need to compute the bin size?
    if (!fBuffer) return 0;
    Int_t nbentries = (Int_t)fBuffer[0];
@@ -301,17 +303,17 @@ Int_t TProfile3D::BufferEmpty(Int_t action)
    return nbentries;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// accumulate arguments in buffer. When buffer is full, empty the buffer
+/// fBuffer[0] = number of entries in buffer
+/// fBuffer[1] = w of first entry
+/// fBuffer[2] = x of first entry
+/// fBuffer[3] = y of first entry
+/// fBuffer[4] = z of first entry
+/// fBuffer[5] = t of first entry
+
 Int_t TProfile3D::BufferFill(Double_t x, Double_t y, Double_t z, Double_t t, Double_t w)
 {
-// accumulate arguments in buffer. When buffer is full, empty the buffer
-// fBuffer[0] = number of entries in buffer
-// fBuffer[1] = w of first entry
-// fBuffer[2] = x of first entry
-// fBuffer[3] = y of first entry
-// fBuffer[4] = z of first entry
-// fBuffer[5] = t of first entry
-
    if (!fBuffer) return -3;
    Int_t nbentries = (Int_t)fBuffer[0];
    if (nbentries < 0) {
@@ -336,12 +338,12 @@ Int_t TProfile3D::BufferFill(Double_t x, Double_t y, Double_t z, Double_t t, Dou
    return -2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*Copy a Profile3D histogram to a new profile2D histogram*-*-*-*
+///*-*            =======================================================
+
 void TProfile3D::Copy(TObject &obj) const
 {
-//*-*-*-*-*-*-*-*Copy a Profile3D histogram to a new profile2D histogram*-*-*-*
-//*-*            =======================================================
-
    try {
       TProfile3D & pobj = dynamic_cast<TProfile3D&>(obj);
 
@@ -364,26 +366,26 @@ void TProfile3D::Copy(TObject &obj) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: this = this/(c1*f1)
+/// This function is not implemented
+
 Bool_t TProfile3D::Divide(TF1 *, Double_t )
 {
-   // Performs the operation: this = this/(c1*f1)
-   // This function is not implemented
-
    Error("Divide","Function not implemented for TProfile3D");
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Divide this profile2D by h1*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ===========================
+///
+///   this = this/h1
+///
+///   This function return kFALSE if the divide operation failed
+
 Bool_t TProfile3D::Divide(const TH1 *h1)
 {
-//*-*-*-*-*-*-*-*-*-*-*Divide this profile2D by h1*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===========================
-//
-//   this = this/h1
-//
-//   This function return kFALSE if the divide operation failed
-
    if (!h1) {
       Error("Divide","Attempt to divide a non-existing profile2D");
       return kFALSE;
@@ -470,16 +472,16 @@ Bool_t TProfile3D::Divide(const TH1 *h1)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*Replace contents of this profile2D by the division of h1 by h2*-*-*
+///*-*      ==============================================================
+///
+///   this = c1*h1/(c2*h2)
+///
+///   This function return kFALSE if the divide operation failed
+
 Bool_t TProfile3D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 {
-//*-*-*-*-*Replace contents of this profile2D by the division of h1 by h2*-*-*
-//*-*      ==============================================================
-//
-//   this = c1*h1/(c2*h2)
-//
-//   This function return kFALSE if the divide operation failed
-
    TString opt = option;
    opt.ToLower();
    Bool_t binomial = kFALSE;
@@ -581,12 +583,12 @@ Bool_t TProfile3D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Fill a Profile3D histogram (no weights)*-*-*-*-*-*-*-*
+///*-*                  =======================================
+
 Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t)
 {
-//*-*-*-*-*-*-*-*-*-*-*Fill a Profile3D histogram (no weights)*-*-*-*-*-*-*-*
-//*-*                  =======================================
-
    if (fBuffer) return BufferFill(x,y,z,t,1);
 
    Int_t bin,binx,biny,binz;
@@ -631,12 +633,12 @@ Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t)
    return bin;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Fill a Profile3D histogram with weights*-*-*-*-*-*-*-*
+///*-*                  =======================================
+
 Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t, Double_t w)
 {
-//*-*-*-*-*-*-*-*-*-*-*Fill a Profile3D histogram with weights*-*-*-*-*-*-*-*
-//*-*                  =======================================
-
    if (fBuffer) return BufferFill(x,y,z,t,w);
 
    Int_t bin,binx,biny,binz;
@@ -682,12 +684,12 @@ Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t, Double_t 
    return bin;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*Return bin content of a Profile3D histogram*-*-*-*-*-*-*-*-*
+///*-*          ===========================================
+
 Double_t TProfile3D::GetBinContent(Int_t bin) const
 {
-//*-*-*-*-*-*-*Return bin content of a Profile3D histogram*-*-*-*-*-*-*-*-*
-//*-*          ===========================================
-
    if (fBuffer) ((TProfile3D*)this)->BufferEmpty();
 
    if (bin < 0 || bin >= fNcells) return 0;
@@ -696,92 +698,92 @@ Double_t TProfile3D::GetBinContent(Int_t bin) const
    return fArray[bin]/fBinEntries.fArray[bin];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*Return bin entries of a Profile3D histogram*-*-*-*-*-*-*-*-*
+///*-*          ===========================================
+
 Double_t TProfile3D::GetBinEntries(Int_t bin) const
 {
-//*-*-*-*-*-*-*Return bin entries of a Profile3D histogram*-*-*-*-*-*-*-*-*
-//*-*          ===========================================
-
    if (fBuffer) ((TProfile3D*)this)->BufferEmpty();
 
    if (bin < 0 || bin >= fNcells) return 0;
    return fBinEntries.fArray[bin];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///            Return bin effective entries for a weighted filled Profile histogram.
+///            In case of an unweighted profile, it is equivalent to the number of entries per bin
+///            The effective entries is defined as the square of the sum of the weights divided by the
+///            sum of the weights square.
+///            TProfile::Sumw2() must be called before filling the profile with weights.
+///            Only by calling this method the  sum of the square of the weights per bin is stored.
+///
+///*-*          =========================================
+
 Double_t TProfile3D::GetBinEffectiveEntries(Int_t bin)
 {
-//            Return bin effective entries for a weighted filled Profile histogram.
-//            In case of an unweighted profile, it is equivalent to the number of entries per bin
-//            The effective entries is defined as the square of the sum of the weights divided by the
-//            sum of the weights square.
-//            TProfile::Sumw2() must be called before filling the profile with weights.
-//            Only by calling this method the  sum of the square of the weights per bin is stored.
-//
-//*-*          =========================================
-
    return TProfileHelper::GetBinEffectiveEntries((TProfile3D*)this, bin);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// *-*-*-*-*-*-*Return bin error of a Profile3D histogram*-*-*-*-*-*-*-*-*
+///
+/// Computing errors: A moving field
+/// =================================
+/// The computation of errors for a TProfile3D has evolved with the versions
+/// of ROOT. The difficulty is in computing errors for bins with low statistics.
+/// - prior to version 3.10, we had no special treatment of low statistic bins.
+///   As a result, these bins had huge errors. The reason is that the
+///   expression eprim2 is very close to 0 (rounding problems) or 0.
+/// - The algorithm is modified/protected for the case
+///   when a TProfile3D is projected (ProjectionX). The previous algorithm
+///   generated a N^2 problem when projecting a TProfile3D with a large number of
+///   bins (eg 100000).
+/// - in version 3.10/02, a new static function TProfile::Approximate
+///   is introduced to enable or disable (default) the approximation.
+///   (see also comments in TProfile::GetBinError)
+
 Double_t TProfile3D::GetBinError(Int_t bin) const
 {
-// *-*-*-*-*-*-*Return bin error of a Profile3D histogram*-*-*-*-*-*-*-*-*
-//
-// Computing errors: A moving field
-// =================================
-// The computation of errors for a TProfile3D has evolved with the versions
-// of ROOT. The difficulty is in computing errors for bins with low statistics.
-// - prior to version 3.10, we had no special treatment of low statistic bins.
-//   As a result, these bins had huge errors. The reason is that the
-//   expression eprim2 is very close to 0 (rounding problems) or 0.
-// - The algorithm is modified/protected for the case
-//   when a TProfile3D is projected (ProjectionX). The previous algorithm
-//   generated a N^2 problem when projecting a TProfile3D with a large number of
-//   bins (eg 100000).
-// - in version 3.10/02, a new static function TProfile::Approximate
-//   is introduced to enable or disable (default) the approximation.
-//   (see also comments in TProfile::GetBinError)
-
    return TProfileHelper::GetBinError((TProfile3D*)this, bin);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*Return option to compute profile2D errors*-*-*-*-*-*-*-*
+///*-*                =========================================
+
 Option_t *TProfile3D::GetErrorOption() const
 {
-//*-*-*-*-*-*-*-*-*-*Return option to compute profile2D errors*-*-*-*-*-*-*-*
-//*-*                =========================================
-
    if (fErrorMode == kERRORSPREAD)  return "s";
    if (fErrorMode == kERRORSPREADI) return "i";
    if (fErrorMode == kERRORSPREADG) return "g";
    return "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// fill the array stats from the contents of this profile
+/// The array stats must be correctly dimensionned in the calling program.
+/// stats[0] = sumw
+/// stats[1] = sumw2
+/// stats[2] = sumwx
+/// stats[3] = sumwx2
+/// stats[4] = sumwy
+/// stats[5] = sumwy2
+/// stats[6] = sumwxy
+/// stats[7] = sumwz
+/// stats[8] = sumwz2
+/// stats[9] = sumwxz
+/// stats[10]= sumwyz
+/// stats[11]= sumwt
+/// stats[12]= sumwt2
+///
+/// If no axis-subrange is specified (via TAxis::SetRange), the array stats
+/// is simply a copy of the statistics quantities computed at filling time.
+/// If a sub-range is specified, the function recomputes these quantities
+/// from the bin contents in the current axis range.
+
 void TProfile3D::GetStats(Double_t *stats) const
 {
-   // fill the array stats from the contents of this profile
-   // The array stats must be correctly dimensionned in the calling program.
-   // stats[0] = sumw
-   // stats[1] = sumw2
-   // stats[2] = sumwx
-   // stats[3] = sumwx2
-   // stats[4] = sumwy
-   // stats[5] = sumwy2
-   // stats[6] = sumwxy
-   // stats[7] = sumwz
-   // stats[8] = sumwz2
-   // stats[9] = sumwxz
-   // stats[10]= sumwyz
-   // stats[11]= sumwt
-   // stats[12]= sumwt2
-   //
-   // If no axis-subrange is specified (via TAxis::SetRange), the array stats
-   // is simply a copy of the statistics quantities computed at filling time.
-   // If a sub-range is specified, the function recomputes these quantities
-   // from the bin contents in the current axis range.
-
    if (fBuffer) ((TProfile3D*)this)->BufferEmpty();
 
    // Loop on bins
@@ -833,22 +835,22 @@ void TProfile3D::GetStats(Double_t *stats) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Merge all histograms in the collection in this histogram.
+///This function computes the min/max for the axes,
+///compute a new number of bins, if necessary,
+///add bin contents, errors and statistics.
+///If overflows are present and limits are different the function will fail.
+///The function returns the total number of entries in the result histogram
+///if the merge is successfull, -1 otherwise.
+///
+///IMPORTANT remark. The 2 axis x and y may have different number
+///of bins and different limits, BUT the largest bin width must be
+///a multiple of the smallest bin width and the upper limit must also
+///be a multiple of the bin width.
+
 Long64_t TProfile3D::Merge(TCollection *li)
 {
-   //Merge all histograms in the collection in this histogram.
-   //This function computes the min/max for the axes,
-   //compute a new number of bins, if necessary,
-   //add bin contents, errors and statistics.
-   //If overflows are present and limits are different the function will fail.
-   //The function returns the total number of entries in the result histogram
-   //if the merge is successfull, -1 otherwise.
-   //
-   //IMPORTANT remark. The 2 axis x and y may have different number
-   //of bins and different limits, BUT the largest bin width must be
-   //a multiple of the smallest bin width and the upper limit must also
-   //be a multiple of the bin width.
-
    return TProfileHelper::Merge(this, li);
 
 //    if (!li) return 0;
@@ -1017,73 +1019,74 @@ Long64_t TProfile3D::Merge(TCollection *li)
 //    return (Long64_t)nentries;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: this = this*c1*f1
+
 Bool_t TProfile3D::Multiply(TF1 *, Double_t )
 {
-   // Performs the operation: this = this*c1*f1
-
    Error("Multiply","Function not implemented for TProfile3D");
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Multiply this profile2D by h1*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  =============================
+///
+///   this = this*h1
+///
+
 Bool_t TProfile3D::Multiply(const TH1 *)
 {
-//*-*-*-*-*-*-*-*-*-*-*Multiply this profile2D by h1*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =============================
-//
-//   this = this*h1
-//
    Error("Multiply","Multiplication of profile2D histograms not implemented");
    return kFALSE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*Replace contents of this profile2D by multiplication of h1 by h2*-*
+///*-*      ================================================================
+///
+///   this = (c1*h1)*(c2*h2)
+///
+
 Bool_t TProfile3D::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option_t *)
 {
-//*-*-*-*-*Replace contents of this profile2D by multiplication of h1 by h2*-*
-//*-*      ================================================================
-//
-//   this = (c1*h1)*(c2*h2)
-//
-
    Error("Multiply","Multiplication of profile2D histograms not implemented");
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*Project this profile3D into a 3-D histogram along X,Y,Z*-*-*-*-*-*-*
+///*-*      =====================================================
+///
+///   The projection is always of the type TH3D.
+///
+///   if option "E" is specified, the errors are computed. (default)
+///   if option "B" is specified, the content of bin of the returned histogram
+///      will be equal to the GetBinEntries(bin) of the profile,
+///   if option "C=E" the bin contents of the projection are set to the
+///       bin errors of the profile
+///   if option "E" is specified  the errors of the projected histogram are computed and set
+///      to be equal to the errors of the profile.
+///      Option "E" is defined as the default one in the header file.
+///   if option "" is specified the histogram errors are simply the sqrt of its content
+///   if option "B" is specified, the content of bin of the returned histogram
+///      will be equal to the GetBinEntries(bin) of the profile,
+///   if option "C=E" the bin contents of the projection are set to the
+///       bin errors of the profile
+///   if option "W" is specified the bin content of the projected histogram  is set to the
+///       product of the bin content of the profile and the entries.
+///       With this option the returned histogram will be equivalent to the one obtained by
+///       filling directly a TH2D using the 3-rd value as a weight.
+///       This option makes sense only for profile filled with all weights =1.
+///       When the profile is weighted (filled with weights different than 1) the
+///       bin error of the projected histogram (obtained using this option "W") cannot be
+///       correctly computed from the information stored in the profile. In that case the
+///       obtained histogram contains as bin error square the weighted sum of the square of the
+///       profiled observable (TProfile2D::fSumw2[bin] )
+
 TH3D *TProfile3D::ProjectionXYZ(const char *name, Option_t *option) const
 {
-//*-*-*-*-*Project this profile3D into a 3-D histogram along X,Y,Z*-*-*-*-*-*-*
-//*-*      =====================================================
-//
-//   The projection is always of the type TH3D.
-//
-//   if option "E" is specified, the errors are computed. (default)
-//   if option "B" is specified, the content of bin of the returned histogram
-//      will be equal to the GetBinEntries(bin) of the profile,
-//   if option "C=E" the bin contents of the projection are set to the
-//       bin errors of the profile
-//   if option "E" is specified  the errors of the projected histogram are computed and set
-//      to be equal to the errors of the profile.
-//      Option "E" is defined as the default one in the header file.
-//   if option "" is specified the histogram errors are simply the sqrt of its content
-//   if option "B" is specified, the content of bin of the returned histogram
-//      will be equal to the GetBinEntries(bin) of the profile,
-//   if option "C=E" the bin contents of the projection are set to the
-//       bin errors of the profile
-//   if option "W" is specified the bin content of the projected histogram  is set to the
-//       product of the bin content of the profile and the entries.
-//       With this option the returned histogram will be equivalent to the one obtained by
-//       filling directly a TH2D using the 3-rd value as a weight.
-//       This option makes sense only for profile filled with all weights =1.
-//       When the profile is weighted (filled with weights different than 1) the
-//       bin error of the projected histogram (obtained using this option "W") cannot be
-//       correctly computed from the information stored in the profile. In that case the
-//       obtained histogram contains as bin error square the weighted sum of the square of the
-//       profiled observable (TProfile2D::fSumw2[bin] )
-
 
    TString opt = option;
    opt.ToLower();
@@ -1152,31 +1155,31 @@ TH3D *TProfile3D::ProjectionXYZ(const char *name, Option_t *option) const
    h1->SetEntries(fEntries);
    return h1;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// *-*-*-*-*Project a 3-D profile into a 2D-profile histogram depending
+/// on the option parameter
+/// option may contain a combination of the characters x,y,z
+/// option = "xy" return the x versus y projection into a TProfile2D histogram
+/// option = "yx" return the y versus x projection into a TProfile2D histogram
+/// option = "xz" return the x versus z projection into a TProfile2D histogram
+/// option = "zx" return the z versus x projection into a TProfile2D histogram
+/// option = "yz" return the y versus z projection into a TProfile2D histogram
+/// option = "zy" return the z versus y projection into a TProfile2D histogram
+/// NB: the notation "a vs b" means "a" vertical and "b" horizontalalong X*-*-*-*-*-*
+///
+///   The resulting profile contains the combination of all the considered bins along X
+///   By default, all bins are included considering also underflow/overflows
+///
+///   The option can also be used to specify the projected profile error type.
+///   Values which can be used are 's', 'i', or 'g'. See TProfile::BuildOptions for details
+///
+///   To select a bin range along an axis, use TAxis::SetRange, eg
+///     h3.GetYaxis()->SetRange(23,56);
+///
+///
+
 TProfile2D *TProfile3D::Project3DProfile(Option_t *option) const
 {
-   // *-*-*-*-*Project a 3-D profile into a 2D-profile histogram depending
-   // on the option parameter
-   // option may contain a combination of the characters x,y,z
-   // option = "xy" return the x versus y projection into a TProfile2D histogram
-   // option = "yx" return the y versus x projection into a TProfile2D histogram
-   // option = "xz" return the x versus z projection into a TProfile2D histogram
-   // option = "zx" return the z versus x projection into a TProfile2D histogram
-   // option = "yz" return the y versus z projection into a TProfile2D histogram
-   // option = "zy" return the z versus y projection into a TProfile2D histogram
-   // NB: the notation "a vs b" means "a" vertical and "b" horizontalalong X*-*-*-*-*-*
-   //
-   //   The resulting profile contains the combination of all the considered bins along X
-   //   By default, all bins are included considering also underflow/overflows
-   //
-   //   The option can also be used to specify the projected profile error type.
-   //   Values which can be used are 's', 'i', or 'g'. See TProfile::BuildOptions for details
-   //
-   //   To select a bin range along an axis, use TAxis::SetRange, eg
-   //     h3.GetYaxis()->SetRange(23,56);
-   //
-   //
-
    // can call TH3 method which will call the virtual method :DoProjectProfile2D reimplented below
    // but need to add underflow/overflow
    TString opt(option);
@@ -1184,13 +1187,13 @@ TProfile2D *TProfile3D::Project3DProfile(Option_t *option) const
    return TH3::Project3DProfile(opt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// internal method to project to a 2D Profile
+/// called from TH3::Project3DProfile but re-implemented in case of the TPRofile3D since what is done is different
+
 TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
                                            bool originalRange, bool useUF, bool useOF) const
 {
-   // internal method to project to a 2D Profile
-   // called from TH3::Project3DProfile but re-implemented in case of the TPRofile3D since what is done is different
-
    // Get the ranges where we will work.
    Int_t ixmin = projX->GetFirst();
    Int_t ixmax = projX->GetLast();
@@ -1274,21 +1277,22 @@ TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title,
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace current statistics with the values in array stats
+
 void TProfile3D::PutStats(Double_t *stats)
 {
-   // Replace current statistics with the values in array stats
-
    TH3::PutStats(stats);
    fTsumwt  = stats[11];
    fTsumwt2 = stats[12];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*Reset contents of a Profile3D histogram*-*-*-*-*-*-*-*
+///*-*                =======================================
+
 void TProfile3D::Reset(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*Reset contents of a Profile3D histogram*-*-*-*-*-*-*-*
-//*-*                =======================================
    TH3D::Reset(option);
    fBinSumw2.Reset();
    fBinEntries.Reset();
@@ -1298,18 +1302,18 @@ void TProfile3D::Reset(Option_t *option)
    fTsumwt = fTsumwt2 = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Profile histogram is resized along axis such that x is in the axis range.
+/// The new axis limits are recomputed by doubling iteratively
+/// the current axis range until the specified value x is within the limits.
+/// The algorithm makes a copy of the histogram, then loops on all bins
+/// of the old histogram to fill the rebinned histogram.
+/// Takes into account errors (Sumw2) if any.
+/// The axis must be rebinnable before invoking this function.
+/// Ex: h->GetXaxis()->SetCanExtend(kTRUE)
+
 void TProfile3D::ExtendAxis(Double_t x, TAxis *axis)
 {
-// Profile histogram is resized along axis such that x is in the axis range.
-// The new axis limits are recomputed by doubling iteratively
-// the current axis range until the specified value x is within the limits.
-// The algorithm makes a copy of the histogram, then loops on all bins
-// of the old histogram to fill the rebinned histogram.
-// Takes into account errors (Sumw2) if any.
-// The axis must be rebinnable before invoking this function.
-// Ex: h->GetXaxis()->SetCanExtend(kTRUE)
-
    TProfile3D* hold = TProfileHelper::ExtendAxis(this, x, axis);
    if ( hold ) {
       fTsumwt  = hold->fTsumwt;
@@ -1318,11 +1322,11 @@ void TProfile3D::ExtendAxis(Double_t x, TAxis *axis)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TProfile3D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    //Note the following restrictions in the code generated:
    // - variable bin size not implemented
    // - SetErrorOption not implemented
@@ -1376,62 +1380,66 @@ void TProfile3D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TH1::SavePrimitiveHelp(out, GetName(), option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// *-*-*-*-*Multiply this profile2D by a constant c1*-*-*-*-*-*-*-*-*
+/// *-*      ========================================
+///
+///   this = c1*this
+///
+/// This function uses the services of TProfile3D::Add
+///
+
 void TProfile3D::Scale(Double_t c1, Option_t *option)
 {
-// *-*-*-*-*Multiply this profile2D by a constant c1*-*-*-*-*-*-*-*-*
-// *-*      ========================================
-//
-//   this = c1*this
-//
-// This function uses the services of TProfile3D::Add
-//
-
    TProfileHelper::Scale(this, c1, option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Set the number of entries in bin*-*-*-*-*-*-*-*-*-*-*-*
+///*-*              ================================
+
 void TProfile3D::SetBinEntries(Int_t bin, Double_t w)
 {
-//*-*-*-*-*-*-*-*-*Set the number of entries in bin*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              ================================
    TProfileHelper::SetBinEntries(this, bin, w);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   -*-*-*-*-*-*-*Redefine  x, y and z axis parameters*-*-*-*-*-*-*-*-*-*-*-*
+///*-*              ===========================
+
 void TProfile3D::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax, Int_t nz, Double_t zmin, Double_t zmax)
 {
-//   -*-*-*-*-*-*-*Redefine  x, y and z axis parameters*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              ===========================
    TH1::SetBins(nx, xmin, xmax, ny, ymin, ymax, nz, zmin, zmax);
    fBinEntries.Set(fNcells);
    if (fBinSumw2.fN) fBinSumw2.Set(fNcells);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   -*-*-*-*-*-*-*Redefine  x, y and z axis parameters with variable bin sizes *-*-*-*-*-*-*-*-*
+///                 ============================================================
+
 void TProfile3D::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins, Int_t nz, const Double_t *zBins)
 {
-   //   -*-*-*-*-*-*-*Redefine  x, y and z axis parameters with variable bin sizes *-*-*-*-*-*-*-*-*
-   //                 ============================================================
    TH1::SetBins(nx,xBins,ny,yBins,nz,zBins);
    fBinEntries.Set(fNcells);
    if (fBinSumw2.fN) fBinSumw2.Set(fNcells);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set total number of bins including under/overflow
+/// Reallocate bin contents array
+
 void TProfile3D::SetBinsLength(Int_t n)
 {
-   // Set total number of bins including under/overflow
-   // Reallocate bin contents array
    TH3D::SetBinsLength(n);
    TProfileHelper::BuildArray(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the buffer size in units of 8 bytes (double)
+
 void TProfile3D::SetBuffer(Int_t buffersize, Option_t *)
 {
-// set the buffer size in units of 8 bytes (double)
-
    if (fBuffer) {
       BufferEmpty();
       delete [] fBuffer;
@@ -1447,48 +1455,48 @@ void TProfile3D::SetBuffer(Int_t buffersize, Option_t *)
    memset(fBuffer,0,sizeof(Double_t)*fBufferSize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*Set option to compute profile3D errors*-*-*-*-*-*-*-*
+///*-*                =======================================
+///
+///    The computation of the bin errors is based on the parameter option:
+///    option:
+///     ' '  (Default) The bin errors are the standard error on the mean of the bin profiled values (T),
+///                    i.e. the standard error of the bin contents.
+///                    Note that if TProfile3D::Approximate()  is called, an approximation is used when
+///                    the spread in T is 0 and the number of bin entries  is > 0
+///
+///     's'            The bin errors are the standard deviations of the T bin values
+///                    Note that if TProfile3D::Approximate()  is called, an approximation is used when
+///                    the spread in T is 0 and the number of bin entries is > 0
+///
+///     'i'            Errors are as in default case (standard errors of the bin contents)
+///                    The only difference is for the case when the spread in T is zero.
+///                    In this case for N > 0 the error is  1./SQRT(12.*N)
+///
+///     'g'            Errors are 1./SQRT(W)  for W not equal to 0 and 0 for W = 0.
+///                    W is the sum in the bin of the weights of the profile.
+///                    This option is for combining measurements t +/- dt,
+///                    and  the profile is filled with values t and weights w = 1/dt**2
+///
+///   See TProfile::BuildOptions for explanation of all options
+
 void TProfile3D::SetErrorOption(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*Set option to compute profile3D errors*-*-*-*-*-*-*-*
-//*-*                =======================================
-//
-//    The computation of the bin errors is based on the parameter option:
-//    option:
-//     ' '  (Default) The bin errors are the standard error on the mean of the bin profiled values (T),
-//                    i.e. the standard error of the bin contents.
-//                    Note that if TProfile3D::Approximate()  is called, an approximation is used when
-//                    the spread in T is 0 and the number of bin entries  is > 0
-//
-//     's'            The bin errors are the standard deviations of the T bin values
-//                    Note that if TProfile3D::Approximate()  is called, an approximation is used when
-//                    the spread in T is 0 and the number of bin entries is > 0
-//
-//     'i'            Errors are as in default case (standard errors of the bin contents)
-//                    The only difference is for the case when the spread in T is zero.
-//                    In this case for N > 0 the error is  1./SQRT(12.*N)
-//
-//     'g'            Errors are 1./SQRT(W)  for W not equal to 0 and 0 for W = 0.
-//                    W is the sum in the bin of the weights of the profile.
-//                    This option is for combining measurements t +/- dt,
-//                    and  the profile is filled with values t and weights w = 1/dt**2
-//
-//   See TProfile::BuildOptions for explanation of all options
-
    TProfileHelper::SetErrorOption(this, option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create/Delete structure to store sum of squares of weights per bin  *-*-*-*-*-*-*-*
+///   This is needed to compute  the correct statistical quantities
+///    of a profile filled with weights
+///
+///
+///  This function is automatically called when the histogram is created
+///  if the static function TH1::SetDefaultSumw2 has been called before.
+///  If flag = false the structure is deleted
+
 void TProfile3D::Sumw2(Bool_t flag)
 {
-   // Create/Delete structure to store sum of squares of weights per bin  *-*-*-*-*-*-*-*
-   //   This is needed to compute  the correct statistical quantities
-   //    of a profile filled with weights
-   //
-   //
-   //  This function is automatically called when the histogram is created
-   //  if the static function TH1::SetDefaultSumw2 has been called before.
-   //  If flag = false the structure is deleted
-
    TProfileHelper::Sumw2(this, flag);
 }

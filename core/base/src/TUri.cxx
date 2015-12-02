@@ -48,27 +48,27 @@ const char* const kURI_unreserved   = "[[:alpha:][:digit:]-._~]";
 
 ClassImp(TUri)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor that calls SetUri with a complete URI.
+
 TUri::TUri(const TString &uri)
 {
-   // Constructor that calls SetUri with a complete URI.
-
    SetUri(uri);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor that calls SetUri with a complete URI.
+
 TUri::TUri(const char *uri)
 {
-   // Constructor that calls SetUri with a complete URI.
-
    SetUri(uri);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TUri copy ctor.
+
 TUri::TUri(const TUri &uri) : TObject(uri)
 {
-   // TUri copy ctor.
-
    fScheme = uri.fScheme;
    fUserinfo = uri.fUserinfo;
    fHost = uri.fHost;
@@ -85,11 +85,11 @@ TUri::TUri(const TUri &uri) : TObject(uri)
    fHasFragment = uri.fHasFragment;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TUri assignment operator.
+
 TUri &TUri::operator= (const TUri & rhs)
 {
-   // TUri assignment operator.
-
    if (this != &rhs) {
       TObject::operator= (rhs);
       fScheme = rhs.fScheme;
@@ -110,13 +110,13 @@ TUri &TUri::operator= (const TUri & rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implementation of a TUri Equivalence operator
+/// that uses syntax-based normalisation
+/// see chapter 6.2.2.
+
 Bool_t operator== (const TUri &u1, const TUri &u2)
 {
-   // Implementation of a TUri Equivalence operator
-   // that uses syntax-based normalisation
-   // see chapter 6.2.2.
-
    // make temporary copies of the operands
    TUri u11 = u1;
    TUri u22 = u2;
@@ -127,19 +127,19 @@ Bool_t operator== (const TUri &u1, const TUri &u2)
    return u11.GetUri() == u22.GetUri();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the whole URI -
+/// an implementation of chapter 5.3 component recomposition.
+/// The result URI is composed out of the five basic parts.
+///
+/// URI         = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
+/// hier-part   = "//" authority path-abempty
+///             / path-absolute
+///             / path-rootless
+///             / path-empty
+
 const TString TUri::GetUri() const
 {
-   // Returns the whole URI -
-   // an implementation of chapter 5.3 component recomposition.
-   // The result URI is composed out of the five basic parts.
-   //
-   // URI         = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
-   // hier-part   = "//" authority path-abempty
-   //             / path-absolute
-   //             / path-rootless
-   //             / path-empty
-
    TString result = "";
    if (fHasScheme)
       result = fScheme + ":";
@@ -151,14 +151,14 @@ const TString TUri::GetUri() const
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This functions implements the "remove_dot_segments" routine
+/// of chapter 5.2.4 "for interpreting and removing the
+/// special '.' and '..' complete path segments from a
+/// referenced path".
+
 const TString TUri::RemoveDotSegments(const TString &inp)
 {
-   // This functions implements the "remove_dot_segments" routine
-   // of chapter 5.2.4 "for interpreting and removing the
-   // special '.' and '..' complete path segments from a
-   // referenced path".
-
    TString source = inp;
    TString sink = TString("");  // sink buffer
 
@@ -200,52 +200,52 @@ const TString TUri::RemoveDotSegments(const TString &inp)
    return sink;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if instance qualifies as absolute-URI
+/// absolute-URI  = scheme ":" hier-part [ "?" query ]
+/// cf. Appendix A.
+
 Bool_t TUri::IsAbsolute() const
 {
-   // Returns kTRUE if instance qualifies as absolute-URI
-   // absolute-URI  = scheme ":" hier-part [ "?" query ]
-   // cf. Appendix A.
-
    return (HasScheme() && HasHierPart() && !HasFragment());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if instance qualifies as relative-ref
+/// relative-ref  = relative-part [ "?" query ] [ "#" fragment ]
+/// cf. Appendix A.
+
 Bool_t TUri::IsRelative() const
 {
-   // Returns kTRUE if instance qualifies as relative-ref
-   // relative-ref  = relative-part [ "?" query ] [ "#" fragment ]
-   // cf. Appendix A.
-
    return (!HasScheme() && HasRelativePart());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if instance qualifies as URI
+/// URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
+/// cf. Appendix A.
+
 Bool_t TUri::IsUri() const
 {
-   // Returns kTRUE if instance qualifies as URI
-   // URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
-   // cf. Appendix A.
-
    return (HasScheme() && HasHierPart());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if instance qualifies as URI-reference
+/// URI-reference = URI / relative-ref
+/// cf. Appendix A.
+
 Bool_t TUri::IsReference() const
 {
-   // Returns kTRUE if instance qualifies as URI-reference
-   // URI-reference = URI / relative-ref
-   // cf. Appendix A.
-
    return (IsUri() || IsRelative());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set scheme component of URI:
+/// scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+
 Bool_t TUri::SetScheme(const TString &scheme)
 {
-   // Set scheme component of URI:
-   // scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
-
    if (!scheme) {
       fHasScheme = kFALSE;
       return kTRUE;
@@ -260,23 +260,23 @@ Bool_t TUri::SetScheme(const TString &scheme)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if string qualifies as URI scheme:
+/// scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+
 Bool_t TUri::IsScheme(const TString &string)
 {
-   // Returns kTRUE if string qualifies as URI scheme:
-   // scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
-
    return TPRegexp(
              "^[[:alpha:]][[:alpha:][:digit:]+-.]*$"
           ).Match(string);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the authority part of the instance:
+/// authority   = [ userinfo "@" ] host [ ":" port ]
+
 const TString TUri::GetAuthority() const
 {
-   // Returns the authority part of the instance:
-   // authority   = [ userinfo "@" ] host [ ":" port ]
-
    TString authority = fHasUserinfo ? fUserinfo + "@" + fHost : fHost;
    if (fHasPort && !fPort.IsNull())
       // add port only if not empty
@@ -284,12 +284,12 @@ const TString TUri::GetAuthority() const
    return (authority);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set query component of URI:
+/// query       = *( pchar / "/" / "?" )
+
 Bool_t TUri::SetQuery(const TString &query)
 {
-   // Set query component of URI:
-   // query       = *( pchar / "/" / "?" )
-
    if (!query) {
       fHasQuery = kFALSE;
       return kTRUE;
@@ -304,28 +304,28 @@ Bool_t TUri::SetQuery(const TString &query)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if string qualifies as URI query:
+/// query       = *( pchar / "/" / "?" )
+
 Bool_t TUri::IsQuery(const TString &string)
 {
-   // Returns kTRUE if string qualifies as URI query:
-   // query       = *( pchar / "/" / "?" )
-
    return TPRegexp(
              TString("^([/?]|") + kURI_pchar + ")*$"
           ).Match(string);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set authority part of URI:
+/// authority   = [ userinfo "@" ] host [ ":" port ]
+///
+/// Split into components {userinfo@, host, :port},
+/// remember that according to the RFC, it is necessary to
+/// distinguish between missing component (no delimiter)
+/// and empty component (delimiter present).
+
 Bool_t TUri::SetAuthority(const TString &authority)
 {
-   // Set authority part of URI:
-   // authority   = [ userinfo "@" ] host [ ":" port ]
-   //
-   // Split into components {userinfo@, host, :port},
-   // remember that according to the RFC, it is necessary to
-   // distinguish between missing component (no delimiter)
-   // and empty component (delimiter present).
-
    if (authority.IsNull()) {
       fHasUserinfo = kFALSE;
       fHasHost = kFALSE;
@@ -363,12 +363,12 @@ Bool_t TUri::SetAuthority(const TString &authority)
    return valid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if string qualifies as valid URI authority:
+/// authority   = [ userinfo "@" ] host [ ":" port ]
+
 Bool_t TUri::IsAuthority(const TString &string)
 {
-   // Returns kTRUE if string qualifies as valid URI authority:
-   // authority   = [ userinfo "@" ] host [ ":" port ]
-
    // split into parts {userinfo, host, port}
    TPRegexp regexp = TPRegexp("^(?:(.*)@)?([^:]*)(?::(.*))?$");
    TObjArray *tokens = regexp.MatchS(string);
@@ -383,12 +383,12 @@ Bool_t TUri::IsAuthority(const TString &string)
    return (IsHost(host) && IsUserInfo(userinfo) && IsPort(port));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set userinfo component of URI:
+/// userinfo    = *( unreserved / pct-encoded / sub-delims / ":" )
+
 Bool_t TUri::SetUserInfo(const TString &userinfo)
 {
-   // Set userinfo component of URI:
-   // userinfo    = *( unreserved / pct-encoded / sub-delims / ":" )
-
    if (userinfo.IsNull()) {
       fHasUserinfo = kFALSE;
       return kTRUE;
@@ -403,25 +403,25 @@ Bool_t TUri::SetUserInfo(const TString &userinfo)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE is string qualifies as valid URI userinfo:
+/// userinfo    = *( unreserved / pct-encoded / sub-delims / ":" )
+/// this equals to pchar without the '@' character
+
 Bool_t TUri::IsUserInfo(const TString &string)
 {
-   // Return kTRUE is string qualifies as valid URI userinfo:
-   // userinfo    = *( unreserved / pct-encoded / sub-delims / ":" )
-   // this equals to pchar without the '@' character
-
    return (TPRegexp(
               "^" + TString(kURI_pchar) + "*$"
            ).Match(string) > 0 && !TString(string).Contains("@"));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set host component of URI:
+/// RFC 3986:    host = IP-literal / IPv4address / reg-name
+/// implemented: host =  IPv4address / reg-name
+
 Bool_t TUri::SetHost(const TString &host)
 {
-   // Set host component of URI:
-   // RFC 3986:    host = IP-literal / IPv4address / reg-name
-   // implemented: host =  IPv4address / reg-name
-
    if (IsHost(host)) {
       fHost = host;
       fHasHost = kTRUE;
@@ -432,12 +432,12 @@ Bool_t TUri::SetHost(const TString &host)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set port component of URI:
+/// port        = *DIGIT
+
 Bool_t TUri::SetPort(const TString &port)
 {
-   // Set port component of URI:
-   // port        = *DIGIT
-
    if (IsPort(port)) {
       fPort = port;
       fHasPort = kTRUE;
@@ -447,16 +447,16 @@ Bool_t TUri::SetPort(const TString &port)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set path component of URI:
+/// path          = path-abempty    ; begins with "/" or is empty
+///               / path-absolute   ; begins with "/" but not "//"
+///               / path-noscheme   ; begins with a non-colon segment
+///               / path-rootless   ; begins with a segment
+///               / path-empty      ; zero characters
+
 Bool_t TUri::SetPath(const TString &path)
 {
-   // Set path component of URI:
-   // path          = path-abempty    ; begins with "/" or is empty
-   //               / path-absolute   ; begins with "/" but not "//"
-   //               / path-noscheme   ; begins with a non-colon segment
-   //               / path-rootless   ; begins with a segment
-   //               / path-empty      ; zero characters
-
    if (IsPath(path)) {
       fPath = path;
       fHasPath = kTRUE;
@@ -466,12 +466,12 @@ Bool_t TUri::SetPath(const TString &path)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set fragment component of URI:
+/// fragment    = *( pchar / "/" / "?" )
+
 Bool_t TUri::SetFragment(const TString &fragment)
 {
-   // Set fragment component of URI:
-   // fragment    = *( pchar / "/" / "?" )
-
    if (IsFragment(fragment)) {
       fFragment = fragment;
       fHasFragment = kTRUE;
@@ -494,13 +494,13 @@ Bool_t TUri::IsFragment(const TString &string)
            ).Match(string) > 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display function,
+/// option "d" .. debug output
+/// anything else .. simply print URI.
+
 void TUri::Print(Option_t *option) const
 {
-   // Display function,
-   // option "d" .. debug output
-   // anything else .. simply print URI.
-
    if (strcmp(option, "d") != 0) {
       Printf("%s", GetUri().Data());
       return ;
@@ -537,13 +537,13 @@ void TUri::Print(Option_t *option) const
    printf("\n");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize this URI object.
+/// Set all TString members to empty string,
+/// set all Bool_t members to kFALSE.
+
 void TUri::Reset()
 {
-   // Initialize this URI object.
-   // Set all TString members to empty string,
-   // set all Bool_t members to kFALSE.
-
    fScheme = "";
    fUserinfo = "";
    fHost = "";
@@ -561,18 +561,18 @@ void TUri::Reset()
    fHasFragment = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse URI and set the member variables accordingly,
+/// returns kTRUE if URI validates, and kFALSE otherwise:
+/// URI         = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
+/// hier-part   = "//" authority path-abempty
+///             / path-absolute
+///             / path-rootless
+///             / path-empty
+///
+
 Bool_t TUri::SetUri(const TString &uri)
 {
-   // Parse URI and set the member variables accordingly,
-   // returns kTRUE if URI validates, and kFALSE otherwise:
-   // URI         = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
-   // hier-part   = "//" authority path-abempty
-   //             / path-absolute
-   //             / path-rootless
-   //             / path-empty
-   //
-
    // Reset member variables
    Reset();
 
@@ -622,44 +622,44 @@ Bool_t TUri::SetUri(const TString &uri)
    return valid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// hier-part   = "//" authority path-abempty
+///             / path-absolute
+///             / path-rootless
+///             / path-empty
+
 const TString TUri::GetHierPart() const
 {
-   // hier-part   = "//" authority path-abempty
-   //             / path-absolute
-   //             / path-rootless
-   //             / path-empty
-
    if (HasAuthority() && IsPathAbempty(fPath))
       return (TString("//") + GetAuthority() + fPath);
    else
       return fPath;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// relative-part = "//" authority path-abempty
+///               / path-absolute
+///               / path-noscheme
+///               / path-empty
+
 const TString TUri::GetRelativePart() const
 {
-   // relative-part = "//" authority path-abempty
-   //               / path-absolute
-   //               / path-noscheme
-   //               / path-empty
-
    if (HasAuthority() && IsPathAbempty(fPath))
       return (TString("//") + GetAuthority() + fPath);
    else
       return fPath;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns hier-part component of URI
+/// hier-part   = "//" authority path-abempty
+///             / path-absolute
+///             / path-rootless
+///             / path-empty
+///
+
 Bool_t TUri::SetHierPart(const TString &hier)
 {
-   // returns hier-part component of URI
-   // hier-part   = "//" authority path-abempty
-   //             / path-absolute
-   //             / path-rootless
-   //             / path-empty
-   //
-
    /*  if ( IsPathAbsolute(hier) || IsPathRootless(hier) || IsPathEmpty(hier) ) {
      SetPath (hier);
      return kTRUE;
@@ -699,46 +699,46 @@ Bool_t TUri::SetHierPart(const TString &hier)
    return valid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if string qualifies as hier-part:
+///
+/// hier-part   = "//" authority path-abempty
+///             / path-absolute
+///             / path-rootless
+///             / path-empty
+
 Bool_t TUri::IsHierPart(const TString &string)
 {
-   // Returns kTRUE if string qualifies as hier-part:
-   //
-   // hier-part   = "//" authority path-abempty
-   //             / path-absolute
-   //             / path-rootless
-   //             / path-empty
-
    // use functionality of SetHierPart
    // in order to avoid duplicate code
    TUri uri;
    return (uri.SetHierPart(string));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE is string qualifies as relative-part:
+/// relative-part = "//" authority path-abempty
+///               / path-absolute
+///               / path-noscheme
+///               / path-empty
+
 Bool_t TUri::IsRelativePart(const TString &string)
 {
-   // Returns kTRUE is string qualifies as relative-part:
-   // relative-part = "//" authority path-abempty
-   //               / path-absolute
-   //               / path-noscheme
-   //               / path-empty
-
    // use functionality of SetRelativePart
    // in order to avoid duplicate code
    TUri uri;
    return (uri.SetRelativePart(string));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE is string qualifies as relative-part:
+/// relative-part = "//" authority path-abempty
+///               / path-absolute
+///               / path-noscheme
+///               / path-empty
+
 Bool_t TUri::SetRelativePart(const TString &relative)
 {
-   // Returns kTRUE is string qualifies as relative-part:
-   // relative-part = "//" authority path-abempty
-   //               / path-absolute
-   //               / path-noscheme
-   //               / path-empty
-
    // reference points:         1  2          3
    TPRegexp regexp = TPRegexp("^(//([^/?#]*))?([^?#]*)$");
    TObjArray *tokens = regexp.MatchS(relative);
@@ -771,12 +771,12 @@ Bool_t TUri::SetRelativePart(const TString &relative)
    return valid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Percent-encode and return the given string according to RFC 3986
+/// in principle, this function cannot fail or produce an error.
+
 const TString TUri::PctEncode(const TString &source)
 {
-   // Percent-encode and return the given string according to RFC 3986
-   // in principle, this function cannot fail or produce an error.
-
    TString sink = "";
    // iterate through source
    for (Int_t i = 0; i < source.Length(); i++) {
@@ -794,26 +794,26 @@ const TString TUri::PctEncode(const TString &source)
    return sink;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if string qualifies as valid host component:
+/// host = IP-literal / IPv4address / reg-name
+/// implemented: host =  IPv4address / reg-name
+
 Bool_t TUri::IsHost(const TString &string)
 {
-   // Returns kTRUE if string qualifies as valid host component:
-   // host = IP-literal / IPv4address / reg-name
-   // implemented: host =  IPv4address / reg-name
-
    return (IsRegName(string) || IsIpv4(string));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retruns kTRUE if string qualifies as valid path component:
+/// path          = path-abempty    ; begins with "/" or is empty
+///               / path-absolute   ; begins with "/" but not "//"
+///               / path-noscheme   ; begins with a non-colon segment
+///               / path-rootless   ; begins with a segment
+///               / path-empty      ; zero characters
+
 Bool_t TUri::IsPath(const TString &string)
 {
-   // Retruns kTRUE if string qualifies as valid path component:
-   // path          = path-abempty    ; begins with "/" or is empty
-   //               / path-absolute   ; begins with "/" but not "//"
-   //               / path-noscheme   ; begins with a non-colon segment
-   //               / path-rootless   ; begins with a segment
-   //               / path-empty      ; zero characters
-
    return (IsPathAbempty(string) ||
            IsPathAbsolute(string) ||
            IsPathNoscheme(string) ||
@@ -821,115 +821,117 @@ Bool_t TUri::IsPath(const TString &string)
            IsPathEmpty(string));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if string qualifies as valid path-abempty component:
+///    path-abempty  = *( "/" segment )
+///    segment       = *pchar
+
 Bool_t TUri::IsPathAbempty(const TString &string)
 {
-   // Returns kTRUE if string qualifies as valid path-abempty component:
-   //    path-abempty  = *( "/" segment )
-   //    segment       = *pchar
-
    return (TPRegexp(
               TString("^(/") + TString(kURI_pchar) + "*)*$"
            ).Match(string) > 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if string qualifies as valid path-absolute component
+///    path-absolute = "/" [ segment-nz *( "/" segment ) ]
+///    segment-nz    = 1*pchar
+///    segment       = *pchar
+
 Bool_t TUri::IsPathAbsolute(const TString &string)
 {
-   // Returns kTRUE if string qualifies as valid path-absolute component
-   //    path-absolute = "/" [ segment-nz *( "/" segment ) ]
-   //    segment-nz    = 1*pchar
-   //    segment       = *pchar
-
    return (TPRegexp(
               TString("^/(") + TString(kURI_pchar) + "+(/" + TString(kURI_pchar) + "*)*)?$"
            ).Match(string) > 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if string qualifies as valid path-noscheme component:
+/// path-noscheme = segment-nz-nc *( "/" segment )
+/// segment-nz-nc = 1*( unreserved / pct-encoded / sub-delims / "@" )
+/// segment       = *pchar
+
 Bool_t TUri::IsPathNoscheme(const TString &string)
 {
-   // Returns kTRUE if string qualifies as valid path-noscheme component:
-   // path-noscheme = segment-nz-nc *( "/" segment )
-   // segment-nz-nc = 1*( unreserved / pct-encoded / sub-delims / "@" )
-   // segment       = *pchar
-
    return (TPRegexp(
               TString("^(([[:alpha:][:digit:]-._~!$&'()*+,;=@]|%[0-9A-Fa-f][0-9A-Fa-f])+)(/") + TString(kURI_pchar) + "*)*$"
            ).Match(string) > 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if string qualifies as valid path-rootless component:
+/// path-rootless = segment-nz *( "/" segment )
+
 Bool_t TUri::IsPathRootless(const TString &string)
 {
-   // Returns kTRUE if string qualifies as valid path-rootless component:
-   // path-rootless = segment-nz *( "/" segment )
-
    return TPRegexp(
              TString("^") + TString(kURI_pchar) + "+(/" + TString(kURI_pchar) + "*)*$"
           ).Match(string);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if string qualifies as valid path-empty component:
+/// path-empty    = 0<pchar>
+
 Bool_t TUri::IsPathEmpty(const TString &string)
 {
-   // Returns kTRUE if string qualifies as valid path-empty component:
-   // path-empty    = 0<pchar>
    return TString(string).IsNull();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if string qualifies as valid port component:
+/// RFC 3986: port        = *DIGIT
+
 Bool_t TUri::IsPort(const TString &string)
 {
-   // Returns kTRUE if string qualifies as valid port component:
-   // RFC 3986: port        = *DIGIT
-
    return (TPRegexp("^[[:digit:]]*$").Match(string) > 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if string qualifies as valid reg-name:
+///
+///  reg-name    = *( unreserved / pct-encoded / sub-delims )
+///  sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
+///                  / "*" / "+" / "," / ";" / "="
+///
+
 Bool_t TUri::IsRegName(const TString &string)
 {
-   // Returns kTRUE if string qualifies as valid reg-name:
-   //
-   //  reg-name    = *( unreserved / pct-encoded / sub-delims )
-   //  sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
-   //                  / "*" / "+" / "," / ";" / "="
-   //
-
    return (TPRegexp(
               "^([[:alpha:][:digit:]-._~!$&'()*+,;=]|%[0-9A-Fa-f][0-9A-Fa-f])*$").Match(string) > 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE, if string holds a valid IPv4 address
+/// currently only decimal variant supported.
+/// Existence of leadig 0s or numeric range remains unchecked
+/// IPv4address = dec-octet "." dec-octet "." dec-octet "." dec-octet.
+///
+
 Bool_t TUri::IsIpv4(const TString &string)
 {
-   // Returns kTRUE, if string holds a valid IPv4 address
-   // currently only decimal variant supported.
-   // Existence of leadig 0s or numeric range remains unchecked
-   // IPv4address = dec-octet "." dec-octet "." dec-octet "." dec-octet.
-   //
    return (TPRegexp(
               "^([[:digit:]]{1,3}[.]){3}[[:digit:]]{1,3}$").Match(string) > 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE, if the given string does not contain
+/// RFC 3986 reserved characters
+/// unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
+
 Bool_t TUri::IsUnreserved(const TString &string)
 {
-   // Returns kTRUE, if the given string does not contain
-   // RFC 3986 reserved characters
-   // unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
-
    return (TPRegexp(
               "^" + TString(kURI_unreserved) + "*$").Match(string) > 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Syntax based normalisation according to
+/// RFC chapter 6.2.2.
+
 void TUri::Normalise()
 {
-   // Syntax based normalisation according to
-   // RFC chapter 6.2.2.
-
    // case normalisation of host and scheme
    // cf. chapter 6.2.2.1
    fScheme.ToLower();
@@ -951,12 +953,12 @@ void TUri::Normalise()
       SetPath(RemoveDotSegments(GetPath()));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Percent-decode the given string according to chapter 2.1
+/// we assume a valid pct-encoded string.
+
 TString const TUri::PctDecodeUnreserved(const TString &source)
 {
-   // Percent-decode the given string according to chapter 2.1
-   // we assume a valid pct-encoded string.
-
    TString sink = "";
    Int_t i = 0;
    while (i < source.Length()) {
@@ -995,13 +997,13 @@ TString const TUri::PctDecodeUnreserved(const TString &source)
    return sink;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normalise the percent-encoded parts of the string
+/// i.e. uppercase the hexadecimal digits
+/// %[:alpha:][:alpha:] -> %[:ALPHA:][:ALPHA:]
+
 TString const TUri::PctNormalise(const TString &source)
 {
-   // Normalise the percent-encoded parts of the string
-   // i.e. uppercase the hexadecimal digits
-   // %[:alpha:][:alpha:] -> %[:ALPHA:][:ALPHA:]
-
    TString sink = "";
    Int_t i = 0;
    while (i < source.Length()) {
@@ -1025,12 +1027,12 @@ TString const TUri::PctNormalise(const TString &source)
    return sink;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Percent-decode the given string according to chapter 2.1
+/// we assume a valid pct-encoded string.
+
 TString const TUri::PctDecode(const TString &source)
 {
-   // Percent-decode the given string according to chapter 2.1
-   // we assume a valid pct-encoded string.
-
    TString sink = "";
    Int_t i = 0;
    while (i < source.Length()) {
@@ -1060,13 +1062,13 @@ TString const TUri::PctDecode(const TString &source)
    return sink;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transform a URI reference into its target URI using
+/// given a base URI.
+/// This is an implementation of the pseudocode in chapter 5.2.2.
+
 TUri TUri::Transform(const TUri &reference, const TUri &base)
 {
-   // Transform a URI reference into its target URI using
-   // given a base URI.
-   // This is an implementation of the pseudocode in chapter 5.2.2.
-
    TUri target;
    if (reference.HasScheme()) {
       target.SetScheme(reference.GetScheme());
@@ -1112,19 +1114,19 @@ TUri TUri::Transform(const TUri &reference, const TUri &base)
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// RFC 3986, 5.3.2.
+/// If the base URI has a defined authority component and an empty
+/// path, then return a string consisting of "/" concatenated with the
+/// reference's path; otherwise,
+/// return a string consisting of the reference's path component
+/// appended to all but the last segment of the base URI's path (i.e.,
+/// excluding any characters after the right-most "/" in the base URI
+/// path, or excluding the entire base URI path if it does not contain
+/// any "/" characters).
+
 const TString TUri::MergePaths(const TUri &reference, const TUri &base)
 {
-   // RFC 3986, 5.3.2.
-   // If the base URI has a defined authority component and an empty
-   // path, then return a string consisting of "/" concatenated with the
-   // reference's path; otherwise,
-   // return a string consisting of the reference's path component
-   // appended to all but the last segment of the base URI's path (i.e.,
-   // excluding any characters after the right-most "/" in the base URI
-   // path, or excluding the entire base URI path if it does not contain
-   // any "/" characters).
-
    TString result = "";
    if (base.HasAuthority() && base.GetPath().IsNull()) {
       result = TString("/") + reference.GetPath();

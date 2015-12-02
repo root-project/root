@@ -30,21 +30,23 @@
 
 ClassImp(TGeoTrack)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Tracks default constructor*-*-*-*-*-*-*-*-*
+///*-*                  ==========================
+
 TGeoTrack::TGeoTrack()
 {
-//*-*-*-*-*-*-*-*-*-*-*Tracks default constructor*-*-*-*-*-*-*-*-*
-//*-*                  ==========================
    fPointsSize = 0;
    fNpoints    = 0;
    fPoints     = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGeoTrack::TGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *parent, TObject *particle)
           :TVirtualGeoTrack(id,pdgcode,parent,particle)
 {
-// Constructor.
    fPointsSize = 0;
    fNpoints    = 0;
    fPoints     = 0;
@@ -63,20 +65,22 @@ TGeoTrack::TGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *parent, TObject 
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor. NOT TO BE CALLED.
+
 TGeoTrack::TGeoTrack(const TGeoTrack& other)
                  :TVirtualGeoTrack(other),
                   fPointsSize(other.fPointsSize),
                   fNpoints(other.fNpoints),
                   fPoints(other.fPoints)
 {
-// Copy ctor. NOT TO BE CALLED.
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator. NOT TO BE CALLED.
+
 TGeoTrack& TGeoTrack::operator=(const TGeoTrack& gv)
 {
-   // Assignment operator. NOT TO BE CALLED.
    if(this!=&gv) {
       TVirtualGeoTrack::operator=(gv);
       fPointsSize=gv.fPointsSize;
@@ -86,18 +90,20 @@ TGeoTrack& TGeoTrack::operator=(const TGeoTrack& gv)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoTrack::~TGeoTrack()
 {
-// Destructor.
    if (fPoints) delete [] fPoints;
 //   if (gPad) gPad->GetListOfPrimitives()->Remove(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a daughter track to this.
+
 TVirtualGeoTrack *TGeoTrack::AddDaughter(Int_t id, Int_t pdgcode, TObject *particle)
 {
-// Add a daughter track to this.
    if (!fTracks) fTracks = new TObjArray(1);
    Int_t index = fTracks->GetEntriesFast();
    TGeoTrack *daughter = new TGeoTrack(id,pdgcode,this,particle);
@@ -105,10 +111,11 @@ TVirtualGeoTrack *TGeoTrack::AddDaughter(Int_t id, Int_t pdgcode, TObject *parti
    return daughter;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a daughter and return its index.
+
 Int_t TGeoTrack::AddDaughter(TVirtualGeoTrack *other)
 {
-// Add a daughter and return its index.
    if (!fTracks) fTracks = new TObjArray(1);
    Int_t index = fTracks->GetEntriesFast();
    fTracks->AddAtAndExpand(other,index);
@@ -116,10 +123,11 @@ Int_t TGeoTrack::AddDaughter(TVirtualGeoTrack *other)
    return index;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw animation of this track
+
 void TGeoTrack::AnimateTrack(Double_t tmin, Double_t tmax, Double_t nframes, Option_t *option)
 {
-// Draw animation of this track
    if (tmin<0 || tmin>=tmax || nframes<1) return;
    gGeoManager->SetAnimateTracks();
    gGeoManager->SetVisLevel(1);
@@ -189,10 +197,11 @@ void TGeoTrack::AnimateTrack(Double_t tmin, Double_t tmax, Double_t nframes, Opt
    gGeoManager->SetAnimateTracks(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a point on the track.
+
 void TGeoTrack::AddPoint(Double_t x, Double_t y, Double_t z, Double_t t)
 {
-// Add a point on the track.
    if (!fPoints) {
       fPointsSize = 16;
       fPoints = new Double_t[fPointsSize];
@@ -211,10 +220,11 @@ void TGeoTrack::AddPoint(Double_t x, Double_t y, Double_t z, Double_t t)
    fPoints[fNpoints++] = t;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// How-to-browse for a track.
+
 void TGeoTrack::Browse(TBrowser *b)
 {
-// How-to-browse for a track.
    if (!b) return;
    Int_t nd = GetNdaughters();
    if (!nd) {
@@ -226,10 +236,11 @@ void TGeoTrack::Browse(TBrowser *b)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns distance to track primitive for picking.
+
 Int_t TGeoTrack::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// Returns distance to track primitive for picking.
    const Int_t inaxis = 7;
    const Int_t maxdist = 5;
    Int_t dist = 9999;
@@ -290,19 +301,19 @@ Int_t TGeoTrack::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this track overimposed on a geometry, according to option.
+/// Options (case sensitive):
+///  default : track without daughters
+///  /D      : track and first level descendents only
+///  /*      : track and all descendents
+///  /Ntype
+///          : descendents of this track with particle name matching input type.
+/// Options can appear only once but can be combined : e.g. Draw("/D /Npion-")
+/// Time range for visible track segments can be set via TGeoManager::SetTminTmax()
+
 void TGeoTrack::Draw(Option_t *option)
 {
-// Draw this track overimposed on a geometry, according to option.
-// Options (case sensitive):
-//  default : track without daughters
-//  /D      : track and first level descendents only
-//  /*      : track and all descendents
-//  /Ntype
-//          : descendents of this track with particle name matching input type.
-// Options can appear only once but can be combined : e.g. Draw("/D /Npion-")
-// Time range for visible track segments can be set via TGeoManager::SetTminTmax()
-
    if (!gPad) gGeoManager->GetMasterVolume()->Draw();
    char *opt1 = Compress(option); // we will have to delete this ?
    TString opt(opt1);
@@ -336,18 +347,20 @@ void TGeoTrack::Draw(Option_t *option)
    return;
 }
 
- //______________________________________________________________________________
+ ///////////////////////////////////////////////////////////////////////////////
+ /// Event treatment.
+
 void TGeoTrack::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
 {
-// Event treatment.
    if (!gPad) return;
    gPad->SetCursor(kHand);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get some info about the track.
+
 char *TGeoTrack::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
 {
-// Get some info about the track.
    static TString info;
    Double_t x=0,y=0,z=0,t=0;
    GetPoint(0,x,y,z,t);
@@ -355,10 +368,11 @@ char *TGeoTrack::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
    return (char*)info.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get coordinates for point I on the track.
+
 Int_t TGeoTrack::GetPoint(Int_t i, Double_t &x, Double_t &y, Double_t &z, Double_t &t) const
 {
-// Get coordinates for point I on the track.
    Int_t np = fNpoints>>2;
    if (i<0 || i>=np) {
       Error("GetPoint", "no point %i, indmax=%d", i, np-1);
@@ -372,19 +386,21 @@ Int_t TGeoTrack::GetPoint(Int_t i, Double_t &x, Double_t &y, Double_t &z, Double
    return i;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the pointer to the array of points starting with index I.
+
 const Double_t *TGeoTrack::GetPoint(Int_t i) const
 {
-// Return the pointer to the array of points starting with index I.
    if (!fNpoints) return 0;
    return (&fPoints[i<<2]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the index of point on track having closest TOF smaller than
+/// the input value. Output POINT is filled with the interpolated value.
+
 Int_t TGeoTrack::GetPoint(Double_t tof, Double_t *point, Int_t istart) const
 {
-// Return the index of point on track having closest TOF smaller than
-// the input value. Output POINT is filled with the interpolated value.
    Int_t np = fNpoints>>2;
    if (istart>(np-2)) return (np-1);
    Int_t ip = SearchPoint(tof, istart);
@@ -399,10 +415,11 @@ Int_t TGeoTrack::GetPoint(Double_t tof, Double_t *point, Int_t istart) const
    return ip;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this track (and descendents) with current attributes.
+
 void TGeoTrack::Paint(Option_t *option)
 {
-// Paint this track (and descendents) with current attributes.
    Bool_t is_default  = TObject::TestBit(kGeoPDefault);
    Bool_t is_onelevel = TObject::TestBit(kGeoPOnelevel);
    Bool_t is_all      = TObject::TestBit(kGeoPAllDaughters);
@@ -429,10 +446,11 @@ void TGeoTrack::Paint(Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint track and daughters.
+
 void TGeoTrack::PaintCollect(Double_t time, Double_t *box)
 {
-// Paint track and daughters.
    Bool_t is_default  = TObject::TestBit(kGeoPDefault);
    Bool_t is_onelevel = TObject::TestBit(kGeoPOnelevel);
    Bool_t is_all      = TObject::TestBit(kGeoPAllDaughters);
@@ -455,10 +473,11 @@ void TGeoTrack::PaintCollect(Double_t time, Double_t *box)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint just this track.
+
 void TGeoTrack::PaintCollectTrack(Double_t time, Double_t *box)
 {
-// Paint just this track.
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
    Int_t np = fNpoints>>2;
@@ -472,10 +491,11 @@ void TGeoTrack::PaintCollectTrack(Double_t time, Double_t *box)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint current point of the track as marker.
+
 void TGeoTrack::PaintMarker(Double_t *point, Option_t *)
 {
-// Paint current point of the track as marker.
    TPoint p;
    Double_t xndc[3];
    TView *view = gPad->GetView();
@@ -489,11 +509,11 @@ void TGeoTrack::PaintMarker(Double_t *point, Option_t *)
    gVirtualX->DrawPolyMarker(1, &p);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this track with its current attributes.
+
 void TGeoTrack::PaintTrack(Option_t *option)
 {
-// Paint this track with its current attributes.
-
    // Check whether there is some 3D view class for this TPad
 //   TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
 //   if (view3D) view3D->PaintGeoTrack(this,option); // to be implemented
@@ -617,10 +637,11 @@ void TGeoTrack::PaintTrack(Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print some info about the track.
+
 void TGeoTrack::Print(Option_t * /*option*/) const
 {
-// Print some info about the track.
    Int_t np = fNpoints>>2;
    printf(" TGeoTrack%6i : %s  ===============================\n", fId,GetName());
    printf("   parent =%6i    nd =%3i\n", (fParent)?fParent->GetId():-1, GetNdaughters());
@@ -631,11 +652,12 @@ void TGeoTrack::Print(Option_t * /*option*/) const
    printf("   Npoints =%6i,  last : (%g, %g, %g) at tof=%g\n\n", np,x,y,z,t);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of points within the time interval specified by
+/// TGeoManager class and the corresponding indices.
+
 Int_t TGeoTrack::Size(Int_t &imin, Int_t &imax)
 {
-// Return the number of points within the time interval specified by
-// TGeoManager class and the corresponding indices.
    Double_t tmin, tmax;
    Int_t np = fNpoints>>2;
    imin = 0;
@@ -647,11 +669,12 @@ Int_t TGeoTrack::Size(Int_t &imin, Int_t &imax)
    return (imax-imin+1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search index of track point having the closest time tag smaller than
+/// TIME. Optional start index can be provided.
+
 Int_t TGeoTrack::SearchPoint(Double_t time, Int_t istart) const
 {
-// Search index of track point having the closest time tag smaller than
-// TIME. Optional start index can be provided.
    Int_t nabove, nbelow, middle, midloc;
    Int_t np = fNpoints>>2;
    nabove = np+1;
@@ -666,27 +689,30 @@ Int_t TGeoTrack::SearchPoint(Double_t time, Int_t istart) const
    return (nbelow-1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set drawing bits for this track
+
 void TGeoTrack::SetBits(Bool_t is_default, Bool_t is_onelevel,
                         Bool_t is_all, Bool_t is_type)
 {
-// Set drawing bits for this track
    TObject::SetBit(kGeoPDefault, is_default);
    TObject::SetBit(kGeoPOnelevel, is_onelevel);
    TObject::SetBit(kGeoPAllDaughters, is_all);
    TObject::SetBit(kGeoPType, is_type);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns 3D size for the track.
+
 void TGeoTrack::Sizeof3D() const
 {
-// Returns 3D size for the track.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset data for this track.
+
 void TGeoTrack::ResetTrack()
 {
-// Reset data for this track.
    fNpoints    = 0;
    fPointsSize = 0;
    if (fTracks) {fTracks->Delete(); delete fTracks;}

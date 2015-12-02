@@ -61,7 +61,8 @@ ClassImp(RooNonCPEigenDecay);
 #define Debug_RooNonCPEigenDecay 1
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title, 
 					RooRealVar&     t, 
 					RooAbsCategory& tag,
@@ -98,7 +99,6 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
   _genRhoPlusFrac( 0 ),
   _type     ( type )
 {
-
   // Constructor
   switch(type) {
   case SingleSided:
@@ -120,7 +120,8 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title, 
 					RooRealVar&     t, 
 					RooAbsCategory& tag,
@@ -155,7 +156,6 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
   _genRhoPlusFrac( 0 ),
   _type     ( type )
 {
-  
   // dummy mischarge (must be set to zero!)
   _wQ = RooRealProxy( "wQ", "mischarge", this, *(new RooRealVar( "wQ", "wQ", 0 )) );
 
@@ -179,7 +179,9 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooNonCPEigenDecay::RooNonCPEigenDecay( const RooNonCPEigenDecay& other, const char* name ) 
   : RooAbsAnaConvPdf( other, name ), 
   _acp      ( "acp",      this, other._acp      ),
@@ -203,26 +205,26 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const RooNonCPEigenDecay& other, const c
   _basisSin      ( other._basisSin       ),
   _basisCos      ( other._basisCos       )
 {
-  // Copy constructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooNonCPEigenDecay::~RooNonCPEigenDecay( void )
 {
-  // Destructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// B0    : _tag  == -1 
+/// B0bar : _tag  == +1 
+/// rho+  : _rhoQ == +1
+/// rho-  : _rhoQ == -1
+/// the charge corrrection factor "_correctQ" serves to implement mis-charges
+
 Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const 
 {
-  // B0    : _tag  == -1 
-  // B0bar : _tag  == +1 
-  // rho+  : _rhoQ == +1
-  // rho-  : _rhoQ == -1
-  // the charge corrrection factor "_correctQ" serves to implement mis-charges
-  
   Int_t rhoQc = _rhoQ * int(_correctQ);
   assert( rhoQc == 1 || rhoQc == -1 );
 
@@ -271,7 +273,8 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
 
 // advertise analytical integration
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooNonCPEigenDecay::getCoefAnalyticalIntegral( Int_t /*code*/, RooArgSet& allVars, 
 						     RooArgSet& analVars, const char* rangeName ) const 
 {
@@ -285,11 +288,12 @@ Int_t RooNonCPEigenDecay::getCoefAnalyticalIntegral( Int_t /*code*/, RooArgSet& 
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// correct for the right/wrong charge...
+
 Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex, 
 						     Int_t code, const char* /*rangeName*/ ) const 
 {
-  // correct for the right/wrong charge...
   Int_t rhoQc = _rhoQ*int(_correctQ);
 
   Double_t a_sin_p = _avgS + _delS;
@@ -336,7 +340,8 @@ Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooNonCPEigenDecay::getGenerator( const RooArgSet& directVars, 
 					RooArgSet&       generateVars, Bool_t staticInitOK ) const
 {
@@ -350,10 +355,10 @@ Int_t RooNonCPEigenDecay::getGenerator( const RooArgSet& directVars,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooNonCPEigenDecay::initGenerator( Int_t code )
 {
-
   if (code == 2 || code == 4) {
     // Calculate the fraction of mixed events to generate
     Double_t sumInt1 = RooRealIntegral( "sumInt1", "sum integral1", *this, 
@@ -391,10 +396,10 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooNonCPEigenDecay::generateEvent( Int_t code )
 {
-
   // Generate delta-t dependent
   while (kTRUE) {
 

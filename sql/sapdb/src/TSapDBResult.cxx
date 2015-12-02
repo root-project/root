@@ -16,11 +16,11 @@
 
 ClassImp(TSapDBResult)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SapDB query result.
+
 TSapDBResult::TSapDBResult(SQLHSTMT result, SDWORD rowCount)
 {
-   // SapDB query result.
-
    fResult     = result;
    fFieldNames = 0;
    fFieldCount = -1;
@@ -37,20 +37,20 @@ TSapDBResult::TSapDBResult(SQLHSTMT result, SDWORD rowCount)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup SapDB query result.
+
 TSapDBResult::~TSapDBResult()
 {
-   // Cleanup SapDB query result.
-
    if (fResult)
       Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close query result.
+
 void TSapDBResult::Close(Option_t *)
 {
-   // Close query result.
-
    if (!fResult)
       return;
 
@@ -61,11 +61,11 @@ void TSapDBResult::Close(Option_t *)
    fRowCount   = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if result set is open and field index within range.
+
 Bool_t TSapDBResult::IsValid(Int_t field)
 {
-   // Check if result set is open and field index within range.
-
    if (!fResult) {
       Error("IsValid", "result set closed");
       return kFALSE;
@@ -77,11 +77,11 @@ Bool_t TSapDBResult::IsValid(Int_t field)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of fields in result.
+
 Int_t TSapDBResult::GetFieldCount()
 {
-   // Get number of fields in result.
-
    if (!fResult) {
       Error("GetFieldCount", "result set closed");
       return 0;
@@ -99,11 +99,11 @@ Int_t TSapDBResult::GetFieldCount()
    return fFieldCount;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get name of specified field.
+
 const char *TSapDBResult::GetFieldName(Int_t field)
 {
-   // Get name of specified field.
-
    if (!IsValid(field))
       return 0;
 
@@ -140,12 +140,12 @@ const char *TSapDBResult::GetFieldName(Int_t field)
    return fFieldNames[field];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next query result row. The returned object must be
+/// deleted by the user.
+
 TSQLRow *TSapDBResult::Next()
 {
-   // Get next query result row. The returned object must be
-   // deleted by the user.
-
    if (!fResult) {
       Error("Next", "result set closed");
       return 0;

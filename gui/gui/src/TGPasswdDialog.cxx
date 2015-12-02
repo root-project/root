@@ -50,12 +50,12 @@
 
 ClassImp(TGPasswdDialog)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an editor in a dialog.
+
 TGPasswdDialog::TGPasswdDialog(const char *prompt, char *pwdbuf, Int_t pwdlenmax,
                                UInt_t w, UInt_t h)
 {
-   // Create an editor in a dialog.
-
    fPwdBuf = pwdbuf;
    fPwdLenMax = pwdlenmax;
 
@@ -115,36 +115,36 @@ TGPasswdDialog::TGPasswdDialog(const char *prompt, char *pwdbuf, Int_t pwdlenmax
    fDialog->MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete log window.
+
 TGPasswdDialog::~TGPasswdDialog()
 {
-   // Delete log window.
-
    DoClose();
    delete fDialog;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle close button.
+
 void TGPasswdDialog::DoClose()
 {
-   // Handle close button.
-
    fDialog->SendCloseMessage();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when closed via window manager action.
+
 void TGPasswdDialog::CloseWindow()
 {
-   // Called when closed via window manager action.
-
    delete this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle return
+
 void TGPasswdDialog::ReturnPressed()
 {
-   // Handle return
-
    if (fPwdBuf) {
       Int_t len = strlen(fPasswdText->GetString());
       len = (len < (fPwdLenMax - 1)) ? len : fPwdLenMax - 1;

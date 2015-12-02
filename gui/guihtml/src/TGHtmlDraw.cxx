@@ -40,11 +40,11 @@
 #include "TImage.h"
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ctor.
+
 TGHtmlBlock::TGHtmlBlock() : TGHtmlElement(Html_Block)
 {
-   // ctor.
-
    fZ = NULL;
    fTop = fBottom = 0;
    fLeft = fRight = 0;
@@ -53,21 +53,21 @@ TGHtmlBlock::TGHtmlBlock() : TGHtmlElement(Html_Block)
    fBPrev = fBNext = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dtor.
+
 TGHtmlBlock::~TGHtmlBlock()
 {
-   // dtor.
-
    if (fZ) delete[] fZ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy the given Block after first unlinking it from the element list.
+/// Note that this unlinks the block from the element list only -- not from
+/// the block list.
+
 void TGHtml::UnlinkAndFreeBlock(TGHtmlBlock *pBlock)
 {
-   // Destroy the given Block after first unlinking it from the element list.
-   // Note that this unlinks the block from the element list only -- not from
-   // the block list.
-
    if (pBlock->fPNext) {
       pBlock->fPNext->fPPrev = pBlock->fPPrev;
    } else {
@@ -82,15 +82,15 @@ void TGHtml::UnlinkAndFreeBlock(TGHtmlBlock *pBlock)
    delete pBlock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Append a block to the block list and insert the block into the
+/// element list immediately prior to the element given.
+///
+/// pToken - The token that comes after pBlock
+/// pBlock - The block to be appended
+
 void TGHtml::AppendBlock(TGHtmlElement *pToken, TGHtmlBlock *pBlock)
 {
-   // Append a block to the block list and insert the block into the
-   // element list immediately prior to the element given.
-   //
-   // pToken - The token that comes after pBlock
-   // pBlock - The block to be appended
-
    pBlock->fPPrev = pToken->fPPrev;
    pBlock->fPNext = pToken;
    pBlock->fBPrev = fLastBlock;
@@ -109,16 +109,16 @@ void TGHtml::AppendBlock(TGHtmlElement *pToken, TGHtmlBlock *pBlock)
    pToken->fPPrev = (TGHtmlElement *) pBlock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print an ordered list index into the given buffer. Use numbering
+/// like this:
+///
+///     A  B  C ... Y Z AA BB CC ... ZZ
+///
+/// Revert to decimal for indices greater than 52.
+
 static void GetLetterIndex(char *zBuf, int index, int isUpper)
 {
-   // Print an ordered list index into the given buffer. Use numbering
-   // like this:
-   //
-   //     A  B  C ... Y Z AA BB CC ... ZZ
-   //
-   // Revert to decimal for indices greater than 52.
-
    int seed;
 
    if (index < 1 || index > 52) {
@@ -148,13 +148,13 @@ static void GetLetterIndex(char *zBuf, int index, int isUpper)
    strcat(zBuf, ".");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print an ordered list index into the given buffer.  Use roman
+/// numerals.  For indices greater than a few thousand, revert to
+/// decimal.
+
 static void GetRomanIndex(char *zBuf, int index, int isUpper)
 {
-   // Print an ordered list index into the given buffer.  Use roman
-   // numerals.  For indices greater than a few thousand, revert to
-   // decimal.
-
    int i = 0;
    UInt_t j;
 
@@ -207,14 +207,14 @@ static void GetRomanIndex(char *zBuf, int index, int isUpper)
    strcat(zBuf, ".");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the selection background for the given block
+///
+/// x, y - Virtual coords of top-left of drawable
+
 void TGHtml::DrawSelectionBackground(TGHtmlBlock *pBlock, Drawable_t drawable,
                                      int x, int y)
 {
-   // Draw the selection background for the given block
-   //
-   // x, y - Virtual coords of top-left of drawable
-
    int xLeft, xRight;        // Left and right bounds of box to draw
    int yTop, yBottom;        // Top and bottom of box
    TGHtmlElement *p = 0;     // First element of the block
@@ -256,15 +256,15 @@ void TGHtml::DrawSelectionBackground(TGHtmlBlock *pBlock, Drawable_t drawable,
    gVirtualX->FillRectangle(drawable, gc, xx, yy, width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a rectangle. The rectangle will have a 3-D appearance if
+/// flat is 0 and a flat appearance if flat is 1.
+///
+/// depth - width of the relief or the flat line
+
 void TGHtml::DrawRect(Drawable_t drawable, TGHtmlElement *src,
                       int x, int y, int w, int h, int depth, int relief)
 {
-   // Draw a rectangle. The rectangle will have a 3-D appearance if
-   // flat is 0 and a flat appearance if flat is 1.
-   //
-   // depth - width of the relief or the flat line
-
    Int_t xx, yy;
    UInt_t width, height;
 
@@ -310,14 +310,14 @@ void TGHtml::DrawRect(Drawable_t drawable, TGHtmlElement *src,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display a single HtmlBlock. This is where all the drawing happens.
+
 void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
                        int drawableLeft, int drawableTop,
                        int drawableWidth, int drawableHeight,
                        Pixmap_t pixmap)
 {
-   // Display a single HtmlBlock. This is where all the drawing happens.
-
    TGFont *font;           // Font to use to render text
    GContext_t gc;          // A graphics context
    TGHtmlElement *src;     // TGHtmlElement holding style information
@@ -532,13 +532,13 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw all or part of an image.
+
 void TGHtml::DrawImage(TGHtmlImageMarkup *image, Drawable_t drawable,
                        int drawableLeft, int drawableTop,
                        int drawableRight, int drawableBottom)
 {
-   // Draw all or part of an image.
-
    int imageTop;          // virtual canvas coordinate for top of image
    int x, y;              // where to place image on the drawable
    int imageX, imageY;    // \__  Subset of image that fits
@@ -583,12 +583,12 @@ void TGHtml::DrawImage(TGHtmlImageMarkup *image, Drawable_t drawable,
    image->fRedrawNeeded = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///TGImage *img = image->image;
+
 void TGHtml::AnimateImage(TGHtmlImage * /*image*/)
 {
-   //
-  //TGImage *img = image->image;
-
   //if (!img->IsAnimated()) return;
   //img->NextFrame();
   //delete image->timer;
@@ -596,25 +596,25 @@ void TGHtml::AnimateImage(TGHtmlImage * /*image*/)
   //ImageChanged(image, image->fW, image->fH);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recompute the following fields of the given block structure:
+///
+///    base.count         The number of elements described by this
+///                       block structure.
+///
+///    n                  The number of characters of text output
+///                       associated with this block.  If the block
+///                       renders something other than text (ex: <IMG>)
+///                       then set n to 0.
+///
+///    z                  Pointer to malloced memory containing the
+///                       text associated with this block.  NULL if
+///                       n is 0.
+///
+/// Return a pointer to the first TGHtmlElement not covered by the block.
+
 TGHtmlElement *TGHtml::FillOutBlock(TGHtmlBlock *p)
 {
-   // Recompute the following fields of the given block structure:
-   //
-   //    base.count         The number of elements described by this
-   //                       block structure.
-   //
-   //    n                  The number of characters of text output
-   //                       associated with this block.  If the block
-   //                       renders something other than text (ex: <IMG>)
-   //                       then set n to 0.
-   //
-   //    z                  Pointer to malloced memory containing the
-   //                       text associated with this block.  NULL if
-   //                       n is 0.
-   //
-   // Return a pointer to the first TGHtmlElement not covered by the block.
-
 
    TGHtmlElement *pElem;
    int go, i, n, x, y;
@@ -793,17 +793,17 @@ TGHtmlElement *TGHtml::FillOutBlock(TGHtmlBlock *p)
    return pElem;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scan ahead looking for a place to put a block.  Return a pointer
+/// to the element which should come immediately after the block.
+///
+/// if pCnt != 0, then put the number of elements skipped in *pCnt.
+///
+/// p    - First candidate for the start of a block
+/// pCnt - Write number of elements skipped here
+
 TGHtmlElement *TGHtml::FindStartOfNextBlock(TGHtmlElement *p, int *pCnt)
 {
-   // Scan ahead looking for a place to put a block.  Return a pointer
-   // to the element which should come immediately after the block.
-   //
-   // if pCnt != 0, then put the number of elements skipped in *pCnt.
-   //
-   // p    - First candidate for the start of a block
-   // pCnt - Write number of elements skipped here
-
    int cnt = 0;
 
    while (p && (p->fFlags & HTML_Visible) == 0) {
@@ -820,15 +820,15 @@ TGHtmlElement *TGHtml::FindStartOfNextBlock(TGHtmlElement *p, int *pCnt)
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add additional blocks to the block list in order to cover
+/// all elements on the element list.
+///
+/// If any old blocks are found on the element list, they must
+/// be left over from a prior rendering.  Unlink and delete them.
+
 void TGHtml::FormBlocks()
 {
-   // Add additional blocks to the block list in order to cover
-   // all elements on the element list.
-   //
-   // If any old blocks are found on the element list, they must
-   // be left over from a prior rendering.  Unlink and delete them.
-
    TGHtmlElement *pElem;
 
    if (fLastBlock) {
@@ -850,12 +850,12 @@ void TGHtml::FormBlocks()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw table background
+
 void TGHtml::DrawTableBgnd(int l, int t, int w, int h,
                            Drawable_t pixmap, TImage *image)
 {
-   // Draw table background
-
    //int  mx, my, sh, sw, sx, sy, hd;
    int dl, dt, dr, db,  left, top, right, bottom;
 

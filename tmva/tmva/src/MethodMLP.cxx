@@ -72,7 +72,9 @@ ClassImp(TMVA::MethodMLP)
 
 using std::vector;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor
+
 TMVA::MethodMLP::MethodMLP( const TString& jobName,
                             const TString& methodTitle,
                             DataSetInfo& theData,
@@ -93,10 +95,11 @@ TMVA::MethodMLP::MethodMLP( const TString& jobName,
      fDeviationsFromTargets(0),
      fWeightRange     (1.0)
 {
-   // standard constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from a weight file
+
 TMVA::MethodMLP::MethodMLP( DataSetInfo& theData,
                             const TString& theWeightFile,
                             TDirectory* theTargetDir )
@@ -115,20 +118,21 @@ TMVA::MethodMLP::MethodMLP( DataSetInfo& theData,
      fDeviationsFromTargets(0),
      fWeightRange     (1.0)
 {
-   // constructor from a weight file
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+/// nothing to be done
+
 TMVA::MethodMLP::~MethodMLP()
 {
-   // destructor
-   // nothing to be done
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MLP can handle classification with 2 classes and regression with one regression-target
+
 Bool_t TMVA::MethodMLP::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
 {
-   // MLP can handle classification with 2 classes and regression with one regression-target
    if (type == Types::kClassification && numberClasses == 2 ) return kTRUE;
    if (type == Types::kMulticlass ) return kTRUE;
    if (type == Types::kRegression ) return kTRUE;
@@ -136,11 +140,11 @@ Bool_t TMVA::MethodMLP::HasAnalysisType( Types::EAnalysisType type, UInt_t numbe
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default initializations
+
 void TMVA::MethodMLP::Init()
 {
-   // default initializations
-
    // the minimum requirement to declare an event signal-like
    SetSignalReferenceCut( 0.5 );
 #ifdef MethodMLP_UseMinuit__
@@ -148,26 +152,26 @@ void TMVA::MethodMLP::Init()
 #endif
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define the options (their key words) that can be set in the option string
+/// know options:
+/// TrainingMethod  <string>     Training method
+///    available values are:         BP   Back-Propagation <default>
+///                                  GA   Genetic Algorithm (takes a LONG time)
+///
+/// LearningRate    <float>      NN learning rate parameter
+/// DecayRate       <float>      Decay rate for learning parameter
+/// TestRate        <int>        Test for overtraining performed at each #th epochs
+///
+/// BPMode          <string>     Back-propagation learning mode
+///    available values are:         sequential <default>
+///                                  batch
+///
+/// BatchSize       <int>        Batch size: number of events/batch, only set if in Batch Mode,
+///                                          -1 for BatchSize=number_of_events
+
 void TMVA::MethodMLP::DeclareOptions()
 {
-   // define the options (their key words) that can be set in the option string
-   // know options:
-   // TrainingMethod  <string>     Training method
-   //    available values are:         BP   Back-Propagation <default>
-   //                                  GA   Genetic Algorithm (takes a LONG time)
-   //
-   // LearningRate    <float>      NN learning rate parameter
-   // DecayRate       <float>      Decay rate for learning parameter
-   // TestRate        <int>        Test for overtraining performed at each #th epochs
-   //
-   // BPMode          <string>     Back-propagation learning mode
-   //    available values are:         sequential <default>
-   //                                  batch
-   //
-   // BatchSize       <int>        Batch size: number of events/batch, only set if in Batch Mode,
-   //                                          -1 for BatchSize=number_of_events
-
    DeclareOptionRef(fTrainMethodS="BP", "TrainingMethod",
                     "Train with Back-Propagation (BP), BFGS Algorithm (BFGS), or Genetic Algorithm (GA - slower and worse)");
    AddPreDefVal(TString("BP"));
@@ -215,10 +219,11 @@ void TMVA::MethodMLP::DeclareOptions()
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// process user options
+
 void TMVA::MethodMLP::ProcessOptions()
 {
-   // process user options
    MethodANNBase::ProcessOptions();
 
 
@@ -245,10 +250,11 @@ void TMVA::MethodMLP::ProcessOptions()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialize learning rates of synapses, used only by backpropagation
+
 void TMVA::MethodMLP::InitializeLearningRates()
 {
-   // initialize learning rates of synapses, used only by backpropagation
    Log() << kDEBUG << "Initialize learning rates" << Endl;
    TSynapse *synapse;
    Int_t numSynapses = fSynapses->GetEntriesFast();
@@ -258,11 +264,11 @@ void TMVA::MethodMLP::InitializeLearningRates()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the estimator that training is attempting to minimize
+
 Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t iEpoch )
 {
-   // calculate the estimator that training is attempting to minimize
-
    // sanity check
    if (treeType!=Types::kTraining && treeType!=Types::kTesting) {
       Log() << kFATAL << "<CalculateEstimator> fatal error: wrong tree type: " << treeType << Endl;
@@ -405,7 +411,8 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
    return estimator;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodMLP::Train(Int_t nEpochs)
 {
    if (fNetwork == 0) {
@@ -446,11 +453,11 @@ void TMVA::MethodMLP::Train(Int_t nEpochs)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// train network with BFGS algorithm
+
 void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
 {
-   // train network with BFGS algorithm
-
    Timer timer( (fSteps>0?100:nEpochs), GetName() );
 
    // create histograms for overtraining monitoring
@@ -623,7 +630,8 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodMLP::SetGammaDelta( TMatrixD &Gamma, TMatrixD &Delta, std::vector<Double_t> &buffer )
 {
    Int_t nWeights = fSynapses->GetEntriesFast();
@@ -647,7 +655,8 @@ void TMVA::MethodMLP::SetGammaDelta( TMatrixD &Gamma, TMatrixD &Delta, std::vect
       }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodMLP::ComputeDEDw()
 {
    Int_t nSynapses = fSynapses->GetEntriesFast();
@@ -683,7 +692,8 @@ void TMVA::MethodMLP::ComputeDEDw()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodMLP::SimulateEvent( const Event* ev )
 {
    Double_t eventWeight = ev->GetWeight();
@@ -722,7 +732,8 @@ void TMVA::MethodMLP::SimulateEvent( const Event* ev )
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodMLP::SteepestDir( TMatrixD &Dir )
 {
    Int_t IDX = 0;
@@ -734,7 +745,8 @@ void TMVA::MethodMLP::SteepestDir( TMatrixD &Dir )
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMVA::MethodMLP::GetHessian( TMatrixD &Hessian, TMatrixD &Gamma, TMatrixD &Delta )
 {
    TMatrixD gd(Gamma, TMatrixD::kTransposeMult, Delta);
@@ -754,7 +766,8 @@ Bool_t TMVA::MethodMLP::GetHessian( TMatrixD &Hessian, TMatrixD &Gamma, TMatrixD
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodMLP::SetDir( TMatrixD &Hessian, TMatrixD &dir )
 {
    Int_t IDX = 0;
@@ -770,7 +783,8 @@ void TMVA::MethodMLP::SetDir( TMatrixD &Hessian, TMatrixD &dir )
    for (Int_t i=0;i<IDX;i++) dir[i][0] = -dir[i][0];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::MethodMLP::DerivDir( TMatrixD &Dir )
 {
    Int_t IDX = 0;
@@ -784,7 +798,8 @@ Double_t TMVA::MethodMLP::DerivDir( TMatrixD &Dir )
    return Result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMVA::MethodMLP::LineSearch(TMatrixD &Dir, std::vector<Double_t> &buffer, Double_t* dError)
 {
    Int_t IDX = 0;
@@ -893,7 +908,8 @@ Bool_t TMVA::MethodMLP::LineSearch(TMatrixD &Dir, std::vector<Double_t> &buffer,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodMLP::SetDirWeights( std::vector<Double_t> &Origin, TMatrixD &Dir, Double_t alpha )
 {
    Int_t IDX = 0;
@@ -908,7 +924,8 @@ void TMVA::MethodMLP::SetDirWeights( std::vector<Double_t> &Origin, TMatrixD &Di
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::MethodMLP::GetError()
 {
    Int_t nEvents = GetNEvents();
@@ -944,7 +961,8 @@ Double_t TMVA::MethodMLP::GetError()
    return Result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::MethodMLP::GetMSEErr( const Event* ev, UInt_t index )
 {
    Double_t error = 0;
@@ -960,7 +978,8 @@ Double_t TMVA::MethodMLP::GetMSEErr( const Event* ev, UInt_t index )
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::MethodMLP::GetCEErr( const Event* ev, UInt_t index )  //zjh
 {
    Double_t error = 0;
@@ -975,11 +994,11 @@ Double_t TMVA::MethodMLP::GetCEErr( const Event* ev, UInt_t index )  //zjh
    return error;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// minimize estimator / train network with backpropagation algorithm
+
 void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
 {
-   // minimize estimator / train network with backpropagation algorithm
-
    //    Timer timer( nEpochs, GetName() );
    Timer timer( (fSteps>0?100:nEpochs), GetName() );
    Int_t lateEpoch = (Int_t)(nEpochs*0.95) - 1;
@@ -1073,11 +1092,11 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// train network over a single epoch/cyle of events
+
 void TMVA::MethodMLP::TrainOneEpoch()
 {
-   // train network over a single epoch/cyle of events
-
    Int_t nEvents = Data()->GetNEvents();
 
    // randomize the order events will be presented, important for sequential mode
@@ -1115,16 +1134,16 @@ void TMVA::MethodMLP::TrainOneEpoch()
    delete[] index;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Input:
+///   index: the array to shuffle
+///   n: the size of the array
+/// Output:
+///   index: the shuffled indexes
+/// This method is used for sequential training
+
 void TMVA::MethodMLP::Shuffle(Int_t* index, Int_t n)
 {
-   // Input:
-   //   index: the array to shuffle
-   //   n: the size of the array
-   // Output:
-   //   index: the shuffled indexes
-   // This method is used for sequential training
-
    Int_t j, k;
    Int_t a = n - 1;
    for (Int_t i = 0; i < n; i++) {
@@ -1137,12 +1156,12 @@ void TMVA::MethodMLP::Shuffle(Int_t* index, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// decay synapse weights
+/// in last 10 epochs, lower learning rate even more to find a good minimum
+
 void TMVA::MethodMLP::DecaySynapseWeights(Bool_t lateEpoch)
 {
-   // decay synapse weights
-   // in last 10 epochs, lower learning rate even more to find a good minimum
-
    TSynapse* synapse;
    Int_t numSynapses = fSynapses->GetEntriesFast();
    for (Int_t i = 0; i < numSynapses; i++) {
@@ -1152,11 +1171,11 @@ void TMVA::MethodMLP::DecaySynapseWeights(Bool_t lateEpoch)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// fast per-event training
+
 void TMVA::MethodMLP::TrainOneEventFast(Int_t ievt, Float_t*& branchVar, Int_t& type)
 {
-   // fast per-event training
-
    GetEvent(ievt);
 
    // as soon as we know how to get event weights, get that here
@@ -1187,12 +1206,12 @@ void TMVA::MethodMLP::TrainOneEventFast(Int_t ievt, Float_t*& branchVar, Int_t& 
    UpdateNetwork(desired, eventWeight);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// train network over a single event
+/// this uses the new event model
+
 void TMVA::MethodMLP::TrainOneEvent(Int_t ievt)
 {
-   // train network over a single event
-   // this uses the new event model
-
    // note: the normalization of event weights will affect the choice
    // of learning rate, one will have to experiment to get the right value.
    // in general, if the "average" event weight is 1, the learning rate
@@ -1207,19 +1226,21 @@ void TMVA::MethodMLP::TrainOneEvent(Int_t ievt)
    else                UpdateNetwork( GetDesiredOutput( ev ), eventWeight );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the desired output of this event
+
 Double_t TMVA::MethodMLP::GetDesiredOutput( const Event* ev )
 {
-   // get the desired output of this event
    return DataInfo().IsSignal(ev)?fOutput->GetMax():fOutput->GetMin(); //zjh
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// update the network based on how closely
+/// the output matched the desired output
+
 void TMVA::MethodMLP::UpdateNetwork(Double_t desired, Double_t eventWeight)
 {
-   // update the network based on how closely
-   // the output matched the desired output
    Double_t error = GetOutputNeuron()->GetActivationValue() - desired;
    if (fEstimator==kMSE)  error = GetOutputNeuron()->GetActivationValue() - desired ;  //zjh
    else if (fEstimator==kCE)  error = -1./(GetOutputNeuron()->GetActivationValue() -1 + desired); //zjh
@@ -1230,11 +1251,12 @@ void TMVA::MethodMLP::UpdateNetwork(Double_t desired, Double_t eventWeight)
    UpdateSynapses();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// update the network based on how closely
+/// the output matched the desired output
+
 void TMVA::MethodMLP::UpdateNetwork(const std::vector<Float_t>& desired, Double_t eventWeight)
 {
-   // update the network based on how closely
-   // the output matched the desired output
    for (UInt_t i = 0, iEnd = desired.size(); i < iEnd; ++i) {
       Double_t error = GetOutputNeuron( i )->GetActivationValue() - desired.at(i);
       error *= eventWeight;
@@ -1245,11 +1267,11 @@ void TMVA::MethodMLP::UpdateNetwork(const std::vector<Float_t>& desired, Double_
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// have each neuron calculate its delta by backpropagation
+
 void TMVA::MethodMLP::CalculateNeuronDeltas()
 {
-   // have each neuron calculate its delta by backpropagation
-
    TNeuron* neuron;
    Int_t    numNeurons;
    Int_t    numLayers = fNetwork->GetEntriesFast();
@@ -1268,16 +1290,16 @@ void TMVA::MethodMLP::CalculateNeuronDeltas()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create genetics class similar to GeneticCut
+/// give it vector of parameter ranges (parameters = weights)
+/// link fitness function of this class to ComputeEstimator
+/// instantiate GA (see MethodCuts)
+/// run it
+/// then this should exist for GA, Minuit and random sampling
+
 void TMVA::MethodMLP::GeneticMinimize()
 {
-   // create genetics class similar to GeneticCut
-   // give it vector of parameter ranges (parameters = weights)
-   // link fitness function of this class to ComputeEstimator
-   // instantiate GA (see MethodCuts)
-   // run it
-   // then this should exist for GA, Minuit and random sampling
-
    PrintMessage("Minimizing Estimator with GA");
 
    // define GA parameters
@@ -1302,18 +1324,19 @@ void TMVA::MethodMLP::GeneticMinimize()
    Log() << kINFO << "GA: estimator after optimization: " << estimator << Endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// interface to the estimate
+
 Double_t TMVA::MethodMLP::EstimatorFunction( std::vector<Double_t>& parameters)
 {
-   // interface to the estimate
    return ComputeEstimator( parameters );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// this function is called by GeneticANN for GA optimization
+
 Double_t TMVA::MethodMLP::ComputeEstimator( std::vector<Double_t>& parameters)
 {
-   // this function is called by GeneticANN for GA optimization
-
    TSynapse* synapse;
    Int_t numSynapses = fSynapses->GetEntriesFast();
 
@@ -1328,11 +1351,11 @@ Double_t TMVA::MethodMLP::ComputeEstimator( std::vector<Double_t>& parameters)
    return estimator;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// update synapse error fields and adjust the weights (if in sequential mode)
+
 void TMVA::MethodMLP::UpdateSynapses()
 {
-   // update synapse error fields and adjust the weights (if in sequential mode)
-
    TNeuron* neuron;
    Int_t numNeurons;
    TObjArray* curLayer;
@@ -1350,11 +1373,11 @@ void TMVA::MethodMLP::UpdateSynapses()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just adjust the synapse weights (should be called in batch mode)
+
 void TMVA::MethodMLP::AdjustSynapseWeights()
 {
-   // just adjust the synapse weights (should be called in batch mode)
-
    TNeuron* neuron;
    Int_t numNeurons;
    TObjArray* curLayer;
@@ -1371,7 +1394,8 @@ void TMVA::MethodMLP::AdjustSynapseWeights()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodMLP::UpdatePriors()  //zjh
 {
    fPrior=0;
@@ -1384,7 +1408,8 @@ void TMVA::MethodMLP::UpdatePriors()  //zjh
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodMLP::UpdateRegulators()  //zjh
 {
    TMatrixD InvH(0,0);
@@ -1423,7 +1448,8 @@ void TMVA::MethodMLP::UpdateRegulators()  //zjh
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodMLP::GetApproxInvHessian(TMatrixD& InvHessian, bool regulate)  //zjh
 {
    Int_t numSynapses=fSynapses->GetEntriesFast();
@@ -1463,7 +1489,8 @@ void TMVA::MethodMLP::GetApproxInvHessian(TMatrixD& InvHessian, bool regulate)  
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::MethodMLP::GetMvaValue( Double_t* errLower, Double_t* errUpper )
 {
   Double_t MvaValue = MethodANNBase::GetMvaValue();// contains back propagation
@@ -1515,10 +1542,11 @@ Double_t TMVA::MethodMLP::GetMvaValue( Double_t* errLower, Double_t* errUpper )
 
 #ifdef MethodMLP_UseMinuit__
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// minimize using Minuit
+
 void TMVA::MethodMLP::MinuitMinimize()
 {
-   // minimize using Minuit
    fNumberOfWeights = fSynapses->GetEntriesFast();
 
    TFitter* tfitter = new TFitter( fNumberOfWeights );
@@ -1604,30 +1632,33 @@ void TMVA::MethodMLP::FCN( Int_t& npars, Double_t* grad, Double_t &f, Double_t* 
    Log() << kDEBUG << "***** New estimator: " << f << "  min: " << minf << " --> ncalls: " << nc << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// global "this" pointer to be used in minuit
+
 TMVA::MethodMLP* TMVA::MethodMLP::GetThisPtr()
 {
-   // global "this" pointer to be used in minuit
    return fgThis;
 }
 
 #endif
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write specific classifier response
+
 void TMVA::MethodMLP::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
-   // write specific classifier response
    MethodANNBase::MakeClassSpecific(fout, className);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get help message text
+///
+/// typical length of text line:
+///         "|--------------------------------------------------------------|"
+
 void TMVA::MethodMLP::GetHelpMessage() const
 {
-   // get help message text
-   //
-   // typical length of text line:
-   //         "|--------------------------------------------------------------|"
    TString col    = gConfig().WriteOptionsReference() ? TString() : gTools().Color("bold");
    TString colres = gConfig().WriteOptionsReference() ? TString() : gTools().Color("reset");
 

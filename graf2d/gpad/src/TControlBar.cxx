@@ -91,11 +91,11 @@
 ClassImp(TControlBar)
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TControlBar::TControlBar() : TControlBarButton()
 {
-   // Default constructor.
-
    fControlBarImp = 0;
    fOrientation   = 0;
    fButtons       = 0;
@@ -103,7 +103,8 @@ TControlBar::TControlBar() : TControlBarButton()
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TControlBar::TControlBar(const char *orientation, const char *title)
             : TControlBarButton(title, "", "", "button")
 
@@ -115,7 +116,8 @@ TControlBar::TControlBar(const char *orientation, const char *title)
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TControlBar::TControlBar(const char *orientation, const char *title, Int_t x, Int_t y)
             : TControlBarButton(title, "", "", "button")
 
@@ -129,11 +131,11 @@ TControlBar::TControlBar(const char *orientation, const char *title, Int_t x, In
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TControlBar::~TControlBar()
 {
-   // Destructor.
-
    delete fControlBarImp;
 
    if( fButtons )
@@ -144,88 +146,89 @@ TControlBar::~TControlBar()
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add button.
+
 void TControlBar::AddButton(TControlBarButton &button)
 {
-   // Add button.
-
    AddButton( &button );
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add button.
+
 void TControlBar::AddButton(TControlBarButton *button)
 {
-   // Add button.
-
    if( fButtons && button )
       fButtons->Add( button );
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add button.
+
 void TControlBar::AddButton(const char *label, const char *action, const char *hint, const char *type)
 {
-   // Add button.
-
    TControlBarButton *button = new TControlBarButton( label, action, hint, type );
    AddButton( button );
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add controlbar.
+
 void TControlBar::AddControlBar(TControlBar &controlBar)
 {
-   // Add controlbar.
-
    AddControlBar( &controlBar );
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add controlbar.
+
 void TControlBar::AddControlBar(TControlBar *controlBar)
 {
-   // Add controlbar.
-
    if( fButtons && controlBar )
       fButtons->Add( controlBar );
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add separator.
+
 void TControlBar::AddSeparator()
 {
-   // Add separator.
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create controlbar.
+
 void TControlBar::Create()
 {
-   // Create controlbar.
-
    if( fControlBarImp ) {
       fControlBarImp->Create();
    }
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hide controlbar.
+
 void TControlBar::Hide()
 {
-   // Hide controlbar.
-
    if( fControlBarImp ) {
       fControlBarImp->Hide();
    }
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize controlbar.
+
 void TControlBar::Initialize(Int_t x, Int_t y)
 {
-   // Initialize controlbar.
-
    // Load and initialize graphics libraries if
    // TApplication::NeedGraphicsLibs() has been called by a
    // library static initializer.
@@ -243,40 +246,40 @@ void TControlBar::Initialize(Int_t x, Int_t y)
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets new font for control bar buttons, e.g.:
+/// root > .x tutorials/demos.C
+/// root > bar->SetFont("-adobe-helvetica-bold-r-*-*-24-*-*-*-*-*-iso8859-1")
+
 void TControlBar::SetFont(const char *fontName)
 {
-   // Sets new font for control bar buttons, e.g.:
-   // root > .x tutorials/demos.C
-   // root > bar->SetFont("-adobe-helvetica-bold-r-*-*-24-*-*-*-*-*-iso8859-1")
-
    fControlBarImp->SetFont(fontName);
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets text color for control bar buttons, e.g.:
+/// root > .x tutorials/demos.C
+/// root > bar->SetTextColor("red")
+
 void TControlBar::SetTextColor(const char *colorName)
 {
-   // Sets text color for control bar buttons, e.g.:
-   // root > .x tutorials/demos.C
-   // root > bar->SetTextColor("red")
-
    fControlBarImp->SetTextColor(colorName);
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets a state for control bar button 'label'; possible states are
+/// 0-kButtonUp, 1-kButtonDown, 2-kButtonEngaged, 3-kButtonDisabled,
+/// e.g.:
+/// root > .x tutorials/demos.C
+/// to disable the button 'first' do:
+/// root > bar->SetButtonState("first", 3)
+/// to enable the button 'first' do:
+/// root > bar->SetButtonState("first", 0)
+
 void TControlBar::SetButtonState(const char *label, Int_t state)
 {
-   // Sets a state for control bar button 'label'; possible states are
-   // 0-kButtonUp, 1-kButtonDown, 2-kButtonEngaged, 3-kButtonDisabled,
-   // e.g.:
-   // root > .x tutorials/demos.C
-   // to disable the button 'first' do:
-   // root > bar->SetButtonState("first", 3)
-   // to enable the button 'first' do:
-   // root > bar->SetButtonState("first", 0)
-
    if (state > 3) {
       Error("SetButtonState", "not valid button state (expecting 0, 1, 2 or 3)");
       return;
@@ -285,20 +288,20 @@ void TControlBar::SetButtonState(const char *label, Int_t state)
 }
 
 
- //_______________________________________________________________________
+ ///////////////////////////////////////////////////////////////////////////////
+ /// Sets the width in pixels for control bar button.
+
 void TControlBar::SetButtonWidth(UInt_t width)
 {
-   // Sets the width in pixels for control bar button.
-
    fControlBarImp->SetButtonWidth(width);
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set controlbar orientation.
+
 void TControlBar::SetOrientation(const char *o)
 {
-   // Set controlbar orientation.
-
    fOrientation = kVertical;
 
    if( *o ) {
@@ -313,11 +316,11 @@ void TControlBar::SetOrientation(const char *o)
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set controlbar orientation.
+
 void TControlBar::SetOrientation(Int_t o)
 {
-   // Set controlbar orientation.
-
    fOrientation = kVertical;
 
    if( ( o == kVertical ) || ( o == kHorizontal ) )
@@ -329,22 +332,22 @@ void TControlBar::SetOrientation(Int_t o)
 
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show controlbar.
+
 void TControlBar::Show()
 {
-   // Show controlbar.
-
    if( fControlBarImp )
       fControlBarImp->Show();
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a pointer to the last clicked controlbar button;
+/// null if no button was clicked yet
+
 TControlBarButton *TControlBar::GetClicked() const
 {
-   // Returns a pointer to the last clicked controlbar button;
-   // null if no button was clicked yet
-
    if (!fControlBarImp->GetClicked())
       Printf("None of the controlbar buttons is clicked yet");
    return fControlBarImp->GetClicked();

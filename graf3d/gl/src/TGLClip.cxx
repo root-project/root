@@ -85,41 +85,42 @@ public:
 
 ClassImp(TGLClip);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a stand-alone physical clipping object.
+
 TGLClip::TGLClip(const TGLLogicalShape & logical, const TGLMatrix & transform, const float color[4]) :
    TGLPhysicalShape(0, logical, transform, kTRUE, color),
    fMode      (kInside),
    fTimeStamp (1),
    fValid     (kFALSE)
 {
-   // Construct a stand-alone physical clipping object.
-
    logical.StrongRef(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy clip object.
+
 TGLClip::~TGLClip()
 {
-   // Destroy clip object.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup the clipping object with two vectors.
+/// The interpretation of the two is different for plane and box
+/// clipping objects.
+
 void TGLClip::Setup(const TGLVector3&, const TGLVector3&)
 {
-   // Setup the clipping object with two vectors.
-   // The interpretation of the two is different for plane and box
-   // clipping objects.
-
    Warning("TGLClip::Setup", "Called on base-class -- should be re-implemented in derived class.");
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw out clipping object with blending and back + front filling.
+/// Some clip objects are single face which we want to see both sides of.
+
 void TGLClip::Draw(TGLRnrCtx & rnrCtx) const
 {
-   // Draw out clipping object with blending and back + front filling.
-   // Some clip objects are single face which we want to see both sides of.
-
    glDepthMask(GL_FALSE);
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -148,23 +149,23 @@ ClassImp(TGLClipPlane);
 
 const float TGLClipPlane::fgColor[4] = { 1.0, 0.6, 0.2, 0.5 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a clip plane object, based on supplied 'plane', with
+/// initial manipulation pivot at 'center', with drawn extents (in
+/// local x/y axes) of 'extents'
+///
+/// Plane can have center pivot translated in all directions, and
+/// rotated round center in X/Y axes , the in-plane axes. It cannot
+/// be scaled
+///
+/// Note theorectically a plane is of course infinite - however we
+/// want to draw the object in viewer - so we fake it with a single
+/// GL face (polygon) - extents defines the width/depth of this -
+/// should be several times scene extents - see Setup().
+
 TGLClipPlane::TGLClipPlane() :
    TGLClip(* new TGLClipPlaneLogical, TGLMatrix(), fgColor)
 {
-   // Construct a clip plane object, based on supplied 'plane', with
-   // initial manipulation pivot at 'center', with drawn extents (in
-   // local x/y axes) of 'extents'
-   //
-   // Plane can have center pivot translated in all directions, and
-   // rotated round center in X/Y axes , the in-plane axes. It cannot
-   // be scaled
-   //
-   // Note theorectically a plane is of course infinite - however we
-   // want to draw the object in viewer - so we fake it with a single
-   // GL face (polygon) - extents defines the width/depth of this -
-   // should be several times scene extents - see Setup().
-
    SetManip(EManip(kTranslateAll | kRotateX | kRotateY));
 
    TGLPlane plane(0.0, -1.0, 0.0, 0.0);
@@ -172,17 +173,18 @@ TGLClipPlane::TGLClipPlane() :
    fValid = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy clip plane object
+
 TGLClipPlane::~TGLClipPlane()
 {
-   // Destroy clip plane object
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup the clip object for scene encompassed by bbox.
+
 void TGLClipPlane::Setup(const TGLBoundingBox & bbox)
 {
-   // Setup the clip object for scene encompassed by bbox.
-
    Double_t extents = bbox.Extents().Mag();
    TGLClipPlaneLogical* cpl = (TGLClipPlaneLogical*) GetLogical();
    cpl->Resize(extents);
@@ -193,19 +195,19 @@ void TGLClipPlane::Setup(const TGLBoundingBox & bbox)
    fValid = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup the clipping plane by point and normal.
+/// Length of the normal determines the size of the plane drawn in
+/// GL viewer. The normal points into the direction of visible half-plane.
+///
+/// This only makes sense if you disable auto-update of the
+/// clip-object:
+///   gl_viewer->SetClipAutoUpdate(kFALSE).
+/// After calling this also call gl_viewer->RefreshPadEditor(gl_viewer)
+/// and gl_viewer->RequestDraw().
+
 void TGLClipPlane::Setup(const TGLVector3& point, const TGLVector3& normal)
 {
-   // Setup the clipping plane by point and normal.
-   // Length of the normal determines the size of the plane drawn in
-   // GL viewer. The normal points into the direction of visible half-plane.
-   //
-   // This only makes sense if you disable auto-update of the
-   // clip-object:
-   //   gl_viewer->SetClipAutoUpdate(kFALSE).
-   // After calling this also call gl_viewer->RefreshPadEditor(gl_viewer)
-   // and gl_viewer->RequestDraw().
-
    TGLVector3 n(normal);
    Double_t extents = n.Mag();
    if (extents > 0)
@@ -224,12 +226,12 @@ void TGLClipPlane::Setup(const TGLVector3& point, const TGLVector3& normal)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update clip plane object to follow passed 'plane' equation. Center pivot
+/// is shifted to nearest point on new plane.
+
 void TGLClipPlane::Set(const TGLPlane& plane)
 {
-   // Update clip plane object to follow passed 'plane' equation. Center pivot
-   // is shifted to nearest point on new plane.
-
    TGLVertex3 oldCenter = BoundingBox().Center();
    TGLVertex3 newCenter = plane.NearestOn(oldCenter);
    SetTransform(TGLMatrix(newCenter, plane.Norm()));
@@ -237,11 +239,11 @@ void TGLClipPlane::Set(const TGLPlane& plane)
    fValid = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return set of planes (actually a single one) describing this clip plane.
+
 void TGLClipPlane::PlaneSet(TGLPlaneSet_t& set) const
 {
-   // Return set of planes (actually a single one) describing this clip plane.
-
    set.resize(1);
    set[0] = BoundingBox().GetNearPlane();
    set[0].Negate();
@@ -260,26 +262,28 @@ ClassImp(TGLClipBox);
 
 const float TGLClipBox::fgColor[4] = { 1.0, 0.6, 0.2, 0.3 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct an (initially) axis aligned clip pbox object, extents
+/// 'halfLengths', centered on 'center' vertex.
+/// Box can be translated, rotated and scaled in all (xyz) local axes.
+
 TGLClipBox::TGLClipBox() :
    TGLClip(* new TGLClipBoxLogical, TGLMatrix(), fgColor)
 {
-   // Construct an (initially) axis aligned clip pbox object, extents
-   // 'halfLengths', centered on 'center' vertex.
-   // Box can be translated, rotated and scaled in all (xyz) local axes.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy clip box object.
+
 TGLClipBox::~TGLClipBox()
 {
-   // Destroy clip box object.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup the clip object for scene encompassed by bbox.
+
 void TGLClipBox::Setup(const TGLBoundingBox& bbox)
 {
-   // Setup the clip object for scene encompassed by bbox.
-
    TGLVector3 halfLengths = bbox.Extents() * 0.2501;
    TGLVertex3 center      = bbox.Center() + halfLengths;
 
@@ -290,17 +294,17 @@ void TGLClipBox::Setup(const TGLBoundingBox& bbox)
    fValid = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup the clip box with min/max points directly.
+///
+/// This only makes sense if you disable auto-update of the
+/// clip-object:
+///   gl_viewer->SetClipAutoUpdate(kFALSE).
+/// After calling this also call gl_viewer->RefreshPadEditor(gl_viewer)
+/// and gl_viewer->RequestDraw().
+
 void TGLClipBox::Setup(const TGLVector3& min_point, const TGLVector3& max_point)
 {
-   // Setup the clip box with min/max points directly.
-   //
-   // This only makes sense if you disable auto-update of the
-   // clip-object:
-   //   gl_viewer->SetClipAutoUpdate(kFALSE).
-   // After calling this also call gl_viewer->RefreshPadEditor(gl_viewer)
-   // and gl_viewer->RequestDraw().
-
    TGLClipBoxLogical* cbl = (TGLClipBoxLogical*) GetLogical();
    cbl->Resize(min_point, max_point);
 
@@ -308,12 +312,12 @@ void TGLClipBox::Setup(const TGLVector3& min_point, const TGLVector3& max_point)
    fValid = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return set of 6 planes describing faces of the box but invert them
+/// so that they point inside of box.
+
 void TGLClipBox::PlaneSet(TGLPlaneSet_t& set) const
 {
-   // Return set of 6 planes describing faces of the box but invert them
-   // so that they point inside of box.
-
    BoundingBox().PlaneSet(set);
    TGLPlaneSet_i i = set.begin();
    while (i != set.end()) {
@@ -334,7 +338,9 @@ void TGLClipBox::PlaneSet(TGLPlaneSet_t& set) const
 
 ClassImp(TGLClipSet);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLClipSet::TGLClipSet() :
    TGLOverlayElement(kViewer),
    fClipPlane   (new TGLClipPlane),
@@ -345,25 +351,24 @@ TGLClipSet::TGLClipSet() :
    fShowManip   (kFALSE),
    fManip       (new TGLManipSet)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLClipSet::~TGLClipSet()
 {
-   // Destructor.
-
    delete fClipPlane;
    delete fClipBox;
    delete fManip;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has enetered this element.
+/// Forward to ManipSet.
+
 Bool_t TGLClipSet::MouseEnter(TGLOvlSelectRecord& selRec)
 {
-   // Mouse has enetered this element.
-   // Forward to ManipSet.
-
    return fManip->MouseEnter(selRec);
 }
 
@@ -375,30 +380,30 @@ Bool_t TGLClipSet::MouseStillInside(TGLOvlSelectRecord& selRec)
    return fManip->MouseStillInside(selRec);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle overlay event.
+/// Forward to ManipSet.
+
 Bool_t TGLClipSet::Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
                           Event_t* event)
 {
-   // Handle overlay event.
-   // Forward to ManipSet.
-
    return fManip->Handle(rnrCtx, selRec, event);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has left the element.
+/// Forward to ManipSet.
+
 void TGLClipSet::MouseLeave()
 {
-   // Mouse has left the element.
-   // Forward to ManipSet.
-
    return fManip->MouseLeave();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render clip-shape and manipulator.
+
 void TGLClipSet::Render(TGLRnrCtx& rnrCtx)
 {
-   // Render clip-shape and manipulator.
-
    if (!fCurrentClip) return;
 
    rnrCtx.SetShapeLOD(TGLRnrCtx::kLODHigh);
@@ -413,72 +418,72 @@ void TGLClipSet::Render(TGLRnrCtx& rnrCtx)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forward request to fill the plane-set to the current clip.
+
 void TGLClipSet::FillPlaneSet(TGLPlaneSet_t& set) const
 {
-   // Forward request to fill the plane-set to the current clip.
-
    if (fCurrentClip)
       fCurrentClip->PlaneSet(set);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup clipping objects for given scene bounding box.
+
 void TGLClipSet::SetupClips(const TGLBoundingBox& sceneBBox)
 {
-   // Setup clipping objects for given scene bounding box.
-
    fLastBBox = sceneBBox;
    fClipPlane->Setup(sceneBBox);
    fClipBox  ->Setup(sceneBBox);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup current clipping object for given scene bounding box.
+
 void TGLClipSet::SetupCurrentClip(const TGLBoundingBox& sceneBBox)
 {
-   // Setup current clipping object for given scene bounding box.
-
    fLastBBox = sceneBBox;
    if (fCurrentClip)
       fCurrentClip->Setup(sceneBBox);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup current clipping object for given scene bounding box.
+
 void TGLClipSet::SetupCurrentClipIfInvalid(const TGLBoundingBox& sceneBBox)
 {
-   // Setup current clipping object for given scene bounding box.
-
    fLastBBox = sceneBBox;
    if (fCurrentClip && ! fCurrentClip->IsValid())
       fCurrentClip->Setup(sceneBBox);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invalidate clip objects.
+
 void TGLClipSet::InvalidateClips()
 {
-   // Invalidate clip objects.
-
    fClipPlane->Invalidate();
    fClipBox  ->Invalidate();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invalidate current clip object.
+
 void TGLClipSet::InvalidateCurrentClip()
 {
-   // Invalidate current clip object.
-
    if (fCurrentClip)
       fCurrentClip->Invalidate();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get state of clip object 'type' into data vector:
+///
+/// 'type' requested - 'data' contents returned
+/// kClipPlane   4 components - A,B,C,D - of plane eq : Ax+By+CZ+D = 0
+/// kBoxPlane    6 components - Box Center X/Y/Z - Box Extents X/Y/Z
+
 void TGLClipSet::GetClipState(TGLClip::EType type, Double_t data[6]) const
 {
-   // Get state of clip object 'type' into data vector:
-   //
-   // 'type' requested - 'data' contents returned
-   // kClipPlane   4 components - A,B,C,D - of plane eq : Ax+By+CZ+D = 0
-   // kBoxPlane    6 components - Box Center X/Y/Z - Box Extents X/Y/Z
-
    switch (type)
    {
       case TGLClip::kClipNone:
@@ -516,16 +521,16 @@ void TGLClipSet::GetClipState(TGLClip::EType type, Double_t data[6]) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set state of clip object 'type' into data vector:
+///
+/// 'type' specified        'data' contents interpretation
+/// kClipNone               ignored
+/// kClipPlane              4 components - A,B,C,D - of plane eq : Ax+By+CZ+D = 0
+/// kBoxPlane               6 components - Box Center X/Y/Z - Box Extents X/Y/Z
+
 void TGLClipSet::SetClipState(TGLClip::EType type, const Double_t data[6])
 {
-   // Set state of clip object 'type' into data vector:
-   //
-   // 'type' specified        'data' contents interpretation
-   // kClipNone               ignored
-   // kClipPlane              4 components - A,B,C,D - of plane eq : Ax+By+CZ+D = 0
-   // kBoxPlane               6 components - Box Center X/Y/Z - Box Extents X/Y/Z
-
    switch (type) {
       case TGLClip::kClipNone: {
          break;
@@ -556,12 +561,12 @@ void TGLClipSet::SetClipState(TGLClip::EType type, const Double_t data[6])
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get current type active in viewer - returns one of kClipNone
+/// kClipPlane or kClipBox.
+
 TGLClip::EType TGLClipSet::GetClipType() const
 {
-   // Get current type active in viewer - returns one of kClipNone
-   // kClipPlane or kClipBox.
-
   TGLClip::EType type;
    if (fCurrentClip == 0) {
       type = TGLClip::kClipNone;
@@ -576,12 +581,12 @@ TGLClip::EType TGLClipSet::GetClipType() const
    return type;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current clip active in viewer - 'type' is one of kClipNone
+/// kClipPlane or kClipBox.
+
 void TGLClipSet::SetClipType(TGLClip::EType type)
 {
-   // Set current clip active in viewer - 'type' is one of kClipNone
-   // kClipPlane or kClipBox.
-
    switch (type) {
       case TGLClip::kClipNone: {
          fCurrentClip = 0;

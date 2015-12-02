@@ -135,72 +135,72 @@
 
 ClassImp(TClonesArray)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default Constructor.
+
 TClonesArray::TClonesArray() : TObjArray()
 {
-   // Default Constructor.
-
    fClass      = 0;
    fKeep       = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an array of clone objects of classname. The class must inherit from
+/// TObject. If the class defines its own operator delete(), make sure that
+/// it looks like this:
+///
+///    void MyClass::operator delete(void *vp)
+///    {
+///       if ((Long_t) vp != TObject::GetDtorOnly())
+///          ::operator delete(vp);       // delete space
+///       else
+///          TObject::SetDtorOnly(0);
+///    }
+///
+/// The second argument s indicates an approximate number of objects
+/// that will be entered in the array. If more than s objects are entered,
+/// the array will be automatically expanded.
+///
+/// The third argument is not used anymore and only there for backward
+/// compatibility reasons.
+
 TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s)
 {
-   // Create an array of clone objects of classname. The class must inherit from
-   // TObject. If the class defines its own operator delete(), make sure that
-   // it looks like this:
-   //
-   //    void MyClass::operator delete(void *vp)
-   //    {
-   //       if ((Long_t) vp != TObject::GetDtorOnly())
-   //          ::operator delete(vp);       // delete space
-   //       else
-   //          TObject::SetDtorOnly(0);
-   //    }
-   //
-   // The second argument s indicates an approximate number of objects
-   // that will be entered in the array. If more than s objects are entered,
-   // the array will be automatically expanded.
-   //
-   // The third argument is not used anymore and only there for backward
-   // compatibility reasons.
-
    fKeep = 0;
    SetClass(classname,s);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an array of clone objects of class cl. The class must inherit from
+/// TObject. If the class defines an own operator delete(), make sure that
+/// it looks like this:
+///
+///    void MyClass::operator delete(void *vp)
+///    {
+///       if ((Long_t) vp != TObject::GetDtorOnly())
+///          ::operator delete(vp);       // delete space
+///       else
+///          TObject::SetDtorOnly(0);
+///    }
+///
+/// The second argument, s, indicates an approximate number of objects
+/// that will be entered in the array. If more than s objects are entered,
+/// the array will be automatically expanded.
+///
+/// The third argument is not used anymore and only there for backward
+/// compatibility reasons.
+
 TClonesArray::TClonesArray(const TClass *cl, Int_t s, Bool_t) : TObjArray(s)
 {
-   // Create an array of clone objects of class cl. The class must inherit from
-   // TObject. If the class defines an own operator delete(), make sure that
-   // it looks like this:
-   //
-   //    void MyClass::operator delete(void *vp)
-   //    {
-   //       if ((Long_t) vp != TObject::GetDtorOnly())
-   //          ::operator delete(vp);       // delete space
-   //       else
-   //          TObject::SetDtorOnly(0);
-   //    }
-   //
-   // The second argument, s, indicates an approximate number of objects
-   // that will be entered in the array. If more than s objects are entered,
-   // the array will be automatically expanded.
-   //
-   // The third argument is not used anymore and only there for backward
-   // compatibility reasons.
-
    fKeep = 0;
    SetClass(cl,s);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TClonesArray::TClonesArray(const TClonesArray& tc): TObjArray(tc)
 {
-   // Copy ctor.
-
    fKeep = new TObjArray(tc.fSize);
    fClass = tc.fClass;
 
@@ -212,11 +212,11 @@ TClonesArray::TClonesArray(const TClonesArray& tc): TObjArray(tc)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TClonesArray& TClonesArray::operator=(const TClonesArray& tc)
 {
-   // Assignment operator.
-
    if (this == &tc) return *this;
 
    if (fClass != tc.fClass) {
@@ -250,11 +250,11 @@ TClonesArray& TClonesArray::operator=(const TClonesArray& tc)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a clones array.
+
 TClonesArray::~TClonesArray()
 {
-   // Delete a clones array.
-
    if (fKeep) {
       for (Int_t i = 0; i < fKeep->fSize; i++) {
          TObject* p = fKeep->fCont[i];
@@ -280,45 +280,45 @@ TClonesArray::~TClonesArray()
    SetOwner(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// When the kBypassStreamer bit is set, the automatically
+/// generated Streamer can call directly TClass::WriteBuffer.
+/// Bypassing the Streamer improves the performance when writing/reading
+/// the objects in the TClonesArray. However there is a drawback:
+/// When a TClonesArray is written with split=0 bypassing the Streamer,
+/// the StreamerInfo of the class in the array being optimized,
+/// one cannot use later the TClonesArray with split>0. For example,
+/// there is a problem with the following scenario:
+///  1- A class Foo has a TClonesArray of Bar objects
+///  2- The Foo object is written with split=0 to Tree T1.
+///     In this case the StreamerInfo for the class Bar is created
+///     in optimized mode in such a way that data members of the same type
+///     are written as an array improving the I/O performance.
+///  3- In a new program, T1 is read and a new Tree T2 is created
+///     with the object Foo in split>1
+///  4- When the T2 branch is created, the StreamerInfo for the class Bar
+///     is created with no optimization (mandatory for the split mode).
+///     The optimized Bar StreamerInfo is going to be used to read
+///     the TClonesArray in T1. The result will be Bar objects with
+///     data member values not in the right sequence.
+/// The solution to this problem is to call BypassStreamer(kFALSE)
+/// for the TClonesArray. In this case, the normal Bar::Streamer function
+/// will be called. The Bar::Streamer function works OK independently
+/// if the Bar StreamerInfo had been generated in optimized mode or not.
+
 void TClonesArray::BypassStreamer(Bool_t bypass)
 {
-   // When the kBypassStreamer bit is set, the automatically
-   // generated Streamer can call directly TClass::WriteBuffer.
-   // Bypassing the Streamer improves the performance when writing/reading
-   // the objects in the TClonesArray. However there is a drawback:
-   // When a TClonesArray is written with split=0 bypassing the Streamer,
-   // the StreamerInfo of the class in the array being optimized,
-   // one cannot use later the TClonesArray with split>0. For example,
-   // there is a problem with the following scenario:
-   //  1- A class Foo has a TClonesArray of Bar objects
-   //  2- The Foo object is written with split=0 to Tree T1.
-   //     In this case the StreamerInfo for the class Bar is created
-   //     in optimized mode in such a way that data members of the same type
-   //     are written as an array improving the I/O performance.
-   //  3- In a new program, T1 is read and a new Tree T2 is created
-   //     with the object Foo in split>1
-   //  4- When the T2 branch is created, the StreamerInfo for the class Bar
-   //     is created with no optimization (mandatory for the split mode).
-   //     The optimized Bar StreamerInfo is going to be used to read
-   //     the TClonesArray in T1. The result will be Bar objects with
-   //     data member values not in the right sequence.
-   // The solution to this problem is to call BypassStreamer(kFALSE)
-   // for the TClonesArray. In this case, the normal Bar::Streamer function
-   // will be called. The Bar::Streamer function works OK independently
-   // if the Bar StreamerInfo had been generated in optimized mode or not.
-
    if (bypass)
       SetBit(kBypassStreamer);
    else
       ResetBit(kBypassStreamer);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove empty slots from array.
+
 void TClonesArray::Compress()
 {
-   // Remove empty slots from array.
-
    Int_t j = 0, je = 0;
 
    TObject **tmp = new TObject* [fSize];
@@ -348,22 +348,22 @@ void TClonesArray::Compress()
    R__ASSERT(je == jf);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get an object at index 'idx' that is guaranteed to have been constructed.
+/// It might be either a freshly allocated object or one that had already been
+/// allocated (and assumingly used).  In the later case, it is the callers
+/// responsability to insure that the object is returned to a known state,
+/// usually by calling the Clear method on the TClonesArray.
+///
+/// Tests to see if the destructor has been called on the object.
+/// If so, or if the object has never been constructed the class constructor is called using
+/// New().  If not, return a pointer to the correct memory location.
+/// This explicitly to deal with TObject classes that allocate memory
+/// which will be reset (but not deallocated) in their Clear()
+/// functions.
+
 TObject *TClonesArray::ConstructedAt(Int_t idx)
 {
-   // Get an object at index 'idx' that is guaranteed to have been constructed.
-   // It might be either a freshly allocated object or one that had already been
-   // allocated (and assumingly used).  In the later case, it is the callers
-   // responsability to insure that the object is returned to a known state,
-   // usually by calling the Clear method on the TClonesArray.
-   //
-   // Tests to see if the destructor has been called on the object.
-   // If so, or if the object has never been constructed the class constructor is called using
-   // New().  If not, return a pointer to the correct memory location.
-   // This explicitly to deal with TObject classes that allocate memory
-   // which will be reset (but not deallocated) in their Clear()
-   // functions.
-
    TObject *obj = (*this)[idx];
    if ( obj && obj->TestBit(TObject::kNotDeleted) ) {
       return obj;
@@ -371,21 +371,21 @@ TObject *TClonesArray::ConstructedAt(Int_t idx)
    return (fClass) ? static_cast<TObject*>(fClass->New(obj)) : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get an object at index 'idx' that is guaranteed to have been constructed.
+/// It might be either a freshly allocated object or one that had already been
+/// allocated (and assumingly used).  In the later case, the function Clear
+/// will be called and passed the value of 'clear_options'
+///
+/// Tests to see if the destructor has been called on the object.
+/// If so, or if the object has never been constructed the class constructor is called using
+/// New().  If not, return a pointer to the correct memory location.
+/// This explicitly to deal with TObject classes that allocate memory
+/// which will be reset (but not deallocated) in their Clear()
+/// functions.
+
 TObject *TClonesArray::ConstructedAt(Int_t idx, Option_t *clear_options)
 {
-   // Get an object at index 'idx' that is guaranteed to have been constructed.
-   // It might be either a freshly allocated object or one that had already been
-   // allocated (and assumingly used).  In the later case, the function Clear
-   // will be called and passed the value of 'clear_options'
-   //
-   // Tests to see if the destructor has been called on the object.
-   // If so, or if the object has never been constructed the class constructor is called using
-   // New().  If not, return a pointer to the correct memory location.
-   // This explicitly to deal with TObject classes that allocate memory
-   // which will be reset (but not deallocated) in their Clear()
-   // functions.
-
    TObject *obj = (*this)[idx];
    if ( obj && obj->TestBit(TObject::kNotDeleted) ) {
       obj->Clear(clear_options);
@@ -394,19 +394,19 @@ TObject *TClonesArray::ConstructedAt(Int_t idx, Option_t *clear_options)
    return (fClass) ? static_cast<TObject*>(fClass->New(obj)) : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the clones array. Only use this routine when your objects don't
+/// allocate memory since it will not call the object dtors.
+/// However, if the class in the TClonesArray implements the function
+/// Clear(Option_t *option) and if option = "C" the function Clear()
+/// is called for all objects in the array. In the function Clear(), one
+/// can delete objects or dynamic arrays allocated in the class.
+/// This procedure is much faster than calling TClonesArray::Delete().
+/// When the option starts with "C+", eg "C+xyz" the objects in the array
+/// are in turn cleared with the option "xyz"
+
 void TClonesArray::Clear(Option_t *option)
 {
-   // Clear the clones array. Only use this routine when your objects don't
-   // allocate memory since it will not call the object dtors.
-   // However, if the class in the TClonesArray implements the function
-   // Clear(Option_t *option) and if option = "C" the function Clear()
-   // is called for all objects in the array. In the function Clear(), one
-   // can delete objects or dynamic arrays allocated in the class.
-   // This procedure is much faster than calling TClonesArray::Delete().
-   // When the option starts with "C+", eg "C+xyz" the objects in the array
-   // are in turn cleared with the option "xyz"
-
    if (option && option[0] == 'C') {
       const char *cplus = strstr(option,"+");
       if (cplus) {
@@ -432,13 +432,13 @@ void TClonesArray::Clear(Option_t *option)
    TObjArray::Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the clones array. Use this routine when your objects allocate
+/// memory (e.g. objects inheriting from TNamed or containing TStrings
+/// allocate memory). If not you better use Clear() since if is faster.
+
 void TClonesArray::Delete(Option_t *)
 {
-   // Clear the clones array. Use this routine when your objects allocate
-   // memory (e.g. objects inheriting from TNamed or containing TStrings
-   // allocate memory). If not you better use Clear() since if is faster.
-
    if ( fClass->TestBit(TClass::kIsEmulation) ) {
       // In case of emulated class, we can not use the delete operator
       // directly, it would use the wrong destructor.
@@ -468,11 +468,11 @@ void TClonesArray::Delete(Option_t *)
    TObjArray::Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand or shrink the array to newSize elements.
+
 void TClonesArray::Expand(Int_t newSize)
 {
-   // Expand or shrink the array to newSize elements.
-
    if (newSize < 0) {
       Error ("Expand", "newSize must be positive (%d)", newSize);
       return;
@@ -495,16 +495,16 @@ void TClonesArray::Expand(Int_t newSize)
    fKeep->Expand(newSize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand or shrink the array to n elements and create the clone
+/// objects by calling their default ctor. If n is less than the current size
+/// the array is shrunk and the allocated space is freed.
+/// This routine is typically used to create a clonesarray into which
+/// one can directly copy object data without going via the
+/// "new (arr[i]) MyObj()" (i.e. the vtbl is already set correctly).
+
 void TClonesArray::ExpandCreate(Int_t n)
 {
-   // Expand or shrink the array to n elements and create the clone
-   // objects by calling their default ctor. If n is less than the current size
-   // the array is shrunk and the allocated space is freed.
-   // This routine is typically used to create a clonesarray into which
-   // one can directly copy object data without going via the
-   // "new (arr[i]) MyObj()" (i.e. the vtbl is already set correctly).
-
    if (n < 0) {
       Error("ExpandCreate", "n must be positive (%d)", n);
       return ;
@@ -536,17 +536,17 @@ void TClonesArray::ExpandCreate(Int_t n)
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand or shrink the array to n elements and create the clone
+/// objects by calling their default ctor. If n is less than the current size
+/// the array is shrinked but the allocated space is _not_ freed.
+/// This routine is typically used to create a clonesarray into which
+/// one can directly copy object data without going via the
+/// "new (arr[i]) MyObj()" (i.e. the vtbl is already set correctly).
+/// This is a simplified version of ExpandCreate used in the TTree mechanism.
+
 void TClonesArray::ExpandCreateFast(Int_t n)
 {
-   // Expand or shrink the array to n elements and create the clone
-   // objects by calling their default ctor. If n is less than the current size
-   // the array is shrinked but the allocated space is _not_ freed.
-   // This routine is typically used to create a clonesarray into which
-   // one can directly copy object data without going via the
-   // "new (arr[i]) MyObj()" (i.e. the vtbl is already set correctly).
-   // This is a simplified version of ExpandCreate used in the TTree mechanism.
-
    Int_t oldSize = fKeep->GetSize();
    if (n > fSize)
       Expand(TMath::Max(n, GrowBy(fSize)));
@@ -568,11 +568,11 @@ void TClonesArray::ExpandCreateFast(Int_t n)
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object at index idx.
+
 TObject *TClonesArray::RemoveAt(Int_t idx)
 {
-   // Remove object at index idx.
-
    if (!BoundsOk("RemoveAt", idx)) return 0;
 
    int i = idx-fLowerBound;
@@ -598,11 +598,11 @@ TObject *TClonesArray::RemoveAt(Int_t idx)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from array.
+
 TObject *TClonesArray::Remove(TObject *obj)
 {
-   // Remove object from array.
-
    if (!obj) return 0;
 
    Int_t i = IndexOf(obj) - fLowerBound;
@@ -627,11 +627,11 @@ TObject *TClonesArray::Remove(TObject *obj)
    return obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove objects from index idx1 to idx2 included.
+
 void TClonesArray::RemoveRange(Int_t idx1, Int_t idx2)
 {
-   // Remove objects from index idx1 to idx2 included.
-
    if (!BoundsOk("RemoveRange", idx1)) return;
    if (!BoundsOk("RemoveRange", idx2)) return;
 
@@ -662,28 +662,28 @@ void TClonesArray::RemoveRange(Int_t idx1, Int_t idx2)
    do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an array of clone objects of class cl. The class must inherit from
+/// TObject. If the class defines an own operator delete(), make sure that
+/// it looks like this:
+///
+///    void MyClass::operator delete(void *vp)
+///    {
+///       if ((Long_t) vp != TObject::GetDtorOnly())
+///          ::operator delete(vp);       // delete space
+///       else
+///          TObject::SetDtorOnly(0);
+///    }
+///
+/// The second argument s indicates an approximate number of objects
+/// that will be entered in the array. If more than s objects are entered,
+/// the array will be automatically expanded.
+///
+/// NB: This function should not be called in the TClonesArray is already
+///     initialized with a class.
+
 void TClonesArray::SetClass(const TClass *cl, Int_t s)
 {
-   // Create an array of clone objects of class cl. The class must inherit from
-   // TObject. If the class defines an own operator delete(), make sure that
-   // it looks like this:
-   //
-   //    void MyClass::operator delete(void *vp)
-   //    {
-   //       if ((Long_t) vp != TObject::GetDtorOnly())
-   //          ::operator delete(vp);       // delete space
-   //       else
-   //          TObject::SetDtorOnly(0);
-   //    }
-   //
-   // The second argument s indicates an approximate number of objects
-   // that will be entered in the array. If more than s objects are entered,
-   // the array will be automatically expanded.
-   //
-   // NB: This function should not be called in the TClonesArray is already
-   //     initialized with a class.
-
    if (fKeep) {
       Error("SetClass", "TClonesArray already initialized with another class");
       return;
@@ -716,31 +716,31 @@ void TClonesArray::SetClass(const TClass *cl, Int_t s)
    BypassStreamer(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///see TClonesArray::SetClass(const TClass*)
+
 void TClonesArray::SetClass(const char *classname, Int_t s)
 {
-   //see TClonesArray::SetClass(const TClass*)
-
    SetClass(TClass::GetClass(classname),s);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A TClonesArray is always the owner of the object it contains.
+/// However the collection its inherits from (TObjArray) does not.
+/// Hence this member function needs to be a nop for TClonesArray.
+
 void TClonesArray::SetOwner(Bool_t /* enable */)
 {
-   // A TClonesArray is always the owner of the object it contains.
-   // However the collection its inherits from (TObjArray) does not.
-   // Hence this member function needs to be a nop for TClonesArray.
-
    // Nothing to be done.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If objects in array are sortable (i.e. IsSortable() returns true
+/// for all objects) then sort array.
+
 void TClonesArray::Sort(Int_t upto)
 {
-   // If objects in array are sortable (i.e. IsSortable() returns true
-   // for all objects) then sort array.
-
    Int_t nentries = GetAbsLast()+1;
    if (nentries <= 0 || fSorted) return;
    for (Int_t i = 0; i < fSize; i++)
@@ -757,13 +757,13 @@ void TClonesArray::Sort(Int_t upto)
    fSorted = kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write all objects in array to the I/O buffer. ATTENTION: empty slots
+/// are also stored (using one byte per slot). If you don't want this
+/// use a TOrdCollection or TList.
+
 void TClonesArray::Streamer(TBuffer &b)
 {
-   // Write all objects in array to the I/O buffer. ATTENTION: empty slots
-   // are also stored (using one byte per slot). If you don't want this
-   // use a TOrdCollection or TList.
-
    // Important Note: if you modify this function, remember to also modify
    // TConvertClonesArrayToProxy accordingly
 
@@ -905,17 +905,17 @@ void TClonesArray::Streamer(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to reserved area in which a new object of clones
+/// class can be constructed. This operator should not be used for
+/// lefthand side assignments, like a[2] = xxx. Only like,
+/// new (a[2]) myClass, or xxx = a[2]. Of course right hand side usage
+/// is only legal after the object has been constructed via the
+/// new operator or via the New() method. To remove elements from
+/// the clones array use Remove() or RemoveAt().
+
 TObject *&TClonesArray::operator[](Int_t idx)
 {
-   // Return pointer to reserved area in which a new object of clones
-   // class can be constructed. This operator should not be used for
-   // lefthand side assignments, like a[2] = xxx. Only like,
-   // new (a[2]) myClass, or xxx = a[2]. Of course right hand side usage
-   // is only legal after the object has been constructed via the
-   // new operator or via the New() method. To remove elements from
-   // the clones array use Remove() or RemoveAt().
-
    if (idx < 0) {
       Error("operator[]", "out of bounds at %d in %lx", idx, (Long_t)this);
       return fCont[0];
@@ -945,11 +945,11 @@ TObject *&TClonesArray::operator[](Int_t idx)
    return fCont[idx];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the object at position idx. Returns 0 if idx is out of bounds.
+
 TObject *TClonesArray::operator[](Int_t idx) const
 {
-   // Return the object at position idx. Returns 0 if idx is out of bounds.
-
    if (idx < 0 || idx >= fSize) {
       Error("operator[]", "out of bounds at %d in %lx", idx, (Long_t)this);
       return 0;
@@ -958,12 +958,12 @@ TObject *TClonesArray::operator[](Int_t idx) const
    return fCont[idx];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an object of type fClass with the default ctor at the specified
+/// index. Returns 0 in case of error.
+
 TObject *TClonesArray::New(Int_t idx)
 {
-   // Create an object of type fClass with the default ctor at the specified
-   // index. Returns 0 in case of error.
-
    if (idx < 0) {
       Error("New", "out of bounds at %d in %lx", idx, (Long_t)this);
       return 0;
@@ -981,13 +981,13 @@ TObject *TClonesArray::New(Int_t idx)
 // The following functions are utilities implemented by Jason Detwiler
 // (jadetwiler@lbl.gov)
 //
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Directly move the object pointers from tc without cloning (copying).
+/// This TClonesArray takes over ownership of all of tc's object
+/// pointers. The tc array is left empty upon return.
+
 void TClonesArray::AbsorbObjects(TClonesArray *tc)
 {
-   // Directly move the object pointers from tc without cloning (copying).
-   // This TClonesArray takes over ownership of all of tc's object
-   // pointers. The tc array is left empty upon return.
-
    // tests
    if (tc == 0 || tc == this || tc->GetEntriesFast() == 0) return;
    if (fClass != tc->fClass) {
@@ -1020,14 +1020,14 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc)
       Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Directly move the range of object pointers from tc without cloning
+/// (copying).
+/// This TClonesArray takes over ownership of all of tc's object pointers
+/// from idx1 to idx2. The tc array is re-arranged by return.
+
 void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
 {
-   // Directly move the range of object pointers from tc without cloning
-   // (copying).
-   // This TClonesArray takes over ownership of all of tc's object pointers
-   // from idx1 to idx2. The tc array is re-arranged by return.
-
    // tests
    if (tc == 0 || tc == this || tc->GetEntriesFast() == 0) return;
    if (fClass != tc->fClass) {
@@ -1073,13 +1073,13 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
       Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort multiple TClonesArrays simultaneously with this array.
+/// If objects in array are sortable (i.e. IsSortable() returns true
+/// for all objects) then sort array.
+
 void TClonesArray::MultiSort(Int_t nTCs, TClonesArray** tcs, Int_t upto)
 {
-   // Sort multiple TClonesArrays simultaneously with this array.
-   // If objects in array are sortable (i.e. IsSortable() returns true
-   // for all objects) then sort array.
-
    Int_t nentries = GetAbsLast()+1;
    if (nentries <= 1 || fSorted) return;
    Bool_t sortedCheck = kTRUE;

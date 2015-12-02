@@ -209,15 +209,15 @@ struct SAddMapElementFunc: public binary_function<SLFCFileInfo_t, TGLiteResult*,
    }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initializing the RGLite plug-in and making a connection to gLite UI.
+/// INPUT:
+///      _gridurl    [in] - must be a "glite" string.
+/// NOTE:
+///      The other parameters are unsupported.
+
 TGLite::TGLite(const char */*_gridurl*/, const char* /*uid*/, const char* /*passwd*/, const char* /*options*/)
 {
-   // Initializing the RGLite plug-in and making a connection to gLite UI.
-   // INPUT:
-   //      _gridurl    [in] - must be a "glite" string.
-   // NOTE:
-   //      The other parameters are unsupported.
-
    if (!CGLiteAPIWrapper::Instance().Init()) {
       gGrid = this;
       fPort = 0; // Will be used in TGLite::IsConnected
@@ -229,75 +229,76 @@ TGLite::TGLite(const char */*_gridurl*/, const char* /*uid*/, const char* /*pass
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGLite::~TGLite()
 {
-   // Destructor
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use this method to find out whether the RGLite plug-in is connected to gLite UI or not.
+/// RETURN:
+///      kTRUE if connected and kFALSE otherwise.
+
 Bool_t TGLite::IsConnected() const
 {
-   // Use this method to find out whether the RGLite plug-in is connected to gLite UI or not.
-   // RETURN:
-   //      kTRUE if connected and kFALSE otherwise.
-
    return (-1 == fPort ? kFALSE : kTRUE);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented for RGLite
+
 void TGLite::Shell()
 {
-   // Not implemented for RGLite
-
    MayNotUse("Shell");
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented for RGLite
+
 void TGLite::Stdout()
 {
-   // Not implemented for RGLite
-
    MayNotUse("Stdout");
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented for RGLite
+
 void TGLite::Stderr()
 {
-   // Not implemented for RGLite
-
    MayNotUse("Stderr");
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented for RGLite
+
 TGridResult* TGLite::Command(const char* /*command*/, Bool_t /*interactive*/, UInt_t /*stream*/)
 {
-   // Not implemented for RGLite
-
    MayNotUse("Command");
    return NULL;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A File Catalog method. Querying a File Catalog.
+/// INPUT:
+///      _path       [in] - a File Catalog directory which query will be executed on.
+///      _pattern    [in] - a POSIX regular expression pattern.
+///                          If a NULL value provided the default pattern will be used,
+///                          which is ".*" - match any.
+/// NOTE:
+///      The third and the forth parameters are unsupported.
+/// RETURN:
+///      A TGridResult object, which holds the result of the query.
+
 TGridResult* TGLite::Query(const char *_path, const char *_pattern /*= NULL*/, const char* /*conditions*/, const char* /*options*/)
 {
-   // A File Catalog method. Querying a File Catalog.
-   // INPUT:
-   //      _path       [in] - a File Catalog directory which query will be executed on.
-   //      _pattern    [in] - a POSIX regular expression pattern.
-   //                          If a NULL value provided the default pattern will be used,
-   //                          which is ".*" - match any.
-   // NOTE:
-   //      The third and the forth parameters are unsupported.
-   // RETURN:
-   //      A TGridResult object, which holds the result of the query.
-
    if (!_path)
       return NULL; // TODO: msg me!
 
@@ -326,11 +327,11 @@ TGridResult* TGLite::Query(const char *_path, const char *_pattern /*= NULL*/, c
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented for RGLite
+
 TGridResult* TGLite::LocateSites()
 {
-   // Not implemented for RGLite
-
    MayNotUse("LocalSites");
    return NULL;
 }
@@ -374,15 +375,15 @@ TGridResult* TGLite::Ls(const char *_ldn, Option_t* /*options*/, Bool_t /*verbos
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A File Catalog method. Retrieving a name of the current working directory.
+/// NOTE:
+///      The parameter is unsupported.
+/// RETURN:
+///      a logical name of the new current working directory.
+
 const char* TGLite::Pwd(Bool_t /*verbose*/)
 {
-   // A File Catalog method. Retrieving a name of the current working directory.
-   // NOTE:
-   //      The parameter is unsupported.
-   // RETURN:
-   //      a logical name of the new current working directory.
-
 
    // Call for a Catalog manager
    CCatalogManager *pCatalog(&CGLiteAPIWrapper::Instance().GetCatalogManager());
@@ -401,17 +402,17 @@ const char* TGLite::Pwd(Bool_t /*verbose*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A File Catalog method. Changing the current working directory.
+/// INPUT:
+///      _ldn    [in] - a logical name of the destination directory
+/// NOTE:
+///      The other parameter is unsupported.
+/// RETURN:
+///      kTRUE if succeeded and kFALSE otherwise.
+
 Bool_t TGLite::Cd(const char *_ldn, Bool_t /*verbose*/)
 {
-   // A File Catalog method. Changing the current working directory.
-   // INPUT:
-   //      _ldn    [in] - a logical name of the destination directory
-   // NOTE:
-   //      The other parameter is unsupported.
-   // RETURN:
-   //      kTRUE if succeeded and kFALSE otherwise.
-
 
    if (!_ldn)
       return kFALSE;
@@ -434,17 +435,17 @@ Bool_t TGLite::Cd(const char *_ldn, Bool_t /*verbose*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A File Catalog method. Create a new directory on the name server.
+/// INPUT:
+///      _ldn    [in] - a logical name of the directory to create.
+/// NOTE:
+///      The other parameters are unsupported.
+/// RETURN:
+///      kTRUE if succeeded and kFALSE otherwise.
+
 Int_t TGLite::Mkdir(const char *_ldn, Option_t* /*options*/, Bool_t /*verbose*/)
 {
-   // A File Catalog method. Create a new directory on the name server.
-   // INPUT:
-   //      _ldn    [in] - a logical name of the directory to create.
-   // NOTE:
-   //      The other parameters are unsupported.
-   // RETURN:
-   //      kTRUE if succeeded and kFALSE otherwise.
-
    if (!_ldn)
       return kFALSE;
 
@@ -467,17 +468,17 @@ Int_t TGLite::Mkdir(const char *_ldn, Option_t* /*options*/, Bool_t /*verbose*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A File Catalog method, it removes a directory from the name server if it is an empty one.
+/// INPUT:
+///      _ldn    [in] - a logical name of the directory to remove.
+/// NOTE:
+///      The other parameters are unsupported.
+/// RETURN:
+///      kTRUE if succeeded and kFALSE otherwise.
+
 Bool_t TGLite::Rmdir(const char *_ldn, Option_t* /*options*/, Bool_t /*verbose*/)
 {
-   // A File Catalog method, it removes a directory from the name server if it is an empty one.
-   // INPUT:
-   //      _ldn    [in] - a logical name of the directory to remove.
-   // NOTE:
-   //      The other parameters are unsupported.
-   // RETURN:
-   //      kTRUE if succeeded and kFALSE otherwise.
-
    if (!_ldn)
       return kFALSE;
 
@@ -499,21 +500,21 @@ Bool_t TGLite::Rmdir(const char *_ldn, Option_t* /*options*/, Bool_t /*verbose*/
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A File Catalog method, it creates a new LFC file in the name server and registering a replication.
+/// INPUT:
+///      _lfn    [in] - a logical file name of the file to create.
+///      _turl   [in] - Storage File Name - is either the Site URL or
+///                      the Physical File Name for the replica.
+///      _se     [in] - either the Storage Element fully qualified hostname or the disk server.
+///      _guid   [in] - a GUID for the new file.
+/// NOTE:
+///      The other parameters are unsupported.
+/// RETURN:
+///      kTRUE if succeeded and kFALSE otherwise.
+
 Bool_t TGLite::Register(const char *_lfn, const char *_turl , Long_t /*size*/, const char *_se, const char *_guid, Bool_t /*verbose*/)
 {
-   // A File Catalog method, it creates a new LFC file in the name server and registering a replication.
-   // INPUT:
-   //      _lfn    [in] - a logical file name of the file to create.
-   //      _turl   [in] - Storage File Name - is either the Site URL or
-   //                      the Physical File Name for the replica.
-   //      _se     [in] - either the Storage Element fully qualified hostname or the disk server.
-   //      _guid   [in] - a GUID for the new file.
-   // NOTE:
-   //      The other parameters are unsupported.
-   // RETURN:
-   //      kTRUE if succeeded and kFALSE otherwise.
-
    // Call for a Catalog manager
    CCatalogManager *pCatalog(&CGLiteAPIWrapper::Instance().GetCatalogManager());
    if (!pCatalog)
@@ -535,18 +536,18 @@ Bool_t TGLite::Register(const char *_lfn, const char *_turl , Long_t /*size*/, c
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A File Catalog method, it removes an LFC file entry from the name server.
+/// The methods deletes all replicas from the file.
+/// INPUT:
+///      _lfn    [in] - a logical name of the file to remove.
+/// NOTE:
+///      The other parameters are unsupported.
+/// RETURN:
+///      kTRUE if succeeded and kFALSE otherwise.
+
 Bool_t TGLite::Rm(const char *_lfn, Option_t* /*option*/, Bool_t /*verbose*/)
 {
-   // A File Catalog method, it removes an LFC file entry from the name server.
-   // The methods deletes all replicas from the file.
-   // INPUT:
-   //      _lfn    [in] - a logical name of the file to remove.
-   // NOTE:
-   //      The other parameters are unsupported.
-   // RETURN:
-   //      kTRUE if succeeded and kFALSE otherwise.
-
    if (!_lfn)
       return kFALSE;
 
@@ -604,25 +605,25 @@ TGridJob* TGLite::Submit(const char *_jdl)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented for RGLite.
+
 TGridJDL* TGLite::GetJDLGenerator()
 {
-   // Not implemented for RGLite.
-
    MayNotUse("GetJDLGenerator");
    return 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A Grid Job operations method, it cancels a given gLite job.
+/// INPUT:
+///      _gridjob    [in] - a TGridJob object.
+/// RETURN:
+///      kTRUE if succeeded and kFALSE otherwise.
+
 Bool_t  TGLite::Kill(TGridJob *_gridjob)
 {
-   // A Grid Job operations method, it cancels a given gLite job.
-   // INPUT:
-   //      _gridjob    [in] - a TGridJob object.
-   // RETURN:
-   //      kTRUE if succeeded and kFALSE otherwise.
-
    if (!_gridjob)
       return kFALSE;
 
@@ -630,15 +631,15 @@ Bool_t  TGLite::Kill(TGridJob *_gridjob)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A Grid Job operations method, it cancels a gLite job by the given id.
+/// INPUT:
+///      _id    [in] - a gLite job ID.
+/// RETURN:
+///      kTRUE if succeeded and kFALSE otherwise.
+
 Bool_t  TGLite::KillById(TString _id)
 {
-   // A Grid Job operations method, it cancels a gLite job by the given id.
-   // INPUT:
-   //      _id    [in] - a gLite job ID.
-   // RETURN:
-   //      kTRUE if succeeded and kFALSE otherwise.
-
    TGLiteJob gridjob(_id);
    return gridjob.Cancel();
 }

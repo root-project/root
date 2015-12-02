@@ -27,24 +27,27 @@
 
 ClassImp(TKeyMapFile)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TKeyMapFile::TKeyMapFile() : TNamed(), fMapFile(0)
 {
-   // Default constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TKeyMapFile::TKeyMapFile(const char *name, const char *classname, TMapFile *mapfile)
       : TNamed(name,classname)
 {
-   // Constructor.
    fMapFile = mapfile;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse the contained objects
+
 void TKeyMapFile::Browse(TBrowser *b)
 {
-   // Browse the contained objects
    TObject *obj = gDirectory->Get((char*)GetName());
    delete obj;
    obj = fMapFile->Get(GetName(),0);

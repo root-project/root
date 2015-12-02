@@ -58,7 +58,8 @@ Bool_t           TQtClientFilter::fgGrabPointerOwner     = kFALSE;
 QCursor         *TQtClientFilter::fgGrabPointerCursor    = 0;
 
 TQtPointerGrabber *TQtClientFilter::fgGrabber = 0;
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static inline UInt_t  MapModifierState(Qt::KeyboardModifiers qState)
 {
    UInt_t state = 0;
@@ -69,7 +70,8 @@ static inline UInt_t  MapModifierState(Qt::KeyboardModifiers qState)
    return state;
 }
 
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static inline UInt_t  MapButtonState(Qt::MouseButtons qState)
 {
    UInt_t state = 0;
@@ -79,10 +81,11 @@ static inline UInt_t  MapButtonState(Qt::MouseButtons qState)
    return state;
 }
 
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map Qt QWheelEvent (like MouseEvent) to ROOT kButton4 and kButton5 events
+
 static inline void MapEvent( QWheelEvent &qev, Event_t &ev)
 {
-    // Map Qt QWheelEvent (like MouseEvent) to ROOT kButton4 and kButton5 events
    ev.fX      = qev.x();
    ev.fY      = qev.y();
    ev.fXRoot  = qev.globalX();
@@ -101,13 +104,15 @@ static inline void MapEvent( QWheelEvent &qev, Event_t &ev)
    qev.ignore(); // propage the mouse event further
    // fprintf(stderr, "QEvent::Wheel %p %d child=%p\n",ev.fWindow, ev.fCode, ev.fUser[0]);
 }
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the selection by "grabButton" / "grabPointer"
+
 Bool_t TQtClientFilter::IsGrabSelected(UInt_t selectEventMask)
 {
-   // return the selection by "grabButton" / "grabPointer"
    return fgGrabber ? fgGrabber->IsGrabSelected(selectEventMask) : kFALSE;
 }
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static inline void MapEvent(QMouseEvent &qev, Event_t &ev)
 {
    ev.fX      = qev.x();
@@ -200,7 +205,8 @@ static KeyQSymbolMap_t gKeyQMap[] = {
    {Qt::Key_Slash,     kKey_Slash},
    {Qt::Key(0), (EKeySym) 0}
 };
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static inline UInt_t MapKeySym(const QKeyEvent &qev)
 {
    UInt_t text = 0;;
@@ -232,7 +238,8 @@ static inline UInt_t MapKeySym(const QKeyEvent &qev)
    return text;
 #endif
 }
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static inline void MapEvent(const QKeyEvent  &qev, Event_t &ev)
 {
    ev.fType  = qev.type() == QEvent::KeyPress ?  kGKeyPress : kKeyRelease;
@@ -242,19 +249,22 @@ static inline void MapEvent(const QKeyEvent  &qev, Event_t &ev)
    ev.fUser[0] = TGQt::rootwid(TGQt::wid(ev.fWindow)->childAt(ev.fX,ev.fY)) ;
    // qev.accept();
 }
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static inline void MapEvent(const QMoveEvent &qev, Event_t &ev)
 {
    ev.fX = qev.pos().x();
    ev.fY = qev.pos().y();
 }
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static inline void MapEvent(const QResizeEvent &qev, Event_t &ev)
 {
    ev.fWidth  = qev.size().width();    // width and
    ev.fHeight = qev.size().height();   // height of exposed area
 }
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static inline void MapEvent(const QPaintEvent &qev, Event_t &ev)
 {
    ev.fX = qev.rect().x();
@@ -264,12 +274,14 @@ static inline void MapEvent(const QPaintEvent &qev, Event_t &ev)
    ev.fCount  = 0;
    //         ev.fCount = xev.expose.count; // number of expose events still to come
 }
-//______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static inline void MapEvent(const TQUserEvent &qev, Event_t &ev)
 {
    qev.getData(ev);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TQtClientFilter::~TQtClientFilter()
 {
    TQtLock lock;  // critical section
@@ -278,10 +290,11 @@ TQtClientFilter::~TQtClientFilter()
       fRootEventQueue = 0;
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Detect whether the mouse cursor is inside of any application widget
+
 static inline bool IsMouseCursorInside()
 {
-   // Detect whether the mouse cursor is inside of any application widget
    bool inside = false;
    QPoint absPostion = QCursor::pos();
    QWidget *currentW = QApplication::widgetAt(absPostion);
@@ -299,13 +312,13 @@ static inline bool IsMouseCursorInside()
 }
 
 #ifdef QTCLOSE_DESTROY_RESPOND
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send close message to window provided via closeEvent.
+/// This method should be called just the user closes the window via WM
+/// See: TGMainFrame::SendCloseMessage()
+
 static void SendCloseMessage(Event_t &closeEvent)
 {
-   // Send close message to window provided via closeEvent.
-   // This method should be called just the user closes the window via WM
-   // See: TGMainFrame::SendCloseMessage()
-
    if (closeEvent.fType != kDestroyNotify) return;
    Event_t evt = closeEvent;
 
@@ -326,15 +339,17 @@ static void SendCloseMessage(Event_t &closeEvent)
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// fprintf(stderr, "Debug me please \n");
+
 void DebugMe() {
-   // fprintf(stderr, "Debug me please \n");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the child window (Qt itself can not do that :( strange :)
+
 static inline QWidget *widgetAt(int x, int y)
 {
-   // Find the child window (Qt itself can not do that :( strange :)
    QWidget *w = (TQtClientWidget *)QApplication::widgetAt(x,y);
    if (w) {
       QWidget *child = w->childAt(w->mapFromGlobal(QPoint(x, y )));
@@ -342,11 +357,12 @@ static inline QWidget *widgetAt(int x, int y)
    }
    return w;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map and and to the ROOT event queue Qt KeyBoard event mapped to the ROOT Event_t
+/// For "dest" widget
+
 void TQtClientFilter::AddKeyEvent( const QKeyEvent &keyEvent, TQtClientWidget *frame)
 {
-   // Map and and to the ROOT event queue Qt KeyBoard event mapped to the ROOT Event_t
-   // For "dest" widget
    if (frame) {
      Event_t &evt = *new Event_t;
      memset( &evt,0,sizeof(Event_t));
@@ -369,19 +385,20 @@ void TQtClientFilter::AddKeyEvent( const QKeyEvent &keyEvent, TQtClientWidget *f
   }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select Event:  --  04.12.2005  --
+
 bool TQtClientFilter::SelectGrab(Event_t &event, UInt_t selectEventMask,QMouseEvent &mouse)
 {
-   // Select Event:  --  04.12.2005  --
    return fgGrabber ? fgGrabber->SelectGrab(event,selectEventMask, mouse) : kFALSE;
 }
 
-//______________________________________________________________________________
-bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
-   // Dispatch The Qt event from event queue to Event_t structure
-   // Not all of the event fields are valid for each event type,
-   // except fType and fWindow.
+////////////////////////////////////////////////////////////////////////////////
+/// Dispatch The Qt event from event queue to Event_t structure
+/// Not all of the event fields are valid for each event type,
+/// except fType and fWindow.
 
+bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
    // Set to default event. This method however, should never be called.
    // check whether we are getting the desktop event
    UInt_t selectEventMask = 0;
@@ -677,7 +694,8 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
    {
 //---------------------------------------------------------------------------
 //    QT message has been mapped to ROOT one and ready to be shipped out
-//---------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
      fRootEventQueue->enqueue(&evt);
 //---------------------------------------------------------------------------
    } else {
@@ -709,11 +727,12 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
   return kTRUE; // eat event. We want the special processing via TGClient
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the X11 style active grabbing for ROOT TG widgets
+
 void TQtClientFilter::GrabPointer(TQtClientWidget *grabber, UInt_t evmask, Window_t /*confine*/,
                                     QCursor *cursor, Bool_t grab, Bool_t owner_events)
 {
-    // Set the X11 style active grabbing for ROOT TG widgets
    TQtPointerGrabber *gr = fgGrabber; fgGrabber = 0;
    if (gr) {
       if (gr->IsGrabbing(fgButtonGrabber)) fgButtonGrabber = 0;
@@ -725,27 +744,33 @@ void TQtClientFilter::GrabPointer(TQtClientWidget *grabber, UInt_t evmask, Windo
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TQtPointerGrabber *TQtClientFilter::PointerGrabber()
 {   return fgGrabber; }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TQtClientWidget *TQtClientFilter::GetPointerGrabber()
 {   return fgPointerGrabber; }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TQtClientWidget *TQtClientFilter::GetButtonGrabber()
 {   return fgButtonGrabber; }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TQtClientFilter::SetButtonGrabber(TQtClientWidget *grabber)
 {   fgButtonGrabber = grabber; }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TQtClientFilter::AppendButtonGrab(TQtClientWidget *widget)
 {   fButtonGrabList.append(widget); }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TQtClientFilter::RemoveButtonGrab(QObject *widget)
 {
    TQtClientWidget *wid = (TQtClientWidget *)widget;
@@ -758,7 +783,8 @@ void TQtClientFilter::RemoveButtonGrab(QObject *widget)
 //   class TQtPointerGrabber  to implement X11 style mouse grabbing under Qt
 //______________________________________________________________________________
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TQtPointerGrabber::TQtPointerGrabber(TQtClientWidget *grabber, UInt_t evGrabMask
                                     , UInt_t evInputMask, QCursor *cursor
                                     , Bool_t grab, Bool_t owner_events
@@ -767,15 +793,17 @@ TQtPointerGrabber::TQtPointerGrabber(TQtClientWidget *grabber, UInt_t evGrabMask
    fIsActive= kFALSE;
    SetGrabPointer(grabber,evGrabMask, evInputMask,cursor,grab,owner_events, confine);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TQtPointerGrabber::~TQtPointerGrabber()
 {
    SetGrabPointer(0,0,0,0,kFALSE);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate the active mouse pointer event grabbing.
+
 void TQtPointerGrabber::ActivateGrabbing(bool on)
 {
-   // Activate the active mouse pointer event grabbing.
    static int grabCounter = 0;
    assert (fPointerGrabber);
    QWidget *qtGrabber = QWidget::mouseGrabber();
@@ -810,7 +838,8 @@ void TQtPointerGrabber::ActivateGrabbing(bool on)
    assert ( !fPointerGrabber->isVisible() || (fIsActive)
             || (!fIsActive && !QWidget::mouseGrabber()) );
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void  TQtPointerGrabber::SetGrabPointer(TQtClientWidget *grabber
                              , UInt_t evGrabMask, UInt_t evInputMask
                              , QCursor *cursor, Bool_t grab, Bool_t owner_events
@@ -844,10 +873,11 @@ void  TQtPointerGrabber::SetGrabPointer(TQtClientWidget *grabber
  //         ,  fGrabPointerOwner);
 
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select Event:  --  25.11.2005  --
+
 bool TQtPointerGrabber::SelectGrab(Event_t &evt, UInt_t selectEventMask, QMouseEvent &mouse)
 {
-  // Select Event:  --  25.11.2005  --
   TQtClientWidget *widget = (TQtClientWidget*)TGQt::wid(evt.fWindow);
   bool pass2Root = FALSE;
 
@@ -952,6 +982,7 @@ bool TQtPointerGrabber::SelectGrab(Event_t &evt, UInt_t selectEventMask, QMouseE
 
    return pass2Root;
  }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TQtPointerGrabber::IsGrabSelected(UInt_t selectEventMask) const
 {  return  fGrabPointerEventMask & selectEventMask; }

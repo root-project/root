@@ -26,7 +26,10 @@
 
 ClassImp(TSQLiteStatement)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+/// Checks if statement contains parameters tags.
+
 TSQLiteStatement::TSQLiteStatement(SQLite3_Stmt_t* stmt, Bool_t errout):
       TSQLStatement(errout),
       fStmt(stmt),
@@ -34,9 +37,6 @@ TSQLiteStatement::TSQLiteStatement(SQLite3_Stmt_t* stmt, Bool_t errout):
       fNumPars(0),
       fIterationCount(0)
 {
-   // Normal constructor.
-   // Checks if statement contains parameters tags.
-
    unsigned long bindParamcount = sqlite3_bind_parameter_count(fStmt->fRes);
 
    if (bindParamcount > 0) {
@@ -48,19 +48,19 @@ TSQLiteStatement::TSQLiteStatement(SQLite3_Stmt_t* stmt, Bool_t errout):
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TSQLiteStatement::~TSQLiteStatement()
 {
-   // Destructor.
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close statement.
+
 void TSQLiteStatement::Close(Option_t *)
 {
-   // Close statement.
-
    if (fStmt->fRes) {
       sqlite3_finalize(fStmt->fRes);
    }
@@ -119,11 +119,11 @@ Bool_t TSQLiteStatement::CheckBindError(const char *method, int res)
    return kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process statement.
+
 Bool_t TSQLiteStatement::Process()
 {
-   // Process statement.
-
    CheckStmt("Process", kFALSE);
 
    int res = sqlite3_step(fStmt->fRes);
@@ -156,23 +156,23 @@ Bool_t TSQLiteStatement::Process()
    return kFALSE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of affected rows after statement is processed.
+/// Indirect changes e.g. by triggers are not counted, only direct changes
+/// from last completed statement are taken into account.
+
 Int_t TSQLiteStatement::GetNumAffectedRows()
 {
-   // Return number of affected rows after statement is processed.
-   // Indirect changes e.g. by triggers are not counted, only direct changes
-   // from last completed statement are taken into account.
-
    CheckStmt("GetNumAffectedRows", kFALSE);
 
    return (Int_t) sqlite3_changes(fStmt->fConn);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of statement parameters.
+
 Int_t TSQLiteStatement::GetNumParameters()
 {
-   // Return number of statement parameters.
-
    CheckStmt("GetNumParameters", -1);
 
    Int_t res = sqlite3_bind_parameter_count(fStmt->fRes);
@@ -182,13 +182,13 @@ Int_t TSQLiteStatement::GetNumParameters()
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store result of statement processing to access them
+/// via GetInt(), GetDouble() and so on methods.
+/// For SQLite, this is a NO-OP.
+
 Bool_t TSQLiteStatement::StoreResult()
 {
-   // Store result of statement processing to access them
-   // via GetInt(), GetDouble() and so on methods.
-   // For SQLite, this is a NO-OP.
-
    fWorkingMode = 2;
 
    CheckStmt("StoreResult", kFALSE);
@@ -196,19 +196,19 @@ Bool_t TSQLiteStatement::StoreResult()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of fields in result set.
+
 Int_t TSQLiteStatement::GetNumFields()
 {
-   // Return number of fields in result set.
-
    return fNumPars;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns field name in result set.
+
 const char* TSQLiteStatement::GetFieldName(Int_t nfield)
 {
-   // Returns field name in result set.
-
    if (!IsResultSetMode() || (nfield < 0) || (nfield >= sqlite3_column_count(fStmt->fRes))) {
       return 0;
    }
@@ -216,11 +216,11 @@ const char* TSQLiteStatement::GetFieldName(Int_t nfield)
    return sqlite3_column_name(fStmt->fRes, nfield);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shift cursor to next row in result set.
+
 Bool_t TSQLiteStatement::NextResultRow()
 {
-   // Shift cursor to next row in result set.
-
    ClearError();
 
    if ((fStmt == 0) || !IsResultSetMode()) return kFALSE;
@@ -236,14 +236,14 @@ Bool_t TSQLiteStatement::NextResultRow()
    return Process();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment iteration counter for statement, where parameter can be set.
+/// Statement with parameters of previous iteration
+/// automatically will be applied to database.
+/// Actually a NO-OP for SQLite, as parameters stay bound when step-ping.
+
 Bool_t TSQLiteStatement::NextIteration()
 {
-   // Increment iteration counter for statement, where parameter can be set.
-   // Statement with parameters of previous iteration
-   // automatically will be applied to database.
-   // Actually a NO-OP for SQLite, as parameters stay bound when step-ping.
-
    ClearError();
 
    if (!IsSetParsMode()) {
@@ -264,113 +264,113 @@ Bool_t TSQLiteStatement::NextIteration()
    return Process();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert field value to string.
+
 const char* TSQLiteStatement::ConvertToString(Int_t npar)
 {
-   // Convert field value to string.
-
    CheckGetField("ConvertToString", "");
 
    return reinterpret_cast<const char *>(sqlite3_column_text(fStmt->fRes, npar));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert field to numeric.
+
 long double TSQLiteStatement::ConvertToNumeric(Int_t npar)
 {
-   // Convert field to numeric.
-
    CheckGetField("ConvertToNumeric", -1);
 
    return (long double) sqlite3_column_double(fStmt->fRes, npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if field value is null.
+
 Bool_t TSQLiteStatement::IsNull(Int_t npar)
 {
-   // Checks if field value is null.
-
    CheckGetField("IsNull", kFALSE);
 
    return (sqlite3_column_type(fStmt->fRes, npar) == SQLITE_NULL);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get integer.
+
 Int_t TSQLiteStatement::GetInt(Int_t npar)
 {
-   // Get integer.
-
    CheckGetField("GetInt", -1);
 
    return (Int_t) sqlite3_column_int(fStmt->fRes, npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get unsigned integer.
+
 UInt_t TSQLiteStatement::GetUInt(Int_t npar)
 {
-   // Get unsigned integer.
-
    CheckGetField("GetUInt", 0);
 
    return (UInt_t) sqlite3_column_int(fStmt->fRes, npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get long.
+
 Long_t TSQLiteStatement::GetLong(Int_t npar)
 {
-   // Get long.
-
    CheckGetField("GetLong", -1);
 
    return (Long_t) sqlite3_column_int64(fStmt->fRes, npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get long64.
+
 Long64_t TSQLiteStatement::GetLong64(Int_t npar)
 {
-   // Get long64.
-
    CheckGetField("GetLong64", -1);
 
    return (Long64_t) sqlite3_column_int64(fStmt->fRes, npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as unsigned 64-bit integer
+
 ULong64_t TSQLiteStatement::GetULong64(Int_t npar)
 {
-   // Return field value as unsigned 64-bit integer
-
    CheckGetField("GetULong64", 0);
 
    return (ULong64_t) sqlite3_column_int64(fStmt->fRes, npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as double.
+
 Double_t TSQLiteStatement::GetDouble(Int_t npar)
 {
-   // Return field value as double.
-
    CheckGetField("GetDouble", -1);
 
    return (Double_t) sqlite3_column_double(fStmt->fRes, npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as string.
+
 const char *TSQLiteStatement::GetString(Int_t npar)
 {
-   // Return field value as string.
-
    CheckGetField("GetString", "");
 
    return reinterpret_cast<const char *>(sqlite3_column_text(fStmt->fRes, npar));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as binary array.
+/// Memory at 'mem' will be reallocated and size updated
+/// to fit the data if not large enough.
+
 Bool_t TSQLiteStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 {
-   // Return field value as binary array.
-   // Memory at 'mem' will be reallocated and size updated
-   // to fit the data if not large enough.
-
    CheckGetField("GetBinary", kFALSE);
 
    // As we retrieve "as blob", we do NOT call sqlite3_column_text() before
@@ -388,11 +388,11 @@ Bool_t TSQLiteStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as date.
+
 Bool_t TSQLiteStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day)
 {
-   // Return field value as date.
-
    CheckGetField("GetDate", kFALSE);
 
    TString val = reinterpret_cast<const char*>(sqlite3_column_text(fStmt->fRes, npar));
@@ -404,11 +404,11 @@ Bool_t TSQLiteStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& d
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field as time.
+
 Bool_t TSQLiteStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
 {
-   // Return field as time.
-
    CheckGetField("GetTime", kFALSE);
 
    TString val = reinterpret_cast<const char*>(sqlite3_column_text(fStmt->fRes, npar));
@@ -420,11 +420,11 @@ Bool_t TSQLiteStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as date & time.
+
 Bool_t TSQLiteStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
 {
-   // Return field value as date & time.
-
    CheckGetField("GetDatime", kFALSE);
 
    TString val = reinterpret_cast<const char*>(sqlite3_column_text(fStmt->fRes, npar));
@@ -439,12 +439,12 @@ Bool_t TSQLiteStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t&
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field as timestamp.
+/// Second fraction is in milliseconds, which is also the precision all date and time functions of sqlite use.
+
 Bool_t TSQLiteStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t& frac)
 {
-   // Return field as timestamp.
-   // Second fraction is in milliseconds, which is also the precision all date and time functions of sqlite use.
-
    CheckGetField("GetTimestamp", kFALSE);
 
    TString val = reinterpret_cast<const char*>(sqlite3_column_text(fStmt->fRes, npar));
@@ -466,95 +466,95 @@ Bool_t TSQLiteStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set NULL as parameter value.
+
 Bool_t TSQLiteStatement::SetNull(Int_t npar)
 {
-   // Set NULL as parameter value.
-
    int res = sqlite3_bind_null(fStmt->fRes, npar + 1);
 
    return CheckBindError("SetNull", res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as integer.
+
 Bool_t TSQLiteStatement::SetInt(Int_t npar, Int_t value)
 {
-   // Set parameter value as integer.
-
    int res = sqlite3_bind_int(fStmt->fRes, npar + 1, value);
 
    return CheckBindError("SetInt", res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as unsigned integer.
+/// Actually casted to signed integer, has to be re-casted upon read!
+
 Bool_t TSQLiteStatement::SetUInt(Int_t npar, UInt_t value)
 {
-   // Set parameter value as unsigned integer.
-   // Actually casted to signed integer, has to be re-casted upon read!
-
    int res = sqlite3_bind_int(fStmt->fRes, npar + 1, (Int_t)value);
 
    return CheckBindError("SetUInt", res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as long.
+
 Bool_t TSQLiteStatement::SetLong(Int_t npar, Long_t value)
 {
-   // Set parameter value as long.
-
    int res = sqlite3_bind_int64(fStmt->fRes, npar + 1, value);
 
    return CheckBindError("SetLong", res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as 64-bit integer.
+
 Bool_t TSQLiteStatement::SetLong64(Int_t npar, Long64_t value)
 {
-   // Set parameter value as 64-bit integer.
-
    int res = sqlite3_bind_int64(fStmt->fRes, npar + 1, value);
 
    return CheckBindError("SetLong64", res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as unsigned 64-bit integer.
+/// Actually casted to signed integer, has to be re-casted upon read!
+
 Bool_t TSQLiteStatement::SetULong64(Int_t npar, ULong64_t value)
 {
-   // Set parameter value as unsigned 64-bit integer.
-   // Actually casted to signed integer, has to be re-casted upon read!
-
    int res = sqlite3_bind_int64(fStmt->fRes, npar + 1, (Long64_t)value);
 
    return CheckBindError("SetULong64", res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as double value.
+
 Bool_t TSQLiteStatement::SetDouble(Int_t npar, Double_t value)
 {
-   // Set parameter value as double value.
-
    int res = sqlite3_bind_double(fStmt->fRes, npar + 1, value);
 
    return CheckBindError("SetDouble", res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as string.
+
 Bool_t TSQLiteStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
-   // Set parameter value as string.
-
    int res = sqlite3_bind_text(fStmt->fRes, npar + 1, value, maxsize, SQLITE_TRANSIENT);
 
    return CheckBindError("SetString", res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as binary data.
+/// Maxsize is ignored for SQLite, we directly insert BLOB of size 'size'.
+/// Negative size would cause undefined behaviour, so we refuse that.
+
 Bool_t TSQLiteStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t /*maxsize*/)
 {
-   // Set parameter value as binary data.
-   // Maxsize is ignored for SQLite, we directly insert BLOB of size 'size'.
-   // Negative size would cause undefined behaviour, so we refuse that.
-
    if (size < 0) {
       SetError(-1, "Passing negative value to size for BLOB to SQLite would cause undefined behaviour, refusing it!", "SetBinary");
       return kFALSE;
@@ -565,22 +565,22 @@ Bool_t TSQLiteStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t /*
    return CheckBindError("SetBinary", res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as date.
+
 Bool_t TSQLiteStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
 {
-   // Set parameter value as date.
-
    TDatime d = TDatime(year, month, day, 0, 0, 0);
    int res = sqlite3_bind_text(fStmt->fRes, npar + 1, (char*)d.AsSQLString(), -1, SQLITE_TRANSIENT);
 
    return CheckBindError("SetDate", res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as time.
+
 Bool_t TSQLiteStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
 {
-   // Set parameter value as time.
-
    TDatime d = TDatime(2000, 1, 1, hour, min, sec);
 
    int res = sqlite3_bind_text(fStmt->fRes, npar + 1, (char*)d.AsSQLString(), -1, SQLITE_TRANSIENT);
@@ -588,11 +588,11 @@ Bool_t TSQLiteStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
    return CheckBindError("SetTime", res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as date & time.
+
 Bool_t TSQLiteStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec)
 {
-   // Set parameter value as date & time.
-
    TDatime d = TDatime(year, month, day, hour, min, sec);
 
    int res = sqlite3_bind_text(fStmt->fRes, npar + 1, (char*)d.AsSQLString(), -1, SQLITE_TRANSIENT);
@@ -600,13 +600,13 @@ Bool_t TSQLiteStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t da
    return CheckBindError("SetDatime", res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as timestamp.
+/// The second fraction has to be in milliseconds,
+/// as all SQLite functions for date and time assume 3 significant digits.
+
 Bool_t TSQLiteStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac)
 {
-   // Set parameter value as timestamp.
-   // The second fraction has to be in milliseconds,
-   // as all SQLite functions for date and time assume 3 significant digits.
-
    TDatime d(year,month,day,hour,min,sec);
    TString value;
    value.Form("%s.%03d", (char*)d.AsSQLString(), frac);

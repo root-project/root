@@ -36,7 +36,8 @@
 
 ClassImp(TEveTrackPropagatorSubEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveTrackPropagatorSubEditor::TEveTrackPropagatorSubEditor(const TGWindow *p):
    TGVerticalFrame(p),
    fM (0),
@@ -104,12 +105,12 @@ TEveTrackPropagatorSubEditor::TEveTrackPropagatorSubEditor(const TGWindow *p):
    AddFrame(fDelta, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a frame containing track-reference controls under parent
+/// frame p.
+
 void TEveTrackPropagatorSubEditor::CreateRefsContainer(TGVerticalFrame* p)
 {
-   // Create a frame containing track-reference controls under parent
-   // frame p.
-
    fRefsCont = new TGCompositeFrame(p, 80, 20, kVerticalFrame);
    fPMFrame  = new TGVerticalFrame(fRefsCont);
    // Rendering control.
@@ -239,11 +240,11 @@ void TEveTrackPropagatorSubEditor::CreateRefsContainer(TGVerticalFrame* p)
    p->AddFrame(fRefsCont, new TGLayoutHints(kLHintsTop| kLHintsExpandX));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveTrackPropagatorSubEditor::SetModel(TEveTrackPropagator* m)
 {
-   // Set model object.
-
    fM = m;
 
    fMaxR->SetValue(fM->fMaxR);
@@ -283,68 +284,68 @@ void TEveTrackPropagatorSubEditor::SetModel(TEveTrackPropagator* m)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit "Changed()" signal.
+
 void TEveTrackPropagatorSubEditor::Changed()
 {
-   // Emit "Changed()" signal.
-
    Emit("Changed()");
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for MaxR.
+
 void TEveTrackPropagatorSubEditor::DoMaxR()
 {
-   // Slot for MaxR.
-
    fM->SetMaxR(fMaxR->GetValue());
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for MaxZ.
+
 void TEveTrackPropagatorSubEditor::DoMaxZ()
 {
-   // Slot for MaxZ.
-
    fM->SetMaxZ(fMaxZ->GetValue());
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for MaxOrbits.
+
 void TEveTrackPropagatorSubEditor::DoMaxOrbits()
 {
-   // Slot for MaxOrbits.
-
    fM->SetMaxOrbs(fMaxOrbits->GetValue());
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for MaxAng.
+
 void TEveTrackPropagatorSubEditor::DoMaxAng()
 {
-   // Slot for MaxAng.
-
    fM->SetMaxAng(fMaxAng->GetValue());
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Delta.
+
 void TEveTrackPropagatorSubEditor::DoDelta()
 {
-   // Slot for Delta.
-
    fM->SetDelta(fDelta->GetValue());
    Changed();
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for FitPM.
+
 void TEveTrackPropagatorSubEditor::DoFitPM()
 {
-   // Slot for FitPM.
-
    TGButton* b = (TGButton *) gTQSender;
    TEvePathMark::EType_e type = TEvePathMark::EType_e(b->WidgetId());
    Bool_t on = b->IsOn();
@@ -373,11 +374,11 @@ void TEveTrackPropagatorSubEditor::DoFitPM()
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrPM.
+
 void TEveTrackPropagatorSubEditor::DoRnrPM()
 {
-   // Slot for RnrPM.
-
    TGButton * b = (TGButton *) gTQSender;
    TEvePathMark::EType_e type = TEvePathMark::EType_e(b->WidgetId());
    Bool_t on = b->IsOn();
@@ -400,29 +401,29 @@ void TEveTrackPropagatorSubEditor::DoRnrPM()
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrFV.
+
 void TEveTrackPropagatorSubEditor::DoRnrFV()
 {
-   // Slot for RnrFV.
-
    fM->SetRnrFV(fRnrFV->IsOn());
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for PTBMode.
+
 void TEveTrackPropagatorSubEditor::DoModePTB(UChar_t mode)
 {
-   // Slot for PTBMode.
-
    fM->SetProjTrackBreaking(mode);
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrPTBMarkers.
+
 void TEveTrackPropagatorSubEditor::DoRnrPTB()
 {
-   // Slot for RnrPTBMarkers.
-
    fM->SetRnrPTBMarkers(fRnrPTBMarkers->IsOn());
    Changed();
 }
@@ -440,7 +441,9 @@ void TEveTrackPropagatorSubEditor::DoRnrPTB()
 
 ClassImp(TEveTrackPropagatorEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveTrackPropagatorEditor::TEveTrackPropagatorEditor(const TGWindow *p,
                                                      Int_t width, Int_t height,
                                                      UInt_t options, Pixel_t back) :
@@ -448,8 +451,6 @@ TEveTrackPropagatorEditor::TEveTrackPropagatorEditor(const TGWindow *p,
    fM(0),
    fRSSubEditor(0)
 {
-   // Constructor.
-
    MakeTitle("RenderStyle");
 
    fRSSubEditor = new TEveTrackPropagatorSubEditor(this);
@@ -477,11 +478,11 @@ TEveTrackPropagatorEditor::TEveTrackPropagatorEditor(const TGWindow *p,
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveTrackPropagatorEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveTrackPropagator*>(obj);
    fRSSubEditor->SetModel(fM);
 }

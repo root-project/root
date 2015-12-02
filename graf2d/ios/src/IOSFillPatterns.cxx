@@ -30,7 +30,8 @@ const unsigned stippleBase = 3000;
 // BITS:   0100 0010  0100 0010 //bits from lower to higher.
 // IN HEX   2     4    2     4
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_1(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -41,7 +42,8 @@ void draw_pattern_1(void *color, CGContextRef ctx)
    CGContextFillRect(ctx, CGRectMake(1.f, 1.f, 1.f, 1.f));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_1(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -52,7 +54,8 @@ CGPatternRef create_pattern_1(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 2.f, 2.f), CGAffineTransformIdentity, 2.f, 2.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_2(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -65,7 +68,8 @@ void draw_pattern_2(void *color, CGContextRef ctx)
    CGContextFillRect(ctx, CGRectMake(0.f, 3.f, 1.f, 1.f));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_2(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -76,7 +80,8 @@ CGPatternRef create_pattern_2(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 4.f, 4.f), CGAffineTransformIdentity, 4.f, 4.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_3(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -87,7 +92,8 @@ void draw_pattern_3(void *color, CGContextRef ctx)
    CGContextFillRect(ctx, CGRectMake(2.f, 2.f, 1.f, 1.f));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_3(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -98,7 +104,8 @@ CGPatternRef create_pattern_3(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 4.f, 4.f), CGAffineTransformIdentity, 4.f, 4.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_4(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -115,7 +122,8 @@ void draw_pattern_4(void *color, CGContextRef ctx)
    CGContextFillRect(ctx, CGRectMake(7.f, 0.f, 1.f, 1.f));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_4(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -126,7 +134,8 @@ CGPatternRef create_pattern_4(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 8.f, 8.f), CGAffineTransformIdentity, 8.f, 8.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_5(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -143,7 +152,8 @@ void draw_pattern_5(void *color, CGContextRef ctx)
    CGContextFillRect(ctx, CGRectMake(7.f, 7.f, 1.f, 1.f));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_5(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -154,7 +164,8 @@ CGPatternRef create_pattern_5(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 8.f, 8.f), CGAffineTransformIdentity, 8.f, 8.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_6(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -167,7 +178,8 @@ void draw_pattern_6(void *color, CGContextRef ctx)
    CGContextFillRect(ctx, CGRectMake(2.f, 3.f, 1.f, 1.f));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_6(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -178,7 +190,8 @@ CGPatternRef create_pattern_6(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 4.f, 4.f), CGAffineTransformIdentity, 4.f, 4.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_7(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -191,7 +204,8 @@ void draw_pattern_7(void *color, CGContextRef ctx)
    CGContextFillRect(ctx, CGRectMake(3.f, 1.f, 1.f, 1.f));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_7(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -202,7 +216,8 @@ CGPatternRef create_pattern_7(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 4.f, 4.f), CGAffineTransformIdentity, 4.f, 4.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_8(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -256,7 +271,8 @@ void draw_pattern_8(void *color, CGContextRef ctx)
    CGContextFillRect(ctx, CGRectMake(7.f, 7.f, 1.f, 1.f));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_8(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -267,7 +283,8 @@ CGPatternRef create_pattern_8(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 8.f, 8.f), CGAffineTransformIdentity, 8.f, 8.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_9(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -297,7 +314,8 @@ void draw_pattern_9(void *color, CGContextRef ctx)
    CGContextFillRect(ctx, CGRectMake(7.f, 7.f, 1.f, 1.f));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_9(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -308,7 +326,8 @@ CGPatternRef create_pattern_9(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 8.f, 8.f), CGAffineTransformIdentity, 8.f, 8.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_10(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -343,7 +362,8 @@ void draw_pattern_10(void *color, CGContextRef ctx)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_10(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -354,7 +374,8 @@ CGPatternRef create_pattern_10(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 8.f, 8.f), CGAffineTransformIdentity, 8.f, 8.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_11(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -399,7 +420,8 @@ void draw_pattern_11(void *color, CGContextRef ctx)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_11(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -410,7 +432,8 @@ CGPatternRef create_pattern_11(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 8.f, 16.f), CGAffineTransformIdentity, 8.f, 16.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_12(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -458,7 +481,8 @@ void draw_pattern_12(void *color, CGContextRef ctx)
    CGContextFillRect(ctx, CGRectMake(7.f, 7.f, 1.f, 1.f));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_12(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -469,7 +493,8 @@ CGPatternRef create_pattern_12(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 8.f, 16.f), CGAffineTransformIdentity, 8.f, 16.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_13(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -499,7 +524,8 @@ void draw_pattern_13(void *color, CGContextRef ctx)
    CGContextFillRect(ctx, CGRectMake(7.f, 6.f,  1.f, 1.f));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_13(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -510,7 +536,8 @@ CGPatternRef create_pattern_13(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 8.f, 8.f), CGAffineTransformIdentity, 8.f, 8.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_14(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -534,7 +561,8 @@ void draw_pattern_14(void *color, CGContextRef ctx)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_14(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -545,7 +573,8 @@ CGPatternRef create_pattern_14(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 16.f, 16.f), CGAffineTransformIdentity, 16.f, 16.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_15(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -577,7 +606,8 @@ void draw_pattern_15(void *color, CGContextRef ctx)
    CGContextFillRect(ctx, CGRectMake(7.f, 3.f, 1.f, 1.f));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_15(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -588,7 +618,8 @@ CGPatternRef create_pattern_15(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 8.f, 8.f), CGAffineTransformIdentity, 8.f, 8.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_16(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -616,7 +647,8 @@ void draw_pattern_16(void *color, CGContextRef ctx)
    CGContextFillRect(ctx, CGRectMake(7.f, 5.f, 1.f, 1.f));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_16(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -627,7 +659,8 @@ CGPatternRef create_pattern_16(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 8.f, 8.f), CGAffineTransformIdentity, 8.f, 8.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void draw_pattern_17(void *color, CGContextRef ctx)
 {
    const float *rgb = static_cast<float *>(color);
@@ -639,7 +672,8 @@ void draw_pattern_17(void *color, CGContextRef ctx)
    CGContextFillRect(ctx, CGRectMake(2.f, 1.f, 1.f, 1.f));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_17(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;
@@ -650,7 +684,8 @@ CGPatternRef create_pattern_17(float *rgb)
    return CGPatternCreate(rgb, CGRectMake(0.f, 0.f, 4.f, 4.f), CGAffineTransformIdentity, 4.f, 4.f, kCGPatternTilingConstantSpacingMinimalDistortion, 1, &patternCallbacks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CGPatternRef create_pattern_18(float *rgb)
 {
    CGPatternCallbacks patternCallbacks;

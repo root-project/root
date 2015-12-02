@@ -38,7 +38,8 @@
 NamespaceImp(TMatrixTCramerInv);
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTCramerInv::Inv2x2(TMatrixT<Element> &m,Double_t *determ)
 {
@@ -69,7 +70,8 @@ Bool_t TMatrixTCramerInv::Inv2x2(TMatrixT<Element> &m,Double_t *determ)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTCramerInv::Inv3x3(TMatrixT<Element> &m,Double_t *determ)
 {
@@ -155,7 +157,8 @@ Bool_t TMatrixTCramerInv::Inv3x3(TMatrixT<Element> &m,Double_t *determ)
 #define GF32 14
 #define GF33 15
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTCramerInv::Inv4x4(TMatrixT<Element> &m,Double_t *determ)
 {
@@ -292,7 +295,8 @@ Bool_t TMatrixTCramerInv::Inv4x4(TMatrixT<Element> &m,Double_t *determ)
 #define GM43 23
 #define GM44 24
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTCramerInv::Inv5x5(TMatrixT<Element> &m,Double_t *determ)
 {
@@ -524,7 +528,8 @@ Bool_t TMatrixTCramerInv::Inv5x5(TMatrixT<Element> &m,Double_t *determ)
 #define GA54 34
 #define GA55 35
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTCramerInv::Inv6x6(TMatrixT<Element> &m,Double_t *determ)
 {

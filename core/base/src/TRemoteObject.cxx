@@ -36,21 +36,21 @@
 
 ClassImp(TRemoteObject);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a remote object.
+
 TRemoteObject::TRemoteObject()
 {
-   // Create a remote object.
-
    fIsFolder = kFALSE;
    fRemoteAddress = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a remote object.
+
 TRemoteObject::TRemoteObject(const char *name, const char *title,
                              const char *classname) : TNamed(name, title)
 {
-   // Create a remote object.
-
    fIsFolder = kFALSE;
    fClassName = classname;
    if ((fClassName == "TSystemDirectory") ||
@@ -64,18 +64,18 @@ TRemoteObject::TRemoteObject(const char *name, const char *title,
    fRemoteAddress = raddr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete remote object.
+
 TRemoteObject::~TRemoteObject()
 {
-   // Delete remote object.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse remote object.
+
 void TRemoteObject::Browse(TBrowser *b)
 {
-   // Browse remote object.
-
    TList *ret;
    TRemoteObject *robj;
    const char *file;
@@ -129,11 +129,11 @@ void TRemoteObject::Browse(TBrowser *b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse OS system directories.
+
 TList *TRemoteObject::Browse()
 {
-   // Browse OS system directories.
-
    // Collections to keep track of all browser objects that have been
    // generated. It's main goal is to prevent the contineous
    // allocations of new objects with the same names during browsing.
@@ -188,11 +188,11 @@ TList *TRemoteObject::Browse()
    return objects;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get remote file status.
+
 Bool_t TRemoteObject::GetFileStat(FileStat_t *buf)
 {
-   // Get remote file status.
-
    buf->fDev    = fFileStat.fDev;
    buf->fIno    = fFileStat.fIno;
    buf->fMode   = fFileStat.fMode;
@@ -204,11 +204,11 @@ Bool_t TRemoteObject::GetFileStat(FileStat_t *buf)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remote object streamer.
+
 void TRemoteObject::Streamer(TBuffer &b)
 {
-   // Remote object streamer.
-
    if (b.IsReading()) {
       b >> fFileStat.fDev;
       b >> fFileStat.fIno;

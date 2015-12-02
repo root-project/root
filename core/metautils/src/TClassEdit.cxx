@@ -20,12 +20,12 @@ namespace {
 
 namespace std {} using namespace std;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the length, if any, taken by std:: and any
+/// potential inline namespace (well compiler detail namespace).
+
 static size_t StdLen(const std::string_view name)
 {
-   // Return the length, if any, taken by std:: and any
-   // potential inline namespace (well compiler detail namespace).
-
    size_t len = 0;
    if (name.compare(0,5,"std::")==0) {
       len = 5;
@@ -67,31 +67,32 @@ static size_t StdLen(const std::string_view name)
    return len;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove std:: and any potential inline namespace (well compiler detail
+/// namespace.
+
 static void RemoveStd(std::string &name, size_t pos = 0)
 {
-   // Remove std:: and any potential inline namespace (well compiler detail
-   // namespace.
-
    size_t len = StdLen({name.data()+pos,name.length()-pos});
    if (len) {
       name.erase(pos,len);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove std:: and any potential inline namespace (well compiler detail
+/// namespace.
+
 static void RemoveStd(std::string_view &name)
 {
-   // Remove std:: and any potential inline namespace (well compiler detail
-   // namespace.
-
    size_t len = StdLen(name);
    if (len) {
       name.remove_prefix(len);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TClassEdit::EComplexType TClassEdit::GetComplexType(const char* clName)
 {
    if (0 == strncmp(clName, "complex<", 8)) {
@@ -112,43 +113,45 @@ TClassEdit::EComplexType TClassEdit::GetComplexType(const char* clName)
    return EComplexType::kNone;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TClassEdit::Init(TClassEdit::TInterpreterLookupHelper *helper)
 {
    gInterpreterHelper = helper;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TClassEdit::TSplitType::TSplitType(const char *type2split, EModType mode) : fName(type2split), fNestedLocation(0)
 {
-   // default constructor
    TClassEdit::GetSplit(type2split, fElements, fNestedLocation, mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  type     : type name: vector<list<classA,allocator>,allocator>[::iterator]
+///  result:    0          : not stl container and not declared inside an stl container.
+///             result: code of container that the type or is the scope of the type
+
 ROOT::ESTLType TClassEdit::TSplitType::IsInSTL() const
 {
-   //  type     : type name: vector<list<classA,allocator>,allocator>[::iterator]
-   //  result:    0          : not stl container and not declared inside an stl container.
-   //             result: code of container that the type or is the scope of the type
-
    if (fElements[0].empty()) return ROOT::kNotSTL;
    return STLKind(fElements[0]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  type     : type name: vector<list<classA,allocator>,allocator>
+///  testAlloc: if true, we test allocator, if it is not default result is negative
+///  result:    0          : not stl container
+///             abs(result): code of container 1=vector,2=list,3=deque,4=map
+///                           5=multimap,6=set,7=multiset
+///             positive val: we have a vector or list with default allocator to any depth
+///                   like vector<list<vector<int>>>
+///             negative val: STL container other than vector or list, or non default allocator
+///                           For example: vector<deque<int>> has answer -1
+
 int TClassEdit::TSplitType::IsSTLCont(int testAlloc) const
 {
-   //  type     : type name: vector<list<classA,allocator>,allocator>
-   //  testAlloc: if true, we test allocator, if it is not default result is negative
-   //  result:    0          : not stl container
-   //             abs(result): code of container 1=vector,2=list,3=deque,4=map
-   //                           5=multimap,6=set,7=multiset
-   //             positive val: we have a vector or list with default allocator to any depth
-   //                   like vector<list<vector<int>>>
-   //             negative val: STL container other than vector or list, or non default allocator
-   //                           For example: vector<deque<int>> has answer -1
-
 
    if (fElements[0].empty()) return 0;
    int numb = fElements.size();
@@ -187,12 +190,12 @@ int TClassEdit::TSplitType::IsSTLCont(int testAlloc) const
    return kind;
 }
 #include <iostream>
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+/// Return the absolute type of typeDesc into the string answ.
+
 void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
 {
-   /////////////////////////////////////////////////////////////////////////////
-   // Return the absolute type of typeDesc into the string answ.
-
    // E.g.: typeDesc = "class const volatile TNamed**", returns "TNamed**".
    // if (mode&1) remove last "*"s                     returns "TNamed"
    // if (mode&2) remove default allocators from STL containers
@@ -457,12 +460,12 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    if (tailLoc) answ += fElements[tailLoc].c_str()+tailOffset;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Converts STL container name to number. vector -> 1, etc..
+/// If len is greater than 0, only look at that many characters in the string.
+
 ROOT::ESTLType TClassEdit::STLKind(std::string_view type)
 {
-   // Converts STL container name to number. vector -> 1, etc..
-   // If len is greater than 0, only look at that many characters in the string.
-
    unsigned char offset = 0;
    if (type.compare(0,6,"const ")==0) { offset += 6; }
    offset += StdLen(type.substr(offset));
@@ -502,11 +505,11 @@ ROOT::ESTLType TClassEdit::STLKind(std::string_view type)
    return ROOT::kNotSTL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///      Return number of arguments for STL container before allocator
+
 int   TClassEdit::STLArgs(int kind)
 {
-//      Return number of arguments for STL container before allocator
-
    static const char  stln[] =// min number of container arguments
       //     vector, list, deque, map, multimap, set, multiset, bitset,
       {    1,     1,    1,     1,   3,        3,   2,        2,      1,
@@ -516,7 +519,8 @@ int   TClassEdit::STLArgs(int kind)
    return stln[kind];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static size_t findNameEnd(const std::string_view full)
 {
    int level = 0;
@@ -538,18 +542,19 @@ static size_t findNameEnd(const std::string_view full)
    return full.length();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static size_t findNameEnd(const std::string &full, size_t pos)
 {
    return pos + findNameEnd( {full.data()+pos,full.length()-pos} );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return whether or not 'allocname' is the STL default allocator for type
+/// 'classname'
+
 bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
 {
-   // return whether or not 'allocname' is the STL default allocator for type
-   // 'classname'
-
    string_view a( allocname );
    RemoveStd(a);
 
@@ -593,14 +598,14 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
    return true;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return whether or not 'allocname' is the STL default allocator for a key
+/// of type 'keyclassname' and a value of type 'valueclassname'
+
 bool TClassEdit::IsDefAlloc(const char *allocname,
                             const char *keyclassname,
                             const char *valueclassname)
 {
-   // return whether or not 'allocname' is the STL default allocator for a key
-   // of type 'keyclassname' and a value of type 'valueclassname'
-
    if (IsDefAlloc(allocname,keyclassname)) return true;
 
    string_view a( allocname );
@@ -690,11 +695,12 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
    return true;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return whether or not 'elementName' is the STL default Element for type
+/// 'classname'
+
 static bool IsDefElement(const char *elementName, const char* defaultElementName, const char *classname)
 {
-   // return whether or not 'elementName' is the STL default Element for type
-   // 'classname'
    string c = elementName;
 
    size_t pos = StdLen(c);
@@ -731,44 +737,45 @@ static bool IsDefElement(const char *elementName, const char* defaultElementName
    return true;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return whether or not 'compare' is the STL default comparator for type
+/// 'classname'
+
 bool TClassEdit::IsDefComp(const char *compname, const char *classname)
 {
-   // return whether or not 'compare' is the STL default comparator for type
-   // 'classname'
-
    return IsDefElement(compname, "less<", classname);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return whether or not 'predname' is the STL default predicate for type
+/// 'classname'
+
 bool TClassEdit::IsDefPred(const char *predname, const char *classname)
 {
-   // return whether or not 'predname' is the STL default predicate for type
-   // 'classname'
    return IsDefElement(predname, "equal_to<", classname);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return whether or not 'hashname' is the STL default hash for type
+/// 'classname'
+
 bool TClassEdit::IsDefHash(const char *hashname, const char *classname)
 {
-   // return whether or not 'hashname' is the STL default hash for type
-   // 'classname'
-
    return IsDefElement(hashname, "hash<", classname);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the normalized name.  See TMetaUtils::GetNormalizedName.
+///
+/// Return the type name normalized for ROOT,
+/// keeping only the ROOT opaque typedef (Double32_t, etc.) and
+/// removing the STL collections default parameter if any.
+///
+/// Compare to TMetaUtils::GetNormalizedName, this routines does not
+/// and can not add default template parameters.
+
 void TClassEdit::GetNormalizedName(std::string &norm_name, std::string_view name)
 {
-   // Return the normalized name.  See TMetaUtils::GetNormalizedName.
-   //
-   // Return the type name normalized for ROOT,
-   // keeping only the ROOT opaque typedef (Double32_t, etc.) and
-   // removing the STL collections default parameter if any.
-   //
-   // Compare to TMetaUtils::GetNormalizedName, this routines does not
-   // and can not add default template parameters.
-
    norm_name = std::string(name); // NOTE: Is that the shortest version?
 
    // Remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
@@ -793,22 +800,22 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, std::string_view name
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
+
 string TClassEdit::GetLong64_Name(const char* original)
 {
-   // Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
-
    if (original==0)
       return "";
    else
       return GetLong64_Name(string(original));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
+
 string TClassEdit::GetLong64_Name(const string& original)
 {
-   // Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
-
    static const char* longlong_s  = "long long";
    static const char* ulonglong_s = "unsigned long long";
    static const unsigned int longlong_len  = strlen(longlong_s);
@@ -827,11 +834,11 @@ string TClassEdit::GetLong64_Name(const string& original)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the start of the unqualified name include in 'original'.
+
 const char *TClassEdit::GetUnqualifiedName(const char *original)
 {
-   // Return the start of the unqualified name include in 'original'.
-
    const char *lastPos = original;
    {
       long depth = 0;
@@ -848,7 +855,8 @@ const char *TClassEdit::GetUnqualifiedName(const char *original)
    return lastPos;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static void R__FindTrailing(std::string &full,  /*modified*/
                             std::string &stars /* the literal output */
                             )
@@ -905,19 +913,19 @@ static void R__FindTrailing(std::string &full,  /*modified*/
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+///  Stores in output (after emptying it) the splited type.
+///  Stores the location of the tail (nested names) in nestedLoc (0 indicates no tail).
+///  Return the number of elements stored.
+///
+///  First in list is the template name or is empty
+///         "vector<list<int>,alloc>**" to "vector" "list<int>" "alloc" "**"
+///   or    "TNamed*" to "" "TNamed" "*"
+////////////////////////////////////////////////////////////////////////////
+
 int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLoc, EModType mode)
 {
-   ///////////////////////////////////////////////////////////////////////////
-   //  Stores in output (after emptying it) the splited type.
-   //  Stores the location of the tail (nested names) in nestedLoc (0 indicates no tail).
-   //  Return the number of elements stored.
-   //
-   //  First in list is the template name or is empty
-   //         "vector<list<int>,alloc>**" to "vector" "list<int>" "alloc" "**"
-   //   or    "TNamed*" to "" "TNamed" "*"
-   ///////////////////////////////////////////////////////////////////////////
-
    nestedLoc = 0;
    output.clear();
    if (strlen(type)==0) return 0;
@@ -1084,24 +1092,24 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+///      Cleanup type description, redundant blanks removed
+///      and redundant tail ignored
+///      return *tail = pointer to last used character
+///      if (mode==0) keep keywords
+///      if (mode==1) remove keywords outside the template params
+///      if (mode>=2) remove the keywords everywhere.
+///      if (tail!=0) cut before the trailing *
+///
+///      The keywords currently are: "const" , "volatile" removed
+///
+///
+///      CleanType(" A<B, C< D, E> > *,F,G>") returns "A<B,C<D,E> >*"
+////////////////////////////////////////////////////////////////////////////
+
 string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 {
-   ///////////////////////////////////////////////////////////////////////////
-   //      Cleanup type description, redundant blanks removed
-   //      and redundant tail ignored
-   //      return *tail = pointer to last used character
-   //      if (mode==0) keep keywords
-   //      if (mode==1) remove keywords outside the template params
-   //      if (mode>=2) remove the keywords everywhere.
-   //      if (tail!=0) cut before the trailing *
-   //
-   //      The keywords currently are: "const" , "volatile" removed
-   //
-   //
-   //      CleanType(" A<B, C< D, E> > *,F,G>") returns "A<B,C<D,E> >*"
-   ///////////////////////////////////////////////////////////////////////////
-
    static const char* remove[] = {"class","const","volatile",0};
    static bool isinit = false;
    static std::vector<size_t> lengths;
@@ -1161,20 +1169,20 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+/// Return the absolute type of typeDesc.
+/// E.g.: typeDesc = "class const volatile TNamed**", returns "TNamed**".
+/// if (mode&1) remove last "*"s                     returns "TNamed"
+/// if (mode&2) remove default allocators from STL containers
+/// if (mode&4) remove all     allocators from STL containers
+/// if (mode&8) return inner class of stl container. list<innerClass>
+/// if (mode&16) return deapest class of stl container. vector<list<deapest>>
+/// if (mode&kDropAllDefault) remove default template arguments
+//////////////////////////////////////////////////////////////////////////////
+
 string TClassEdit::ShortType(const char *typeDesc, int mode)
 {
-   /////////////////////////////////////////////////////////////////////////////
-   // Return the absolute type of typeDesc.
-   // E.g.: typeDesc = "class const volatile TNamed**", returns "TNamed**".
-   // if (mode&1) remove last "*"s                     returns "TNamed"
-   // if (mode&2) remove default allocators from STL containers
-   // if (mode&4) remove all     allocators from STL containers
-   // if (mode&8) return inner class of stl container. list<innerClass>
-   // if (mode&16) return deapest class of stl container. vector<list<deapest>>
-   // if (mode&kDropAllDefault) remove default template arguments
-   /////////////////////////////////////////////////////////////////////////////
-
    string answer;
 
    // get list of all arguments
@@ -1186,12 +1194,12 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
    return answer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the type is one the interpreter details which are
+/// only forward declared (ClassInfo_t etc..)
+
 bool TClassEdit::IsInterpreterDetail(const char *type)
 {
-   // Return true if the type is one the interpreter details which are
-   // only forward declared (ClassInfo_t etc..)
-
    size_t len = strlen(type);
    if (len < 2 || strncmp(type+len-2,"_t",2) != 0) return false;
 
@@ -1205,30 +1213,30 @@ bool TClassEdit::IsInterpreterDetail(const char *type)
    return false;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true is the name is std::bitset<number> or bitset<number>
+
 bool TClassEdit::IsSTLBitset(const char *classname)
 {
-   // Return true is the name is std::bitset<number> or bitset<number>
-
    size_t offset = StdLen(classname);
    if ( strncmp(classname+offset,"bitset<",strlen("bitset<"))==0) return true;
    return false;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the type of STL collection, if any, that is the underlying type
+/// of the given type.   Namely return the value of IsSTLCont after stripping
+/// pointer, reference and constness from the type.
+///    UnderlyingIsSTLCont("vector<int>*") == IsSTLCont("vector<int>")
+/// See TClassEdit::IsSTLCont
+///
+///  type     : type name: vector<list<classA,allocator>,allocator>*
+///  result:    0          : not stl container
+///             code of container 1=vector,2=list,3=deque,4=map
+///                     5=multimap,6=set,7=multiset
+
 ROOT::ESTLType TClassEdit::UnderlyingIsSTLCont(std::string_view type)
 {
-   // Return the type of STL collection, if any, that is the underlying type
-   // of the given type.   Namely return the value of IsSTLCont after stripping
-   // pointer, reference and constness from the type.
-   //    UnderlyingIsSTLCont("vector<int>*") == IsSTLCont("vector<int>")
-   // See TClassEdit::IsSTLCont
-   //
-   //  type     : type name: vector<list<classA,allocator>,allocator>*
-   //  result:    0          : not stl container
-   //             code of container 1=vector,2=list,3=deque,4=map
-   //                     5=multimap,6=set,7=multiset
-
    if (type.compare(0,6,"const ",6) == 0)
       type.remove_prefix(6);
 
@@ -1240,14 +1248,14 @@ ROOT::ESTLType TClassEdit::UnderlyingIsSTLCont(std::string_view type)
    return IsSTLCont(type);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  type     : type name: vector<list<classA,allocator>,allocator>
+///  result:    0          : not stl container
+///             code of container 1=vector,2=list,3=deque,4=map
+///                     5=multimap,6=set,7=multiset
+
 ROOT::ESTLType TClassEdit::IsSTLCont(std::string_view type)
 {
-   //  type     : type name: vector<list<classA,allocator>,allocator>
-   //  result:    0          : not stl container
-   //             code of container 1=vector,2=list,3=deque,4=map
-   //                     5=multimap,6=set,7=multiset
-
    auto pos = type.find('<');
    if (pos==std::string_view::npos) return ROOT::kNotSTL;
 
@@ -1264,30 +1272,30 @@ ROOT::ESTLType TClassEdit::IsSTLCont(std::string_view type)
    return STLKind({type.data(),pos});
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  type     : type name: vector<list<classA,allocator>,allocator>
+///  testAlloc: if true, we test allocator, if it is not default result is negative
+///  result:    0          : not stl container
+///             abs(result): code of container 1=vector,2=list,3=deque,4=map
+///                           5=multimap,6=set,7=multiset
+///             positive val: we have a vector or list with default allocator to any depth
+///                   like vector<list<vector<int>>>
+///             negative val: STL container other than vector or list, or non default allocator
+///                           For example: vector<deque<int>> has answer -1
+
 int TClassEdit::IsSTLCont(const char *type, int testAlloc)
 {
-   //  type     : type name: vector<list<classA,allocator>,allocator>
-   //  testAlloc: if true, we test allocator, if it is not default result is negative
-   //  result:    0          : not stl container
-   //             abs(result): code of container 1=vector,2=list,3=deque,4=map
-   //                           5=multimap,6=set,7=multiset
-   //             positive val: we have a vector or list with default allocator to any depth
-   //                   like vector<list<vector<int>>>
-   //             negative val: STL container other than vector or list, or non default allocator
-   //                           For example: vector<deque<int>> has answer -1
-
    if (strchr(type,'<')==0) return 0;
 
    TSplitType arglist( type );
    return arglist.IsSTLCont(testAlloc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return true if the class belongs to the std namespace
+
 bool TClassEdit::IsStdClass(const char *classname)
 {
-   // return true if the class belongs to the std namespace
-
    classname += StdLen( classname );
    if ( strcmp(classname,"string")==0 ) return true;
    if ( strncmp(classname,"bitset<",strlen("bitset<"))==0) return true;
@@ -1318,7 +1326,8 @@ bool TClassEdit::IsStdClass(const char *classname)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 bool TClassEdit::IsVectorBool(const char *name) {
    TSplitType splitname( name );
 
@@ -1326,7 +1335,8 @@ bool TClassEdit::IsVectorBool(const char *name) {
       && ( splitname.fElements[1] == "bool" || splitname.fElements[1]=="Bool_t");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static void ResolveTypedefProcessType(const char *tname,
                                       unsigned int /* len */,
                                       unsigned int cursor,
@@ -1380,14 +1390,14 @@ static void ResolveTypedefProcessType(const char *tname,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static void ResolveTypedefImpl(const char *tname,
                                unsigned int len,
                                unsigned int &cursor,
                                bool &modified,
                                std::string &result)
 {
-
    // Need to parse and deal with
    // A::B::C< D, E::F, G::H<I,J>::K::L >::M
    // where E might be replace by N<O,P>
@@ -1621,10 +1631,10 @@ static void ResolveTypedefImpl(const char *tname,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 string TClassEdit::ResolveTypedef(const char *tname, bool /* resolveAll */)
 {
-
    // Return the name of type 'tname' with all its typedef components replaced
    // by the actual type its points to
    // For example for "typedef MyObj MyObjTypedef;"
@@ -1654,10 +1664,10 @@ string TClassEdit::ResolveTypedef(const char *tname, bool /* resolveAll */)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 string TClassEdit::InsertStd(const char *tname)
 {
-
    // Return the name of type 'tname' with all STL classes prepended by "std::".
    // For example for "vector<set<auto_ptr<int*> > >" it returns
    //    "std::vector<std::set<std::auto_ptr<int*> > >"
@@ -1834,12 +1844,12 @@ string TClassEdit::InsertStd(const char *tname)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Demangle in a portable way the type id name.
+/// IMPORTANT: The caller is responsible for freeing the returned const char*
+
 char* TClassEdit::DemangleTypeIdName(const std::type_info& ti, int& errorCode)
 {
-   // Demangle in a portable way the type id name.
-   // IMPORTANT: The caller is responsible for freeing the returned const char*
-
    const char* mangled_name = ti.name();
    return DemangleName(mangled_name, errorCode);
 }

@@ -33,7 +33,9 @@
 
  using namespace TMVA;
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 CCPruner::CCPruner( DecisionTree* t_max, const EventList* validationSample,
                     SeparationBase* qualityIndex ) : 
    fAlpha(-1.0), 
@@ -41,7 +43,6 @@ CCPruner::CCPruner( DecisionTree* t_max, const EventList* validationSample,
    fValidationDataSet(NULL),
    fOptimalK(-1)
 {
-   // constructor
    fTree = t_max;
    
    if(qualityIndex == NULL) {
@@ -55,7 +56,9 @@ CCPruner::CCPruner( DecisionTree* t_max, const EventList* validationSample,
    fDebug = kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 CCPruner::CCPruner( DecisionTree* t_max, const DataSet* validationSample,
                     SeparationBase* qualityIndex ) : 
    fAlpha(-1.0), 
@@ -63,7 +66,6 @@ CCPruner::CCPruner( DecisionTree* t_max, const DataSet* validationSample,
    fValidationDataSet(validationSample),
    fOptimalK(-1)
 {
-   // constructor
    fTree = t_max;
    
    if(qualityIndex == NULL) {
@@ -78,18 +80,19 @@ CCPruner::CCPruner( DecisionTree* t_max, const DataSet* validationSample,
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CCPruner::~CCPruner( )
 {
    if(fOwnQIndex) delete fQualityIndex;
    // destructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// determine the pruning sequence
+
 void CCPruner::Optimize( )
 {
-   // determine the pruning sequence
-
    Bool_t HaveStopCondition = fAlpha > 0; // keep pruning the tree until reach the limit fAlpha
 
    // build a wrapper tree to perform work on
@@ -201,10 +204,11 @@ void CCPruner::Optimize( )
    delete dTWrapper;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the prune strength (=alpha) corresponding to the prune sequence
+
 std::vector<DecisionTreeNode*> CCPruner::GetOptimalPruneSequence( ) const
 {
-   // return the prune strength (=alpha) corresponding to the prune sequence
    std::vector<DecisionTreeNode*> optimalSequence;
    if( fOptimalK >= 0 ) {
       for( Int_t i = 0; i < fOptimalK; i++ ) {

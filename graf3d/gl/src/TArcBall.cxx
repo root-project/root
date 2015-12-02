@@ -26,7 +26,8 @@ ClassImp(TArcBall)
 //Diameter is       2.0f
 //Radius is         1.0f
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline void Vector3dCross(Double_t *NewObj, const Double_t * v1, const Double_t *v2)
 {
    NewObj[0] = v1[1] * v2[2] - v1[2] * v2[1];
@@ -34,32 +35,37 @@ inline void Vector3dCross(Double_t *NewObj, const Double_t * v1, const Double_t 
    NewObj[2] = v1[0] * v2[1] - v1[1] * v2[0];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline Double_t Vector3dDot(const Double_t *NewObj, const Double_t *v1)
 {
    return  NewObj[0] * v1[0] + NewObj[1] * v1[1] + NewObj[2] * v1[2];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline Double_t Vector3dLengthSquared(const Double_t *NewObj)
 {
    return  NewObj[0] * NewObj[0] + NewObj[1] * NewObj[1] + NewObj[2] * NewObj[2];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline Double_t Vector3dLength(const Double_t *NewObj)
 {
    return TMath::Sqrt(Vector3dLengthSquared(NewObj));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline void Matrix3dSetZero(Double_t * NewObj)
 {
    for (Int_t i = 0; i < 9; ++i)
       NewObj[i] = 0.;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline void Matrix3dSetIdentity(Double_t *NewObj)
 {
    Matrix3dSetZero(NewObj);
@@ -67,7 +73,8 @@ inline void Matrix3dSetIdentity(Double_t *NewObj)
    NewObj[0] = NewObj[4] = NewObj[8] = 1.;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Matrix3dSetRotationFromQuat4d(Double_t *NewObj, const Double_t *q1)
 {
    Double_t n = (q1[0] * q1[0]) + (q1[1] * q1[1]) + (q1[2] * q1[2]) + (q1[3] * q1[3]);
@@ -82,7 +89,8 @@ void Matrix3dSetRotationFromQuat4d(Double_t *NewObj, const Double_t *q1)
    NewObj[2] = xz - wy;          NewObj[5] = yz + wx;          NewObj[8] = 1.0f - (xx + yy);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Matrix3dMulMatrix3d(Double_t *NewObj, const Double_t *m1)
 {
    Double_t result[9];
@@ -103,7 +111,8 @@ void Matrix3dMulMatrix3d(Double_t *NewObj, const Double_t *m1)
       NewObj[i] = result[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline void Matrix4dSetRotationScaleFromMatrix4d(Double_t *NewObj, const Double_t *m1)
 {
    NewObj[0] = m1[0]; NewObj[4] = m1[4]; NewObj[8] = m1[8];
@@ -111,7 +120,8 @@ inline void Matrix4dSetRotationScaleFromMatrix4d(Double_t *NewObj, const Double_
    NewObj[2] = m1[2]; NewObj[6] = m1[6]; NewObj[10] = m1[10];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline Double_t Matrix4fSVD(const Double_t *NewObj, Double_t *rot3, Double_t *rot4)
 {
    Double_t s = TMath::Sqrt(
@@ -165,7 +175,8 @@ inline Double_t Matrix4fSVD(const Double_t *NewObj, Double_t *rot3, Double_t *ro
    return s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline void Matrix4dSetRotationScaleFromMatrix3d(Double_t *NewObj, const Double_t *m1)
 {
    NewObj[0] = m1[0]; NewObj[4] = m1[3]; NewObj[8] = m1[6];
@@ -173,7 +184,8 @@ inline void Matrix4dSetRotationScaleFromMatrix3d(Double_t *NewObj, const Double_
    NewObj[2] = m1[2]; NewObj[6] = m1[5]; NewObj[10] = m1[8];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline void Matrix4dMulRotationScale(Double_t *NewObj, Double_t scale)
 {
    NewObj[0] *= scale; NewObj[4] *= scale; NewObj[8] *= scale;
@@ -181,7 +193,8 @@ inline void Matrix4dMulRotationScale(Double_t *NewObj, Double_t scale)
    NewObj[2] *= scale; NewObj[6] *= scale; NewObj[10] *= scale;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Matrix4dSetRotationFromMatrix3d(Double_t *NewObj, const Double_t *m1)
 {
    Double_t scale = Matrix4fSVD(NewObj, 0, 0);
@@ -189,10 +202,11 @@ void Matrix4dSetRotationFromMatrix3d(Double_t *NewObj, const Double_t *m1)
    Matrix4dMulRotationScale(NewObj, scale);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///map to sphere
+
 inline void TArcBall::MapToSphere(const TPoint &NewPt, Double_t *NewVec) const
 {
-   //map to sphere
    Double_t tempPt[] = { static_cast<Double_t>(NewPt.fX), static_cast<Double_t>(NewPt.fY)};
    //Adjust point coords and scale down to range of [-1 ... 1]
    tempPt[0]  = tempPt[0] * fAdjustWidth  - 1.;
@@ -214,32 +228,35 @@ inline void TArcBall::MapToSphere(const TPoint &NewPt, Double_t *NewVec) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TArcBall::TArcBall(UInt_t Width, UInt_t Height)
          :fThisRot(), fLastRot(),
          fTransform(), fStVec(),
          fEnVec(), fAdjustWidth(0.),
          fAdjustHeight(0.)
 {
-   // constructor
    SetBounds(Width, Height);
    ResetMatrices();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Mouse down
+
 void TArcBall::Click(const TPoint &NewPt)
 {
-   //Mouse down
    MapToSphere(NewPt, fStVec);
 
    for (Int_t i = 0; i < 9; ++i)
       fLastRot[i] = fThisRot[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Mouse drag, calculate rotation
+
 void TArcBall::Drag(const TPoint &NewPt)
 {
-   //Mouse drag, calculate rotation
    MapToSphere(NewPt, fEnVec);
    //Return the quaternion equivalent to the rotation
    Double_t newRot[4] = {0.};
@@ -262,10 +279,11 @@ void TArcBall::Drag(const TPoint &NewPt)
    Matrix4dSetRotationFromMatrix3d(fTransform, fThisRot);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set rotation matrix as union
+
 void TArcBall::ResetMatrices()
 {
-   //Set rotation matrix as union
    fTransform[0] = 1.f, fTransform[1] = fTransform[2] = fTransform[3] =
    fTransform[4] = 0.f, fTransform[5] = 1.f, fTransform[6] = fTransform[7] =
    fTransform[8] = fTransform[9] = 0.f, fTransform[10] = 1.f, fTransform[11] =

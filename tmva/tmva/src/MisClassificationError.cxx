@@ -36,10 +36,11 @@
 
 ClassImp(TMVA::MisClassificationError)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Misclassifiacton error   criterion: 1-max(p, 1-p)  (p: purity= s/(s+b))
+
 Double_t  TMVA::MisClassificationError::GetSeparationIndex( const Double_t &s, const Double_t &b )
 {
-   // Misclassifiacton error   criterion: 1-max(p, 1-p)  (p: purity= s/(s+b))
    if ( s+b <= 0) return 0;
 
    Double_t p = s/(s+b);

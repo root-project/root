@@ -26,7 +26,8 @@
 
 ClassImp(TLeaf)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TLeaf::TLeaf()
    : TNamed()
    , fNdata(0)
@@ -40,7 +41,11 @@ TLeaf::TLeaf()
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a Leaf.
+///
+/// See the TTree and TBranch constructors for explanation of parameters.
+
 TLeaf::TLeaf(TBranch *parent, const char* name, const char *)
    : TNamed(name, name)
    , fNdata(0)
@@ -52,10 +57,6 @@ TLeaf::TLeaf(TBranch *parent, const char* name, const char *)
    , fLeafCount(0)
    , fBranch(parent)
 {
-   // Create a Leaf.
-   //
-   // See the TTree and TBranch constructors for explanation of parameters.
-
    fLeafCount = GetLeafCounter(fLen);
 
    if (fLen == -1) {
@@ -67,7 +68,9 @@ TLeaf::TLeaf(TBranch *parent, const char* name, const char *)
    if (bracket) fName.ReplaceAll(bracket,"");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TLeaf::TLeaf(const TLeaf& lf) :
   TNamed(lf),
   fNdata(lf.fNdata),
@@ -79,13 +82,13 @@ TLeaf::TLeaf(const TLeaf& lf) :
   fLeafCount(lf.fLeafCount),
   fBranch(lf.fBranch)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TLeaf& TLeaf::operator=(const TLeaf& lf)
 {
-   //assignment operator
    if(this!=&lf) {
       TNamed::operator=(lf);
       fNdata=lf.fNdata;
@@ -100,11 +103,11 @@ TLeaf& TLeaf::operator=(const TLeaf& lf)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Destructor.
+
 TLeaf::~TLeaf()
 {
-   // -- Destructor.
-
    if (fBranch) {
       TTree* tree = fBranch->GetTree();
       fBranch = 0;
@@ -116,11 +119,11 @@ TLeaf::~TLeaf()
    fLeafCount = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse the content of this leaf.
+
 void TLeaf::Browse(TBrowser* b)
 {
-   // Browse the content of this leaf.
-
    if (strchr(GetName(), '.')) {
       fBranch->GetTree()->Draw(GetName(), "", b ? b->GetDrawOption() : "");
    } else {
@@ -138,30 +141,31 @@ void TLeaf::Browse(TBrowser* b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Pack leaf elements in Basket output buffer.
+
 void TLeaf::FillBasket(TBuffer &)
 {
-   // -- Pack leaf elements in Basket output buffer.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Return a pointer to the counter of this leaf.
+///
+///  If leaf name has the form var[nelem], where nelem is alphanumeric, then
+///     if nelem is a leaf name, return countval = 1 and the pointer to
+///          the leaf named nelem, otherwise return 0.
+///  If leaf name has the form var[nelem], where nelem is a non-negative integer, then
+///     return countval = nelem and a null pointer.
+///  If leaf name has the form of a multi-dimensional array (e.g. var[nelem][nelem2]
+///     where nelem and nelem2 are non-negative integers) then
+///     return countval = product of all dimension sizes and a null pointer.
+///  If leaf name has the form var[... (and does not match the previous 2
+///     cases) return countval = -1 and null pointer;
+///  Otherwise return countval = 1 and a null pointer.
+///
+
 TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
 {
-   // -- Return a pointer to the counter of this leaf.
-   //
-   //  If leaf name has the form var[nelem], where nelem is alphanumeric, then
-   //     if nelem is a leaf name, return countval = 1 and the pointer to
-   //          the leaf named nelem, otherwise return 0.
-   //  If leaf name has the form var[nelem], where nelem is a non-negative integer, then
-   //     return countval = nelem and a null pointer.
-   //  If leaf name has the form of a multi-dimensional array (e.g. var[nelem][nelem2]
-   //     where nelem and nelem2 are non-negative integers) then
-   //     return countval = product of all dimension sizes and a null pointer.
-   //  If leaf name has the form var[... (and does not match the previous 2
-   //     cases) return countval = -1 and null pointer;
-   //  Otherwise return countval = 1 and a null pointer.
-   //
-
    countval = 1;
    const char* name = GetTitle();
    char* bleft = (char*) strchr(name, '[');
@@ -268,11 +272,11 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Return the number of effective elements of this leaf.
+
 Int_t TLeaf::GetLen() const
 {
-   // -- Return the number of effective elements of this leaf.
-
    if (fLeafCount) {
       // -- We are a varying length array.
       Int_t len = Int_t(fLeafCount->GetValue());
@@ -287,18 +291,18 @@ Int_t TLeaf::GetLen() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Helper routine for TLeafX::SetAddress.
+///
+/// The return value is non-zero if we owned the old
+/// value buffer and must delete it now.  The size
+/// of the value buffer is recalculated and stored,
+/// and a decision is made whether or not we own the
+/// new value buffer.
+///
+
 Int_t TLeaf::ResetAddress(void* addr, Bool_t calledFromDestructor)
 {
-   // -- Helper routine for TLeafX::SetAddress.
-   //
-   // The return value is non-zero if we owned the old
-   // value buffer and must delete it now.  The size
-   // of the value buffer is recalculated and stored,
-   // and a decision is made whether or not we own the
-   // new value buffer.
-   //
-
    // The kNewValue bit records whether or not we own
    // the current value buffer or not.  If we own it,
    // then we are responsible for deleting it.
@@ -330,11 +334,11 @@ Int_t TLeaf::ResetAddress(void* addr, Bool_t calledFromDestructor)
    return deleteValue;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Set the leaf count of this leaf.
+
 void TLeaf::SetLeafCount(TLeaf *leaf)
 {
-   // -- Set the leaf count of this leaf.
-
    if (IsZombie() && (fLen == -1) && leaf) {
       // The constructor noted that it could not find the
       // leafcount.  Now that we did find it, let's remove
@@ -345,11 +349,11 @@ void TLeaf::SetLeafCount(TLeaf *leaf)
    fLeafCount = leaf;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Stream a class object.
+
 void TLeaf::Streamer(TBuffer &b)
 {
-   // -- Stream a class object.
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);

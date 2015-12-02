@@ -65,16 +65,17 @@ ULong64_t TSocket::fgBytesRecv;
 
 //---- error handling ----------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to ErrorHandler (protected).
+
 void TXSocket::DoError(int level, const char *location, const char *fmt, va_list va) const
 {
-   // Interface to ErrorHandler (protected).
-
    ::ErrorHandler(level, Form("TXSocket::%s", location), fmt, va);
 }
 
 //----- Ping handler -----------------------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TXSocketPingHandler : public TFileHandler {
    TXSocket  *fSocket;
 public:
@@ -84,10 +85,11 @@ public:
    Bool_t ReadNotify() { return Notify(); }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ping the socket
+
 Bool_t TXSocketPingHandler::Notify()
 {
-   // Ping the socket
    fSocket->Ping("ping handler");
 
    return kTRUE;
@@ -106,28 +108,28 @@ std::list<TXSockBuf *> TXSocket::fgSQue;     // list of spare buffers
 Long64_t     TXSockBuf::fgBuffMem = 0;       // Total allocated memory
 Long64_t     TXSockBuf::fgMemMax = 10485760; // Max allowed allocated memory [10 MB]
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+/// Open the connection to a remote XrdProofd instance and start a PROOF
+/// session.
+/// The mode 'm' indicates the role of this connection:
+///     'a'      Administrator; used by an XPD to contact the head XPD
+///     'i'      Internal; used by a TXProofServ to call back its creator
+///              (see XrdProofUnixConn)
+///     'C'      PROOF manager: open connection only (do not start a session)
+///     'M'      Client creating a top master
+///     'A'      Client attaching to top master
+///     'm'      Top master creating a submaster
+///     's'      Master creating a slave
+/// The buffer 'logbuf' is a null terminated string to be sent over at
+/// login.
+
 TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
                    const char *logbuf, Int_t loglevel, TXHandler *handler)
          : TSocket(), fMode(m), fLogLevel(loglevel),
            fBuffer(logbuf), fConn(0), fASem(0), fAsynProc(1),
            fDontTimeout(kFALSE), fRDInterrupt(kFALSE), fXrdProofdVersion(-1)
 {
-   // Constructor
-   // Open the connection to a remote XrdProofd instance and start a PROOF
-   // session.
-   // The mode 'm' indicates the role of this connection:
-   //     'a'      Administrator; used by an XPD to contact the head XPD
-   //     'i'      Internal; used by a TXProofServ to call back its creator
-   //              (see XrdProofUnixConn)
-   //     'C'      PROOF manager: open connection only (do not start a session)
-   //     'M'      Client creating a top master
-   //     'A'      Client attaching to top master
-   //     'm'      Top master creating a submaster
-   //     's'      Master creating a slave
-   // The buffer 'logbuf' is a null terminated string to be sent over at
-   // login.
-
    fUrl = url;
    // Enable tracing in the XrdProof client. if not done already
    eDest.logger(&eLogger);
@@ -232,25 +234,27 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
 }
 
 #if 0
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TXSocket copy ctor.
+
 TXSocket::TXSocket(const TXSocket &s) : TSocket(s),XrdClientAbsUnsolMsgHandler(s)
 {
-   // TXSocket copy ctor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TXSocket assignment operator.
+
 TXSocket& TXSocket::operator=(const TXSocket&)
 {
-   // TXSocket assignment operator.
    return *this;
 }
 #endif
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TXSocket::~TXSocket()
 {
-   // Destructor
-
    // Disconnect from remote server (the connection manager is
    // responsible of the underlying physical connection, so we do not
    // force its closing)
@@ -261,11 +265,11 @@ TXSocket::~TXSocket()
    SafeDelete(fIMtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set location string
+
 void TXSocket::SetLocation(const char *loc)
 {
-   // Set location string
-
    if (loc) {
       fgLoc = loc;
       fgPipe.SetLoc(loc);
@@ -275,23 +279,23 @@ void TXSocket::SetLocation(const char *loc)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set session ID to 'id'. If id < 0, disable also the asynchronous handler.
+
 void TXSocket::SetSessionID(Int_t id)
 {
-   // Set session ID to 'id'. If id < 0, disable also the asynchronous handler.
-
    if (id < 0 && fConn)
       fConn->SetAsync(0);
    fSessionID = id;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnect a session. Use opt= "S" or "s" to
+/// shutdown remote session.
+/// Default is opt = "".
+
 void TXSocket::DisconnectSession(Int_t id, Option_t *opt)
 {
-   // Disconnect a session. Use opt= "S" or "s" to
-   // shutdown remote session.
-   // Default is opt = "".
-
    // Make sure we are connected
    if (!IsValid()) {
       if (gDebug > 0)
@@ -326,15 +330,15 @@ void TXSocket::DisconnectSession(Int_t id, Option_t *opt)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection. Available options are (case insensitive)
+///   'P'   force closing of the underlying physical connection
+///   'S'   shutdown remote session, is any
+/// A session ID can be given using #...# signature, e.g. "#1#".
+/// Default is opt = "".
+
 void TXSocket::Close(Option_t *opt)
 {
-   // Close connection. Available options are (case insensitive)
-   //   'P'   force closing of the underlying physical connection
-   //   'S'   shutdown remote session, is any
-   // A session ID can be given using #...# signature, e.g. "#1#".
-   // Default is opt = "".
-
    Int_t to = gEnv->GetValue("XProof.AsynProcSemTimeout", 60);
    if (fAsynProc.Wait(to*1000) != 0)
       Warning("Close", "could not hold semaphore for async messages after %d sec: closing anyhow (may give error messages)", to);
@@ -383,15 +387,16 @@ void TXSocket::Close(Option_t *opt)
    fAsynProc.Post();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// We are here if an unsolicited response comes from a logical conn
+/// The response comes in the form of an XrdClientMessage *, that must NOT be
+/// destroyed after processing. It is destroyed by the first sender.
+/// Remember that we are in a separate thread, since unsolicited
+/// responses are asynchronous by nature.
+
 UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
                                                     XrdClientMessage *m)
 {
-   // We are here if an unsolicited response comes from a logical conn
-   // The response comes in the form of an XrdClientMessage *, that must NOT be
-   // destroyed after processing. It is destroyed by the first sender.
-   // Remember that we are in a separate thread, since unsolicited
-   // responses are asynchronous by nature.
    UnsolRespProcResult rc = kUNSOL_KEEP;
 
    // If we are closing we will not do anything
@@ -862,15 +867,15 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    return rc;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Post a message of type 'type' into the read messages queue.
+/// If 'msg' is defined it is also added as TString.
+/// This is used, for example, with kPROOF_FATAL to force the main thread
+/// to mark this socket as bad, avoiding race condition when a worker
+/// dies while in processing state.
+
 void TXSocket::PostMsg(Int_t type, const char *msg)
 {
-   // Post a message of type 'type' into the read messages queue.
-   // If 'msg' is defined it is also added as TString.
-   // This is used, for example, with kPROOF_FATAL to force the main thread
-   // to mark this socket as bad, avoiding race condition when a worker
-   // dies while in processing state.
-
    // Create the message
    TMessage m(type);
 
@@ -923,11 +928,11 @@ void TXSocket::PostMsg(Int_t type, const char *msg)
    return;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if the remote server is a 'proofd'
+
 Bool_t TXSocket::IsServProofd()
 {
-   // Return kTRUE if the remote server is a 'proofd'
-
    if (fConn && (fConn->GetServType() == XrdProofConn::kSTProofd))
       return kTRUE;
 
@@ -935,12 +940,12 @@ Bool_t TXSocket::IsServProofd()
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get latest interrupt level and reset it; if the interrupt has to be
+/// propagated to lower stages forward will be kTRUE after the call
+
 Int_t TXSocket::GetInterrupt(Bool_t &forward)
 {
-   // Get latest interrupt level and reset it; if the interrupt has to be
-   // propagated to lower stages forward will be kTRUE after the call
-
    if (gDebug > 2)
       Info("GetInterrupt","%p: waiting to lock mutex %p", this, fIMtx);
 
@@ -966,13 +971,13 @@ Int_t TXSocket::GetInterrupt(Bool_t &forward)
    return ilev;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Flush the asynchronous queue.
+/// Typically called when a kHardInterrupt is received.
+/// Returns number of bytes in flushed buffers.
+
 Int_t TXSocket::Flush()
 {
-   // Flush the asynchronous queue.
-   // Typically called when a kHardInterrupt is received.
-   // Returns number of bytes in flushed buffers.
-
    Int_t nf = 0;
    list<TXSockBuf *> splist;
    list<TXSockBuf *>::iterator i;
@@ -1016,12 +1021,12 @@ Int_t TXSocket::Flush()
    return nf;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method sends a request for creation of (or attachment to) a remote
+/// server application.
+
 Bool_t TXSocket::Create(Bool_t attach)
 {
-   // This method sends a request for creation of (or attachment to) a remote
-   // server application.
-
    // Make sure we are connected
    if (!IsValid()) {
       if (gDebug > 0)
@@ -1179,14 +1184,14 @@ Bool_t TXSocket::Create(Bool_t attach)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a raw buffer of specified length.
+/// Use opt = kDontBlock to ask xproofd to push the message into the proofsrv.
+/// (by default is appended to a queue waiting for a request from proofsrv).
+/// Returns the number of bytes sent or -1 in case of error.
+
 Int_t TXSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
 {
-   // Send a raw buffer of specified length.
-   // Use opt = kDontBlock to ask xproofd to push the message into the proofsrv.
-   // (by default is appended to a queue waiting for a request from proofsrv).
-   // Returns the number of bytes sent or -1 in case of error.
-
    TSystem::ResetErrno();
 
    // Options and request ID
@@ -1237,13 +1242,13 @@ Int_t TXSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ping functionality: contact the server to check its vitality.
+/// If external, the server waits for a reply from the server
+/// Returns kTRUE if OK or kFALSE in case of error.
+
 Bool_t TXSocket::Ping(const char *ord)
 {
-   // Ping functionality: contact the server to check its vitality.
-   // If external, the server waits for a reply from the server
-   // Returns kTRUE if OK or kFALSE in case of error.
-
    TSystem::ResetErrno();
 
    if (gDebug > 0)
@@ -1310,12 +1315,12 @@ Bool_t TXSocket::Ping(const char *ord)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remote touch functionality: contact the server to proof our vitality.
+/// No reply from server is expected.
+
 void TXSocket::RemoteTouch()
 {
-   // Remote touch functionality: contact the server to proof our vitality.
-   // No reply from server is expected.
-
    TSystem::ResetErrno();
 
    if (gDebug > 0)
@@ -1348,12 +1353,12 @@ void TXSocket::RemoteTouch()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interrupt the remote protocol instance. Used to propagate Ctrl-C.
+/// No reply from server is expected.
+
 void TXSocket::CtrlC()
 {
-   // Interrupt the remote protocol instance. Used to propagate Ctrl-C.
-   // No reply from server is expected.
-
    TSystem::ResetErrno();
 
    if (gDebug > 0)
@@ -1385,11 +1390,11 @@ void TXSocket::CtrlC()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wait and pick-up next buffer from the asynchronous queue
+
 Int_t TXSocket::PickUpReady()
 {
-   // Wait and pick-up next buffer from the asynchronous queue
-
    fBufCur = 0;
    fByteLeft = 0;
    fByteCur = 0;
@@ -1474,12 +1479,13 @@ Int_t TXSocket::PickUpReady()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pop-up a buffer of at least size bytes from the spare list
+/// If none is found either one is reallocated or a new one
+/// created
+
 TXSockBuf *TXSocket::PopUpSpare(Int_t size)
 {
-   // Pop-up a buffer of at least size bytes from the spare list
-   // If none is found either one is reallocated or a new one
-   // created
    TXSockBuf *buf = 0;
    static Int_t nBuf = 0;
 
@@ -1525,11 +1531,11 @@ TXSockBuf *TXSocket::PopUpSpare(Int_t size)
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release read buffer giving back to the spare list
+
 void TXSocket::PushBackSpare()
 {
-   // Release read buffer giving back to the spare list
-
    R__LOCKGUARD(&fgSMtx);
 
    if (gDebug > 2)
@@ -1546,11 +1552,11 @@ void TXSocket::PushBackSpare()
    fByteLeft = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a raw buffer of specified length bytes.
+
 Int_t TXSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions)
 {
-   // Receive a raw buffer of specified length bytes.
-
    // Inputs must make sense
    if (!buffer || (length <= 0))
       return -1;
@@ -1602,12 +1608,12 @@ Int_t TXSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions)
    return length;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send urgent message (interrupt) to remote server
+/// Returns 0 or -1 in case of error.
+
 Int_t TXSocket::SendInterrupt(Int_t type)
 {
-   // Send urgent message (interrupt) to remote server
-   // Returns 0 or -1 in case of error.
-
    TSystem::ResetErrno();
 
    // Prepare request
@@ -1643,12 +1649,12 @@ Int_t TXSocket::SendInterrupt(Int_t type)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a TMessage object. Returns the number of bytes in the TMessage
+/// that were sent and -1 in case of error.
+
 Int_t TXSocket::Send(const TMessage &mess)
 {
-   // Send a TMessage object. Returns the number of bytes in the TMessage
-   // that were sent and -1 in case of error.
-
    TSystem::ResetErrno();
 
    if (mess.IsReading()) {
@@ -1726,14 +1732,14 @@ Int_t TXSocket::Send(const TMessage &mess)
    return nsent - sizeof(UInt_t);  //length - length header
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a TMessage object. The user must delete the TMessage object.
+/// Returns length of message in bytes (can be 0 if other side of connection
+/// is closed) or -1 in case of error or -5 if pipe broken (connection invalid).
+/// In those case mess == 0.
+
 Int_t TXSocket::Recv(TMessage *&mess)
 {
-   // Receive a TMessage object. The user must delete the TMessage object.
-   // Returns length of message in bytes (can be 0 if other side of connection
-   // is closed) or -1 in case of error or -5 if pipe broken (connection invalid).
-   // In those case mess == 0.
-
    TSystem::ResetErrno();
 
    if (!IsValid()) {
@@ -1778,14 +1784,14 @@ oncemore:
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send message to intermediate coordinator.
+/// If any output is due, this is returned as an obj string to be
+/// deleted by the caller
+
 TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
                                       Long64_t l64, Int_t int3, const char *)
 {
-   // Send message to intermediate coordinator.
-   // If any output is due, this is returned as an obj string to be
-   // deleted by the caller
-
    TObjString *sout = 0;
 
    // We fill the header struct containing the request
@@ -1895,13 +1901,13 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
    return sout;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send urgent message to counterpart; 'type' specifies the type of
+/// the message (see TXSocket::EUrgentMsgType), and 'int1', 'int2'
+/// two containers for additional information.
+
 void TXSocket::SendUrgent(Int_t type, Int_t int1, Int_t int2)
 {
-   // Send urgent message to counterpart; 'type' specifies the type of
-   // the message (see TXSocket::EUrgentMsgType), and 'int1', 'int2'
-   // two containers for additional information.
-
    TSystem::ResetErrno();
 
    // Prepare request
@@ -1933,11 +1939,11 @@ void TXSocket::SendUrgent(Int_t type, Int_t int1, Int_t int2)
    return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init environment variables for XrdClient
+
 void TXSocket::InitEnvs()
 {
-   // Init environment variables for XrdClient
-
    // Set debug level
    Int_t deb = gEnv->GetValue("XProof.Debug", -1);
    EnvPutInt(NAME_DEBUG, deb);
@@ -2082,11 +2088,11 @@ void TXSocket::InitEnvs()
    fgInitDone = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try reconnection after failure
+
 Int_t TXSocket::Reconnect()
 {
-   // Try reconnection after failure
-
    if (gDebug > 0) {
       Info("Reconnect", "%p (c:%p, v:%d): trying to reconnect to %s (logid: %d)",
                         this, fConn, (fConn ? fConn->IsValid() : 0),
@@ -2136,10 +2142,11 @@ Int_t TXSocket::Reconnect()
    return ((fConn && fConn->IsValid()) ? 0 : -1);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 TXSockBuf::TXSockBuf(Char_t *bp, Int_t sz, Bool_t own)
 {
-   //constructor
    fBuf = fMem = bp;
    fSiz = fLen = sz;
    fOwn = own;
@@ -2147,20 +2154,22 @@ TXSockBuf::TXSockBuf(Char_t *bp, Int_t sz, Bool_t own)
    fgBuffMem += sz;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TXSockBuf::~TXSockBuf()
 {
-   //destructor
    if (fOwn && fMem) {
       free(fMem);
       fgBuffMem -= fSiz;
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///resize socket buffer
+
 void TXSockBuf::Resize(Int_t sz)
 {
-   //resize socket buffer
    if (sz > fSiz) {
       if ((fMem = (Char_t *)realloc(fMem, sz))) {
          fgBuffMem += (sz - fSiz);
@@ -2176,27 +2185,27 @@ void TXSockBuf::Resize(Int_t sz)
 // TXSockBuf static methods
 //
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the currently allocated memory
+
 Long64_t TXSockBuf::BuffMem()
 {
-   // Return the currently allocated memory
-
    return fgBuffMem;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the max allocated memory allowed
+
 Long64_t TXSockBuf::GetMemMax()
 {
-   // Return the max allocated memory allowed
-
    return fgMemMax;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the max allocated memory allowed
+
 void TXSockBuf::SetMemMax(Long64_t memmax)
 {
-   // Return the max allocated memory allowed
-
    fgMemMax = memmax > 0 ? memmax : fgMemMax;
 }
 
@@ -2205,11 +2214,11 @@ void TXSockBuf::SetMemMax(Long64_t memmax)
 // TXSockPipe
 //
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TXSockPipe::TXSockPipe(const char *loc) : fMutex(kTRUE), fLoc(loc)
 {
-   // Constructor
-
    // Create the pipe
    if (pipe(fPipe) != 0) {
       Printf("TXSockPipe: problem initializing pipe for socket inputs");
@@ -2219,22 +2228,22 @@ TXSockPipe::TXSockPipe(const char *loc) : fMutex(kTRUE), fLoc(loc)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TXSockPipe::~TXSockPipe()
 {
-   // Destructor
-
    if (fPipe[0] >= 0) close(fPipe[0]);
    if (fPipe[1] >= 0) close(fPipe[1]);
 }
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write a byte to the global pipe to signal new availibility of
+/// new messages
+
 Int_t TXSockPipe::Post(TSocket *s)
 {
-   // Write a byte to the global pipe to signal new availibility of
-   // new messages
-
    if (!IsValid() || !s) return -1;
 
    // This must be an atomic action
@@ -2259,11 +2268,11 @@ Int_t TXSockPipe::Post(TSocket *s)
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a byte to the global pipe to synchronize message pickup
+
 Int_t TXSockPipe::Clean(TSocket *s)
 {
-   // Read a byte to the global pipe to synchronize message pickup
-
    // Pipe must have been created
    if (!IsValid() || !s) return -1;
 
@@ -2289,12 +2298,12 @@ Int_t TXSockPipe::Clean(TSocket *s)
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove any reference to socket 's' from the global pipe and
+/// ready-socket queue
+
 Int_t TXSockPipe::Flush(TSocket *s)
 {
-   // Remove any reference to socket 's' from the global pipe and
-   // ready-socket queue
-
    // Pipe must have been created
    if (!IsValid() || !s) return -1;
 
@@ -2324,11 +2333,11 @@ Int_t TXSockPipe::Flush(TSocket *s)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump content of the ready socket list
+
 void TXSockPipe::DumpReadySock()
 {
-   // Dump content of the ready socket list
-
    R__LOCKGUARD(&fMutex);
 
    TString buf = Form("%d |", fReadySock.GetSize());
@@ -2339,11 +2348,11 @@ void TXSockPipe::DumpReadySock()
    Printf("TXSockPipe::DumpReadySock: %s: list content: %s", fLoc.Data(), buf.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return last ready socket
+
 TXSocket *TXSockPipe::GetLastReady()
 {
-   // Return last ready socket
-
    R__LOCKGUARD(&fMutex);
 
    return (TXSocket *) fReadySock.Last();

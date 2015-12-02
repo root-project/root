@@ -43,41 +43,43 @@ ClassImp(RooTruthModel)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of a truth resolution model, i.e. a delta function in observable 'xIn'
+
 RooTruthModel::RooTruthModel(const char *name, const char *title, RooRealVar& xIn) : 
   RooResolutionModel(name,title,xIn)
 {  
-  // Constructor of a truth resolution model, i.e. a delta function in observable 'xIn'
-
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooTruthModel::RooTruthModel(const RooTruthModel& other, const char* name) : 
   RooResolutionModel(other,name)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooTruthModel::~RooTruthModel()
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return basis code for given basis definition string. Return special
+/// codes for 'known' bases for which compiled definition exists. Return
+/// generic bases code if implementation relies on TFormula interpretation
+/// of basis name
+
 Int_t RooTruthModel::basisCode(const char* name) const 
 {
-  // Return basis code for given basis definition string. Return special
-  // codes for 'known' bases for which compiled definition exists. Return
-  // generic bases code if implementation relies on TFormula interpretation
-  // of basis name
-
   // Check for optimized basis functions
   if (!TString("exp(-@0/@1)").CompareTo(name)) return expBasisPlus ;
   if (!TString("exp(@0/@1)").CompareTo(name)) return expBasisMinus ;
@@ -105,11 +107,11 @@ Int_t RooTruthModel::basisCode(const char* name) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes associated bases function to 'inBasis'
+
 void RooTruthModel::changeBasis(RooFormulaVar* inBasis) 
 {
-  // Changes associated bases function to 'inBasis'
-
   // Process change basis function. Since we actually
   // evaluate the basis function object, we need to
   // adjust our client-server links to the basis function here
@@ -132,12 +134,12 @@ void RooTruthModel::changeBasis(RooFormulaVar* inBasis)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the truth model: a delta function when used as PDF,
+/// the basis function itself, when convoluted with a basis function.
+
 Double_t RooTruthModel::evaluate() const 
 {
-  // Evaluate the truth model: a delta function when used as PDF,
-  // the basis function itself, when convoluted with a basis function.
-
   // No basis: delta function
   if (_basisCode == noBasis) {
     if (x==0) return 1 ;
@@ -198,12 +200,12 @@ Double_t RooTruthModel::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Advertise analytical integrals for compiled basis functions and when used
+/// as p.d.f without basis function.
+
 Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
-  // Advertise analytical integrals for compiled basis functions and when used
-  // as p.d.f without basis function.
-
   switch(_basisCode) {
 
   // Analytical integration capability of raw PDF
@@ -238,12 +240,12 @@ Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement analytical integrals when used as p.d.f and for compiled
+/// basis functions.
+
 Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-  // Implement analytical integrals when used as p.d.f and for compiled
-  // basis functions.
-
 
   // Code must be 1
   R__ASSERT(code==1) ;
@@ -333,7 +335,8 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooAbsGenContext* RooTruthModel::modelGenContext
 (const RooAbsAnaConvPdf& convPdf, const RooArgSet &vars, const RooDataSet *prototype,
  const RooArgSet* auxProto, Bool_t verbose) const
@@ -345,23 +348,24 @@ RooAbsGenContext* RooTruthModel::modelGenContext
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Advertise internal generator for observable x
+
 Int_t RooTruthModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
-  // Advertise internal generator for observable x
   if (matchArgs(directVars,generateVars,x)) return 1 ;  
   return 0 ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement internal generator for observable x,
+/// x=0 for all events following definition
+/// of delta function
+
 void RooTruthModel::generateEvent(Int_t code)
 {
-  // Implement internal generator for observable x,
-  // x=0 for all events following definition
-  // of delta function
-
   R__ASSERT(code==1) ;
   Double_t zero(0.) ;
   x = zero ;

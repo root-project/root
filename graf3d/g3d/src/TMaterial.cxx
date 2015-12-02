@@ -19,11 +19,11 @@ ClassImp(TMaterial)
 // Manages a detector material. See class TGeometry
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Material default constructor.
+
 TMaterial::TMaterial()
 {
-   // Material default constructor.
-
    fA = 0;
    fDensity = 0;
    fInterLength = 0;
@@ -33,12 +33,12 @@ TMaterial::TMaterial()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Material normal constructor.
+
 TMaterial::TMaterial(const char *name, const char *title, Float_t a, Float_t z, Float_t density)
            :TNamed(name,title), TAttFill(0,1)
 {
-   // Material normal constructor.
-
    if (!gGeometry) gGeometry = new TGeometry("Geometry","Default Geometry");
    fA       = a;
    fZ       = z;
@@ -50,12 +50,12 @@ TMaterial::TMaterial(const char *name, const char *title, Float_t a, Float_t z, 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Material normal constructor.
+
 TMaterial::TMaterial(const char *name, const char *title, Float_t a, Float_t z, Float_t density, Float_t radl, Float_t inter)
            :TNamed(name,title), TAttFill(0,1)
 {
-   // Material normal constructor.
-
    if (!gGeometry) gGeometry = new TGeometry("Geometry","Default Geometry");
    fA       = a;
    fZ       = z;
@@ -67,21 +67,21 @@ TMaterial::TMaterial(const char *name, const char *title, Float_t a, Float_t z, 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Material default destructor.
+
 TMaterial::~TMaterial()
 {
-   // Material default destructor.
-
    if (gGeometry) gGeometry->GetListOfMaterials()->Remove(this);
 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TMaterial.
+
 void TMaterial::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TMaterial.
-
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

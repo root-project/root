@@ -44,58 +44,64 @@ ClassImp(RooUnblindCPAsymVar)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooUnblindCPAsymVar::RooUnblindCPAsymVar()
 {
-  // Default constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
+
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
 					 const char *blindString, RooAbsReal& cpasym)
   : RooAbsHiddenReal(name,title), 
   _asym("asym","CP Asymmetry",this,cpasym),
   _blindEngine(blindString)
 {  
-  // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
+
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
 					 const char *blindString, RooAbsReal& cpasym, RooAbsCategory& blindState)
   : RooAbsHiddenReal(name,title,blindState), 
   _asym("asym","CP Asymmetry",this,cpasym),
   _blindEngine(blindString)
 {  
-  // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const char* name) : 
   RooAbsHiddenReal(other, name), 
   _asym("asym",this,other._asym),
   _blindEngine(other._blindEngine) 
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooUnblindCPAsymVar::~RooUnblindCPAsymVar() 
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooUnblindCPAsymVar::evaluate() const
 {
   if (isHidden()) {

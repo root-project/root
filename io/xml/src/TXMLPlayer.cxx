@@ -129,39 +129,41 @@ const char* names_xmlfileclass = "TXmlFile";
 
 ClassImp(TXMLPlayer);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TXMLPlayer::TXMLPlayer() : TObject()
 {
-   // default constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor of TXMLPlayer object
+
 TXMLPlayer::~TXMLPlayer()
 {
-   // destructor of TXMLPlayer object
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns streamer function name for given class
+
 TString TXMLPlayer::GetStreamerName(TClass* cl)
 {
-   // returns streamer function name for given class
-
    if (cl==0) return "";
    TString res = cl->GetName();
    res += "_streamer";
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce streamers for provide class list
+/// TList should include list of classes, for which code should be generated.
+/// filename specify name of file (without extension), where streamers should be
+/// created. Function produces two files: header file and source file.
+/// For instance, if filename is "streamers", files "streamers.h" and "streamers.cxx"
+/// will be created.
+
 Bool_t TXMLPlayer::ProduceCode(TList* cllist, const char* filename)
 {
-   // Produce streamers for provide class list
-   // TList should include list of classes, for which code should be generated.
-   // filename specify name of file (without extension), where streamers should be
-   // created. Function produces two files: header file and source file.
-   // For instance, if filename is "streamers", files "streamers.h" and "streamers.cxx"
-   // will be created.
-
    if ((cllist==0) || (filename==0)) return kFALSE;
 
    std::ofstream fh(TString(filename)+".h");
@@ -210,11 +212,11 @@ Bool_t TXMLPlayer::ProduceCode(TList* cllist, const char* filename)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns name of simple data type for given data member
+
 TString TXMLPlayer::GetMemberTypeName(TDataMember* member)
 {
-   // returns name of simple data type for given data member
-
    if (member==0) return "int";
 
    if (member->IsBasic())
@@ -245,11 +247,11 @@ TString TXMLPlayer::GetMemberTypeName(TDataMember* member)
    return member->GetTypeName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return simple data types for given TStreamerElement object
+
 TString TXMLPlayer::GetBasicTypeName(TStreamerElement* el)
 {
-   // return simple data types for given TStreamerElement object
-
    if (el->GetType() == TVirtualStreamerInfo::kCounter) return "int";
 
    switch (el->GetType() % 20) {
@@ -276,11 +278,11 @@ TString TXMLPlayer::GetBasicTypeName(TStreamerElement* el)
    return "int";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return functions name to read simple data type from xml file
+
 TString TXMLPlayer::GetBasicTypeReaderMethodName(Int_t type, const char* realname)
 {
-   // return functions name to read simple data type from xml file
-
    if (type == TVirtualStreamerInfo::kCounter) return "ReadInt";
 
    switch (type % 20) {
@@ -309,16 +311,16 @@ TString TXMLPlayer::GetBasicTypeReaderMethodName(Int_t type, const char* realnam
    return "ReadValue";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// produce code to access member of given class.
+/// Parameter specials has following meaning:
+///    0 - nothing special
+///    1 - cast to data type
+///    2 - produce pointer on given member
+///    3 - skip casting when produce pointer by buf.P() function
+
 const char* TXMLPlayer::ElementGetter(TClass* cl, const char* membername, int specials)
 {
-   // produce code to access member of given class.
-   // Parameter specials has following meaning:
-   //    0 - nothing special
-   //    1 - cast to data type
-   //    2 - produce pointer on given member
-   //    3 - skip casting when produce pointer by buf.P() function
-
    TClass* membercl = cl ? cl->GetBaseDataMember(membername) : 0;
    TDataMember* member = membercl ? membercl->GetDataMember(membername) : 0;
    TMethodCall* mgetter = member ? member->GetterMethod(0) : 0;
@@ -368,12 +370,12 @@ const char* TXMLPlayer::ElementGetter(TClass* cl, const char* membername, int sp
    return fGetterName.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce code to set value to given data member.
+/// endch should be output after value is specified.
+
 const char* TXMLPlayer::ElementSetter(TClass* cl, const char* membername, char* endch)
 {
-   // Produce code to set value to given data member.
-   // endch should be output after value is specified.
-
    strcpy(endch,"");
 
    TClass* membercl = cl ? cl->GetBaseDataMember(membername) : 0;
@@ -404,11 +406,11 @@ const char* TXMLPlayer::ElementSetter(TClass* cl, const char* membername, char* 
    return fSetterName.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce source code of streamer function for specified class
+
 void TXMLPlayer::ProduceStreamerSource(std::ostream& fs, TClass* cl, TList* cllist)
 {
-   // Produce source code of streamer function for specified class
-
    if (cl==0) return;
    TVirtualStreamerInfo* info = cl->GetStreamerInfo();
    TObjArray* elements = info->GetElements();
@@ -821,7 +823,9 @@ void TXMLPlayer::ProduceStreamerSource(std::ostream& fs, TClass* cl, TList* clli
    fs << "}" << std::endl << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce code to read argument of stl container from xml file
+
 void TXMLPlayer::ReadSTLarg(std::ostream& fs,
                             TString& argname,
                             int argtyp,
@@ -830,8 +834,6 @@ void TXMLPlayer::ReadSTLarg(std::ostream& fs,
                             TString& tname,
                             TString& ifcond)
 {
-   // Produce code to read argument of stl container from xml file
-
    switch(argtyp) {
       case TVirtualStreamerInfo::kBool:
       case TVirtualStreamerInfo::kChar:
@@ -887,11 +889,11 @@ void TXMLPlayer::ReadSTLarg(std::ostream& fs,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce code to write argument of stl container to xml file
+
 void TXMLPlayer::WriteSTLarg(std::ostream& fs, const char* accname, int argtyp, Bool_t isargptr, TClass* argcl)
 {
-   // Produce code to write argument of stl container to xml file
-
    switch(argtyp) {
       case TVirtualStreamerInfo::kBool:
       case TVirtualStreamerInfo::kChar:
@@ -938,11 +940,11 @@ void TXMLPlayer::WriteSTLarg(std::ostream& fs, const char* accname, int argtyp, 
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce code of xml streamer for data member of stl type
+
 Bool_t TXMLPlayer::ProduceSTLstreamer(std::ostream& fs, TClass* cl, TStreamerSTL* el, Bool_t isWriting)
 {
-   // Produce code of xml streamer for data member of stl type
-
    if ((cl==0) || (el==0)) return false;
 
    TClass* contcl = el->GetClassPointer();

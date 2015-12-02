@@ -40,25 +40,28 @@ ClassImp(RooAbsMCStudyModule)
   ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooAbsMCStudyModule::RooAbsMCStudyModule(const char* name, const char* title) : TNamed(name,title), _mcs(0) 
 {
-  // Constructor
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAbsMCStudyModule::RooAbsMCStudyModule(const RooAbsMCStudyModule& other) : TNamed(other), _mcs(other._mcs)
 {
-  // Copy constructor
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store reference to RooMCStudy object that this module relates to and call internal module
+/// initialization function
+
 Bool_t RooAbsMCStudyModule::doInitializeInstance(RooMCStudy& study) 
 { 
-  // Store reference to RooMCStudy object that this module relates to and call internal module
-  // initialization function
   _mcs = &study ; 
   return initializeInstance() ; 
 }  

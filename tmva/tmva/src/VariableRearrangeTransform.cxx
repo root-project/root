@@ -41,28 +41,32 @@
 
 ClassImp(TMVA::VariableRearrangeTransform)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::VariableRearrangeTransform::VariableRearrangeTransform( DataSetInfo& dsi )
 :  VariableTransformBase( dsi, Types::kRearranged, "Rearrange" )
 { 
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::VariableRearrangeTransform::~VariableRearrangeTransform() {
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialization of the rearrangement transformation
+/// (nothing to do)
+
 void TMVA::VariableRearrangeTransform::Initialize()
 {
-   // initialization of the rearrangement transformation
-   // (nothing to do)
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prepare transformation --> (nothing to do)
+
 Bool_t TMVA::VariableRearrangeTransform::PrepareTransformation (const std::vector<Event*>& /*events*/)
 {
-   // prepare transformation --> (nothing to do)
    if (!IsEnabled() || IsCreated()) return kTRUE;
 
    UInt_t nvars = 0, ntgts = 0, nspcts = 0;
@@ -73,7 +77,8 @@ Bool_t TMVA::VariableRearrangeTransform::PrepareTransformation (const std::vecto
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const TMVA::Event* TMVA::VariableRearrangeTransform::Transform( const TMVA::Event* const ev, Int_t /*cls*/ ) const
 {
    if (!IsEnabled()) return ev;
@@ -91,7 +96,8 @@ const TMVA::Event* TMVA::VariableRearrangeTransform::Transform( const TMVA::Even
    return fTransformedEvent;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const TMVA::Event* TMVA::VariableRearrangeTransform::InverseTransform( const TMVA::Event* const ev, Int_t /*cls*/ ) const
 {
    if (!IsEnabled()) return ev;
@@ -110,32 +116,33 @@ const TMVA::Event* TMVA::VariableRearrangeTransform::InverseTransform( const TMV
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates string with variable transformations applied
+
 std::vector<TString>* TMVA::VariableRearrangeTransform::GetTransformationStrings( Int_t /*cls*/ ) const
 {
-   // creates string with variable transformations applied
-
    const UInt_t size = fGet.size();
    std::vector<TString>* strVec = new std::vector<TString>(size);
 
    return strVec;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///    // create XML description of Rearrange transformation
+
 void TMVA::VariableRearrangeTransform::AttachXMLTo(void* parent) 
 {
-//    // create XML description of Rearrange transformation
    void* trfxml = gTools().AddChild(parent, "Transform");
    gTools().AddAttr(trfxml, "Name", "Rearrange");
 
    VariableTransformBase::AttachXMLTo( trfxml );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///    // Read the transformation matrices from the xml node
+
 void TMVA::VariableRearrangeTransform::ReadFromXML( void* trfnode ) 
 {
-//    // Read the transformation matrices from the xml node
-
 
    void* inpnode = NULL;
 
@@ -148,15 +155,17 @@ void TMVA::VariableRearrangeTransform::ReadFromXML( void* trfnode )
    SetCreated();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prints the transformation ranges
+
 void TMVA::VariableRearrangeTransform::PrintTransformation( std::ostream& ) 
 {
-   // prints the transformation ranges
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates a normalizing function
+
 void TMVA::VariableRearrangeTransform::MakeFunction( std::ostream& /*fout*/, const TString& /*fcncName*/, 
                                                      Int_t /*part*/, UInt_t /*trCounter*/, Int_t ) 
 {
-   // creates a normalizing function
 }

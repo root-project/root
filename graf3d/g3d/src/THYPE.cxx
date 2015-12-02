@@ -27,28 +27,29 @@ ClassImp(THYPE)
 //     - phi        stereo angle
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HYPE shape default constructor
+
 THYPE::THYPE()
 {
-   // HYPE shape default constructor
-
    fPhi = 0.;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HYPE shape normal constructor
+
 THYPE::THYPE(const char *name, const char *title, const char *material, Float_t rmin,
              Float_t rmax, Float_t dz, Float_t phi)
       : TTUBE(name,title,material,rmin,rmax,dz)
 {
-   // HYPE shape normal constructor
-
    fPhi = phi;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HYPE shape default destructor
+
 THYPE::~THYPE()
 {
-   // HYPE shape default destructor
 }

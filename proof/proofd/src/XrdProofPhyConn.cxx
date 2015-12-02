@@ -46,13 +46,14 @@
 
 #define URLTAG "["<<fUrl.Host<<":"<<fUrl.Port<<"]"
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. Open a direct connection (Unix or Tcp) to a remote
+/// XrdProofd instance. Does not use the connection manager.
+
 XrdProofPhyConn::XrdProofPhyConn(const char *url, int psid, char capver,
                                  XrdClientAbsUnsolMsgHandler *uh, bool tcp, int fd)
    : XrdProofConn(0, 'i', psid, capver, uh)
 {
-   // Constructor. Open a direct connection (Unix or Tcp) to a remote
-   // XrdProofd instance. Does not use the connection manager.
    XPDLOC(ALL, "PhyConn")
 
    fTcp = tcp;
@@ -68,10 +69,11 @@ XrdProofPhyConn::XrdProofPhyConn(const char *url, int psid, char capver,
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization
+
 bool XrdProofPhyConn::Init(const char *url, int fd)
 {
-   // Initialization
    XPDLOC(ALL, "PhyConn::Init")
 
    // Save url
@@ -127,10 +129,11 @@ bool XrdProofPhyConn::Init(const char *url, int fd)
    return fConnected;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run the connection attempts: the result is stored in fConnected
+
 void XrdProofPhyConn::Connect(int fd)
 {
-   // Run the connection attempts: the result is stored in fConnected
    XPDLOC(ALL, "PhyConn::Connect")
 
    int maxTry = -1, timeWait = -1;
@@ -189,10 +192,11 @@ void XrdProofPhyConn::Connect(int fd)
    } //for connect try
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to remote server
+
 int XrdProofPhyConn::TryConnect(int fd)
 {
-   // Connect to remote server
    XPDLOC(ALL, "PhyConn::TryConnect")
 
    const char *ctype[2] = {"UNIX", "TCP"};
@@ -233,11 +237,11 @@ int XrdProofPhyConn::TryConnect(int fd)
    return fLogConnID;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the connection.
+
 void XrdProofPhyConn::Close(const char *)
 {
-   // Close the connection.
-
    // Make sure we are connected
    if (!fConnected)
       return;
@@ -253,29 +257,30 @@ void XrdProofPhyConn::Close(const char *)
    return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set handler of unsolicited responses
+
 void XrdProofPhyConn::SetAsync(XrdClientAbsUnsolMsgHandler *uh,
                                XrdProofConnSender_t, void *)
 {
-   // Set handler of unsolicited responses
-
    if (fPhyConn)
       fPhyConn->UnsolicitedMsgHandler = uh;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pickup message from the queue
+
 XrdClientMessage *XrdProofPhyConn::ReadMsg()
 {
-   // Pickup message from the queue
-
    return (fPhyConn ? fPhyConn->ReadMessage(fStreamid) : (XrdClientMessage *)0);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gets access to the connected server.
+/// The login and authorization steps are performed here.
+
 bool XrdProofPhyConn::GetAccessToSrv(XrdClientPhyConnection *)
 {
-   // Gets access to the connected server.
-   // The login and authorization steps are performed here.
    XPDLOC(ALL, "PhyConn::GetAccessToSrv")
 
    // Now we are connected and we ask for the kind of the server
@@ -317,11 +322,11 @@ bool XrdProofPhyConn::GetAccessToSrv(XrdClientPhyConnection *)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Low level write call
+
 int XrdProofPhyConn::WriteRaw(const void *buf, int len, XrdClientPhyConnection *)
 {
-   // Low level write call
-
    if (fPhyConn)
       return fPhyConn->WriteRaw(buf, len);
 
@@ -329,11 +334,11 @@ int XrdProofPhyConn::WriteRaw(const void *buf, int len, XrdClientPhyConnection *
    return -1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Low level write call
+
 int XrdProofPhyConn::ReadRaw(void *buf, int len, XrdClientPhyConnection *)
 {
-   // Low level write call
-
    if (fPhyConn)
       return fPhyConn->ReadRaw(buf, len);
 

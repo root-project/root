@@ -191,7 +191,8 @@ Double_t RooNonCentralChiSquare::evaluate() const
 
 } 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooNonCentralChiSquare::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
    if (matchArgs(allVars,analVars,x)) return 1 ;
@@ -200,7 +201,8 @@ Int_t RooNonCentralChiSquare::getAnalyticalIntegral(RooArgSet& allVars, RooArgSe
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooNonCentralChiSquare::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
    R__ASSERT(code==1 );

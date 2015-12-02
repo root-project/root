@@ -89,49 +89,52 @@ ClassImp(TExec)
 // The 3 options above can be combined.
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exec default constructor.
+
 TExec::TExec(): TNamed()
 {
-   // Exec default constructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exec normal constructor.
+
 TExec::TExec(const char *name, const char *command) : TNamed(name,command)
 {
-   // Exec normal constructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exec default destructor.
+
 TExec::~TExec()
 {
-   // Exec default destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TExec::TExec(const TExec &e) : TNamed(e)
 {
-   // Copy constructor.
-
    TNamed::Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the command referenced by this object.
+///
+///  if command is given, this command is executed
+/// otherwise the default command of the object is executed
+///
+/// if the default command (in the exec title) is empty, an attemp is made
+/// to execute the exec name if it contains a "." or a "(", otherwise
+/// the command ".x execname.C" is executed.
+/// The function returns the result of the user function/script.
+
 void TExec::Exec(const char *command)
 {
-   // Execute the command referenced by this object.
-   //
-   //  if command is given, this command is executed
-   // otherwise the default command of the object is executed
-   //
-   // if the default command (in the exec title) is empty, an attemp is made
-   // to execute the exec name if it contains a "." or a "(", otherwise
-   // the command ".x execname.C" is executed.
-   // The function returns the result of the user function/script.
-
    if (command && (strlen(command) > 1))  gROOT->ProcessLine(command);
    else  {
       if (strlen(GetTitle()) > 0)         gROOT->ProcessLine(GetTitle());
@@ -146,20 +149,20 @@ void TExec::Exec(const char *command)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the command referenced by this object.
+
 void TExec::Paint(Option_t *)
 {
-   // Execute the command referenced by this object.
-
    Exec();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out.
+
 void TExec::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out.
-
    char quote = '"';
    if (gROOT->ClassSaved(TExec::Class())) {
       out<<"   ";

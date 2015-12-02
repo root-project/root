@@ -277,7 +277,9 @@ const char* oracle_OtherTypes[13] = {
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default TSQLFile constructor
+
 TSQLFile::TSQLFile() :
    TFile(),
    fSQL(0),
@@ -298,11 +300,31 @@ TSQLFile::TSQLFile() :
    fIdsTableExists(kFALSE),
    fStmtCounter(0)
 {
-   // default TSQLFile constructor
    SetBit(kBinaryFile, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connects to SQL server with provided arguments.
+/// If the constructor fails in any way IsZombie() will
+/// return true. Use IsOpen() to check if the file is (still) open.
+///
+/// If option = NEW or CREATE   create a ROOT tables in database
+///                             if the tables already exists connection is
+///                             not opened.
+///           = RECREATE        create completely new tables. Any existing tables
+///                             will be deleted
+///           = UPDATE          open an existing database for writing.
+///                             If data base open by other TSQLFile instance for writing,
+///                             write access will be rejected
+///           = BREAKLOCK       Special case when lock was not correctly released
+///                             by TSQLFile instance. This may happen if program crashed when
+///                             TSQLFile was open with write access mode.
+///           = READ or OPEN    open an existing data base for reading.
+///
+/// For more details see comments for TFile::TFile() constructor
+///
+/// For a moment TSQLFile does not support TTree objects and subdirectories
+
 TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const char* pass) :
    TFile(),
    fSQL(0),
@@ -323,27 +345,6 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
    fIdsTableExists(kFALSE),
    fStmtCounter(0)
 {
-   // Connects to SQL server with provided arguments.
-   // If the constructor fails in any way IsZombie() will
-   // return true. Use IsOpen() to check if the file is (still) open.
-   //
-   // If option = NEW or CREATE   create a ROOT tables in database
-   //                             if the tables already exists connection is
-   //                             not opened.
-   //           = RECREATE        create completely new tables. Any existing tables
-   //                             will be deleted
-   //           = UPDATE          open an existing database for writing.
-   //                             If data base open by other TSQLFile instance for writing,
-   //                             write access will be rejected
-   //           = BREAKLOCK       Special case when lock was not correctly released
-   //                             by TSQLFile instance. This may happen if program crashed when
-   //                             TSQLFile was open with write access mode.
-   //           = READ or OPEN    open an existing data base for reading.
-   //
-   // For more details see comments for TFile::TFile() constructor
-   //
-   // For a moment TSQLFile does not support TTree objects and subdirectories
-
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
 
@@ -481,122 +482,124 @@ zombie:
    gDirectory = gROOT;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// start logging of all SQL statements in specified file
+
 void TSQLFile::StartLogFile(const char* fname)
 {
-   // start logging of all SQL statements in specified file
-
    StopLogFile();
    fLogFile = new std::ofstream(fname);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// close logging file
+
 void TSQLFile::StopLogFile()
 {
-   // close logging file
    if (fLogFile!=0) {
       delete fLogFile;
       fLogFile = 0;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// checks, if MySQL database
+
 Bool_t TSQLFile::IsMySQL() const
 {
-   // checks, if MySQL database
    if (fSQL==0) return kFALSE;
    return strcmp(fSQL->ClassName(),"TMySQLServer")==0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// checks, if Oracle database
+
 Bool_t TSQLFile::IsOracle() const
 {
-   // checks, if Oracle database
-
    if (fSQL==0) return kFALSE;
    return strcmp(fSQL->ClassName(),"TOracleServer")==0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// checks, if ODBC driver used for database connection
+
 Bool_t TSQLFile::IsODBC() const
 {
-   // checks, if ODBC driver used for database connection
-
    if (fSQL==0) return kFALSE;
    return strcmp(fSQL->ClassName(),"TODBCServer")==0;
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// enable/disable uasge of suffixes in columns names
+/// can be changed before first object is saved into file
+
 void TSQLFile::SetUseSuffixes(Bool_t on)
 {
-   // enable/disable uasge of suffixes in columns names
-   // can be changed before first object is saved into file
-
    if (!fCanChangeConfig)
       Error("SetUseSuffixes", "Configurations already cannot be changed");
    else
       fUseSuffixes = on;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Defines maximum number of columns for array representation
+/// If array size bigger than limit, array data will be converted to raw format
+/// This is usefull to prevent tables with very big number of columns
+/// If limit==0, all arrays will be stored in raw format
+/// If limit<0, all array values will be stored in column form
+/// Default value is 21
+
 void TSQLFile::SetArrayLimit(Int_t limit)
 {
-   // Defines maximum number of columns for array representation
-   // If array size bigger than limit, array data will be converted to raw format
-   // This is usefull to prevent tables with very big number of columns
-   // If limit==0, all arrays will be stored in raw format
-   // If limit<0, all array values will be stored in column form
-   // Default value is 21
-
    if (!fCanChangeConfig)
       Error("SetArrayLimit", "Configurations already cannot be changed");
    else
       fArrayLimit = limit;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Defines tables type, which is used in CREATE TABLE statements
+/// Now is only used for MySQL database, where following types are supported:
+///    "BDB", "HEAP", "ISAM", "InnoDB", "MERGE", "MRG_MYISAM", "MYISAM"
+/// Default for TSQLFile is "InnoDB". For more detailes see MySQL docs.
+
 void TSQLFile::SetTablesType(const char* tables_type)
 {
-   // Defines tables type, which is used in CREATE TABLE statements
-   // Now is only used for MySQL database, where following types are supported:
-   //    "BDB", "HEAP", "ISAM", "InnoDB", "MERGE", "MRG_MYISAM", "MYISAM"
-   // Default for TSQLFile is "InnoDB". For more detailes see MySQL docs.
-
    if (!fCanChangeConfig)
       Error("SetTablesType", "Configurations already cannot be changed");
    else
       fTablesType = tables_type;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Defines usage of transactions statements for writing objects data to database.
+///    kTransactionsOff=0   - no transaction operation are allowed
+///    kTransactionsAuto=1  - automatic mode. Each write operation,
+///        produced by TSQLFile, will be supplied by START TRANSACTION and COMMIT calls.
+///        If any error happen, ROLLBACK will returns database to previous state
+///    kTransactionsUser=2  - transactions are delegated to user. Methods
+///        StartTransaction(), Commit() and Rollback() should be called by user.
+/// Default UseTransactions option is kTransactionsAuto
+
 void TSQLFile::SetUseTransactions(Int_t mode)
 {
-   // Defines usage of transactions statements for writing objects data to database.
-   //    kTransactionsOff=0   - no transaction operation are allowed
-   //    kTransactionsAuto=1  - automatic mode. Each write operation,
-   //        produced by TSQLFile, will be supplied by START TRANSACTION and COMMIT calls.
-   //        If any error happen, ROLLBACK will returns database to previous state
-   //    kTransactionsUser=2  - transactions are delegated to user. Methods
-   //        StartTransaction(), Commit() and Rollback() should be called by user.
-   // Default UseTransactions option is kTransactionsAuto
-
    fUseTransactions = mode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start user transaction.
+/// This can be usesfull, when big number of objects should be stored in
+/// data base and commitment required only if all operations were successful.
+/// In that case in the end of all operations method Commit() should be
+/// called. If operation on user-level is looks like not successfull,
+/// method Rollback() will return database data and TSQLFile instance to
+/// previous state.
+/// In MySQL not all tables types support transaction mode of operation.
+/// See SetTablesType() method for details .
+
 Bool_t TSQLFile::StartTransaction()
 {
-   // Start user transaction.
-   // This can be usesfull, when big number of objects should be stored in
-   // data base and commitment required only if all operations were successful.
-   // In that case in the end of all operations method Commit() should be
-   // called. If operation on user-level is looks like not successfull,
-   // method Rollback() will return database data and TSQLFile instance to
-   // previous state.
-   // In MySQL not all tables types support transaction mode of operation.
-   // See SetTablesType() method for details .
-
    if (GetUseTransactions()!=kTransactionsUser) {
       Error("SQLStartTransaction","Only allowed when SetUseTransactions(kUserTransactions) was configured");
       return kFALSE;
@@ -605,12 +608,12 @@ Bool_t TSQLFile::StartTransaction()
    return SQLStartTransaction();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Commit transaction, started by StartTransaction() call.
+/// Only after that call data will be written and visible on database side.
+
 Bool_t TSQLFile::Commit()
 {
-   // Commit transaction, started by StartTransaction() call.
-   // Only after that call data will be written and visible on database side.
-
    if (GetUseTransactions()!=kTransactionsUser) {
       Error("SQLCommit","Only allowed when SetUseTransactions(kUserTransactions) was configured");
       return kFALSE;
@@ -619,12 +622,12 @@ Bool_t TSQLFile::Commit()
    return SQLCommit();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rollback all operations, done after StartTransaction() call.
+/// Database should return to initial state.
+
 Bool_t TSQLFile::Rollback()
 {
-   // Rollback all operations, done after StartTransaction() call.
-   // Database should return to initial state.
-
    if (GetUseTransactions()!=kTransactionsUser) {
       Error("SQLRollback","Only allowed when SetUseTransactions(kUserTransactions) was configured");
       return kFALSE;
@@ -633,42 +636,42 @@ Bool_t TSQLFile::Rollback()
    return SQLRollback();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specify usage of indexes for data tables
+///    kIndexesNone = 0  - no indexes are used
+///    kIndexesBasic = 1 - indexes used only for keys list and
+///                        objects list tables (default)
+///    kIndexesClass = 2 - index also created for every normal class table
+///    kIndexesAll = 3   - index created for every table, including _streamer_ tables
+/// Indexes in general should increase speed of access to objects data,
+/// but they required more operations and more disk space on server side
+
 void TSQLFile::SetUseIndexes(Int_t use_type)
 {
-   // Specify usage of indexes for data tables
-   //    kIndexesNone = 0  - no indexes are used
-   //    kIndexesBasic = 1 - indexes used only for keys list and
-   //                        objects list tables (default)
-   //    kIndexesClass = 2 - index also created for every normal class table
-   //    kIndexesAll = 3   - index created for every table, including _streamer_ tables
-   // Indexes in general should increase speed of access to objects data,
-   // but they required more operations and more disk space on server side
-
    if (!fCanChangeConfig)
       Error("SetUseIndexes", "Configurations already cannot be changed");
    else
       fUseIndexes = use_type;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return name of data base on the host
+/// For Oracle always return 0
+
 const char* TSQLFile::GetDataBaseName() const
 {
-   // Return name of data base on the host
-   // For Oracle always return 0
-
    if (IsOracle()) return 0;
    const char* name = strrchr(GetName(),'/');
    if (name==0) return 0;
    return name + 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close a SQL file
+/// For more comments see TFile::Close() function
+
 void TSQLFile::Close(Option_t *option)
 {
-   // Close a SQL file
-   // For more comments see TFile::Close() function
-
    if (!IsOpen()) return;
 
    TString opt = option;
@@ -710,11 +713,11 @@ void TSQLFile::Close(Option_t *option)
    gROOT->GetListOfFiles()->Remove(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor of TSQLFile object
+
 TSQLFile::~TSQLFile()
 {
-   // destructor of TSQLFile object
-
    Close();
 
    if (fSQLClassInfos!=0) {
@@ -730,26 +733,27 @@ TSQLFile::~TSQLFile()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// make private to exclude copy operator
+
 void TSQLFile::operator=(const TSQLFile &)
 {
-   // make private to exclude copy operator
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return kTRUE if file is opened and can be accessed
+
 Bool_t TSQLFile::IsOpen() const
 {
-   // return kTRUE if file is opened and can be accessed
-
    return fSQL != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reopen a file with a different access mode, like from READ to
+/// See TFile::Open() for details
+
 Int_t TSQLFile::ReOpen(Option_t* mode)
 {
-   // Reopen a file with a different access mode, like from READ to
-   // See TFile::Open() for details
-
    cd();
 
    TString opt = mode;
@@ -792,33 +796,35 @@ Int_t TSQLFile::ReOpen(Option_t* mode)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create SQL key, which will store object in data base
+
 TKey* TSQLFile::CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t )
 {
-   // create SQL key, which will store object in data base
    return new TKeySQL(mother, obj, name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create SQL key, which will store object in data base
+
 TKey* TSQLFile::CreateKey(TDirectory* mother, const void* obj, const TClass* cl, const char* name, Int_t )
 {
-   // create SQL key, which will store object in data base
    return new TKeySQL(mother, obj, cl, name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write file info like configurations, title, UUID and other
+
 void TSQLFile::WriteHeader()
 {
-   // Write file info like configurations, title, UUID and other
-
    WriteSpecialObject(sqlio::Ids_TSQLFile, this, GetName(), GetTitle());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store all TVirtualStreamerInfo, used in file, in sql database
+
 void TSQLFile::WriteStreamerInfo()
 {
-   // Store all TVirtualStreamerInfo, used in file, in sql database
-
    // return;
 
    // do not write anything when no basic tables was created
@@ -848,13 +854,13 @@ void TSQLFile::WriteStreamerInfo()
    fClassIndex->fArray[0] = 0; //to prevent adding classes in TVirtualStreamerInfo::TagFile
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write special kind of object like streamer infos or file itself
+/// keys for that objects should exist in tables but not indicated in list of keys,
+/// therefore users can not get them with TDirectoryFile::Get() method
+
 Bool_t TSQLFile::WriteSpecialObject(Long64_t keyid, TObject* obj, const char* name, const char* title)
 {
-// write special kind of object like streamer infos or file itself
-// keys for that objects should exist in tables but not indicated in list of keys,
-// therefore users can not get them with TDirectoryFile::Get() method
-
    DeleteKeyFromDB(keyid);
    if (obj==0) return kTRUE;
 
@@ -873,11 +879,11 @@ Bool_t TSQLFile::WriteSpecialObject(Long64_t keyid, TObject* obj, const char* na
    return (objid>0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read data of special kind of objects
+
 TObject* TSQLFile::ReadSpecialObject(Long64_t keyid, TObject* obj)
 {
-   // Read data of special kind of objects
-
    TKeySQL* key = 0;
 
    StreamKeysForDirectory(this, kFALSE, keyid, &key);
@@ -899,13 +905,13 @@ TObject* TSQLFile::ReadSpecialObject(Long64_t keyid, TObject* obj)
    return (TObject*) res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read back streamer infos from database
+/// List of streamer infos is always stored with key:id 0,
+/// which is not shown in normal keys list
+
 TList* TSQLFile::GetStreamerInfoList()
 {
-   // Read back streamer infos from database
-   // List of streamer infos is always stored with key:id 0,
-   // which is not shown in normal keys list
-
 //   return new TList;
 
    if (gDebug>1)
@@ -919,25 +925,25 @@ TList* TSQLFile::GetStreamerInfoList()
    return list;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// save data which is not yet in Database
+/// Typically this is streamerinfos structures or
+
 void TSQLFile::SaveToDatabase()
 {
-   // save data which is not yet in Database
-   // Typically this is streamerinfos structures or
-
    if (fSQL==0) return;
 
    WriteStreamerInfo();
    WriteHeader();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read keys for specified directory (when update == kFALSE)
+/// or update value for modified keys when update == kTRUE
+/// Returns number of successfully read keys or -1 if error
+
 Int_t TSQLFile::StreamKeysForDirectory(TDirectory* dir, Bool_t doupdate, Long64_t specialkeyid, TKeySQL** specialkey)
 {
-   // read keys for specified directory (when update == kFALSE)
-   // or update value for modified keys when update == kTRUE
-   // Returns number of successfully read keys or -1 if error
-
    if (dir==0) return -1;
 
    const char* quote = SQLIdentifierQuote();
@@ -1011,12 +1017,12 @@ Int_t TSQLFile::StreamKeysForDirectory(TDirectory* dir, Bool_t doupdate, Long64_
    return nkeys;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialize sql database and correspondent structures
+/// identical to TFile::Init() function
+
 void TSQLFile::InitSqlDatabase(Bool_t create)
 {
-   // initialize sql database and correspondent structures
-   // identical to TFile::Init() function
-
    Int_t len = gROOT->GetListOfStreamerInfo()->GetSize()+1;
    if (len<5000) len = 5000;
    fClassIndex = new TArrayC(len);
@@ -1066,11 +1072,11 @@ void TSQLFile::InitSqlDatabase(Bool_t create)
    fProcessIDs = new TObjArray(fNProcessIDs+1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read table configurations as special table
+
 Bool_t TSQLFile::ReadConfigurations()
 {
-   // read table configurations as special table
-
    const char* quote = SQLIdentifierQuote();
 
    TString sqlcmd;
@@ -1127,13 +1133,13 @@ Bool_t TSQLFile::ReadConfigurations()
    return (fSQLIOversion>0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates initial tables in database
+/// This is table with configurations and table with keys
+/// Function called once when first object is stored to the file.
+
 void TSQLFile::CreateBasicTables()
 {
-   // Creates initial tables in database
-   // This is table with configurations and table with keys
-   // Function called once when first object is stored to the file.
-
    TString sqlcmd;
 
    const char* quote = SQLIdentifierQuote();
@@ -1208,14 +1214,14 @@ void TSQLFile::CreateBasicTables()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update value of modify counter in config table
+/// Modify counter used to indicate that something was changed in database.
+/// It will be used when multiple instances of TSQLFile for the same data base
+/// will be connected.
+
 void TSQLFile::IncrementModifyCounter()
 {
-   // Update value of modify counter in config table
-   // Modify counter used to indicate that something was changed in database.
-   // It will be used when multiple instances of TSQLFile for the same data base
-   // will be connected.
-
    if (!IsWritable()) {
       Error("IncrementModifyCounter","Cannot update tables without write accsess");
       return;
@@ -1233,17 +1239,17 @@ void TSQLFile::IncrementModifyCounter()
    SQLQuery(sqlcmd.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce SELECT statement which can be used to get all data
+/// of class cl in one SELECT statement
+/// This statement also can be used to create VIEW by command like
+/// mysql> CREATE VIEW TH1I_view AS $CLASSSELECT$
+/// Where $CLASSSELECT$ argument should be produced by call
+///   f->MakeSelectQuery(TH1I::Class());
+/// VIEWs supported by latest MySQL 5 and Oracle
+
 TString TSQLFile::MakeSelectQuery(TClass* cl)
 {
-   // Produce SELECT statement which can be used to get all data
-   // of class cl in one SELECT statement
-   // This statement also can be used to create VIEW by command like
-   // mysql> CREATE VIEW TH1I_view AS $CLASSSELECT$
-   // Where $CLASSSELECT$ argument should be produced by call
-   //   f->MakeSelectQuery(TH1I::Class());
-   // VIEWs supported by latest MySQL 5 and Oracle
-
    TString res = "";
    TSQLClassInfo* sqlinfo = FindSQLClassInfo(cl);
    if (sqlinfo==0) return res;
@@ -1259,16 +1265,16 @@ TString TSQLFile::MakeSelectQuery(TClass* cl)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// used by MakeClassSelectQuery method to add columns from table of
+/// class, specified by TVirtualStreamerInfo structure
+
 Bool_t TSQLFile::ProduceClassSelectQuery(TVirtualStreamerInfo* info,
                                          TSQLClassInfo* sqlinfo,
                                          TString& columns,
                                          TString& tables,
                                          Int_t& tablecnt)
 {
-   // used by MakeClassSelectQuery method to add columns from table of
-   // class, specified by TVirtualStreamerInfo structure
-
    if ((info==0) || (sqlinfo==0)) return kFALSE;
 
    if (!sqlinfo->IsClassTableExist()) return kFALSE;
@@ -1345,27 +1351,27 @@ Bool_t TSQLFile::ProduceClassSelectQuery(TVirtualStreamerInfo* info,
    return (columns.Length()>0) && (tables.Length()>0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if main keys table is existing
+
 Bool_t TSQLFile::IsTablesExists()
 {
-   // Checks if main keys table is existing
-
    return SQLTestTable(sqlio::KeysTable) && SQLTestTable(sqlio::ConfigTable);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checkis, if lock is free in configuration tables
+
 Bool_t TSQLFile::IsWriteAccess()
 {
-   // Checkis, if lock is free in configuration tables
-
    return GetLocking()==kLockFree;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set locking mode for current database
+
 void TSQLFile::SetLocking(Int_t mode)
 {
-   // Set locking mode for current database
-
    TString sqlcmd;
    const char* quote = SQLIdentifierQuote();
    const char* vquote = SQLValueQuote();
@@ -1378,11 +1384,11 @@ void TSQLFile::SetLocking(Int_t mode)
    SQLQuery(sqlcmd.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return current locking mode for that file
+
 Int_t TSQLFile::GetLocking()
 {
-   // Return current locking mode for that file
-
    const char* quote = SQLIdentifierQuote();
    const char* vquote = SQLValueQuote();
 
@@ -1404,25 +1410,25 @@ Int_t TSQLFile::GetLocking()
    return field.Atoi();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dummy, in future should check about read access to database
+
 Bool_t TSQLFile::IsReadAccess()
 {
-   // dummy, in future should check about read access to database
-
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// submits query to SQL server
+/// if flag==0, result is not interesting and will be deleted
+/// if flag==1, return result of submitted query
+/// if flag==2, results is may be necessary for long time
+///             Oracle plugin do not support working with several TSQLResult
+///             objects, therefore explicit deep copy will be produced
+/// If ok!=0, it will contains kTRUE is Query was successfull, otherwise kFALSE
+
 TSQLResult* TSQLFile::SQLQuery(const char* cmd, Int_t flag, Bool_t* ok)
 {
-   // submits query to SQL server
-   // if flag==0, result is not interesting and will be deleted
-   // if flag==1, return result of submitted query
-   // if flag==2, results is may be necessary for long time
-   //             Oracle plugin do not support working with several TSQLResult
-   //             objects, therefore explicit deep copy will be produced
-   // If ok!=0, it will contains kTRUE is Query was successfull, otherwise kFALSE
-
    if (fLogFile!=0)
       *fLogFile << cmd << std::endl;
 
@@ -1448,11 +1454,11 @@ TSQLResult* TSQLFile::SQLQuery(const char* cmd, Int_t flag, Bool_t* ok)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test if DB support statement and number of open statements is not exceeded
+
 Bool_t TSQLFile::SQLCanStatement()
 {
-   // Test if DB support statement and number of open statements is not exceeded
-
    if (fSQL==0) return kFALSE;
 
    if (!fSQL->HasStatement()) return kFALSE;
@@ -1460,11 +1466,11 @@ Bool_t TSQLFile::SQLCanStatement()
    return kTRUE; // !IsOracle() || (fStmtCounter<15);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produces SQL statement for currently conected DB server
+
 TSQLStatement* TSQLFile::SQLStatement(const char* cmd, Int_t bufsize)
 {
-   // Produces SQL statement for currently conected DB server
-
    if (fSQL==0) return 0;
 
    if (!fSQL->HasStatement()) return 0;
@@ -1478,11 +1484,11 @@ TSQLStatement* TSQLFile::SQLStatement(const char* cmd, Int_t bufsize)
    return fSQL->Statement(cmd, bufsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// delete statement and decrease counter
+
 void TSQLFile::SQLDeleteStatement(TSQLStatement* stmt)
 {
-   // delete statement and decrease counter
-
    if (stmt==0) return;
 
    fStmtCounter--;
@@ -1490,12 +1496,12 @@ void TSQLFile::SQLDeleteStatement(TSQLStatement* stmt)
    delete stmt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// supplies set of commands to server
+/// Commands is stored as array of TObjString
+
 Bool_t TSQLFile::SQLApplyCommands(TObjArray* cmds)
 {
-   // supplies set of commands to server
-   // Commands is stored as array of TObjString
-
    if ((cmds==0) || (fSQL==0)) return kFALSE;
 
    Bool_t ok = kTRUE;
@@ -1509,11 +1515,11 @@ Bool_t TSQLFile::SQLApplyCommands(TObjArray* cmds)
    return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test, if table of specified name exists
+
 Bool_t TSQLFile::SQLTestTable(const char* tablename)
 {
-   // Test, if table of specified name exists
-
    if (fSQL==0) return kFALSE;
 
    if (fSQL->HasTable(tablename)) return kTRUE;
@@ -1525,12 +1531,12 @@ Bool_t TSQLFile::SQLTestTable(const char* tablename)
    return fSQL->HasTable(buf.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns maximum value, found in specified columnname of table tablename
+/// Column type should be numeric
+
 Long64_t TSQLFile::SQLMaximumValue(const char* tablename, const char* columnname)
 {
-   // Returns maximum value, found in specified columnname of table tablename
-   // Column type should be numeric
-
    if (fSQL==0) return -1;
 
    if (gDebug>2)
@@ -1562,11 +1568,11 @@ Long64_t TSQLFile::SQLMaximumValue(const char* tablename, const char* columnname
    return maxid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete all tables in database
+
 void TSQLFile::SQLDeleteAllTables()
 {
-   // Delete all tables in database
-
    if (fSQL==0) return;
 
    TList* tables = fSQL->GetTablesList();
@@ -1584,35 +1590,35 @@ void TSQLFile::SQLDeleteAllTables()
    delete tables;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start SQL transaction.
+
 Bool_t TSQLFile::SQLStartTransaction()
 {
-   // Start SQL transaction.
-
    return fSQL ? fSQL->StartTransaction() : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Commit SQL transaction
+
 Bool_t TSQLFile::SQLCommit()
 {
-   // Commit SQL transaction
-
    return fSQL ? fSQL->Commit() : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rollback all SQL operations, done after start transaction
+
 Bool_t TSQLFile::SQLRollback()
 {
-   // Rollback all SQL operations, done after start transaction
-
    return fSQL ? fSQL->Rollback() : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns maximum allowed length of identifiers
+
 Int_t TSQLFile::SQLMaxIdentifierLength()
 {
-   // returns maximum allowed length of identifiers
-
    Int_t maxlen = fSQL==0 ? 32 : fSQL->GetMaxIdentifierLength();
 
    // lets exclude absolute ubnormal data
@@ -1621,12 +1627,12 @@ Int_t TSQLFile::SQLMaxIdentifierLength()
    return maxlen;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// remove key with specified id from keys table
+/// also removes all objects data, related to this table
+
 void TSQLFile::DeleteKeyFromDB(Long64_t keyid)
 {
-// remove key with specified id from keys table
-// also removes all objects data, related to this table
-
    if (!IsWritable() || (keyid<0) || (fSQL==0)) return;
 
    TString sqlcmd;
@@ -1682,11 +1688,11 @@ void TSQLFile::DeleteKeyFromDB(Long64_t keyid)
    IncrementModifyCounter();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search for TKeySQL object with specified keyid
+
 TKeySQL* TSQLFile::FindSQLKey(TDirectory* dir, Long64_t keyid)
 {
-   // Search for TKeySQL object with specified keyid
-
    if (dir==0) return 0;
 
    TIter next(dir->GetListOfKeys());
@@ -1701,11 +1707,11 @@ TKeySQL* TSQLFile::FindSQLKey(TDirectory* dir, Long64_t keyid)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add entry into keys table
+
 Bool_t TSQLFile::WriteKeyData(TKeySQL* key)
 {
-   // add entry into keys table
-
    if ((fSQL==0) || (key==0)) return kFALSE;
 
    if (!IsTablesExists()) CreateBasicTables();
@@ -1732,11 +1738,11 @@ Bool_t TSQLFile::WriteKeyData(TKeySQL* key)
    return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// updates (overwrites) key data in KeysTable
+
 Bool_t TSQLFile::UpdateKeyData(TKeySQL* key)
 {
-   // updates (overwrites) key data in KeysTable
-
    if ((fSQL==0) || (key==0)) return kFALSE;
 
    TString sqlcmd;
@@ -1768,11 +1774,11 @@ Bool_t TSQLFile::UpdateKeyData(TKeySQL* key)
    return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns next possible key identifier
+
 Long64_t TSQLFile::DefineNextKeyId()
 {
-   // Returns next possible key identifier
-
    Long64_t max = -1;
 
    if (SQLTestTable(sqlio::KeysTable))
@@ -1783,11 +1789,11 @@ Long64_t TSQLFile::DefineNextKeyId()
    return max+1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return (if exists) TSQLClassInfo for specified class name and version
+
 TSQLClassInfo* TSQLFile::FindSQLClassInfo(const char* clname, Int_t version)
 {
-   // return (if exists) TSQLClassInfo for specified class name and version
-
    if (fSQLClassInfos==0) return 0;
 
    TIter iter(fSQLClassInfos);
@@ -1800,19 +1806,19 @@ TSQLClassInfo* TSQLFile::FindSQLClassInfo(const char* clname, Int_t version)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return (if exists) TSQLClassInfo for specified class
+
 TSQLClassInfo* TSQLFile::FindSQLClassInfo(const TClass* cl)
 {
-   // return (if exists) TSQLClassInfo for specified class
-
    return FindSQLClassInfo(cl->GetName(), cl->GetClassVersion());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// search in database tables for specified class and return TSQLClassInfo object
+
 TSQLClassInfo* TSQLFile::RequestSQLClassInfo(const char* clname, Int_t version)
 {
-   // search in database tables for specified class and return TSQLClassInfo object
-
    TSQLClassInfo* info = FindSQLClassInfo(clname, version);
    if (info!=0) return info;
 
@@ -1840,11 +1846,11 @@ TSQLClassInfo* TSQLFile::RequestSQLClassInfo(const char* clname, Int_t version)
    return info;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// proposes table name for class
+
 TString TSQLFile::DefineTableName(const char* clname, Int_t version, Bool_t rawtable)
 {
-   // proposes table name for class
-
    Int_t maxlen = SQLMaxIdentifierLength();
 
    TString res;
@@ -1886,11 +1892,11 @@ TString TSQLFile::DefineTableName(const char* clname, Int_t version, Bool_t rawt
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if table name exists
+
 Bool_t TSQLFile::HasTable(const char* name)
 {
-   // test if table name exists
-
    if (fSQLClassInfos==0) return kFALSE;
 
    TIter iter(fSQLClassInfos);
@@ -1903,19 +1909,19 @@ Bool_t TSQLFile::HasTable(const char* name)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// search in database tables for specified class and return TSQLClassInfo object
+
 TSQLClassInfo* TSQLFile::RequestSQLClassInfo(const TClass* cl)
 {
-   // search in database tables for specified class and return TSQLClassInfo object
-
    return RequestSQLClassInfo(cl->GetName(), cl->GetClassVersion());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read all class infos from IdsTable
+
 void TSQLFile::ReadSQLClassInfos()
 {
-   // Read all class infos from IdsTable
-
    if (fSQL==0) return;
 
    fIdsTableExists = SQLTestTable(sqlio::IdsTable);
@@ -2021,12 +2027,12 @@ void TSQLFile::ReadSQLClassInfos()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add entry into IdsTable, where all tables names and columns names are listed
+
 void TSQLFile::AddIdEntry(Long64_t tableid, Int_t subid, Int_t type,
                           const char* name, const char* sqlname, const char* info)
 {
-   // Add entry into IdsTable, where all tables names and columns names are listed
-
    if ((fSQL==0) || !IsWritable()) return;
 
    TString sqlcmd;
@@ -2067,11 +2073,11 @@ void TSQLFile::AddIdEntry(Long64_t tableid, Int_t subid, Int_t type,
    SQLQuery(sqlcmd.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create normal class table if required
+
 Bool_t TSQLFile::CreateClassTable(TSQLClassInfo* sqlinfo, TObjArray* colinfos)
 {
-   // Create normal class table if required
-
    if (sqlinfo==0) return kFALSE;
 
    // this is normal situation, when no extra column infos was created when not necessary
@@ -2156,10 +2162,11 @@ Bool_t TSQLFile::CreateClassTable(TSQLClassInfo* sqlinfo, TObjArray* colinfos)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///create the raw table
+
 Bool_t TSQLFile::CreateRawTable(TSQLClassInfo* sqlinfo)
 {
-   //create the raw table
    if (sqlinfo==0) return kFALSE;
 
    if (sqlinfo->IsRawTableExist()) return kTRUE;
@@ -2208,12 +2215,12 @@ Bool_t TSQLFile::CreateRawTable(TSQLClassInfo* sqlinfo)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks that table for big strings is exists
+/// If not, will be created
+
 Bool_t TSQLFile::VerifyLongStringTable()
 {
-   // Checks that table for big strings is exists
-   // If not, will be created
-
    if (fSQL==0) return kFALSE;
 
    if (SQLTestTable(sqlio::StringsTable)) return kTRUE;
@@ -2237,20 +2244,22 @@ Bool_t TSQLFile::VerifyLongStringTable()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// produces id which will be placed in column instead of string itself
+
 TString TSQLFile::CodeLongString(Long64_t objid, Int_t strid)
 {
-   // produces id which will be placed in column instead of string itself
    TString res;
    res.Form("%s %lld %s %d %s", sqlio::LongStrPrefix, objid, sqlio::LongStrPrefix, strid, sqlio::LongStrPrefix);
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// checks if this is long string code
+/// returns 0, if not or string id
+
 Int_t TSQLFile::IsLongStringCode(Long64_t objid, const char* value)
 {
-   // checks if this is long string code
-   // returns 0, if not or string id
    if (value==0) return 0;
    if (strlen(value)<strlen(sqlio::LongStrPrefix)*3+6) return 0;
    if (strstr(value, sqlio::LongStrPrefix)!=value) return 0;
@@ -2282,12 +2291,12 @@ Int_t TSQLFile::IsLongStringCode(Long64_t objid, const char* value)
    return atoi(s_strid.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns value of string, extracted from special table,
+/// where long strings are stored
+
 Bool_t TSQLFile::GetLongString(Long64_t objid, Int_t strid, TString& value)
 {
-   // returns value of string, extracted from special table,
-   // where long strings are stored
-
    if (!SQLTestTable(sqlio::StringsTable)) return kFALSE;
 
    TString cmd;
@@ -2310,13 +2319,13 @@ Bool_t TSQLFile::GetLongString(Long64_t objid, Int_t strid, TString& value)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks that objects table is exists
+/// If not, table will be created
+/// Returns maximum value for existing objects id
+
 Long64_t TSQLFile::VerifyObjectTable()
 {
-   // Checks that objects table is exists
-   // If not, table will be created
-   // Returns maximum value for existing objects id
-
    if (fSQL==0) return -1;
 
    Long64_t maxid = -1;
@@ -2355,11 +2364,11 @@ Long64_t TSQLFile::VerifyObjectTable()
    return maxid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read from objects table data for specified objectid
+
 Bool_t TSQLFile::SQLObjectInfo(Long64_t objid, TString& clname, Version_t &version)
 {
-   // Read from objects table data for specified objectid
-
    if (fSQL==0) return kFALSE;
 
    TString sqlcmd;
@@ -2382,11 +2391,12 @@ Bool_t TSQLFile::SQLObjectInfo(Long64_t objid, TString& clname, Version_t &versi
    return row!=0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce array of TSQLObjectInfo objects for all objects, belong to that key
+/// Array should be deleted by calling function afterwards
+
 TObjArray* TSQLFile::SQLObjectsInfo(Long64_t keyid)
 {
-// Produce array of TSQLObjectInfo objects for all objects, belong to that key
-// Array should be deleted by calling function afterwards
    if (fSQL==0) return 0;
 
    TString sqlcmd;
@@ -2445,11 +2455,11 @@ TObjArray* TSQLFile::SQLObjectsInfo(Long64_t keyid)
    return arr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method return request result for specified objid from normal classtable
+
 TSQLResult* TSQLFile::GetNormalClassData(Long64_t objid, TSQLClassInfo* sqlinfo)
 {
-// Method return request result for specified objid from normal classtable
-
    if (!sqlinfo->IsClassTableExist()) return 0;
    TString sqlcmd;
    const char* quote = SQLIdentifierQuote();
@@ -2459,11 +2469,11 @@ TSQLResult* TSQLFile::GetNormalClassData(Long64_t objid, TSQLClassInfo* sqlinfo)
    return SQLQuery(sqlcmd.Data(), 2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return data for several objects from the range from normal class table
+
 TSQLResult* TSQLFile::GetNormalClassDataAll(Long64_t minobjid, Long64_t maxobjid, TSQLClassInfo* sqlinfo)
 {
-   // return data for several objects from the range from normal class table
-
    if (!sqlinfo->IsClassTableExist()) return 0;
    TString sqlcmd;
    const char* quote = SQLIdentifierQuote();
@@ -2474,11 +2484,11 @@ TSQLResult* TSQLFile::GetNormalClassDataAll(Long64_t minobjid, Long64_t maxobjid
    return SQLQuery(sqlcmd.Data(), 2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Method return request results for specified objid from _streamer_ classtable
+
 TSQLResult* TSQLFile::GetBlobClassData(Long64_t objid, TSQLClassInfo* sqlinfo)
 {
-//  Method return request results for specified objid from _streamer_ classtable
-
    if (!sqlinfo->IsRawTableExist()) return 0;
    TString sqlcmd;
    const char* quote = SQLIdentifierQuote();
@@ -2490,12 +2500,12 @@ TSQLResult* TSQLFile::GetBlobClassData(Long64_t objid, TSQLClassInfo* sqlinfo)
    return SQLQuery(sqlcmd.Data(), 2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Method return request results for specified objid from _streamer_ classtable
+///  Data returned in form of statement, where direct access to values are possible
+
 TSQLStatement* TSQLFile::GetBlobClassDataStmt(Long64_t objid, TSQLClassInfo* sqlinfo)
 {
-//  Method return request results for specified objid from _streamer_ classtable
-//  Data returned in form of statement, where direct access to values are possible
-
    if (!sqlinfo->IsRawTableExist()) return 0;
 
    TString sqlcmd;
@@ -2521,11 +2531,11 @@ TSQLStatement* TSQLFile::GetBlobClassDataStmt(Long64_t objid, TSQLClassInfo* sql
    return stmt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store object in database. Return stored object id or -1 if error
+
 Long64_t TSQLFile::StoreObjectInTables(Long64_t keyid, const void* obj, const TClass* cl)
 {
-   // Store object in database. Return stored object id or -1 if error
-
    if (fSQL==0) return -1;
 
    Long64_t objid = VerifyObjectTable();
@@ -2567,28 +2577,28 @@ Long64_t TSQLFile::StoreObjectInTables(Long64_t keyid, const void* obj, const TC
    return objid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns sql type name which is most closer to ROOT basic type
+/// typ should be from TVirtualStreamerInfo:: constansts like TVirtualStreamerInfo::kInt
+
 const char* TSQLFile::SQLCompatibleType(Int_t typ) const
 {
-   // returns sql type name which is most closer to ROOT basic type
-   // typ should be from TVirtualStreamerInfo:: constansts like TVirtualStreamerInfo::kInt
-
    return (typ<0) || (typ>18) ? 0 : fBasicTypes[typ];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return SQL integer type
+
 const char* TSQLFile::SQLIntType() const
 {
-   // return SQL integer type
-
    return SQLCompatibleType(TVirtualStreamerInfo::kInt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create entry for directory in database
+
 Long64_t TSQLFile::DirCreateEntry(TDirectory* dir)
 {
-   // Create entry for directory in database
-
    TDirectory* mother = dir->GetMotherDir();
    if (mother==0) mother = this;
 
@@ -2598,11 +2608,11 @@ Long64_t TSQLFile::DirCreateEntry(TDirectory* dir)
    return key->GetDBKeyId();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read directory list of keys from database
+
 Int_t TSQLFile::DirReadKeys(TDirectory* dir)
 {
-   // Read directory list of keys from database
-
    // First delete all old keys
    dir->GetListOfKeys()->Delete();
 
@@ -2612,19 +2622,19 @@ Int_t TSQLFile::DirReadKeys(TDirectory* dir)
    return StreamKeysForDirectory(dir, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write directory keys list to database
+
 void TSQLFile::DirWriteKeys(TDirectory* dir)
 {
-   // Write directory keys list to database
-
    StreamKeysForDirectory(dir, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update dir header in the file
+
 void TSQLFile::DirWriteHeader(TDirectory* dir)
 {
-   // Update dir header in the file
-
    TSQLClassInfo* sqlinfo = FindSQLClassInfo("TDirectory",TDirectoryFile::Class()->GetClassVersion());
    if (sqlinfo==0) return;
 
@@ -2665,12 +2675,12 @@ void TSQLFile::DirWriteHeader(TDirectory* dir)
    SQLQuery(sqlcmd.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// streamer for TSQLFile class
+/// stores only data for TDirectory
+
 void TSQLFile::Streamer(TBuffer &b)
 {
-   // streamer for TSQLFile class
-   // stores only data for TDirectory
-
 
    TString sbuf;
 

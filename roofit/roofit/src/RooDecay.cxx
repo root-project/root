@@ -39,7 +39,9 @@ ClassImp(RooDecay)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooDecay::RooDecay(const char *name, const char *title, 
 		   RooRealVar& t, RooAbsReal& tau, 
 		   const RooResolutionModel& model, DecayType type) :
@@ -48,7 +50,6 @@ RooDecay::RooDecay(const char *name, const char *title,
   _tau("tau","decay time",this,tau),
   _type(type)
 {
-  // Constructor
   switch(type) {
   case SingleSided:
     _basisExp = declareBasis("exp(-@0/@1)",tau) ;
@@ -64,7 +65,9 @@ RooDecay::RooDecay(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooDecay::RooDecay(const RooDecay& other, const char* name) : 
   RooAbsAnaConvPdf(other,name), 
   _t("t",this,other._t),
@@ -72,20 +75,21 @@ RooDecay::RooDecay(const RooDecay& other, const char* name) :
   _type(other._type),
   _basisExp(other._basisExp)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooDecay::~RooDecay()
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooDecay::coefficient(Int_t /*basisIndex*/) const 
 {
   return 1 ;
@@ -93,7 +97,8 @@ Double_t RooDecay::coefficient(Int_t /*basisIndex*/) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,_t)) return 1 ;  
@@ -102,7 +107,8 @@ Int_t RooDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVar
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooDecay::generateEvent(Int_t code)
 {
   R__ASSERT(code==1) ;

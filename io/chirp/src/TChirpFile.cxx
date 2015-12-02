@@ -94,7 +94,8 @@ static void chirp_root_global_setup()
 
 ClassImp(TChirpFile)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TChirpFile::TChirpFile(const char *path, Option_t * option, const char *ftitle, Int_t compress):TFile(path, "NET", ftitle, compress)
 {
    chirp_root_global_setup();
@@ -156,13 +157,15 @@ zombie:
    gDirectory = gROOT;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TChirpFile::~TChirpFile()
 {
    Close();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TChirpFile::ReadBuffers(char *buf, Long64_t * pos, Int_t * len, Int_t nbuf)
 {
    struct chirp_bulkio bulkio[nbuf];
@@ -188,7 +191,8 @@ Bool_t TChirpFile::ReadBuffers(char *buf, Long64_t * pos, Int_t * len, Int_t nbu
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TChirpFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
    TUrl url(pathname);
@@ -200,13 +204,15 @@ Int_t TChirpFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TChirpFile::SysClose(Int_t)
 {
    return chirp_reli_close(chirp_file_ptr, time(0) + chirp_root_timeout);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TChirpFile::SysRead(Int_t, void *buf, Int_t len)
 {
    Int_t rc = chirp_reli_pread(chirp_file_ptr, buf, len, fOffset, time(0) + chirp_root_timeout);
@@ -214,7 +220,8 @@ Int_t TChirpFile::SysRead(Int_t, void *buf, Int_t len)
    return rc;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TChirpFile::SysWrite(Int_t, const void *buf, Int_t len)
 {
    Int_t rc = chirp_reli_pwrite(chirp_file_ptr, buf, len, fOffset, time(0) + chirp_root_timeout);
@@ -222,7 +229,8 @@ Int_t TChirpFile::SysWrite(Int_t, const void *buf, Int_t len)
    return rc;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Long64_t TChirpFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
 {
    if (whence == SEEK_SET) {
@@ -248,13 +256,15 @@ Long64_t TChirpFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
    return fOffset;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TChirpFile::SysSync(Int_t /*fd*/)
 {
    return chirp_reli_fsync(chirp_file_ptr, time(0) + chirp_root_timeout);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TChirpFile::SysStat(Int_t, Long_t * id, Long64_t * size, Long_t * flags, Long_t * modtime)
 {
    struct chirp_stat cst;
@@ -273,39 +283,45 @@ Int_t TChirpFile::SysStat(Int_t, Long_t * id, Long64_t * size, Long_t * flags, L
 
 ClassImp(TChirpSystem)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TChirpSystem::TChirpSystem():TSystem("-chirp", "Chirp Helper System")
 {
    SetName("chirp");
    chirp_root_global_setup();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TChirpSystem::~TChirpSystem()
 {
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TChirpSystem::MakeDirectory(const char *path)
 {
    TUrl url(path);
    return chirp_reli_mkdir(url.GetHost(), FIXPATH(url.GetFile()), 0777, time(0) + chirp_root_timeout);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void *TChirpSystem::OpenDirectory(const char *path)
 {
    TUrl url(path);
    return chirp_reli_opendir(url.GetHost(), FIXPATH(url.GetFile()), time(0) + chirp_root_timeout);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TChirpSystem::FreeDirectory(void *dirp)
 {
    return chirp_reli_closedir((struct chirp_dir *) dirp);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *TChirpSystem::GetDirEntry(void *dirp)
 {
    struct chirp_dirent *d = chirp_reli_readdir((struct chirp_dir *) dirp);
@@ -316,7 +332,8 @@ const char *TChirpSystem::GetDirEntry(void *dirp)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TChirpSystem::GetPathInfo(const char *path, FileStat_t & buf)
 {
    TUrl url(path);
@@ -336,7 +353,8 @@ Int_t TChirpSystem::GetPathInfo(const char *path, FileStat_t & buf)
    return rc;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TChirpSystem::AccessPathName(const char *path, EAccessMode mode)
 {
    TUrl url(path);
@@ -354,7 +372,8 @@ Bool_t TChirpSystem::AccessPathName(const char *path, EAccessMode mode)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TChirpSystem::Unlink(const char *path)
 {
    TUrl url(path);
@@ -365,7 +384,8 @@ Int_t TChirpSystem::Unlink(const char *path)
    return rc;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int TChirpSystem::Rename(const char *from, const char *to)
 {
    TUrl fromurl(from);
@@ -379,7 +399,8 @@ int TChirpSystem::Rename(const char *from, const char *to)
    return chirp_reli_rename(fromurl.GetHost(), FIXPATH(fromurl.GetFile()), FIXPATH(tourl.GetFile()), time(0) + chirp_root_timeout);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int TChirpSystem::Link(const char *from, const char *to)
 {
    TUrl fromurl(from);
@@ -393,7 +414,8 @@ int TChirpSystem::Link(const char *from, const char *to)
    return chirp_reli_link(fromurl.GetHost(), FIXPATH(fromurl.GetFile()), FIXPATH(tourl.GetFile()), time(0) + chirp_root_timeout);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int TChirpSystem::Symlink(const char *from, const char *to)
 {
    TUrl fromurl(from);
@@ -407,7 +429,8 @@ int TChirpSystem::Symlink(const char *from, const char *to)
    return chirp_reli_symlink(fromurl.GetHost(), FIXPATH(fromurl.GetFile()), FIXPATH(tourl.GetFile()), time(0) + chirp_root_timeout);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int TChirpSystem::GetFsInfo(const char *path, Long_t * id, Long_t * bsize, Long_t * blocks, Long_t * bfree)
 {
    TUrl url(path);
@@ -424,14 +447,16 @@ int TChirpSystem::GetFsInfo(const char *path, Long_t * id, Long_t * bsize, Long_
    return rc;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int TChirpSystem::Chmod(const char *path, UInt_t mode)
 {
    TUrl url(path);
    return chirp_reli_chmod(url.GetHost(), FIXPATH(url.GetFile()), mode, time(0) + chirp_root_timeout);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int TChirpSystem::Utime(const char *path, Long_t modtime, Long_t actime)
 {
    TUrl url(path);

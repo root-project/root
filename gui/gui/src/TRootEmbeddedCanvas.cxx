@@ -67,12 +67,12 @@ public:
    void    SetEditable(Bool_t) { }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a canvas container.
+
 TRootEmbeddedContainer::TRootEmbeddedContainer(TRootEmbeddedCanvas *c, Window_t id,
    const TGWindow *p) : TGCompositeFrame(gClient, id, p)
 {
-   // Create a canvas container.
-
    fCanvas = c;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
@@ -90,22 +90,22 @@ TRootEmbeddedContainer::TRootEmbeddedContainer(TRootEmbeddedCanvas *c, Window_t 
 
 ClassImp(TRootEmbeddedCanvas)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an TCanvas embedded in a TGFrame. A pointer to the TCanvas can
+/// be obtained via the GetCanvas() member function. To embed a canvas
+/// derived from a TCanvas do the following:
+/// TRootEmbeddedCanvas *embedded = new TRootEmbeddedCanvas(0, p, w, h);
+///      [note name must be 0, not null string ""]
+/// Int_t wid = embedded->GetCanvasWindowId();
+/// TMyCanvas *myc = new TMyCanvas("myname", 10, 10, wid);
+/// embedded->AdoptCanvas(myc);
+///      [ the MyCanvas is adopted by the embedded canvas and will be
+///        destroyed by it ]
+
 TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
             UInt_t w, UInt_t h, UInt_t options, ULong_t back)
    : TGCanvas(p, w, h, options, back)
 {
-   // Create an TCanvas embedded in a TGFrame. A pointer to the TCanvas can
-   // be obtained via the GetCanvas() member function. To embed a canvas
-   // derived from a TCanvas do the following:
-   // TRootEmbeddedCanvas *embedded = new TRootEmbeddedCanvas(0, p, w, h);
-   //      [note name must be 0, not null string ""]
-   // Int_t wid = embedded->GetCanvasWindowId();
-   // TMyCanvas *myc = new TMyCanvas("myname", 10, 10, wid);
-   // embedded->AdoptCanvas(myc);
-   //      [ the MyCanvas is adopted by the embedded canvas and will be
-   //        destroyed by it ]
-
    fCanvas  = 0;
    fButton  = 0;
    fAutoFit = kTRUE;
@@ -166,11 +166,11 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete embedded ROOT canvas.
+
 TRootEmbeddedCanvas::~TRootEmbeddedCanvas()
 {
-   // Delete embedded ROOT canvas.
-
    if (!MustCleanup()) {
       delete fCanvas;
       delete fCanvasContainer;
@@ -178,21 +178,21 @@ TRootEmbeddedCanvas::~TRootEmbeddedCanvas()
    delete [] fDNDTypeList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Canvas c is adopted from this embedded canvas.
+
 void TRootEmbeddedCanvas::AdoptCanvas(TCanvas *c)
 {
-   // Canvas c is adopted from this embedded canvas.
-
    if(c == 0) return;
    c->EmbedInto(fCWinId, fWidth, fHeight);
    fCanvas = c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button events in the canvas container.
+
 Bool_t TRootEmbeddedCanvas::HandleContainerButton(Event_t *event)
 {
-   // Handle mouse button events in the canvas container.
-
    if (!fCanvas) return kTRUE;
 
    Int_t button = event->fCode;
@@ -232,11 +232,11 @@ Bool_t TRootEmbeddedCanvas::HandleContainerButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button double click events in the canvas container.
+
 Bool_t TRootEmbeddedCanvas::HandleContainerDoubleClick(Event_t *event)
 {
-   // Handle mouse button double click events in the canvas container.
-
    if (!fCanvas) return kTRUE;
 
    Int_t button = event->fCode;
@@ -253,11 +253,11 @@ Bool_t TRootEmbeddedCanvas::HandleContainerDoubleClick(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle configure (i.e. resize) event.
+
 Bool_t TRootEmbeddedCanvas::HandleContainerConfigure(Event_t *)
 {
-   // Handle configure (i.e. resize) event.
-
    if (fAutoFit && fCanvas) {
       fCanvas->Resize();
       fCanvas->Update();
@@ -265,11 +265,11 @@ Bool_t TRootEmbeddedCanvas::HandleContainerConfigure(Event_t *)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle keyboard events in the canvas container.
+
 Bool_t TRootEmbeddedCanvas::HandleContainerKey(Event_t *event)
 {
-   // Handle keyboard events in the canvas container.
-
    static EGEventType previous_event = kOtherEvent;
    static UInt_t previous_keysym = 0;
 
@@ -367,11 +367,11 @@ Bool_t TRootEmbeddedCanvas::HandleContainerKey(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in the canvas container.
+
 Bool_t TRootEmbeddedCanvas::HandleContainerMotion(Event_t *event)
 {
-   // Handle mouse motion event in the canvas container.
-
    if (!fCanvas) return kTRUE;
 
    Int_t x = event->fX;
@@ -391,11 +391,11 @@ Bool_t TRootEmbeddedCanvas::HandleContainerMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle expose events.
+
 Bool_t TRootEmbeddedCanvas::HandleContainerExpose(Event_t *event)
 {
-   // Handle expose events.
-
    if (!fCanvas) return kTRUE;
 
    if (event->fCount == 0)
@@ -404,11 +404,11 @@ Bool_t TRootEmbeddedCanvas::HandleContainerExpose(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle enter/leave events. Only leave is activated at the moment.
+
 Bool_t TRootEmbeddedCanvas::HandleContainerCrossing(Event_t *event)
 {
-   // Handle enter/leave events. Only leave is activated at the moment.
-
    if (!fCanvas) return kTRUE;
 
    Int_t x = event->fX;
@@ -422,11 +422,11 @@ Bool_t TRootEmbeddedCanvas::HandleContainerCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle drop events.
+
 Bool_t TRootEmbeddedCanvas::HandleDNDDrop(TDNDData *data)
 {
-   // Handle drop events.
-
    static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
    static Atom_t uriObj  = gVirtualX->InternAtom("text/uri-list", kFALSE);
 
@@ -481,12 +481,12 @@ Bool_t TRootEmbeddedCanvas::HandleDNDDrop(TDNDData *data)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle dragging position events.
+
 Atom_t TRootEmbeddedCanvas::HandleDNDPosition(Int_t /*x*/, Int_t /*y*/, Atom_t action,
                                               Int_t xroot, Int_t yroot)
 {
-   // Handle dragging position events.
-
    Int_t    px = 0, py = 0;
    Window_t wtarget;
 
@@ -504,11 +504,11 @@ Atom_t TRootEmbeddedCanvas::HandleDNDPosition(Int_t /*x*/, Int_t /*y*/, Atom_t a
    return action;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle drag enter events.
+
 Atom_t TRootEmbeddedCanvas::HandleDNDEnter(Atom_t *typelist)
 {
-   // Handle drag enter events.
-
    static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
    static Atom_t uriObj  = gVirtualX->InternAtom("text/uri-list", kFALSE);
    Atom_t ret = kNone;
@@ -521,19 +521,19 @@ Atom_t TRootEmbeddedCanvas::HandleDNDEnter(Atom_t *typelist)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle drag leave events.
+
 Bool_t TRootEmbeddedCanvas::HandleDNDLeave()
 {
-   // Handle drag leave events.
-
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save an embedded canvas as a C++ statement(s) on output stream out.
+
 void TRootEmbeddedCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save an embedded canvas as a C++ statement(s) on output stream out.
-
    if (!GetCanvas()) return;
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);

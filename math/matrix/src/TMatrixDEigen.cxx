@@ -46,11 +46,11 @@
 
 ClassImp(TMatrixDEigen)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for eigen-problem of matrix A .
+
 TMatrixDEigen::TMatrixDEigen(const TMatrixD &a)
 {
-// Constructor for eigen-problem of matrix A .
-
    R__ASSERT(a.IsValid());
 
    const Int_t nRows  = a.GetNrows();
@@ -87,22 +87,22 @@ TMatrixDEigen::TMatrixDEigen(const TMatrixD &a)
    Sort(fEigenVectors,fEigenValuesRe,fEigenValuesIm);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TMatrixDEigen::TMatrixDEigen(const TMatrixDEigen &another)
 {
-// Copy constructor
-
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Nonsymmetric reduction to Hessenberg form.
+/// This is derived from the Algol procedures orthes and ortran, by Martin and Wilkinson,
+/// Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
+/// Fortran subroutines in EISPACK.
+
 void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
 {
-// Nonsymmetric reduction to Hessenberg form.
-// This is derived from the Algol procedures orthes and ortran, by Martin and Wilkinson,
-// Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
-// Fortran subroutines in EISPACK.
-
    Double_t *pV = v.GetMatrixArray();
    Double_t *pO = ortho.GetMatrixArray();
    Double_t *pH = H.GetMatrixArray();
@@ -201,10 +201,11 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Complex scalar division.
+
 static Double_t gCdivr, gCdivi;
 static void cdiv(Double_t xr,Double_t xi,Double_t yr,Double_t yi) {
-// Complex scalar division.
    Double_t r,d;
    if (TMath::Abs(yr) > TMath::Abs(yi)) {
       r = yi/yr;
@@ -219,14 +220,14 @@ static void cdiv(Double_t xr,Double_t xi,Double_t yr,Double_t yi) {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Nonsymmetric reduction from Hessenberg to real Schur form.
+/// This is derived from the Algol procedure hqr2, by Martin and Wilkinson,
+/// Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
+/// Fortran subroutine in EISPACK.
+
 void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
 {
-// Nonsymmetric reduction from Hessenberg to real Schur form.
-// This is derived from the Algol procedure hqr2, by Martin and Wilkinson,
-// Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
-// Fortran subroutine in EISPACK.
-
    // Initialize
 
    const Int_t nn = v.GetNrows();
@@ -686,12 +687,12 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort eigenvalues and corresponding vectors in descending order of Re^2+Im^2
+/// of the complex eigenvalues .
+
 void TMatrixDEigen::Sort(TMatrixD &v,TVectorD &d,TVectorD &e)
 {
-// Sort eigenvalues and corresponding vectors in descending order of Re^2+Im^2
-// of the complex eigenvalues .
-
    // Sort eigenvalues and corresponding vectors.
    Double_t *pV = v.GetMatrixArray();
    Double_t *pD = d.GetMatrixArray();
@@ -728,11 +729,11 @@ void TMatrixDEigen::Sort(TMatrixD &v,TVectorD &d,TVectorD &e)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TMatrixDEigen &TMatrixDEigen::operator=(const TMatrixDEigen &source)
 {
-// Assignment operator
-
    if (this != &source) {
       fEigenVectors.ResizeTo(source.fEigenVectors);
       fEigenValuesRe.ResizeTo(source.fEigenValuesRe);
@@ -741,42 +742,43 @@ TMatrixDEigen &TMatrixDEigen::operator=(const TMatrixDEigen &source)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes the block diagonal eigenvalue matrix.
+/// If the original matrix A is not symmetric, then the eigenvalue
+/// matrix D is block diagonal with the real eigenvalues in 1-by-1
+/// blocks and any complex eigenvalues,
+///    a + i*b, in 2-by-2 blocks, [a, b; -b, a].
+///  That is, if the complex eigenvalues look like
+///
+///     u + iv     .        .          .      .    .
+///       .      u - iv     .          .      .    .
+///       .        .      a + ib       .      .    .
+///       .        .        .        a - ib   .    .
+///       .        .        .          .      x    .
+///       .        .        .          .      .    y
+///
+/// then D looks like
+///
+///     u        v        .          .      .    .
+///    -v        u        .          .      .    .
+///     .        .        a          b      .    .
+///     .        .       -b          a      .    .
+///     .        .        .          .      x    .
+///     .        .        .          .      .    y
+///
+/// This keeps V a real matrix in both symmetric and non-symmetric
+/// cases, and A*V = V*D.
+///
+/// Indexing:
+///  If matrix A has the index/shape (rowLwb,rowUpb,rowLwb,rowUpb)
+///  each eigen-vector must have the shape (rowLwb,rowUpb) .
+///  For convinience, the column index of the eigen-vector matrix
+///  also runs from rowLwb to rowUpb so that the returned matrix
+///  has also index/shape (rowLwb,rowUpb,rowLwb,rowUpb) .
+///
+
 const TMatrixD TMatrixDEigen::GetEigenValues() const
 {
-// Computes the block diagonal eigenvalue matrix.
-// If the original matrix A is not symmetric, then the eigenvalue
-// matrix D is block diagonal with the real eigenvalues in 1-by-1
-// blocks and any complex eigenvalues,
-//    a + i*b, in 2-by-2 blocks, [a, b; -b, a].
-//  That is, if the complex eigenvalues look like
-//
-//     u + iv     .        .          .      .    .
-//       .      u - iv     .          .      .    .
-//       .        .      a + ib       .      .    .
-//       .        .        .        a - ib   .    .
-//       .        .        .          .      x    .
-//       .        .        .          .      .    y
-//
-// then D looks like
-//
-//     u        v        .          .      .    .
-//    -v        u        .          .      .    .
-//     .        .        a          b      .    .
-//     .        .       -b          a      .    .
-//     .        .        .          .      x    .
-//     .        .        .          .      .    y
-//
-// This keeps V a real matrix in both symmetric and non-symmetric
-// cases, and A*V = V*D.
-//
-// Indexing:
-//  If matrix A has the index/shape (rowLwb,rowUpb,rowLwb,rowUpb)
-//  each eigen-vector must have the shape (rowLwb,rowUpb) .
-//  For convinience, the column index of the eigen-vector matrix
-//  also runs from rowLwb to rowUpb so that the returned matrix
-//  has also index/shape (rowLwb,rowUpb,rowLwb,rowUpb) .
-//
    const Int_t nrows  = fEigenVectors.GetNrows();
    const Int_t rowLwb = fEigenVectors.GetRowLwb();
    const Int_t rowUpb = rowLwb+nrows-1;

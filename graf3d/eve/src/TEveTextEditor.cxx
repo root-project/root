@@ -32,7 +32,8 @@
 
 ClassImp(TEveTextEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveTextEditor::TEveTextEditor(const TGWindow *p, Int_t width, Int_t height,
                                UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
@@ -115,11 +116,11 @@ TEveTextEditor::TEveTextEditor(const TGWindow *p, Int_t width, Int_t height,
    AddFrame(alf, new TGLayoutHints(kLHintsTop, 0, 0, 0, 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper function. Creates TGComboBox with fixed size TGLabel.
+
 TGComboBox* TEveTextEditor::MakeLabeledCombo(const char* name)
 {
-   // Helper function. Creates TGComboBox with fixed size TGLabel.
-
    UInt_t labelW = 45;
    UInt_t labelH = 20;
    TGHorizontalFrame* hf = new TGHorizontalFrame(this);
@@ -138,11 +139,11 @@ TGComboBox* TEveTextEditor::MakeLabeledCombo(const char* name)
    return combo;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveTextEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveText*>(obj);
    if (strcmp(fM->GetText(), fText->GetText()))
       fText->SetText(fM->GetText());
@@ -174,64 +175,64 @@ void TEveTextEditor::SetModel(TObject* obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting text.
+
 void TEveTextEditor::DoText(const char* /*txt*/)
 {
-   // Slot for setting text.
-
    fM->SetText(fText->GetText());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting FTGL attributes.
+
 void TEveTextEditor::DoFontSize()
 {
-   // Slot for setting FTGL attributes.
-
    fM->SetFontSize(fSize->GetSelected(), kFALSE);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting FTGL attributes.
+
 void TEveTextEditor::DoFontFile()
 {
-   // Slot for setting FTGL attributes.
-
    fM->SetFontFile(fFile->GetSelected());
    Update();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting FTGL attributes.
+
 void TEveTextEditor::DoFontMode()
 {
-   // Slot for setting FTGL attributes.
-
    fM->SetFontMode(fMode->GetSelected());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting an extrude depth.
+
 void TEveTextEditor::DoExtrude()
 {
-   // Slot for setting an extrude depth.
-
    fM->SetExtrude(fExtrude->GetValue());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for enabling/disabling defaults.
+
 void TEveTextEditor::DoAutoLighting()
 {
-   // Slot for enabling/disabling defaults.
-
    fM->SetAutoLighting(fAutoLighting->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for enabling/disabling GL lighting.
+
 void TEveTextEditor::DoLighting()
 {
-    // Slot for enabling/disabling GL lighting.
-
    fM->SetLighting(fLighting->IsOn());
    Update();
 }

@@ -36,14 +36,14 @@ ClassImp(RooList)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the link corresponding to the named object in this list.
+/// Return 0 if the object is not found or does not have an Option_t
+/// string associated with its link. Also print a warning message
+/// if caller is non-zero.
+
 TObjOptLink *RooList::findLink(const char *name, const char *caller) const 
 {
-  // Find the link corresponding to the named object in this list.
-  // Return 0 if the object is not found or does not have an Option_t
-  // string associated with its link. Also print a warning message
-  // if caller is non-zero.
-
   if(0 == strlen(name)) return 0;
   TObjLink *link = FirstLink();
   while (link) {
@@ -61,12 +61,12 @@ TObjOptLink *RooList::findLink(const char *name, const char *caller) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move the target object immediately before the specified object,
+/// preserving any Option_t associated with the target link.
+
 Bool_t RooList::moveBefore(const char *before, const char *target, const char *caller) 
 {
-  // Move the target object immediately before the specified object,
-  // preserving any Option_t associated with the target link.
-
   // Find the target object's link
   TObjOptLink *targetLink= findLink(target,caller);
   if(0 == targetLink) return kFALSE;
@@ -96,12 +96,12 @@ Bool_t RooList::moveBefore(const char *before, const char *target, const char *c
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move the target object immediately after the specified object,
+/// preserving any Option_t associated with the target link.
+
 Bool_t RooList::moveAfter(const char *after, const char *target, const char *caller) 
 {
-  // Move the target object immediately after the specified object,
-  // preserving any Option_t associated with the target link.
-
   // Find the target object's link
   TObjOptLink *targetLink= findLink(target,caller);
   if(0 == targetLink) return kFALSE;

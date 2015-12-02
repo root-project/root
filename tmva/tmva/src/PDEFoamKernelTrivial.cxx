@@ -39,34 +39,36 @@
 
 ClassImp(TMVA::PDEFoamKernelTrivial)
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer
+
 TMVA::PDEFoamKernelTrivial::PDEFoamKernelTrivial()
    : PDEFoamKernelBase()
 {
-   // Default constructor for streamer
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TMVA::PDEFoamKernelTrivial::PDEFoamKernelTrivial(const PDEFoamKernelTrivial &other)
    : PDEFoamKernelBase(other)
 {
-   // Copy constructor
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simple kernel estimator.  It returns the cell value 'cv',
+/// corresponding to the event vector 'txvec' (in foam coordinates).
+///
+/// Parameters:
+///
+/// - foam - the pdefoam to search in
+///
+/// - txvec - event vector in foam coordinates [0,1]
+///
+/// - cv - cell value to estimate
+
 Float_t TMVA::PDEFoamKernelTrivial::Estimate(PDEFoam *foam, std::vector<Float_t> &txvec, ECellValue cv)
 {
-   // Simple kernel estimator.  It returns the cell value 'cv',
-   // corresponding to the event vector 'txvec' (in foam coordinates).
-   //
-   // Parameters:
-   //
-   // - foam - the pdefoam to search in
-   //
-   // - txvec - event vector in foam coordinates [0,1]
-   //
-   // - cv - cell value to estimate
-
    if (foam == NULL)
       Log() << kFATAL << "<PDEFoamKernelTrivial::Estimate>: PDEFoam not set!" << Endl;
 

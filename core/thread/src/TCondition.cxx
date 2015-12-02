@@ -26,14 +26,14 @@
 
 ClassImp(TCondition)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a condition variable. The actual condition implementation
+/// will be provided via the TThreadFactory. If no external mutex is
+/// provided one will be created. Use GetMutex() to get this mutex
+/// and use it before calling Signal() or Broadcast().
+
 TCondition::TCondition(TMutex *m)
 {
-   // Create a condition variable. The actual condition implementation
-   // will be provided via the TThreadFactory. If no external mutex is
-   // provided one will be created. Use GetMutex() to get this mutex
-   // and use it before calling Signal() or Broadcast().
-
    fPrivateMutex = (m == 0);
    if (fPrivateMutex) {
       fMutex = new TMutex();
@@ -47,32 +47,32 @@ TCondition::TCondition(TMutex *m)
       Error("TCondition", "could not create TConditionImp");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up condition variable.
+
 TCondition::~TCondition()
 {
-   // Clean up condition variable.
-
    delete fConditionImp;
    if (fPrivateMutex) delete fMutex;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get internally created mutex. Use it to lock resources
+/// before calling Signal() or Broadcast(). Returns 0 if
+/// external mutex was provided in TCondition ctor.
+
 TMutex *TCondition::GetMutex() const
 {
-   // Get internally created mutex. Use it to lock resources
-   // before calling Signal() or Broadcast(). Returns 0 if
-   // external mutex was provided in TCondition ctor.
-
    if (fPrivateMutex)
       return fMutex;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wait to be signaled.
+
 Int_t TCondition::Wait()
 {
-   // Wait to be signaled.
-
    if (!fConditionImp) return -1;
 
    Int_t iret;
@@ -82,17 +82,17 @@ Int_t TCondition::Wait()
    return iret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wait to be signaled or till the timer times out.
+/// This method is given an absolute time since the beginning of
+/// the EPOCH (use TThread::GetTime() to get this absolute time).
+/// To wait for a relative time from now, use
+/// TCondition::TimedWaitRelative(ULong_t ms).
+/// Returns 0 if successfully signalled, 1 if time expired and -1 in
+/// case of error.
+
 Int_t TCondition::TimedWait(ULong_t secs, ULong_t nanoSec)
 {
-   // Wait to be signaled or till the timer times out.
-   // This method is given an absolute time since the beginning of
-   // the EPOCH (use TThread::GetTime() to get this absolute time).
-   // To wait for a relative time from now, use
-   // TCondition::TimedWaitRelative(ULong_t ms).
-   // Returns 0 if successfully signalled, 1 if time expired and -1 in
-   // case of error.
-
    if (!fConditionImp) return -1;
 
    Int_t iret;
@@ -102,16 +102,16 @@ Int_t TCondition::TimedWait(ULong_t secs, ULong_t nanoSec)
    return iret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wait to be signaled or till the timer times out.
+/// This method is given a relative time from now.
+/// To wait for an absolute time since the beginning of the EPOCH, use
+/// TCondition::TimedWait(ULong_t secs, ULong_t nanoSec).
+/// Returns 0 if successfully signalled, 1 if time expired and -1 in
+/// case of error.
+
 Int_t TCondition::TimedWaitRelative(ULong_t ms)
 {
-   // Wait to be signaled or till the timer times out.
-   // This method is given a relative time from now.
-   // To wait for an absolute time since the beginning of the EPOCH, use
-   // TCondition::TimedWait(ULong_t secs, ULong_t nanoSec).
-   // Returns 0 if successfully signalled, 1 if time expired and -1 in
-   // case of error.
-
    if (!fConditionImp) return -1;
 
    ULong_t absSec, absNanoSec;

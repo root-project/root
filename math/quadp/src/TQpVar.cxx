@@ -52,11 +52,11 @@
 
 ClassImp(TQpVar)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TQpVar::TQpVar()
 {
-// Default constructor
-
    fNx   = 0;
    fMy   = 0;
    fMz   = 0;
@@ -68,14 +68,14 @@ TQpVar::TQpVar()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TQpVar::TQpVar(TVectorD &x_in,TVectorD &s_in,TVectorD &y_in,TVectorD &z_in,
                TVectorD &v_in,TVectorD &gamma_in,TVectorD &w_in,TVectorD &phi_in,
                TVectorD &t_in,TVectorD &lambda_in,TVectorD &u_in,TVectorD &pi_in,
                TVectorD &ixlow_in,TVectorD &ixupp_in,TVectorD &iclow_in,TVectorD &icupp_in)
 {
-// Constructor
-
    if (x_in     .GetNrows() > 0) fX.       Use(x_in     .GetNrows(),x_in     .GetMatrixArray());
    if (s_in     .GetNrows() > 0) fS.       Use(s_in     .GetNrows(),s_in     .GetMatrixArray());
    if (y_in     .GetNrows() > 0) fY.       Use(y_in     .GetNrows(),y_in     .GetMatrixArray());
@@ -123,12 +123,12 @@ TQpVar::TQpVar(TVectorD &x_in,TVectorD &s_in,TVectorD &y_in,TVectorD &z_in,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TQpVar::TQpVar(Int_t nx,Int_t my,Int_t mz,TVectorD &ixlow,TVectorD &ixupp,
                TVectorD &iclow,TVectorD &icupp)
 {
-// Constructor
-
    R__ASSERT(nx == ixlow.GetNrows() || 0 == ixlow.GetNrows());
    R__ASSERT(nx == ixlow.GetNrows() || 0 == ixlow.GetNrows());
    R__ASSERT(mz == iclow.GetNrows() || 0 == iclow.GetNrows());
@@ -174,22 +174,22 @@ TQpVar::TQpVar(Int_t nx,Int_t my,Int_t mz,TVectorD &ixlow,TVectorD &ixupp,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TQpVar::TQpVar(const TQpVar &another) : TObject(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute complementarity gap, obtained by taking the inner product of the
+/// complementary vectors and dividing by the total number of components
+/// computes mu = (t'lambda +u'pi + v'gamma + w'phi)/(mclow+mcupp+nxlow+nxupp)
+
 Double_t TQpVar::GetMu()
 {
-// compute complementarity gap, obtained by taking the inner product of the
-// complementary vectors and dividing by the total number of components
-// computes mu = (t'lambda +u'pi + v'gamma + w'phi)/(mclow+mcupp+nxlow+nxupp)
-
    Double_t mu = 0.0;
    if (fNComplementaryVariables > 0 ) {
       if (fMclo > 0) mu += fT*fLambda;
@@ -203,12 +203,12 @@ Double_t TQpVar::GetMu()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the complementarity gap resulting from a step of length "alpha" along
+/// direction "step"
+
 Double_t TQpVar::MuStep(TQpVar *step,Double_t alpha)
 {
-// Compute the complementarity gap resulting from a step of length "alpha" along
-// direction "step"
-
    Double_t mu = 0.0;
    if (fNComplementaryVariables > 0) {
       if (fMclo > 0)
@@ -225,11 +225,11 @@ Double_t TQpVar::MuStep(TQpVar *step,Double_t alpha)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a "saxpy" operation on all data vectors : x += alpha*y
+
 void TQpVar::Saxpy(TQpVar *b,Double_t alpha)
 {
-// Perform a "saxpy" operation on all data vectors : x += alpha*y
-
    Add(fX,alpha,b->fX);
    Add(fY,alpha,b->fY);
    Add(fZ,alpha,b->fZ);
@@ -265,11 +265,11 @@ void TQpVar::Saxpy(TQpVar *b,Double_t alpha)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a "negate" operation on all data vectors : x =  -x
+
 void TQpVar::Negate()
 {
-// Perform a "negate" operation on all data vectors : x =  -x
-
    fS *= -1.;
    fX *= -1.;
    fY *= -1.;
@@ -293,15 +293,15 @@ void TQpVar::Negate()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the largest alpha in (0,1] such that the/ nonnegative variables stay
+/// nonnegative in the given search direction. In the general QP problem formulation
+/// this is the largest value of alpha such that
+///     (t,u,v,w,lambda,pi,phi,gamma) + alpha * (b->t,b->u,b->v,b->w,b->lambda,b->pi,
+///                                                b->phi,b->gamma) >= 0.
+
 Double_t TQpVar::StepBound(TQpVar *b)
 {
-// calculate the largest alpha in (0,1] such that the/ nonnegative variables stay
-// nonnegative in the given search direction. In the general QP problem formulation
-// this is the largest value of alpha such that
-//     (t,u,v,w,lambda,pi,phi,gamma) + alpha * (b->t,b->u,b->v,b->w,b->lambda,b->pi,
-//                                                b->phi,b->gamma) >= 0.
-
    Double_t maxStep = 1.0;
 
    if (fMclo > 0 ) {
@@ -340,12 +340,12 @@ Double_t TQpVar::StepBound(TQpVar *b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the maximum stepsize of v in direction dir
+/// before violating the nonnegativity constraints
+
 Double_t TQpVar::StepBound(TVectorD &v,TVectorD &dir,Double_t maxStep)
 {
-// Find the maximum stepsize of v in direction dir
-// before violating the nonnegativity constraints
-
    if (!AreCompatible(v,dir)) {
       ::Error("StepBound(TVectorD &,TVectorD &,Double_t)","vector's not compatible");
       return kFALSE;
@@ -368,11 +368,11 @@ Double_t TQpVar::StepBound(TVectorD &v,TVectorD &dir,Double_t maxStep)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Is the current position an interior point  ?
+
 Bool_t TQpVar::IsInteriorPoint()
 {
-// Is the current position an interior point  ?
-
    Bool_t interior = kTRUE;
    if (fMclo > 0)
       interior = interior &&
@@ -394,7 +394,22 @@ Bool_t TQpVar::IsInteriorPoint()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the same function as StepBound, and supplies additional information about
+/// which component of the nonnegative variables is responsible for restricting alpha.
+/// In terms of the abstract formulation, the components have the following meanings :
+///
+///  primalValue   : the value of the blocking component of the primal variables (u,t,v,w).
+///  primalStep    : the corresponding value of the blocking component of the primal step
+///                  variables (b->u,b->t,b->v,b->w)
+///  dualValue     : the value of the blocking component of the dual variables/
+///                  (lambda,pi,phi,gamma).
+///  dualStep      : the corresponding value of the blocking component of the dual step
+///                   variables (b->lambda,b->pi,b->phi,b->gamma)
+///  firstOrSecond : 1 if the primal step is blocking,
+///                  2 if the dual step is block,
+///                  0 if no step is blocking.
+
 Double_t TQpVar::FindBlocking(TQpVar   *step,
                               Double_t &primalValue,
                               Double_t &primalStep,
@@ -402,21 +417,6 @@ Double_t TQpVar::FindBlocking(TQpVar   *step,
                               Double_t &dualStep,
                               Int_t    &fIrstOrSecond)
 {
-// Performs the same function as StepBound, and supplies additional information about
-// which component of the nonnegative variables is responsible for restricting alpha.
-// In terms of the abstract formulation, the components have the following meanings :
-//
-//  primalValue   : the value of the blocking component of the primal variables (u,t,v,w).
-//  primalStep    : the corresponding value of the blocking component of the primal step
-//                  variables (b->u,b->t,b->v,b->w)
-//  dualValue     : the value of the blocking component of the dual variables/
-//                  (lambda,pi,phi,gamma).
-//  dualStep      : the corresponding value of the blocking component of the dual step
-//                   variables (b->lambda,b->pi,b->phi,b->gamma)
-//  firstOrSecond : 1 if the primal step is blocking,
-//                  2 if the dual step is block,
-//                  0 if no step is blocking.
-
    fIrstOrSecond = 0;
    Double_t alpha = 1.0;
    if (fMclo > 0)
@@ -439,13 +439,13 @@ Double_t TQpVar::FindBlocking(TQpVar   *step,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See other FindBlocking function
+
 Double_t TQpVar::FindBlocking(TVectorD &w,TVectorD &wstep,TVectorD &u,TVectorD &ustep,
                               Double_t maxStep,Double_t &w_elt,Double_t &wstep_elt,Double_t &u_elt,
                               Double_t &ustep_elt,int& fIrst_or_second)
 {
-// See other FindBlocking function
-
    return FindBlockingSub(w.GetNrows(),
       w.GetMatrixArray(),    1,
       wstep.GetMatrixArray(),1,
@@ -458,7 +458,9 @@ Double_t TQpVar::FindBlocking(TVectorD &w,TVectorD &wstep,TVectorD &u,TVectorD &
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See FindBlocking function
+
 Double_t TQpVar::FindBlockingSub(Int_t n,
                                  Double_t *w,    Int_t incw,
                                  Double_t *wstep,Int_t incwstep,
@@ -469,8 +471,6 @@ Double_t TQpVar::FindBlockingSub(Int_t n,
                                  Double_t &u_elt,Double_t &ustep_elt,
                                  Int_t &fIrst_or_second)
 {
-// See FindBlocking function
-
    Double_t bound = maxStep;
 
    Int_t i = n-1;
@@ -527,11 +527,11 @@ Double_t TQpVar::FindBlockingSub(Int_t n,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets components of (u,t,v,w) to alpha and of (lambda,pi,phi,gamma) to beta
+
 void TQpVar::InteriorPoint(Double_t alpha,Double_t beta)
 {
-// Sets components of (u,t,v,w) to alpha and of (lambda,pi,phi,gamma) to beta
-
    fS.Zero();
    fX.Zero();
    fY.Zero();
@@ -567,11 +567,11 @@ void TQpVar::InteriorPoint(Double_t alpha,Double_t beta)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The amount by which the current variables violate the  non-negativity constraints.
+
 Double_t TQpVar::Violation()
 {
-// The amount by which the current variables violate the  non-negativity constraints.
-
    Double_t viol = 0.0;
    Double_t cmin;
 
@@ -608,11 +608,11 @@ Double_t TQpVar::Violation()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add alpha to components of (u,t,v,w) and beta to components of (lambda,pi,phi,gamma)
+
 void TQpVar::ShiftBoundVariables(Double_t alpha,Double_t beta)
 {
-// Add alpha to components of (u,t,v,w) and beta to components of (lambda,pi,phi,gamma)
-
    if (fNxlo > 0) {
       fV    .AddSomeConstant(alpha,fXloIndex);
       fGamma.AddSomeConstant(beta, fXloIndex);
@@ -632,11 +632,11 @@ void TQpVar::ShiftBoundVariables(Double_t alpha,Double_t beta)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print class members
+
 void TQpVar::Print(Option_t * /*option*/) const
 {
-// Print class members
-
    std::cout << "fNx  : " << fNx   << std::endl;
    std::cout << "fMy  : " << fMy   << std::endl;
    std::cout << "fMz  : " << fMz   << std::endl;
@@ -669,11 +669,11 @@ void TQpVar::Print(Option_t * /*option*/) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the sum of the vector-norm1's
+
 Double_t TQpVar::Norm1()
 {
-// Return the sum of the vector-norm1's
-
    Double_t norm = 0.0;
    norm += fX.Norm1();
    norm += fS.Norm1();
@@ -693,11 +693,11 @@ Double_t TQpVar::Norm1()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the sum of the vector-normInf's
+
 Double_t TQpVar::NormInf()
 {
-// Return the sum of the vector-normInf's
-
    Double_t norm = 0.0;
 
    Double_t tmp = fX.NormInf();
@@ -733,11 +733,11 @@ Double_t TQpVar::NormInf()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check that the variables conform to the non-zero indices
+
 Bool_t TQpVar::ValidNonZeroPattern()
 {
-// Check that the variables conform to the non-zero indices
-
    if (fNxlo > 0 &&
       ( !fV    .MatchesNonZeroPattern(fXloIndex) ||
         !fGamma.MatchesNonZeroPattern(fXloIndex) ) ) {
@@ -765,11 +765,11 @@ Bool_t TQpVar::ValidNonZeroPattern()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TQpVar &TQpVar::operator=(const TQpVar &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TObject::operator=(source);
       fNx       = source.fNx;

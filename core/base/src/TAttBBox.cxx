@@ -22,11 +22,11 @@
 
 ClassImp(TAttBBox)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate and prepare for incremental filling.
+
 void TAttBBox::BBoxInit(Float_t infinity)
 {
-   // Allocate and prepare for incremental filling.
-
    if (fBBox == 0) fBBox = new Float_t[6];
 
    fBBox[0] =  infinity;   fBBox[1] = -infinity;
@@ -34,12 +34,12 @@ void TAttBBox::BBoxInit(Float_t infinity)
    fBBox[4] =  infinity;   fBBox[5] = -infinity;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create cube of volume (2*epsiolon)^3 at (x,y,z).
+/// epsilon iz zero by default.
+
 void TAttBBox::BBoxZero(Float_t epsilon, Float_t x, Float_t y, Float_t z)
 {
-   // Create cube of volume (2*epsiolon)^3 at (x,y,z).
-   // epsilon iz zero by default.
-
    if (fBBox == 0) fBBox = new Float_t[6];
 
    fBBox[0] = x - epsilon;   fBBox[1] = x + epsilon;
@@ -47,19 +47,19 @@ void TAttBBox::BBoxZero(Float_t epsilon, Float_t x, Float_t y, Float_t z)
    fBBox[4] = z - epsilon;   fBBox[5] = z + epsilon;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove BBox information.
+
 void TAttBBox::BBoxClear()
 {
-   // Remove BBox information.
-
    delete [] fBBox; fBBox = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assert extents of all sides of the bounding-box are at least epsilon.
+
 void TAttBBox::AssertBBoxExtents(Float_t epsilon)
 {
-   // Assert extents of all sides of the bounding-box are at least epsilon.
-
    for (Int_t i=0; i<6; i+=2) {
       if (fBBox[i+1] - fBBox[i] < epsilon) {
          Float_t b  = 0.5*(fBBox[i] + fBBox[i+1]);

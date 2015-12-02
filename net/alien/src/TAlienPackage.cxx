@@ -48,11 +48,11 @@
 
 ClassImp (TAlienPackage)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor of a AliEn package constructing a ROOT:v5-16-00 for Linux-i686.
+
 TAlienPackage::TAlienPackage() : fInstallList (0), fPackages (0), fDebugLevel (0)
 {
-   // Default constructor of a AliEn package constructing a ROOT:v5-16-00 for Linux-i686.
-
    fName = "ROOT";
    fVersion = "v5-16-00";
    fPlatform = "Linux-i686";
@@ -79,14 +79,14 @@ TAlienPackage::TAlienPackage() : fInstallList (0), fPackages (0), fDebugLevel (0
    fPackages->SetOwner (kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of a AliEn package.
+
 TAlienPackage::TAlienPackage(const char *name, const char *version,
                              const char *platform,
                              const char *installationdirectory) :
    fInstallList (0), fPackages (0), fDebugLevel (0)
 {
-   // Constructor of a AliEn package.
-
    fName = name;
 
    fVersion = version;
@@ -115,22 +115,22 @@ TAlienPackage::TAlienPackage(const char *name, const char *version,
    fPackages->SetOwner (kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TAlienPackage::~TAlienPackage()
 {
-   // Destructor.
-
    if (GetDebugLevel () > 2)
       Info ("~TAlienPackage", "\tDestr: Package=%s Version=%s Platform=%s",
             fName.Data (), fVersion.Data (), fPlatform.Data ());
    SafeDelete (fInstallList);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Install/enable an AliEn package on the local computer.
+
 Bool_t TAlienPackage::Enable()
 {
-   // Install/enable an AliEn package on the local computer.
-
    fInstallList->Clear ();
    if (GetDebugLevel () > 1)
       Info ("Install", "\t\tInstalling Package=%s Version=%s Platform=%s",
@@ -154,11 +154,11 @@ Bool_t TAlienPackage::Enable()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return shell command to enable package.
+
 const char *TAlienPackage::GetEnable ()
 {
-   // Return shell command to enable package.
-
    fEnableCommand =
       Form ("%s/%s/%s/.alienEnvironment %s/%s/%s ",
             fInstallationDirectory.Data (), fName.Data (), fVersion.Data (),
@@ -166,11 +166,11 @@ const char *TAlienPackage::GetEnable ()
    return fEnableCommand.Data ();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Uninstall a package e.g. remove it from the local disk.
+
 Bool_t TAlienPackage::UnInstall ()
 {
-   // Uninstall a package e.g. remove it from the local disk.
-
    gSystem->Exec(Form
             ("test -e %s/%s/%s/%s/.safeguard && rm -rf %s/%s/%s",
              fInstallationDirectory.Data (), fName.Data (), fVersion.Data (),
@@ -180,11 +180,11 @@ Bool_t TAlienPackage::UnInstall ()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check that <str> is listed in GRID directory <dir1>.
+
 Bool_t TAlienPackage::IsDirectory (const char *dir1, const char *str)
 {
-   // Check that <str> is listed in GRID directory <dir1>.
-
    TGridResult *result = gGrid->Ls (dir1);
    Int_t i = 0;
    while (result->GetFileName (i)) {
@@ -197,11 +197,11 @@ Bool_t TAlienPackage::IsDirectory (const char *dir1, const char *str)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the name and version directory of package/version given.
+
 Bool_t TAlienPackage::CheckDirectories (TString name, TString version)
 {
-   // Check the name and version directory of package/version given.
-
    TString s(GetAliEnMainPackageDir());
 
    if ((IsDirectory (s.Data (), name.Data ())) == kTRUE) {
@@ -231,11 +231,11 @@ Bool_t TAlienPackage::CheckDirectories (TString name, TString version)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reinstalls a package e.g. uninstall + install.
+
 Bool_t TAlienPackage::ReInstall ()
 {
-   // Reinstalls a package e.g. uninstall + install.
-
    if (UnInstall () == kFALSE)
       return kFALSE;
 
@@ -244,11 +244,11 @@ Bool_t TAlienPackage::ReInstall ()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute post_install procedure for a package.
+
 Bool_t TAlienPackage::PostInstall (TString name, TString version)
 {
-   // Execute post_install procedure for a package.
-
    TGridResult *result =
       gGrid->Command (Form
                ("showTagValue -z %s/%s/%s PackageDef",
@@ -288,11 +288,11 @@ Bool_t TAlienPackage::PostInstall (TString name, TString version)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute package command.
+
 Bool_t TAlienPackage::Exec (const char *cmdline)
 {
-   // Execute package command.
-
    TString fullline = "";
 
    if (!fEnabled) {
@@ -315,11 +315,11 @@ Bool_t TAlienPackage::Exec (const char *cmdline)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the dependency packages of this package.
+
 Bool_t TAlienPackage::CheckDependencies ()
 {
-   // Check the dependency packages of this package.
-
    TString path (Form("%s/%s/%s", fAliEnMainPackageDir.Data (), fName.Data (),
              fVersion.Data ()));
 
@@ -382,11 +382,11 @@ Bool_t TAlienPackage::CheckDependencies ()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Install a single package.
+
 Bool_t TAlienPackage::InstallSinglePackage(TString name, TString version, Bool_t isDep)
 {
-   // Install a single package.
-
    Info ("InstallSinglePackage", "\t%s %s", name.Data (), version.Data ());
    // install a package without dependencies
    TString s1 (Form ("%s/%s/%s/%s", fAliEnMainPackageDir.Data (), name.Data (),
@@ -473,11 +473,11 @@ Bool_t TAlienPackage::InstallSinglePackage(TString name, TString version, Bool_t
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Installs a package and all its direct dependencies.
+
 Bool_t TAlienPackage::InstallAllPackages ()
 {
-   // Installs a package and all its direct dependencies.
-
    Bool_t isDep = kFALSE;
 
    Info ("InstallAllPackages", "\tPackage=%s Version=%s", fName.Data (),

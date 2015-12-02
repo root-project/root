@@ -29,30 +29,30 @@
 
 ClassImp(TDecompChol)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for (nrows x nrows) matrix
+
 TDecompChol::TDecompChol(Int_t nrows)
 {
-// Constructor for (nrows x nrows) matrix
-
    fU.ResizeTo(nrows,nrows);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for ([row_lwb..row_upb] x [row_lwb..row_upb]) matrix
+
 TDecompChol::TDecompChol(Int_t row_lwb,Int_t row_upb)
 {
-// Constructor for ([row_lwb..row_upb] x [row_lwb..row_upb]) matrix
-
    const Int_t nrows = row_upb-row_lwb+1;
    fRowLwb = row_lwb;
    fColLwb = row_lwb;
    fU.ResizeTo(row_lwb,row_lwb+nrows-1,row_lwb,row_lwb+nrows-1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for symmetric matrix A . Matrix should be positive definite
+
 TDecompChol::TDecompChol(const TMatrixDSym &a,Double_t tol)
 {
-// Constructor for symmetric matrix A . Matrix should be positive definite
-
    R__ASSERT(a.IsValid());
 
    SetBit(kMatrixSet);
@@ -67,11 +67,11 @@ TDecompChol::TDecompChol(const TMatrixDSym &a,Double_t tol)
    fU = a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for general matrix A . Matrix should be symmetric positive definite
+
 TDecompChol::TDecompChol(const TMatrixD &a,Double_t tol)
 {
-// Constructor for general matrix A . Matrix should be symmetric positive definite
-
    R__ASSERT(a.IsValid());
 
    if (a.GetNrows() != a.GetNcols() || a.GetRowLwb() != a.GetColLwb()) {
@@ -91,20 +91,20 @@ TDecompChol::TDecompChol(const TMatrixD &a,Double_t tol)
    fU = a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TDecompChol::TDecompChol(const TDecompChol &another) : TDecompBase(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix A is decomposed in component U so that A = U^T * U 
+/// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
+
 Bool_t TDecompChol::Decompose()
 {
-// Matrix A is decomposed in component U so that A = U^T * U 
-// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
-
    if (TestBit(kDecomposed)) return kTRUE;
 
    if ( !TestBit(kMatrixSet) ) {
@@ -154,11 +154,11 @@ Bool_t TDecompChol::Decompose()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reconstruct the original matrix using the decomposition parts
+
 const TMatrixDSym TDecompChol::GetMatrix()
 {
-// Reconstruct the original matrix using the decomposition parts
-
    if (TestBit(kSingular)) {
       Error("GetMatrix()","Matrix is singular");
       return TMatrixDSym();
@@ -173,11 +173,11 @@ const TMatrixDSym TDecompChol::GetMatrix()
    return TMatrixDSym(TMatrixDSym::kAtA,fU);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the matrix to be decomposed, decomposition status is reset.
+
 void TDecompChol::SetMatrix(const TMatrixDSym &a)
 {
-// Set the matrix to be decomposed, decomposition status is reset.
-
    R__ASSERT(a.IsValid());
 
    ResetStatus();
@@ -195,13 +195,13 @@ void TDecompChol::SetMatrix(const TMatrixDSym &a)
    fU = a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve equations Ax=b assuming A has been factored by Cholesky. The factor U is
+/// assumed to be in upper triang of fU. fTol is used to determine if diagonal
+/// element is zero. The solution is returned in b.
+
 Bool_t TDecompChol::Solve(TVectorD &b)
 {
-// Solve equations Ax=b assuming A has been factored by Cholesky. The factor U is
-// assumed to be in upper triang of fU. fTol is used to determine if diagonal
-// element is zero. The solution is returned in b.
-
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
       Error("Solve()","Matrix is singular");
@@ -253,13 +253,13 @@ Bool_t TDecompChol::Solve(TVectorD &b)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve equations Ax=b assuming A has been factored by Cholesky. The factor U is
+/// assumed to be in upper triang of fU. fTol is used to determine if diagonal
+/// element is zero. The solution is returned in b.
+
 Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
 {
-// Solve equations Ax=b assuming A has been factored by Cholesky. The factor U is
-// assumed to be in upper triang of fU. fTol is used to determine if diagonal
-// element is zero. The solution is returned in b.
-
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
@@ -316,12 +316,12 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix determinant det = d1*TMath::Power(2.,d2) is square of diagProd
+/// of cholesky factor
+
 void TDecompChol::Det(Double_t &d1,Double_t &d2)
 {
-// Matrix determinant det = d1*TMath::Power(2.,d2) is square of diagProd
-// of cholesky factor
-
    if ( !TestBit(kDetermined) ) {
       if ( !TestBit(kDecomposed) )
          Decompose();
@@ -335,11 +335,11 @@ void TDecompChol::Det(Double_t &d1,Double_t &d2)
    d2 = fDet2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
+
 Bool_t TDecompChol::Invert(TMatrixDSym &inv)
 {
-// For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
-
    if (inv.GetNrows() != GetNrows() || inv.GetRowLwb() != GetRowLwb()) {
       Error("Invert(TMatrixDSym &","Input matrix has wrong shape");
       return kFALSE;
@@ -358,11 +358,11 @@ Bool_t TDecompChol::Invert(TMatrixDSym &inv)
    return status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
+
 TMatrixDSym TDecompChol::Invert(Bool_t &status)
 {
-// For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
-
    const Int_t rowLwb = GetRowLwb();
    const Int_t rowUpb = rowLwb+GetNrows()-1;
 
@@ -373,20 +373,20 @@ TMatrixDSym TDecompChol::Invert(Bool_t &status)
    return inv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print class members .
+
 void TDecompChol::Print(Option_t *opt) const
 {
-// Print class members .
-
    TDecompBase::Print(opt);
    fU.Print("fU");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TDecompChol &TDecompChol::operator=(const TDecompChol &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TDecompBase::operator=(source);
       fU.ResizeTo(source.fU);
@@ -395,29 +395,29 @@ TDecompChol &TDecompChol::operator=(const TDecompChol &source)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve min {(A . x - b)^T (A . x - b)} for vector x where
+///   A : (m x n) matrix, m >= n
+///   b : (m)     vector
+///   x : (n)     vector
+
 TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b)
 {
-// Solve min {(A . x - b)^T (A . x - b)} for vector x where
-//   A : (m x n) matrix, m >= n
-//   b : (m)     vector
-//   x : (n)     vector
-
    TDecompChol ch(TMatrixDSym(TMatrixDSym::kAtA,A));
    Bool_t ok;
    return ch.Solve(TMatrixD(TMatrixD::kTransposed,A)*b,ok);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve min {(A . x - b)^T W (A . x - b)} for vector x where
+///   A : (m x n) matrix, m >= n
+///   b : (m)     vector
+///   x : (n)     vector
+///   W : (m x m) weight matrix with W(i,j) = 1/std(i)^2  for i == j
+///                                         = 0           fir i != j
+
 TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b,const TVectorD &std)
 {
-// Solve min {(A . x - b)^T W (A . x - b)} for vector x where
-//   A : (m x n) matrix, m >= n
-//   b : (m)     vector
-//   x : (n)     vector
-//   W : (m x m) weight matrix with W(i,j) = 1/std(i)^2  for i == j
-//                                         = 0           fir i != j
-
    if (!AreCompatible(b,std)) {
       ::Error("NormalEqn","vectors b and std are not compatible");
       return TVectorD();
@@ -434,32 +434,32 @@ TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b,const TVectorD &std)
    return ch.Solve(TMatrixD(TMatrixD::kTransposed,mAw)*mBw,ok);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve min {(A . X_j - B_j)^T (A . X_j - B_j)} for each column j in
+/// B and X
+///   A : (m x n ) matrix, m >= n
+///   B : (m x nb) matrix, nb >= 1
+///  mX : (n x nb) matrix
+
 TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B)
 {
-// Solve min {(A . X_j - B_j)^T (A . X_j - B_j)} for each column j in
-// B and X
-//   A : (m x n ) matrix, m >= n
-//   B : (m x nb) matrix, nb >= 1
-//  mX : (n x nb) matrix
-
    TDecompChol ch(TMatrixDSym(TMatrixDSym::kAtA,A));
    TMatrixD mX(A,TMatrixD::kTransposeMult,B);
    ch.MultiSolve(mX);
    return mX;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve min {(A . X_j - B_j)^T W (A . X_j - B_j)} for each column j in
+/// B and X
+///   A : (m x n ) matrix, m >= n
+///   B : (m x nb) matrix, nb >= 1
+///  mX : (n x nb) matrix
+///   W : (m x m) weight matrix with W(i,j) = 1/std(i)^2  for i == j
+///                                         = 0           fir i != j
+
 TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B,const TVectorD &std)
 {
-// Solve min {(A . X_j - B_j)^T W (A . X_j - B_j)} for each column j in
-// B and X
-//   A : (m x n ) matrix, m >= n
-//   B : (m x nb) matrix, nb >= 1
-//  mX : (n x nb) matrix
-//   W : (m x m) weight matrix with W(i,j) = 1/std(i)^2  for i == j
-//                                         = 0           fir i != j
-
    TMatrixD mAw = A;
    TMatrixD mBw = B;
    for (Int_t irow = 0; irow < A.GetNrows(); irow++) {

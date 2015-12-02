@@ -46,32 +46,33 @@
 
 ClassImp(TProcessUUID)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TProcessUUID::TProcessUUID() : TProcessID()
 {
-   // Default constructor.
-
    fUUIDs   = new THashList(100,3);
    fActive  = new TBits(100);
    IncrementCount();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TProcessUUID::~TProcessUUID()
 {
-   // Destructor.
    fUUIDs->Delete();
    delete fUUIDs;  fUUIDs  = 0;
    delete fActive; fActive = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add uuid to the table of UUIDs
+/// The TObject *obj has its uniqueID set to the UUID number
+/// return entry number in the table
+
 UInt_t TProcessUUID::AddUUID(TUUID &uuid, TObject *obj)
 {
-   // Add uuid to the table of UUIDs
-   // The TObject *obj has its uniqueID set to the UUID number
-   // return entry number in the table
-
    UInt_t number;
    const char *uuids = uuid.AsString();
    TObjString *objs = (TObjString*)fUUIDs->FindObject(uuids);
@@ -98,12 +99,12 @@ UInt_t TProcessUUID::AddUUID(TUUID &uuid, TObject *obj)
    return number;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add uuid with name uuids to the table of UUIDs
+/// return entry number in the table
+
 UInt_t TProcessUUID::AddUUID(const char *uuids)
 {
-   // Add uuid with name uuids to the table of UUIDs
-   // return entry number in the table
-
 
    TObjString *objs = (TObjString*)fUUIDs->FindObject(uuids);
    if (objs) return objs->GetUniqueID();
@@ -117,11 +118,11 @@ UInt_t TProcessUUID::AddUUID(const char *uuids)
    return number;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Find the TObjString by slot number
+
 TObjString *TProcessUUID::FindUUID(UInt_t number) const
 {
-   //Find the TObjString by slot number
-
    TObjLink *lnk = fUUIDs->FirstLink();
    while (lnk) {
       TObject *obj = lnk->GetObject();
@@ -131,11 +132,11 @@ TObjString *TProcessUUID::FindUUID(UInt_t number) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Remove entry number in the list of uuids
+
 void TProcessUUID::RemoveUUID(UInt_t number)
 {
-   //Remove entry number in the list of uuids
-
    if (number > (UInt_t)fObjects->GetSize()) return;
    TObjLink *lnk = fUUIDs->FirstLink();
    while (lnk) {

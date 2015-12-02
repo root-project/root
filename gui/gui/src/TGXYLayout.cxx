@@ -105,17 +105,17 @@
 ClassImp(TGXYLayout)
 ClassImp(TGXYLayoutHints)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. The x, y, w and h define the position of the widget in
+/// its frame and the size of the widget. The unit is the size of a
+/// character. The rubberFlag defines how to move and to resize the
+/// widget when the frame is resized. Default is moving the X and Y
+/// position but keep the size of the widget.
+
 TGXYLayoutHints::TGXYLayoutHints(Double_t x, Double_t y, Double_t w, Double_t h,
                                  UInt_t rubberFlag)
    : TGLayoutHints(kLHintsNormal, 0,0,0,0)
 {
-   // Constructor. The x, y, w and h define the position of the widget in
-   // its frame and the size of the widget. The unit is the size of a
-   // character. The rubberFlag defines how to move and to resize the
-   // widget when the frame is resized. Default is moving the X and Y
-   // position but keep the size of the widget.
-
    fX    = x;
    fY    = y;
    fW    = w;
@@ -123,11 +123,11 @@ TGXYLayoutHints::TGXYLayoutHints(Double_t x, Double_t y, Double_t w, Double_t h,
    fFlag = rubberFlag;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save XY layout hints as a C++ statement(s) on output stream.
+
 void TGXYLayoutHints::SavePrimitive(std::ostream &out, Option_t * /*option = ""*/)
 {
-   // Save XY layout hints as a C++ statement(s) on output stream.
-
    TString flag = "";
    if (fFlag & kLRubberX) {
       if (flag.Length() == 0)  flag  = "TGXYLayoutHints::kLRubberX";
@@ -156,11 +156,11 @@ void TGXYLayoutHints::SavePrimitive(std::ostream &out, Option_t * /*option = ""*
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. The main is the frame for which this layout manager works.
+
 TGXYLayout::TGXYLayout(TGCompositeFrame *main)
 {
-   // Constructor. The main is the frame for which this layout manager works.
-
    UInt_t  width, height;
    Int_t   dummy;
 
@@ -184,7 +184,9 @@ TGXYLayout::TGXYLayout(TGCompositeFrame *main)
    main->Resize(width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TGXYLayout::TGXYLayout(const TGXYLayout& xyl) :
   TGLayoutManager(xyl),
   fList(xyl.fList),
@@ -195,13 +197,13 @@ TGXYLayout::TGXYLayout(const TGXYLayout& xyl) :
   fTWidth(xyl.fTWidth),
   fTHeight(xyl.fTHeight)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGXYLayout& TGXYLayout::operator=(const TGXYLayout& xyl)
 {
-   //assignment operator
    if(this!=&xyl) {
       TGLayoutManager::operator=(xyl);
       fList=xyl.fList;
@@ -215,11 +217,11 @@ TGXYLayout& TGXYLayout::operator=(const TGXYLayout& xyl)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recalculates the postion and the size of all widgets.
+
 void TGXYLayout::Layout()
 {
-   // Recalculates the postion and the size of all widgets.
-
    TGFrameElement   *ptr;
    TGXYLayoutHints  *layout;
    Double_t          xFactor;
@@ -278,21 +280,21 @@ void TGXYLayout::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the original size of the frame.
+
 TGDimension TGXYLayout::GetDefaultSize() const
 {
-   // Returns the original size of the frame.
-
    TGDimension size(fFirstWidth, fFirstHeight);
 
    return size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save XY layout manager as a C++ statement(s) on output stream.
+
 void TGXYLayout::SavePrimitive(std::ostream &out, Option_t * /*option = ""*/)
 {
-   // Save XY layout manager as a C++ statement(s) on output stream.
-
    out << "new TGXYLayout(" << fMain->GetName() << ")";
 
 }

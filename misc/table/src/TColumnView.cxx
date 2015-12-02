@@ -16,24 +16,28 @@
 //  TColumnView
 //
 //  It is a helper class to present TTable object view TBrowser
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TColumnView)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 TColumnView::TColumnView(const char *colName,TTable *table):TChair(table)
 {
-   //constructor
    SetName(colName);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TColumnView::~TColumnView()
 {
-   //destructor
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a column histogram for the simple column
+
 void TColumnView::Browse(TBrowser *)
 {
-   // Create a column histogram for the simple column
    if (!IsFolder())
    {
       Draw(GetName(),"");
@@ -43,10 +47,11 @@ void TColumnView::Browse(TBrowser *)
       }
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a histogram from the context menu
+
 TH1 *TColumnView::Histogram(const char *selection)
 {
-   // Create a histogram from the context menu
    TH1 *h = Draw(GetName(),selection);
    if (gPad) {
       gPad->Modified();
@@ -55,10 +60,11 @@ TH1 *TColumnView::Histogram(const char *selection)
    return h;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Treat the column with the pointer to the "Ptr" as a "folder"
+
 Bool_t  TColumnView::IsFolder() const
 {
-   // Treat the column with the pointer to the "Ptr" as a "folder"
    Bool_t isFolder = kFALSE;
    const TTable *thisTable = Table();
    if (thisTable) {

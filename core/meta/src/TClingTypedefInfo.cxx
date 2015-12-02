@@ -37,13 +37,14 @@
 
 using namespace clang;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lookup named typedef and initialize the iterator to point to it.
+/// Yields a non-iterable TClingTypedefInfo (fIter is invalid).
+
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
                                      const char *name)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fTitle("")
 {
-   // Lookup named typedef and initialize the iterator to point to it.
-   // Yields a non-iterable TClingTypedefInfo (fIter is invalid).
    Init(name);
 }
 
@@ -56,18 +57,19 @@ TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
    // fIter is invalid; cannot call Next().
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the current typedef declaration.
+
 const clang::Decl *TClingTypedefInfo::GetDecl() const
 {
-   // Get the current typedef declaration.
    return fDecl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lookup named typedef and reset the iterator to point to it.
+
 void TClingTypedefInfo::Init(const char *name)
 {
-   // Lookup named typedef and reset the iterator to point to it.
-
    fDecl = 0;
 
    // Reset the iterator to invalid.
@@ -107,17 +109,19 @@ void TClingTypedefInfo::Init(const char *name)
    fDecl = td->getDecl();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the current iterator position is valid.
+
 bool TClingTypedefInfo::IsValid() const
 {
-   // Return true if the current iterator position is valid.
    return fDecl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment the iterator, return true if new position is valid.
+
 int TClingTypedefInfo::InternalNext()
 {
-   // Increment the iterator, return true if new position is valid.
    if (!*fIter) {
       // Iterator is already invalid.
       if (fFirstTime && fDecl) {
@@ -182,17 +186,19 @@ int TClingTypedefInfo::InternalNext()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment the iterator.
+
 int TClingTypedefInfo::Next()
 {
-   // Increment the iterator.
    return InternalNext();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a bit mask of metadata about the current typedef.
+
 long TClingTypedefInfo::Property() const
 {
-   // Return a bit mask of metadata about the current typedef.
    if (!IsValid()) {
       return 0L;
    }
@@ -236,10 +242,11 @@ long TClingTypedefInfo::Property() const
    return property;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the size in bytes of the underlying type of the current typedef.
+
 int TClingTypedefInfo::Size() const
 {
-   // Return the size in bytes of the underlying type of the current typedef.
    if (!IsValid()) {
       return 1;
    }
@@ -264,10 +271,11 @@ int TClingTypedefInfo::Size() const
    return static_cast<int>(quantity);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the name of the underlying type of the current typedef.
+
 const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
-   // Get the name of the underlying type of the current typedef.
    if (!IsValid()) {
       return "(unknown)";
    }
@@ -285,10 +293,11 @@ const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt 
    return truename.c_str();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the name of the current typedef.
+
 const char *TClingTypedefInfo::Name() const
 {
-   // Get the name of the current typedef.
    if (!IsValid()) {
       return "(unknown)";
    }
@@ -301,7 +310,8 @@ const char *TClingTypedefInfo::Name() const
    return fullname.c_str();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *TClingTypedefInfo::Title()
 {
    if (!IsValid()) {

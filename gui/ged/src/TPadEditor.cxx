@@ -57,13 +57,13 @@ enum EPadWid {
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of TPad editor GUI.
+
 TPadEditor::TPadEditor(const TGWindow *p, Int_t width,
                        Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of TPad editor GUI.
-
    fPadPointer = 0;
 
    MakeTitle("Pad/Canvas");
@@ -140,11 +140,11 @@ TPadEditor::TPadEditor(const TGWindow *p, Int_t width,
    fInit = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of fill editor.
+
 TPadEditor::~TPadEditor()
 {
-   // Destructor of fill editor.
-
    // children of TGButonGroup are not deleted
    delete fBmode;
    delete fBmode0;
@@ -152,11 +152,11 @@ TPadEditor::~TPadEditor()
    delete fBmodelh;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TPadEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fFixedAR->Connect("Toggled(Bool_t)","TPadEditor",this,"DoFixedAspectRatio(Bool_t)");
    fCrosshair->Connect("Toggled(Bool_t)","TPadEditor",this,"DoCrosshair(Bool_t)");
    fEditable->Connect("Toggled(Bool_t)","TPadEditor",this,"DoEditable(Bool_t)");
@@ -172,11 +172,11 @@ void TPadEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the used fill attributes.
+
 void TPadEditor::SetModel(TObject* obj)
 {
-   // Pick up the used fill attributes.
-
    if (!obj || !obj->InheritsFrom("TPad"))
       return;
    fPadPointer = (TPad *)obj;
@@ -245,120 +245,120 @@ void TPadEditor::SetModel(TObject* obj)
    fAvoidSignal = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exclude TAttLineEditor from this interface.
+
 void TPadEditor::ActivateBaseClassEditors(TClass* cl)
 {
-   // Exclude TAttLineEditor from this interface.
-
    fGedEditor->ExcludeClassEditor(TAttLine::Class());
    TGedFrame::ActivateBaseClassEditors(cl);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the check box 'Editable'.
+
 void TPadEditor::DoEditable(Bool_t on)
 {
-   // Slot connected to the check box 'Editable'.
-
    if (fAvoidSignal) return;
    fPadPointer->SetEditable(on);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the check box 'Crosshair'.
+
 void TPadEditor::DoCrosshair(Bool_t on)
 {
-   // Slot connected to the check box 'Crosshair'.
-
    if (fAvoidSignal) return;
    fPadPointer->SetCrosshair(on);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the check box 'Fixed aspect ratio'.
+
 void TPadEditor::DoFixedAspectRatio(Bool_t on)
 {
-   // Slot connected to the check box 'Fixed aspect ratio'.
-
    if (fAvoidSignal) return;
    fPadPointer->SetFixedAspectRatio(on);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the check box 'GridX'.
+
 void TPadEditor::DoGridX(Bool_t on)
 {
-   // Slot connected to the check box 'GridX'.
-
    if (fAvoidSignal) return;
    fPadPointer->SetGridx(on);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the check box 'GridY'.
+
 void TPadEditor::DoGridY(Bool_t on)
 {
-   // Slot connected to the check box 'GridY'.
-
    if (fAvoidSignal) return;
    fPadPointer->SetGridy(on);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the check box 'LogX'.
+
 void TPadEditor::DoLogX(Bool_t on)
 {
-   // Slot connected to the check box 'LogX'.
-
    if (fAvoidSignal) return;
    fPadPointer->SetLogx(on);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the check box 'LogY'.
+
 void TPadEditor::DoLogY(Bool_t on)
 {
-   // Slot connected to the check box 'LogY'.
-
    if (fAvoidSignal) return;
    fPadPointer->SetLogy(on);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the check box 'LogZ'.
+
 void TPadEditor::DoLogZ(Bool_t on)
 {
-   // Slot connected to the check box 'LogZ'.
-
    if (fAvoidSignal) return;
    fPadPointer->SetLogz(on);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the check box 'TickX'.
+
 void TPadEditor::DoTickX(Bool_t on)
 {
-   // Slot connected to the check box 'TickX'.
-
    if (fAvoidSignal) return;
    fPadPointer->SetTickx(on);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the check box 'TickY'.
+
 void TPadEditor::DoTickY(Bool_t on)
 {
-   // Slot connected to the check box 'TickY'.
-
    if (fAvoidSignal) return;
    fPadPointer->SetTicky(on);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the border mode settings.
+
 void TPadEditor::DoBorderMode()
 {
-   // Slot connected to the border mode settings.
-
    if (fAvoidSignal) return;
    Int_t mode = 0;
    if (fBmode->GetState() == kButtonDown) mode = -1;
@@ -374,11 +374,11 @@ void TPadEditor::DoBorderMode()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the border size settings.
+
 void TPadEditor::DoBorderSize(Int_t size)
 {
-   // Slot connected to the border size settings.
-
    if (fAvoidSignal) return;
    fPadPointer->SetBorderSize(size);
    Update();

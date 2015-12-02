@@ -26,33 +26,34 @@
 
 ClassImp(TSystemFile)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TSystemFile default constructor
+
 TSystemFile::TSystemFile() : TNamed()
 {
-   // TSystemFile default constructor
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TSystemFile normal constructor
+
 TSystemFile::TSystemFile(const char *filename, const char *dirname)
    : TNamed(filename, dirname)
 {
-   // TSystemFile normal constructor
-
    SetBit(kCanDelete);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete TSystemFile object.
+
 TSystemFile::~TSystemFile()
 {
-   // Delete TSystemFile object.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if object is a directory.
+
 Bool_t TSystemFile::IsDirectory(const char *dir) const
 {
-   // Check if object is a directory.
-
    Long64_t size;
    Long_t id, flags, modtime;
 
@@ -63,21 +64,21 @@ Bool_t TSystemFile::IsDirectory(const char *dir) const
    return isdir ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute default action for this system file (action is specified
+/// in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file.
+
 void TSystemFile::Browse(TBrowser *b)
 {
-   // Execute default action for this system file (action is specified
-   // in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file.
-
    if (b)
       b->ExecuteDefaultAction(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke text editor on this file
+
 void TSystemFile::Edit()
 {
-   // Invoke text editor on this file
-
 #ifndef _WIN32
    const char *ed = gEnv->GetValue("Editor", "vi");
    Int_t nch = strlen(ed)+strlen(GetName()) + 50;
@@ -97,11 +98,11 @@ void TSystemFile::Edit()
    delete [] cmd;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy this file
+
 void TSystemFile::Copy(const char *to)
 {
-   // copy this file
-
    TString name = to;
 
    if (IsDirectory(to)) {
@@ -120,11 +121,11 @@ void TSystemFile::Copy(const char *to)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// move this file
+
 void TSystemFile::Move(const char *to)
 {
-   // move this file
-
    if (!to) {
       Warning("Move", "No file/dir name specified");
       return;
@@ -149,31 +150,33 @@ void TSystemFile::Move(const char *to)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// delete this file
+
 void TSystemFile::Delete()
 {
-   // delete this file
-
    gSystem->Unlink(fName);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// rename this file
+
 void TSystemFile::Rename(const char *name)
 {
-   // rename this file
-
    gSystem->Rename(fName, name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// inspect this file
+
 void TSystemFile::Inspect() const
 {
-   // inspect this file
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dump this file
+
 void TSystemFile::Dump() const
 {
-   // dump this file
 }
 

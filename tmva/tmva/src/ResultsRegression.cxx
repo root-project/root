@@ -31,29 +31,33 @@
 #include "TMVA/MsgLogger.h"
 #include "TMVA/DataSet.h"
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::ResultsRegression::ResultsRegression( const DataSetInfo* dsi, TString resultsName  ) 
    : Results( dsi, resultsName  ),
      fLogger( new MsgLogger(Form("ResultsRegression%s",resultsName.Data()) , kINFO) )
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::ResultsRegression::~ResultsRegression() 
 {
-   // destructor
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::ResultsRegression::SetValue( std::vector<Float_t>& value, Int_t ievt )
 {
    if (ievt >= (Int_t)fRegValues.size()) fRegValues.resize( ievt+1 );
    fRegValues[ievt] = value; 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TH1F*  TMVA::ResultsRegression::QuadraticDeviation( UInt_t tgtNum , Bool_t truncate, Double_t truncvalue )
 {
    DataSet* ds = GetDataSet();
@@ -92,7 +96,8 @@ TH1F*  TMVA::ResultsRegression::QuadraticDeviation( UInt_t tgtNum , Bool_t trunc
    return h;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TH2F*  TMVA::ResultsRegression::DeviationAsAFunctionOf( UInt_t varNum, UInt_t tgtNum )
 {
    DataSet* ds = GetDataSet();
@@ -179,7 +184,8 @@ TH2F*  TMVA::ResultsRegression::DeviationAsAFunctionOf( UInt_t varNum, UInt_t tg
    return h;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void  TMVA::ResultsRegression::CreateDeviationHistograms( TString prefix )
 {
    Log() << kINFO << "Create variable histograms" << Endl;

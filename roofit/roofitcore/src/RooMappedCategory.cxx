@@ -211,12 +211,12 @@ Bool_t RooMappedCategory::readFromStream(istream& is, Bool_t compact, Bool_t /*v
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Customized printing of arguments of a RooMappedCategory to more intuitively reflect the contents of the
+/// product operator construction
+
 void RooMappedCategory::printMetaArgs(ostream& os) const 
 {
-  // Customized printing of arguments of a RooMappedCategory to more intuitively reflect the contents of the
-  // product operator construction
-
   // Scan array of regexps
   RooCatType prevOutCat ;
   Bool_t first(kTRUE) ;
@@ -274,7 +274,8 @@ void RooMappedCategory::writeToStream(ostream& os, Bool_t compact) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMappedCategory::Entry& RooMappedCategory::Entry::operator=(const RooMappedCategory::Entry& other)
 {
   if (&other==this) return *this ;
@@ -292,10 +293,11 @@ RooMappedCategory::Entry& RooMappedCategory::Entry::operator=(const RooMappedCat
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mangle name : escape regexp character '+'
+
 TString RooMappedCategory::Entry::mangle(const char* exp) const
 {
-  // Mangle name : escape regexp character '+'
   TString t ;
   const char *c = exp ;
   while(*c) {
@@ -308,7 +310,8 @@ TString RooMappedCategory::Entry::mangle(const char* exp) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooMappedCategory::Entry::Streamer(TBuffer &R__b)
 {
   typedef ::RooMappedCategory::Entry ThisClass;

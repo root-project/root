@@ -50,32 +50,36 @@
 
 ClassImp(TMVA::VariableDecorrTransform)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::VariableDecorrTransform::VariableDecorrTransform( DataSetInfo& dsi )
   : VariableTransformBase( dsi, Types::kDecorrelated, "Deco" )
 { 
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::VariableDecorrTransform::~VariableDecorrTransform()
 {
-   // destructor
    for (std::vector<TMatrixD*>::iterator it = fDecorrMatrices.begin(); it != fDecorrMatrices.end(); it++) {
       if ((*it) != 0) delete (*it);
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialisation
+
 void TMVA::VariableDecorrTransform::Initialize()
 {
-   // initialisation
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the decorrelation matrix and the normalization
+
 Bool_t TMVA::VariableDecorrTransform::PrepareTransformation (const std::vector<Event*>& events)
 {
-   // calculate the decorrelation matrix and the normalization
    Initialize();
 
    if (!IsEnabled() || IsCreated()) return kTRUE;
@@ -103,11 +107,11 @@ Bool_t TMVA::VariableDecorrTransform::PrepareTransformation (const std::vector<E
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates string with variable transformations applied
+
 std::vector<TString>* TMVA::VariableDecorrTransform::GetTransformationStrings( Int_t cls ) const
 {
-   // creates string with variable transformations applied
-
    Int_t whichMatrix = cls;
    // if cls (the class chosen by the user) not existing, assume that user wants to 
    // have the matrix for all classes together. 
@@ -156,10 +160,11 @@ std::vector<TString>* TMVA::VariableDecorrTransform::GetTransformationStrings( I
    return strVec;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// apply the decorrelation transformation
+
 const TMVA::Event* TMVA::VariableDecorrTransform::Transform( const TMVA::Event* const ev, Int_t cls ) const
 {
-   // apply the decorrelation transformation
    if (!IsCreated())
       Log() << kFATAL << "Transformation matrix not yet created" 
             << Endl;
@@ -220,11 +225,12 @@ const TMVA::Event* TMVA::VariableDecorrTransform::Transform( const TMVA::Event* 
    return fTransformedEvent;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// apply the inverse decorrelation transformation ... 
+/// TODO : ... build the inverse transformation
+
 const TMVA::Event* TMVA::VariableDecorrTransform::InverseTransform( const TMVA::Event* const /*ev*/, Int_t /*cls*/ ) const
 {
-   // apply the inverse decorrelation transformation ... 
-   // TODO : ... build the inverse transformation
    Log() << kFATAL << "Inverse transformation for decorrelation transformation not yet implemented. Hence, this transformation cannot be applied together with regression if targets should be transformed. Please contact the authors if necessary." << Endl;
 
 
@@ -232,11 +238,11 @@ const TMVA::Event* TMVA::VariableDecorrTransform::InverseTransform( const TMVA::
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute square-root matrices for signal and background
+
 void TMVA::VariableDecorrTransform::CalcSQRMats( const std::vector< Event*>& events, Int_t maxCls )
 {
-   // compute square-root matrices for signal and background
-
    // delete old matrices if any
    for (std::vector<TMatrixD*>::iterator it = fDecorrMatrices.begin(); 
         it != fDecorrMatrices.end(); it++)
@@ -260,10 +266,11 @@ void TMVA::VariableDecorrTransform::CalcSQRMats( const std::vector< Event*>& eve
    delete covMat;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write the decorrelation matrix to the stream
+
 void TMVA::VariableDecorrTransform::WriteTransformationToStream( std::ostream& o ) const
 {
-   // write the decorrelation matrix to the stream
    Int_t cls = 0;
    Int_t dp = o.precision();
    for (std::vector<TMatrixD*>::const_iterator itm = fDecorrMatrices.begin(); itm != fDecorrMatrices.end(); itm++) {
@@ -282,10 +289,11 @@ void TMVA::VariableDecorrTransform::WriteTransformationToStream( std::ostream& o
    o << std::setprecision(dp);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// node attachment to parent
+
 void TMVA::VariableDecorrTransform::AttachXMLTo(void* parent) 
 {
-   // node attachment to parent
    void* trf = gTools().AddChild(parent, "Transform");
    gTools().AddAttr(trf,"Name", "Decorrelation");
 
@@ -308,11 +316,11 @@ void TMVA::VariableDecorrTransform::AttachXMLTo(void* parent)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the transformation matrices from the xml node
+
 void TMVA::VariableDecorrTransform::ReadFromXML( void* trfnode ) 
 {
-   // Read the transformation matrices from the xml node
-
    // first delete the old matrices
    for( std::vector<TMatrixD*>::iterator it = fDecorrMatrices.begin(); it != fDecorrMatrices.end(); it++ )
       if( (*it) != 0 ) delete (*it);
@@ -356,11 +364,11 @@ void TMVA::VariableDecorrTransform::ReadFromXML( void* trfnode )
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the decorellation matrix from an input stream
+
 void TMVA::VariableDecorrTransform::ReadTransformationFromStream( std::istream& istr, const TString& classname )
 {
-   // Read the decorellation matrix from an input stream
-
    char buf[512];
    istr.getline(buf,512);
    TString strvar, dummy;
@@ -400,10 +408,11 @@ void TMVA::VariableDecorrTransform::ReadTransformationFromStream( std::istream& 
    SetCreated();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prints the transformation matrix
+
 void TMVA::VariableDecorrTransform::PrintTransformation( std::ostream& ) 
 {
-   // prints the transformation matrix
    Int_t cls = 0;
    for (std::vector<TMatrixD*>::iterator itm = fDecorrMatrices.begin(); itm != fDecorrMatrices.end(); itm++) {
       Log() << kINFO << "Transformation matrix "<< cls <<":" << Endl;
@@ -411,11 +420,11 @@ void TMVA::VariableDecorrTransform::PrintTransformation( std::ostream& )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates C++ code fragment of the decorrelation transform for inclusion in standalone C++ class
+
 void TMVA::VariableDecorrTransform::MakeFunction( std::ostream& fout, const TString& fcncName, Int_t part, UInt_t trCounter, Int_t )
 {
-   // creates C++ code fragment of the decorrelation transform for inclusion in standalone C++ class
-
    Int_t dp = fout.precision();
 
    UInt_t numC = fDecorrMatrices.size();

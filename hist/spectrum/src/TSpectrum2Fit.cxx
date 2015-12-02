@@ -34,10 +34,11 @@
 
 ClassImp(TSpectrum2Fit)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///default constructor
+
 TSpectrum2Fit::TSpectrum2Fit() :TNamed("Spectrum2Fit", "Miroslav Morhac peak fitter")
 {
-   //default constructor
    fNPeaks = 0;
    fNumberIterations = 1;
    fXmin = 0;
@@ -138,13 +139,14 @@ TSpectrum2Fit::TSpectrum2Fit() :TNamed("Spectrum2Fit", "Miroslav Morhac peak fit
    fFixAy  = true;
 
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///numberPeaks: number of fitted peaks (must be greater than zero)
+///the constructor allocates arrays for all fitted parameters (peak positions, amplitudes etc) and sets the member
+///variables to their default values. One can change these variables by member functions (setters) of TSpectrumFit class.
+///Begin_Html <!--
+
 TSpectrum2Fit::TSpectrum2Fit(Int_t numberPeaks) :TNamed("Spectrum2Fit", "Miroslav Morhac peak fitter")
 {
-   //numberPeaks: number of fitted peaks (must be greater than zero)
-   //the constructor allocates arrays for all fitted parameters (peak positions, amplitudes etc) and sets the member
-   //variables to their default values. One can change these variables by member functions (setters) of TSpectrumFit class.
-//Begin_Html <!--
 /* -->
 <div class=Section1>
 
@@ -263,10 +265,11 @@ width=600 height=401 src="gif/spectrum2fit_constructor_image001.gif"></span></su
    fFixAy  = true;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TSpectrum2Fit::~TSpectrum2Fit()
 {
-   // destructor
    delete [] fPositionInitX;
    delete [] fPositionCalcX;
    delete [] fPositionErrX;
@@ -301,15 +304,16 @@ TSpectrum2Fit::~TSpectrum2Fit()
 
 
 /////////////////BEGINNING OF AUXILIARY FUNCTIONS USED BY FITTING FUNCTIONS//////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                      //
+///                                                                          //
+///   This function calculates error function of x.                           //
+///                                                                          //
+///////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Erfc(Double_t x)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                      //
-//                                                                          //
-//   This function calculates error function of x.                           //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
    Double_t da1 = 0.1740121, da2 = -0.0479399, da3 = 0.3739278, dap =
        0.47047;
    Double_t a, t, c, w;
@@ -329,15 +333,16 @@ Double_t TSpectrum2Fit::Erfc(Double_t x)
    return (c);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                      //
+///                                                                          //
+///   This function calculates derivative of error function of x.             //
+///                                                                          //
+///////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derfc(Double_t x)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                      //
-//                                                                          //
-//   This function calculates derivative of error function of x.             //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
    Double_t a, t, c, w;
    Double_t da1 = 0.1740121, da2 = -0.0479399, da3 = 0.3739278, dap =
        0.47047;
@@ -356,10 +361,11 @@ Double_t TSpectrum2Fit::Derfc(Double_t x)
    return (c);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///power function
+
 Double_t TSpectrum2Fit::Ourpowl(Double_t a, Int_t pw)
 {
-   //power function
    Double_t c;
    Double_t a2 = a*a;
    c = 1;
@@ -434,7 +440,25 @@ void TSpectrum2Fit::StiefelInversion(Double_t **a, Int_t size)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates 2D peaks shape function (see manual)               //
+///      Function parameters:                                                    //
+///              -numOfFittedPeaks-number of fitted peaks                        //
+///              -x-channel in x-dimension                                       //
+///              -y-channel in y-dimension                                       //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigmax-sigmax of peaks                                         //
+///              -sigmay-sigmay of peaks                                         //
+///              -ro-correlation coefficient                                     //
+///              -a0,ax,ay-bac kground coefficients                              //
+///              -txy,tx,ty, sxy,sy,sx-relative amplitudes                       //
+///              -bx, by-slopes                                                  //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Shape2(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                             const Double_t *parameter, Double_t sigmax,
                             Double_t sigmay, Double_t ro, Double_t a0, Double_t ax,
@@ -442,23 +466,6 @@ Double_t TSpectrum2Fit::Shape2(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                             Double_t ty, Double_t sx, Double_t sy, Double_t bx,
                             Double_t by)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates 2D peaks shape function (see manual)               //
-//      Function parameters:                                                    //
-//              -numOfFittedPeaks-number of fitted peaks                        //
-//              -x-channel in x-dimension                                       //
-//              -y-channel in y-dimension                                       //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigmax-sigmax of peaks                                         //
-//              -sigmay-sigmay of peaks                                         //
-//              -ro-correlation coefficient                                     //
-//              -a0,ax,ay-bac kground coefficients                              //
-//              -txy,tx,ty, sxy,sy,sx-relative amplitudes                       //
-//              -bx, by-slopes                                                  //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t j;
    Double_t r, p, r1, e, ex, ey, vx, s2, px, py, rx, ry, erx, ery;
    vx = 0;
@@ -543,28 +550,29 @@ Double_t TSpectrum2Fit::Shape2(Int_t numOfFittedPeaks, Double_t x, Double_t y,
    return (vx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of 2D peaks shape function (see manual) //
+///   according to amplitude of 2D peak                                          //
+///      Function parameters:                                                    //
+///              -x-channel in x-dimension                                       //
+///              -y-channel in y-dimension                                       //
+///              -x0-position of peak in x-dimension                             //
+///              -y0-position of peak in y-dimension                             //
+///              -sigmax-sigmax of peaks                                         //
+///              -sigmay-sigmay of peaks                                         //
+///              -ro-correlation coefficient                                     //
+///              -txy, sxy-relative amplitudes                                   //
+///              -bx, by-slopes                                                  //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Deramp2(Double_t x, Double_t y, Double_t x0, Double_t y0,
                             Double_t sigmax, Double_t sigmay, Double_t ro,
                             Double_t txy, Double_t sxy, Double_t bx, Double_t by)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of 2D peaks shape function (see manual) //
-//   according to amplitude of 2D peak                                          //
-//      Function parameters:                                                    //
-//              -x-channel in x-dimension                                       //
-//              -y-channel in y-dimension                                       //
-//              -x0-position of peak in x-dimension                             //
-//              -y0-position of peak in y-dimension                             //
-//              -sigmax-sigmax of peaks                                         //
-//              -sigmay-sigmay of peaks                                         //
-//              -ro-correlation coefficient                                     //
-//              -txy, sxy-relative amplitudes                                   //
-//              -bx, by-slopes                                                  //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r, r1 = 0, e, ex, ey, px, py, rx, ry, erx, ery, s2;
    p = (x - x0) / sigmax;
    r = (y - y0) / sigmay;
@@ -595,25 +603,26 @@ Double_t TSpectrum2Fit::Deramp2(Double_t x, Double_t y, Double_t x0, Double_t y0
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of 2D peaks shape function (see manual) //
+///   according to amplitude of the ridge                                        //
+///      Function parameters:                                                    //
+///              -x-channel in x-dimension                                       //
+///              -x0-position of peak in x-dimension                             //
+///              -y0-position of peak in y-dimension                             //
+///              -sigmax-sigmax of peaks                                         //
+///              -ro-correlation coefficient                                     //
+///              -tx, sx-relative amplitudes                                     //
+///              -bx-slope                                                       //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derampx(Double_t x, Double_t x0, Double_t sigmax, Double_t tx,
                              Double_t sx, Double_t bx)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of 2D peaks shape function (see manual) //
-//   according to amplitude of the ridge                                        //
-//      Function parameters:                                                    //
-//              -x-channel in x-dimension                                       //
-//              -x0-position of peak in x-dimension                             //
-//              -y0-position of peak in y-dimension                             //
-//              -sigmax-sigmax of peaks                                         //
-//              -ro-correlation coefficient                                     //
-//              -tx, sx-relative amplitudes                                     //
-//              -bx-slope                                                       //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r1 = 0, px, erx, rx, ex, s2;
    p = (x - x0) / sigmax;
    if (TMath::Abs(p) < 3) {
@@ -642,30 +651,31 @@ Double_t TSpectrum2Fit::Derampx(Double_t x, Double_t x0, Double_t sigmax, Double
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of 2D peaks shape function (see manual) //
+///   according to x position of 2D peak                                         //
+///      Function parameters:                                                    //
+///              -x-channel in x-dimension                                       //
+///              -y-channel in y-dimension                                       //
+///              -a-amplitude                                                    //
+///              -x0-position of peak in x-dimension                             //
+///              -y0-position of peak in y-dimension                             //
+///              -sigmax-sigmax of peaks                                         //
+///              -sigmay-sigmay of peaks                                         //
+///              -ro-correlation coefficient                                     //
+///              -txy, sxy-relative amplitudes                                   //
+///              -bx, by-slopes                                                  //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Deri02(Double_t x, Double_t y, Double_t a, Double_t x0,
                             Double_t y0, Double_t sigmax, Double_t sigmay,
                             Double_t ro, Double_t txy, Double_t sxy, Double_t bx,
                             Double_t by)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of 2D peaks shape function (see manual) //
-//   according to x position of 2D peak                                         //
-//      Function parameters:                                                    //
-//              -x-channel in x-dimension                                       //
-//              -y-channel in y-dimension                                       //
-//              -a-amplitude                                                    //
-//              -x0-position of peak in x-dimension                             //
-//              -y0-position of peak in y-dimension                             //
-//              -sigmax-sigmax of peaks                                         //
-//              -sigmay-sigmay of peaks                                         //
-//              -ro-correlation coefficient                                     //
-//              -txy, sxy-relative amplitudes                                   //
-//              -bx, by-slopes                                                  //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r, r1 = 0, e, ex, ey, px, py, rx, ry, erx, ery, s2;
    p = (x - x0) / sigmax;
    r = (y - y0) / sigmay;
@@ -702,27 +712,28 @@ Double_t TSpectrum2Fit::Deri02(Double_t x, Double_t y, Double_t a, Double_t x0,
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates second derivative of 2D peaks shape function       //
+///   (see manual) according to x position of 2D peak                            //
+///      Function parameters:                                                    //
+///              -x-channel in x-dimension                                       //
+///              -y-channel in y-dimension                                       //
+///              -a-amplitude                                                    //
+///              -x0-position of peak in x-dimension                             //
+///              -y0-position of peak in y-dimension                             //
+///              -sigmax-sigmax of peaks                                         //
+///              -sigmay-sigmay of peaks                                         //
+///              -ro-correlation coefficient                                     //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derderi02(Double_t x, Double_t y, Double_t a, Double_t x0,
                               Double_t y0, Double_t sigmax, Double_t sigmay,
                               Double_t ro)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates second derivative of 2D peaks shape function       //
-//   (see manual) according to x position of 2D peak                            //
-//      Function parameters:                                                    //
-//              -x-channel in x-dimension                                       //
-//              -y-channel in y-dimension                                       //
-//              -a-amplitude                                                    //
-//              -x0-position of peak in x-dimension                             //
-//              -y0-position of peak in y-dimension                             //
-//              -sigmax-sigmax of peaks                                         //
-//              -sigmay-sigmay of peaks                                         //
-//              -ro-correlation coefficient                                     //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r, r1 = 0, e;
    p = (x - x0) / sigmax;
    r = (y - y0) / sigmay;
@@ -800,27 +811,28 @@ Double_t TSpectrum2Fit::Derj02(Double_t x, Double_t y, Double_t a, Double_t x0,
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates second derivative of 2D peaks shape function       //
+///   (see manual) according to y position of 2D peak                            //
+///      Function parameters:                                                    //
+///              -x-channel in x-dimension                                       //
+///              -y-channel in y-dimension                                       //
+///              -a-amplitude                                                    //
+///              -x0-position of peak in x-dimension                             //
+///              -y0-position of peak in y-dimension                             //
+///              -sigmax-sigmax of peaks                                         //
+///              -sigmay-sigmay of peaks                                         //
+///              -ro-correlation coefficient                                     //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derderj02(Double_t x, Double_t y, Double_t a, Double_t x0,
                                Double_t y0, Double_t sigmax, Double_t sigmay,
                                Double_t ro)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates second derivative of 2D peaks shape function       //
-//   (see manual) according to y position of 2D peak                            //
-//      Function parameters:                                                    //
-//              -x-channel in x-dimension                                       //
-//              -y-channel in y-dimension                                       //
-//              -a-amplitude                                                    //
-//              -x0-position of peak in x-dimension                             //
-//              -y0-position of peak in y-dimension                             //
-//              -sigmax-sigmax of peaks                                         //
-//              -sigmay-sigmay of peaks                                         //
-//              -ro-correlation coefficient                                     //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r, r1 = 0, e;
    p = (x - x0) / sigmax;
    r = (y - y0) / sigmay;
@@ -840,25 +852,26 @@ Double_t TSpectrum2Fit::Derderj02(Double_t x, Double_t y, Double_t a, Double_t x
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of 2D peaks shape function (see manual) //
+///   according to x position of 1D ridge                                        //
+///      Function parameters:                                                    //
+///              -x-channel in x-dimension                                       //
+///              -ax-amplitude of ridge                                          //
+///              -x0-position of peak in x-dimension                             //
+///              -sigmax-sigmax of peaks                                         //
+///              -ro-correlation coefficient                                     //
+///              -tx, sx-relative amplitudes                                     //
+///              -bx-slope                                                       //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Deri01(Double_t x, Double_t ax, Double_t x0, Double_t sigmax,
                             Double_t tx, Double_t sx, Double_t bx)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of 2D peaks shape function (see manual) //
-//   according to x position of 1D ridge                                        //
-//      Function parameters:                                                    //
-//              -x-channel in x-dimension                                       //
-//              -ax-amplitude of ridge                                          //
-//              -x0-position of peak in x-dimension                             //
-//              -sigmax-sigmax of peaks                                         //
-//              -ro-correlation coefficient                                     //
-//              -tx, sx-relative amplitudes                                     //
-//              -bx-slope                                                       //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, e, r1 = 0, px, rx, erx, ex, s2;
    p = (x - x0) / sigmax;
    if (TMath::Abs(p) < 3) {
@@ -890,22 +903,23 @@ Double_t TSpectrum2Fit::Deri01(Double_t x, Double_t ax, Double_t x0, Double_t si
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates second derivative of 2D peaks shape function       //
+///   (see manual) according to x position of 1D ridge                           //
+///      Function parameters:                                                    //
+///              -x-channel in x-dimension                                       //
+///              -ax-amplitude of ridge                                          //
+///              -x0-position of peak in x-dimension                             //
+///              -sigmax-sigmax of peaks                                         //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derderi01(Double_t x, Double_t ax, Double_t x0,
                                Double_t sigmax)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates second derivative of 2D peaks shape function       //
-//   (see manual) according to x position of 1D ridge                           //
-//      Function parameters:                                                    //
-//              -x-channel in x-dimension                                       //
-//              -ax-amplitude of ridge                                          //
-//              -x0-position of peak in x-dimension                             //
-//              -sigmax-sigmax of peaks                                         //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, e, r1 = 0;
    p = (x - x0) / sigmax;
    if (TMath::Abs(p) < 3) {
@@ -922,29 +936,30 @@ Double_t TSpectrum2Fit::Derderi01(Double_t x, Double_t ax, Double_t x0,
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to sigmax of peaks.                                              //
+///      Function parameters:                                                    //
+///              -numOfFittedPeaks-number of fitted peaks                        //
+///              -x,y-position of channel                                        //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigmax-sigmax of peaks                                         //
+///              -sigmay-sigmay of peaks                                         //
+///              -ro-correlation coefficient                                     //
+///              -txy, sxy, tx, sx-relative amplitudes                           //
+///              -bx, by-slopes                                                  //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Dersigmax(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                                const Double_t *parameter, Double_t sigmax,
                                Double_t sigmay, Double_t ro, Double_t txy,
                                Double_t sxy, Double_t tx, Double_t sx, Double_t bx,
                                Double_t by)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to sigmax of peaks.                                              //
-//      Function parameters:                                                    //
-//              -numOfFittedPeaks-number of fitted peaks                        //
-//              -x,y-position of channel                                        //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigmax-sigmax of peaks                                         //
-//              -sigmay-sigmay of peaks                                         //
-//              -ro-correlation coefficient                                     //
-//              -txy, sxy, tx, sx-relative amplitudes                           //
-//              -bx, by-slopes                                                  //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r, r1 =
        0, e, a, b, x0, y0, s2, px, py, rx, ry, erx, ery, ex, ey;
    Int_t j;
@@ -1014,26 +1029,27 @@ Double_t TSpectrum2Fit::Dersigmax(Int_t numOfFittedPeaks, Double_t x, Double_t y
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates second derivative of peaks shape function          //
+///   (see manual) according to sigmax of peaks.                                 //
+///      Function parameters:                                                    //
+///              -numOfFittedPeaks-number of fitted peaks                        //
+///              -x,y-position of channel                                        //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigmax-sigmax of peaks                                         //
+///              -sigmay-sigmay of peaks                                         //
+///              -ro-correlation coefficient                                     //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derdersigmax(Int_t numOfFittedPeaks, Double_t x,
                                   Double_t y, const Double_t *parameter,
                                   Double_t sigmax, Double_t sigmay,
                                   Double_t ro)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates second derivative of peaks shape function          //
-//   (see manual) according to sigmax of peaks.                                 //
-//      Function parameters:                                                    //
-//              -numOfFittedPeaks-number of fitted peaks                        //
-//              -x,y-position of channel                                        //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigmax-sigmax of peaks                                         //
-//              -sigmay-sigmay of peaks                                         //
-//              -ro-correlation coefficient                                     //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r, r1 = 0, e, a, b, x0, y0;
    Int_t j;
    for (j = 0; j < numOfFittedPeaks; j++) {
@@ -1075,29 +1091,30 @@ Double_t TSpectrum2Fit::Derdersigmax(Int_t numOfFittedPeaks, Double_t x,
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to sigmax of peaks.                                              //
+///      Function parameters:                                                    //
+///              -numOfFittedPeaks-number of fitted peaks                        //
+///              -x,y-position of channel                                        //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigmax-sigmax of peaks                                         //
+///              -sigmay-sigmay of peaks                                         //
+///              -ro-correlation coefficient                                     //
+///              -txy, sxy, ty, sy-relative amplitudes                           //
+///              -bx, by-slopes                                                  //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Dersigmay(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                                const Double_t *parameter, Double_t sigmax,
                                Double_t sigmay, Double_t ro, Double_t txy,
                                Double_t sxy, Double_t ty, Double_t sy, Double_t bx,
                                Double_t by)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to sigmax of peaks.                                              //
-//      Function parameters:                                                    //
-//              -numOfFittedPeaks-number of fitted peaks                        //
-//              -x,y-position of channel                                        //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigmax-sigmax of peaks                                         //
-//              -sigmay-sigmay of peaks                                         //
-//              -ro-correlation coefficient                                     //
-//              -txy, sxy, ty, sy-relative amplitudes                           //
-//              -bx, by-slopes                                                  //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r, r1 =
        0, e, a, b, x0, y0, s2, px, py, rx, ry, erx, ery, ex, ey;
    Int_t j;
@@ -1167,26 +1184,27 @@ Double_t TSpectrum2Fit::Dersigmay(Int_t numOfFittedPeaks, Double_t x, Double_t y
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates second derivative of peaks shape function          //
+///   (see manual) according to sigmay of peaks.                                 //
+///      Function parameters:                                                    //
+///              -numOfFittedPeaks-number of fitted peaks                        //
+///              -x,y-position of channel                                        //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigmax-sigmax of peaks                                         //
+///              -sigmay-sigmay of peaks                                         //
+///              -ro-correlation coefficient                                     //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derdersigmay(Int_t numOfFittedPeaks, Double_t x,
                                   Double_t y, const Double_t *parameter,
                                   Double_t sigmax, Double_t sigmay,
                                   Double_t ro)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates second derivative of peaks shape function          //
-//   (see manual) according to sigmay of peaks.                                 //
-//      Function parameters:                                                    //
-//              -numOfFittedPeaks-number of fitted peaks                        //
-//              -x,y-position of channel                                        //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigmax-sigmax of peaks                                         //
-//              -sigmay-sigmay of peaks                                         //
-//              -ro-correlation coefficient                                     //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r, r1 = 0, e, a, b, x0, y0;
    Int_t j;
    for (j = 0; j < numOfFittedPeaks; j++) {
@@ -1228,25 +1246,26 @@ Double_t TSpectrum2Fit::Derdersigmay(Int_t numOfFittedPeaks, Double_t x,
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to correlation coefficient ro.                                   //
+///      Function parameters:                                                    //
+///              -numOfFittedPeaks-number of fitted peaks                        //
+///              -x,y-position of channel                                        //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sx-sigmax of peaks                                             //
+///              -sy-sigmay of peaks                                             //
+///              -r-correlation coefficient ro                                   //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derro(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                            const Double_t *parameter, Double_t sx, Double_t sy,
                            Double_t r)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to correlation coefficient ro.                                   //
-//      Function parameters:                                                    //
-//              -numOfFittedPeaks-number of fitted peaks                        //
-//              -x,y-position of channel                                        //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sx-sigmax of peaks                                             //
-//              -sy-sigmay of peaks                                             //
-//              -r-correlation coefficient ro                                   //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t px, qx, rx, vx, x0, y0, a, ex, tx;
    Int_t j;
    vx = 0;
@@ -1273,25 +1292,26 @@ Double_t TSpectrum2Fit::Derro(Int_t numOfFittedPeaks, Double_t x, Double_t y,
    return (vx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to relative amplitude txy.                                       //
+///      Function parameters:                                                    //
+///              -numOfFittedPeaks-number of fitted peaks                        //
+///              -x,y-position of channel                                        //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigmax-sigmax of peaks                                         //
+///              -sigmay-sigmay of peaks                                         //
+///              -bx, by-slopes                                                  //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Dertxy(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                             const Double_t *parameter, Double_t sigmax,
                             Double_t sigmay, Double_t bx, Double_t by)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to relative amplitude txy.                                       //
-//      Function parameters:                                                    //
-//              -numOfFittedPeaks-number of fitted peaks                        //
-//              -x,y-position of channel                                        //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigmax-sigmax of peaks                                         //
-//              -sigmay-sigmay of peaks                                         //
-//              -bx, by-slopes                                                  //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r, r1 = 0, ex, ey, px, py, erx, ery, s2, x0, y0, a;
    Int_t j;
    s2 = TMath::Sqrt(2.0);
@@ -1313,24 +1333,25 @@ Double_t TSpectrum2Fit::Dertxy(Int_t numOfFittedPeaks, Double_t x, Double_t y,
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to relative amplitude sxy.                                       //
+///      Function parameters:                                                    //
+///              -numOfFittedPeaks-number of fitted peaks                        //
+///              -x,y-position of channel                                        //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigmax-sigmax of peaks                                         //
+///              -sigmay-sigmay of peaks                                         //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Dersxy(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                             const Double_t *parameter, Double_t sigmax,
                             Double_t sigmay)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to relative amplitude sxy.                                       //
-//      Function parameters:                                                    //
-//              -numOfFittedPeaks-number of fitted peaks                        //
-//              -x,y-position of channel                                        //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigmax-sigmax of peaks                                         //
-//              -sigmay-sigmay of peaks                                         //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r, r1 = 0, rx, ry, x0, y0, a, s2;
    Int_t j;
    s2 = TMath::Sqrt(2.0);
@@ -1346,24 +1367,25 @@ Double_t TSpectrum2Fit::Dersxy(Int_t numOfFittedPeaks, Double_t x, Double_t y,
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to relative amplitude tx.                                        //
+///      Function parameters:                                                    //
+///              -numOfFittedPeaks-number of fitted peaks                        //
+///              -x-position of channel                                          //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigmax-sigma of 1D ridge                                       //
+///              -bx-slope                                                       //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Dertx(Int_t numOfFittedPeaks, Double_t x,
                            const Double_t *parameter, Double_t sigmax,
                            Double_t bx)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to relative amplitude tx.                                        //
-//      Function parameters:                                                    //
-//              -numOfFittedPeaks-number of fitted peaks                        //
-//              -x-position of channel                                          //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigmax-sigma of 1D ridge                                       //
-//              -bx-slope                                                       //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r1 = 0, ex, px, erx, s2, ax, x0;
    Int_t j;
    s2 = TMath::Sqrt(2.0);
@@ -1382,24 +1404,25 @@ Double_t TSpectrum2Fit::Dertx(Int_t numOfFittedPeaks, Double_t x,
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to relative amplitude ty.                                        //
+///      Function parameters:                                                    //
+///              -numOfFittedPeaks-number of fitted peaks                        //
+///              -x-position of channel                                          //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigmax-sigma of 1D ridge                                       //
+///              -bx-slope                                                       //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derty(Int_t numOfFittedPeaks, Double_t x,
                            const Double_t *parameter, Double_t sigmax,
                            Double_t bx)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to relative amplitude ty.                                        //
-//      Function parameters:                                                    //
-//              -numOfFittedPeaks-number of fitted peaks                        //
-//              -x-position of channel                                          //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigmax-sigma of 1D ridge                                       //
-//              -bx-slope                                                       //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r1 = 0, ex, px, erx, s2, ax, x0;
    Int_t j;
    s2 = TMath::Sqrt(2.0);
@@ -1418,22 +1441,23 @@ Double_t TSpectrum2Fit::Derty(Int_t numOfFittedPeaks, Double_t x,
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to relative amplitude sx.                                        //
+///      Function parameters:                                                    //
+///              -numOfFittedPeaks-number of fitted peaks                        //
+///              -x-position of channel                                          //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigmax-sigma of 1D ridge                                       //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Dersx(Int_t numOfFittedPeaks, Double_t x,
                            const Double_t *parameter, Double_t sigmax)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to relative amplitude sx.                                        //
-//      Function parameters:                                                    //
-//              -numOfFittedPeaks-number of fitted peaks                        //
-//              -x-position of channel                                          //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigmax-sigma of 1D ridge                                       //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r1 = 0, rx, ax, x0, s2;
    Int_t j;
    s2 = TMath::Sqrt(2.0);
@@ -1448,22 +1472,23 @@ Double_t TSpectrum2Fit::Dersx(Int_t numOfFittedPeaks, Double_t x,
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to relative amplitude sy.                                        //
+///      Function parameters:                                                    //
+///              -numOfFittedPeaks-number of fitted peaks                        //
+///              -x-position of channel                                          //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigmax-sigma of 1D ridge                                       //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Dersy(Int_t numOfFittedPeaks, Double_t x,
                            const Double_t *parameter, Double_t sigmax)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to relative amplitude sy.                                        //
-//      Function parameters:                                                    //
-//              -numOfFittedPeaks-number of fitted peaks                        //
-//              -x-position of channel                                          //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigmax-sigma of 1D ridge                                       //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r1 = 0, rx, ax, x0, s2;
    Int_t j;
    s2 = TMath::Sqrt(2.0);
@@ -1478,27 +1503,28 @@ Double_t TSpectrum2Fit::Dersy(Int_t numOfFittedPeaks, Double_t x,
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to slope bx.                                                     //
+///      Function parameters:                                                    //
+///              -numOfFittedPeaks-number of fitted peaks                        //
+///              -x,y-position of channel                                        //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigmax-sigmax of peaks                                         //
+///              -sigmay-sigmay of peaks                                         //
+///              -txy, tx-relative amplitudes                                    //
+///              -bx, by-slopes                                                  //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derbx(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                            const Double_t *parameter, Double_t sigmax,
                            Double_t sigmay, Double_t txy, Double_t tx, Double_t bx,
                            Double_t by)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to slope bx.                                                     //
-//      Function parameters:                                                    //
-//              -numOfFittedPeaks-number of fitted peaks                        //
-//              -x,y-position of channel                                        //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigmax-sigmax of peaks                                         //
-//              -sigmay-sigmay of peaks                                         //
-//              -txy, tx-relative amplitudes                                    //
-//              -bx, by-slopes                                                  //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r, r1 = 0, a, x0, y0, s2, px, py, erx, ery, ex, ey;
    Int_t j;
    s2 = TMath::Sqrt(2.0);
@@ -1537,27 +1563,28 @@ Double_t TSpectrum2Fit::Derbx(Int_t numOfFittedPeaks, Double_t x, Double_t y,
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of peaks shape function (see manual)    //
+///   according to slope by.                                                     //
+///      Function parameters:                                                    //
+///              -numOfFittedPeaks-number of fitted peaks                        //
+///              -x,y-position of channel                                        //
+///              -parameter-array of peaks parameters (amplitudes and positions) //
+///              -sigmax-sigmax of peaks                                         //
+///              -sigmay-sigmay of peaks                                         //
+///              -txy, ty-relative amplitudes                                    //
+///              -bx, by-slopes                                                  //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derby(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                            const Double_t *parameter, Double_t sigmax,
                            Double_t sigmay, Double_t txy, Double_t ty, Double_t bx,
                            Double_t by)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to slope by.                                                     //
-//      Function parameters:                                                    //
-//              -numOfFittedPeaks-number of fitted peaks                        //
-//              -x,y-position of channel                                        //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigmax-sigmax of peaks                                         //
-//              -sigmay-sigmay of peaks                                         //
-//              -txy, ty-relative amplitudes                                    //
-//              -bx, by-slopes                                                  //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t p, r, r1 = 0, a, x0, y0, s2, px, py, erx, ery, ex, ey;
    Int_t j;
    s2 = TMath::Sqrt(2.0);
@@ -1596,19 +1623,20 @@ Double_t TSpectrum2Fit::Derby(Int_t numOfFittedPeaks, Double_t x, Double_t y,
    return (r1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates volume of a peak                                   //
+///      Function parameters:                                                    //
+///              -a-amplitude of the peak                                        //
+///              -sx,sy-sigmas of peak                                           //
+///              -ro-correlation coefficient                                     //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Volume(Double_t a, Double_t sx, Double_t sy, Double_t ro)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates volume of a peak                                   //
-//      Function parameters:                                                    //
-//              -a-amplitude of the peak                                        //
-//              -sx,sy-sigmas of peak                                           //
-//              -ro-correlation coefficient                                     //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t pi = 3.1415926535, r;
    r = 1 - ro * ro;
    if (r > 0)
@@ -1621,19 +1649,20 @@ Double_t TSpectrum2Fit::Volume(Double_t a, Double_t sx, Double_t sy, Double_t ro
    return (r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of the volume of a peak                 //
+///   according to amplitute                                                     //
+///      Function parameters:                                                    //
+///              -sx,sy-sigmas of peak                                           //
+///              -ro-correlation coefficient                                     //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derpa2(Double_t sx, Double_t sy, Double_t ro)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of the volume of a peak                 //
-//   according to amplitute                                                     //
-//      Function parameters:                                                    //
-//              -sx,sy-sigmas of peak                                           //
-//              -ro-correlation coefficient                                     //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t pi = 3.1415926535, r;
    r = 1 - ro * ro;
    if (r > 0)
@@ -1646,20 +1675,21 @@ Double_t TSpectrum2Fit::Derpa2(Double_t sx, Double_t sy, Double_t ro)
    return (r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of the volume of a peak                 //
+///   according to sigmax                                                        //
+///      Function parameters:                                                    //
+///              -a-amplitude of peak                                            //
+///              -sy-sigma of peak                                               //
+///              -ro-correlation coefficient                                     //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derpsigmax(Double_t a, Double_t sy, Double_t ro)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of the volume of a peak                 //
-//   according to sigmax                                                        //
-//      Function parameters:                                                    //
-//              -a-amplitude of peak                                            //
-//              -sy-sigma of peak                                               //
-//              -ro-correlation coefficient                                     //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t pi = 3.1415926535, r;
    r = 1 - ro * ro;
    if (r > 0)
@@ -1672,20 +1702,21 @@ Double_t TSpectrum2Fit::Derpsigmax(Double_t a, Double_t sy, Double_t ro)
    return (r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of the volume of a peak                 //
+///   according to sigmay                                                        //
+///      Function parameters:                                                    //
+///              -a-amplitude of peak                                            //
+///              -sx-sigma of peak                                               //
+///              -ro-correlation coefficient                                     //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derpsigmay(Double_t a, Double_t sx, Double_t ro)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of the volume of a peak                 //
-//   according to sigmay                                                        //
-//      Function parameters:                                                    //
-//              -a-amplitude of peak                                            //
-//              -sx-sigma of peak                                               //
-//              -ro-correlation coefficient                                     //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t pi = 3.1415926535, r;
    r = 1 - ro * ro;
    if (r > 0)
@@ -1698,20 +1729,21 @@ Double_t TSpectrum2Fit::Derpsigmay(Double_t a, Double_t sx, Double_t ro)
    return (r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCTION                                                          //
+///                                                                              //
+///   This function calculates derivative of the volume of a peak                 //
+///   according to ro                                                            //
+///      Function parameters:                                                    //
+///              -a-amplitude of peak                                            //
+///              -sx,sy-sigmas of peak                                           //
+///              -ro-correlation coefficient                                     //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 Double_t TSpectrum2Fit::Derpro(Double_t a, Double_t sx, Double_t sy, Double_t ro)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of the volume of a peak                 //
-//   according to ro                                                            //
-//      Function parameters:                                                    //
-//              -a-amplitude of peak                                            //
-//              -sx,sy-sigmas of peak                                           //
-//              -ro-correlation coefficient                                     //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t pi = 3.1415926535, r;
    r = 1 - ro * ro;
    if (r > 0)
@@ -1727,24 +1759,25 @@ Double_t TSpectrum2Fit::Derpro(Double_t a, Double_t sx, Double_t sy, Double_t ro
 
 /////////////////END OF AUXILIARY FUNCTIONS USED BY FITTING FUNCTION fit2//////////////////////////
 /////////////////FITTING FUNCTION WITHOUT MATRIX INVERSION///////////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+/// TWO-DIMENSIONAL FIT FUNCTION
+///  ALGORITHM WITHOUT MATRIX INVERSION
+///  This function fits the source spectrum. The calling program should
+///  fill in input parameters of the TSpectrum2Fit class.
+///  The fitted parameters are written into
+///  TSpectrum2Fit class output parameters and fitted data are written into
+///  source spectrum.
+///
+///        Function parameters:
+///        source-pointer to the matrix of source spectrum
+///
+//////////////////////////////////////////////////////////////////////////////
+///
+///Begin_Html <!--
+
 void TSpectrum2Fit::FitAwmi(Double_t **source)
 {
-/////////////////////////////////////////////////////////////////////////////
-// TWO-DIMENSIONAL FIT FUNCTION
-//  ALGORITHM WITHOUT MATRIX INVERSION
-//  This function fits the source spectrum. The calling program should
-//  fill in input parameters of the TSpectrum2Fit class.
-//  The fitted parameters are written into
-//  TSpectrum2Fit class output parameters and fitted data are written into
-//  source spectrum.
-//
-//        Function parameters:
-//        source-pointer to the matrix of source spectrum
-//
-/////////////////////////////////////////////////////////////////////////////
-//
-//Begin_Html <!--
 /* -->
 <div class=Section2>
 
@@ -6499,31 +6532,31 @@ void TSpectrum2Fit::SetFitParameters(Int_t xmin,Int_t xmax,Int_t ymin,Int_t ymax
    fXmin=xmin,fXmax=xmax,fYmin=ymin,fYmax=ymax,fNumberIterations=numberIterations,fAlpha=alpha,fStatisticType=statisticType,fAlphaOptim=alphaOptim,fPower=power,fFitTaylor=fitTaylor;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   SETTER FUNCTION
+///
+///   This function sets the following fitting parameters of peaks:
+///         -sigmaX - initial value of sigma x parameter
+///         -fixSigmaX - logical value of sigma x parameter, which allows to fix the parameter (not to fit)
+///         -sigmaY - initial value of sigma y parameter
+///         -fixSigmaY - logical value of sigma y parameter, which allows to fix the parameter (not to fit)
+///         -ro - initial value of ro parameter (correlation coefficient)
+///         -fixRo - logical value of ro parameter, which allows to fix the parameter (not to fit)
+///         -positionInitX - aray of initial values of peaks x positions
+///         -fixPositionX - array of logical values which allow to fix appropriate x positions (not fit). However they are present in the estimated functional.
+///         -positionInitY - aray of initial values of peaks y positions
+///         -fixPositionY - array of logical values which allow to fix appropriate y positions (not fit). However they are present in the estimated functional.
+///         -ampInit - aray of initial values of  2D peaks amplitudes
+///         -fixAmp - aray of logical values which allow to fix appropriate amplitudes of 2D peaks (not fit). However they are present in the estimated functional
+///         -ampInitX1 - aray of initial values of amplitudes of  1D ridges in x direction
+///         -fixAmpX1 - aray of logical values which allow to fix appropriate amplitudes of 1D ridges in x direction (not fit). However they are present in the estimated functional
+///         -ampInitY1 - aray of initial values of amplitudes of  1D ridges in y direction
+///         -fixAmpY1 - aray of logical values which allow to fix appropriate amplitudes of 1D ridges in y direction (not fit). However they are present in the estimated functional
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum2Fit::SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_t sigmaY, Bool_t fixSigmaY, Double_t ro, Bool_t fixRo, const Double_t *positionInitX, const Bool_t *fixPositionX, const Double_t *positionInitY, const Bool_t *fixPositionY, const Double_t *positionInitX1, const Bool_t *fixPositionX1, const Double_t *positionInitY1, const Bool_t *fixPositionY1, const Double_t *ampInit, const Bool_t *fixAmp, const Double_t *ampInitX1, const Bool_t *fixAmpX1, const Double_t *ampInitY1, const Bool_t *fixAmpY1)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION
-//
-//   This function sets the following fitting parameters of peaks:
-//         -sigmaX - initial value of sigma x parameter
-//         -fixSigmaX - logical value of sigma x parameter, which allows to fix the parameter (not to fit)
-//         -sigmaY - initial value of sigma y parameter
-//         -fixSigmaY - logical value of sigma y parameter, which allows to fix the parameter (not to fit)
-//         -ro - initial value of ro parameter (correlation coefficient)
-//         -fixRo - logical value of ro parameter, which allows to fix the parameter (not to fit)
-//         -positionInitX - aray of initial values of peaks x positions
-//         -fixPositionX - array of logical values which allow to fix appropriate x positions (not fit). However they are present in the estimated functional.
-//         -positionInitY - aray of initial values of peaks y positions
-//         -fixPositionY - array of logical values which allow to fix appropriate y positions (not fit). However they are present in the estimated functional.
-//         -ampInit - aray of initial values of  2D peaks amplitudes
-//         -fixAmp - aray of logical values which allow to fix appropriate amplitudes of 2D peaks (not fit). However they are present in the estimated functional
-//         -ampInitX1 - aray of initial values of amplitudes of  1D ridges in x direction
-//         -fixAmpX1 - aray of logical values which allow to fix appropriate amplitudes of 1D ridges in x direction (not fit). However they are present in the estimated functional
-//         -ampInitY1 - aray of initial values of amplitudes of  1D ridges in y direction
-//         -fixAmpY1 - aray of logical values which allow to fix appropriate amplitudes of 1D ridges in y direction (not fit). However they are present in the estimated functional
-//////////////////////////////////////////////////////////////////////////////
-
    if (sigmaX <= 0 || sigmaY <= 0){
       Error ("SetPeakParameters","Invalid sigma, must be > than 0");
       return;
@@ -6582,21 +6615,21 @@ void TSpectrum2Fit::SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   SETTER FUNCTION
+///
+///   This function sets the following fitting parameters of background:
+///         -a0Init - initial value of a0 parameter (backgroud is estimated as a0+ax*x+ay*y)
+///         -fixA0 - logical value of a0 parameter, which allows to fix the parameter (not to fit)
+///         -axInit - initial value of ax parameter
+///         -fixAx - logical value of ax parameter, which allows to fix the parameter (not to fit)
+///         -ayInit - initial value of ay parameter
+///         -fixAy - logical value of ay parameter, which allows to fix the parameter (not to fit)
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum2Fit::SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Double_t axInit, Bool_t fixAx, Double_t ayInit, Bool_t fixAy)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION
-//
-//   This function sets the following fitting parameters of background:
-//         -a0Init - initial value of a0 parameter (backgroud is estimated as a0+ax*x+ay*y)
-//         -fixA0 - logical value of a0 parameter, which allows to fix the parameter (not to fit)
-//         -axInit - initial value of ax parameter
-//         -fixAx - logical value of ax parameter, which allows to fix the parameter (not to fit)
-//         -ayInit - initial value of ay parameter
-//         -fixAy - logical value of ay parameter, which allows to fix the parameter (not to fit)
-//////////////////////////////////////////////////////////////////////////////
-
    fA0Init = a0Init;
    fFixA0 = fixA0;
    fAxInit = axInit;
@@ -6605,30 +6638,31 @@ void TSpectrum2Fit::SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Doubl
    fFixAy = fixAy;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   SETTER FUNCTION
+///
+///   This function sets the following fitting parameters of tails of peaks
+///         -tInitXY - initial value of txy parameter
+///         -fixTxy - logical value of txy parameter, which allows to fix the parameter (not to fit)
+///         -tInitX - initial value of tx parameter
+///         -fixTx - logical value of tx parameter, which allows to fix the parameter (not to fit)
+///         -tInitY - initial value of ty parameter
+///         -fixTy - logical value of ty parameter, which allows to fix the parameter (not to fit)
+///         -bInitX - initial value of bx parameter
+///         -fixBx - logical value of bx parameter, which allows to fix the parameter (not to fit)
+///         -bInitY - initial value of by parameter
+///         -fixBy - logical value of by parameter, which allows to fix the parameter (not to fit)
+///         -sInitXY - initial value of sxy parameter
+///         -fixSxy - logical value of sxy parameter, which allows to fix the parameter (not to fit)
+///         -sInitX - initial value of sx parameter
+///         -fixSx - logical value of sx parameter, which allows to fix the parameter (not to fit)
+///         -sInitY - initial value of sy parameter
+///         -fixSy - logical value of sy parameter, which allows to fix the parameter (not to fit)
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum2Fit::SetTailParameters(Double_t tInitXY, Bool_t fixTxy, Double_t tInitX, Bool_t fixTx, Double_t tInitY, Bool_t fixTy, Double_t bInitX, Bool_t fixBx, Double_t bInitY, Bool_t fixBy, Double_t sInitXY, Bool_t fixSxy, Double_t sInitX, Bool_t fixSx, Double_t sInitY, Bool_t fixSy)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION
-//
-//   This function sets the following fitting parameters of tails of peaks
-//         -tInitXY - initial value of txy parameter
-//         -fixTxy - logical value of txy parameter, which allows to fix the parameter (not to fit)
-//         -tInitX - initial value of tx parameter
-//         -fixTx - logical value of tx parameter, which allows to fix the parameter (not to fit)
-//         -tInitY - initial value of ty parameter
-//         -fixTy - logical value of ty parameter, which allows to fix the parameter (not to fit)
-//         -bInitX - initial value of bx parameter
-//         -fixBx - logical value of bx parameter, which allows to fix the parameter (not to fit)
-//         -bInitY - initial value of by parameter
-//         -fixBy - logical value of by parameter, which allows to fix the parameter (not to fit)
-//         -sInitXY - initial value of sxy parameter
-//         -fixSxy - logical value of sxy parameter, which allows to fix the parameter (not to fit)
-//         -sInitX - initial value of sx parameter
-//         -fixSx - logical value of sx parameter, which allows to fix the parameter (not to fit)
-//         -sInitY - initial value of sy parameter
-//         -fixSy - logical value of sy parameter, which allows to fix the parameter (not to fit)
-//////////////////////////////////////////////////////////////////////////////
    fTxyInit = tInitXY;
    fFixTxy = fixTxy;
    fTxInit = tInitX;
@@ -6647,18 +6681,19 @@ void TSpectrum2Fit::SetTailParameters(Double_t tInitXY, Bool_t fixTxy, Double_t 
    fFixSy = fixSy;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   GETTER FUNCTION
+///
+///   This function gets the positions of fitted 2D peaks and 1D ridges
+///         -positionX - gets vector of x positions of 2D peaks
+///         -positionY - gets vector of y positions of 2D peaks
+///         -positionX1 - gets vector of x positions of 1D ridges
+///         -positionY1 - gets vector of y positions of 1D ridges
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum2Fit::GetPositions(Double_t *positionsX, Double_t *positionsY, Double_t *positionsX1, Double_t *positionsY1)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the positions of fitted 2D peaks and 1D ridges
-//         -positionX - gets vector of x positions of 2D peaks
-//         -positionY - gets vector of y positions of 2D peaks
-//         -positionX1 - gets vector of x positions of 1D ridges
-//         -positionY1 - gets vector of y positions of 1D ridges
-//////////////////////////////////////////////////////////////////////////////
    for( Int_t i=0; i < fNPeaks; i++){
       positionsX[i]  = fPositionCalcX[i];
       positionsY[i]  = fPositionCalcY[i];
@@ -6667,19 +6702,19 @@ void TSpectrum2Fit::GetPositions(Double_t *positionsX, Double_t *positionsY, Dou
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   GETTER FUNCTION
+///
+///   This function gets the errors of positions of fitted 2D peaks and 1D ridges
+///         -positionErrorsX - gets vector of errors of x positions of 2D peaks
+///         -positionErrorsY - gets vector of errors of y positions of 2D peaks
+///         -positionErrorsX1 - gets vector of errors of x positions of 1D ridges
+///         -positionErrorsY1 - gets vector of errors of y positions of 1D ridges
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum2Fit::GetPositionErrors(Double_t *positionErrorsX, Double_t *positionErrorsY, Double_t *positionErrorsX1, Double_t *positionErrorsY1)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the errors of positions of fitted 2D peaks and 1D ridges
-//         -positionErrorsX - gets vector of errors of x positions of 2D peaks
-//         -positionErrorsY - gets vector of errors of y positions of 2D peaks
-//         -positionErrorsX1 - gets vector of errors of x positions of 1D ridges
-//         -positionErrorsY1 - gets vector of errors of y positions of 1D ridges
-//////////////////////////////////////////////////////////////////////////////
-
    for( Int_t i=0; i < fNPeaks; i++){
       positionErrorsX[i] = fPositionErrX[i];
       positionErrorsY[i] = fPositionErrY[i];
@@ -6688,18 +6723,18 @@ void TSpectrum2Fit::GetPositionErrors(Double_t *positionErrorsX, Double_t *posit
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   GETTER FUNCTION
+///
+///   This function gets the amplitudes of fitted 2D peaks and 1D ridges
+///         -amplitudes - gets vector of amplitudes of 2D peaks
+///         -amplitudesX1 - gets vector of amplitudes of 1D ridges in x direction
+///         -amplitudesY1 - gets vector of amplitudes of 1D ridges in y direction
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum2Fit::GetAmplitudes(Double_t *amplitudes, Double_t *amplitudesX1, Double_t *amplitudesY1)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the amplitudes of fitted 2D peaks and 1D ridges
-//         -amplitudes - gets vector of amplitudes of 2D peaks
-//         -amplitudesX1 - gets vector of amplitudes of 1D ridges in x direction
-//         -amplitudesY1 - gets vector of amplitudes of 1D ridges in y direction
-//////////////////////////////////////////////////////////////////////////////
-
    for( Int_t i=0; i < fNPeaks; i++){
       amplitudes[i] = fAmpCalc[i];
       amplitudesX1[i] = fAmpCalcX1[i];
@@ -6707,18 +6742,18 @@ void TSpectrum2Fit::GetAmplitudes(Double_t *amplitudes, Double_t *amplitudesX1, 
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   GETTER FUNCTION
+///
+///   This function gets the amplitudes of fitted 2D peaks and 1D ridges
+///         -amplitudeErrors - gets vector of amplitudes errors of 2D peaks
+///         -amplitudeErrorsX1 - gets vector of amplitudes errors of 1D ridges in x direction
+///         -amplitudesErrorY1 - gets vector of amplitudes errors of 1D ridges in y direction
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum2Fit::GetAmplitudeErrors(Double_t *amplitudeErrors, Double_t *amplitudeErrorsX1, Double_t *amplitudeErrorsY1)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the amplitudes of fitted 2D peaks and 1D ridges
-//         -amplitudeErrors - gets vector of amplitudes errors of 2D peaks
-//         -amplitudeErrorsX1 - gets vector of amplitudes errors of 1D ridges in x direction
-//         -amplitudesErrorY1 - gets vector of amplitudes errors of 1D ridges in y direction
-//////////////////////////////////////////////////////////////////////////////
-
    for( Int_t i=0; i < fNPeaks; i++){
       amplitudeErrors[i] = fAmpErr[i];
       amplitudeErrorsX1[i] = fAmpErrX1[i];
@@ -6726,91 +6761,96 @@ void TSpectrum2Fit::GetAmplitudeErrors(Double_t *amplitudeErrors, Double_t *ampl
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   GETTER FUNCTION
+///
+///   This function gets the volumes of fitted 2D peaks
+///         -volumes - gets vector of volumes of 2D peaks
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum2Fit::GetVolumes(Double_t *volumes)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the volumes of fitted 2D peaks
-//         -volumes - gets vector of volumes of 2D peaks
-//////////////////////////////////////////////////////////////////////////////
    for( Int_t i=0; i < fNPeaks; i++){
       volumes[i] = fVolume[i];
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   GETTER FUNCTION
+///
+///   This function gets errors of the volumes of fitted 2D peaks
+///         -volumeErrors - gets vector of volumes errors of 2D peaks
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum2Fit::GetVolumeErrors(Double_t *volumeErrors)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets errors of the volumes of fitted 2D peaks
-//         -volumeErrors - gets vector of volumes errors of 2D peaks
-//////////////////////////////////////////////////////////////////////////////
    for( Int_t i=0; i < fNPeaks; i++){
       volumeErrors[i] = fVolumeErr[i];
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   GETTER FUNCTION
+///
+///   This function gets the sigma x parameter and its error
+///         -sigmaX - gets the fitted value of sigma x parameter
+///         -sigmaErrX - gets error value of sigma x parameter
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum2Fit::GetSigmaX(Double_t &sigmaX, Double_t &sigmaErrX)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the sigma x parameter and its error
-//         -sigmaX - gets the fitted value of sigma x parameter
-//         -sigmaErrX - gets error value of sigma x parameter
-//////////////////////////////////////////////////////////////////////////////
    sigmaX=fSigmaCalcX;
    sigmaErrX=fSigmaErrX;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   GETTER FUNCTION
+///
+///   This function gets the sigma y parameter and its error
+///         -sigmaY - gets the fitted value of sigma y parameter
+///         -sigmaErrY - gets error value of sigma y parameter
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum2Fit::GetSigmaY(Double_t &sigmaY, Double_t &sigmaErrY)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the sigma y parameter and its error
-//         -sigmaY - gets the fitted value of sigma y parameter
-//         -sigmaErrY - gets error value of sigma y parameter
-//////////////////////////////////////////////////////////////////////////////
    sigmaY=fSigmaCalcY;
    sigmaErrY=fSigmaErrY;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   GETTER FUNCTION
+///
+///   This function gets the ro parameter and its error
+///         -ro - gets the fitted value of ro parameter
+///         -roErr - gets error value of ro parameter
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum2Fit::GetRo(Double_t &ro, Double_t &roErr)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the ro parameter and its error
-//         -ro - gets the fitted value of ro parameter
-//         -roErr - gets error value of ro parameter
-//////////////////////////////////////////////////////////////////////////////
    ro=fRoCalc;
    roErr=fRoErr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   GETTER FUNCTION
+///
+///   This function gets the background parameters and their errors
+///         -a0 - gets the fitted value of a0 parameter
+///         -a0Err - gets error value of a0 parameter
+///         -ax - gets the fitted value of ax parameter
+///         -axErr - gets error value of ax parameter
+///         -ay - gets the fitted value of ay parameter
+///         -ayErr - gets error value of ay parameter
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum2Fit::GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Double_t &ax, Double_t &axErr, Double_t &ay, Double_t &ayErr)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the background parameters and their errors
-//         -a0 - gets the fitted value of a0 parameter
-//         -a0Err - gets error value of a0 parameter
-//         -ax - gets the fitted value of ax parameter
-//         -axErr - gets error value of ax parameter
-//         -ay - gets the fitted value of ay parameter
-//         -ayErr - gets error value of ay parameter
-//////////////////////////////////////////////////////////////////////////////
-
    a0 = fA0Calc;
    a0Err = fA0Err;
    ax = fAxCalc;
@@ -6819,30 +6859,31 @@ void TSpectrum2Fit::GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Doubl
    ayErr = fAyErr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   GETTER FUNCTION
+///
+///   This function gets the tail parameters and their errors
+///         -txy - gets the fitted value of txy parameter
+///         -txyErr - gets error value of txy parameter
+///         -tx - gets the fitted value of tx parameter
+///         -txErr - gets error value of tx parameter
+///         -ty - gets the fitted value of ty parameter
+///         -tyErr - gets error value of ty parameter
+///         -bx - gets the fitted value of bx parameter
+///         -bxErr - gets error value of bx parameter
+///         -by - gets the fitted value of by parameter
+///         -byErr - gets error value of by parameter
+///         -sxy - gets the fitted value of sxy parameter
+///         -sxyErr - gets error value of sxy parameter
+///         -sx - gets the fitted value of sx parameter
+///         -sxErr - gets error value of sx parameter
+///         -sy - gets the fitted value of sy parameter
+///         -syErr - gets error value of sy parameter
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum2Fit::GetTailParameters(Double_t &txy, Double_t &txyErr, Double_t &tx, Double_t &txErr, Double_t &ty, Double_t &tyErr, Double_t &bx, Double_t &bxErr, Double_t &by, Double_t &byErr, Double_t &sxy, Double_t &sxyErr, Double_t &sx, Double_t &sxErr, Double_t &sy, Double_t &syErr)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the tail parameters and their errors
-//         -txy - gets the fitted value of txy parameter
-//         -txyErr - gets error value of txy parameter
-//         -tx - gets the fitted value of tx parameter
-//         -txErr - gets error value of tx parameter
-//         -ty - gets the fitted value of ty parameter
-//         -tyErr - gets error value of ty parameter
-//         -bx - gets the fitted value of bx parameter
-//         -bxErr - gets error value of bx parameter
-//         -by - gets the fitted value of by parameter
-//         -byErr - gets error value of by parameter
-//         -sxy - gets the fitted value of sxy parameter
-//         -sxyErr - gets error value of sxy parameter
-//         -sx - gets the fitted value of sx parameter
-//         -sxErr - gets error value of sx parameter
-//         -sy - gets the fitted value of sy parameter
-//         -syErr - gets error value of sy parameter
-//////////////////////////////////////////////////////////////////////////////
    txy = fTxyCalc;
    txyErr = fTxyErr;
    tx = fTxCalc;

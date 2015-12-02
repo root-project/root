@@ -30,45 +30,45 @@ ClassImp(TEveLine);
 
 Bool_t TEveLine::fgDefaultSmooth = kFALSE;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveLine::TEveLine(Int_t n_points, ETreeVarType_e tv_type) :
    TEvePointSet("Line", n_points, tv_type),
    fRnrLine   (kTRUE),
    fRnrPoints (kFALSE),
    fSmooth    (fgDefaultSmooth)
 {
-   // Constructor.
-
    fMainColorPtr = &fLineColor;
    fMarkerColor  =  kGreen;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveLine::TEveLine(const char* name, Int_t n_points, ETreeVarType_e tv_type) :
    TEvePointSet(name, n_points, tv_type),
    fRnrLine   (kTRUE),
    fRnrPoints (kFALSE),
    fSmooth    (fgDefaultSmooth)
 {
-   // Constructor.
-
    fMainColorPtr = &fLineColor;
    fMarkerColor = kGreen;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns list-tree icon for TEveLine.
+
 const TGPicture* TEveLine::GetListTreeIcon(Bool_t)
 {
-   // Returns list-tree icon for TEveLine.
-
    return fgListTreeIcons[8];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker color. Propagate to projected lines.
+
 void TEveLine::SetMarkerColor(Color_t col)
 {
-   // Set marker color. Propagate to projected lines.
-
    std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
    while (pi != fProjectedList.end())
    {
@@ -83,12 +83,12 @@ void TEveLine::SetMarkerColor(Color_t col)
    TAttMarker::SetMarkerColor(col);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line-style of the line.
+/// The style is propagated to projecteds.
+
 void TEveLine::SetLineStyle(Style_t lstyle)
 {
-   // Set line-style of the line.
-   // The style is propagated to projecteds.
-
    std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
    while (pi != fProjectedList.end())
    {
@@ -103,12 +103,12 @@ void TEveLine::SetLineStyle(Style_t lstyle)
    TAttLine::SetLineStyle(lstyle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line-style of the line.
+/// The style is propagated to projecteds.
+
 void TEveLine::SetLineWidth(Width_t lwidth)
 {
-   // Set line-style of the line.
-   // The style is propagated to projecteds.
-
    std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
    while (pi != fProjectedList.end())
    {
@@ -123,11 +123,11 @@ void TEveLine::SetLineWidth(Width_t lwidth)
    TAttLine::SetLineWidth(lwidth);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set rendering of line. Propagate to projected lines.
+
 void TEveLine::SetRnrLine(Bool_t r)
 {
-   // Set rendering of line. Propagate to projected lines.
-
    fRnrLine = r;
    std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
    while (pi != fProjectedList.end())
@@ -142,11 +142,11 @@ void TEveLine::SetRnrLine(Bool_t r)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set rendering of points. Propagate to projected lines.
+
 void TEveLine::SetRnrPoints(Bool_t r)
 {
-   // Set rendering of points. Propagate to projected lines.
-
    fRnrPoints = r;
    std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
    while (pi != fProjectedList.end())
@@ -161,11 +161,11 @@ void TEveLine::SetRnrPoints(Bool_t r)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set smooth rendering. Propagate to projected lines.
+
 void TEveLine::SetSmooth(Bool_t r)
 {
-   // Set smooth rendering. Propagate to projected lines.
-
    fSmooth = r;
    std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
    while (pi != fProjectedList.end())
@@ -182,12 +182,12 @@ void TEveLine::SetSmooth(Bool_t r)
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that no segment is longer than max.
+/// Per point references and integer ids are lost.
+
 void TEveLine::ReduceSegmentLengths(Float_t max)
 {
-   // Make sure that no segment is longer than max.
-   // Per point references and integer ids are lost.
-
    const Float_t max2 = max*max;
 
    Float_t    *p = GetP();
@@ -222,11 +222,11 @@ void TEveLine::ReduceSegmentLengths(Float_t max)
       SetNextPoint(i->fX, i->fY, i->fZ);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sum-up lengths of individual segments.
+
 Float_t TEveLine::CalculateLineLength() const
 {
-   // Sum-up lengths of individual segments.
-
    Float_t sum = 0;
 
    Int_t    s = Size();
@@ -238,23 +238,23 @@ Float_t TEveLine::CalculateLineLength() const
    return sum;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the first point of the line.
+/// If there are no points (0,0,0) is returned.
+
 TEveVector TEveLine::GetLineStart() const
 {
-   // Return the first point of the line.
-   // If there are no points (0,0,0) is returned.
-
    TEveVector v;
    GetPoint(0, v.fX, v.fY, v.fZ);
    return v;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the last point of the line.
+/// If there are no points (0,0,0) is returned.
+
 TEveVector TEveLine::GetLineEnd() const
 {
-   // Return the last point of the line.
-   // If there are no points (0,0,0) is returned.
-
    TEveVector v;
    GetPoint(fLastPoint, v.fX, v.fY, v.fZ);
    return v;
@@ -262,11 +262,11 @@ TEveVector TEveLine::GetLineEnd() const
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy visualization parameters from element el.
+
 void TEveLine::CopyVizParams(const TEveElement* el)
 {
-   // Copy visualization parameters from element el.
-
    const TEveLine* m = dynamic_cast<const TEveLine*>(el);
    if (m)
    {
@@ -279,11 +279,11 @@ void TEveLine::CopyVizParams(const TEveElement* el)
    TEvePointSet::CopyVizParams(el);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write visualization parameters.
+
 void TEveLine::WriteVizParams(std::ostream& out, const TString& var)
 {
-   // Write visualization parameters.
-
    TEvePointSet::WriteVizParams(out, var);
 
    TString t = "   " + var + "->";
@@ -293,31 +293,31 @@ void TEveLine::WriteVizParams(std::ostream& out, const TString& var)
    out << t << "SetSmooth("    << ToString(fSmooth)    << ");\n";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TEveProjectable, returns TEvePointSetProjected class.
+
 TClass* TEveLine::ProjectedClass(const TEveProjection*) const
 {
-   // Virtual from TEveProjectable, returns TEvePointSetProjected class.
-
    return TEveLineProjected::Class();
 }
 
 //------------------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default value for smooth-line drawing flag.
+/// Static function.
+
 Bool_t TEveLine::GetDefaultSmooth()
 {
-   // Get default value for smooth-line drawing flag.
-   // Static function.
-
    return fgDefaultSmooth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default value for smooth-line drawing flag (default kFALSE).
+/// Static function.
+
 void TEveLine::SetDefaultSmooth(Bool_t r)
 {
-   // Set default value for smooth-line drawing flag (default kFALSE).
-   // Static function.
-
    fgDefaultSmooth = r;
 }
 
@@ -334,30 +334,31 @@ void TEveLine::SetDefaultSmooth(Bool_t r)
 
 ClassImp(TEveLineProjected);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TEveLineProjected::TEveLineProjected() :
    TEveLine      (),
    TEveProjected ()
 {
-   // Default constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set projection manager and projection model.
+/// Virtual from TEveProjected.
+
 void TEveLineProjected::SetProjection(TEveProjectionManager* mng,
                                       TEveProjectable* model)
 {
-   // Set projection manager and projection model.
-   // Virtual from TEveProjected.
-
    TEveProjected::SetProjection(mng, model);
    CopyVizParams(dynamic_cast<TEveElement*>(model));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set depth (z-coordinate) of the projected points.
+
 void TEveLineProjected::SetDepthLocal(Float_t d)
 {
-   // Set depth (z-coordinate) of the projected points.
-
    SetDepthCommon(d, this, fBBox);
 
    Int_t    n = Size();
@@ -366,12 +367,12 @@ void TEveLineProjected::SetDepthLocal(Float_t d)
       *p = fDepth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Re-apply the projection.
+/// Virtual from TEveProjected.
+
 void TEveLineProjected::UpdateProjection()
 {
-   // Re-apply the projection.
-   // Virtual from TEveProjected.
-
    TEveProjection& proj = * fManager->GetProjection();
    TEveLine      & als  = * dynamic_cast<TEveLine*>(fProjectable);
    TEveTrans      *tr   =   als.PtrMainTrans(kFALSE);

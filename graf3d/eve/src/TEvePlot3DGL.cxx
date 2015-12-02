@@ -22,32 +22,32 @@
 
 ClassImp(TEvePlot3DGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEvePlot3DGL::TEvePlot3DGL() :
    TGLObject(), fM(0), fPlotLogical(0)
 {
-   // Constructor.
-
    fDLCache = kFALSE; // Disable display list.
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEvePlot3DGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEvePlot3D>(obj);
    fPlotLogical = TGLPlot3D::CreatePlot(fM->fPlot, fM->fPlotOption, fM->fLogX, fM->fLogY, fM->fLogZ);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding box.
+
 void TEvePlot3DGL::SetBBox()
 {
-   // Set bounding box.
-
    // !! This ok if master sub-classed from TAttBBox
    //SetAxisAlignedBBox(((TEvePlot3D*)fExternalObj)->AssertBBox());
    fBoundingBox = fPlotLogical->BoundingBox();
@@ -55,11 +55,11 @@ void TEvePlot3DGL::SetBBox()
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render with OpenGL.
+
 void TEvePlot3DGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Render with OpenGL.
-
    // printf("TEvePlot3DGL::DirectDraw LOD %d\n", rnrCtx.CombiLOD());
    if (fPlotLogical)
    {

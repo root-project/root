@@ -23,7 +23,9 @@
 //
 //   This version is based on his work.
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Constructor.
+
 TKDEFGT::TKDEFGT()
          : fDim(0),
            fP(0),
@@ -32,7 +34,6 @@ TKDEFGT::TKDEFGT()
            fPD(0),
            fModelValid(kFALSE)
 {
-   //Constructor.
 }
 
 namespace {
@@ -41,17 +42,19 @@ UInt_t NChooseK(UInt_t n, UInt_t k);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Destructor.
+
 TKDEFGT::~TKDEFGT()
 {
-   //Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Calculate coefficients for FGT.
+
 void TKDEFGT::BuildModel(const std::vector<Double_t> &sources, Double_t sigma,
                          UInt_t dim, UInt_t p, UInt_t k)
 {
-   //Calculate coefficients for FGT.
    if (!sources.size()) {
       Warning("TKDEFGT::BuildModel", "Bad input - zero size vector");
       return;
@@ -95,11 +98,12 @@ void TKDEFGT::BuildModel(const std::vector<Double_t> &sources, Double_t sigma,
    fModelValid = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Calculate coefficients for FGT.
+///Alternative specialized version for data from TTree.
+
 void TKDEFGT::BuildModel(const TGL5DDataSet *sources, Double_t sigma, UInt_t p, UInt_t k)
 {
-   //Calculate coefficients for FGT.
-   //Alternative specialized version for data from TTree.
    if (!sources->SelectedSize()) {
       Warning("TKDEFGT::BuildModel", "Bad input - zero size vector");
       return;
@@ -150,11 +154,11 @@ UInt_t Idmax(const std::vector<Double_t> &x , UInt_t n);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Solve kcenter task.
+
 void TKDEFGT::Kcenter(const std::vector<double> &x)
 {
-   //Solve kcenter task.
-
    //Randomly pick one node as the first center.
    const UInt_t nP = UInt_t(x.size()) / fDim;
 
@@ -198,11 +202,12 @@ void TKDEFGT::Kcenter(const std::vector<double> &x)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Solve kcenter task. Version for dim == 3 and data from TTree.
+///Randomly pick one node as the first center.
+
 void TKDEFGT::Kcenter(const TGL5DDataSet *sources)
 {
-   //Solve kcenter task. Version for dim == 3 and data from TTree.
-   //Randomly pick one node as the first center.
    const UInt_t nP = sources->SelectedSize();
 
    UInt_t *indxc = &fIndxc[0];
@@ -259,10 +264,11 @@ void TKDEFGT::Kcenter(const TGL5DDataSet *sources)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Coefficients C_K.
+
 void TKDEFGT::Compute_C_k()
 {
-   //Coefficients C_K.
    fHeads[fDim] = UINT_MAX;
    fCinds[0] = 0;
    fC_K[0] = 1.0;
@@ -280,10 +286,11 @@ void TKDEFGT::Compute_C_k()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Coefficients A_K.
+
 void TKDEFGT::Compute_A_k(const std::vector<Double_t> &x)
 {
-   //Coefficients A_K.
    const Double_t ctesigma = 1. / fSigma;
    const UInt_t nP = UInt_t(x.size()) / fDim;
 
@@ -324,10 +331,11 @@ void TKDEFGT::Compute_A_k(const std::vector<Double_t> &x)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Coefficients A_K. Special case for TTree and dim == 3.
+
 void TKDEFGT::Compute_A_k(const TGL5DDataSet *sources)
 {
-   //Coefficients A_K. Special case for TTree and dim == 3.
    const Double_t ctesigma = 1. / fSigma;
    const UInt_t nP = sources->SelectedSize();
 
@@ -374,11 +382,11 @@ UInt_t InvNChooseK(UInt_t d, UInt_t cnk);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Calculate densities.
+
 void TKDEFGT::Predict(const std::vector<Double_t> &ts, std::vector<Double_t> &v, Double_t eval)const
 {
-   //Calculate densities.
-
    if (!fModelValid) {
       Error("TKDEFGT::Predict", "Call BuildModel first!");
       return;
@@ -453,10 +461,11 @@ void TKDEFGT::Predict(const std::vector<Double_t> &ts, std::vector<Double_t> &v,
 
 namespace {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///n is always >= k.
+
 UInt_t NChooseK(UInt_t n, UInt_t k)
 {
-   //n is always >= k.
    UInt_t n_k = n - k;
    if (k < n_k) {
       k = n_k;
@@ -471,13 +480,15 @@ UInt_t NChooseK(UInt_t n, UInt_t k)
    return nchsk;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t DDist(Double_t x1, Double_t y1, Double_t z1, Double_t x2, Double_t y2, Double_t z2)
 {
    return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) + (z1 - z2) * (z1 - z2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t DDist(const Double_t *x , const Double_t *y , Int_t d)
 {
    Double_t t = 0., s = 0.;
@@ -490,7 +501,8 @@ Double_t DDist(const Double_t *x , const Double_t *y , Int_t d)
    return s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 UInt_t Idmax(const std::vector<Double_t> &x , UInt_t n)
 {
    UInt_t k = 0;
@@ -505,7 +517,8 @@ UInt_t Idmax(const std::vector<Double_t> &x , UInt_t n)
    return k;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 UInt_t InvNChooseK(UInt_t d, UInt_t cnk)
 {
    UInt_t cted = 1;

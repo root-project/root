@@ -40,7 +40,8 @@
 
 ClassImp(TParallelCoord)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>Parallel Coordinates class</h2></center>
 <p>
@@ -99,23 +100,23 @@ End_Html
 */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TParallelCoord::TParallelCoord()
    :TNamed()
 {
-   // Default constructor.
-
    Init();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor without a reference to a tree,
+/// the datas must be added afterwards with
+/// TParallelCoord::AddVariable(Double_t*,const char*).
+
 TParallelCoord::TParallelCoord(Long64_t nentries)
 {
-   // Constructor without a reference to a tree,
-   // the datas must be added afterwards with
-   // TParallelCoord::AddVariable(Double_t*,const char*).
-
    Init();
    fNentries = nentries;
    fCurrentN = fNentries;
@@ -126,13 +127,13 @@ TParallelCoord::TParallelCoord(Long64_t nentries)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor, the datas must be added afterwards
+/// with TParallelCoord::AddVariable(Double_t*,const char*).
+
 TParallelCoord::TParallelCoord(TTree* tree, Long64_t nentries)
    :TNamed("ParaCoord","ParaCoord")
 {
-   // Normal constructor, the datas must be added afterwards
-   // with TParallelCoord::AddVariable(Double_t*,const char*).
-
    Init();
    Int_t estimate = tree->GetEstimate();
    if (nentries>estimate) {
@@ -153,11 +154,11 @@ TParallelCoord::TParallelCoord(TTree* tree, Long64_t nentries)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TParallelCoord::~TParallelCoord()
 {
-   // Destructor.
-
    if (fInitEntries != fCurrentEntries && fCurrentEntries != 0) delete fCurrentEntries;
    if (fVarList) {
       fVarList->Delete();
@@ -172,22 +173,22 @@ TParallelCoord::~TParallelCoord()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a variable.
+
 void TParallelCoord::AddVariable(Double_t* val, const char* title)
 {
-   // Add a variable.
-
    ++fNvar;
    fVarList->Add(new TParallelCoordVar(val,title,fVarList->GetSize(),this));
    SetAxesPosition();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a variable from an expression.
+
 void TParallelCoord::AddVariable(const char* varexp)
 {
-   // Add a variable from an expression.
-
    if(!fTree) return; // The tree from whichone one will get the data must be defined.
 
    // Select in the only the entries of this TParallelCoord.
@@ -219,22 +220,22 @@ void TParallelCoord::AddVariable(const char* varexp)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a selection.
+
 void TParallelCoord::AddSelection(const char* title)
 {
-   // Add a selection.
-
    TParallelCoordSelect *sel = new TParallelCoordSelect(title);
    fSelectList->Add(sel);
    fCurrentSelection = sel;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply the current selection to the tree.
+
 void  TParallelCoord::ApplySelectionToTree()
 {
-   // Apply the current selection to the tree.
-
    if(!fTree) return;
    if(fSelectList) {
       if(fSelectList->GetSize() == 0) return;
@@ -267,11 +268,11 @@ void  TParallelCoord::ApplySelectionToTree()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call constructor and add the variables.
+
 void  TParallelCoord::BuildParallelCoord(TSelectorDraw* selector, Bool_t candle)
 {
-   // Call constructor and add the variables.
-
    TParallelCoord* pc = new TParallelCoord(selector->GetTree(),selector->GetNfill());
    pc->SetBit(kCanDelete);
    selector->SetObject(pc);
@@ -291,12 +292,12 @@ void  TParallelCoord::BuildParallelCoord(TSelectorDraw* selector, Bool_t candle)
    else pc->Draw("candle");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up the selections from the ranges which could have been deleted
+/// when a variable has been deleted.
+
 void TParallelCoord::CleanUpSelections(TParallelCoordRange* range)
 {
-   // Clean up the selections from the ranges which could have been deleted
-   // when a variable has been deleted.
-
    TIter next(fSelectList);
    TParallelCoordSelect* select;
    while ((select = (TParallelCoordSelect*)next())){
@@ -305,11 +306,11 @@ void TParallelCoord::CleanUpSelections(TParallelCoordRange* range)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a selection.
+
 void TParallelCoord::DeleteSelection(TParallelCoordSelect * sel)
 {
-   // Delete a selection.
-
    fSelectList->Remove(sel);
    delete sel;
    if(fSelectList->GetSize() == 0) fCurrentSelection = 0;
@@ -317,11 +318,11 @@ void TParallelCoord::DeleteSelection(TParallelCoordSelect * sel)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the distance from the TParallelCoord.
+
 Int_t TParallelCoord::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute the distance from the TParallelCoord.
-
    if(!gPad) return 9999;
 
    TFrame *frame = gPad->GetFrame();
@@ -341,11 +342,11 @@ Int_t TParallelCoord::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the parallel coordinates graph.
+
 void TParallelCoord::Draw(Option_t* option)
 {
-   // Draw the parallel coordinates graph.
-
    if (!GetTree()) return;
    if (!fCurrentEntries) fCurrentEntries = fInitEntries;
    Bool_t optcandle = kFALSE;
@@ -413,21 +414,21 @@ void TParallelCoord::Draw(Option_t* option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the corresponding entry.
+
 void TParallelCoord::ExecuteEvent(Int_t /*entry*/, Int_t /*px*/, Int_t /*py*/)
 {
-   // Execute the corresponding entry.
-
    if (!gPad) return;
    gPad->SetCursor(kHand);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the selection currently being edited.
+
 TParallelCoordSelect* TParallelCoord::GetCurrentSelection()
 {
-   // Return the selection currently being edited.
-
    if (!fSelectList) return 0;
    if (!fCurrentSelection) {
       fCurrentSelection = (TParallelCoordSelect*)fSelectList->First();
@@ -436,11 +437,11 @@ TParallelCoordSelect* TParallelCoord::GetCurrentSelection()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the whole entry list or one for a selection.
+
 TEntryList* TParallelCoord::GetEntryList(Bool_t sel)
 {
-   // Get the whole entry list or one for a selection.
-
    if(!sel || fCurrentSelection->GetSize() == 0){ // If no selection is specified, return the entry list of all the entries.
       return fInitEntries;
    } else { // return the entry list corresponding to the current selection.
@@ -461,11 +462,11 @@ TEntryList* TParallelCoord::GetEntryList(Bool_t sel)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the global maximum.
+
 Double_t TParallelCoord::GetGlobalMax()
 {
-   // return the global maximum.
-
    Double_t gmax=-DBL_MAX;
    TIter next(fVarList);
    TParallelCoordVar* var;
@@ -476,11 +477,11 @@ Double_t TParallelCoord::GetGlobalMax()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the global minimum.
+
 Double_t TParallelCoord::GetGlobalMin()
 {
-   // return the global minimum.
-
    Double_t gmin=DBL_MAX;
    TIter next(fVarList);
    TParallelCoordVar* var;
@@ -491,20 +492,20 @@ Double_t TParallelCoord::GetGlobalMin()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the binning of the histograms.
+
 Int_t TParallelCoord::GetNbins()
 {
-   // get the binning of the histograms.
-
    return ((TParallelCoordVar*)fVarList->First())->GetNbins();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a selection from its title.
+
 TParallelCoordSelect* TParallelCoord::GetSelection(const char* title)
 {
-   // Get a selection from its title.
-
    TIter next(fSelectList);
    TParallelCoordSelect* sel;
    while ((sel = (TParallelCoordSelect*)next()) && strcmp(title,sel->GetTitle())) { }
@@ -512,12 +513,12 @@ TParallelCoordSelect* TParallelCoord::GetSelection(const char* title)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the tree if fTree is defined. If not, the method try to load the tree
+/// from fTreeFileName.
+
 TTree* TParallelCoord::GetTree()
 {
-   // return the tree if fTree is defined. If not, the method try to load the tree
-   // from fTreeFileName.
-
    if (fTree) return fTree;
    if (fTreeFileName=="" || fTreeName=="") {
       Error("GetTree","Cannot load the tree: no tree defined!");
@@ -556,11 +557,11 @@ TTree* TParallelCoord::GetTree()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the variables values from its title.
+
 Double_t* TParallelCoord::GetVariable(const char* vartitle)
 {
-   // Get the variables values from its title.
-
    TIter next(fVarList);
    TParallelCoordVar* var = 0;
    while(((var = (TParallelCoordVar*)next()) != 0) && (var->GetTitle() != vartitle)) { }
@@ -569,21 +570,21 @@ Double_t* TParallelCoord::GetVariable(const char* vartitle)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the variables values from its index.
+
 Double_t* TParallelCoord::GetVariable(Int_t i)
 {
-   // Get the variables values from its index.
-
    if(i<0 || (UInt_t)i>fNvar) return 0;
    else return ((TParallelCoordVar*)fVarList->At(i))->GetValues();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialise the data members of TParallelCoord.
+
 void TParallelCoord::Init()
 {
-   // Initialise the data members of TParallelCoord.
-
    fNentries = 0;
    fVarList = 0;
    fSelectList = 0;
@@ -610,11 +611,11 @@ void TParallelCoord::Init()
    fTreeFileName = "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the parallel coordinates graph.
+
 void TParallelCoord::Paint(Option_t* /*option*/)
 {
-   // Paint the parallel coordinates graph.
-
    if (!GetTree()) return;
    gPad->Range(0,0,1,1);
    TFrame *frame = gPad->GetFrame();
@@ -634,11 +635,11 @@ void TParallelCoord::Paint(Option_t* /*option*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop over the entries and paint them.
+
 void TParallelCoord::PaintEntries(TParallelCoordSelect* sel)
 {
-   // Loop over the entries and paint them.
-
    if (fVarList->GetSize() < 2) return;
    Int_t i=0;
    Long64_t n=0;
@@ -719,22 +720,22 @@ void TParallelCoord::PaintEntries(TParallelCoordSelect* sel)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a variable from the graph.
+
 void TParallelCoord::RemoveVariable(TParallelCoordVar *var)
 {
-   // Delete a variable from the graph.
-
    fVarList->Remove(var);
    fNvar = fVarList->GetSize();
    SetAxesPosition();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the variable "vartitle" from the graph.
+
 TParallelCoordVar* TParallelCoord::RemoveVariable(const char* vartitle)
 {
-   // Delete the variable "vartitle" from the graph.
-
    TIter next(fVarList);
    TParallelCoordVar* var=0;
    while((var = (TParallelCoordVar*)next())) {
@@ -749,11 +750,11 @@ TParallelCoordVar* TParallelCoord::RemoveVariable(const char* vartitle)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the tree entry list to the initial one..
+
 void TParallelCoord::ResetTree()
 {
-   // Reset the tree entry list to the initial one..
-
    if(!fTree) return;
    fTree->SetEntryList(fInitEntries);
    fCurrentEntries = fInitEntries;
@@ -782,11 +783,11 @@ void TParallelCoord::ResetTree()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the entry lists in a root file "filename.root".
+
 void TParallelCoord::SaveEntryLists(const char* filename, Bool_t overwrite)
 {
-   // Save the entry lists in a root file "filename.root".
-
    TString sfile = filename;
    if (sfile == "") sfile = Form("%s_parallelcoord_entries.root",fTree->GetName());
 
@@ -806,11 +807,11 @@ void TParallelCoord::SaveEntryLists(const char* filename, Bool_t overwrite)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the TParallelCoord in a macro.
+
 void TParallelCoord::SavePrimitive(std::ostream & out, Option_t* options)
 {
-   // Save the TParallelCoord in a macro.
-
    TString opt = options;
    opt.ToLower();
    //Bool_t overwrite = opt.Contains("overwrite"); // Is there a way to specify "options" when saving ?
@@ -876,11 +877,11 @@ void TParallelCoord::SavePrimitive(std::ostream & out, Option_t* options)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the tree in a file if fTreeFileName == "".
+
 void TParallelCoord::SaveTree(const char* filename, Bool_t overwrite)
 {
-   // Save the tree in a file if fTreeFileName == "".
-
    if (!(fTreeFileName=="")) return;
    TString sfile = filename;
    if (sfile == "") sfile = Form("%s.root",fTree->GetName());
@@ -901,11 +902,11 @@ void TParallelCoord::SaveTree(const char* filename, Bool_t overwrite)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the position of the axes.
+
 void TParallelCoord::SetAxesPosition()
 {
-   // Update the position of the axes.
-
    if(!gPad) return;
    Bool_t vert          = TestBit (kVertDisplay);
    TFrame *frame        = gPad->GetFrame();
@@ -946,33 +947,33 @@ void TParallelCoord::SetAxesPosition()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the same histogram axis binning for all axis.
+
 void TParallelCoord::SetAxisHistogramBinning(Int_t n)
 {
-   // Set the same histogram axis binning for all axis.
-
    TIter next(fVarList);
    TParallelCoordVar *var;
    while((var = (TParallelCoordVar*)next())) var->SetHistogramBinning(n);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the same histogram axis height for all axis.
+
 void TParallelCoord::SetAxisHistogramHeight(Double_t h)
 {
-   // Set the same histogram axis height for all axis.
-
    TIter next(fVarList);
    TParallelCoordVar *var;
    while((var = (TParallelCoordVar*)next())) var->SetHistogramHeight(h);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// All axes in log scale.
+
 void TParallelCoord::SetGlobalLogScale(Bool_t lt)
 {
-   // All axes in log scale.
-
    if (lt == TestBit(kGlobalLogScale)) return;
    SetBit(kGlobalLogScale,lt);
    TIter next(fVarList);
@@ -982,11 +983,11 @@ void TParallelCoord::SetGlobalLogScale(Bool_t lt)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constraint all axes to the same scale.
+
 void TParallelCoord::SetGlobalScale(Bool_t gl)
 {
-   // Constraint all axes to the same scale.
-
    SetBit(kGlobalScale,gl);
    if (fCandleAxis) {
       delete fCandleAxis;
@@ -1016,22 +1017,22 @@ void TParallelCoord::SetGlobalScale(Bool_t gl)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the same histogram axis line width for all axis.
+
 void TParallelCoord::SetAxisHistogramLineWidth(Int_t lw)
 {
-   // Set the same histogram axis line width for all axis.
-
    TIter next(fVarList);
    TParallelCoordVar *var;
    while((var = (TParallelCoordVar*)next())) var->SetHistogramLineWidth(lw);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a candle chart display.
+
 void TParallelCoord::SetCandleChart(Bool_t can)
 {
-   // Set a candle chart display.
-
    SetBit(kCandleChart,can);
    SetGlobalScale(can);
    TIter next(fVarList);
@@ -1058,11 +1059,11 @@ void TParallelCoord::SetCandleChart(Bool_t can)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the first entry to be dispayed.
+
 void TParallelCoord::SetCurrentFirst(Long64_t f)
 {
-   // Set the first entry to be dispayed.
-
    if(f<0 || f>fNentries) return;
    fCurrentFirst = f;
    if(fCurrentFirst + fCurrentN > fNentries) fCurrentN = fNentries-fCurrentFirst;
@@ -1076,11 +1077,11 @@ void TParallelCoord::SetCurrentFirst(Long64_t f)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the number of entry to be displayed.
+
 void TParallelCoord::SetCurrentN(Long64_t n)
 {
-   // Set the number of entry to be displayed.
-
    if(n<=0) return;
    if(fCurrentFirst+n>fNentries) fCurrentN = fNentries-fCurrentFirst;
    else fCurrentN = n;
@@ -1094,11 +1095,11 @@ void TParallelCoord::SetCurrentN(Long64_t n)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the selection beeing edited.
+
 TParallelCoordSelect* TParallelCoord::SetCurrentSelection(const char* title)
 {
-   // Set the selection beeing edited.
-
    if (fCurrentSelection && fCurrentSelection->GetTitle() == title) return fCurrentSelection;
    TIter next(fSelectList);
    TParallelCoordSelect* sel;
@@ -1108,22 +1109,22 @@ TParallelCoordSelect* TParallelCoord::SetCurrentSelection(const char* title)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the selection beeing edited.
+
 void TParallelCoord::SetCurrentSelection(TParallelCoordSelect* sel)
 {
-   // Set the selection beeing edited.
-
    if (fCurrentSelection == sel) return;
    fCurrentSelection = sel;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set dots spacing. Modify the line style 11.
+/// If the canvas support transparency dot spacing is ignored.
+
 void TParallelCoord::SetDotsSpacing(Int_t s)
 {
-   // Set dots spacing. Modify the line style 11.
-   // If the canvas support transparency dot spacing is ignored.
-
    if (gPad->GetCanvas()->SupportAlpha()) return;
    if (s == fDotsSpacing) return;
    fDotsSpacing = s;
@@ -1131,21 +1132,21 @@ void TParallelCoord::SetDotsSpacing(Int_t s)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the entry lists of "para".
+
 void TParallelCoord::SetEntryList(TParallelCoord* para, TEntryList* enlist)
 {
-   // Set the entry lists of "para".
-
    para->SetCurrentEntries(enlist);
    para->SetInitEntries(enlist);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Force all variables to adopt the same max.
+
 void TParallelCoord::SetGlobalMax(Double_t max)
 {
-   // Force all variables to adopt the same max.
-
    TIter next(fVarList);
    TParallelCoordVar* var;
    while ((var = (TParallelCoordVar*)next())) {
@@ -1154,11 +1155,11 @@ void TParallelCoord::SetGlobalMax(Double_t max)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Force all variables to adopt the same min.
+
 void TParallelCoord::SetGlobalMin(Double_t min)
 {
-   // Force all variables to adopt the same min.
-
    TIter next(fVarList);
    TParallelCoordVar* var;
    while ((var = (TParallelCoordVar*)next())) {
@@ -1167,11 +1168,11 @@ void TParallelCoord::SetGlobalMin(Double_t min)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If true, the pad is updated while the motion of a dragged range.
+
 void TParallelCoord::SetLiveRangesUpdate(Bool_t on)
 {
-   // If true, the pad is updated while the motion of a dragged range.
-
    SetBit(kLiveUpdate,on);
    TIter next(fVarList);
    TParallelCoordVar* var;
@@ -1179,11 +1180,11 @@ void TParallelCoord::SetLiveRangesUpdate(Bool_t on)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the vertical or horizontal display.
+
 void TParallelCoord::SetVertDisplay(Bool_t vert)
 {
-   // Set the vertical or horizontal display.
-
    if (vert == TestBit (kVertDisplay)) return;
    SetBit(kVertDisplay,vert);
    if (!gPad) return;
@@ -1210,11 +1211,11 @@ void TParallelCoord::SetVertDisplay(Bool_t vert)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unzoom all variables.
+
 void TParallelCoord::UnzoomAll()
 {
-   // Unzoom all variables.
-
    TIter next(fVarList);
    TParallelCoordVar* var;
    while((var = (TParallelCoordVar*)next())) var->Unzoom();

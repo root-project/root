@@ -31,14 +31,14 @@
 #include "TSystem.h"
 #include "TVirtualMonitoring.h"
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor
+
 TProofMonSenderML::TProofMonSenderML(const char *serv, const char *tag,
                                      const char *id, const char *subid,
                                      const char *opt)
                   : TProofMonSender(serv, "ProofMonSenderML")
 {
-   // Main constructor
-
    fWriter = 0;
    // Init the sender instance using the plugin manager
    TPluginHandler *h = 0;
@@ -63,81 +63,81 @@ TProofMonSenderML::TProofMonSenderML(const char *serv, const char *tag,
    PDB(kMonitoring,1) if (fWriter) fWriter->Verbose(kTRUE);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TProofMonSenderML::~TProofMonSenderML()
 {
-   // Destructor
-
    SafeDelete(fWriter);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send summary record
+///
+/// There are three versions of this record, corresponding the evolution
+/// in time of the monitoring requirements.
+///
+/// The default version 2 contains the following information
+///
+///    user                  XRD_STRING
+///    proofgroup            XRD_STRING
+///    begin                 XRD_STRING
+///    end                   XRD_STRING
+///    walltime              XRD_REAL64
+///    cputime               XRD_REAL64
+///    bytesread             XRD_REAL64
+///    events                XRD_REAL64
+///    totevents             XRD_REAL64
+///    workers               XRD_REAL64
+///    vmemmxw               XRD_REAL64
+///    rmemmxw               XRD_REAL64
+///    vmemmxm               XRD_REAL64
+///    rmemmxm               XRD_REAL64
+///    numfiles              XRD_REAL64
+///    missfiles             XRD_REAL64
+///    status                XRD_REAL64
+///    rootver               XRD_STRING
+///
+/// Version 1 contains the following information
+///    (no 'status', 'missfiles', 'rootver'; 'dataset' field with name(s) of
+///     processed dataset(s))
+///
+///    user                  XRD_STRING
+///    proofgroup            XRD_STRING
+///    begin                 XRD_STRING
+///    end                   XRD_STRING
+///    walltime              XRD_REAL64
+///    cputime               XRD_REAL64
+///    bytesread             XRD_REAL64
+///    events                XRD_REAL64
+///    totevents             XRD_REAL64
+///    workers               XRD_REAL64
+///    vmemmxw               XRD_REAL64
+///    rmemmxw               XRD_REAL64
+///    vmemmxm               XRD_REAL64
+///    rmemmxm               XRD_REAL64
+///    numfiles              XRD_REAL64
+///    dataset               XRD_STRING
+///
+/// Version 0 contains the following information
+///    ('group' instead of 'proofgroup'; no 'vmemmxw',
+///     'rmemmxw', 'vmemmxm', 'rmemmxm', 'numfiles', 'dataset')
+///
+///    user                  XRD_STRING
+///    group                 XRD_STRING
+///    begin                 XRD_STRING
+///    end                   XRD_STRING
+///    walltime              XRD_REAL64
+///    cputime               XRD_REAL64
+///    bytesread             XRD_REAL64
+///    events                XRD_REAL64
+///    totevents             XRD_REAL64
+///    workers               XRD_REAL64
+///
+///  Return 0 on success, -1 on any failure.
+
 Int_t TProofMonSenderML::SendSummary(TList *recs, const char *id)
 {
-   // Send summary record
-   //
-   // There are three versions of this record, corresponding the evolution
-   // in time of the monitoring requirements.
-   //
-   // The default version 2 contains the following information
-   //
-   //    user                  XRD_STRING
-   //    proofgroup            XRD_STRING
-   //    begin                 XRD_STRING
-   //    end                   XRD_STRING
-   //    walltime              XRD_REAL64
-   //    cputime               XRD_REAL64
-   //    bytesread             XRD_REAL64
-   //    events                XRD_REAL64
-   //    totevents             XRD_REAL64
-   //    workers               XRD_REAL64
-   //    vmemmxw               XRD_REAL64
-   //    rmemmxw               XRD_REAL64
-   //    vmemmxm               XRD_REAL64
-   //    rmemmxm               XRD_REAL64
-   //    numfiles              XRD_REAL64
-   //    missfiles             XRD_REAL64
-   //    status                XRD_REAL64
-   //    rootver               XRD_STRING
-   //
-   // Version 1 contains the following information
-   //    (no 'status', 'missfiles', 'rootver'; 'dataset' field with name(s) of
-   //     processed dataset(s))
-   //
-   //    user                  XRD_STRING
-   //    proofgroup            XRD_STRING
-   //    begin                 XRD_STRING
-   //    end                   XRD_STRING
-   //    walltime              XRD_REAL64
-   //    cputime               XRD_REAL64
-   //    bytesread             XRD_REAL64
-   //    events                XRD_REAL64
-   //    totevents             XRD_REAL64
-   //    workers               XRD_REAL64
-   //    vmemmxw               XRD_REAL64
-   //    rmemmxw               XRD_REAL64
-   //    vmemmxm               XRD_REAL64
-   //    rmemmxm               XRD_REAL64
-   //    numfiles              XRD_REAL64
-   //    dataset               XRD_STRING
-   //
-   // Version 0 contains the following information
-   //    ('group' instead of 'proofgroup'; no 'vmemmxw',
-   //     'rmemmxw', 'vmemmxm', 'rmemmxm', 'numfiles', 'dataset')
-   //
-   //    user                  XRD_STRING
-   //    group                 XRD_STRING
-   //    begin                 XRD_STRING
-   //    end                   XRD_STRING
-   //    walltime              XRD_REAL64
-   //    cputime               XRD_REAL64
-   //    bytesread             XRD_REAL64
-   //    events                XRD_REAL64
-   //    totevents             XRD_REAL64
-   //    workers               XRD_REAL64
-   //
-   //  Return 0 on success, -1 on any failure.
-
    if (!IsValid()) {
       Error("SendSummary", "invalid instance: do nothing!");
       return -1;
@@ -203,40 +203,40 @@ Int_t TProofMonSenderML::SendSummary(TList *recs, const char *id)
    return (rc ? 0 : -1);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Post information about the processed dataset(s). The information is taken
+/// from the TDSet object 'dset' and integrated with the missing files
+/// information in the list 'missing'. The string 'qid' is the uninque
+/// ID of the query; 'begin' the starting time.
+///
+/// The records sent by this call will appear with ids 'dataset_<dataset_name_hash>'
+///
+/// There are two versions of this record, with or without the starting time.
+/// The starting time could be looked up from the summary record, if available.
+///
+/// The default version 1 contains the following information:
+///
+///    dsn              XRD_STRING
+///    querytag         XRD_STRING
+///    querybegin       XRD_STRING
+///    numfiles         XRD_REAL64
+///    missfiles        XRD_REAL64
+///
+/// Version 0 contains the following information:
+///    (no 'querybegin')
+///
+///    dsn              XRD_STRING
+///    querytag         XRD_STRING
+///    numfiles         XRD_REAL64
+///    missfiles        XRD_REAL64
+///
+/// The information is posted with a bulk insert.
+///
+/// Returns 0 on success, -1 on failure.
+
 Int_t TProofMonSenderML::SendDataSetInfo(TDSet *dset, TList *missing,
                                          const char *begin, const char *qid)
 {
-   // Post information about the processed dataset(s). The information is taken
-   // from the TDSet object 'dset' and integrated with the missing files
-   // information in the list 'missing'. The string 'qid' is the uninque
-   // ID of the query; 'begin' the starting time.
-   //
-   // The records sent by this call will appear with ids 'dataset_<dataset_name_hash>'
-   //
-   // There are two versions of this record, with or without the starting time.
-   // The starting time could be looked up from the summary record, if available.
-   //
-   // The default version 1 contains the following information:
-   //
-   //    dsn              XRD_STRING
-   //    querytag         XRD_STRING
-   //    querybegin       XRD_STRING
-   //    numfiles         XRD_REAL64
-   //    missfiles        XRD_REAL64
-   //
-   // Version 0 contains the following information:
-   //    (no 'querybegin')
-   //
-   //    dsn              XRD_STRING
-   //    querytag         XRD_STRING
-   //    numfiles         XRD_REAL64
-   //    missfiles        XRD_REAL64
-   //
-   // The information is posted with a bulk insert.
-   //
-   // Returns 0 on success, -1 on failure.
-
    if (!IsValid()) {
       Error("SendDataSetInfo", "invalid instance: do nothing!");
       return -1;
@@ -366,40 +366,40 @@ Int_t TProofMonSenderML::SendDataSetInfo(TDSet *dset, TList *missing,
    return (rc ? 0 : -1);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Post information about the requested files. The information is taken
+/// from the TDSet object 'dset' and integrated with the missing files
+/// information in the list 'missing'. The string 'qid' is the unique
+/// ID of the query; 'begin' the starting time.
+///
+/// The records sent by this call will appear with ids 'file_<file_name_hash>'
+///
+/// There are two versions of this record, with or without the starting time.
+/// The starting time could be looked up from the summary record, if available.
+///
+/// The default version 1 contains the following information:
+///
+///    lfn              XRD_STRING
+///    path             XRD_STRING
+///    querytag         XRD_STRING
+///    querybegin       XRD_STRING
+///    status           XRD_REAL64
+///
+/// Version 0 contains the following information:
+///    (no 'querybegin')
+///
+///    lfn              XRD_STRING
+///    path             XRD_STRING
+///    querytag         XRD_STRING
+///    status           XRD_REAL64
+///
+/// The information is posted with a bulk insert.
+///
+/// Returns 0 on success, -1 on failure.
+
 Int_t TProofMonSenderML::SendFileInfo(TDSet *dset, TList *missing,
                                       const char *begin, const char *qid)
 {
-   // Post information about the requested files. The information is taken
-   // from the TDSet object 'dset' and integrated with the missing files
-   // information in the list 'missing'. The string 'qid' is the unique
-   // ID of the query; 'begin' the starting time.
-   //
-   // The records sent by this call will appear with ids 'file_<file_name_hash>'
-   //
-   // There are two versions of this record, with or without the starting time.
-   // The starting time could be looked up from the summary record, if available.
-   //
-   // The default version 1 contains the following information:
-   //
-   //    lfn              XRD_STRING
-   //    path             XRD_STRING
-   //    querytag         XRD_STRING
-   //    querybegin       XRD_STRING
-   //    status           XRD_REAL64
-   //
-   // Version 0 contains the following information:
-   //    (no 'querybegin')
-   //
-   //    lfn              XRD_STRING
-   //    path             XRD_STRING
-   //    querytag         XRD_STRING
-   //    status           XRD_REAL64
-   //
-   // The information is posted with a bulk insert.
-   //
-   // Returns 0 on success, -1 on failure.
-
    if (!IsValid()) {
       Error("SendFileInfo", "invalid instance: do nothing!");
       return -1;

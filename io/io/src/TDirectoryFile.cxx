@@ -54,36 +54,36 @@ const Int_t  kMaxLen = 2048;
 ClassImp(TDirectoryFile)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*Directory default constructor-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                    =============================
+
 TDirectoryFile::TDirectoryFile() : TDirectory()
    , fModified(kFALSE), fWritable(kFALSE), fNbytesKeys(0), fNbytesName(0)
    , fBufferSize(0), fSeekDir(0), fSeekParent(0), fSeekKeys(0)
    , fFile(0), fKeys(0)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Directory default constructor-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    =============================
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-* Create a new DirectoryFile *-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                     ==========================
+///  A new directory with name,title is created in the current directory
+///  The directory header information is immediatly saved on the file
+///  A new key is added in the parent directory
+///
+///  When this constructor is called from a class directly derived
+///  from TDirectoryFile, the third argument classname MUST be specified.
+///  In this case, classname must be the name of the derived class.
+///
+///  Note that the directory name cannot contain slashes.
+
 TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *classname, TDirectory* initMotherDir)
            : TDirectory()
    , fModified(kFALSE), fWritable(kFALSE), fNbytesKeys(0), fNbytesName(0)
    , fBufferSize(0), fSeekDir(0), fSeekParent(0), fSeekKeys(0)
    , fFile(0), fKeys(0)
 {
-//*-*-*-*-*-*-*-*-*-*-*-* Create a new DirectoryFile *-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                     ==========================
-//  A new directory with name,title is created in the current directory
-//  The directory header information is immediatly saved on the file
-//  A new key is added in the parent directory
-//
-//  When this constructor is called from a class directly derived
-//  from TDirectoryFile, the third argument classname MUST be specified.
-//  In this case, classname must be the name of the derived class.
-//
-//  Note that the directory name cannot contain slashes.
-
    fName = name;
    fTitle = title;
 
@@ -133,12 +133,12 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
    gROOT->GetUUIDs()->AddUUID(fUUID,this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the key associated with this directory (and the related
+/// data members.
+
 void TDirectoryFile::Init(TClass *cl)
 {
-   // Initialize the key associated with this directory (and the related
-   // data members.
-
    TFile* f = GetFile();
    if (f->IsBinary()) {
       if (cl==0) {
@@ -164,21 +164,22 @@ void TDirectoryFile::Init(TClass *cl)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TDirectoryFile::TDirectoryFile(const TDirectoryFile & directory) : TDirectory(directory)
    , fModified(kFALSE), fWritable(kFALSE), fNbytesKeys(0), fNbytesName(0)
    , fBufferSize(0), fSeekDir(0), fSeekParent(0), fSeekKeys(0)
    , fFile(0), fKeys(0)
 {
-   // Copy constructor.
    ((TDirectoryFile&)directory).Copy(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Destructor.
+
 TDirectoryFile::~TDirectoryFile()
 {
-   // -- Destructor.
-
    if (fKeys) {
       fKeys->Delete("slow");
       SafeDelete(fKeys);
@@ -203,14 +204,14 @@ TDirectoryFile::~TDirectoryFile()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Append object to this directory.
+///
+/// If replace is true:
+///   remove any existing objects with the same same (if the name is not ""
+
 void TDirectoryFile::Append(TObject *obj, Bool_t replace /* = kFALSE */)
 {
-   // Append object to this directory.
-   //
-   // If replace is true:
-   //   remove any existing objects with the same same (if the name is not ""
-
    if (obj == 0 || fList == 0) return;
 
    TDirectory::Append(obj,replace);
@@ -222,12 +223,12 @@ void TDirectoryFile::Append(TObject *obj, Bool_t replace /* = kFALSE */)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*Insert key in the linked list of keys of this directory*-*-*-*
+///*-*          =======================================================
+
 Int_t TDirectoryFile::AppendKey(TKey *key)
 {
-//*-*-*-*-*-*-*Insert key in the linked list of keys of this directory*-*-*-*
-//*-*          =======================================================
-
    fModified = kTRUE;
 
    key->SetMotherDir(this);
@@ -253,11 +254,11 @@ Int_t TDirectoryFile::AppendKey(TKey *key)
    return oldkey->GetCycle() + 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse the content of the directory.
+
 void TDirectoryFile::Browse(TBrowser *b)
 {
-   // Browse the content of the directory.
-
    TString name;
 
    if (b) {
@@ -298,12 +299,12 @@ void TDirectoryFile::Browse(TBrowser *b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*Initialise directory to defaults*-*-*-*-*-*-*-*-*-*
+///*-*                    ================================
+
 void TDirectoryFile::Build(TFile* motherFile, TDirectory* motherDir)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Initialise directory to defaults*-*-*-*-*-*-*-*-*-*
-//*-*                    ================================
-
    // If directory is created via default ctor (when dir is read from file)
    // don't add it here to the directory since its name is not yet known.
    // It will be added to the directory in TKey::ReadObj().
@@ -325,26 +326,26 @@ void TDirectoryFile::Build(TFile* motherFile, TDirectory* motherDir)
    SetBit(kCanDelete);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change current directory to "this" directory . Using path one can
+/// change the current directory to "path". The absolute path syntax is:
+/// file.root:/dir1/dir2
+/// where file.root is the file and /dir1/dir2 the desired subdirectory
+/// in the file. Relative syntax is relative to "this" directory. E.g:
+/// ../aa. Returns kTRUE in case of success.
+
 Bool_t TDirectoryFile::cd(const char *path)
 {
-   // Change current directory to "this" directory . Using path one can
-   // change the current directory to "path". The absolute path syntax is:
-   // file.root:/dir1/dir2
-   // where file.root is the file and /dir1/dir2 the desired subdirectory
-   // in the file. Relative syntax is relative to "this" directory. E.g:
-   // ../aa. Returns kTRUE in case of success.
-
    Bool_t ok = TDirectory::cd(path);
    if (ok) TFile::CurrentFile() = fFile;
    return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean the pointers to this object (gDirectory, TContext, etc.)
+
 void TDirectoryFile::CleanTargets()
 {
-   // Clean the pointers to this object (gDirectory, TContext, etc.)
-
 
    // After CleanTargets either gFile was changed appropriately
    // by a cd() or needs to be set to zero.
@@ -354,19 +355,19 @@ void TDirectoryFile::CleanTargets()
    TDirectory::CleanTargets();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a clone of an object using the Streamer facility.
+/// If the object derives from TNamed, this function is called
+/// by TNamed::Clone. TNamed::Clone uses the optional argument newname to set
+/// a new name to the newly created object.
+///
+/// If autoadd is true and if the object class has a
+/// DirectoryAutoAdd function, it will be called at the end of the
+/// function with the parameter gDirector.  This usually means that
+/// the object will be appended to the current ROOT directory.
+
 TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE */)
 {
-   // Make a clone of an object using the Streamer facility.
-   // If the object derives from TNamed, this function is called
-   // by TNamed::Clone. TNamed::Clone uses the optional argument newname to set
-   // a new name to the newly created object.
-   //
-   // If autoadd is true and if the object class has a
-   // DirectoryAutoAdd function, it will be called at the end of the
-   // function with the parameter gDirector.  This usually means that
-   // the object will be appended to the current ROOT directory.
-
    // if no default ctor return immediately (error issued by New())
    char *pobj = (char*)obj->IsA()->New();
    if (!pobj) return 0;
@@ -420,11 +421,11 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
    return newobj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scan the memory lists of all files for an object with name
+
 TObject *TDirectoryFile::FindObjectAnyFile(const char *name) const
 {
-   // Scan the memory lists of all files for an object with name
-
    TFile *f;
    R__LOCKGUARD2(gROOTMutex);
    TIter next(gROOT->GetListOfFiles());
@@ -437,21 +438,21 @@ TObject *TDirectoryFile::FindObjectAnyFile(const char *name) const
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find a directory named "apath".
+/// It apath is null or empty, returns "this" directory.
+/// Otherwise use the name "apath" to find a directory.
+/// The absolute path syntax is:
+///    file.root:/dir1/dir2
+/// where file.root is the file and /dir1/dir2 the desired subdirectory
+/// in the file. Relative syntax is relative to "this" directory. E.g:
+/// ../aa.
+/// Returns 0 in case path does not exist.
+/// If printError is true, use Error with 'funcname' to issue an error message.
+
 TDirectory *TDirectoryFile::GetDirectory(const char *apath,
                                          Bool_t printError, const char *funcname)
 {
-   // Find a directory named "apath".
-   // It apath is null or empty, returns "this" directory.
-   // Otherwise use the name "apath" to find a directory.
-   // The absolute path syntax is:
-   //    file.root:/dir1/dir2
-   // where file.root is the file and /dir1/dir2 the desired subdirectory
-   // in the file. Relative syntax is relative to "this" directory. E.g:
-   // ../aa.
-   // Returns 0 in case path does not exist.
-   // If printError is true, use Error with 'funcname' to issue an error message.
-
    Int_t nch = 0;
    if (apath) nch = strlen(apath);
    if (!nch) {
@@ -525,11 +526,11 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
    delete [] path; return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Delete all objects from memory and directory structure itself.
+
 void TDirectoryFile::Close(Option_t *)
 {
-   // -- Delete all objects from memory and directory structure itself.
-
    if (!fList || !fSeekDir) {
       return;
    }
@@ -562,36 +563,36 @@ void TDirectoryFile::Close(Option_t *)
    CleanTargets();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-* Delete Objects or/and keys in a directory *-*-*-*-*-*-*-*
+///*-*             =========================================
+///   namecycle has the format name;cycle
+///   namecycle = "" same as namecycle ="T*"
+///   name  = * means all
+///   cycle = * means all cycles (memory and keys)
+///   cycle = "" or cycle = 9999 ==> apply to a memory object
+///   When name=* use T* to delete subdirectories also
+///
+///   To delete one directory, you must specify the directory cycle,
+///      eg.  file.Delete("dir1;1");
+///
+///   examples:
+///     foo   : delete object named foo in memory
+///     foo*  : delete all objects with a name starting with foo
+///     foo;1 : delete cycle 1 of foo on file
+///     foo;* : delete all cycles of foo on file and also from memory
+///     *;2   : delete all objects on file having the cycle 2
+///     *;*   : delete all objects from memory and file
+///    T*;*   : delete all objects from memory and file and all subdirectories
+///          WARNING
+///    If the key to be deleted contains special characters ("+","^","?", etc
+///    that have a special meaning for the regular expression parser (see TRegexp)
+///    then you must specify 2 backslash characters to escape the regular expression.
+///    For example, if the key to be deleted is namecycle = "C++", you must call
+///       mydir.Delete("C\\+\\+")).
+
 void TDirectoryFile::Delete(const char *namecycle)
 {
-//*-*-*-*-*-*-*-* Delete Objects or/and keys in a directory *-*-*-*-*-*-*-*
-//*-*             =========================================
-//   namecycle has the format name;cycle
-//   namecycle = "" same as namecycle ="T*"
-//   name  = * means all
-//   cycle = * means all cycles (memory and keys)
-//   cycle = "" or cycle = 9999 ==> apply to a memory object
-//   When name=* use T* to delete subdirectories also
-//
-//   To delete one directory, you must specify the directory cycle,
-//      eg.  file.Delete("dir1;1");
-//
-//   examples:
-//     foo   : delete object named foo in memory
-//     foo*  : delete all objects with a name starting with foo
-//     foo;1 : delete cycle 1 of foo on file
-//     foo;* : delete all cycles of foo on file and also from memory
-//     *;2   : delete all objects on file having the cycle 2
-//     *;*   : delete all objects from memory and file
-//    T*;*   : delete all objects from memory and file and all subdirectories
-//          WARNING
-//    If the key to be deleted contains special characters ("+","^","?", etc
-//    that have a special meaning for the regular expression parser (see TRegexp)
-//    then you must specify 2 backslash characters to escape the regular expression.
-//    For example, if the key to be deleted is namecycle = "C++", you must call
-//       mydir.Delete("C\\+\\+")).
-
    if (gDebug)
      Info("Delete","Call for this = %s namecycle = %s",
                GetName(), (namecycle ? namecycle : "null"));
@@ -690,11 +691,12 @@ void TDirectoryFile::Delete(const char *namecycle)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*Encode directory header into output buffer*-*-*-*-*-*
+///*-*                    =========================================
+
 void TDirectoryFile::FillBuffer(char *&buffer)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Encode directory header into output buffer*-*-*-*-*-*
-//*-*                    =========================================
    Version_t version = TDirectoryFile::Class_Version();
    if (fSeekKeys > TFile::kStartBigFile) version += 1000;
    tobuf(buffer, version);
@@ -716,11 +718,11 @@ void TDirectoryFile::FillBuffer(char *&buffer)
    if (version <=1000) for (Int_t i=0;i<3;i++) tobuf(buffer,Int_t(0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find key with name keyname in the current directory
+
 TKey *TDirectoryFile::FindKey(const char *keyname) const
 {
-   // Find key with name keyname in the current directory
-
    Short_t  cycle;
    char     name[kMaxLen];
 
@@ -728,14 +730,14 @@ TKey *TDirectoryFile::FindKey(const char *keyname) const
    return GetKey(name,cycle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find key with name keyname in the current directory or
+/// its subdirectories.
+/// NOTE that If a key is found, the directory containing the key becomes
+/// the current directory
+
 TKey *TDirectoryFile::FindKeyAny(const char *keyname) const
 {
-   // Find key with name keyname in the current directory or
-   // its subdirectories.
-   // NOTE that If a key is found, the directory containing the key becomes
-   // the current directory
-
    TDirectory *dirsav = gDirectory;
    Short_t  cycle;
    char     name[kMaxLen];
@@ -766,15 +768,15 @@ TKey *TDirectoryFile::FindKeyAny(const char *keyname) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find object by name in the list of memory objects of the current
+/// directory or its sub-directories.
+/// After this call the current directory is not changed.
+/// To automatically set the current directory where the object is found,
+/// use FindKeyAny(aname)->ReadObj().
+
 TObject *TDirectoryFile::FindObjectAny(const char *aname) const
 {
-   // Find object by name in the list of memory objects of the current
-   // directory or its sub-directories.
-   // After this call the current directory is not changed.
-   // To automatically set the current directory where the object is found,
-   // use FindKeyAny(aname)->ReadObj().
-
    //object may be already in the list of objects in memory
    TObject *obj = TDirectory::FindObjectAny(aname);
    if (obj) return obj;
@@ -809,49 +811,49 @@ TObject *TDirectoryFile::FindObjectAny(const char *aname) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  return pointer to object identified by namecycle
+///
+///   namecycle has the format name;cycle
+///   name  = * is illegal, cycle = * is illegal
+///   cycle = "" or cycle = 9999 ==> apply to a memory object
+///
+///   examples:
+///     foo   : get object named foo in memory
+///             if object is not in memory, try with highest cycle from file
+///     foo;1 : get cycle 1 of foo on file
+///
+///  The retrieved object should in principle derive from TObject.
+///  If not, the function TDirectoryFile::GetObject should be called.
+///  However, this function will still work for a non-TObject, providing that
+///  the calling application cast the return type to the correct type (which
+///  is the actual type of the object).
+///
+///  NOTE:
+///  The method GetObject offers better protection and avoids the need
+///  for any cast:
+///      MyClass *obj;
+///      directory->GetObject("some object",obj);
+///      if (obj) { ... the object exist and inherits from MyClass ... }
+///
+///  VERY IMPORTANT NOTE:
+///  In case the class of this object derives from TObject but not
+///  as a first inheritance, one must use dynamic_cast<>().
+///  Example 1: Normal case:
+///      class MyClass : public TObject, public AnotherClass
+///   then on return, one can do:
+///      MyClass *obj = (MyClass*)directory->Get("some object of MyClass");
+///
+///  Example 2: Special case:
+///      class MyClass : public AnotherClass, public TObject
+///  then on return, one must do:
+///      MyClass *obj = dynamic_cast<MyClass*>(directory->Get("some object of MyClass"));
+///
+///  Of course, dynamic_cast<> can also be used in the example 1.
+///
+
 TObject *TDirectoryFile::Get(const char *namecycle)
 {
-//  return pointer to object identified by namecycle
-//
-//   namecycle has the format name;cycle
-//   name  = * is illegal, cycle = * is illegal
-//   cycle = "" or cycle = 9999 ==> apply to a memory object
-//
-//   examples:
-//     foo   : get object named foo in memory
-//             if object is not in memory, try with highest cycle from file
-//     foo;1 : get cycle 1 of foo on file
-//
-//  The retrieved object should in principle derive from TObject.
-//  If not, the function TDirectoryFile::GetObject should be called.
-//  However, this function will still work for a non-TObject, providing that
-//  the calling application cast the return type to the correct type (which
-//  is the actual type of the object).
-//
-//  NOTE:
-//  The method GetObject offers better protection and avoids the need
-//  for any cast:
-//      MyClass *obj;
-//      directory->GetObject("some object",obj);
-//      if (obj) { ... the object exist and inherits from MyClass ... }
-//
-//  VERY IMPORTANT NOTE:
-//  In case the class of this object derives from TObject but not
-//  as a first inheritance, one must use dynamic_cast<>().
-//  Example 1: Normal case:
-//      class MyClass : public TObject, public AnotherClass
-//   then on return, one can do:
-//      MyClass *obj = (MyClass*)directory->Get("some object of MyClass");
-//
-//  Example 2: Special case:
-//      class MyClass : public AnotherClass, public TObject
-//  then on return, one must do:
-//      MyClass *obj = dynamic_cast<MyClass*>(directory->Get("some object of MyClass"));
-//
-//  Of course, dynamic_cast<> can also be used in the example 1.
-//
-
    Short_t  cycle;
    char     name[kMaxLen];
 
@@ -904,54 +906,54 @@ TObject *TDirectoryFile::Get(const char *namecycle)
    return idcur;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return pointer to object identified by namecycle.
+/// The returned object may or may not derive from TObject.
+///
+///   namecycle has the format name;cycle
+///   name  = * is illegal, cycle = * is illegal
+///   cycle = "" or cycle = 9999 ==> apply to a memory object
+///
+///  VERY IMPORTANT NOTE:
+///  The calling application must cast the returned object to
+///  the final type, eg
+///      MyClass *obj = (MyClass*)directory->GetObject("some object of MyClass");
+
 void *TDirectoryFile::GetObjectUnchecked(const char *namecycle)
 {
-// return pointer to object identified by namecycle.
-// The returned object may or may not derive from TObject.
-//
-//   namecycle has the format name;cycle
-//   name  = * is illegal, cycle = * is illegal
-//   cycle = "" or cycle = 9999 ==> apply to a memory object
-//
-//  VERY IMPORTANT NOTE:
-//  The calling application must cast the returned object to
-//  the final type, eg
-//      MyClass *obj = (MyClass*)directory->GetObject("some object of MyClass");
-
    return GetObjectChecked(namecycle,(TClass*)0);
 }
 
-//_________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See documentation of TDirectoryFile::GetObjectCheck(const char *namecycle, const TClass *cl)
+
 void *TDirectoryFile::GetObjectChecked(const char *namecycle, const char* classname)
 {
-// See documentation of TDirectoryFile::GetObjectCheck(const char *namecycle, const TClass *cl)
-
    return GetObjectChecked(namecycle,TClass::GetClass(classname));
 }
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return pointer to object identified by namecycle if and only if the actual
+/// object is a type suitable to be stored as a pointer to a "expectedClass"
+/// If expectedClass is null, no check is performed.
+///
+///   namecycle has the format name;cycle
+///   name  = * is illegal, cycle = * is illegal
+///   cycle = "" or cycle = 9999 ==> apply to a memory object
+///
+///  VERY IMPORTANT NOTE:
+///  The calling application must cast the returned pointer to
+///  the type described by the 2 arguments (i.e. cl):
+///      MyClass *obj = (MyClass*)directory->GetObjectChecked("some object of MyClass","MyClass"));
+///
+///  Note: We recommend using the method TDirectoryFile::GetObject:
+///      MyClass *obj = 0;
+///      directory->GetObject("some object inheriting from MyClass",obj);
+///      if (obj) { ... we found what we are looking for ... }
+
 void *TDirectoryFile::GetObjectChecked(const char *namecycle, const TClass* expectedClass)
 {
-// return pointer to object identified by namecycle if and only if the actual
-// object is a type suitable to be stored as a pointer to a "expectedClass"
-// If expectedClass is null, no check is performed.
-//
-//   namecycle has the format name;cycle
-//   name  = * is illegal, cycle = * is illegal
-//   cycle = "" or cycle = 9999 ==> apply to a memory object
-//
-//  VERY IMPORTANT NOTE:
-//  The calling application must cast the returned pointer to
-//  the type described by the 2 arguments (i.e. cl):
-//      MyClass *obj = (MyClass*)directory->GetObjectChecked("some object of MyClass","MyClass"));
-//
-//  Note: We recommend using the method TDirectoryFile::GetObject:
-//      MyClass *obj = 0;
-//      directory->GetObject("some object inheriting from MyClass",obj);
-//      if (obj) { ... we found what we are looking for ... }
-
    Short_t  cycle;
    char     name[kMaxLen];
 
@@ -1013,26 +1015,26 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const TClass* expe
    return idcur;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the buffer size to create new TKeys.
+/// If the stored fBufferSize is null, the value returned is the average
+/// buffer size of objects in the file so far.
+
 Int_t TDirectoryFile::GetBufferSize() const
 {
-   // Return the buffer size to create new TKeys.
-   // If the stored fBufferSize is null, the value returned is the average
-   // buffer size of objects in the file so far.
-
    if (fBufferSize <= 0) return fFile->GetBestBuffer();
    else                  return fBufferSize;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Return pointer to key with name,cycle*-*-*-*-*-*-*-*
+///*-*                  =====================================
+///  if cycle = 9999 returns highest cycle
+///
+
 TKey *TDirectoryFile::GetKey(const char *name, Short_t cycle) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Return pointer to key with name,cycle*-*-*-*-*-*-*-*
-//*-*                  =====================================
-//  if cycle = 9999 returns highest cycle
-//
-
    // TIter::TIter() already checks for null pointers
    TIter next( ((THashList *)(GetListOfKeys()))->GetListForObject(name) );
 
@@ -1047,21 +1049,22 @@ TKey *TDirectoryFile::GetKey(const char *name, Short_t cycle) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*List Directory contents*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                    =======================
+///  Indentation is used to identify the directory tree
+///  Subdirectories are listed first, then objects in memory, then objects on the file
+///
+///  The option can has the following format:
+///     [-d |-m][<regexp>]
+///  Option -d means: only list objects in the file
+///         -m means: only list objects in memory
+///  The <regexp> will be used to match the name of the objects.
+///  By default memory and disk objects are listed.
+///
+
 void TDirectoryFile::ls(Option_t *option) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*List Directory contents*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    =======================
-//  Indentation is used to identify the directory tree
-//  Subdirectories are listed first, then objects in memory, then objects on the file
-//
-//  The option can has the following format:
-//     [-d |-m][<regexp>]
-//  Option -d means: only list objects in the file
-//         -m means: only list objects in memory
-//  The <regexp> will be used to match the name of the objects.
-//  By default memory and disk objects are listed.
-//
    TROOT::IndentLevel();
    std::cout <<ClassName()<<"*\t\t"<<GetName()<<"\t"<<GetTitle()<<std::endl;
    TROOT::IncreaseDirLevel();
@@ -1106,25 +1109,25 @@ void TDirectoryFile::ls(Option_t *option) const
    TROOT::DecreaseDirLevel();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to TFile::Open
+
 TFile *TDirectoryFile::OpenFile(const char *name, Option_t *option,const char *ftitle, Int_t compress, Int_t netopt)
 {
-   // Interface to TFile::Open
-
    return TFile::Open(name,option,ftitle,compress,netopt);
 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a sub-directory and return a pointer to the created directory.
+/// Returns 0 in case of error.
+/// Returns 0 if a directory with the same name already exists.
+/// Note that the directory name may be of the form "a/b/c" to create a hierarchy of directories.
+/// In this case, the function returns the pointer to the "a" directory if the operation is successful.
+
 TDirectory *TDirectoryFile::mkdir(const char *name, const char *title)
 {
-   // Create a sub-directory and return a pointer to the created directory.
-   // Returns 0 in case of error.
-   // Returns 0 if a directory with the same name already exists.
-   // Note that the directory name may be of the form "a/b/c" to create a hierarchy of directories.
-   // In this case, the function returns the pointer to the "a" directory if the operation is successful.
-
    if (!name || !title || !name[0]) return 0;
    if (!title[0]) title = name;
    if (GetKey(name)) {
@@ -1156,13 +1159,13 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title)
    return newdir;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Purge lowest key cycles in a directory.
+/// By default, only the highest cycle of a key is kept. Keys for which
+/// the "KEEP" flag has been set are not removed. See TKey::Keep().
+
 void TDirectoryFile::Purge(Short_t)
 {
-   // Purge lowest key cycles in a directory.
-   // By default, only the highest cycle of a key is kept. Keys for which
-   // the "KEEP" flag has been set are not removed. See TKey::Keep().
-
    if (!IsWritable()) return;
 
    TDirectory::TContext ctxt(this);
@@ -1189,15 +1192,15 @@ void TDirectoryFile::Purge(Short_t)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read objects from a ROOT db file directory into memory.
+/// If an object is already in memory, the memory copy is deleted
+/// and the object is again read from the file.
+/// If opt=="dirs", only subdirectories will be read
+/// If opt=="dirs*" complete directory tree will be read
+
 void TDirectoryFile::ReadAll(Option_t* opt)
 {
-   // Read objects from a ROOT db file directory into memory.
-   // If an object is already in memory, the memory copy is deleted
-   // and the object is again read from the file.
-   // If opt=="dirs", only subdirectories will be read
-   // If opt=="dirs*" complete directory tree will be read
-
    TDirectory::TContext ctxt(this);
 
    TKey *key;
@@ -1223,31 +1226,31 @@ void TDirectoryFile::ReadAll(Option_t* opt)
       }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*-*Read the KEYS linked list*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                      =========================
+///  Every directory has a linked list (fKeys). This linked list has been
+///  written on the file via WriteKeys as a single data record.
+///
+///  It is interesting to call this function in the following situation.
+///  Assume another process1 is connecting this directory in Update mode
+///    -Process1 is adding/updating objects in this directory
+///    -You want to see the latest status from process1.
+///  Example Process1:
+///    obj1.Write();
+///    obj2.Write();
+///    gDirectory->SaveSelf();
+///
+///  Example Process2
+///    gDirectory->ReadKeys();
+///    obj1->Draw();
+///
+///  This is an efficient way (without opening/closing files) to view
+///  the latest updates of a file being modified by another process
+///  as it is typically the case in a data acquisition system.
+
 Int_t TDirectoryFile::ReadKeys(Bool_t forceRead)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Read the KEYS linked list*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =========================
-//  Every directory has a linked list (fKeys). This linked list has been
-//  written on the file via WriteKeys as a single data record.
-//
-//  It is interesting to call this function in the following situation.
-//  Assume another process1 is connecting this directory in Update mode
-//    -Process1 is adding/updating objects in this directory
-//    -You want to see the latest status from process1.
-//  Example Process1:
-//    obj1.Write();
-//    obj2.Write();
-//    gDirectory->SaveSelf();
-//
-//  Example Process2
-//    gDirectory->ReadKeys();
-//    obj1->Draw();
-//
-//  This is an efficient way (without opening/closing files) to view
-//  the latest updates of a file being modified by another process
-//  as it is typically the case in a data acquisition system.
-
    if (fFile==0) return 0;
 
    if (!fFile->IsBinary())
@@ -1323,16 +1326,16 @@ Int_t TDirectoryFile::ReadKeys(Bool_t forceRead)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read object with keyname from the current directory
+/// Read contents of object with specified name from the current directory.
+/// First the key with keyname is searched in the current directory,
+/// next the key buffer is deserialized into the object.
+/// The object must have been created before via the default constructor.
+/// See TObject::Write().
+
 Int_t TDirectoryFile::ReadTObject(TObject *obj, const char *keyname)
 {
-   // Read object with keyname from the current directory
-   // Read contents of object with specified name from the current directory.
-   // First the key with keyname is searched in the current directory,
-   // next the key buffer is deserialized into the object.
-   // The object must have been created before via the default constructor.
-   // See TObject::Write().
-
    if (!fFile) { Error("Read","No file open"); return 0; }
    TKey *key = 0;
    TIter nextkey(GetListOfKeys());
@@ -1345,14 +1348,14 @@ Int_t TDirectoryFile::ReadTObject(TObject *obj, const char *keyname)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the TDirectory after its content has been merged into another
+/// Directory.  This returns the TDirectoryFile object back to its state
+/// before any data has been written to the file.
+/// The object in the in-memory list are assumed to also have been reset.
+
 void TDirectoryFile::ResetAfterMerge(TFileMergeInfo *info)
 {
-   // Reset the TDirectory after its content has been merged into another
-   // Directory.  This returns the TDirectoryFile object back to its state
-   // before any data has been written to the file.
-   // The object in the in-memory list are assumed to also have been reset.
-
    // There is nothing to reset in the base class (TDirectory) since
    // we do want to key the list of in-memory object as is.
    fModified = kFALSE;
@@ -1390,14 +1393,14 @@ void TDirectoryFile::ResetAfterMerge(TFileMergeInfo *info)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Removes subdirectory from the directory
+/// When diredctory is deleted, all keys in all subdirectories will be
+/// read first and deleted from file (if exists)
+/// Equivalent call is Delete("name;*");
+
 void TDirectoryFile::rmdir(const char *name)
 {
-   // Removes subdirectory from the directory
-   // When diredctory is deleted, all keys in all subdirectories will be
-   // read first and deleted from file (if exists)
-   // Equivalent call is Delete("name;*");
-
    if ((name==0) || (*name==0)) return;
 
    TString mask(name);
@@ -1405,12 +1408,12 @@ void TDirectoryFile::rmdir(const char *name)
    Delete(mask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*Save recursively all directory keys and headers-*-*-*-*-*
+///*-*                ===============================================
+
 void TDirectoryFile::Save()
 {
-//*-*-*-*-*-*-*-*-*-*Save recursively all directory keys and headers-*-*-*-*-*
-//*-*                ===============================================
-
    TDirectory::TContext ctxt(this);
 
    SaveSelf();
@@ -1428,16 +1431,16 @@ void TDirectoryFile::Save()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save object in filename,
+/// if filename is 0 or "", a file with "objectname.root" is created.
+/// The name of the key is the object name.
+/// If the operation is successful, it returns the number of bytes written to the file
+/// otherwise it returns 0.
+/// By default a message is printed. Use option "q" to not print the message.
+
 Int_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option) const
 {
-   // Save object in filename,
-   // if filename is 0 or "", a file with "objectname.root" is created.
-   // The name of the key is the object name.
-   // If the operation is successful, it returns the number of bytes written to the file
-   // otherwise it returns 0.
-   // By default a message is printed. Use option "q" to not print the message.
-
    if (!obj) return 0;
    TDirectory *dirsav = gDirectory;
    TString fname = filename;
@@ -1457,23 +1460,23 @@ Int_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Opt
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*Save Directory keys and header*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                ==============================
+///  If the directory has been modified (fModified set), write the keys
+///  and the directory header. This function assumes the cd is correctly set.
+///
+///  It is recommended to use this function in the following situation:
+///  Assume a process1 using a directory in Update mode
+///    -New objects or modified objects have been written to the directory
+///    -You do not want to close the file
+///    -You want your changes be visible from another process2 already connected
+///     to this directory in read mode
+///    -Call this function
+///    -In process2, use TDirectoryFile::ReadKeys to refresh the directory
+
 void TDirectoryFile::SaveSelf(Bool_t force)
 {
-//*-*-*-*-*-*-*-*-*-*Save Directory keys and header*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                ==============================
-//  If the directory has been modified (fModified set), write the keys
-//  and the directory header. This function assumes the cd is correctly set.
-//
-//  It is recommended to use this function in the following situation:
-//  Assume a process1 using a directory in Update mode
-//    -New objects or modified objects have been written to the directory
-//    -You do not want to close the file
-//    -You want your changes be visible from another process2 already connected
-//     to this directory in read mode
-//    -Call this function
-//    -In process2, use TDirectoryFile::ReadKeys to refresh the directory
-
    if (IsWritable() && (fModified || force) && fFile) {
       Bool_t dowrite = kTRUE;
       if (fFile->GetListOfFree())
@@ -1488,26 +1491,26 @@ void TDirectoryFile::SaveSelf(Bool_t force)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the default buffer size when creating new TKeys
+/// see also TDirectoryFile::GetBufferSize
+
 void TDirectoryFile::SetBufferSize(Int_t bufsize)
 {
-   // set the default buffer size when creating new TKeys
-   // see also TDirectoryFile::GetBufferSize
-
    fBufferSize = bufsize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the action to be executed in the dictionary of the parent class
+/// and store the corresponding exec number into fBits.
+/// This function searches a data member in the class of parent with an
+/// offset corresponding to this.
+/// If a comment "TEXEC:" is found in the comment field of the data member,
+/// the function stores the exec identifier of the exec statement
+/// following this keyword.
+
 void TDirectoryFile::SetTRefAction(TObject *ref, TObject *parent)
 {
-   // Find the action to be executed in the dictionary of the parent class
-   // and store the corresponding exec number into fBits.
-   // This function searches a data member in the class of parent with an
-   // offset corresponding to this.
-   // If a comment "TEXEC:" is found in the comment field of the data member,
-   // the function stores the exec identifier of the exec statement
-   // following this keyword.
-
    Int_t offset = (char*)ref - (char*)parent;
    TClass *cl = parent->IsA();
    cl->BuildRealData(parent);
@@ -1522,11 +1525,11 @@ void TDirectoryFile::SetTRefAction(TObject *ref, TObject *parent)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Set the new value of fWritable recursively
+
 void TDirectoryFile::SetWritable(Bool_t writable)
 {
-//  Set the new value of fWritable recursively
-
    TDirectory::TContext ctxt(this);
 
    fWritable = writable;
@@ -1545,20 +1548,21 @@ void TDirectoryFile::SetWritable(Bool_t writable)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*Return the size in bytes of the directory header*-*-*-*-*-*-*
+///*-*          ================================================
+///Int_t nbytes = sizeof(Version_t);    2
+///nbytes     += fDatimeC.Sizeof();
+///nbytes     += fDatimeM.Sizeof();
+///nbytes     += sizeof fNbytesKeys;    4
+///nbytes     += sizeof fNbytesName;    4
+///nbytes     += sizeof fSeekDir;       4 or 8
+///nbytes     += sizeof fSeekParent;    4 or 8
+///nbytes     += sizeof fSeekKeys;      4 or 8
+///nbytes     += fUUID.Sizeof();
+
 Int_t TDirectoryFile::Sizeof() const
 {
-//*-*-*-*-*-*-*Return the size in bytes of the directory header*-*-*-*-*-*-*
-//*-*          ================================================
-   //Int_t nbytes = sizeof(Version_t);    2
-   //nbytes     += fDatimeC.Sizeof();
-   //nbytes     += fDatimeM.Sizeof();
-   //nbytes     += sizeof fNbytesKeys;    4
-   //nbytes     += sizeof fNbytesName;    4
-   //nbytes     += sizeof fSeekDir;       4 or 8
-   //nbytes     += sizeof fSeekParent;    4 or 8
-   //nbytes     += sizeof fSeekKeys;      4 or 8
-   //nbytes     += fUUID.Sizeof();
    Int_t nbytes = 22;
 
    nbytes     += fDatimeC.Sizeof();
@@ -1570,12 +1574,12 @@ Int_t TDirectoryFile::Sizeof() const
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*              =========================================
+
 void TDirectoryFile::Streamer(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              =========================================
-
    Version_t v,version;
    if (b.IsReading()) {
       Build((TFile*)b.GetParent(), 0);
@@ -1680,15 +1684,15 @@ void TDirectoryFile::Streamer(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write all objects in memory to disk.
+/// Loop on all objects in memory (including subdirectories).
+/// A new key is created in the KEYS linked list for each object.
+/// For allowed options see TObject::Write().
+/// The directory header info is rewritten on the directory header record.
+
 Int_t TDirectoryFile::Write(const char *, Int_t opt, Int_t bufsize)
 {
-   // Write all objects in memory to disk.
-   // Loop on all objects in memory (including subdirectories).
-   // A new key is created in the KEYS linked list for each object.
-   // For allowed options see TObject::Write().
-   // The directory header info is rewritten on the directory header record.
-
    if (!IsWritable()) return 0;
    TDirectory::TContext ctxt(this);
 
@@ -1704,65 +1708,65 @@ Int_t TDirectoryFile::Write(const char *, Int_t opt, Int_t bufsize)
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// One can not save a const TDirectory object.
+
 Int_t TDirectoryFile::Write(const char *n, Int_t opt, Int_t bufsize) const
 {
-   // One can not save a const TDirectory object.
-
    Error("Write const","A const TDirectory object should not be saved. We try to proceed anyway.");
    return const_cast<TDirectoryFile*>(this)->Write(n, opt, bufsize);
 }
 
-//____________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write object obj to this directory
+/// The data structure corresponding to this object is serialized.
+/// The corresponding buffer is written to this directory
+/// with an associated key with name "name".
+///
+/// Writing an object to a file involves the following steps:
+///
+///  -Creation of a support TKey object in the directory.
+///   The TKey object creates a TBuffer object.
+///
+///  -The TBuffer object is filled via the class::Streamer function.
+///
+///  -If the file is compressed (default) a second buffer is created to
+///   hold the compressed buffer.
+///
+///  -Reservation of the corresponding space in the file by looking
+///   in the TFree list of free blocks of the file.
+///
+///  -The buffer is written to the file.
+///
+///  By default, the buffersize will be taken from the average buffer size
+///  of all objects written to the current file so far.
+///  Use TDirectoryFile::SetBufferSize to force a given buffer size.
+///
+///  If a name is specified, it will be the name of the key.
+///  If name is not given, the name of the key will be the name as returned
+///  by obj->GetName().
+///
+///  The option can be a combination of:
+///    "SingleKey", "Overwrite" or "WriteDelete"
+///  Using the "Overwrite" option a previous key with the same name is
+///  overwritten. The previous key is deleted before writing the new object.
+///  Using the "WriteDelete" option a previous key with the same name is
+///  deleted only after the new object has been written. This option
+///  is safer than kOverwrite but it is slower.
+///  The "SingleKey" option is only used by TCollection::Write() to write
+///  a container with a single key instead of each object in the container
+///  with its own key.
+///
+///  An object is read from this directory via TDirectoryFile::Get.
+///
+///  The function returns the total number of bytes written to the directory.
+///  It returns 0 if the object cannot be written.
+///
+///  WARNING: in name avoid special characters like '^','$','.' that are used
+///  by the regular expression parser (see TRegexp).
+
 Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_t *option, Int_t bufsize)
 {
-   // Write object obj to this directory
-   // The data structure corresponding to this object is serialized.
-   // The corresponding buffer is written to this directory
-   // with an associated key with name "name".
-   //
-   // Writing an object to a file involves the following steps:
-   //
-   //  -Creation of a support TKey object in the directory.
-   //   The TKey object creates a TBuffer object.
-   //
-   //  -The TBuffer object is filled via the class::Streamer function.
-   //
-   //  -If the file is compressed (default) a second buffer is created to
-   //   hold the compressed buffer.
-   //
-   //  -Reservation of the corresponding space in the file by looking
-   //   in the TFree list of free blocks of the file.
-   //
-   //  -The buffer is written to the file.
-   //
-   //  By default, the buffersize will be taken from the average buffer size
-   //  of all objects written to the current file so far.
-   //  Use TDirectoryFile::SetBufferSize to force a given buffer size.
-   //
-   //  If a name is specified, it will be the name of the key.
-   //  If name is not given, the name of the key will be the name as returned
-   //  by obj->GetName().
-   //
-   //  The option can be a combination of:
-   //    "SingleKey", "Overwrite" or "WriteDelete"
-   //  Using the "Overwrite" option a previous key with the same name is
-   //  overwritten. The previous key is deleted before writing the new object.
-   //  Using the "WriteDelete" option a previous key with the same name is
-   //  deleted only after the new object has been written. This option
-   //  is safer than kOverwrite but it is slower.
-   //  The "SingleKey" option is only used by TCollection::Write() to write
-   //  a container with a single key instead of each object in the container
-   //  with its own key.
-   //
-   //  An object is read from this directory via TDirectoryFile::Get.
-   //
-   //  The function returns the total number of bytes written to the directory.
-   //  It returns 0 if the object cannot be written.
-   //
-   //  WARNING: in name avoid special characters like '^','$','.' that are used
-   //  by the regular expression parser (see TRegexp).
-
    TDirectory::TContext ctxt(this);
 
    if (fFile==0) {
@@ -1845,31 +1849,31 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write object from pointer of class classname in this directory
+/// obj may not derive from TObject
+/// see TDirectoryFile::WriteTObject for comments
+///
+/// VERY IMPORTANT NOTE:
+///    The value passed as 'obj' needs to be from a pointer to the type described by classname
+///    For example with:
+///      TopClass *top;
+///      BottomClass *bottom;
+///      top = bottom;
+///    you can do:
+///      directory->WriteObjectAny(top,"top","name of object");
+///      directory->WriteObjectAny(bottom,"bottom","name of object");
+///    BUT YOU CAN NOT DO (it will fail in particular with multiple inheritance):
+///      directory->WriteObjectAny(top,"bottom","name of object");
+///
+/// We STRONGLY recommend to use
+///      TopClass *top = ....;
+///      directory->WriteObject(top,"name of object")
+///
+///   see laso remarks in TDirectoryFile::WriteTObject
+
 Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Int_t bufsize)
 {
-   // Write object from pointer of class classname in this directory
-   // obj may not derive from TObject
-   // see TDirectoryFile::WriteTObject for comments
-   //
-   // VERY IMPORTANT NOTE:
-   //    The value passed as 'obj' needs to be from a pointer to the type described by classname
-   //    For example with:
-   //      TopClass *top;
-   //      BottomClass *bottom;
-   //      top = bottom;
-   //    you can do:
-   //      directory->WriteObjectAny(top,"top","name of object");
-   //      directory->WriteObjectAny(bottom,"bottom","name of object");
-   //    BUT YOU CAN NOT DO (it will fail in particular with multiple inheritance):
-   //      directory->WriteObjectAny(top,"bottom","name of object");
-   //
-   // We STRONGLY recommend to use
-   //      TopClass *top = ....;
-   //      directory->WriteObject(top,"name of object")
-   //
-   //   see laso remarks in TDirectoryFile::WriteTObject
-
    TClass *cl = TClass::GetClass(classname);
    if (cl == 0) {
       TObject *info_obj = *(TObject**)obj;
@@ -1884,16 +1888,16 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, con
    return WriteObjectAny(obj,cl,name,option,bufsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write object of class with dictionary cl in this directory
+/// obj may not derive from TObject
+/// To get the TClass* cl pointer, one can use
+///    TClass *cl = TClass::GetClass("classname");
+/// An alternative is to call the function WriteObjectAny above.
+/// see TDirectoryFile::WriteTObject for comments
+
 Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option, Int_t bufsize)
 {
-   // Write object of class with dictionary cl in this directory
-   // obj may not derive from TObject
-   // To get the TClass* cl pointer, one can use
-   //    TClass *cl = TClass::GetClass("classname");
-   // An alternative is to call the function WriteObjectAny above.
-   // see TDirectoryFile::WriteTObject for comments
-
    TDirectory::TContext ctxt(this);
 
    if (fFile==0) return 0;
@@ -1981,11 +1985,12 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Overwrite the Directory header record*-*-*-*-*-*-*-*-*
+///*-*                  =====================================
+
 void TDirectoryFile::WriteDirHeader()
 {
-//*-*-*-*-*-*-*-*-*-*-*Overwrite the Directory header record*-*-*-*-*-*-*-*-*
-//*-*                  =====================================
    TFile* f = GetFile();
    if (f==0) return;
 
@@ -2008,14 +2013,14 @@ void TDirectoryFile::WriteDirHeader()
    delete [] header;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*Write KEYS linked list on the file *-*-*-*-*-*-*-*
+///*-*                    ==================================
+///  The linked list of keys (fKeys) is written as a single data record
+///
+
 void TDirectoryFile::WriteKeys()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Write KEYS linked list on the file *-*-*-*-*-*-*-*
-//*-*                    ==================================
-//  The linked list of keys (fKeys) is written as a single data record
-//
-
    TFile* f = GetFile();
    if (f==0) return;
 

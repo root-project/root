@@ -44,7 +44,11 @@ ClassImp(RooMultiBinomial)
   ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct the efficiency functions from a list of efficiency functions
+/// and a list of categories cat with two states (0,1) that indicate if a given
+/// event should be counted as rejected or accepted respectively
+
 RooMultiBinomial::RooMultiBinomial(const char *name, const char *title, 
 				   const RooArgList& effFuncList, 
 				   const RooArgList& catList,
@@ -54,10 +58,6 @@ RooMultiBinomial::RooMultiBinomial(const char *name, const char *title,
   _effFuncList("effFuncList","list of eff funcs",this),
   _ignoreNonVisible(ignoreNonVisible)
 {  
-  // Construct the efficiency functions from a list of efficiency functions
-  // and a list of categories cat with two states (0,1) that indicate if a given
-  // event should be counted as rejected or accepted respectively
-
   _catList.add(catList);
   _effFuncList.add(effFuncList);
 
@@ -70,32 +70,34 @@ RooMultiBinomial::RooMultiBinomial(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooMultiBinomial::RooMultiBinomial(const RooMultiBinomial& other, const char* name) : 
   RooAbsReal(other, name),
   _catList("catList",this,other._catList),
   _effFuncList("effFuncList",this,other._effFuncList),
   _ignoreNonVisible(other._ignoreNonVisible)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooMultiBinomial::~RooMultiBinomial() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the raw value of the function which is the effFunc
+/// value if cat==1 and it is (1-effFunc) if cat==0
+
 Double_t RooMultiBinomial::evaluate() const
 {
-  // Calculate the raw value of the function which is the effFunc
-  // value if cat==1 and it is (1-effFunc) if cat==0
-
   Int_t effFuncListSize = _effFuncList.getSize();
 
   // Get efficiency function for category i

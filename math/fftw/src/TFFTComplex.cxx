@@ -43,11 +43,11 @@
 
 ClassImp(TFFTComplex)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///default
+
 TFFTComplex::TFFTComplex()
 {
-//default
-
    fIn   = 0;
    fOut  = 0;
    fPlan = 0;
@@ -58,12 +58,12 @@ TFFTComplex::TFFTComplex()
    fSign = 1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///For 1d transforms
+///Allocates memory for the input array, and, if inPlace = kFALSE, for the output array
+
 TFFTComplex::TFFTComplex(Int_t n, Bool_t inPlace)
 {
-//For 1d transforms
-//Allocates memory for the input array, and, if inPlace = kFALSE, for the output array
-
    fIn = fftw_malloc(sizeof(fftw_complex) *n);
    if (!inPlace)
       fOut = fftw_malloc(sizeof(fftw_complex) * n);
@@ -78,12 +78,12 @@ TFFTComplex::TFFTComplex(Int_t n, Bool_t inPlace)
    fFlags = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///For multidim. transforms
+///Allocates memory for the input array, and, if inPlace = kFALSE, for the output array
+
 TFFTComplex::TFFTComplex(Int_t ndim, Int_t *n, Bool_t inPlace)
 {
-//For multidim. transforms
-//Allocates memory for the input array, and, if inPlace = kFALSE, for the output array
-
    fNdim = ndim;
    fTotalSize = 1;
    fN = new Int_t[fNdim];
@@ -101,13 +101,13 @@ TFFTComplex::TFFTComplex(Int_t ndim, Int_t *n, Bool_t inPlace)
    fFlags = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Destroys the data arrays and the plan. However, some plan information stays around
+///until the root session is over, and is reused if other plans of the same size are
+///created
+
 TFFTComplex::~TFFTComplex()
 {
-//Destroys the data arrays and the plan. However, some plan information stays around
-//until the root session is over, and is reused if other plans of the same size are
-//created
-
    fftw_destroy_plan((fftw_plan)fPlan);
    fPlan = 0;
    fftw_free((fftw_complex*)fIn);
@@ -117,26 +117,26 @@ TFFTComplex::~TFFTComplex()
       delete [] fN;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Creates the fftw-plan
+///
+///NOTE:  input and output arrays are overwritten during initialisation,
+///       so don't set any points, before running this function!!!!!
+///
+///2nd parameter: +1
+///Argument kind is dummy and doesn't need to be specified
+///Possible flag_options:
+///"ES" (from "estimate") - no time in preparing the transform, but probably sub-optimal
+///   performance
+///"M" (from "measure") - some time spend in finding the optimal way to do the transform
+///"P" (from "patient") - more time spend in finding the optimal way to do the transform
+///"EX" (from "exhaustive") - the most optimal way is found
+///This option should be chosen depending on how many transforms of the same size and
+///type are going to be done. Planning is only done once, for the first transform of this
+///size and type.
+
 void TFFTComplex::Init( Option_t *flags, Int_t sign,const Int_t* /*kind*/)
 {
-//Creates the fftw-plan
-//
-//NOTE:  input and output arrays are overwritten during initialisation,
-//       so don't set any points, before running this function!!!!!
-//
-//2nd parameter: +1
-//Argument kind is dummy and doesn't need to be specified
-//Possible flag_options:
-//"ES" (from "estimate") - no time in preparing the transform, but probably sub-optimal
-//   performance
-//"M" (from "measure") - some time spend in finding the optimal way to do the transform
-//"P" (from "patient") - more time spend in finding the optimal way to do the transform
-//"EX" (from "exhaustive") - the most optimal way is found
-//This option should be chosen depending on how many transforms of the same size and
-//type are going to be done. Planning is only done once, for the first transform of this
-//size and type.
-
    fSign = sign;
    fFlags = flags;
 
@@ -150,11 +150,11 @@ void TFFTComplex::Init( Option_t *flags, Int_t sign,const Int_t* /*kind*/)
       fPlan = (void*)fftw_plan_dft(fNdim, fN, (fftw_complex*)fIn, (fftw_complex*)fIn, sign, MapFlag(flags));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Computes the transform, specified in Init() function
+
 void TFFTComplex::Transform()
 {
-//Computes the transform, specified in Init() function
-
    if (fPlan)
       fftw_execute((fftw_plan)fPlan);
    else {
@@ -163,11 +163,11 @@ void TFFTComplex::Transform()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Copies the output(or input) into the argument array
+
 void TFFTComplex::GetPoints(Double_t *data, Bool_t fromInput) const
 {
-//Copies the output(or input) into the argument array
-
    if (!fromInput){
       for (Int_t i=0; i<2*fTotalSize; i+=2){
          data[i] = ((fftw_complex*)fOut)[i/2][0];
@@ -181,11 +181,11 @@ void TFFTComplex::GetPoints(Double_t *data, Bool_t fromInput) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///returns real and imaginary parts of the point #ipoint
+
 void TFFTComplex::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, Bool_t fromInput) const
 {
-//returns real and imaginary parts of the point #ipoint
-
    if (fOut && !fromInput){
       re = ((fftw_complex*)fOut)[ipoint][0];
       im = ((fftw_complex*)fOut)[ipoint][1];
@@ -195,11 +195,11 @@ void TFFTComplex::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, Bool
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///For multidimensional transforms. Returns real and imaginary parts of the point #ipoint
+
 void TFFTComplex::GetPointComplex(const Int_t *ipoint, Double_t &re, Double_t &im, Bool_t fromInput) const
 {
-//For multidimensional transforms. Returns real and imaginary parts of the point #ipoint
-
    Int_t ireal = ipoint[0];
    for (Int_t i=0; i<fNdim-1; i++)
       ireal=fN[i+1]*ireal + ipoint[i+1];
@@ -213,11 +213,11 @@ void TFFTComplex::GetPointComplex(const Int_t *ipoint, Double_t &re, Double_t &i
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Copies real and imaginary parts of the output (input) into the argument arrays
+
 void TFFTComplex::GetPointsComplex(Double_t *re, Double_t *im, Bool_t fromInput) const
 {
-//Copies real and imaginary parts of the output (input) into the argument arrays
-
    if (fOut && !fromInput){
       for (Int_t i=0; i<fTotalSize; i++){
          re[i] = ((fftw_complex*)fOut)[i][0];
@@ -231,11 +231,11 @@ void TFFTComplex::GetPointsComplex(Double_t *re, Double_t *im, Bool_t fromInput)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Copies the output(input) into the argument array
+
 void TFFTComplex::GetPointsComplex(Double_t *data, Bool_t fromInput) const
 {
-//Copies the output(input) into the argument array
-
    if (fOut && !fromInput){
       for (Int_t i=0; i<fTotalSize; i+=2){
          data[i] = ((fftw_complex*)fOut)[i/2][0];
@@ -249,20 +249,20 @@ void TFFTComplex::GetPointsComplex(Double_t *data, Bool_t fromInput) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///sets real and imaginary parts of point # ipoint
+
 void TFFTComplex::SetPoint(Int_t ipoint, Double_t re, Double_t im)
 {
-//sets real and imaginary parts of point # ipoint
-
    ((fftw_complex*)fIn)[ipoint][0]=re;
    ((fftw_complex*)fIn)[ipoint][1]=im;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///For multidim. transforms. Sets real and imaginary parts of point # ipoint
+
 void TFFTComplex::SetPoint(const Int_t *ipoint, Double_t re, Double_t im)
 {
-//For multidim. transforms. Sets real and imaginary parts of point # ipoint
-
    Int_t ireal = ipoint[0];
    for (Int_t i=0; i<fNdim-1; i++)
       ireal=fN[i+1]*ireal + ipoint[i+1];
@@ -271,30 +271,31 @@ void TFFTComplex::SetPoint(const Int_t *ipoint, Double_t re, Double_t im)
    ((fftw_complex*)fIn)[ireal][1]=im;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TFFTComplex::SetPointComplex(Int_t ipoint, TComplex &c)
 {
    ((fftw_complex*)fIn)[ipoint][0] = c.Re();
    ((fftw_complex*)fIn)[ipoint][1] = c.Im();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set all points. the values are copied. points should be ordered as follows:
+///[re_0, im_0, re_1, im_1, ..., re_n, im_n)
+
 void TFFTComplex::SetPoints(const Double_t *data)
 {
-//set all points. the values are copied. points should be ordered as follows:
-//[re_0, im_0, re_1, im_1, ..., re_n, im_n)
-
    for (Int_t i=0; i<2*fTotalSize-1; i+=2){
       ((fftw_complex*)fIn)[i/2][0]=data[i];
       ((fftw_complex*)fIn)[i/2][1]=data[i+1];
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set all points. the values are copied
+
 void TFFTComplex::SetPointsComplex(const Double_t *re_data, const Double_t *im_data)
 {
-//set all points. the values are copied
-
    if (!fIn){
       Error("SetPointsComplex", "Size is not set yet");
       return;
@@ -305,15 +306,15 @@ void TFFTComplex::SetPointsComplex(const Double_t *re_data, const Double_t *im_d
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///allowed options:
+///"ES" - FFTW_ESTIMATE
+///"M" - FFTW_MEASURE
+///"P" - FFTW_PATIENT
+///"EX" - FFTW_EXHAUSTIVE
+
 UInt_t TFFTComplex::MapFlag(Option_t *flag)
 {
-//allowed options:
-//"ES" - FFTW_ESTIMATE
-//"M" - FFTW_MEASURE
-//"P" - FFTW_PATIENT
-//"EX" - FFTW_EXHAUSTIVE
-
    TString opt = flag;
    opt.ToUpper();
    if (opt.Contains("ES"))

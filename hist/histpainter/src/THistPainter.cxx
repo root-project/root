@@ -64,7 +64,8 @@
 #include "TPoint.h"
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>The histogram painter class</h2></center>
 
@@ -3047,7 +3048,8 @@ static TString gStringKurtosisZ;
 ClassImp(THistPainter)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 THistPainter::THistPainter()
 {
    /* Begin_html
@@ -3097,7 +3099,8 @@ THistPainter::THistPainter()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 THistPainter::~THistPainter()
 {
    /* Begin_html
@@ -3106,7 +3109,8 @@ THistPainter::~THistPainter()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 {
    /* Begin_html
@@ -3291,7 +3295,8 @@ FUNCTIONS:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::DrawPanel()
 {
    /* Begin_html
@@ -3310,7 +3315,8 @@ void THistPainter::DrawPanel()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    /* Begin_html
@@ -3541,7 +3547,8 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TList *THistPainter::GetContourList(Double_t contour) const
 {
    /* Begin_html
@@ -3563,7 +3570,8 @@ TList *THistPainter::GetContourList(Double_t contour) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
 {
    /* Begin_html
@@ -3693,7 +3701,8 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t THistPainter::IsInside(Int_t ix, Int_t iy)
 {
    /* Begin_html
@@ -3713,7 +3722,8 @@ Bool_t THistPainter::IsInside(Int_t ix, Int_t iy)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t THistPainter::IsInside(Double_t x, Double_t y)
 {
    /* Begin_html
@@ -3731,7 +3741,8 @@ Bool_t THistPainter::IsInside(Double_t x, Double_t y)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t THistPainter::MakeChopt(Option_t *choptin)
 {
    /* Begin_html
@@ -4087,7 +4098,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t THistPainter::MakeCuts(char *choptin)
 {
    /* Begin_html
@@ -4136,7 +4148,8 @@ Int_t THistPainter::MakeCuts(char *choptin)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::Paint(Option_t *option)
 {
    /* Begin_Html
@@ -4326,7 +4339,8 @@ paintstat:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintArrows(Option_t *)
 {
    /* Begin_html
@@ -4417,7 +4431,8 @@ void THistPainter::PaintArrows(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintAxis(Bool_t drawGridOnly)
 {
    /* Begin_html
@@ -4717,7 +4732,8 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintBar(Option_t *)
 {
    /* Begin_html
@@ -4765,7 +4781,8 @@ void THistPainter::PaintBar(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintBarH(Option_t *)
 {
    /* Begin_html
@@ -4840,7 +4857,8 @@ void THistPainter::PaintBarH(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintBoxes(Option_t *)
 {
    /* Begin_html
@@ -5019,7 +5037,8 @@ void THistPainter::PaintBoxes(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintCandlePlot(Option_t *)
 {
    /* Begin_html
@@ -5126,7 +5145,8 @@ void THistPainter::PaintCandlePlot(Option_t *)
    delete [] quantiles;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintViolinPlot(Option_t *)
 {
     /* Begin_html
@@ -5240,7 +5260,8 @@ void THistPainter::PaintViolinPlot(Option_t *)
    delete [] quantiles;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintColorLevels(Option_t *)
 {
    /* Begin_html
@@ -5379,7 +5400,8 @@ void THistPainter::PaintColorLevels(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintContour(Option_t *option)
 {
    /* Begin_html
@@ -5719,7 +5741,8 @@ theEND:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, Double_t y1,
                             Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
                             Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels)
@@ -5778,7 +5801,8 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintErrors(Option_t *)
 {
    /* Begin_html
@@ -6056,7 +6080,8 @@ L30:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::Paint2DErrors(Option_t *)
 {
    /* Begin_html
@@ -6219,7 +6244,8 @@ void THistPainter::Paint2DErrors(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintFrame()
 {
    /* Begin_html
@@ -6244,7 +6270,8 @@ void THistPainter::PaintFrame()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintFunction(Option_t *)
 {
    /* Begin_html
@@ -6286,7 +6313,8 @@ void THistPainter::PaintFunction(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintHist(Option_t *)
 {
    /* Begin_html
@@ -6430,7 +6458,8 @@ void THistPainter::PaintHist(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintH3(Option_t *option)
 {
    /* Begin_html
@@ -6511,7 +6540,8 @@ void THistPainter::PaintH3(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t THistPainter::PaintInit()
 {
    /* Begin_html
@@ -6745,7 +6775,8 @@ Int_t THistPainter::PaintInit()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t THistPainter::PaintInitH()
 {
    /* Begin_html
@@ -6912,7 +6943,8 @@ Int_t THistPainter::PaintInitH()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintH3Iso()
 {
    /* Begin_html
@@ -7032,7 +7064,8 @@ void THistPainter::PaintH3Iso()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintLego(Option_t *)
 {
    /* Begin_html
@@ -7243,7 +7276,8 @@ void THistPainter::PaintLego(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 {
    /* Begin_html
@@ -7436,7 +7470,8 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintPalette()
 {
    /* Begin_html
@@ -7475,7 +7510,8 @@ void THistPainter::PaintPalette()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintScatterPlot(Option_t *option)
 {
    /* Begin_html
@@ -7590,7 +7626,8 @@ void THistPainter::PaintScatterPlot(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintSpecialObjects(const TObject *obj, Option_t *option)
 {
    /* Begin_html
@@ -7633,7 +7670,8 @@ void THistPainter::PaintSpecialObjects(const TObject *obj, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 {
    /* Begin_html
@@ -7858,7 +7896,8 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
 {
    /* Begin_html
@@ -8079,7 +8118,8 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
 {
    /* Begin_html
@@ -8320,7 +8360,8 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintSurface(Option_t *)
 {
    /* Begin_html
@@ -8571,7 +8612,8 @@ void THistPainter::PaintSurface(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintTriangles(Option_t *option)
 {
    /* Begin_html
@@ -8668,7 +8710,8 @@ void THistPainter::PaintTriangles(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::DefineColorLevels(Int_t ndivz)
 {
    /* Begin_html
@@ -8698,7 +8741,8 @@ void THistPainter::DefineColorLevels(Int_t ndivz)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintTable(Option_t *option)
 {
    /* Begin_html
@@ -8781,7 +8825,8 @@ void THistPainter::PaintTable(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintTH2PolyBins(Option_t *option)
 {
    /* Begin_html
@@ -8843,7 +8888,8 @@ void THistPainter::PaintTH2PolyBins(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintTH2PolyColorLevels(Option_t *)
 {
    /* Begin_html
@@ -8941,7 +8987,8 @@ void THistPainter::PaintTH2PolyColorLevels(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
 {
    /* Begin_html
@@ -9056,7 +9103,8 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintTH2PolyText(Option_t *)
 {
    /* Begin_html
@@ -9117,7 +9165,8 @@ void THistPainter::PaintTH2PolyText(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintText(Option_t *)
 {
    /* Begin_html
@@ -9215,7 +9264,8 @@ void THistPainter::PaintText(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintTF3()
 {
    /* Begin_html
@@ -9276,7 +9326,8 @@ void THistPainter::PaintTF3()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::PaintTitle()
 {
    /* Begin_html
@@ -9365,7 +9416,8 @@ void THistPainter::PaintTitle()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::ProcessMessage(const char *mess, const TObject *obj)
 {
    /* Begin_html
@@ -9386,7 +9438,8 @@ void THistPainter::ProcessMessage(const char *mess, const TObject *obj)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t THistPainter::ProjectAitoff2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
    /* Begin_html
@@ -9421,7 +9474,8 @@ Int_t THistPainter::ProjectAitoff2xy(Double_t l, Double_t b, Double_t &Al, Doubl
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t THistPainter::ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
    /* Begin_html
@@ -9444,7 +9498,8 @@ Int_t THistPainter::ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Dou
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
    /* Begin_html
@@ -9457,7 +9512,8 @@ Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, D
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t THistPainter::ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
    /* Begin_html
@@ -9470,7 +9526,8 @@ Int_t THistPainter::ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Do
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::RecalculateRange()
 {
    /* Begin_html
@@ -9583,7 +9640,8 @@ void THistPainter::RecalculateRange()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::SetHistogram(TH1 *h)
 {
    /* Begin_html
@@ -9599,7 +9657,8 @@ void THistPainter::SetHistogram(TH1 *h)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t THistPainter::TableInit()
 {
    /* Begin_html
@@ -9778,7 +9837,8 @@ LZMIN:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
 {
    /* Begin_html
@@ -9834,7 +9894,8 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::SetShowProjection(const char *option,Int_t nbins)
 {
    /* Begin_html
@@ -9863,7 +9924,8 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 {
    /* Begin_html
@@ -9947,7 +10009,8 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 {
    /* Begin_html
@@ -10031,7 +10094,8 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void THistPainter::ShowProjection3(Int_t px, Int_t py)
 {
    /* Begin_html

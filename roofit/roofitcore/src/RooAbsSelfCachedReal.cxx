@@ -42,37 +42,40 @@ ClassImp(RooAbsSelfCachedReal)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooAbsSelfCachedReal::RooAbsSelfCachedReal(const char *name, const char *title, Int_t ipOrder) :
   RooAbsCachedReal(name,title,ipOrder)
  { 
-   // Constructor
  } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAbsSelfCachedReal::RooAbsSelfCachedReal(const RooAbsSelfCachedReal& other, const char* name) :  
    RooAbsCachedReal(other,name)
  { 
-   // Copy constructor
  } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooAbsSelfCachedReal::~RooAbsSelfCachedReal() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill cache with sampling of function as defined by the evaluate() implementation
+
 void RooAbsSelfCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const 
 {
-  // Fill cache with sampling of function as defined by the evaluate() implementation
-
   RooDataHist& cacheHist = *cache.hist() ;
 
   // Make deep clone of self in non-caching mde and attach to dataset observables
@@ -93,12 +96,12 @@ void RooAbsSelfCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cach
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Defines observables to be cached, given a set of user defined observables
+/// Returns the subset of nset that are observables this p.d.f
+
 RooArgSet* RooAbsSelfCachedReal::actualObservables(const RooArgSet& nset) const 
 {
-  // Defines observables to be cached, given a set of user defined observables
-  // Returns the subset of nset that are observables this p.d.f
-
   // Make list of servers
   RooArgSet servers ;
 
@@ -115,13 +118,13 @@ RooArgSet* RooAbsSelfCachedReal::actualObservables(const RooArgSet& nset) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Defines parameters on which cache contents depends. Returns
+/// subset of variables of self that is not contained in the
+/// supplied nset
+
 RooArgSet* RooAbsSelfCachedReal::actualParameters(const RooArgSet& nset) const 
 {  
-  // Defines parameters on which cache contents depends. Returns
-  // subset of variables of self that is not contained in the
-  // supplied nset
-
   // Make list of servers
   RooArgSet *servers = new RooArgSet ;
 

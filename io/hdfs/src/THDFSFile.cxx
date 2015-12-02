@@ -64,13 +64,13 @@ static const Bool_t R__HDFS_ALLOW_CHANGES = kFALSE;
 
 ClassImp(THDFSFile)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Usual Constructor.  See the TFile constructor for details.
+
 THDFSFile::THDFSFile(const char *path, Option_t *option,
                      const char *ftitle, Int_t compress):
    TFile(path, "WEB", ftitle, compress)
 {
-   // Usual Constructor.  See the TFile constructor for details.
-
    fHdfsFH    = 0;
    fFS        = 0;
    fSize      = -1;
@@ -143,11 +143,11 @@ zombie:
    gDirectory = gROOT;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close and clean-up HDFS file.
+
 THDFSFile::~THDFSFile()
 {
-   // Close and clean-up HDFS file.
-
    TRACE("destroy")
 
    if (fPath)
@@ -160,12 +160,12 @@ THDFSFile::~THDFSFile()
    // internals) is going away in the next libhdfs version.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified number of bytes from current offset into the buffer.
+/// See documentation for TFile::SysRead().
+
 Int_t THDFSFile::SysRead(Int_t, void *buf, Int_t len)
 {
-   // Read specified number of bytes from current offset into the buffer.
-   // See documentation for TFile::SysRead().
-
    TRACE("READ")
    tSize num_read = hdfsPread(fFS, (hdfsFile)fHdfsFH, fSysOffset, buf, len);
    fSysOffset += len;
@@ -175,12 +175,12 @@ Int_t THDFSFile::SysRead(Int_t, void *buf, Int_t len)
    return num_read;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Seek to a specified position in the file.  See TFile::SysSeek().
+/// Note that THDFSFile does not support seeks when the file is open for write.
+
 Long64_t THDFSFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
 {
-   // Seek to a specified position in the file.  See TFile::SysSeek().
-   // Note that THDFSFile does not support seeks when the file is open for write.
-
    TRACE("SEEK")
    if (whence == SEEK_SET)
       fSysOffset = offset;
@@ -209,11 +209,11 @@ Long64_t THDFSFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
    return fSysOffset;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a file in HDFS.
+
 Int_t THDFSFile::SysOpen(const char * pathname, Int_t flags, UInt_t)
 {
-   // Open a file in HDFS.
-
    // This is given to us as a URL (hdfs://hadoop-name:9000//foo or
    // hdfs:///foo); convert this to a file name.
    TUrl url(pathname);
@@ -231,31 +231,31 @@ Int_t THDFSFile::SysOpen(const char * pathname, Int_t flags, UInt_t)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the file in HDFS.
+
 Int_t THDFSFile::SysClose(Int_t)
 {
-   // Close the file in HDFS.
-
    int result = hdfsCloseFile(fFS, (hdfsFile)fHdfsFH);
    fFS = 0;
    fHdfsFH = 0;
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write a buffer into the file; this is not supported currently.
+
 Int_t THDFSFile::SysWrite(Int_t, const void *, Int_t)
 {
-   // Write a buffer into the file; this is not supported currently.
-
    errno = ENOSYS;
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a stat on the HDFS file; see TFile::SysStat().
+
 Int_t THDFSFile::SysStat(Int_t, Long_t* id, Long64_t* size, Long_t* flags, Long_t* modtime)
 {
-   // Perform a stat on the HDFS file; see TFile::SysStat().
-
    *id = ::Hash(fPath);
 
    hdfsFileInfo *info = hdfsGetPathInfo(fFS, fPath);
@@ -275,30 +275,30 @@ Int_t THDFSFile::SysStat(Int_t, Long_t* id, Long64_t* size, Long_t* flags, Long_
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sync remaining data to disk; Not supported by HDFS.
+
 Int_t THDFSFile::SysSync(Int_t)
 {
-   // Sync remaining data to disk; Not supported by HDFS.
-
    errno = ENOSYS;
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ResetErrno; simply calls TSystem::ResetErrno().
+
 void THDFSFile::ResetErrno() const
 {
-   // ResetErrno; simply calls TSystem::ResetErrno().
-
    TSystem::ResetErrno();
 }
 
 
 ClassImp(THDFSSystem)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 THDFSSystem::THDFSSystem() : TSystem("-hdfs", "HDFS Helper System")
 {
-
    SetName("hdfs");
 
    Bool_t has_authn = kTRUE;
@@ -329,10 +329,11 @@ zombie:
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a directory.
+
 Int_t THDFSSystem::MakeDirectory(const char * path)
 {
-   // Make a directory.
    if (fFH != 0) {
       Error("MakeDirectory", "No filesystem handle (should never happen)");
       return -1;
@@ -346,12 +347,12 @@ Int_t THDFSSystem::MakeDirectory(const char * path)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a directory via hdfs. Returns an opaque pointer to a dir
+/// structure. Returns 0 in case of error.
+
 void *THDFSSystem::OpenDirectory(const char * path)
 {
-   // Open a directory via hdfs. Returns an opaque pointer to a dir
-   // structure. Returns 0 in case of error.
-
    if (fFH == 0) {
        Error("OpenDirectory", "No filesystem handle (should never happen)");
        return 0;
@@ -381,11 +382,11 @@ void *THDFSSystem::OpenDirectory(const char * path)
    return fDirp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free directory via httpd.
+
 void THDFSSystem::FreeDirectory(void *dirp)
 {
-   // Free directory via httpd.
-
    if (fFH == 0) {
       Error("FreeDirectory", "No filesystem handle (should never happen)");
       return;
@@ -402,11 +403,11 @@ void THDFSSystem::FreeDirectory(void *dirp)
    fDirp=0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get directory entry via httpd. Returns 0 in case no more entries.
+
 const char *THDFSSystem::GetDirEntry(void *dirp)
 {
-   // Get directory entry via httpd. Returns 0 in case no more entries.
-
    if (fFH == 0) {
       Error("GetDirEntry", "No filesystem handle (should never happen)");
       return 0;
@@ -437,14 +438,14 @@ const char *THDFSSystem::GetDirEntry(void *dirp)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file. Info is returned in the form of a FileStat_t
+/// structure (see TSystem.h).
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 Int_t THDFSSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file. Info is returned in the form of a FileStat_t
-   // structure (see TSystem.h).
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    if (fFH == 0) {
       Error("GetPathInfo", "No filesystem handle (should never happen)");
       return 1;
@@ -466,13 +467,13 @@ Int_t THDFSSystem::GetPathInfo(const char *path, FileStat_t &buf)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns FALSE if one can access a file using the specified access mode.
+/// Mode is the same as for the Unix access(2) function.
+/// Attention, bizarre convention of return value!!
+
 Bool_t THDFSSystem::AccessPathName(const char *path, EAccessMode mode)
 {
-   // Returns FALSE if one can access a file using the specified access mode.
-   // Mode is the same as for the Unix access(2) function.
-   // Attention, bizarre convention of return value!!
-
    if (mode & kExecutePermission || mode & kWritePermission)
        return kTRUE;
 
@@ -487,12 +488,12 @@ Bool_t THDFSSystem::AccessPathName(const char *path, EAccessMode mode)
       return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlink, i.e. remove, a file or directory. Returns 0 when successful,
+/// -1 in case of failure.
+
 Int_t THDFSSystem::Unlink(const char * path)
 {
-   // Unlink, i.e. remove, a file or directory. Returns 0 when successful,
-   // -1 in case of failure.
-
    if (fFH == 0) {
       Error("Unlink", "No filesystem handle (should never happen)");
       return kTRUE;

@@ -43,18 +43,20 @@ ClassImp(RooCmdArg)
 const RooCmdArg RooCmdArg::_none ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return reference to null argument
+
 const RooCmdArg& RooCmdArg::none() 
 {
-  // Return reference to null argument
   return _none ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooCmdArg::RooCmdArg() : TNamed("","")
 {
-  // Default constructor
   _procSubArgs = kFALSE ;
   _prefixSubArgs = kTRUE ;
   _c = 0 ;
@@ -67,15 +69,15 @@ RooCmdArg::RooCmdArg() : TNamed("","")
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with full specification of payload: two integers, two doubles,
+/// three string poiners, two object pointers and one RooCmdArg pointer
+
 RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, Double_t d1, Double_t d2, 
 		     const char* s1, const char* s2, const TObject* o1, const TObject* o2, 
 		     const RooCmdArg* ca, const char* s3, const RooArgSet* c1, const RooArgSet* c2) :
   TNamed(name,name)
 {
-  // Constructor with full specification of payload: two integers, two doubles,
-  // three string poiners, two object pointers and one RooCmdArg pointer
-
   _i[0] = i1 ;
   _i[1] = i2 ;
   _d[0] = d1 ;
@@ -100,12 +102,12 @@ RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, Double_t d1, Double_t
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooCmdArg::RooCmdArg(const RooCmdArg& other) :
   TNamed(other)
 {
-  // Copy constructor
-
   _i[0] = other._i[0] ;
   _i[1] = other._i[1] ;
   _d[0] = other._d[0] ;
@@ -131,11 +133,11 @@ RooCmdArg::RooCmdArg(const RooCmdArg& other) :
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 RooCmdArg& RooCmdArg::operator=(const RooCmdArg& other) 
 {
-  // Assignment operator
-
   if (&other==this) return *this ;
 
   SetName(other.GetName()) ;
@@ -168,35 +170,38 @@ RooCmdArg& RooCmdArg::operator=(const RooCmdArg& other)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooCmdArg::~RooCmdArg()
 {
-  // Destructor
   _argList.Delete() ;
   if (_c) delete[] _c ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Utility function to add nested RooCmdArg to payload of this RooCmdArg
+
 void RooCmdArg::addArg(const RooCmdArg& arg) 
 {
-  // Utility function to add nested RooCmdArg to payload of this RooCmdArg
-
   _argList.Add(new RooCmdArg(arg)) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return RooArgSet stored in slot idx
+
 const RooArgSet* RooCmdArg::getSet(Int_t idx) const {
-  // Return RooArgSet stored in slot idx
     return _c ? &_c[idx] : 0 ;
   }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooCmdArg::setSet(Int_t idx,const RooArgSet& set) 
 {
   if (!_c) {

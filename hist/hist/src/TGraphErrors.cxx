@@ -31,7 +31,8 @@
 ClassImp(TGraphErrors)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>TGraphErrors class</h2></center>
 A TGraphErrors is a TGraph with error bars.
@@ -65,36 +66,36 @@ Begin_Macro(source)
 End_Macro */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphErrors default constructor.
+
 TGraphErrors::TGraphErrors(): TGraph()
 {
-   // TGraphErrors default constructor.
-
    if (!CtorAllocate()) return;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphErrors normal constructor.
+///
+///  the arrays are preset to zero
+
 TGraphErrors::TGraphErrors(Int_t n)
    : TGraph(n)
 {
-   // TGraphErrors normal constructor.
-   //
-   //  the arrays are preset to zero
-
    if (!CtorAllocate()) return;
    FillZero(0, fNpoints);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphErrors normal constructor.
+///
+///  if ex or ey are null, the corresponding arrays are preset to zero
+
 TGraphErrors::TGraphErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *ex, const Float_t *ey)
    : TGraph(n, x, y)
 {
-   // TGraphErrors normal constructor.
-   //
-   //  if ex or ey are null, the corresponding arrays are preset to zero
-
    if (!CtorAllocate()) return;
 
    for (Int_t i = 0; i < n; i++) {
@@ -106,14 +107,14 @@ TGraphErrors::TGraphErrors(Int_t n, const Float_t *x, const Float_t *y, const Fl
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphErrors normal constructor.
+///
+///  if ex or ey are null, the corresponding arrays are preset to zero
+
 TGraphErrors::TGraphErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *ex, const Double_t *ey)
    : TGraph(n, x, y)
 {
-   // TGraphErrors normal constructor.
-   //
-   //  if ex or ey are null, the corresponding arrays are preset to zero
-
    if (!CtorAllocate()) return;
 
    n = sizeof(Double_t) * fNpoints;
@@ -124,16 +125,16 @@ TGraphErrors::TGraphErrors(Int_t n, const Double_t *x, const Double_t *y, const 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor with four vectors of floats in input
+/// A grapherrors is built with the X coordinates taken from vx and Y coord from vy
+/// and the errors from vectors vex and vey.
+/// The number of points in the graph is the minimum of number of points
+/// in vx and vy.
+
 TGraphErrors::TGraphErrors(const TVectorF &vx, const TVectorF &vy, const TVectorF &vex, const TVectorF &vey)
    : TGraph(TMath::Min(vx.GetNrows(), vy.GetNrows()), vx.GetMatrixArray(), vy.GetMatrixArray() )
 {
-   // constructor with four vectors of floats in input
-   // A grapherrors is built with the X coordinates taken from vx and Y coord from vy
-   // and the errors from vectors vex and vey.
-   // The number of points in the graph is the minimum of number of points
-   // in vx and vy.
-
    if (!CtorAllocate()) return;
    Int_t ivexlow = vex.GetLwb();
    Int_t iveylow = vey.GetLwb();
@@ -144,16 +145,16 @@ TGraphErrors::TGraphErrors(const TVectorF &vx, const TVectorF &vy, const TVector
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor with four vectors of doubles in input
+/// A grapherrors is built with the X coordinates taken from vx and Y coord from vy
+/// and the errors from vectors vex and vey.
+/// The number of points in the graph is the minimum of number of points
+/// in vx and vy.
+
 TGraphErrors::TGraphErrors(const TVectorD  &vx, const TVectorD  &vy, const TVectorD  &vex, const TVectorD  &vey)
    : TGraph(TMath::Min(vx.GetNrows(), vy.GetNrows()), vx.GetMatrixArray(), vy.GetMatrixArray() )
 {
-   // constructor with four vectors of doubles in input
-   // A grapherrors is built with the X coordinates taken from vx and Y coord from vy
-   // and the errors from vectors vex and vey.
-   // The number of points in the graph is the minimum of number of points
-   // in vx and vy.
-
    if (!CtorAllocate()) return;
    Int_t ivexlow = vex.GetLwb();
    Int_t iveylow = vey.GetLwb();
@@ -164,12 +165,12 @@ TGraphErrors::TGraphErrors(const TVectorD  &vx, const TVectorD  &vy, const TVect
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphErrors copy constructor
+
 TGraphErrors::TGraphErrors(const TGraphErrors &gr)
    : TGraph(gr)
 {
-   // TGraphErrors copy constructor
-
    if (!CtorAllocate()) return;
 
    Int_t n = sizeof(Double_t) * fNpoints;
@@ -178,11 +179,11 @@ TGraphErrors::TGraphErrors(const TGraphErrors &gr)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphErrors assignment operator
+
 TGraphErrors& TGraphErrors::operator=(const TGraphErrors &gr)
 {
-   // TGraphErrors assignment operator
-
    if (this != &gr) {
       TGraph::operator=(gr);
       // N.B CtorAllocate does not delete arrays
@@ -198,12 +199,12 @@ TGraphErrors& TGraphErrors::operator=(const TGraphErrors &gr)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphErrors constructor importing its parameters from the TH1 object passed as argument
+
 TGraphErrors::TGraphErrors(const TH1 *h)
    : TGraph(h)
 {
-   // TGraphErrors constructor importing its parameters from the TH1 object passed as argument
-
    if (!CtorAllocate()) return;
 
    for (Int_t i = 0; i < fNpoints; i++) {
@@ -213,24 +214,24 @@ TGraphErrors::TGraphErrors(const TH1 *h)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GraphErrors constructor reading input from filename
+/// filename is assumed to contain at least 3 columns of numbers
+/// convention for format (default="%lg %lg %lg %lg)
+///  format = "%lg %lg"         read only 2 first columns into X,Y
+///  format = "%lg %lg %lg"     read only 3 first columns into X,Y and EY
+///  format = "%lg %lg %lg %lg" read only 4 first columns into X,Y,EX,EY.
+///
+/// For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
+/// you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
+/// e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';')
+/// used once (e.g. "1;1") or in a combined way (" 1;,;;  1").
+/// Note in that case, the instanciation is about 2 times slower.
+/// In case a delimiter is specified, the format "%lg %lg %lg" will read X,Y,EX.
+
 TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *option)
    : TGraph(100)
 {
-   // GraphErrors constructor reading input from filename
-   // filename is assumed to contain at least 3 columns of numbers
-   // convention for format (default="%lg %lg %lg %lg)
-   //  format = "%lg %lg"         read only 2 first columns into X,Y
-   //  format = "%lg %lg %lg"     read only 3 first columns into X,Y and EY
-   //  format = "%lg %lg %lg %lg" read only 4 first columns into X,Y,EX,EY.
-   //
-   // For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
-   // you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
-   // e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';')
-   // used once (e.g. "1;1") or in a combined way (" 1;,;;  1").
-   // Note in that case, the instanciation is about 2 times slower.
-   // In case a delimiter is specified, the format "%lg %lg %lg" will read X,Y,EX.
-
    if (!CtorAllocate()) return;
    Double_t x, y, ex, ey;
    TString fname = filename;
@@ -359,31 +360,31 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphErrors default destructor.
+
 TGraphErrors::~TGraphErrors()
 {
-   // TGraphErrors default destructor.
-
    delete [] fEX;
    delete [] fEY;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// apply function to all the data points
+/// y = f(x,y)
+///
+/// The error is calculated as ey=(f(x,y+ey)-f(x,y-ey))/2
+/// This is the same as error(fy) = df/dy * ey for small errors
+///
+/// For generic functions the symmetric errors might become non-symmetric
+/// and are averaged here. Use TGraphAsymmErrors if desired.
+///
+/// error on x doesn't change
+/// function suggested/implemented by Miroslav Helbich <helbich@mail.desy.de>
+
 void TGraphErrors::Apply(TF1 *f)
 {
-   // apply function to all the data points
-   // y = f(x,y)
-   //
-   // The error is calculated as ey=(f(x,y+ey)-f(x,y-ey))/2
-   // This is the same as error(fy) = df/dy * ey for small errors
-   //
-   // For generic functions the symmetric errors might become non-symmetric
-   // and are averaged here. Use TGraphAsymmErrors if desired.
-   //
-   // error on x doesn't change
-   // function suggested/implemented by Miroslav Helbich <helbich@mail.desy.de>
-
    Double_t x, y, ex, ey;
 
    if (fHistogram) {
@@ -402,11 +403,11 @@ void TGraphErrors::Apply(TF1 *f)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate scan fields.
+
 Int_t TGraphErrors::CalculateScanfFields(const char *fmt)
 {
-   // Calculate scan fields.
-
    Int_t fields = 0;
    while ((fmt = strchr(fmt, '%'))) {
       Bool_t skip = kFALSE;
@@ -433,11 +434,11 @@ Int_t TGraphErrors::CalculateScanfFields(const char *fmt)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute range.
+
 void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const
 {
-   // Compute range.
-
    TGraph::ComputeRange(xmin, ymin, xmax, ymax);
 
    for (Int_t i = 0; i < fNpoints; i++) {
@@ -463,12 +464,12 @@ void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy and release.
+
 void TGraphErrors::CopyAndRelease(Double_t **newarrays,
                                   Int_t ibegin, Int_t iend, Int_t obegin)
 {
-   // Copy and release.
-
    CopyPoints(newarrays, ibegin, iend, obegin);
    if (newarrays) {
       delete[] fX;
@@ -484,13 +485,13 @@ void TGraphErrors::CopyAndRelease(Double_t **newarrays,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy errors from fEX and fEY to arrays[0] and arrays[1]
+/// or to fX and fY. Copy points.
+
 Bool_t TGraphErrors::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
                                 Int_t obegin)
 {
-   // Copy errors from fEX and fEY to arrays[0] and arrays[1]
-   // or to fX and fY. Copy points.
-
    if (TGraph::CopyPoints(arrays ? arrays + 2 : 0, ibegin, iend, obegin)) {
       Int_t n = (iend - ibegin) * sizeof(Double_t);
       if (arrays) {
@@ -507,13 +508,13 @@ Bool_t TGraphErrors::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor allocate.
+///Note: This function should be called only from the constructor
+/// since it does not delete previously existing arrays
+
 Bool_t TGraphErrors::CtorAllocate()
 {
-   // Constructor allocate.
-   //Note: This function should be called only from the constructor
-   // since it does not delete previously existing arrays
-
 
    if (!fNpoints) {
       fEX = fEY = 0;
@@ -525,11 +526,11 @@ Bool_t TGraphErrors::CtorAllocate()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  protected function to perform the merge operation of a graph with errors
+
 Bool_t TGraphErrors::DoMerge(const TGraph *g)
 {
-   //  protected function to perform the merge operation of a graph with errors
-
    if (g->GetN() == 0) return kFALSE;
 
    Double_t * ex = g->GetEX();
@@ -550,11 +551,11 @@ Bool_t TGraphErrors::DoMerge(const TGraph *g)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set zero values for point arrays in the range [begin, end]
+
 void TGraphErrors::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
 {
-   // Set zero values for point arrays in the range [begin, end]
-
    if (!from_ctor) {
       TGraph::FillZero(begin, end, from_ctor);
    }
@@ -564,83 +565,83 @@ void TGraphErrors::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by GraphFitChisquare.
+/// It returns the error along X at point i.
+
 Double_t TGraphErrors::GetErrorX(Int_t i) const
 {
-   // This function is called by GraphFitChisquare.
-   // It returns the error along X at point i.
-
    if (i < 0 || i >= fNpoints) return -1;
    if (fEX) return fEX[i];
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by GraphFitChisquare.
+/// It returns the error along Y at point i.
+
 Double_t TGraphErrors::GetErrorY(Int_t i) const
 {
-   // This function is called by GraphFitChisquare.
-   // It returns the error along Y at point i.
-
    if (i < 0 || i >= fNpoints) return -1;
    if (fEY) return fEY[i];
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by GraphFitChisquare.
+/// It returns the error along X at point i.
+
 Double_t TGraphErrors::GetErrorXhigh(Int_t i) const
 {
-   // This function is called by GraphFitChisquare.
-   // It returns the error along X at point i.
-
    if (i < 0 || i >= fNpoints) return -1;
    if (fEX) return fEX[i];
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by GraphFitChisquare.
+/// It returns the error along X at point i.
+
 Double_t TGraphErrors::GetErrorXlow(Int_t i) const
 {
-   // This function is called by GraphFitChisquare.
-   // It returns the error along X at point i.
-
    if (i < 0 || i >= fNpoints) return -1;
    if (fEX) return fEX[i];
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by GraphFitChisquare.
+/// It returns the error along X at point i.
+
 Double_t TGraphErrors::GetErrorYhigh(Int_t i) const
 {
-   // This function is called by GraphFitChisquare.
-   // It returns the error along X at point i.
-
    if (i < 0 || i >= fNpoints) return -1;
    if (fEY) return fEY[i];
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by GraphFitChisquare.
+/// It returns the error along X at point i.
+
 Double_t TGraphErrors::GetErrorYlow(Int_t i) const
 {
-   // This function is called by GraphFitChisquare.
-   // It returns the error along X at point i.
-
    if (i < 0 || i >= fNpoints) return -1;
    if (fEY) return fEY[i];
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds all graphs with errors from the collection to this graph.
+/// Returns the total number of poins in the result or -1 in case of an error.
+
 Int_t TGraphErrors::Merge(TCollection* li)
 {
-   // Adds all graphs with errors from the collection to this graph.
-   // Returns the total number of poins in the result or -1 in case of an error.
-
    TIter next(li);
    while (TObject* o = next()) {
       TGraph *g = dynamic_cast<TGraph*>(o);
@@ -665,22 +666,22 @@ Int_t TGraphErrors::Merge(TCollection* li)
    return GetN();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print graph and errors values.
+
 void TGraphErrors::Print(Option_t *) const
 {
-   // Print graph and errors values.
-
    for (Int_t i = 0; i < fNpoints; i++) {
       printf("x[%d]=%g, y[%d]=%g, ex[%d]=%g, ey[%d]=%g\n", i, fX[i], i, fY[i], i, fEX[i], i, fEY[i]);
    }
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    char quote = '"';
    out << "   " << std::endl;
    static Int_t frameNumber = 1000;
@@ -750,11 +751,11 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set ex and ey values for point pointed by the mouse.
+
 void TGraphErrors::SetPointError(Double_t ex, Double_t ey)
 {
-   // Set ex and ey values for point pointed by the mouse.
-
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
 
@@ -778,11 +779,11 @@ void TGraphErrors::SetPointError(Double_t ex, Double_t ey)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set ex and ey values for point number i.
+
 void TGraphErrors::SetPointError(Int_t i, Double_t ex, Double_t ey)
 {
-   // Set ex and ey values for point number i.
-
    if (i < 0) return;
    if (i >= fNpoints) {
       // re-allocate the object
@@ -793,11 +794,11 @@ void TGraphErrors::SetPointError(Int_t i, Double_t ex, Double_t ey)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TGraphErrors.
+
 void TGraphErrors::Streamer(TBuffer &b)
 {
-   // Stream an object of class TGraphErrors.
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
@@ -833,11 +834,11 @@ void TGraphErrors::Streamer(TBuffer &b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Swap points
+
 void TGraphErrors::SwapPoints(Int_t pos1, Int_t pos2)
 {
-   // Swap points
-
    SwapValues(fEX, pos1, pos2);
    SwapValues(fEY, pos1, pos2);
    TGraph::SwapPoints(pos1, pos2);

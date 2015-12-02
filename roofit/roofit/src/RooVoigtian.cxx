@@ -43,7 +43,8 @@ using namespace std;
 ClassImp(RooVoigtian)
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooVoigtian::RooVoigtian(const char *name, const char *title,
 			 RooAbsReal& _x, RooAbsReal& _mean,
 			 RooAbsReal& _width, RooAbsReal& _sigma,
@@ -60,7 +61,8 @@ RooVoigtian::RooVoigtian(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooVoigtian::RooVoigtian(const RooVoigtian& other, const char* name) : 
   RooAbsPdf(other,name), x("x",this,other.x), mean("mean",this,other.mean),
   width("width",this,other.width),sigma("sigma",this,other.sigma),
@@ -71,7 +73,8 @@ RooVoigtian::RooVoigtian(const RooVoigtian& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooVoigtian::evaluate() const
 {
   Double_t s = (sigma>0) ? sigma : -sigma ;

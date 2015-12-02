@@ -28,35 +28,35 @@ static TPosixThreadFactory gPosixThreadFactoryCreator;
 
 ClassImp(TPosixThreadFactory)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create Posix thread factory. Also sets global gThreadFactory to this.
+
 TPosixThreadFactory::TPosixThreadFactory(const char *name, const char *title) :
                      TThreadFactory(name, title)
 {
-   // Create Posix thread factory. Also sets global gThreadFactory to this.
-
    gThreadFactory = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a Posix Mutex.
+
 TMutexImp *TPosixThreadFactory::CreateMutexImp(Bool_t recursive=kFALSE)
 {
-   // Return a Posix Mutex.
-
    return new TPosixMutex(recursive);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a Posix thread.
+
 TThreadImp *TPosixThreadFactory::CreateThreadImp()
 {
-   // Return a Posix thread.
-
    return new TPosixThread;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a Posix condition variable.
+
 TConditionImp *TPosixThreadFactory::CreateConditionImp(TMutexImp *m)
 {
-   // Return a Posix condition variable.
-
    return new TPosixCondition(m);
 }

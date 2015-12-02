@@ -49,20 +49,23 @@
 
 ClassImp(TGeoBoolNode)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGeoBoolNode::ThreadData_t::ThreadData_t() :
    fSelected(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoBoolNode::ThreadData_t::~ThreadData_t()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGeoBoolNode::ThreadData_t& TGeoBoolNode::GetThreadData() const
 {
    Int_t tid = TGeoManager::ThreadId();
@@ -87,7 +90,8 @@ TGeoBoolNode::ThreadData_t& TGeoBoolNode::GetThreadData() const
    return *fThreadData[tid];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGeoBoolNode::ClearThreadData() const
 {
    TThread::Lock();
@@ -102,10 +106,11 @@ void TGeoBoolNode::ClearThreadData() const
    TThread::UnLock();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create thread data for n threads max.
+
 void TGeoBoolNode::CreateThreadData(Int_t nthreads)
 {
-// Create thread data for n threads max.
    TThread::Lock();
    fThreadData.resize(nthreads);
    fThreadSize = nthreads;
@@ -120,18 +125,19 @@ void TGeoBoolNode::CreateThreadData(Int_t nthreads)
    TThread::UnLock();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the selected branch.
+
 void TGeoBoolNode::SetSelected(Int_t sel)
 {
-   // Set the selected branch.
-
    GetThreadData().fSelected = sel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoBoolNode::TGeoBoolNode()
 {
-// Default constructor
    fLeft     = 0;
    fRight    = 0;
    fLeftMat  = 0;
@@ -142,10 +148,11 @@ TGeoBoolNode::TGeoBoolNode()
    CreateThreadData(1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor called by TGeoCompositeShape providing 2 subexpressions for the 2 branches.
+
 TGeoBoolNode::TGeoBoolNode(const char *expr1, const char *expr2)
 {
-// Constructor called by TGeoCompositeShape providing 2 subexpressions for the 2 branches.
    fLeft     = 0;
    fRight    = 0;
    fLeftMat  = 0;
@@ -162,10 +169,11 @@ TGeoBoolNode::TGeoBoolNode(const char *expr1, const char *expr2)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor providing left and right shapes and matrices (in the Boolean operation).
+
 TGeoBoolNode::TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, TGeoMatrix *rmat)
 {
-// Constructor providing left and right shapes and matrices (in the Boolean operation).
    fLeft = left;
    fRight = right;
    fLeftMat = lmat;
@@ -188,20 +196,22 @@ TGeoBoolNode::TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, 
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+/// --- deletion of components handled by TGeoManager class.
+
 TGeoBoolNode::~TGeoBoolNode()
 {
-// Destructor.
-// --- deletion of components handled by TGeoManager class.
    if (fPoints) delete [] fPoints;
    ClearThreadData();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expands the boolean expression either on left or right branch, creating
+/// component elements (composite shapes and boolean nodes). Returns true on success.
+
 Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
 {
-// Expands the boolean expression either on left or right branch, creating
-// component elements (composite shapes and boolean nodes). Returns true on success.
    TString sleft, sright, stransf;
    Int_t boolop = TGeoManager::Parse(expr, sleft, sright, stransf);
    if (boolop<0) {
@@ -267,10 +277,11 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Special schema for feeding the 3D buffers to the painter client.
+
 void TGeoBoolNode::Paint(Option_t * option)
 {
-// Special schema for feeding the 3D buffers to the painter client.
    TVirtualViewer3D * viewer = gPad->GetViewer3D();
    if (!viewer) return;
 
@@ -309,21 +320,23 @@ void TGeoBoolNode::Paint(Option_t * option)
    *glmat = &mat;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register all matrices of the boolean node and descendents.
+
 void TGeoBoolNode::RegisterMatrices()
 {
-// Register all matrices of the boolean node and descendents.
    if (!fLeftMat->IsIdentity()) fLeftMat->RegisterYourself();
    if (!fRightMat->IsIdentity()) fRightMat->RegisterYourself();
    if (fLeft->IsComposite()) ((TGeoCompositeShape*)fLeft)->GetBoolNode()->RegisterMatrices();
    if (fRight->IsComposite()) ((TGeoCompositeShape*)fRight)->GetBoolNode()->RegisterMatrices();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace one of the matrices. Does not work with TGeoIdentity. Returns true
+/// if replacement was successful.
+
 Bool_t TGeoBoolNode::ReplaceMatrix(TGeoMatrix *mat, TGeoMatrix *newmat)
 {
-// Replace one of the matrices. Does not work with TGeoIdentity. Returns true
-// if replacement was successful.
    if (mat==gGeoIdentity || newmat==gGeoIdentity) {
       Error("ReplaceMatrix", "Matrices should not be gGeoIdentity. Use default matrix constructor to repersent identities.");
       return kFALSE;
@@ -344,10 +357,11 @@ Bool_t TGeoBoolNode::ReplaceMatrix(TGeoMatrix *mat, TGeoMatrix *newmat)
    return replaced;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoBoolNode::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    fLeft->SavePrimitive(out,option);
    fRight->SavePrimitive(out,option);
    if (!fLeftMat->IsIdentity()) {
@@ -360,45 +374,50 @@ void TGeoBoolNode::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill buffer with shape vertices.
+
 void TGeoBoolNode::SetPoints(Double_t *points) const
 {
-// Fill buffer with shape vertices.
    TGeoBoolNode *bn = (TGeoBoolNode*)this;
    Int_t npoints = bn->GetNpoints();
    memcpy(points, fPoints, 3*npoints*sizeof(Double_t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill buffer with shape vertices.
+
 void TGeoBoolNode::SetPoints(Float_t *points) const
 {
-// Fill buffer with shape vertices.
    TGeoBoolNode *bn = (TGeoBoolNode*)this;
    Int_t npoints = bn->GetNpoints();
    for (Int_t i=0; i<3*npoints; i++) points[i] = fPoints[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register size of this 3D object
+
 void TGeoBoolNode::Sizeof3D() const
 {
-// Register size of this 3D object
    fLeft->Sizeof3D();
    fRight->Sizeof3D();
 }
 
 ClassImp(TGeoUnion)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a clone of this. Pointers are preserved.
+
 TGeoBoolNode *TGeoUnion::MakeClone() const
 {
-// Make a clone of this. Pointers are preserved.
    return new TGeoUnion(fLeft, fRight, fLeftMat, fRightMat);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint method.
+
 void TGeoUnion::Paint(Option_t *option)
 {
-// Paint method.
    TVirtualViewer3D *viewer = gPad->GetViewer3D();
 
    if (!viewer) {
@@ -411,40 +430,45 @@ void TGeoUnion::Paint(Option_t *option)
    TGeoBoolNode::Paint(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoUnion::TGeoUnion()
 {
-// Default constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TGeoUnion::TGeoUnion(const char *expr1, const char *expr2)
           :TGeoBoolNode(expr1, expr2)
 {
-// Constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor providing pointers to components
+
 TGeoUnion::TGeoUnion(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, TGeoMatrix *rmat)
           :TGeoBoolNode(left,right,lmat,rmat)
 {
-// Constructor providing pointers to components
    if (left->TestShapeBit(TGeoShape::kGeoHalfSpace) || right->TestShapeBit(TGeoShape::kGeoHalfSpace)) {
       Fatal("TGeoUnion", "Unions with a half-space (%s + %s) not allowed", left->GetName(), right->GetName());
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+/// --- deletion of components handled by TGeoManager class.
+
 TGeoUnion::~TGeoUnion()
 {
-// Destructor
-// --- deletion of components handled by TGeoManager class.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding box corresponding to a union of two shapes.
+
 void TGeoUnion::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin)
 {
-// Compute bounding box corresponding to a union of two shapes.
    if (((TGeoBBox*)fLeft)->IsNullBox()) fLeft->ComputeBBox();
    if (((TGeoBBox*)fRight)->IsNullBox()) fRight->ComputeBBox();
    Double_t vert[48];
@@ -481,10 +505,11 @@ void TGeoUnion::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *
    origin[2] = 0.5*(zmin+zmax);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find if a union of two shapes contains a given point
+
 Bool_t TGeoUnion::Contains(const Double_t *point) const
 {
-// Find if a union of two shapes contains a given point
    Double_t local[3];
    fLeftMat->MasterToLocal(point, &local[0]);
    Bool_t inside = fLeft->Contains(&local[0]);
@@ -494,10 +519,11 @@ Bool_t TGeoUnion::Contains(const Double_t *point) const
    return inside;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
+
 void TGeoUnion::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
    ThreadData_t& td = GetThreadData();
    norm[0] = norm[1] = 0.;
    norm[2] = 1.;
@@ -545,18 +571,20 @@ void TGeoUnion::ComputeNormal(const Double_t *point, const Double_t *dir, Double
    ComputeNormal(local,dir,norm);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute minimum distance to shape vertices.
+
 Int_t TGeoUnion::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
-// Compute minimum distance to shape vertices.
    return 9999;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes distance from a given point inside the shape to its boundary.
+
 Double_t TGeoUnion::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
-// Computes distance from a given point inside the shape to its boundary.
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kTRUE);
@@ -664,11 +692,12 @@ Double_t TGeoUnion::DistFromInside(const Double_t *point, const Double_t *dir, I
    return snxt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from a given outside point to the shape.
+
 Double_t TGeoUnion::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
-// Compute distance from a given outside point to the shape.
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kFALSE);
@@ -694,10 +723,11 @@ Double_t TGeoUnion::DistFromOutside(const Double_t *point, const Double_t *dir, 
    return snxt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of vertices for the composite shape described by this union.
+
 Int_t TGeoUnion::GetNpoints()
 {
-// Returns number of vertices for the composite shape described by this union.
    Int_t itot=0;
    Double_t point[3];
    Double_t tolerance = TGeoShape::Tolerance();
@@ -732,10 +762,11 @@ Int_t TGeoUnion::GetNpoints()
    return fNpoints;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safety distance for a union node;
+
 Double_t TGeoUnion::Safety(const Double_t *point, Bool_t in) const
 {
-// Compute safety distance for a union node;
    Double_t local1[3], local2[3];
    fLeftMat->MasterToLocal(point,local1);
    Bool_t in1 = fLeft->Contains(local1);
@@ -751,10 +782,11 @@ Double_t TGeoUnion::Safety(const Double_t *point, Bool_t in) const
    return TMath::Min(saf1,saf2);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoUnion::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    TGeoBoolNode::SavePrimitive(out,option);
    out << "   pBoolNode = new TGeoUnion(";
    out << fLeft->GetPointerName() << ",";
@@ -765,27 +797,30 @@ void TGeoUnion::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    else                         out << "0);" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register 3D size of this shape.
+
 void TGeoUnion::Sizeof3D() const
 {
-// Register 3D size of this shape.
    TGeoBoolNode::Sizeof3D();
 }
 
 
 ClassImp(TGeoSubtraction)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a clone of this. Pointers are preserved.
+
 TGeoBoolNode *TGeoSubtraction::MakeClone() const
 {
-// Make a clone of this. Pointers are preserved.
    return new TGeoSubtraction(fLeft, fRight, fLeftMat, fRightMat);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint method.
+
 void TGeoSubtraction::Paint(Option_t *option)
 {
-// Paint method.
    TVirtualViewer3D *viewer = gPad->GetViewer3D();
 
    if (!viewer) {
@@ -798,40 +833,45 @@ void TGeoSubtraction::Paint(Option_t *option)
    TGeoBoolNode::Paint(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoSubtraction::TGeoSubtraction()
 {
-// Default constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TGeoSubtraction::TGeoSubtraction(const char *expr1, const char *expr2)
           :TGeoBoolNode(expr1, expr2)
 {
-// Constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor providing pointers to components
+
 TGeoSubtraction::TGeoSubtraction(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, TGeoMatrix *rmat)
                 :TGeoBoolNode(left,right,lmat,rmat)
 {
-// Constructor providing pointers to components
    if (left->TestShapeBit(TGeoShape::kGeoHalfSpace)) {
       Fatal("TGeoSubstraction", "Substractions from a half-space (%s) not allowed", left->GetName());
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+/// --- deletion of components handled by TGeoManager class.
+
 TGeoSubtraction::~TGeoSubtraction()
 {
-// Destructor
-// --- deletion of components handled by TGeoManager class.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding box corresponding to a subtraction of two shapes.
+
 void TGeoSubtraction::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin)
 {
-// Compute bounding box corresponding to a subtraction of two shapes.
    TGeoBBox *box = (TGeoBBox*)fLeft;
    if (box->IsNullBox()) fLeft->ComputeBBox();
    Double_t vert[24];
@@ -858,10 +898,11 @@ void TGeoSubtraction::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Doub
    origin[2] = 0.5*(zmin+zmax);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
+
 void TGeoSubtraction::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
    ThreadData_t& td = GetThreadData();
    norm[0] = norm[1] = 0.;
    norm[2] = 1.;
@@ -907,10 +948,11 @@ void TGeoSubtraction::ComputeNormal(const Double_t *point, const Double_t *dir, 
    ComputeNormal(local,dir,norm);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find if a subtraction of two shapes contains a given point
+
 Bool_t TGeoSubtraction::Contains(const Double_t *point) const
 {
-// Find if a subtraction of two shapes contains a given point
    Double_t local[3];
    fLeftMat->MasterToLocal(point, &local[0]);
    Bool_t inside = fLeft->Contains(&local[0]);
@@ -920,18 +962,20 @@ Bool_t TGeoSubtraction::Contains(const Double_t *point) const
    return inside;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute minimum distance to shape vertices
+
 Int_t TGeoSubtraction::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
-// Compute minimum distance to shape vertices
    return 9999;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from a given point inside to the shape boundary.
+
 Double_t TGeoSubtraction::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
-// Compute distance from a given point inside to the shape boundary.
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kTRUE);
@@ -957,11 +1001,12 @@ Double_t TGeoSubtraction::DistFromInside(const Double_t *point, const Double_t *
    return snxt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from a given point outside to the shape.
+
 Double_t TGeoSubtraction::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
-// Compute distance from a given point outside to the shape.
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kFALSE);
@@ -1013,10 +1058,11 @@ Double_t TGeoSubtraction::DistFromOutside(const Double_t *point, const Double_t 
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of vertices for the composite shape described by this subtraction.
+
 Int_t TGeoSubtraction::GetNpoints()
 {
-// Returns number of vertices for the composite shape described by this subtraction.
    Int_t itot=0;
    Double_t point[3];
    Double_t tolerance = TGeoShape::Tolerance();
@@ -1049,10 +1095,11 @@ Int_t TGeoSubtraction::GetNpoints()
    return fNpoints;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safety distance for a union node;
+
 Double_t TGeoSubtraction::Safety(const Double_t *point, Bool_t in) const
 {
-// Compute safety distance for a union node;
    Double_t local1[3], local2[3];
    fLeftMat->MasterToLocal(point,local1);
    Bool_t in1 = fLeft->Contains(local1);
@@ -1068,10 +1115,11 @@ Double_t TGeoSubtraction::Safety(const Double_t *point, Bool_t in) const
    return saf1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoSubtraction::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    TGeoBoolNode::SavePrimitive(out,option);
    out << "   pBoolNode = new TGeoSubtraction(";
    out << fLeft->GetPointerName() << ",";
@@ -1082,26 +1130,29 @@ void TGeoSubtraction::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
    else                         out << "0);" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register 3D size of this shape.
+
 void TGeoSubtraction::Sizeof3D() const
 {
-// Register 3D size of this shape.
    TGeoBoolNode::Sizeof3D();
 }
 
 ClassImp(TGeoIntersection)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a clone of this. Pointers are preserved.
+
 TGeoBoolNode *TGeoIntersection::MakeClone() const
 {
-// Make a clone of this. Pointers are preserved.
    return new TGeoIntersection(fLeft, fRight, fLeftMat, fRightMat);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint method.
+
 void TGeoIntersection::Paint(Option_t *option)
 {
-// Paint method.
    TVirtualViewer3D *viewer = gPad->GetViewer3D();
 
    if (!viewer) {
@@ -1114,40 +1165,45 @@ void TGeoIntersection::Paint(Option_t *option)
    TGeoBoolNode::Paint(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoIntersection::TGeoIntersection()
 {
-// Default constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TGeoIntersection::TGeoIntersection(const char *expr1, const char *expr2)
           :TGeoBoolNode(expr1, expr2)
 {
-// Constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor providing pointers to components
+
 TGeoIntersection::TGeoIntersection(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, TGeoMatrix *rmat)
                  :TGeoBoolNode(left,right,lmat,rmat)
 {
-// Constructor providing pointers to components
    Bool_t hs1 = (fLeft->TestShapeBit(TGeoShape::kGeoHalfSpace))?kTRUE:kFALSE;
    Bool_t hs2 = (fRight->TestShapeBit(TGeoShape::kGeoHalfSpace))?kTRUE:kFALSE;
    if (hs1 && hs2) Fatal("ctor", "cannot intersect two half-spaces: %s * %s", left->GetName(), right->GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+/// --- deletion of components handled by TGeoManager class.
+
 TGeoIntersection::~TGeoIntersection()
 {
-// Destructor
-// --- deletion of components handled by TGeoManager class.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding box corresponding to a intersection of two shapes.
+
 void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin)
 {
-// Compute bounding box corresponding to a intersection of two shapes.
    Bool_t hs1 = (fLeft->TestShapeBit(TGeoShape::kGeoHalfSpace))?kTRUE:kFALSE;
    Bool_t hs2 = (fRight->TestShapeBit(TGeoShape::kGeoHalfSpace))?kTRUE:kFALSE;
    Double_t vert[48];
@@ -1244,10 +1300,11 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
    origin[2] = 0.5*(sort[isort[1]]+sort[isort[2]]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
+
 void TGeoIntersection::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
    ThreadData_t& td = GetThreadData();
    Double_t local[3], ldir[3], lnorm[3];
    norm[0] = norm[1] = 0.;
@@ -1293,10 +1350,11 @@ void TGeoIntersection::ComputeNormal(const Double_t *point, const Double_t *dir,
    ComputeNormal(local,dir,norm);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find if a intersection of two shapes contains a given point
+
 Bool_t TGeoIntersection::Contains(const Double_t *point) const
 {
-// Find if a intersection of two shapes contains a given point
    Double_t local[3];
    fLeftMat->MasterToLocal(point, &local[0]);
    Bool_t inside = fLeft->Contains(&local[0]);
@@ -1306,18 +1364,20 @@ Bool_t TGeoIntersection::Contains(const Double_t *point) const
    return inside;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute minimum distance to shape vertices
+
 Int_t TGeoIntersection::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
-// Compute minimum distance to shape vertices
    return 9999;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from a given point inside to the shape boundary.
+
 Double_t TGeoIntersection::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
-// Compute distance from a given point inside to the shape boundary.
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kTRUE);
@@ -1343,11 +1403,12 @@ Double_t TGeoIntersection::DistFromInside(const Double_t *point, const Double_t 
    return snxt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from a given point outside to the shape.
+
 Double_t TGeoIntersection::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
-// Compute distance from a given point outside to the shape.
    Double_t tol = TGeoShape::Tolerance();
    if (iact<3 && safe) {
       // compute safe distance
@@ -1423,10 +1484,11 @@ Double_t TGeoIntersection::DistFromOutside(const Double_t *point, const Double_t
    return snext;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of vertices for the composite shape described by this intersection.
+
 Int_t TGeoIntersection::GetNpoints()
 {
-// Returns number of vertices for the composite shape described by this intersection.
    Int_t itot=0;
    Double_t point[3];
    Double_t tolerance = TGeoShape::Tolerance();
@@ -1459,10 +1521,11 @@ Int_t TGeoIntersection::GetNpoints()
    return fNpoints;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safety distance for a union node;
+
 Double_t TGeoIntersection::Safety(const Double_t *point, Bool_t in) const
 {
-// Compute safety distance for a union node;
    Double_t local1[3], local2[3];
    fLeftMat->MasterToLocal(point,local1);
    Bool_t in1 = fLeft->Contains(local1);
@@ -1478,10 +1541,11 @@ Double_t TGeoIntersection::Safety(const Double_t *point, Bool_t in) const
    return TMath::Max(saf1,saf2);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoIntersection::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    TGeoBoolNode::SavePrimitive(out,option);
    out << "   pBoolNode = new TGeoIntersection(";
    out << fLeft->GetPointerName() << ",";
@@ -1492,9 +1556,10 @@ void TGeoIntersection::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
    else                         out << "0);" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register 3D size of this shape.
+
 void TGeoIntersection::Sizeof3D() const
 {
-// Register 3D size of this shape.
    TGeoBoolNode::Sizeof3D();
 }

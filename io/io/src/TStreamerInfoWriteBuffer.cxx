@@ -102,19 +102,19 @@ namespace {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  The object at pointer is serialized to the buffer b
+///  if (arrayMode & 1) ptr is a pointer to array of pointers to the objects
+///  otherwise it is a pointer to a pointer to a single object.
+///  This also means that T is of a type such that arr[i] is a pointer to an
+///  object.  Currently the only anticipated instantiation are for T==char**
+///  and T==TVirtualCollectionProxy
+
 template <class T>
 Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                                     TCompInfo *const*const compinfo, Int_t first, Int_t last,
                                     Int_t narr, Int_t eoffset, Int_t arrayMode)
 {
-   //  The object at pointer is serialized to the buffer b
-   //  if (arrayMode & 1) ptr is a pointer to array of pointers to the objects
-   //  otherwise it is a pointer to a pointer to a single object.
-   //  This also means that T is of a type such that arr[i] is a pointer to an
-   //  object.  Currently the only anticipated instantiation are for T==char**
-   //  and T==TVirtualCollectionProxy
-
    Bool_t needIncrement = !( arrayMode & 2 );
    arrayMode = arrayMode & (~2);
 
@@ -804,11 +804,11 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 
 template Int_t TStreamerInfo::WriteBufferAux<char**>(TBuffer &b, char ** const &arr, TCompInfo *const*const compinfo, Int_t first, Int_t last, Int_t narr,Int_t eoffset,Int_t mode);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write for STL container. ('first' is an id between -1 and fNfulldata).
+
 Int_t TStreamerInfo::WriteBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc)
 {
-   // Write for STL container. ('first' is an id between -1 and fNfulldata).
-
    if (!nc) return 0;
    R__ASSERT((unsigned int)nc==cont->Size());
 
@@ -817,12 +817,12 @@ Int_t TStreamerInfo::WriteBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, I
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write for STL container.  ('first' is an id between -1 and fNfulldata).
+/// Note: This is no longer used.
+
 Int_t TStreamerInfo::WriteBufferSTLPtrs(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset )
 {
-   // Write for STL container.  ('first' is an id between -1 and fNfulldata).
-   // Note: This is no longer used.
-
    if (!nc) return 0;
    R__ASSERT((unsigned int)nc==cont->Size());
    int ret = WriteBufferAux(b, TPointerCollectionAdapter(cont),fCompFull,first==-1?0:first,first==-1?fNfulldata:first+1,nc,eoffset,1);
@@ -830,22 +830,22 @@ Int_t TStreamerInfo::WriteBufferSTLPtrs(TBuffer &b, TVirtualCollectionProxy *con
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General Write.  ('first' is an id between -1 and fNdata).
+/// Note: This is no longer used.
+
 Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *ipointer, Int_t first)
 {
-   // General Write.  ('first' is an id between -1 and fNdata).
-   // Note: This is no longer used.
-
    return WriteBufferAux(b,&ipointer,fCompOpt,first==-1?0:first,first==-1?fNdata:first+1,1,0,0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write for ClonesArray ('first' is an id between -1 and fNfulldata).
+/// Note: This is no longer used.
+
 Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones,
                                        Int_t nc, Int_t first, Int_t eoffset)
 {
-   // Write for ClonesArray ('first' is an id between -1 and fNfulldata).
-   // Note: This is no longer used.
-
    char **arr = reinterpret_cast<char**>(clones->GetObjectRef(0));
    return WriteBufferAux(b,arr,fCompFull,first==-1?0:first,first==-1?fNfulldata:first+1,nc,eoffset,1);
 }

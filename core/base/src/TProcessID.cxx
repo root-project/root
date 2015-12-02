@@ -59,39 +59,39 @@ UInt_t      TProcessID::fgNumber = 0; //Current referenced object instance count
 TExMap     *TProcessID::fgObjPIDs= 0; //Table (pointer,pids)
 ClassImp(TProcessID)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return hash value for this object.
+
 static inline ULong_t Void_Hash(const void *ptr)
 {
-   // Return hash value for this object.
-
    return TString::Hash(&ptr, sizeof(void*));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TProcessID::TProcessID()
 {
-   // Default constructor.
-
    fCount = 0;
    fObjects = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TProcessID::~TProcessID()
 {
-   // Destructor.
-
    delete fObjects;
    fObjects = 0;
    R__LOCKGUARD2(gROOTMutex);
    fgPIDs->Remove(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to add a new TProcessID to the list of PIDs.
+
 TProcessID *TProcessID::AddProcessID()
 {
-   // Static function to add a new TProcessID to the list of PIDs.
-
    R__LOCKGUARD2(gROOTMutex);
 
    if (fgPIDs && fgPIDs->GetEntriesFast() >= 65534) {
@@ -124,13 +124,13 @@ TProcessID *TProcessID::AddProcessID()
    return pid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function returning the ID assigned to obj
+/// If the object is not yet referenced, its kIsReferenced bit is set
+/// and its fUniqueID set to the current number of referenced objects so far.
+
 UInt_t TProcessID::AssignID(TObject *obj)
 {
-   // static function returning the ID assigned to obj
-   // If the object is not yet referenced, its kIsReferenced bit is set
-   // and its fUniqueID set to the current number of referenced objects so far.
-
    R__LOCKGUARD2(gROOTMutex);
 
    UInt_t uid = obj->GetUniqueID() & 0xffffff;
@@ -163,18 +163,19 @@ UInt_t TProcessID::AssignID(TObject *obj)
    return uid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize fObjects.
+
 void TProcessID::CheckInit()
 {
-   // Initialize fObjects.
    if (!fObjects) fObjects = new TObjArray(100);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function (called by TROOT destructor) to delete all TProcessIDs
+
 void TProcessID::Cleanup()
 {
-   // static function (called by TROOT destructor) to delete all TProcessIDs
-
    R__LOCKGUARD2(gROOTMutex);
 
    fgPIDs->Delete();
@@ -183,12 +184,12 @@ void TProcessID::Cleanup()
    fgPIDs = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// delete the TObjArray pointing to referenced objects
+/// this function is called by TFile::Close("R")
+
 void TProcessID::Clear(Option_t *)
 {
-   // delete the TObjArray pointing to referenced objects
-   // this function is called by TFile::Close("R")
-
    if (GetUniqueID()>254 && fObjects && fgObjPIDs) {
       // We might have many references registered in the map
       for(Int_t i = 0; i < fObjects->GetSize(); ++i) {
@@ -203,10 +204,10 @@ void TProcessID::Clear(Option_t *)
    delete fObjects; fObjects = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TProcessID::DecrementCount()
 {
-
    // the reference fCount is used to delete the TProcessID
    // in the TFile destructor when fCount = 0
 
@@ -215,27 +216,28 @@ Int_t TProcessID::DecrementCount()
    return fCount;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function returning a pointer to TProcessID number pid in fgPIDs
+
 TProcessID *TProcessID::GetProcessID(UShort_t pid)
 {
-   // static function returning a pointer to TProcessID number pid in fgPIDs
-
    return (TProcessID*)fgPIDs->At(pid);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the (static) number of process IDs.
+
 UInt_t TProcessID::GetNProcessIDs()
 {
-   // Return the (static) number of process IDs.
    return fgPIDs ? fgPIDs->GetLast()+1 : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function returning a pointer to TProcessID with its pid
+/// encoded in the highest byte of uid
+
 TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, const void *obj)
 {
-   // static function returning a pointer to TProcessID with its pid
-   // encoded in the highest byte of uid
-
    R__LOCKGUARD2(gROOTMutex);
 
    Int_t pid = (uid>>24)&0xff;
@@ -248,75 +250,75 @@ TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, const void *obj)
    return (TProcessID*)fgPIDs->At(pid);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function returning a pointer to TProcessID with its pid
+/// encoded in the highest byte of obj->GetUniqueID()
+
 TProcessID *TProcessID::GetProcessWithUID(const TObject *obj)
 {
-   // static function returning a pointer to TProcessID with its pid
-   // encoded in the highest byte of obj->GetUniqueID()
-
    return GetProcessWithUID(obj->GetUniqueID(),obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function returning the pointer to the session TProcessID
+
 TProcessID *TProcessID::GetSessionProcessID()
 {
-   // static function returning the pointer to the session TProcessID
-
    return fgPID;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increase the reference count to this object.
+
 Int_t TProcessID::IncrementCount()
 {
-   // Increase the reference count to this object.
-
    if (!fObjects) fObjects = new TObjArray(100);
    fCount++;
    return fCount;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the current referenced object count
+/// fgNumber is incremented everytime a new object is referenced
+
 UInt_t TProcessID::GetObjectCount()
 {
-   // Return the current referenced object count
-   // fgNumber is incremented everytime a new object is referenced
-
    return fgNumber;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///returns the TObject with unique identifier uid in the table of objects
+
 TObject *TProcessID::GetObjectWithID(UInt_t uidd)
 {
-   //returns the TObject with unique identifier uid in the table of objects
-
    Int_t uid = uidd & 0xffffff;  //take only the 24 lower bits
 
    if (fObjects==0 || uid >= fObjects->GetSize()) return 0;
    return fObjects->UncheckedAt(uid);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///static: returns pointer to current TProcessID
+
 TProcessID *TProcessID::GetPID()
 {
-   //static: returns pointer to current TProcessID
-
    return fgPID;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///static: returns array of TProcessIDs
+
 TObjArray *TProcessID::GetPIDs()
 {
-   //static: returns array of TProcessIDs
-
    return fgPIDs;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function. return kTRUE if pid is a valid TProcessID
+
 Bool_t TProcessID::IsValid(TProcessID *pid)
 {
-   // static function. return kTRUE if pid is a valid TProcessID
-
    R__LOCKGUARD2(gROOTMutex);
 
    if (fgPIDs==0) return kFALSE;
@@ -325,12 +327,12 @@ Bool_t TProcessID::IsValid(TProcessID *pid)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///stores the object at the uid th slot in the table of objects
+///The object uniqueid is set as well as its kMustCleanup bit
+
 void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
 {
-   //stores the object at the uid th slot in the table of objects
-   //The object uniqueid is set as well as its kMustCleanup bit
-
    if (uid == 0) uid = obj->GetUniqueID() & 0xffffff;
 
    if (!fObjects) fObjects = new TObjArray(100);
@@ -352,12 +354,12 @@ void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// called by the object destructor
+/// remove reference to obj from the current table if it is referenced
+
 void TProcessID::RecursiveRemove(TObject *obj)
 {
-   // called by the object destructor
-   // remove reference to obj from the current table if it is referenced
-
    if (!fObjects) return;
    if (!obj->TestBit(kIsReferenced)) return;
    UInt_t uid = obj->GetUniqueID() & 0xffffff;
@@ -371,11 +373,11 @@ void TProcessID::RecursiveRemove(TObject *obj)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function to set the current referenced object count
+/// fgNumber is incremented everytime a new object is referenced
+
 void TProcessID::SetObjectCount(UInt_t number)
 {
-   // static function to set the current referenced object count
-   // fgNumber is incremented everytime a new object is referenced
-
    fgNumber = number;
 }

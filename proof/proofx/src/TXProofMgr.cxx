@@ -56,11 +56,11 @@ public:
    Bool_t Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TProofMgr interrupt handler.
+
 Bool_t TProofMgrInterruptHandler::Notify()
 {
-   // TProofMgr interrupt handler.
-
    // Only on clients
    if (isatty(0) != 0 && isatty(1) != 0) {
       TString u = fMgr->GetUrl();
@@ -88,12 +88,12 @@ public:
 }};
 static TXProofMgrInit gxproofmgr_init;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a PROOF manager for the standard (old) environment.
+
 TXProofMgr::TXProofMgr(const char *url, Int_t dbg, const char *alias)
           : TProofMgr(url, dbg, alias)
 {
-   // Create a PROOF manager for the standard (old) environment.
-
    // Set the correct servert type
    fServType = kXProofd;
 
@@ -105,15 +105,15 @@ TXProofMgr::TXProofMgr(const char *url, Int_t dbg, const char *alias)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do real initialization: open the connection and set the relevant
+/// variables.
+/// Login and authentication are dealt with at this level, if required.
+/// Return 0 in case of success, 1 if the remote server is a 'proofd',
+/// -1 in case of error.
+
 Int_t TXProofMgr::Init(Int_t)
 {
-   // Do real initialization: open the connection and set the relevant
-   // variables.
-   // Login and authentication are dealt with at this level, if required.
-   // Return 0 in case of success, 1 if the remote server is a 'proofd',
-   // -1 in case of error.
-
    // Here we make sure that the port is explicitly specified in the URL,
    // even when it matches the default value
    TString u = fUrl.GetUrl(kTRUE);
@@ -146,19 +146,19 @@ Int_t TXProofMgr::Init(Int_t)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor: close the connection
+
 TXProofMgr::~TXProofMgr()
 {
-   // Destructor: close the connection
-
    SetInvalid();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invalidate this manager by closing the connection
+
 void TXProofMgr::SetInvalid()
 {
-   // Invalidate this manager by closing the connection
-
    if (fSocket)
       fSocket->Close("P");
    SafeDelete(fSocket);
@@ -169,13 +169,13 @@ void TXProofMgr::SetInvalid()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy version provided for completeness. Just returns a pointer to
+/// existing session 'id' (as shown by TProof::QuerySessions) or 0 if 'id' is
+/// not valid. The boolena 'gui' should be kTRUE when invoked from the GUI.
+
 TProof *TXProofMgr::AttachSession(TProofDesc *d, Bool_t gui)
 {
-   // Dummy version provided for completeness. Just returns a pointer to
-   // existing session 'id' (as shown by TProof::QuerySessions) or 0 if 'id' is
-   // not valid. The boolena 'gui' should be kTRUE when invoked from the GUI.
-
    if (!IsValid()) {
       Warning("AttachSession","invalid TXProofMgr - do nothing");
       return 0;
@@ -220,14 +220,14 @@ TProof *TXProofMgr::AttachSession(TProofDesc *d, Bool_t gui)
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Detach session with 'id' from its proofserv. The 'id' is the number
+/// shown by QuerySessions. The correspondent TProof object is deleted.
+/// If id == 0 all the known sessions are detached.
+/// Option opt="S" or "s" forces session shutdown.
+
 void TXProofMgr::DetachSession(Int_t id, Option_t *opt)
 {
-   // Detach session with 'id' from its proofserv. The 'id' is the number
-   // shown by QuerySessions. The correspondent TProof object is deleted.
-   // If id == 0 all the known sessions are detached.
-   // Option opt="S" or "s" forces session shutdown.
-
    if (!IsValid()) {
       Warning("DetachSession","invalid TXProofMgr - do nothing");
       return;
@@ -266,12 +266,12 @@ void TXProofMgr::DetachSession(Int_t id, Option_t *opt)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Detach session 'p' from its proofserv. The instance 'p' is invalidated
+/// and should be deleted by the caller
+
 void TXProofMgr::DetachSession(TProof *p, Option_t *opt)
 {
-   // Detach session 'p' from its proofserv. The instance 'p' is invalidated
-   // and should be deleted by the caller
-
    if (!IsValid()) {
       Warning("DetachSession","invalid TXProofMgr - do nothing");
       return;
@@ -292,14 +292,14 @@ void TXProofMgr::DetachSession(TProof *p, Option_t *opt)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if 'url' refers to the same 'user@host:port' entity as the URL
+/// in memory. TProofMgr::MatchUrl cannot be used here because of the
+/// 'double' default port, implying an additional check on the port effectively
+/// open.
+
 Bool_t TXProofMgr::MatchUrl(const char *url)
 {
-   // Checks if 'url' refers to the same 'user@host:port' entity as the URL
-   // in memory. TProofMgr::MatchUrl cannot be used here because of the
-   // 'double' default port, implying an additional check on the port effectively
-   // open.
-
    if (!IsValid()) {
       Warning("MatchUrl","invalid TXProofMgr - do nothing");
       return 0;
@@ -330,11 +330,11 @@ Bool_t TXProofMgr::MatchUrl(const char *url)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show available workers
+
 void TXProofMgr::ShowWorkers()
 {
-   // Show available workers
-
    if (!IsValid()) {
       Warning("ShowWorkers","invalid TXProofMgr - do nothing");
       return;
@@ -354,13 +354,13 @@ void TXProofMgr::ShowWorkers()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gets the URL to be prepended to paths when accessing the MSS associated
+/// with the connected cluster, if any. The information is retrieved from
+/// the cluster the first time or if retrieve is true.
+
 const char *TXProofMgr::GetMssUrl(Bool_t retrieve)
 {
-   // Gets the URL to be prepended to paths when accessing the MSS associated
-   // with the connected cluster, if any. The information is retrieved from
-   // the cluster the first time or if retrieve is true.
-
    if (fMssUrl.IsNull() || retrieve) {
       // Nothing to do if not in contact with proofserv
       if (!IsValid()) {
@@ -390,11 +390,11 @@ const char *TXProofMgr::GetMssUrl(Bool_t retrieve)
    return fMssUrl.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list of sessions accessible to this manager
+
 TList *TXProofMgr::QuerySessions(Option_t *opt)
 {
-   // Get list of sessions accessible to this manager
-
    if (opt && !strncasecmp(opt,"L",1))
       // Just return the existing list
       return fSessions;
@@ -472,11 +472,11 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
    return fSessions;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle asynchronous input on the socket
+
 Bool_t TXProofMgr::HandleInput(const void *)
 {
-   // Handle asynchronous input on the socket
-
    if (fSocket && fSocket->IsValid()) {
       TMessage *mess;
       if (fSocket->Recv(mess) >= 0) {
@@ -500,11 +500,11 @@ Bool_t TXProofMgr::HandleInput(const void *)
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle error on the input socket
+
 Bool_t TXProofMgr::HandleError(const void *in)
 {
-   // Handle error on the input socket
-
    XHandleErr_t *herr = in ? (XHandleErr_t *)in : 0;
 
    // Try reconnection
@@ -536,19 +536,19 @@ Bool_t TXProofMgr::HandleError(const void *in)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a cleanup request for the sessions associated with the current user.
+/// If 'hard' is true sessions are signalled for termination and moved to
+/// terminate at all stages (top master, sub-master, workers). Otherwise
+/// (default) only top-master sessions are asked to terminate, triggering
+/// a gentle session termination. In all cases all sessions should be gone
+/// after a few (2 or 3) session checking cycles.
+/// A user with superuser privileges can also asks cleaning for an different
+/// user, specified by 'usr', or for all users (usr = *)
+/// Return 0 on success, -1 in case of error.
+
 Int_t TXProofMgr::Reset(Bool_t hard, const char *usr)
 {
-   // Send a cleanup request for the sessions associated with the current user.
-   // If 'hard' is true sessions are signalled for termination and moved to
-   // terminate at all stages (top master, sub-master, workers). Otherwise
-   // (default) only top-master sessions are asked to terminate, triggering
-   // a gentle session termination. In all cases all sessions should be gone
-   // after a few (2 or 3) session checking cycles.
-   // A user with superuser privileges can also asks cleaning for an different
-   // user, specified by 'usr', or for all users (usr = *)
-   // Return 0 on success, -1 in case of error.
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Warning("Reset","invalid TXProofMgr - do nothing");
@@ -561,30 +561,30 @@ Int_t TXProofMgr::Reset(Bool_t hard, const char *usr)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get logs or log tails from last session associated with this manager
+/// instance.
+/// The arguments allow to specify a session different from the last one:
+///      isess   specifies a position relative to the last one, i.e. 1
+///              for the next to last session; the absolute value is taken
+///              so -1 and 1 are equivalent.
+///      stag    specifies the unique tag of the wanted session
+/// The special value stag = "NR" allows to just initialize the TProofLog
+/// object w/o retrieving the files; this may be useful when the number
+/// of workers is large and only a subset of logs is required.
+/// If 'stag' is specified 'isess' is ignored (unless stag = "NR").
+/// If 'pattern' is specified only the lines containing it are retrieved
+/// (remote grep functionality); to filter out a pattern 'pat' use
+/// pattern = "-v pat".
+/// If 'rescan' is TRUE, masters will rescan the worker sandboxes for the exact
+/// paths, instead of using the save information; may be useful when the
+/// ssave information looks wrong or incomplete.
+/// Returns a TProofLog object (to be deleted by the caller) on success,
+/// 0 if something wrong happened.
+
 TProofLog *TXProofMgr::GetSessionLogs(Int_t isess, const char *stag,
                                       const char *pattern, Bool_t rescan)
 {
-   // Get logs or log tails from last session associated with this manager
-   // instance.
-   // The arguments allow to specify a session different from the last one:
-   //      isess   specifies a position relative to the last one, i.e. 1
-   //              for the next to last session; the absolute value is taken
-   //              so -1 and 1 are equivalent.
-   //      stag    specifies the unique tag of the wanted session
-   // The special value stag = "NR" allows to just initialize the TProofLog
-   // object w/o retrieving the files; this may be useful when the number
-   // of workers is large and only a subset of logs is required.
-   // If 'stag' is specified 'isess' is ignored (unless stag = "NR").
-   // If 'pattern' is specified only the lines containing it are retrieved
-   // (remote grep functionality); to filter out a pattern 'pat' use
-   // pattern = "-v pat".
-   // If 'rescan' is TRUE, masters will rescan the worker sandboxes for the exact
-   // paths, instead of using the save information; may be useful when the
-   // ssave information looks wrong or incomplete.
-   // Returns a TProofLog object (to be deleted by the caller) on success,
-   // 0 if something wrong happened.
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Warning("GetSessionLogs","invalid TXProofMgr - do nothing");
@@ -666,12 +666,12 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess, const char *stag,
    return pl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read, via the coordinator, 'len' bytes from offset 'ofs' of 'file'.
+/// Returns a TObjString with the content or 0, in case of failure
+
 TObjString *TXProofMgr::ReadBuffer(const char *fin, Long64_t ofs, Int_t len)
 {
-   // Read, via the coordinator, 'len' bytes from offset 'ofs' of 'file'.
-   // Returns a TObjString with the content or 0, in case of failure
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Warning("ReadBuffer","invalid TXProofMgr - do nothing");
@@ -682,13 +682,13 @@ TObjString *TXProofMgr::ReadBuffer(const char *fin, Long64_t ofs, Int_t len)
    return fSocket->SendCoordinator(kReadBuffer, fin, len, ofs, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read, via the coordinator, 'fin' filtered. If 'pattern' starts with '|',
+/// it represents a command filtering the output. Elsewhere, it is a grep
+/// pattern. Returns a TObjString with the content or 0 in case of failure
+
 TObjString *TXProofMgr::ReadBuffer(const char *fin, const char *pattern)
 {
-   // Read, via the coordinator, 'fin' filtered. If 'pattern' starts with '|',
-   // it represents a command filtering the output. Elsewhere, it is a grep
-   // pattern. Returns a TObjString with the content or 0 in case of failure
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Warning("ReadBuffer", "invalid TXProofMgr - do nothing");
@@ -718,11 +718,11 @@ TObjString *TXProofMgr::ReadBuffer(const char *fin, const char *pattern)
    return fSocket->SendCoordinator(kReadBuffer, buf, plen, 0, type);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display what ROOT versions are available on the cluster
+
 void TXProofMgr::ShowROOTVersions()
 {
-   // Display what ROOT versions are available on the cluster
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Warning("ShowROOTVersions","invalid TXProofMgr - do nothing");
@@ -744,11 +744,11 @@ void TXProofMgr::ShowROOTVersions()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the default ROOT version to be used
+
 Int_t TXProofMgr::SetROOTVersion(const char *tag)
 {
-   // Set the default ROOT version to be used
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Warning("SetROOTVersion","invalid TXProofMgr - do nothing");
@@ -762,16 +762,16 @@ Int_t TXProofMgr::SetROOTVersion(const char *tag)
    return (fSocket->GetOpenError() != kXR_noErrorYet) ? -1 : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a message to connected users. Only superusers can do this.
+/// The first argument specifies the message or the file from where to take
+/// the message.
+/// The second argument specifies the user to which to send the message: if
+/// empty or null the message is send to all the connected users.
+/// return 0 in case of success, -1 in case of error
+
 Int_t TXProofMgr::SendMsgToUsers(const char *msg, const char *usr)
 {
-   // Send a message to connected users. Only superusers can do this.
-   // The first argument specifies the message or the file from where to take
-   // the message.
-   // The second argument specifies the user to which to send the message: if
-   // empty or null the message is send to all the connected users.
-   // return 0 in case of success, -1 in case of error
-
    Int_t rc = 0;
 
    // Check input
@@ -870,11 +870,11 @@ Int_t TXProofMgr::SendMsgToUsers(const char *msg, const char *usr)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run 'grep' on the nodes
+
 void TXProofMgr::Grep(const char *what, const char *how, const char *where)
 {
-   // Run 'grep' on the nodes
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Error("Grep","invalid TXProofMgr - do nothing");
@@ -896,11 +896,11 @@ void TXProofMgr::Grep(const char *what, const char *how, const char *where)
    SafeDelete(os);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run 'find' on the nodes
+
 void TXProofMgr::Find(const char *what, const char *how, const char *where)
 {
-   // Run 'find' on the nodes
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Error("Find","invalid TXProofMgr - do nothing");
@@ -923,11 +923,11 @@ void TXProofMgr::Find(const char *what, const char *how, const char *where)
    SafeDelete(os);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run 'ls' on the nodes
+
 void TXProofMgr::Ls(const char *what, const char *how, const char *where)
 {
-   // Run 'ls' on the nodes
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Error("Ls","invalid TXProofMgr - do nothing");
@@ -949,11 +949,11 @@ void TXProofMgr::Ls(const char *what, const char *how, const char *where)
    SafeDelete(os);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run 'more' on the nodes
+
 void TXProofMgr::More(const char *what, const char *how, const char *where)
 {
-   // Run 'more' on the nodes
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Error("More","invalid TXProofMgr - do nothing");
@@ -975,13 +975,13 @@ void TXProofMgr::More(const char *what, const char *how, const char *where)
    SafeDelete(os);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run 'rm' on the nodes. The user is prompted before removal, unless 'how'
+/// contains "--force" or a combination of single letter options including 'f',
+/// e.g. "-fv".
+
 Int_t TXProofMgr::Rm(const char *what, const char *how, const char *where)
 {
-   // Run 'rm' on the nodes. The user is prompted before removal, unless 'how'
-   // contains "--force" or a combination of single letter options including 'f',
-   // e.g. "-fv".
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Error("Rm","invalid TXProofMgr - do nothing");
@@ -1039,11 +1039,11 @@ Int_t TXProofMgr::Rm(const char *what, const char *how, const char *where)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run 'tail' on the nodes
+
 void TXProofMgr::Tail(const char *what, const char *how, const char *where)
 {
-   // Run 'tail' on the nodes
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Error("Tail","invalid TXProofMgr - do nothing");
@@ -1065,11 +1065,11 @@ void TXProofMgr::Tail(const char *what, const char *how, const char *where)
    SafeDelete(os);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run 'md5sum' on one of the nodes
+
 Int_t TXProofMgr::Md5sum(const char *what, TString &sum, const char *where)
 {
-   // Run 'md5sum' on one of the nodes
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Error("Md5sum","invalid TXProofMgr - do nothing");
@@ -1102,11 +1102,11 @@ Int_t TXProofMgr::Md5sum(const char *what, TString &sum, const char *where)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run 'stat' on one of the nodes
+
 Int_t TXProofMgr::Stat(const char *what, FileStat_t &st, const char *where)
 {
-   // Run 'stat' on one of the nodes
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Error("Stat","invalid TXProofMgr - do nothing");
@@ -1181,21 +1181,21 @@ Int_t TXProofMgr::Stat(const char *what, FileStat_t &st, const char *where)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute 'action' (see EAdminExecType in 'XProofProtocol.h') at 'where'
+/// (default master), with options 'how', on 'what'. The option specified by
+/// 'how' are typically unix option for the relate commands. In addition to
+/// the unix authorizations, the limitations are:
+///
+///      action = kRm        limited to the sandbox (but basic dirs cannot be
+///                          removed) and on files owned by the user in the
+///                          allowed directories
+///      action = kTail      option '-f' is not supported and will be ignored
+///
+
 TObjString *TXProofMgr::Exec(Int_t action,
                              const char *what, const char *how, const char *where)
 {
-   // Execute 'action' (see EAdminExecType in 'XProofProtocol.h') at 'where'
-   // (default master), with options 'how', on 'what'. The option specified by
-   // 'how' are typically unix option for the relate commands. In addition to
-   // the unix authorizations, the limitations are:
-   //
-   //      action = kRm        limited to the sandbox (but basic dirs cannot be
-   //                          removed) and on files owned by the user in the
-   //                          allowed directories
-   //      action = kTail      option '-f' is not supported and will be ignored
-   //
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Error("Exec","invalid TXProofMgr - do nothing");
@@ -1263,16 +1263,16 @@ TObjString *TXProofMgr::Exec(Int_t action,
    return os;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get file 'remote' into 'local' from the master.
+/// If opt contains "force", the file, if it exists remotely, is copied in all cases,
+/// otherwise a check is done on the MD5sum.
+/// If opt contains "silent" standard notificatons are not printed (errors and
+/// warnings and prompts still are).
+/// Return 0 on success, -1 on error.
+
 Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt)
 {
-   // Get file 'remote' into 'local' from the master.
-   // If opt contains "force", the file, if it exists remotely, is copied in all cases,
-   // otherwise a check is done on the MD5sum.
-   // If opt contains "silent" standard notificatons are not printed (errors and
-   // warnings and prompts still are).
-   // Return 0 on success, -1 on error.
-
    Int_t rc = -1;
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
@@ -1500,14 +1500,14 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Put file 'local'to 'remote' to the master
+/// If opt is "force", the file, if it exists remotely, is copied in all cases,
+/// otherwise a check is done on the MD5sum.
+/// Return 0 on success, -1 on error
+
 Int_t TXProofMgr::PutFile(const char *local, const char *remote, const char *opt)
 {
-   // Put file 'local'to 'remote' to the master
-   // If opt is "force", the file, if it exists remotely, is copied in all cases,
-   // otherwise a check is done on the MD5sum.
-   // Return 0 on success, -1 on error
-
    Int_t rc = -1;
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
@@ -1704,12 +1704,12 @@ Int_t TXProofMgr::PutFile(const char *local, const char *remote, const char *opt
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print file copy progress.
+
 void TXProofMgr::CpProgress(const char *pfx, Long64_t bytes,
                             Long64_t size, TStopwatch *watch, Bool_t cr)
 {
-   // Print file copy progress.
-
    // Protection
    if (!pfx || size == 0 || !watch) return;
 
@@ -1736,13 +1736,13 @@ void TXProofMgr::CpProgress(const char *pfx, Long64_t bytes,
    watch->Continue();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy files in/out of the sandbox. Either 'src' or 'dst' must be in the
+/// sandbox.
+/// Return 0 on success, -1 on error
+
 Int_t TXProofMgr::Cp(const char *src, const char *dst, const char *fmt)
 {
-   // Copy files in/out of the sandbox. Either 'src' or 'dst' must be in the
-   // sandbox.
-   // Return 0 on success, -1 on error
-
    Int_t rc = -1;
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {

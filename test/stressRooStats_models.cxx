@@ -10,10 +10,11 @@ using namespace RooFit;
 using namespace RooStats;
 
 
-//__________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build model
+
 void buildSimultaneousModel(RooWorkspace *w)
 {
-   // Build model
    w->factory("sig[8,0,50]");
    w->factory("Uniform::u1(x1[0,1])");
    w->factory("Uniform::u2(x2[0,1])");
@@ -44,10 +45,11 @@ void buildSimultaneousModel(RooWorkspace *w)
    w->import(*data);
 }
 
-//__________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build product model
+
 void buildPoissonProductModel(RooWorkspace *w)
 {
-   // Build product model
    w->factory("expr::comp_sig('2*sig*pow(1.2, beta)', sig[0,20], beta[-3,3])");
    w->factory("Poisson::poiss1(x[0,40], sum::splusb1(sig, bkg1[0,10]))");
    w->factory("Poisson::poiss2(y[0,120], sum::splusb2(comp_sig, bkg2[0,10]))");

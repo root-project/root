@@ -9,7 +9,8 @@
 * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 *************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>TEntryListArray: a list of entries and subentries in a TTree or TChain</h2></center>
 
@@ -75,65 +76,74 @@ End_Html */
 
 ClassImp(TEntryListArray)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize data members, called by Reset
+
 void TEntryListArray::Init()
 {
-   // Initialize data members, called by Reset
    fSubLists = 0;
    fEntry = -1;
    fLastSubListQueried = 0;
    fSubListIter = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///default c-tor
+
 TEntryListArray::TEntryListArray() : TEntryList(), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
 {
-   //default c-tor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///c-tor with name and title
+
 TEntryListArray::TEntryListArray(const char *name, const char *title): TEntryList(name, title), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
 {
-   //c-tor with name and title
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor with name and title, which also sets the tree
+
 TEntryListArray::TEntryListArray(const char *name, const char *title, const TTree *tree): TEntryList(name, title, tree), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
 {
-   //constructor with name and title, which also sets the tree
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///c-tor with name and title, which also sets the treename and the filename
+
 TEntryListArray::TEntryListArray(const char *name, const char *title, const char *treename, const char *filename): TEntryList(name, title, treename, filename), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
 {
-   //c-tor with name and title, which also sets the treename and the filename
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///c-tor, which sets the tree
+
 TEntryListArray::TEntryListArray(const TTree *tree) : TEntryList(tree), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
 {
-   //c-tor, which sets the tree
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy c-tor
+
 TEntryListArray::TEntryListArray(const TEntryListArray &elist) : TEntryList(), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
 {
-   //copy c-tor
    fEntry = elist.fEntry;
    Add(&elist);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///c-tor, from TEntryList
+
 TEntryListArray::TEntryListArray(const TEntryList& elist) : TEntryList(elist), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
 {
-   //c-tor, from TEntryList
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// d-tor
+
 TEntryListArray::~TEntryListArray()
 {
-   // d-tor
    if (fSubLists) {
       fSubLists->Delete();
       delete fSubLists;
@@ -143,11 +153,11 @@ TEntryListArray::~TEntryListArray()
    fSubListIter = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Add 2 entry lists
+
 void TEntryListArray::Add(const TEntryList *elist)
 {
-   //Add 2 entry lists
-
    if (!elist) return;
 
    if (fEntry != -1) {
@@ -170,13 +180,13 @@ void TEntryListArray::Add(const TEntryList *elist)
    AddEntriesAndSubLists(elist);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The method that really adds two entry lists with sublists
+/// If lists are splitted (fLists != 0), look for the ones whose trees match and call the method for those lists.
+/// Add first the sublists, and then use TEntryList::Add to deal with the entries
+
 void TEntryListArray::AddEntriesAndSubLists(const TEntryList *elist)
 {
-   // The method that really adds two entry lists with sublists
-   // If lists are splitted (fLists != 0), look for the ones whose trees match and call the method for those lists.
-   // Add first the sublists, and then use TEntryList::Add to deal with the entries
-
    // WARNING: cannot call TEntryList::Add in the beginning:
    // - Need to know which entries are present in each list when adding the sublists
    // - TEL::Add is recursive, so it will call this guy after the first iteration
@@ -248,14 +258,14 @@ void TEntryListArray::AddEntriesAndSubLists(const TEntryList *elist)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///When tree = 0, returns from the current list
+///When tree != 0, finds the list corresponding to this tree
+///When tree is a chain, the entry is assumed to be global index and the local
+///entry is recomputed from the treeoffset information of the chain
+
 Int_t TEntryListArray::Contains(Long64_t entry, TTree *tree, Long64_t subentry)
 {
-   //When tree = 0, returns from the current list
-   //When tree != 0, finds the list corresponding to this tree
-   //When tree is a chain, the entry is assumed to be global index and the local
-   //entry is recomputed from the treeoffset information of the chain
-
    //When subentry != -1, return true if the enter is present and not splitted
    //or if the subentry list is found and contains #subentry
 
@@ -279,13 +289,13 @@ Int_t TEntryListArray::Contains(Long64_t entry, TTree *tree, Long64_t subentry)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TEntryListArray based on the given TEntryList
+/// Called by SetTree when the given list is added to fLists
+/// Replace it by a TEntryListArray and delete the given list
+
 void TEntryListArray::ConvertToTEntryListArray(TEntryList *e)
 {
-   // Create a TEntryListArray based on the given TEntryList
-   // Called by SetTree when the given list is added to fLists
-   // Replace it by a TEntryListArray and delete the given list
-
    // TODO: Keep the blocks and the number of entries to transfer without copying?
    //    TObjArray *blocks = e->fBlocks;
    //    Int_t NBlocks = e->fNBlocks;
@@ -318,15 +328,15 @@ void TEntryListArray::ConvertToTEntryListArray(TEntryList *e)
    e = 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Add entry #entry (, #subentry) to the list
+///When tree = 0, adds to the current list
+///When tree != 0, finds the list corresponding to this tree (or add a new one)
+///When tree is a chain, the entry is assumed to be global index and the local
+///entry is recomputed from the treeoffset information of the chain
+
 Bool_t TEntryListArray::Enter(Long64_t entry, TTree *tree, Long64_t subentry)
 {
-   //Add entry #entry (, #subentry) to the list
-   //When tree = 0, adds to the current list
-   //When tree != 0, finds the list corresponding to this tree (or add a new one)
-   //When tree is a chain, the entry is assumed to be global index and the local
-   //entry is recomputed from the treeoffset information of the chain
-
    //When subentry = -1, add all subentries (remove the sublist if it exists)
    //When subentry != -1 and the entry is not present,
    //add only the given subentry, creating a TEntryListArray to hold the subentries for the given entry
@@ -371,11 +381,11 @@ Bool_t TEntryListArray::Enter(Long64_t entry, TTree *tree, Long64_t subentry)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the list holding the subentries for the given entry or 0
+
 TEntryListArray* TEntryListArray::GetSubListForEntry(Long64_t entry, TTree *tree)
 {
-   // Return the list holding the subentries for the given entry or 0
-
    if (tree) {
       Long64_t localentry = tree->LoadTree(entry);
       SetTree(tree->GetTree());
@@ -420,13 +430,14 @@ TEntryListArray* TEntryListArray::GetSubListForEntry(Long64_t entry, TTree *tree
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Print this list
+///option = "" - default - print the name of the tree and file
+///option = "all" - print all the entry numbers
+///option = "subentries" - print all the entry numbers and associated subentries
+
 void TEntryListArray::Print(const Option_t* option) const
 {
-   //Print this list
-   //option = "" - default - print the name of the tree and file
-   //option = "all" - print all the entry numbers
-   //option = "subentries" - print all the entry numbers and associated subentries
    TString opt = option;
    opt.ToUpper();
    Bool_t new_line = !opt.Contains("EOL");
@@ -466,16 +477,16 @@ void TEntryListArray::Print(const Option_t* option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Remove entry #entry (, #subentry)  from the list
+///When tree = 0, removes from the current list
+///When tree != 0, finds the list, corresponding to this tree
+///When tree is a chain, the entry is assumed to be global index and the local
+///entry is recomputed from the treeoffset information of the chain
+///If subentry != -1, only the given subentry is removed
+
 Bool_t TEntryListArray::Remove(Long64_t entry, TTree *tree, Long64_t subentry)
 {
-   //Remove entry #entry (, #subentry)  from the list
-   //When tree = 0, removes from the current list
-   //When tree != 0, finds the list, corresponding to this tree
-   //When tree is a chain, the entry is assumed to be global index and the local
-   //entry is recomputed from the treeoffset information of the chain
-   //If subentry != -1, only the given subentry is removed
-
    Bool_t result = 0;
 
    if (tree) {
@@ -514,10 +525,11 @@ Bool_t TEntryListArray::Remove(Long64_t entry, TTree *tree, Long64_t subentry)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the given sublist and return true if succeeded
+
 Bool_t TEntryListArray::RemoveSubList(TEntryListArray *e, TTree *tree)
 {
-   // Remove the given sublist and return true if succeeded
    if (!e) return 0;
    if (tree) {
       SetTree(tree->GetTree());
@@ -540,11 +552,11 @@ Bool_t TEntryListArray::RemoveSubList(TEntryListArray *e, TTree *tree)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the sublists for the given entry --> not being used...
+
 Bool_t TEntryListArray::RemoveSubListForEntry(Long64_t entry, TTree *tree)
 {
-   // Remove the sublists for the given entry --> not being used...
-
    if (tree) {
       Long64_t localentry = tree->LoadTree(entry);
       SetTree(tree->GetTree());
@@ -556,10 +568,11 @@ Bool_t TEntryListArray::RemoveSubListForEntry(Long64_t entry, TTree *tree)
    return RemoveSubList(GetSubListForEntry(entry));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset all entries and remove all sublists
+
 void TEntryListArray::Reset()
 {
-   // Reset all entries and remove all sublists
    TEntryList::Reset();
    if (fSubLists) {
       if (!((TEntryListArray*)fSubLists->First())->GetDirectory()) {
@@ -571,11 +584,11 @@ void TEntryListArray::Reset()
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Create a sublist for the given entry and returns it --> should be called after calling GetSubListForEntry
+
 TEntryListArray* TEntryListArray::SetEntry(Long64_t entry, TTree *tree)
 {
-   //Create a sublist for the given entry and returns it --> should be called after calling GetSubListForEntry
-
    if (entry < 0) return 0;
 
    // If tree is given, switch to the list that contains tree
@@ -604,12 +617,12 @@ TEntryListArray* TEntryListArray::SetEntry(Long64_t entry, TTree *tree)
    return newlist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Remove all the entries (and subentries) of this entry list that are contained in elist
+///If for a given entry present in both lists, one has subentries and the other does not, the whole entry is removed
+
 void TEntryListArray::Subtract(const TEntryList *elist)
 {
-   //Remove all the entries (and subentries) of this entry list that are contained in elist
-   //If for a given entry present in both lists, one has subentries and the other does not, the whole entry is removed
-
    if (!elist) return;
 
    if (fLists) { // This list is splitted
@@ -672,12 +685,12 @@ void TEntryListArray::Subtract(const TEntryList *elist)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///If a list for a tree with such name and filename exists, sets it as the current sublist
+///If not, creates this list and sets it as the current sublist
+
 void TEntryListArray::SetTree(const char *treename, const char *filename)
 {
-   //If a list for a tree with such name and filename exists, sets it as the current sublist
-   //If not, creates this list and sets it as the current sublist
-
    //  ! the filename is taken as provided, no extensions to full path or url !
 
    // Uses the method from the base class: if the tree is new, the a new TEntryList will be created (and stored in fLists) and needs to be converted to a TEntryListArray

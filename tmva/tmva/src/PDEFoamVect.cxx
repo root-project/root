@@ -39,44 +39,47 @@ using namespace std;
 
 ClassImp(TMVA::PDEFoamVect)
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer
+
 TMVA::PDEFoamVect::PDEFoamVect()
    : TObject(),
      fDim(0),
      fCoords(0)
 {
-   // Default constructor for streamer
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User constructor creating n-dimensional vector
+/// and allocating dynamically array of components
+
 TMVA::PDEFoamVect::PDEFoamVect(Int_t n)
    : TObject(),
      fDim(n),
      fCoords(0)
 {
-   // User constructor creating n-dimensional vector
-   // and allocating dynamically array of components
-
    if (n>0) {
       fCoords = new Double_t[fDim];
       for (Int_t i=0; i<n; i++) *(fCoords+i)=0.0;
    }
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TMVA::PDEFoamVect::PDEFoamVect(const PDEFoamVect &vect)
    : TObject(),
      fDim(vect.fDim),
      fCoords(vect.fCoords)
 {
-   // Copy constructor
    Error( "PDEFoamVect", "COPY CONSTRUCTOR NOT IMPLEMENTED" );
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TMVA::PDEFoamVect::~PDEFoamVect()
 {
-   // Destructor
    delete [] fCoords; //  free(fCoords)
    fCoords=0;
 }
@@ -85,11 +88,11 @@ TMVA::PDEFoamVect::~PDEFoamVect()
 //                     Overloading operators                                //
 //////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// substitution operator
+
 TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator =(const PDEFoamVect& vect)
 {
-   // substitution operator
-
    if (&vect == this) return *this;
    if (fDim != vect.fDim)
       Error("PDEFoamVect", "operator=Dims. are different: %d and %d \n ", fDim, vect.fDim);
@@ -103,34 +106,35 @@ TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator =(const PDEFoamVect& vect)
    return *this;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [] is for access to elements as in ordinary matrix like a[j]=b[j]
+/// (Perhaps against some strict rules but rather practical.)
+/// Range protection is built in, consequently for substitution
+/// one should use rather use a=b than explicit loop!
+
 Double_t &TMVA::PDEFoamVect::operator[](Int_t n)
 {
-   // [] is for access to elements as in ordinary matrix like a[j]=b[j]
-   // (Perhaps against some strict rules but rather practical.)
-   // Range protection is built in, consequently for substitution
-   // one should use rather use a=b than explicit loop!
-
    if ((n<0) || (n>=fDim)) {
       Error(  "PDEFoamVect","operator[], out of range \n");
    }
    return fCoords[n];
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// unary multiplication operator *=
+
 TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator*=(const Double_t &x)
 {
-   // unary multiplication operator *=
-
    for(Int_t i=0;i<fDim;i++)
       fCoords[i] = fCoords[i]*x;
    return *this;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// unary addition operator +=; adding vector c*=x,
+
 TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator+=(const PDEFoamVect& shift)
 {
-   // unary addition operator +=; adding vector c*=x,
    if(fDim != shift.fDim){
       Error("PDEFoamVect", "operator+, different dimensions= %d %d \n", fDim, shift.fDim);
    }
@@ -139,10 +143,11 @@ TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator+=(const PDEFoamVect& shift)
    return *this;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// unary subtraction operator -=
+
 TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator-=(const PDEFoamVect& shift)
 {
-   // unary subtraction operator -=
    if(fDim != shift.fDim) {
       Error("PDEFoamVect", "operator+, different dimensions= %d %d \n", fDim, shift.fDim);
    }
@@ -151,41 +156,45 @@ TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator-=(const PDEFoamVect& shift)
    return *this;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// addition operator +; sum of 2 vectors: c=a+b, a=a+b,
+/// NEVER USE IT, VERY SLOW!!!
+
 TMVA::PDEFoamVect TMVA::PDEFoamVect::operator+(const PDEFoamVect &p2)
 {
-   // addition operator +; sum of 2 vectors: c=a+b, a=a+b,
-   // NEVER USE IT, VERY SLOW!!!
    PDEFoamVect temp(fDim);
    temp  = (*this);
    temp += p2;
    return temp;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// subtraction operator -; difference of 2 vectors; c=a-b, a=a-b,
+/// NEVER USE IT, VERY SLOW!!!
+
 TMVA::PDEFoamVect TMVA::PDEFoamVect::operator-(const PDEFoamVect &p2)
 {
-   // subtraction operator -; difference of 2 vectors; c=a-b, a=a-b,
-   // NEVER USE IT, VERY SLOW!!!
    PDEFoamVect temp(fDim);
    temp  = (*this);
    temp -= p2;
    return temp;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loading in ordinary double prec. vector, sometimes can be useful
+
 TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator =(Double_t Vect[])
 {
-   // Loading in ordinary double prec. vector, sometimes can be useful
    for(Int_t i=0; i<fDim; i++)
       fCoords[i] = Vect[i];
    return *this;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loading in double prec. number, sometimes can be useful
+
 TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator =(Double_t x)
 {
-   // Loading in double prec. number, sometimes can be useful
    if(fCoords != 0) {
       for(Int_t i=0; i<fDim; i++)
          fCoords[i] = x;
@@ -197,10 +206,11 @@ TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator =(Double_t x)
 //                          OTHER METHODS                                   //
 //////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Printout of all vector components
+
 void TMVA::PDEFoamVect::Print(Option_t *option) const
 {
-   // Printout of all vector components
    streamsize wid = std::cout.width(); // saving current field width
    if(!option) Error( "Print ", "No option set \n");
    std::cout << "(";

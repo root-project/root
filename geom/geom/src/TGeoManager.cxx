@@ -336,10 +336,11 @@ Int_t  TGeoManager::fgMaxXtruVert = 1;
 Int_t  TGeoManager::fgNumThreads   = 0;
 TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = 0;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TGeoManager::TGeoManager()
 {
-// Default constructor.
    if (!fgThreadId) fgThreadId = new TGeoManager::ThreadsMap_t;
    if (TClass::IsCallingNew() == TClass::kDummyNew) {
       fTimeCut = kFALSE;
@@ -415,11 +416,12 @@ TGeoManager::TGeoManager()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGeoManager::TGeoManager(const char *name, const char *title)
             :TNamed(name, title)
 {
-// Constructor.
    if (!gROOT->GetListOfGeometries()->FindObject(this)) gROOT->GetListOfGeometries()->Add(this);
    if (!gROOT->GetListOfBrowsables()->FindObject(this)) gROOT->GetListOfBrowsables()->Add(this);
    Init();
@@ -428,11 +430,11 @@ TGeoManager::TGeoManager(const char *name, const char *title)
    if (fgVerboseLevel>0) Info("TGeoManager","Geometry %s, %s created", GetName(), GetTitle());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize manager class.
+
 void TGeoManager::Init()
 {
-// Initialize manager class.
-
    if (gGeoManager) {
       Warning("Init","Deleting previous geometry: %s/%s",gGeoManager->GetName(),gGeoManager->GetTitle());
       delete gGeoManager;
@@ -509,7 +511,9 @@ void TGeoManager::Init()
    ClearThreadsMap();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TGeoManager::TGeoManager(const TGeoManager& gm) :
   TNamed(gm),
   fPhimin(gm.fPhimin),
@@ -578,17 +582,17 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fUsePWNav(kFALSE),
   fParallelWorld(0)
 {
-   //copy constructor
    for(Int_t i=0; i<1024; i++)
       fPdgId[i]=gm.fPdgId[i];
    if (!fgThreadId) fgThreadId = new TGeoManager::ThreadsMap_t;
    ClearThreadsMap();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
 {
-   //assignment operator
    if (!fgThreadId) fgThreadId = new TGeoManager::ThreadsMap_t;
    if(this!=&gm) {
       TNamed::operator=(gm);
@@ -665,10 +669,11 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   Destructor
+
 TGeoManager::~TGeoManager()
 {
-//   Destructor
    if (gGeoManager != this) gGeoManager = this;
    fIsGeomCleaning = kTRUE;
 
@@ -715,69 +720,77 @@ TGeoManager::~TGeoManager()
    gGeoManager = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a material to the list. Returns index of the material in list.
+
 Int_t TGeoManager::AddMaterial(const TGeoMaterial *material)
 {
-// Add a material to the list. Returns index of the material in list.
    return TGeoBuilder::Instance(this)->AddMaterial((TGeoMaterial*)material);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an illegal overlap/extrusion to the list.
+
 Int_t TGeoManager::AddOverlap(const TNamed *ovlp)
 {
-// Add an illegal overlap/extrusion to the list.
    Int_t size = fOverlaps->GetEntriesFast();
    fOverlaps->Add((TObject*)ovlp);
    return size;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a matrix to the list. Returns index of the matrix in list.
+
 Int_t TGeoManager::AddTransformation(const TGeoMatrix *matrix)
 {
-// Add a matrix to the list. Returns index of the matrix in list.
    return TGeoBuilder::Instance(this)->AddTransformation((TGeoMatrix*)matrix);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a shape to the list. Returns index of the shape in list.
+
 Int_t TGeoManager::AddShape(const TGeoShape *shape)
 {
-// Add a shape to the list. Returns index of the shape in list.
    return TGeoBuilder::Instance(this)->AddShape((TGeoShape*)shape);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a track to the list of tracks. Use this for primaries only. For secondaries,
+/// add them to the parent track. The method create objects that are registered
+/// to the analysis manager but have to be cleaned-up by the user via ClearTracks().
+
 Int_t TGeoManager::AddTrack(Int_t id, Int_t pdgcode, TObject *particle)
 {
-// Add a track to the list of tracks. Use this for primaries only. For secondaries,
-// add them to the parent track. The method create objects that are registered
-// to the analysis manager but have to be cleaned-up by the user via ClearTracks().
    Int_t index = fNtracks;
    fTracks->AddAtAndExpand(GetGeomPainter()->AddTrack(id,pdgcode,particle),fNtracks++);
    return index;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a track to the list of tracks
+
 Int_t TGeoManager::AddTrack(TVirtualGeoTrack *track)
 {
-// Add a track to the list of tracks
    Int_t index = fNtracks;
    fTracks->AddAtAndExpand(track,fNtracks++);
    return index;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Makes a primary track but do not attach it to the list of tracks. The track
+/// can be attached as daughter to another one with TVirtualGeoTrack::AddTrack
+
 TVirtualGeoTrack *TGeoManager::MakeTrack(Int_t id, Int_t pdgcode, TObject *particle)
 {
-// Makes a primary track but do not attach it to the list of tracks. The track
-// can be attached as daughter to another one with TVirtualGeoTrack::AddTrack
    TVirtualGeoTrack *track = GetGeomPainter()->AddTrack(id,pdgcode,particle);
    return track;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a volume to the list. Returns index of the volume in list.
+
 Int_t TGeoManager::AddVolume(TGeoVolume *volume)
 {
-// Add a volume to the list. Returns index of the volume in list.
    if (!volume) {
       Error("AddVolume", "invalid volume");
       return -1;
@@ -817,11 +830,12 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
    return uid;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a navigator in the list of navigators. If it is the first one make it
+/// current navigator.
+
 TGeoNavigator *TGeoManager::AddNavigator()
 {
-// Add a navigator in the list of navigators. If it is the first one make it
-// current navigator.
    if (fMultiThread) TThread::Lock();
 //   if (fgLockNavigators) {
 //      Error("AddNavigator", "Navigators are locked. Use SetNavigatorsLock(false) first.");
@@ -841,10 +855,11 @@ TGeoNavigator *TGeoManager::AddNavigator()
    return nav;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns current navigator for the calling thread.
+
 TGeoNavigator *TGeoManager::GetCurrentNavigator() const
 {
-// Returns current navigator for the calling thread.
    TTHREAD_TLS(TGeoNavigator*) tnav = 0;
    if (!fMultiThread) return fCurrentNavigator;
    TGeoNavigator *nav = tnav; // TTHREAD_TLS_GET(TGeoNavigator*,tnav);
@@ -858,10 +873,11 @@ TGeoNavigator *TGeoManager::GetCurrentNavigator() const
    return nav;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list of navigators for the calling thread.
+
 TGeoNavigatorArray *TGeoManager::GetListOfNavigators() const
 {
-// Get list of navigators for the calling thread.
    Long_t threadId = fMultiThread ? TThread::SelfId() : 0;
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end()) return 0;
@@ -869,10 +885,11 @@ TGeoNavigatorArray *TGeoManager::GetListOfNavigators() const
    return array;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Switch to another existing navigator for the calling thread.
+
 Bool_t TGeoManager::SetCurrentNavigator(Int_t index)
 {
-// Switch to another existing navigator for the calling thread.
    Long_t threadId = fMultiThread ? TThread::SelfId() : 0;
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end()) {
@@ -889,17 +906,19 @@ Bool_t TGeoManager::SetCurrentNavigator(Int_t index)
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the lock for navigators.
+
 void TGeoManager::SetNavigatorsLock(Bool_t flag)
 {
-// Set the lock for navigators.
    fgLockNavigators = flag;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear all navigators.
+
 void TGeoManager::ClearNavigators()
 {
-// Clear all navigators.
    if (fMultiThread) TThread::Lock();
    TGeoNavigatorArray *arr = 0;
    for (NavigatorsMap_t::iterator it = fNavigators.begin();
@@ -911,10 +930,11 @@ void TGeoManager::ClearNavigators()
    if (fMultiThread) TThread::UnLock();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear a single navigator.
+
 void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
 {
-// Clear a single navigator.
    if (fMultiThread) TThread::Lock();
    for (NavigatorsMap_t::iterator it = fNavigators.begin();
         it != fNavigators.end(); it++) {
@@ -932,10 +952,11 @@ void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
    if (fMultiThread) TThread::UnLock();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set maximum number of threads for navigation.
+
 void TGeoManager::SetMaxThreads(Int_t nthreads)
 {
-// Set maximum number of threads for navigation.
    if (!fClosed) {
       Error("SetMaxThreads", "Cannot set maximum number of threads before closing the geometry");
       return;
@@ -961,7 +982,8 @@ void TGeoManager::SetMaxThreads(Int_t nthreads)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGeoManager::ClearThreadData() const
 {
    if (!fMaxThreads) return;
@@ -972,10 +994,11 @@ void TGeoManager::ClearThreadData() const
    TThread::UnLock();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create thread private data for all geometry objects.
+
 void TGeoManager::CreateThreadData() const
 {
-// Create thread private data for all geometry objects.
    if (!fMaxThreads) return;
    TThread::Lock();
    TIter next(fVolumes);
@@ -984,11 +1007,12 @@ void TGeoManager::CreateThreadData() const
    TThread::UnLock();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the current map of threads. This will be filled again by the calling
+/// threads via ThreadId calls.
+
 void TGeoManager::ClearThreadsMap()
 {
-// Clear the current map of threads. This will be filled again by the calling
-// threads via ThreadId calls.
    if (gGeoManager && !gGeoManager->IsMultiThread()) return;
    TThread::Lock();
    if (!fgThreadId->empty()) fgThreadId->clear();
@@ -996,13 +1020,14 @@ void TGeoManager::ClearThreadsMap()
    TThread::UnLock();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Translates the current thread id to an ordinal number. This can be used to
+/// manage data which is pspecific for a given thread.
+///   static __thread Int_t tid = -1;
+///   if (tid > -1) return tid;
+
 Int_t TGeoManager::ThreadId()
 {
-// Translates the current thread id to an ordinal number. This can be used to
-// manage data which is pspecific for a given thread.
-//   static __thread Int_t tid = -1;
-//   if (tid > -1) return tid;
    TTHREAD_TLS(Int_t) tid = -1;
    Int_t ttid = tid; // TTHREAD_TLS_GET(Int_t,tid);
    if (ttid > -1) return ttid;
@@ -1018,10 +1043,11 @@ Int_t TGeoManager::ThreadId()
    return ttid;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Describe how to browse this object.
+
 void TGeoManager::Browse(TBrowser *b)
 {
-// Describe how to browse this object.
    if (!b) return;
    if (fMaterials) b->Add(fMaterials, "Materials");
    if (fMedia)     b->Add(fMedia,     "Media");
@@ -1036,17 +1062,19 @@ void TGeoManager::Browse(TBrowser *b)
                      "TGeoManager", this, "SetVisibility(TObject*,Bool_t)");
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Append a pad for this geometry.
+
 void TGeoManager::Edit(Option_t *option) {
-// Append a pad for this geometry.
    AppendPad("");
    GetGeomPainter()->EditGeometry(option);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set visibility for a volume.
+
 void TGeoManager::SetVisibility(TObject *obj, Bool_t vis)
 {
-// Set visibility for a volume.
    if(obj->IsA() == TGeoVolume::Class()) {
       TGeoVolume *vol = (TGeoVolume *) obj;
       vol->SetVisibility(vis);
@@ -1059,50 +1087,56 @@ void TGeoManager::SetVisibility(TObject *obj, Bool_t vis)
    GetGeomPainter()->ModifiedPad(kTRUE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the new 'bombed' translation vector according current exploded view mode.
+
 void TGeoManager::BombTranslation(const Double_t *tr, Double_t *bombtr)
 {
-// Get the new 'bombed' translation vector according current exploded view mode.
    if (fPainter) fPainter->BombTranslation(tr, bombtr);
    return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the new 'unbombed' translation vector according current exploded view mode.
+
 void TGeoManager::UnbombTranslation(const Double_t *tr, Double_t *bombtr)
 {
-// Get the new 'unbombed' translation vector according current exploded view mode.
    if (fPainter) fPainter->UnbombTranslation(tr, bombtr);
    return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Backup the current state without affecting the cache stack.
+
 void TGeoManager::DoBackupState()
 {
-// Backup the current state without affecting the cache stack.
    GetCurrentNavigator()->DoBackupState();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restore a backed-up state without affecting the cache stack.
+
 void TGeoManager::DoRestoreState()
 {
-// Restore a backed-up state without affecting the cache stack.
    GetCurrentNavigator()->DoRestoreState();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register a matrix to the list of matrices. It will be cleaned-up at the
+/// destruction TGeoManager.
+
 void TGeoManager::RegisterMatrix(const TGeoMatrix *matrix)
 {
-// Register a matrix to the list of matrices. It will be cleaned-up at the
-// destruction TGeoManager.
    return TGeoBuilder::Instance(this)->RegisterMatrix((TGeoMatrix*)matrix);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replaces all occurences of VORIG with VNEW in the geometry tree. The volume VORIG
+/// is not replaced from the list of volumes, but all node referencing it will reference
+/// VNEW instead. Returns number of occurences changed.
+
 Int_t TGeoManager::ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew)
 {
-// Replaces all occurences of VORIG with VNEW in the geometry tree. The volume VORIG
-// is not replaced from the list of volumes, but all node referencing it will reference
-// VNEW instead. Returns number of occurences changed.
    Int_t nref = 0;
    if (!vorig || !vnew) return nref;
    TGeoMedium *morig = vorig->GetMedium();
@@ -1167,10 +1201,11 @@ Int_t TGeoManager::ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew)
    return nref;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transform all volumes named VNAME to assemblies. The volumes must be virtual.
+
 Int_t TGeoManager::TransformVolumeToAssembly(const char *vname)
 {
-// Transform all volumes named VNAME to assemblies. The volumes must be virtual.
    TGeoVolume *toTransform = FindVolumeFast(vname);
    if (!toTransform) {
       Warning("TransformVolumeToAssembly", "Volume %s not found", vname);
@@ -1205,172 +1240,181 @@ Int_t TGeoManager::TransformVolumeToAssembly(const char *vname)
    return count;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new volume by dividing an existing one (GEANT3 like)
+///
+/// Divides MOTHER into NDIV divisions called NAME
+/// along axis IAXIS starting at coordinate value START
+/// and having size STEP. The created volumes will have tracking
+/// media ID=NUMED (if NUMED=0 -> same media as MOTHER)
+///    The behavior of the division operation can be triggered using OPTION :
+/// OPTION (case insensitive) :
+///  N  - divide all range in NDIV cells (same effect as STEP<=0) (GSDVN in G3)
+///  NX - divide range starting with START in NDIV cells          (GSDVN2 in G3)
+///  S  - divide all range with given STEP. NDIV is computed and divisions will be centered
+///         in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
+///  SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
+
 TGeoVolume *TGeoManager::Division(const char *name, const char *mother, Int_t iaxis,
                                   Int_t ndiv, Double_t start, Double_t step, Int_t numed, Option_t *option)
 {
-// Create a new volume by dividing an existing one (GEANT3 like)
-//
-// Divides MOTHER into NDIV divisions called NAME
-// along axis IAXIS starting at coordinate value START
-// and having size STEP. The created volumes will have tracking
-// media ID=NUMED (if NUMED=0 -> same media as MOTHER)
-//    The behavior of the division operation can be triggered using OPTION :
-// OPTION (case insensitive) :
-//  N  - divide all range in NDIV cells (same effect as STEP<=0) (GSDVN in G3)
-//  NX - divide range starting with START in NDIV cells          (GSDVN2 in G3)
-//  S  - divide all range with given STEP. NDIV is computed and divisions will be centered
-//         in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
-//  SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
-
    return TGeoBuilder::Instance(this)->Division(name, mother, iaxis, ndiv, start, step, numed, option);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create rotation matrix named 'mat<index>'.
+///
+///  index    rotation matrix number
+///  theta1   polar angle for axis X
+///  phi1     azimuthal angle for axis X
+///  theta2   polar angle for axis Y
+///  phi2     azimuthal angle for axis Y
+///  theta3   polar angle for axis Z
+///  phi3     azimuthal angle for axis Z
+///
+
 void TGeoManager::Matrix(Int_t index, Double_t theta1, Double_t phi1,
                          Double_t theta2, Double_t phi2,
                          Double_t theta3, Double_t phi3)
 {
-// Create rotation matrix named 'mat<index>'.
-//
-//  index    rotation matrix number
-//  theta1   polar angle for axis X
-//  phi1     azimuthal angle for axis X
-//  theta2   polar angle for axis Y
-//  phi2     azimuthal angle for axis Y
-//  theta3   polar angle for axis Z
-//  phi3     azimuthal angle for axis Z
-//
    TGeoBuilder::Instance(this)->Matrix(index, theta1, phi1, theta2, phi2, theta3, phi3);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create material with given A, Z and density, having an unique id.
+
 TGeoMaterial *TGeoManager::Material(const char *name, Double_t a, Double_t z, Double_t dens, Int_t uid,Double_t radlen, Double_t intlen)
 {
-// Create material with given A, Z and density, having an unique id.
    return TGeoBuilder::Instance(this)->Material(name, a, z, dens, uid, radlen, intlen);
 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create mixture OR COMPOUND IMAT as composed by THE BASIC nelem
+/// materials defined by arrays A,Z and WMAT, having an unique id.
+
 TGeoMaterial *TGeoManager::Mixture(const char *name, Float_t *a, Float_t *z, Double_t dens,
                                    Int_t nelem, Float_t *wmat, Int_t uid)
 {
-// Create mixture OR COMPOUND IMAT as composed by THE BASIC nelem
-// materials defined by arrays A,Z and WMAT, having an unique id.
    return TGeoBuilder::Instance(this)->Mixture(name, a, z, dens, nelem, wmat, uid);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create mixture OR COMPOUND IMAT as composed by THE BASIC nelem
+/// materials defined by arrays A,Z and WMAT, having an unique id.
+
 TGeoMaterial *TGeoManager::Mixture(const char *name, Double_t *a, Double_t *z, Double_t dens,
                                    Int_t nelem, Double_t *wmat, Int_t uid)
 {
-// Create mixture OR COMPOUND IMAT as composed by THE BASIC nelem
-// materials defined by arrays A,Z and WMAT, having an unique id.
    return TGeoBuilder::Instance(this)->Mixture(name, a, z, dens, nelem, wmat, uid);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create tracking medium
+///
+///  numed      tracking medium number assigned
+///  name      tracking medium name
+///  nmat      material number
+///  isvol     sensitive volume flag
+///  ifield    magnetic field
+///  fieldm    max. field value (kilogauss)
+///  tmaxfd    max. angle due to field (deg/step)
+///  stemax    max. step allowed
+///  deemax    max. fraction of energy lost in a step
+///  epsil     tracking precision (cm)
+///  stmin     min. step due to continuous processes (cm)
+///
+///  ifield = 0 if no magnetic field; ifield = -1 if user decision in guswim;
+///  ifield = 1 if tracking performed with g3rkuta; ifield = 2 if tracking
+///  performed with g3helix; ifield = 3 if tracking performed with g3helx3.
+///
+
 TGeoMedium *TGeoManager::Medium(const char *name, Int_t numed, Int_t nmat, Int_t isvol,
                                 Int_t ifield, Double_t fieldm, Double_t tmaxfd,
                                 Double_t stemax, Double_t deemax, Double_t epsil,
                                 Double_t stmin)
 {
-// Create tracking medium
-  //
-  //  numed      tracking medium number assigned
-  //  name      tracking medium name
-  //  nmat      material number
-  //  isvol     sensitive volume flag
-  //  ifield    magnetic field
-  //  fieldm    max. field value (kilogauss)
-  //  tmaxfd    max. angle due to field (deg/step)
-  //  stemax    max. step allowed
-  //  deemax    max. fraction of energy lost in a step
-  //  epsil     tracking precision (cm)
-  //  stmin     min. step due to continuous processes (cm)
-  //
-  //  ifield = 0 if no magnetic field; ifield = -1 if user decision in guswim;
-  //  ifield = 1 if tracking performed with g3rkuta; ifield = 2 if tracking
-  //  performed with g3helix; ifield = 3 if tracking performed with g3helx3.
-  //
    return TGeoBuilder::Instance(this)->Medium(name, numed, nmat, isvol, ifield, fieldm, tmaxfd, stemax, deemax, epsil, stmin);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a node called <name_nr> pointing to the volume called <name>
+/// as daughter of the volume called <mother> (gspos). The relative matrix is
+/// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
+/// In case npar>0, create the volume to be positioned in mother, according
+/// its actual parameters (gsposp).
+///  NAME   Volume name
+///  NUMBER Copy number of the volume
+///  MOTHER Mother volume name
+///  X      X coord. of the volume in mother ref. sys.
+///  Y      Y coord. of the volume in mother ref. sys.
+///  Z      Z coord. of the volume in mother ref. sys.
+///  IROT   Rotation matrix number w.r.t. mother ref. sys.
+///  ISONLY ONLY/MANY flag
+
 void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
                        Double_t x, Double_t y, Double_t z, Int_t irot,
                        Bool_t isOnly, Float_t *upar, Int_t npar)
 {
-// Create a node called <name_nr> pointing to the volume called <name>
-// as daughter of the volume called <mother> (gspos). The relative matrix is
-// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
-// In case npar>0, create the volume to be positioned in mother, according
-// its actual parameters (gsposp).
-//  NAME   Volume name
-//  NUMBER Copy number of the volume
-//  MOTHER Mother volume name
-//  X      X coord. of the volume in mother ref. sys.
-//  Y      Y coord. of the volume in mother ref. sys.
-//  Z      Z coord. of the volume in mother ref. sys.
-//  IROT   Rotation matrix number w.r.t. mother ref. sys.
-//  ISONLY ONLY/MANY flag
-
    TGeoBuilder::Instance(this)->Node(name, nr, mother, x, y, z, irot, isOnly, upar, npar);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a node called <name_nr> pointing to the volume called <name>
+/// as daughter of the volume called <mother> (gspos). The relative matrix is
+/// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
+/// In case npar>0, create the volume to be positioned in mother, according
+/// its actual parameters (gsposp).
+///  NAME   Volume name
+///  NUMBER Copy number of the volume
+///  MOTHER Mother volume name
+///  X      X coord. of the volume in mother ref. sys.
+///  Y      Y coord. of the volume in mother ref. sys.
+///  Z      Z coord. of the volume in mother ref. sys.
+///  IROT   Rotation matrix number w.r.t. mother ref. sys.
+///  ISONLY ONLY/MANY flag
+
 void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
                        Double_t x, Double_t y, Double_t z, Int_t irot,
                        Bool_t isOnly, Double_t *upar, Int_t npar)
 {
-// Create a node called <name_nr> pointing to the volume called <name>
-// as daughter of the volume called <mother> (gspos). The relative matrix is
-// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
-// In case npar>0, create the volume to be positioned in mother, according
-// its actual parameters (gsposp).
-//  NAME   Volume name
-//  NUMBER Copy number of the volume
-//  MOTHER Mother volume name
-//  X      X coord. of the volume in mother ref. sys.
-//  Y      Y coord. of the volume in mother ref. sys.
-//  Z      Z coord. of the volume in mother ref. sys.
-//  IROT   Rotation matrix number w.r.t. mother ref. sys.
-//  ISONLY ONLY/MANY flag
    TGeoBuilder::Instance(this)->Node(name, nr, mother, x, y, z, irot, isOnly, upar, npar);
 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a volume in GEANT3 style.
+///  NAME   Volume name
+///  SHAPE  Volume type
+///  NMED   Tracking medium number
+///  NPAR   Number of shape parameters
+///  UPAR   Vector containing shape parameters
+
 TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
                                 Float_t *upar, Int_t npar)
 {
-// Create a volume in GEANT3 style.
-//  NAME   Volume name
-//  SHAPE  Volume type
-//  NMED   Tracking medium number
-//  NPAR   Number of shape parameters
-//  UPAR   Vector containing shape parameters
    return TGeoBuilder::Instance(this)->Volume(name, shape, nmed, upar, npar);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a volume in GEANT3 style.
+///  NAME   Volume name
+///  SHAPE  Volume type
+///  NMED   Tracking medium number
+///  NPAR   Number of shape parameters
+///  UPAR   Vector containing shape parameters
+
 TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
                                 Double_t *upar, Int_t npar)
 {
-// Create a volume in GEANT3 style.
-//  NAME   Volume name
-//  SHAPE  Volume type
-//  NMED   Tracking medium number
-//  NPAR   Number of shape parameters
-//  UPAR   Vector containing shape parameters
    return TGeoBuilder::Instance(this)->Volume(name, shape, nmed, upar, npar);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assigns uid's for all materials,media and matrices.
+
 void TGeoManager::SetAllIndex()
 {
-// Assigns uid's for all materials,media and matrices.
    Int_t index = 1;
    TIter next(fMaterials);
    TGeoMaterial *mater;
@@ -1409,11 +1453,12 @@ void TGeoManager::SetAllIndex()
    while ((vol=(TGeoVolume*)next5())) vol->UnmarkSaved();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset all attributes to default ones. Default attributes for visualization
+/// are those defined before closing the geometry.
+
 void TGeoManager::ClearAttributes()
 {
-// Reset all attributes to default ones. Default attributes for visualization
-// are those defined before closing the geometry.
    if (gPad) delete gPad;
    gPad = 0;
    SetVisOption(0);
@@ -1428,13 +1473,14 @@ void TGeoManager::ClearAttributes()
       vol->SetVisTouched(kFALSE);
    }
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Closing geometry implies checking the geometry validity, fixing shapes
+/// with negative parameters (run-time shapes)building the cache manager,
+/// voxelizing all volumes, counting the total number of physical nodes and
+/// registring the manager class to the browser.
+
 void TGeoManager::CloseGeometry(Option_t *option)
 {
-// Closing geometry implies checking the geometry validity, fixing shapes
-// with negative parameters (run-time shapes)building the cache manager,
-// voxelizing all volumes, counting the total number of physical nodes and
-// registring the manager class to the browser.
    if (fClosed) {
       Warning("CloseGeometry", "geometry already closed");
       return;
@@ -1528,10 +1574,11 @@ void TGeoManager::CloseGeometry(Option_t *option)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the list of overlaps.
+
 void TGeoManager::ClearOverlaps()
 {
-// Clear the list of overlaps.
    if (fOverlaps) {
       fOverlaps->Delete();
       delete fOverlaps;
@@ -1539,17 +1586,19 @@ void TGeoManager::ClearOverlaps()
    fOverlaps = new TObjArray();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a shape from the list of shapes.
+
 void TGeoManager::ClearShape(const TGeoShape *shape)
 {
-// Remove a shape from the list of shapes.
    if (fShapes->FindObject(shape)) fShapes->Remove((TGeoShape*)shape);
    delete shape;
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean temporary volumes and shapes from garbage collection.
+
 void TGeoManager::CleanGarbage()
 {
-// Clean temporary volumes and shapes from garbage collection.
    if (!fGVolumes && !fGShapes) return;
    Int_t i,nentries;
    if (fGVolumes) {
@@ -1570,70 +1619,79 @@ void TGeoManager::CleanGarbage()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change current path to point to the node having this id.
+/// Node id has to be in range : 0 to fNNodes-1 (no check for performance reasons)
+
 void TGeoManager::CdNode(Int_t nodeid)
 {
-// Change current path to point to the node having this id.
-// Node id has to be in range : 0 to fNNodes-1 (no check for performance reasons)
    GetCurrentNavigator()->CdNode(nodeid);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the unique ID of the current node.
+
 Int_t TGeoManager::GetCurrentNodeId() const
 {
-// Get the unique ID of the current node.
    return GetCurrentNavigator()->GetCurrentNodeId();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make top level node the current node. Updates the cache accordingly.
+/// Determine the overlapping state of current node.
+
 void TGeoManager::CdTop()
 {
-// Make top level node the current node. Updates the cache accordingly.
-// Determine the overlapping state of current node.
    GetCurrentNavigator()->CdTop();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go one level up in geometry. Updates cache accordingly.
+/// Determine the overlapping state of current node.
+
 void TGeoManager::CdUp()
 {
-// Go one level up in geometry. Updates cache accordingly.
-// Determine the overlapping state of current node.
    GetCurrentNavigator()->CdUp();
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a daughter of current node current. Can be called only with a valid
+/// daughter index (no check). Updates cache accordingly.
+
 void TGeoManager::CdDown(Int_t index)
 {
-// Make a daughter of current node current. Can be called only with a valid
-// daughter index (no check). Updates cache accordingly.
    GetCurrentNavigator()->CdDown(index);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do a cd to the node found next by FindNextBoundary
+
 void TGeoManager::CdNext()
 {
-// Do a cd to the node found next by FindNextBoundary
    GetCurrentNavigator()->CdNext();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse the tree of nodes starting from fTopNode according to pathname.
+/// Changes the path accordingly.
+
 Bool_t TGeoManager::cd(const char *path)
 {
-// Browse the tree of nodes starting from fTopNode according to pathname.
-// Changes the path accordingly.
    return GetCurrentNavigator()->cd(path);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if a geometry path is valid without changing the state of the current navigator.
+
 Bool_t TGeoManager::CheckPath(const char *path) const
 {
-// Check if a geometry path is valid without changing the state of the current navigator.
    return GetCurrentNavigator()->CheckPath(path);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert all reflections in geometry to normal rotations + reflected shapes.
+
 void TGeoManager::ConvertReflections()
 {
-// Convert all reflections in geometry to normal rotations + reflected shapes.
    if (!fTopNode) return;
    if (fgVerboseLevel>0) Info("ConvertReflections", "Converting reflections in: %s - %s ...", GetName(), GetTitle());
    TGeoIterator next(fTopVolume);
@@ -1661,11 +1719,12 @@ void TGeoManager::ConvertReflections()
    if (fgVerboseLevel>0) Info("ConvertReflections", "Done");
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Count maximum number of nodes per volume, maximum depth and maximum
+/// number of xtru vertices.
+
 void TGeoManager::CountLevels()
 {
-// Count maximum number of nodes per volume, maximum depth and maximum
-// number of xtru vertices.
    if (!fTopNode) {
       Error("CountLevels", "Top node not defined.");
       return;
@@ -1701,10 +1760,11 @@ void TGeoManager::CountLevels()
    if (fgVerboseLevel>0) Info("CountLevels", "max level = %d, max placements = %d", fgMaxLevel, fgMaxDaughters);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Count the total number of nodes starting from a volume, nlevels down.
+
 Int_t TGeoManager::CountNodes(const TGeoVolume *vol, Int_t nlevels, Int_t option)
 {
-// Count the total number of nodes starting from a volume, nlevels down.
    TGeoVolume *top;
    if (!vol) {
       top = fTopVolume;
@@ -1715,24 +1775,27 @@ Int_t TGeoManager::CountNodes(const TGeoVolume *vol, Int_t nlevels, Int_t option
    return count;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default angles for a given view.
+
 void TGeoManager::DefaultAngles()
 {
-// Set default angles for a given view.
    if (fPainter) fPainter->DefaultAngles();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw current point in the same view.
+
 void TGeoManager::DrawCurrentPoint(Int_t color)
 {
-// Draw current point in the same view.
    if (fPainter) fPainter->DrawCurrentPoint(color);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw animation of tracks
+
 void TGeoManager::AnimateTracks(Double_t tmin, Double_t tmax, Int_t nframes, Option_t *option)
 {
-// Draw animation of tracks
    SetAnimateTracks();
    GetGeomPainter();
    if (tmin<0 || tmin>=tmax || nframes<1) return;
@@ -1789,11 +1852,12 @@ void TGeoManager::AnimateTracks(Double_t tmin, Double_t tmax, Int_t nframes, Opt
    SetAnimateTracks(kFALSE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw tracks over the geometry, according to option. By default, only
+/// primaries are drawn. See TGeoTrack::Draw() for additional options.
+
 void TGeoManager::DrawTracks(Option_t *option)
 {
-// Draw tracks over the geometry, according to option. By default, only
-// primaries are drawn. See TGeoTrack::Draw() for additional options.
    TVirtualGeoTrack *track;
    //SetVisLevel(1);
    //SetVisOption(1);
@@ -1806,42 +1870,48 @@ void TGeoManager::DrawTracks(Option_t *option)
    ModifiedPad();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw current path
+
 void TGeoManager::DrawPath(const char *path, Option_t *option)
 {
-// Draw current path
    if (!fTopVolume) return;
    fTopVolume->SetVisBranch();
    GetGeomPainter()->DrawPath(path, option);
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw random points in the bounding box of a volume.
+
 void TGeoManager::RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option)
 {
-// Draw random points in the bounding box of a volume.
    GetGeomPainter()->RandomPoints((TGeoVolume*)vol, npoints, option);
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check time of finding "Where am I" for n points.
+
 void TGeoManager::Test(Int_t npoints, Option_t *option)
 {
-// Check time of finding "Where am I" for n points.
    GetGeomPainter()->Test(npoints, option);
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Geometry overlap checker based on sampling.
+
 void TGeoManager::TestOverlaps(const char* path)
 {
-// Geometry overlap checker based on sampling.
    GetGeomPainter()->TestOverlaps(path);
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill volume names of current branch into an array.
+
 void TGeoManager::GetBranchNames(Int_t *names) const
 {
-// Fill volume names of current branch into an array.
    GetCurrentNavigator()->GetBranchNames(names);
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get name for given pdg code;
+
 const char *TGeoManager::GetPdgName(Int_t pdg) const
 {
-// Get name for given pdg code;
    static char defaultname[5] = { "XXX" };
    if (!fPdgNames || !pdg) return defaultname;
    for (Int_t i=0; i<fNpdg; i++) {
@@ -1850,10 +1920,11 @@ const char *TGeoManager::GetPdgName(Int_t pdg) const
    return defaultname;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a name for a particle having a given pdg.
+
 void TGeoManager::SetPdgName(Int_t pdg, const char *name)
 {
-// Set a name for a particle having a given pdg.
    if (!pdg) return;
    if (!fPdgNames) {
       fPdgNames = new TObjArray(1024);
@@ -1869,24 +1940,27 @@ void TGeoManager::SetPdgName(Int_t pdg, const char *name)
    fPdgNames->AddAtAndExpand(pdgname, fNpdg++);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill node copy numbers of current branch into an array.
+
 void TGeoManager::GetBranchNumbers(Int_t *copyNumbers, Int_t *volumeNumbers) const
 {
-// Fill node copy numbers of current branch into an array.
    GetCurrentNavigator()->GetBranchNumbers(copyNumbers, volumeNumbers);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill node copy numbers of current branch into an array.
+
 void TGeoManager::GetBranchOnlys(Int_t *isonly) const
 {
-// Fill node copy numbers of current branch into an array.
    GetCurrentNavigator()->GetBranchOnlys(isonly);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve cartesian and radial bomb factors.
+
 void TGeoManager::GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const
 {
-// Retrieve cartesian and radial bomb factors.
    if (fPainter) {
       fPainter->GetBombFactors(bombx, bomby, bombz, bombr);
       return;
@@ -1894,74 +1968,82 @@ void TGeoManager::GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bom
    bombx = bomby = bombz = bombr = 1.3;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return maximum number of daughters of a volume used in the geometry.
+
 Int_t TGeoManager::GetMaxDaughters()
 {
-// Return maximum number of daughters of a volume used in the geometry.
    return fgMaxDaughters;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return maximum number of levels used in the geometry.
+
 Int_t TGeoManager::GetMaxLevels()
 {
-// Return maximum number of levels used in the geometry.
    return fgMaxLevel;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return maximum number of vertices for an xtru shape used.
+
 Int_t TGeoManager::GetMaxXtruVert()
 {
-// Return maximum number of vertices for an xtru shape used.
    return fgMaxXtruVert;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of threads that were set to use geometry.
+
 Int_t TGeoManager::GetNumThreads()
 {
-// Returns number of threads that were set to use geometry.
    return fgNumThreads;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return stored current matrix (global matrix of the next touched node).
+
 TGeoHMatrix *TGeoManager::GetHMatrix()
 {
-// Return stored current matrix (global matrix of the next touched node).
    if (!GetCurrentNavigator()) return NULL;
    return GetCurrentNavigator()->GetHMatrix();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns current depth to which geometry is drawn.
+
 Int_t TGeoManager::GetVisLevel() const
 {
-// Returns current depth to which geometry is drawn.
    return fVisLevel;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns current depth to which geometry is drawn.
+
 Int_t TGeoManager::GetVisOption() const
 {
-// Returns current depth to which geometry is drawn.
    return fVisOption;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find level of virtuality of current overlapping node (number of levels
+/// up having the same tracking media.
+
 Int_t TGeoManager::GetVirtualLevel()
 {
-// Find level of virtuality of current overlapping node (number of levels
-// up having the same tracking media.
-
    return GetCurrentNavigator()->GetVirtualLevel();
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search the track hierarchy to find the track with the
+/// given id
+///
+/// if 'primsFirst' is true, then:
+/// first tries TGeoManager::GetTrackOfId, then does a
+/// recursive search if that fails. this would be faster
+/// if the track is somehow known to be a primary
+
 TVirtualGeoTrack *TGeoManager::FindTrackWithId(Int_t id) const
 {
-// Search the track hierarchy to find the track with the
-// given id
-//
-// if 'primsFirst' is true, then:
-// first tries TGeoManager::GetTrackOfId, then does a
-// recursive search if that fails. this would be faster
-// if the track is somehow known to be a primary
    TVirtualGeoTrack* trk = 0;
    trk = GetTrackOfId(id);
    if (trk) return trk;
@@ -1975,10 +2057,11 @@ TVirtualGeoTrack *TGeoManager::FindTrackWithId(Int_t id) const
    return NULL;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get track with a given ID.
+
 TVirtualGeoTrack *TGeoManager::GetTrackOfId(Int_t id) const
 {
-// Get track with a given ID.
    TVirtualGeoTrack *track;
    for (Int_t i=0; i<fNtracks; i++) {
       if ((track = (TVirtualGeoTrack *)fTracks->UncheckedAt(i))) {
@@ -1988,10 +2071,11 @@ TVirtualGeoTrack *TGeoManager::GetTrackOfId(Int_t id) const
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get parent track with a given ID.
+
 TVirtualGeoTrack *TGeoManager::GetParentTrackOfId(Int_t id) const
 {
-// Get parent track with a given ID.
    TVirtualGeoTrack *track = fCurrentTrack;
    while ((track=track->GetMother())) {
       if (track->GetId()==id) return track;
@@ -1999,10 +2083,11 @@ TVirtualGeoTrack *TGeoManager::GetParentTrackOfId(Int_t id) const
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get index for track id, -1 if not found.
+
 Int_t TGeoManager::GetTrackIndex(Int_t id) const
 {
-// Get index for track id, -1 if not found.
    TVirtualGeoTrack *track;
    for (Int_t i=0; i<fNtracks; i++) {
       if ((track = (TVirtualGeoTrack *)fTracks->UncheckedAt(i))) {
@@ -2012,25 +2097,27 @@ Int_t TGeoManager::GetTrackIndex(Int_t id) const
    return -1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go upwards the tree until a non-overlaping node
+
 Bool_t TGeoManager::GotoSafeLevel()
 {
-// Go upwards the tree until a non-overlaping node
    return GetCurrentNavigator()->GotoSafeLevel();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go upwards the tree until a non-overlaping node
+
 Int_t TGeoManager::GetSafeLevel() const
 {
-// Go upwards the tree until a non-overlaping node
    return GetCurrentNavigator()->GetSafeLevel();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default volume colors according to A of material
+
 void TGeoManager::DefaultColors()
 {
-// Set default volume colors according to A of material
-
    const Int_t nmax = 110;
    Int_t col[nmax];
    for (Int_t i=0;i<nmax;i++) col[i] = kGray;
@@ -2063,19 +2150,20 @@ void TGeoManager::DefaultColors()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe distance from the current point. This represent the distance
+/// from POINT to the closest boundary.
+
 Double_t TGeoManager::Safety(Bool_t inside)
 {
-// Compute safe distance from the current point. This represent the distance
-// from POINT to the closest boundary.
-
    return GetCurrentNavigator()->Safety(inside);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set volume attributes in G3 style.
+
 void TGeoManager::SetVolumeAttribute(const char *name, const char *att, Int_t val)
 {
-// Set volume attributes in G3 style.
    TGeoVolume *volume;
    Bool_t all = kFALSE;
    if (strstr(name,"*")) all=kTRUE;
@@ -2106,17 +2194,19 @@ void TGeoManager::SetVolumeAttribute(const char *name, const char *att, Int_t va
       Warning("SetVolumeAttribute","volume: %s does not exist",name);
    }
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set factors that will "bomb" all translations in cartesian and cylindrical coordinates.
+
 void TGeoManager::SetBombFactors(Double_t bombx, Double_t bomby, Double_t bombz, Double_t bombr)
 {
-// Set factors that will "bomb" all translations in cartesian and cylindrical coordinates.
    if (fPainter) fPainter->SetBombFactors(bombx, bomby, bombz, bombr);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a user-defined shape as clipping for ray tracing.
+
 void TGeoManager::SetClippingShape(TGeoShape *shape)
 {
-// Set a user-defined shape as clipping for ray tracing.
    TVirtualGeoPainter *painter = GetGeomPainter();
    if (shape) {
       if (fClippingShape && (fClippingShape!=shape)) ClearShape(fClippingShape);
@@ -2125,9 +2215,10 @@ void TGeoManager::SetClippingShape(TGeoShape *shape)
    painter->SetClippingShape(shape);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the maximum number of visible nodes.
+
 void TGeoManager::SetMaxVisNodes(Int_t maxnodes) {
-// set the maximum number of visible nodes.
    fMaxVisNodes = maxnodes;
    if (maxnodes>0 && fgVerboseLevel>0)
       Info("SetMaxVisNodes","Automatic visible depth for %d visible nodes", maxnodes);
@@ -2137,57 +2228,64 @@ void TGeoManager::SetMaxVisNodes(Int_t maxnodes) {
    if (level != fVisLevel) fVisLevel = level;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// make top volume visible on screen
+
 void TGeoManager::SetTopVisible(Bool_t vis) {
-// make top volume visible on screen
    GetGeomPainter();
    fPainter->SetTopVisible(vis);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign a given node to be checked for ovelaps. Any other overlaps will be ignored.
+
 void TGeoManager::SetCheckedNode(TGeoNode *node) {
-// Assign a given node to be checked for ovelaps. Any other overlaps will be ignored.
    GetGeomPainter()->SetCheckedNode(node);
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the number of points to be generated on the shape outline when checking
+/// for overlaps.
+
 void TGeoManager::SetNmeshPoints(Int_t npoints)
 {
-// Set the number of points to be generated on the shape outline when checking
-// for overlaps.
    GetGeomPainter()->SetNmeshPoints(npoints);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set drawing mode :
+/// option=0 (default) all nodes drawn down to vislevel
+/// option=1           leaves and nodes at vislevel drawn
+/// option=2           path is drawn
+/// option=4           visibility changed
+
 void TGeoManager::SetVisOption(Int_t option) {
-// set drawing mode :
-// option=0 (default) all nodes drawn down to vislevel
-// option=1           leaves and nodes at vislevel drawn
-// option=2           path is drawn
-// option=4           visibility changed
    if ((option>=0) && (option<3)) fVisOption=option;
    if (fPainter) fPainter->SetVisOption(option);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set visualization option (leaves only OR all volumes)
+
 void TGeoManager::ViewLeaves(Bool_t flag)
 {
-// Set visualization option (leaves only OR all volumes)
    if (flag) SetVisOption(1);
    else      SetVisOption(0);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set density threshold. Volumes with densities lower than this become
+/// transparent.
+
 void TGeoManager::SetVisDensity(Double_t density)
 {
-// Set density threshold. Volumes with densities lower than this become
-// transparent.
    fVisDensity = density;
    if (fPainter) fPainter->ModifiedPad();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set default level down to which visualization is performed
+
 void TGeoManager::SetVisLevel(Int_t level) {
-// set default level down to which visualization is performed
    if (level>0) {
       fVisLevel = level;
       fMaxVisNodes = 0;
@@ -2199,17 +2297,19 @@ void TGeoManager::SetVisLevel(Int_t level) {
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort overlaps by decreasing overlap distance. Extrusions comes first.
+
 void TGeoManager::SortOverlaps()
 {
-// Sort overlaps by decreasing overlap distance. Extrusions comes first.
    fOverlaps->Sort();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Optimize voxelization type for all volumes. Save best choice in a macro.
+
 void TGeoManager::OptimizeVoxels(const char *filename)
 {
-// Optimize voxelization type for all volumes. Save best choice in a macro.
    if (!fTopNode) {
       Error("OptimizeVoxels","Geometry must be closed first");
       return;
@@ -2249,20 +2349,21 @@ void TGeoManager::OptimizeVoxels(const char *filename)
    out << "}" << std::endl;
    out.close();
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse a string boolean expression and do a syntax check. Find top
+/// level boolean operator and returns its type. Fill the two
+/// substrings to which this operator applies. The returned integer is :
+/// -1 : parse error
+///  0 : no boolean operator
+///  1 : union - represented as '+' in expression
+///  2 : difference (subtraction) - represented as '-' in expression
+///  3 : intersection - represented as '*' in expression.
+/// Paranthesys should be used to avoid ambiguites. For instance :
+///    A+B-C will be interpreted as (A+B)-C which is not the same as A+(B-C)
+/// eliminate not needed paranthesys
+
 Int_t TGeoManager::Parse(const char *expr, TString &expr1, TString &expr2, TString &expr3)
 {
-// Parse a string boolean expression and do a syntax check. Find top
-// level boolean operator and returns its type. Fill the two
-// substrings to which this operator applies. The returned integer is :
-// -1 : parse error
-//  0 : no boolean operator
-//  1 : union - represented as '+' in expression
-//  2 : difference (subtraction) - represented as '-' in expression
-//  3 : intersection - represented as '*' in expression.
-// Paranthesys should be used to avoid ambiguites. For instance :
-//    A+B-C will be interpreted as (A+B)-C which is not the same as A+(B-C)
-   // eliminate not needed paranthesys
    TString startstr(expr);
    Int_t len = startstr.Length();
    Int_t i;
@@ -2371,10 +2472,11 @@ Int_t TGeoManager::Parse(const char *expr, TString &expr1, TString &expr2, TStri
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save current attributes in a macro
+
 void TGeoManager::SaveAttributes(const char *filename)
 {
-// Save current attributes in a macro
    if (!fTopNode) {
       Error("SaveAttributes","geometry must be closed first\n");
       return;
@@ -2425,119 +2527,128 @@ void TGeoManager::SaveAttributes(const char *filename)
    out << "}" << std::endl;
    out.close();
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the deepest node containing fPoint, which must be set a priori.
+
 TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
 {
-// Returns the deepest node containing fPoint, which must be set a priori.
-
    return GetCurrentNavigator()->SearchNode(downwards, skipnode);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cross next boundary and locate within current node
+/// The current point must be on the boundary of fCurrentNode.
+
 TGeoNode *TGeoManager::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skipnode)
 {
-// Cross next boundary and locate within current node
-// The current point must be on the boundary of fCurrentNode.
    return GetCurrentNavigator()->CrossBoundaryAndLocate(downwards, skipnode);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance to next boundary within STEPMAX. If no boundary is found,
+/// propagate current point along current direction with fStep=STEPMAX. Otherwise
+/// propagate with fStep=SNEXT (distance to boundary) and locate/return the next
+/// node.
+
 TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe)
 {
-// Compute distance to next boundary within STEPMAX. If no boundary is found,
-// propagate current point along current direction with fStep=STEPMAX. Otherwise
-// propagate with fStep=SNEXT (distance to boundary) and locate/return the next
-// node.
-
    return GetCurrentNavigator()->FindNextBoundaryAndStep(stepmax, compsafe);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find distance to next boundary and store it in fStep. Returns node to which this
+/// boundary belongs. If PATH is specified, compute only distance to the node to which
+/// PATH points. If STEPMAX is specified, compute distance only in case fSafety is smaller
+/// than this value. STEPMAX represent the step to be made imposed by other reasons than
+/// geometry (usually physics processes). Therefore in this case this method provides the
+/// answer to the question : "Is STEPMAX a safe step ?" returning a NULL node and filling
+/// fStep with a big number.
+/// In case frombdr=kTRUE, the isotropic safety is set to zero.
+/// Note : safety distance for the current point is computed ONLY in case STEPMAX is
+///        specified, otherwise users have to call explicitly TGeoManager::Safety() if
+///        they want this computed for the current point.
+
 TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path, Bool_t frombdr)
 {
-// Find distance to next boundary and store it in fStep. Returns node to which this
-// boundary belongs. If PATH is specified, compute only distance to the node to which
-// PATH points. If STEPMAX is specified, compute distance only in case fSafety is smaller
-// than this value. STEPMAX represent the step to be made imposed by other reasons than
-// geometry (usually physics processes). Therefore in this case this method provides the
-// answer to the question : "Is STEPMAX a safe step ?" returning a NULL node and filling
-// fStep with a big number.
-// In case frombdr=kTRUE, the isotropic safety is set to zero.
-// Note : safety distance for the current point is computed ONLY in case STEPMAX is
-//        specified, otherwise users have to call explicitly TGeoManager::Safety() if
-//        they want this computed for the current point.
-
    // convert current point and direction to local reference
    return GetCurrentNavigator()->FindNextBoundary(stepmax,path, frombdr);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes as fStep the distance to next daughter of the current volume.
+/// The point and direction must be converted in the coordinate system of the current volume.
+/// The proposed step limit is fStep.
+
 TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, Int_t &idaughter, Bool_t compmatrix)
 {
-// Computes as fStep the distance to next daughter of the current volume.
-// The point and direction must be converted in the coordinate system of the current volume.
-// The proposed step limit is fStep.
-
    return GetCurrentNavigator()->FindNextDaughterBoundary(point, dir, idaughter, compmatrix);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset current state flags.
+
 void TGeoManager::ResetState()
 {
-// Reset current state flags.
    GetCurrentNavigator()->ResetState();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns deepest node containing current point.
+
 TGeoNode *TGeoManager::FindNode(Bool_t safe_start)
 {
-// Returns deepest node containing current point.
    return GetCurrentNavigator()->FindNode(safe_start);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns deepest node containing current point.
+
 TGeoNode *TGeoManager::FindNode(Double_t x, Double_t y, Double_t z)
 {
-// Returns deepest node containing current point.
    return GetCurrentNavigator()->FindNode(x, y, z);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes fast normal to next crossed boundary, assuming that the current point
+/// is close enough to the boundary. Works only after calling FindNextBoundary.
+
 Double_t *TGeoManager::FindNormalFast()
 {
-// Computes fast normal to next crossed boundary, assuming that the current point
-// is close enough to the boundary. Works only after calling FindNextBoundary.
    return GetCurrentNavigator()->FindNormalFast();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes normal vector to the next surface that will be or was already
+/// crossed when propagating on a straight line from a given point/direction.
+/// Returns the normal vector cosines in the MASTER coordinate system. The dot
+/// product of the normal and the current direction is positive defined.
+
 Double_t *TGeoManager::FindNormal(Bool_t forward)
 {
-// Computes normal vector to the next surface that will be or was already
-// crossed when propagating on a straight line from a given point/direction.
-// Returns the normal vector cosines in the MASTER coordinate system. The dot
-// product of the normal and the current direction is positive defined.
    return GetCurrentNavigator()->FindNormal(forward);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if point (x,y,z) is still in the current node.
+
 Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t change)
 {
-// Checks if point (x,y,z) is still in the current node.
    return GetCurrentNavigator()->IsSameLocation(x,y,z,change);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if a new point with given coordinates is the same as the last located one.
+
 Bool_t TGeoManager::IsSamePoint(Double_t x, Double_t y, Double_t z) const
 {
-// Check if a new point with given coordinates is the same as the last located one.
    return GetCurrentNavigator()->IsSamePoint(x,y,z);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// True if current node is in phi range
+
 Bool_t TGeoManager::IsInPhiRange() const
 {
-// True if current node is in phi range
    if (!fPhiCut) return kTRUE;
    const Double_t *origin;
    if (!GetCurrentNavigator() || !GetCurrentNavigator()->GetCurrentNode()) return kFALSE;
@@ -2550,40 +2661,45 @@ Bool_t TGeoManager::IsInPhiRange() const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize current point and current direction vector (normalized)
+/// in MARS. Return corresponding node.
+
 TGeoNode *TGeoManager::InitTrack(const Double_t *point, const Double_t *dir)
 {
-// Initialize current point and current direction vector (normalized)
-// in MARS. Return corresponding node.
    return GetCurrentNavigator()->InitTrack(point, dir);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize current point and current direction vector (normalized)
+/// in MARS. Return corresponding node.
+
 TGeoNode *TGeoManager::InitTrack(Double_t x, Double_t y, Double_t z, Double_t nx, Double_t ny, Double_t nz)
 {
-// Initialize current point and current direction vector (normalized)
-// in MARS. Return corresponding node.
    return GetCurrentNavigator()->InitTrack(x,y,z,nx,ny,nz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Inspects path and all flags for the current state.
+
 void TGeoManager::InspectState() const
 {
-// Inspects path and all flags for the current state.
    GetCurrentNavigator()->InspectState();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get path to the current node in the form /node0/node1/...
+
 const char *TGeoManager::GetPath() const
 {
-// Get path to the current node in the form /node0/node1/...
    return GetCurrentNavigator()->GetPath();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get total size of geometry in bytes.
+
 Int_t TGeoManager::GetByteCount(Option_t * /*option*/)
 {
-// Get total size of geometry in bytes.
    Int_t count = 0;
    TIter next(fVolumes);
    TGeoVolume *vol;
@@ -2600,10 +2716,11 @@ Int_t TGeoManager::GetByteCount(Option_t * /*option*/)
    if (fgVerboseLevel>0) Info("GetByteCount","Total size of logical tree : %i bytes", count);
    return count;
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a default painter if none present. Returns pointer to it.
+
 TVirtualGeoPainter *TGeoManager::GetGeomPainter()
 {
-// Make a default painter if none present. Returns pointer to it.
    if (!fPainter) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoPainter"))) {
@@ -2618,20 +2735,22 @@ TVirtualGeoPainter *TGeoManager::GetGeomPainter()
    }
    return fPainter;
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search for a named volume. All trailing blanks stripped.
+
 TGeoVolume *TGeoManager::GetVolume(const char *name) const
 {
-// Search for a named volume. All trailing blanks stripped.
    TString sname = name;
    sname = sname.Strip();
    TGeoVolume *vol = (TGeoVolume*)fVolumes->FindObject(sname.Data());
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fast search for a named volume. All trailing blanks stripped.
+
 TGeoVolume *TGeoManager::FindVolumeFast(const char *name, Bool_t multi)
 {
-// Fast search for a named volume. All trailing blanks stripped.
    if (!fHashVolumes) {
       Int_t nvol = fVolumes->GetEntriesFast();
       Int_t ngvol = fGVolumes->GetEntriesFast();
@@ -2649,10 +2768,11 @@ TGeoVolume *TGeoManager::FindVolumeFast(const char *name, Bool_t multi)
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retreive unique id for a volume name. Return -1 if name not found.
+
 Int_t TGeoManager::GetUID(const char *volname) const
 {
-// Retreive unique id for a volume name. Return -1 if name not found.
    TGeoManager *geom = (TGeoManager*)this;
    TGeoVolume *vol = geom->FindVolumeFast(volname, kFALSE);
    if (!vol) vol = geom->FindVolumeFast(volname, kTRUE);
@@ -2660,10 +2780,11 @@ Int_t TGeoManager::GetUID(const char *volname) const
    return vol->GetNumber();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find if a given material duplicates an existing one.
+
 TGeoMaterial *TGeoManager::FindDuplicateMaterial(const TGeoMaterial *mat) const
 {
-// Find if a given material duplicates an existing one.
    Int_t index = fMaterials->IndexOf(mat);
    if (index <= 0) return 0;
    TGeoMaterial *other;
@@ -2675,30 +2796,33 @@ TGeoMaterial *TGeoManager::FindDuplicateMaterial(const TGeoMaterial *mat) const
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search for a named material. All trailing blanks stripped.
+
 TGeoMaterial *TGeoManager::GetMaterial(const char *matname) const
 {
-// Search for a named material. All trailing blanks stripped.
    TString sname = matname;
    sname = sname.Strip();
    TGeoMaterial *mat = (TGeoMaterial*)fMaterials->FindObject(sname.Data());
    return mat;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search for a named tracking medium. All trailing blanks stripped.
+
 TGeoMedium *TGeoManager::GetMedium(const char *medium) const
 {
-// Search for a named tracking medium. All trailing blanks stripped.
    TString sname = medium;
    sname = sname.Strip();
    TGeoMedium *med = (TGeoMedium*)fMedia->FindObject(sname.Data());
    return med;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search for a tracking medium with a given ID.
+
 TGeoMedium *TGeoManager::GetMedium(Int_t numed) const
 {
-// Search for a tracking medium with a given ID.
    TIter next(fMedia);
    TGeoMedium *med;
    while ((med=(TGeoMedium*)next())) {
@@ -2707,18 +2831,20 @@ TGeoMedium *TGeoManager::GetMedium(Int_t numed) const
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return material at position id.
+
 TGeoMaterial *TGeoManager::GetMaterial(Int_t id) const
 {
-// Return material at position id.
    if (id<0 || id >= fMaterials->GetSize()) return 0;
    TGeoMaterial *mat = (TGeoMaterial*)fMaterials->At(id);
    return mat;
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return index of named material.
+
 Int_t TGeoManager::GetMaterialIndex(const char *matname) const
 {
-// Return index of named material.
    TIter next(fMaterials);
    TGeoMaterial *mat;
    Int_t id = 0;
@@ -2731,43 +2857,48 @@ Int_t TGeoManager::GetMaterialIndex(const char *matname) const
    }
    return -1;  // fail
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Randomly shoot nrays and plot intersections with surfaces for current
+/// top node.
+
 void TGeoManager::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz, const char *target_vol, Bool_t check_norm)
 {
-// Randomly shoot nrays and plot intersections with surfaces for current
-// top node.
    GetGeomPainter()->RandomRays(nrays, startx, starty, startz, target_vol, check_norm);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove material at given index.
+
 void TGeoManager::RemoveMaterial(Int_t index)
 {
-// Remove material at given index.
    TObject *obj = fMaterials->At(index);
    if (obj) fMaterials->Remove(obj);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets all pointers TGeoVolume::fField to NULL. User data becomes decoupled
+/// from geometry. Deletion has to be managed by users.
+
 void TGeoManager::ResetUserData()
 {
-// Sets all pointers TGeoVolume::fField to NULL. User data becomes decoupled
-// from geometry. Deletion has to be managed by users.
    TIter next(fVolumes);
    TGeoVolume *vol;
    while ((vol=(TGeoVolume*)next())) vol->SetField(0);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restore the master volume of the geometry.
+
 void TGeoManager::RestoreMasterVolume()
 {
-// Restore the master volume of the geometry.
    if (fTopVolume == fMasterVolume) return;
    if (fMasterVolume) SetTopVolume(fMasterVolume);
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Voxelize all non-divided volumes.
+
 void TGeoManager::Voxelize(Option_t *option)
 {
-// Voxelize all non-divided volumes.
    TGeoVolume *vol;
 //   TGeoVoxelFinder *vox = 0;
    if (!fStreamVoxels && fgVerboseLevel>0) Info("Voxelize","Voxelizing...");
@@ -2781,192 +2912,214 @@ void TGeoManager::Voxelize(Option_t *option)
       if (!fIsGeomReading) vol->FindOverlaps();
    }
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send "Modified" signal to painter.
+
 void TGeoManager::ModifiedPad() const
 {
-// Send "Modified" signal to painter.
    if (!fPainter) return;
    fPainter->ModifiedPad();
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make an TGeoArb8 volume.
+
 TGeoVolume *TGeoManager::MakeArb8(const char *name, TGeoMedium *medium,
                                   Double_t dz, Double_t *vertices)
 {
-// Make an TGeoArb8 volume.
    return TGeoBuilder::Instance(this)->MakeArb8(name, medium, dz, vertices);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a box shape with given medium.
+
 TGeoVolume *TGeoManager::MakeBox(const char *name, TGeoMedium *medium,
                                     Double_t dx, Double_t dy, Double_t dz)
 {
-// Make in one step a volume pointing to a box shape with given medium.
    return TGeoBuilder::Instance(this)->MakeBox(name, medium, dx, dy, dz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a paralelipiped shape with given medium.
+
 TGeoVolume *TGeoManager::MakePara(const char *name, TGeoMedium *medium,
                                     Double_t dx, Double_t dy, Double_t dz,
                                     Double_t alpha, Double_t theta, Double_t phi)
 {
-// Make in one step a volume pointing to a paralelipiped shape with given medium.
    return TGeoBuilder::Instance(this)->MakePara(name, medium, dx, dy, dz, alpha, theta, phi);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a sphere shape with given medium
+
 TGeoVolume *TGeoManager::MakeSphere(const char *name, TGeoMedium *medium,
                                     Double_t rmin, Double_t rmax, Double_t themin, Double_t themax,
                                     Double_t phimin, Double_t phimax)
 {
-// Make in one step a volume pointing to a sphere shape with given medium
    return TGeoBuilder::Instance(this)->MakeSphere(name, medium, rmin, rmax, themin, themax, phimin, phimax);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a torus shape with given medium.
+
 TGeoVolume *TGeoManager::MakeTorus(const char *name, TGeoMedium *medium, Double_t r,
                                    Double_t rmin, Double_t rmax, Double_t phi1, Double_t dphi)
 {
-// Make in one step a volume pointing to a torus shape with given medium.
    return TGeoBuilder::Instance(this)->MakeTorus(name, medium, r, rmin, rmax, phi1, dphi);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a tube shape with given medium.
+
 TGeoVolume *TGeoManager::MakeTube(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz)
 {
-// Make in one step a volume pointing to a tube shape with given medium.
    return TGeoBuilder::Instance(this)->MakeTube(name, medium, rmin, rmax, dz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a tube segment shape with given medium.
+/// The segment will be from phiStart to phiEnd, the angles are expressed in degree
+
 TGeoVolume *TGeoManager::MakeTubs(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz,
                                      Double_t phiStart, Double_t phiEnd)
 {
-   // Make in one step a volume pointing to a tube segment shape with given medium.
-   // The segment will be from phiStart to phiEnd, the angles are expressed in degree
    return TGeoBuilder::Instance(this)->MakeTubs(name, medium, rmin, rmax, dz, phiStart, phiEnd);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a tube shape with given medium
+
 TGeoVolume *TGeoManager::MakeEltu(const char *name, TGeoMedium *medium,
                                      Double_t a, Double_t b, Double_t dz)
 {
-// Make in one step a volume pointing to a tube shape with given medium
    return TGeoBuilder::Instance(this)->MakeEltu(name, medium, a, b, dz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a tube shape with given medium
+
 TGeoVolume *TGeoManager::MakeHype(const char *name, TGeoMedium *medium,
                                         Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz)
 {
-// Make in one step a volume pointing to a tube shape with given medium
    return TGeoBuilder::Instance(this)->MakeHype(name, medium, rin, stin, rout, stout, dz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a tube shape with given medium
+
 TGeoVolume *TGeoManager::MakeParaboloid(const char *name, TGeoMedium *medium,
                                         Double_t rlo, Double_t rhi, Double_t dz)
 {
-// Make in one step a volume pointing to a tube shape with given medium
    return TGeoBuilder::Instance(this)->MakeParaboloid(name, medium, rlo, rhi, dz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a tube segment shape with given medium
+
 TGeoVolume *TGeoManager::MakeCtub(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
                                      Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
 {
-// Make in one step a volume pointing to a tube segment shape with given medium
    return TGeoBuilder::Instance(this)->MakeCtub(name, medium, rmin, rmax, dz, phi1, phi2, lx, ly, lz, tx, ty, tz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a cone shape with given medium.
+
 TGeoVolume *TGeoManager::MakeCone(const char *name, TGeoMedium *medium,
                                      Double_t dz, Double_t rmin1, Double_t rmax1,
                                      Double_t rmin2, Double_t rmax2)
 {
-// Make in one step a volume pointing to a cone shape with given medium.
    return TGeoBuilder::Instance(this)->MakeCone(name, medium, dz, rmin1, rmax1, rmin2, rmax2);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a cone segment shape with given medium
+
 TGeoVolume *TGeoManager::MakeCons(const char *name, TGeoMedium *medium,
                                      Double_t dz, Double_t rmin1, Double_t rmax1,
                                      Double_t rmin2, Double_t rmax2,
                                      Double_t phi1, Double_t phi2)
 {
-// Make in one step a volume pointing to a cone segment shape with given medium
    return TGeoBuilder::Instance(this)->MakeCons(name, medium, dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a polycone shape with given medium.
+
 TGeoVolume *TGeoManager::MakePcon(const char *name, TGeoMedium *medium,
                                      Double_t phi, Double_t dphi, Int_t nz)
 {
-// Make in one step a volume pointing to a polycone shape with given medium.
    return TGeoBuilder::Instance(this)->MakePcon(name, medium, phi, dphi, nz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a polygone shape with given medium.
+
 TGeoVolume *TGeoManager::MakePgon(const char *name, TGeoMedium *medium,
                                      Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
 {
-// Make in one step a volume pointing to a polygone shape with given medium.
    return TGeoBuilder::Instance(this)->MakePgon(name, medium, phi, dphi, nedges, nz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a TGeoTrd1 shape with given medium.
+
 TGeoVolume *TGeoManager::MakeTrd1(const char *name, TGeoMedium *medium,
                                   Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
 {
-// Make in one step a volume pointing to a TGeoTrd1 shape with given medium.
    return TGeoBuilder::Instance(this)->MakeTrd1(name, medium, dx1, dx2, dy, dz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a TGeoTrd2 shape with given medium.
+
 TGeoVolume *TGeoManager::MakeTrd2(const char *name, TGeoMedium *medium,
                                   Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2,
                                   Double_t dz)
 {
-// Make in one step a volume pointing to a TGeoTrd2 shape with given medium.
    return TGeoBuilder::Instance(this)->MakeTrd2(name, medium, dx1, dx2, dy1, dy2, dz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a trapezoid shape with given medium.
+
 TGeoVolume *TGeoManager::MakeTrap(const char *name, TGeoMedium *medium,
                                   Double_t dz, Double_t theta, Double_t phi, Double_t h1,
                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
 {
-// Make in one step a volume pointing to a trapezoid shape with given medium.
    return TGeoBuilder::Instance(this)->MakeTrap(name, medium, dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a twisted trapezoid shape with given medium.
+
 TGeoVolume *TGeoManager::MakeGtra(const char *name, TGeoMedium *medium,
                                   Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
 {
-// Make in one step a volume pointing to a twisted trapezoid shape with given medium.
    return TGeoBuilder::Instance(this)->MakeGtra(name, medium, dz, theta, phi, twist, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a TGeoXtru-shaped volume with nz planes
+
 TGeoVolume *TGeoManager::MakeXtru(const char *name, TGeoMedium *medium, Int_t nz)
 {
-// Make a TGeoXtru-shaped volume with nz planes
    return TGeoBuilder::Instance(this)->MakeXtru(name, medium, nz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates an aligneable object with unique name corresponding to a path
+/// and adds it to the list of alignables. An optional unique ID can be
+/// provided, in which case PN entries can be searched fast by uid.
+
 TGeoPNEntry *TGeoManager::SetAlignableEntry(const char *unique_name, const char *path,
                                             Int_t uid)
 {
-// Creates an aligneable object with unique name corresponding to a path
-// and adds it to the list of alignables. An optional unique ID can be
-// provided, in which case PN entries can be searched fast by uid.
    if (!CheckPath(path)) return NULL;
    if (!fHashPNE) fHashPNE = new THashList(256,3);
    if (!fArrayPNE) fArrayPNE = new TObjArray(256);
@@ -2986,45 +3139,50 @@ TGeoPNEntry *TGeoManager::SetAlignableEntry(const char *unique_name, const char 
    return entry;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retreives an existing alignable object.
+
 TGeoPNEntry *TGeoManager::GetAlignableEntry(const char *name) const
 {
-// Retreives an existing alignable object.
    if (!fHashPNE) return 0;
    return (TGeoPNEntry*)fHashPNE->FindObject(name);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retreives an existing alignable object at a given index.
+
 TGeoPNEntry *TGeoManager::GetAlignableEntry(Int_t index) const
 {
-// Retreives an existing alignable object at a given index.
    if (!fArrayPNE && !InitArrayPNE()) return 0;
    return (TGeoPNEntry*)fArrayPNE->At(index);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retreives an existing alignable object having a preset UID.
+
 TGeoPNEntry *TGeoManager::GetAlignableEntryByUID(Int_t uid) const
 {
-// Retreives an existing alignable object having a preset UID.
    if (!fNPNEId || (!fArrayPNE && !InitArrayPNE())) return NULL;
    Int_t index = TMath::BinarySearch(fNPNEId, fKeyPNEId, uid);
    if (index<0 || fKeyPNEId[index]!=uid) return NULL;
    return (TGeoPNEntry*)fArrayPNE->At(fValuePNEId[index]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retreives number of PN entries with or without UID.
+
 Int_t TGeoManager::GetNAlignable(Bool_t with_uid) const
 {
-// Retreives number of PN entries with or without UID.
    if (!fHashPNE) return 0;
    if (with_uid) return fNPNEId;
    return fHashPNE->GetSize();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert a PN entry in the sorted array of indexes.
+
 Bool_t TGeoManager::InsertPNEId(Int_t uid, Int_t ientry)
 {
-// Insert a PN entry in the sorted array of indexes.
    if (!fSizePNEId) {
       // Create the arrays.
       fSizePNEId = 128;
@@ -3077,10 +3235,11 @@ Bool_t TGeoManager::InsertPNEId(Int_t uid, Int_t ientry)
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a physical node from the path pointed by an alignable object with a given name.
+
 TGeoPhysicalNode *TGeoManager::MakeAlignablePN(const char *name)
 {
-// Make a physical node from the path pointed by an alignable object with a given name.
    TGeoPNEntry *entry = GetAlignableEntry(name);
    if (!entry) {
       Error("MakeAlignablePN","No alignable object named %s found !", name);
@@ -3089,10 +3248,11 @@ TGeoPhysicalNode *TGeoManager::MakeAlignablePN(const char *name)
    return MakeAlignablePN(entry);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a physical node from the path pointed by a given alignable object.
+
 TGeoPhysicalNode *TGeoManager::MakeAlignablePN(TGeoPNEntry *entry)
 {
-// Make a physical node from the path pointed by a given alignable object.
    if (!entry) {
       Error("MakeAlignablePN","No alignable object specified !");
       return 0;
@@ -3108,11 +3268,12 @@ TGeoPhysicalNode *TGeoManager::MakeAlignablePN(TGeoPNEntry *entry)
    return node;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Makes a physical node corresponding to a path. If PATH is not specified,
+/// makes physical node matching current modeller state.
+
 TGeoPhysicalNode *TGeoManager::MakePhysicalNode(const char *path)
 {
-// Makes a physical node corresponding to a path. If PATH is not specified,
-// makes physical node matching current modeller state.
    TGeoPhysicalNode *node;
    if (path) {
       if (!CheckPath(path)) {
@@ -3127,11 +3288,12 @@ TGeoPhysicalNode *TGeoManager::MakePhysicalNode(const char *path)
    return node;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refresh physical nodes to reflect the actual geometry paths after alignment
+/// was applied. Optionally locks physical nodes (default).
+
 void TGeoManager::RefreshPhysicalNodes(Bool_t lock)
 {
-// Refresh physical nodes to reflect the actual geometry paths after alignment
-// was applied. Optionally locks physical nodes (default).
    TIter next(gGeoManager->GetListOfPhysicalNodes());
    TGeoPhysicalNode *pn;
    while ((pn=(TGeoPhysicalNode*)next())) pn->Refresh();
@@ -3139,41 +3301,46 @@ void TGeoManager::RefreshPhysicalNodes(Bool_t lock)
    if (lock) LockGeometry();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the current list of physical nodes, so that we can start over with a new list.
+/// If MUSTDELETE is true, delete previous nodes.
+
 void TGeoManager::ClearPhysicalNodes(Bool_t mustdelete)
 {
-// Clear the current list of physical nodes, so that we can start over with a new list.
-// If MUSTDELETE is true, delete previous nodes.
    if (mustdelete) fPhysicalNodes->Delete();
    else fPhysicalNodes->Clear();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make an assembly of volumes.
+
 TGeoVolumeAssembly *TGeoManager::MakeVolumeAssembly(const char *name)
 {
-// Make an assembly of volumes.
    return TGeoBuilder::Instance(this)->MakeVolumeAssembly(name);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a TGeoVolumeMulti handling a list of volumes.
+
 TGeoVolumeMulti *TGeoManager::MakeVolumeMulti(const char *name, TGeoMedium *medium)
 {
-// Make a TGeoVolumeMulti handling a list of volumes.
    return TGeoBuilder::Instance(this)->MakeVolumeMulti(name, medium);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set type of exploding view (see TGeoPainter::SetExplodedView())
+
 void TGeoManager::SetExplodedView(Int_t ibomb)
 {
-// Set type of exploding view (see TGeoPainter::SetExplodedView())
    if ((ibomb>=0) && (ibomb<4)) fExplodedView = ibomb;
    if (fPainter) fPainter->SetExplodedView(ibomb);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set cut phi range
+
 void TGeoManager::SetPhiRange(Double_t phimin, Double_t phimax)
 {
-// Set cut phi range
    if ((phimin==0) && (phimax==360)) {
       fPhiCut = kFALSE;
       return;
@@ -3183,62 +3350,69 @@ void TGeoManager::SetPhiRange(Double_t phimin, Double_t phimax)
    fPhimax = phimax;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set number of segments for approximating circles in drawing.
+
 void TGeoManager::SetNsegments(Int_t nseg)
 {
-// Set number of segments for approximating circles in drawing.
    if (fNsegments==nseg) return;
    if (nseg>2) fNsegments = nseg;
    if (fPainter) fPainter->SetNsegments(nseg);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of segments approximating circles
+
 Int_t TGeoManager::GetNsegments() const
 {
-// Get number of segments approximating circles
    return fNsegments;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Now just a shortcut for GetElementTable.
+
 void TGeoManager::BuildDefaultMaterials()
 {
-// Now just a shortcut for GetElementTable.
    GetElementTable();
    TGeoVolume::CreateDummyMedium();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns material table. Creates it if not existing.
+
 TGeoElementTable *TGeoManager::GetElementTable()
 {
-// Returns material table. Creates it if not existing.
    if (!fElementTable) fElementTable = new TGeoElementTable(200);
    return fElementTable;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a rectiliniar step of length fStep from current point (fPoint) on current
+/// direction (fDirection). If the step is imposed by geometry, is_geom flag
+/// must be true (default). The cross flag specifies if the boundary should be
+/// crossed in case of a geometry step (default true). Returns new node after step.
+/// Set also on boundary condition.
+
 TGeoNode *TGeoManager::Step(Bool_t is_geom, Bool_t cross)
 {
-// Make a rectiliniar step of length fStep from current point (fPoint) on current
-// direction (fDirection). If the step is imposed by geometry, is_geom flag
-// must be true (default). The cross flag specifies if the boundary should be
-// crossed in case of a geometry step (default true). Returns new node after step.
-// Set also on boundary condition.
    return GetCurrentNavigator()->Step(is_geom, cross);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// shoot npoints randomly in a box of 1E-5 arround current point.
+/// return minimum distance to points outside
+
 TGeoNode *TGeoManager::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil,
                                     const char* g3path)
 {
-// shoot npoints randomly in a box of 1E-5 arround current point.
-// return minimum distance to points outside
    return GetGeomPainter()->SamplePoints(npoints, dist, epsil, g3path);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the top volume and corresponding node as starting point of the geometry.
+
 void TGeoManager::SetTopVolume(TGeoVolume *vol)
 {
-// Set the top volume and corresponding node as starting point of the geometry.
    if (fTopVolume==vol) return;
 
    TSeqCollection *brlist = gROOT->GetListOfBrowsers();
@@ -3281,11 +3455,12 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
       if (fClosed) nav->GetCache()->BuildInfoBranch();
    }
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define different tracking media.
+///   printf("List of materials :\n");
+
 void TGeoManager::SelectTrackingMedia()
 {
-// Define different tracking media.
-//   printf("List of materials :\n");
 /*
    Int_t nmat = fMaterials->GetSize();
    if (!nmat) {printf(" No materials !\n"); return;}
@@ -3323,64 +3498,69 @@ void TGeoManager::SelectTrackingMedia()
 */
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check pushes and pulls needed to cross the next boundary with respect to the
+/// position given by FindNextBoundary. If radius is not mentioned the full bounding
+/// box will be sampled.
+
 void TGeoManager::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
 {
-// Check pushes and pulls needed to cross the next boundary with respect to the
-// position given by FindNextBoundary. If radius is not mentioned the full bounding
-// box will be sampled.
    GetGeomPainter()->CheckBoundaryErrors(ntracks, radius);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the boundary errors reference file created by CheckBoundaryErrors method.
+/// The shape for which the crossing failed is drawn with the starting point in red
+/// and the extrapolated point to boundary (+/- failing push/pull) in yellow.
+
 void TGeoManager::CheckBoundaryReference(Int_t icheck)
 {
-// Check the boundary errors reference file created by CheckBoundaryErrors method.
-// The shape for which the crossing failed is drawn with the starting point in red
-// and the extrapolated point to boundary (+/- failing push/pull) in yellow.
    GetGeomPainter()->CheckBoundaryReference(icheck);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Classify a given point. See TGeoChecker::CheckPoint().
+
 void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *option)
 {
-// Classify a given point. See TGeoChecker::CheckPoint().
    GetGeomPainter()->CheckPoint(x,y,z,option);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test for shape navigation methods. Summary for test numbers:
+///  1: DistFromInside/Outside. Sample points inside the shape. Generate
+///    directions randomly in cos(theta). Compute DistFromInside and move the
+///    point with bigger distance. Compute DistFromOutside back from new point.
+///    Plot d-(d1+d2)
+///
+
 void TGeoManager::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option)
 {
-// Test for shape navigation methods. Summary for test numbers:
-//  1: DistFromInside/Outside. Sample points inside the shape. Generate
-//    directions randomly in cos(theta). Compute DistFromInside and move the
-//    point with bigger distance. Compute DistFromOutside back from new point.
-//    Plot d-(d1+d2)
-//
    GetGeomPainter()->CheckShape(shape, testNo, nsamples, option);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Geometry checking.
+/// - if option contains 'o': Optional overlap checkings (by sampling and by mesh).
+/// - if option contains 'b': Optional boundary crossing check + timing per volume.
+///
+/// STAGE 1: extensive overlap checking by sampling per volume. Stdout need to be
+///  checked by user to get report, then TGeoVolume::CheckOverlaps(0.01, "s") can
+///  be called for the suspicious volumes.
+/// STAGE2 : normal overlap checking using the shapes mesh - fills the list of
+///  overlaps.
+/// STAGE3 : shooting NRAYS rays from VERTEX and counting the total number of
+///  crossings per volume (rays propagated from boundary to boundary until
+///  geometry exit). Timing computed and results stored in a histo.
+/// STAGE4 : shooting 1 mil. random rays inside EACH volume and calling
+///  FindNextBoundary() + Safety() for each call. The timing is normalized by the
+///  number of crossings computed at stage 2 and presented as percentage.
+///  One can get a picture on which are the most "burned" volumes during
+///  transportation from geometry point of view. Another plot of the timing per
+///  volume vs. number of daughters is produced.
+
 void TGeoManager::CheckGeometryFull(Int_t ntracks, Double_t vx, Double_t vy, Double_t vz, Option_t *option)
 {
-// Geometry checking.
-// - if option contains 'o': Optional overlap checkings (by sampling and by mesh).
-// - if option contains 'b': Optional boundary crossing check + timing per volume.
-//
-// STAGE 1: extensive overlap checking by sampling per volume. Stdout need to be
-//  checked by user to get report, then TGeoVolume::CheckOverlaps(0.01, "s") can
-//  be called for the suspicious volumes.
-// STAGE2 : normal overlap checking using the shapes mesh - fills the list of
-//  overlaps.
-// STAGE3 : shooting NRAYS rays from VERTEX and counting the total number of
-//  crossings per volume (rays propagated from boundary to boundary until
-//  geometry exit). Timing computed and results stored in a histo.
-// STAGE4 : shooting 1 mil. random rays inside EACH volume and calling
-//  FindNextBoundary() + Safety() for each call. The timing is normalized by the
-//  number of crossings computed at stage 2 and presented as percentage.
-//  One can get a picture on which are the most "burned" volumes during
-//  transportation from geometry point of view. Another plot of the timing per
-//  volume vs. number of daughters is produced.
    TString opt(option);
    opt.ToLower();
    if (!opt.Length()) {
@@ -3396,10 +3576,11 @@ void TGeoManager::CheckGeometryFull(Int_t ntracks, Double_t vx, Double_t vy, Dou
    GetGeomPainter()->CheckGeometryFull(checkoverlaps,checkcrossings,ntracks,vertex);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform last checks on the geometry
+
 void TGeoManager::CheckGeometry(Option_t * /*option*/)
 {
-   // Perform last checks on the geometry
    if (fgVerboseLevel>0) Info("CheckGeometry","Fixing runtime shapes...");
    TIter next(fShapes);
    TIter nextv(fVolumes);
@@ -3427,10 +3608,11 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check all geometry for illegal overlaps within a limit OVLP.
+
 void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
 {
-// Check all geometry for illegal overlaps within a limit OVLP.
    if (!fTopNode) {
       Error("CheckOverlaps","Top node not set");
       return;
@@ -3438,10 +3620,11 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
    fTopNode->CheckOverlaps(ovlp,option);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints the current list of overlaps.
+
 void TGeoManager::PrintOverlaps() const
 {
-// Prints the current list of overlaps.
    if (!fOverlaps) return;
    Int_t novlp = fOverlaps->GetEntriesFast();
    if (!novlp) return;
@@ -3449,11 +3632,12 @@ void TGeoManager::PrintOverlaps() const
    geom->GetGeomPainter()->PrintOverlaps();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Estimate weight of volume VOL with a precision SIGMA(W)/W better than PRECISION.
+/// Option can be "v" - verbose (default)
+
 Double_t TGeoManager::Weight(Double_t precision, Option_t *option)
 {
-// Estimate weight of volume VOL with a precision SIGMA(W)/W better than PRECISION.
-// Option can be "v" - verbose (default)
    GetGeomPainter();
    TString opt(option);
    opt.ToLower();
@@ -3476,18 +3660,20 @@ Double_t TGeoManager::Weight(Double_t precision, Option_t *option)
    return weight;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes the total size in bytes of the branch starting with node.
+/// The option can specify if all the branch has to be parsed or only the node
+
 ULong_t TGeoManager::SizeOf(const TGeoNode * /*node*/, Option_t * /*option*/)
 {
-// computes the total size in bytes of the branch starting with node.
-// The option can specify if all the branch has to be parsed or only the node
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TGeoManager.
+
 void TGeoManager::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TGeoManager.
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(TGeoManager::Class(), this);
       fIsGeomReading = kTRUE;
@@ -3499,34 +3685,35 @@ void TGeoManager::Streamer(TBuffer &R__b)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute mouse actions on this manager.
+
 void TGeoManager::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-// Execute mouse actions on this manager.
    if (!fPainter) return;
    fPainter->ExecuteManagerEvent(this, event, px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Export this geometry to a file
+///
+/// -Case 1: root file or root/xml file
+///  if filename end with ".root". The key will be named name
+///  By default the geometry is saved without the voxelisation info.
+///  Use option 'v" to save the voxelisation info.
+///  if filename end with ".xml" a root/xml file is produced.
+///
+/// -Case 2: C++ script
+///  if filename end with ".C"
+///
+/// -Case 3: gdml file
+///  if filename end with ".gdml"
+///  NOTE that to use this option, the PYTHONPATH must be defined like
+///      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/geom/gdml
+///
+
 Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *option)
 {
-   // Export this geometry to a file
-   //
-   // -Case 1: root file or root/xml file
-   //  if filename end with ".root". The key will be named name
-   //  By default the geometry is saved without the voxelisation info.
-   //  Use option 'v" to save the voxelisation info.
-   //  if filename end with ".xml" a root/xml file is produced.
-   //
-   // -Case 2: C++ script
-   //  if filename end with ".C"
-   //
-   // -Case 3: gdml file
-   //  if filename end with ".gdml"
-   //  NOTE that to use this option, the PYTHONPATH must be defined like
-   //      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/geom/gdml
-   //
-
    TString sfile(filename);
    if (sfile.Contains(".C")) {
       //Save geometry as a C++ script
@@ -3568,62 +3755,67 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
    }
    return 0;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lock current geometry so that no other geometry can be imported.
+
 void TGeoManager::LockGeometry()
 {
-// Lock current geometry so that no other geometry can be imported.
    fgLock = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlock current geometry.
+
 void TGeoManager::UnlockGeometry()
 {
-// Unlock current geometry.
    fgLock = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check lock state.
+
 Bool_t TGeoManager::IsLocked()
 {
-// Check lock state.
    return fgLock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set verbosity level (static function).
+/// 0 - suppress messages related to geom-painter visibility level
+/// 1 - default value
+
 Int_t TGeoManager::GetVerboseLevel()
 {
-// Set verbosity level (static function).
-// 0 - suppress messages related to geom-painter visibility level
-// 1 - default value
    return fgVerboseLevel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return current verbosity level (static function).
+
 void TGeoManager::SetVerboseLevel(Int_t vl)
 {
-// Return current verbosity level (static function).
    fgVerboseLevel = vl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///static function
+///Import a geometry from a gdml or ROOT file
+///
+/// -Case 1: gdml
+///  if filename ends with ".gdml" the foreign geometry described with gdml
+///  is imported executing some python scripts in $ROOTSYS/gdml.
+///  NOTE that to use this option, the PYTHONPATH must be defined like
+///      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/gdml
+///
+/// -Case 2: root file (.root) or root/xml file (.xml)
+///  Import in memory from filename the geometry with key=name.
+///  if name="" (default), the first TGeoManager object in the file is returned.
+///
+///Note that this function deletes the current gGeoManager (if one)
+///before importing the new object.
+
 TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_t * /*option*/)
 {
-   //static function
-   //Import a geometry from a gdml or ROOT file
-   //
-   // -Case 1: gdml
-   //  if filename ends with ".gdml" the foreign geometry described with gdml
-   //  is imported executing some python scripts in $ROOTSYS/gdml.
-   //  NOTE that to use this option, the PYTHONPATH must be defined like
-   //      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/gdml
-   //
-   // -Case 2: root file (.root) or root/xml file (.xml)
-   //  Import in memory from filename the geometry with key=name.
-   //  if name="" (default), the first TGeoManager object in the file is returned.
-   //
-   //Note that this function deletes the current gGeoManager (if one)
-   //before importing the new object.
-
    if (fgLock) {
       ::Warning("TGeoManager::Import", "TGeoMananager in lock mode. NOT IMPORTING new geometry");
       return NULL;
@@ -3680,10 +3872,11 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    return gGeoManager;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update element flags when geometry is loaded from a file.
+
 void TGeoManager::UpdateElements()
 {
-// Update element flags when geometry is loaded from a file.
    if (!fElementTable) return;
    TIter next(fMaterials);
    TGeoMaterial *mat;
@@ -3721,10 +3914,11 @@ void TGeoManager::UpdateElements()
    }
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize PNE array for fast access via index and unique-id.
+
 Bool_t TGeoManager::InitArrayPNE() const
 {
-// Initialize PNE array for fast access via index and unique-id.
    if (fHashPNE) {
      fArrayPNE = new TObjArray(fHashPNE->GetSize());
      TIter next(fHashPNE);
@@ -3737,20 +3931,22 @@ Bool_t TGeoManager::InitArrayPNE() const
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get time cut for drawing tracks.
+
 Bool_t TGeoManager::GetTminTmax(Double_t &tmin, Double_t &tmax) const
 {
-// Get time cut for drawing tracks.
    tmin = fTmin;
    tmax = fTmax;
    return fTimeCut;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set time cut interval for drawing tracks. If called with no arguments, time
+/// cut will be disabled.
+
 void TGeoManager::SetTminTmax(Double_t tmin, Double_t tmax)
 {
-// Set time cut interval for drawing tracks. If called with no arguments, time
-// cut will be disabled.
    fTmin = tmin;
    fTmax = tmax;
    if (tmin==0 && tmax==999) fTimeCut = kFALSE;
@@ -3758,38 +3954,42 @@ void TGeoManager::SetTminTmax(Double_t tmin, Double_t tmax)
    if (fTracks && !IsAnimatingTracks()) ModifiedPad();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert coordinates from master volume frame to top.
+
 void TGeoManager::MasterToTop(const Double_t *master, Double_t *top) const
 {
-// Convert coordinates from master volume frame to top.
    GetCurrentNavigator()->MasterToLocal(master, top);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert coordinates from top volume frame to master.
+
 void TGeoManager::TopToMaster(const Double_t *top, Double_t *master) const
 {
- // Convert coordinates from top volume frame to master.
    GetCurrentNavigator()->LocalToMaster(top, master);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a parallel world for prioritized navigation. This can be populated
+/// with physical nodes and can be navigated independently using its API.
+/// In case the flag SetUseParallelWorldNav is set, any navigation query in the
+/// main geometry is checked against the parallel geometry, which gets priority
+/// in case of overlaps with the main geometry volumes.
+
 TGeoParallelWorld *TGeoManager::CreateParallelWorld(const char *name)
 {
-// Create a parallel world for prioritized navigation. This can be populated
-// with physical nodes and can be navigated independently using its API.
-// In case the flag SetUseParallelWorldNav is set, any navigation query in the
-// main geometry is checked against the parallel geometry, which gets priority
-// in case of overlaps with the main geometry volumes.
    fParallelWorld = new TGeoParallelWorld(name, this);
    return fParallelWorld;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate/deactivate usage of parallel world navigation. Can only be done if
+/// there is a parallel world. Activating navigation will automatically close
+/// the parallel geometry.
+
 void TGeoManager::SetUseParallelWorldNav(Bool_t flag)
 {
-// Activate/deactivate usage of parallel world navigation. Can only be done if
-// there is a parallel world. Activating navigation will automatically close
-// the parallel geometry.
    if (!fParallelWorld) {
       Error("SetUseParallelWorldNav", "No parallel world geometry defined. Use CreateParallelWorld.");
       return;

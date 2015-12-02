@@ -38,91 +38,96 @@
 
 ClassImp(TCut)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TCut::TCut() : TNamed()
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TCut::TCut(const char *title) : TNamed("CUT",title)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TCut::TCut(const char *name, const char *title) : TNamed(name,title)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy Constructor.
+
 TCut::TCut(const TCut &cut) : TNamed(cut)
 {
-   // Copy Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Typical destructor.
+
 TCut::~TCut()
 {
-   // Typical destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Comparison.
+
 Bool_t TCut::operator==(const char *rhs) const
 {
-   // Comparison.
-
    return fTitle == rhs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Comparison.
+
 Bool_t TCut::operator==(const TCut &rhs) const
 {
-   // Comparison.
-
    return fTitle == rhs.fTitle;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Comparison.
+
 Bool_t TCut::operator!=(const char *rhs) const
 {
-   // Comparison.
-
    return fTitle != rhs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Comparison.
+
 Bool_t TCut::operator!=(const TCut &rhs) const
 {
-   // Comparison.
-
    return fTitle != rhs.fTitle;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment.
+
 TCut& TCut::operator=(const char *rhs)
 {
-   // Assignment.
-
    fTitle = rhs;
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment.
+
 TCut& TCut::operator=(const TCut& rhs)
 {
-   // Assignment.
-
    if (this != &rhs) TNamed::operator=(rhs);
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Addition.
+
 TCut& TCut::operator+=(const char *rhs)
 {
-   // Addition.
-
    if (!rhs || !rhs[0]) return *this;
    if (fTitle.Length() == 0)
       fTitle = rhs;
@@ -131,11 +136,11 @@ TCut& TCut::operator+=(const char *rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Addition.
+
 TCut& TCut::operator+=(const TCut& rhs)
 {
-   // Addition.
-
    if (rhs.fTitle.Length() == 0) return *this;
    if (fTitle.Length() == 0)
       fTitle = rhs;
@@ -144,11 +149,11 @@ TCut& TCut::operator+=(const TCut& rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiplication.
+
 TCut& TCut::operator*=(const char *rhs)
 {
-   // Multiplication.
-
 if (!rhs || !rhs[0]) return *this;
    if (fTitle.Length() == 0)
       fTitle = rhs;
@@ -157,11 +162,11 @@ if (!rhs || !rhs[0]) return *this;
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiplication.
+
 TCut& TCut::operator*=(const TCut& rhs)
 {
-   // Multiplication.
-
    if (rhs.fTitle.Length() == 0) return *this;
    if (fTitle.Length() == 0)
       fTitle = rhs;
@@ -170,83 +175,83 @@ TCut& TCut::operator*=(const TCut& rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Addition.
+
 TCut operator+(const TCut& lhs, const char *rhs)
 {
-   // Addition.
-
    return TCut(lhs) += rhs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Addition.
+
 TCut operator+(const char *lhs, const TCut& rhs)
 {
-   // Addition.
-
    return TCut(lhs) += rhs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Addition.
+
 TCut operator+(const TCut& lhs, const TCut& rhs)
 {
-   // Addition.
-
    return TCut(lhs) += rhs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiplication.
+
 TCut operator*(const TCut& lhs, const char *rhs)
 {
-   // Multiplication.
-
    return TCut(lhs) *= rhs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiplication.
+
 TCut operator*(const char *lhs, const TCut& rhs)
 {
-   // Multiplication.
-
    return TCut(lhs) *= rhs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiplication.
+
 TCut operator*(const TCut& lhs, const TCut& rhs)
 {
-   // Multiplication.
-
    return TCut(lhs) *= rhs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical and.
+
 TCut operator&&(const TCut& lhs, const char *rhs)
 {
-   // Logical and.
-
    return TCut(lhs) += rhs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical and.
+
 TCut operator&&(const char *lhs, const TCut& rhs)
 {
-   // Logical and.
-
    return TCut(lhs) += rhs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical and.
+
 TCut operator&&(const TCut& lhs, const TCut& rhs)
 {
-   // Logical and.
-
    return TCut(lhs) += rhs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical or.
+
 TCut operator||(const TCut& lhs, const char *rhs)
 {
-   // Logical or.
-
    if (lhs.fTitle.Length() == 0 && (!rhs || !rhs[0])) return TCut();
    if (lhs.fTitle.Length() == 0) return TCut(rhs);
    if (!rhs || !rhs[0]) return TCut(lhs);
@@ -254,11 +259,11 @@ TCut operator||(const TCut& lhs, const char *rhs)
    return TCut(s.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical or.
+
 TCut operator||(const char *lhs, const TCut& rhs)
 {
-   // Logical or.
-
    if ((!lhs || !lhs[0]) && rhs.fTitle.Length() == 0) return TCut();
    if (!lhs || !lhs[0]) return TCut(rhs);
    if (rhs.fTitle.Length() == 0) return TCut(lhs);
@@ -266,11 +271,11 @@ TCut operator||(const char *lhs, const TCut& rhs)
    return TCut(s.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical or.
+
 TCut operator||(const TCut& lhs, const TCut& rhs)
 {
-   // Logical or.
-
    if (lhs.fTitle.Length() == 0 && rhs.fTitle.Length() == 0) return TCut();
    if (lhs.fTitle.Length() == 0) return TCut(rhs);
    if (rhs.fTitle.Length() == 0) return TCut(lhs);
@@ -278,11 +283,11 @@ TCut operator||(const TCut& lhs, const TCut& rhs)
    return TCut(s.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical negation.
+
 TCut operator!(const TCut &rhs)
 {
-   // Logical negation.
-
    if (rhs.fTitle.Length() == 0) return TCut();
    TString s = "!(" + rhs.fTitle + ")";
    return TCut(s.Data());

@@ -97,29 +97,30 @@ ClassImp(TGuiBldAction)
 TGuiBuilder *gGuiBuilder = 0;
 static TPluginHandler *gHandler = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGuiBldAction::TGuiBldAction(const char *name, const char *title,
                Int_t type,  TGLayoutHints *hints) :
    TNamed(name, title), fType(type), fHints(hints)
 {
-   // constructor
-
    fPicture = 0;
    fPic = 0;
    fAct = "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGuiBldAction::~TGuiBldAction()
 {
-   // destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGuiBuilder::TGuiBuilder()
 {
-   // constructor
-
    fAction = 0;
    // load plugin
    if (!gGuiBuilder) {
@@ -134,16 +135,17 @@ TGuiBuilder::TGuiBuilder()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGuiBuilder::~TGuiBuilder()
 {
-   // destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return an instance of TGuiBuilder object
+
 TGuiBuilder *TGuiBuilder::Instance()
 {
-   // return an instance of TGuiBuilder object
-
    return (gGuiBuilder? gGuiBuilder : new TGuiBuilder());
 }

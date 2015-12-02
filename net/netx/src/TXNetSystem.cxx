@@ -52,11 +52,11 @@ THashList TXNetSystem::fgAdminHash;
 
 typedef XrdClientVector<XrdOucString> VecString_t;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create system management class without connecting to server.
+
 TXNetSystem::TXNetSystem(Bool_t owner) : TNetSystem(owner), fDirList(0)
 {
-   // Create system management class without connecting to server.
-
    SetTitle("(x)rootd system administration");
    fIsRootd = kFALSE;
    fIsXRootd = kFALSE;
@@ -65,11 +65,11 @@ TXNetSystem::TXNetSystem(Bool_t owner) : TNetSystem(owner), fDirList(0)
    fUrl = "";
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create system management class and connect to server specified by url.
+
 TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner), fDirList(0)
 {
-   // Create system management class and connect to server specified by url.
-
    SetTitle("(x)rootd system administration");
    fIsRootd = kFALSE;
    fIsXRootd = kFALSE;
@@ -97,13 +97,13 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner), fDi
    return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init a connection to the server.
+/// Returns a pointer to the appropriate instance of XrdClientAdmin or 0
+/// in case of failure.
+
 XrdClientAdmin *TXNetSystem::Connect(const char *url)
 {
-   // Init a connection to the server.
-   // Returns a pointer to the appropriate instance of XrdClientAdmin or 0
-   // in case of failure.
-
    // We need a dummy filename after the server url to connect
    TString dummy = url;
    dummy += "/dummy";
@@ -199,11 +199,11 @@ XrdClientAdmin *TXNetSystem::Connect(const char *url)
    return cadm;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// One-time initialization of some communication variables for xrootd protocol
+
 void TXNetSystem::InitXrdClient()
 {
-   // One-time initialization of some communication variables for xrootd protocol
-
    // Init vars with default debug level -1, so we do not get warnings
    TXNetFile::SetEnv();
 
@@ -216,12 +216,12 @@ void TXNetSystem::InitXrdClient()
          gROOT->GetVersion());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a directory. Returns a non-zero pointer (with no special
+/// purpose) in case of success, 0 in case of error.
+
 void* TXNetSystem::OpenDirectory(const char* dir)
 {
-   // Open a directory. Returns a non-zero pointer (with no special
-   // purpose) in case of success, 0 in case of error.
-
    if (fIsXRootd) {
       // Check if the directory exists
       TXNetSystemConnectGuard cg(this, dir);
@@ -250,11 +250,11 @@ void* TXNetSystem::OpenDirectory(const char* dir)
    return TNetSystem::OpenDirectory(dir);       // for a rootd
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free(Close) the directory referenced by dirp
+
 void TXNetSystem::FreeDirectory(void *dirp)
 {
-   // Free(Close) the directory referenced by dirp
-
    if (fIsXRootd) {
       if (dirp != fDirp) {
          Error("FreeDirectory","invalid directory pointer (%p, %p)", dirp, fDirp);
@@ -276,11 +276,11 @@ void TXNetSystem::FreeDirectory(void *dirp)
    return TNetSystem::FreeDirectory(dirp);     // for a rootd
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a directory. Return 0 on success, -1 otherwise.
+
 Int_t TXNetSystem::MakeDirectory(const char* dir)
 {
-   // Create a directory. Return 0 on success, -1 otherwise.
-
    if (fIsXRootd) {
       TXNetSystemConnectGuard cg(this, dir);
       if (cg.IsValid()) {
@@ -301,12 +301,12 @@ Int_t TXNetSystem::MakeDirectory(const char* dir)
    return TNetSystem::MakeDirectory(dir);     // for a rootd
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get directory entry for directory referenced by dirp.
+/// Returns 0 in case there are no more entries.
+
 const char* TXNetSystem::GetDirEntry(void *dirp)
 {
-   // Get directory entry for directory referenced by dirp.
-   // Returns 0 in case there are no more entries.
-
    if (fIsXRootd) {
       if (dirp != fDirp) {
          Error("GetDirEntry","invalid directory pointer");
@@ -341,15 +341,15 @@ const char* TXNetSystem::GetDirEntry(void *dirp)
    return TNetSystem::GetDirEntry(dirp);      // for a rootd
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file. Info is returned in the form of a FileStat_t
+/// structure (see TSystem.h).
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+/// NOTICE: Not all information is available with an xrootd server.
+
 Int_t TXNetSystem::GetPathInfo(const char* path, FileStat_t &buf)
 {
-   // Get info about a file. Info is returned in the form of a FileStat_t
-   // structure (see TSystem.h).
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-   // NOTICE: Not all information is available with an xrootd server.
-
    if (fIsXRootd) {
       TXNetSystemConnectGuard cg(this, path);
       if (cg.IsValid()) {
@@ -404,12 +404,12 @@ Int_t TXNetSystem::GetPathInfo(const char* path, FileStat_t &buf)
    return TNetSystem::GetPathInfo(path,buf);       // for a rootd
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check consistency of this helper with the one required
+/// by 'path' or 'dirptr'.
+
 Bool_t TXNetSystem::ConsistentWith(const char *path, void *dirptr)
 {
-   // Check consistency of this helper with the one required
-   // by 'path' or 'dirptr'.
-
    if (gDebug > 1)
       Info("ConsistentWith",
            "calling for path: %s, dir: %p", path, dirptr);
@@ -417,15 +417,15 @@ Bool_t TXNetSystem::ConsistentWith(const char *path, void *dirptr)
    return TNetSystem::ConsistentWith(path,dirptr);    // for a rootd
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns FALSE if one can access a file using the specified access mode.
+/// NB: for the time being mode is ignored for XROOTD (just checks existence
+/// of the file or directory).
+/// Mode is the same as for the Unix access(2) function.
+/// Attention, bizarre convention of return value!!
+
 Bool_t TXNetSystem::AccessPathName(const char *path, EAccessMode mode)
 {
-   // Returns FALSE if one can access a file using the specified access mode.
-   // NB: for the time being mode is ignored for XROOTD (just checks existence
-   // of the file or directory).
-   // Mode is the same as for the Unix access(2) function.
-   // Attention, bizarre convention of return value!!
-
    if (fIsXRootd) {
       // Check only if the file or directory exists and
       FileStat_t buf;
@@ -441,12 +441,12 @@ Bool_t TXNetSystem::AccessPathName(const char *path, EAccessMode mode)
    return TNetSystem::AccessPathName(path,mode);    // for a rootd
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlink 'path' on the remote server system.
+/// Returns 0 on success, -1 otherwise.
+
 int TXNetSystem::Unlink(const char *path)
 {
-   // Unlink 'path' on the remote server system.
-   // Returns 0 on success, -1 otherwise.
-
    if (fIsXRootd) {
 
       TXNetSystemConnectGuard cg(this, path);
@@ -483,11 +483,11 @@ int TXNetSystem::Unlink(const char *path)
    return -1;    // not implemented for rootd
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the file defined by 'path' is ready to be used
+
 Bool_t TXNetSystem::IsOnline(const char *path)
 {
-   // Check if the file defined by 'path' is ready to be used
-
    // This is most efficiently done using GetPathInfo
    FileStat_t st;
    if (GetPathInfo(path, st) != 0) {
@@ -504,11 +504,11 @@ Bool_t TXNetSystem::IsOnline(const char *path)
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Issue a prepare request for file defined by 'path'
+
 Bool_t TXNetSystem::Prepare(const char *path, UChar_t option, UChar_t priority)
 {
-   // Issue a prepare request for file defined by 'path'
-
    TXNetSystemConnectGuard cg(this, path);
    if (cg.IsValid()) {
       XrdOucString pathname = TUrl(path).GetFileAndOptions();
@@ -529,16 +529,16 @@ Bool_t TXNetSystem::Prepare(const char *path, UChar_t option, UChar_t priority)
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Issue a prepare request for a list of files defined by 'paths', which must
+/// be of one of the following types: TFileInfo, TUrl, TObjString.
+/// On output, bufout, if defined, points to a buffer form that can be used
+/// with GetPathsInfo.
+/// Return the number of paths found or -1 if any error occured.
+
 Int_t TXNetSystem::Prepare(TCollection *paths,
                            UChar_t opt, UChar_t prio, TString *bufout)
 {
-   // Issue a prepare request for a list of files defined by 'paths', which must
-   // be of one of the following types: TFileInfo, TUrl, TObjString.
-   // On output, bufout, if defined, points to a buffer form that can be used
-   // with GetPathsInfo.
-   // Return the number of paths found or -1 if any error occured.
-
    if (!paths) {
       Warning("Prepare", "input list is empty!");
       return -1;
@@ -590,13 +590,13 @@ Int_t TXNetSystem::Prepare(TCollection *paths,
    return -1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve status of a '\n'-separated list of files in 'paths'.
+/// The information is returned as one UChar_t per file in 'info';
+/// 'info' must be allocated by the caller.
+
 Bool_t TXNetSystem::GetPathsInfo(const char *paths, UChar_t *info)
 {
-   // Retrieve status of a '\n'-separated list of files in 'paths'.
-   // The information is returned as one UChar_t per file in 'info';
-   // 'info' must be allocated by the caller.
-
    if (!paths) {
       Warning("GetPathsInfo", "input list is empty!");
       return kFALSE;
@@ -619,12 +619,12 @@ Bool_t TXNetSystem::GetPathsInfo(const char *paths, UChar_t *info)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns TRUE if the url in 'path' points to the local file system.
+/// This is used to avoid going through the NIC card for local operations.
+
 Bool_t TXNetSystem::IsPathLocal(const char *path)
 {
-   // Returns TRUE if the url in 'path' points to the local file system.
-   // This is used to avoid going through the NIC card for local operations.
-
    if (fIsXRootd) {
       TXNetSystemConnectGuard cg(this, path);
       if (cg.IsValid()) {
@@ -638,13 +638,13 @@ Bool_t TXNetSystem::IsPathLocal(const char *path)
    return TSystem::IsPathLocal(path);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get end-point url of a file. Info is returned in eurl.
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 Int_t TXNetSystem::Locate(const char *path, TString &eurl)
 {
-   // Get end-point url of a file. Info is returned in eurl.
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    if (fIsXRootd) {
       TXNetSystemConnectGuard cg(this, path);
       if (cg.IsValid()) {
@@ -688,11 +688,12 @@ Int_t TXNetSystem::Locate(const char *path, TString &eurl)
    return -1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if an admin for 'url' exists already.
+/// Avoid duplications.
+
 XrdClientAdmin *TXNetSystem::GetClientAdmin(const char *url)
 {
-   // Checks if an admin for 'url' exists already.
-   // Avoid duplications.
    XrdClientAdmin *ca = 0;
 
    // ID key
@@ -712,11 +713,11 @@ XrdClientAdmin *TXNetSystem::GetClientAdmin(const char *url)
    return ca;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build from uu a unique ID key used in hash tables
+
 TString TXNetSystem::GetKey(const char *url)
 {
-   // Build from uu a unique ID key used in hash tables
-
    TUrl u(url);
    TString key(u.GetUser());
    if (!key.IsNull())
@@ -734,42 +735,42 @@ TString TXNetSystem::GetKey(const char *url)
 //
 // Wrapper class
 //
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor: destroy the instance
+
 TXrdClientAdminWrapper::~TXrdClientAdminWrapper()
 {
-   // Destructor: destroy the instance
-
    SafeDelete(fXCA);
 }
 
 //
 // Guard methods
 //
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a guard object
+
 TXNetSystemConnectGuard::TXNetSystemConnectGuard(TXNetSystem *xn, const char *url)
                         : fClientAdmin(0)
 {
-   // Construct a guard object
-
     if (xn)
        // Connect
        fClientAdmin = (url && strlen(url) > 0) ? xn->Connect(url)
                                                : xn->Connect(xn->fUrl);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor: close the connection
+
 TXNetSystemConnectGuard::~TXNetSystemConnectGuard()
 {
-   // Destructor: close the connection
-
    fClientAdmin = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print message about last occured error
+
 void TXNetSystemConnectGuard::NotifyLastError()
 {
-   // Print message about last occured error
-
    if (fClientAdmin)
       if (fClientAdmin->GetClientConn())
          Printf("Srv err: %s", fClientAdmin->GetClientConn()->LastServerError.errmsg);

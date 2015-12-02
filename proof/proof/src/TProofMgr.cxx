@@ -57,13 +57,13 @@ typedef struct {
    int msgval;
 } srv_HS_t;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a PROOF manager for the standard (old) environment.
+
 TProofMgr::TProofMgr(const char *url, Int_t, const char *alias)
           : TNamed("",""), fRemoteProtocol(-1), fServType(kXProofd),
             fSessions(0), fIntHandler(0)
 {
-   // Create a PROOF manager for the standard (old) environment.
-
    fServType = kProofd;
 
    // AVoid problems with empty URLs
@@ -104,11 +104,11 @@ TProofMgr::TProofMgr(const char *url, Int_t, const char *alias)
       SetAlias(fUrl.GetHost());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy a TProofMgr instance
+
 TProofMgr::~TProofMgr()
 {
-   // Destroy a TProofMgr instance
-
    SafeDelete(fSessions);
    SafeDelete(fIntHandler);
 
@@ -116,13 +116,13 @@ TProofMgr::~TProofMgr()
    gROOT->GetListOfProofs()->Remove(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy version provided for completeness. Just returns a pointer to
+/// existing session 'id' (as shown by TProof::QuerySessions) or 0 if 'id' is
+/// not valid. The boolena 'gui' should be kTRUE when invoked from the GUI.
+
 TProof *TProofMgr::AttachSession(Int_t id, Bool_t gui)
 {
-   // Dummy version provided for completeness. Just returns a pointer to
-   // existing session 'id' (as shown by TProof::QuerySessions) or 0 if 'id' is
-   // not valid. The boolena 'gui' should be kTRUE when invoked from the GUI.
-
    TProofDesc *d = GetProofDesc(id);
    if (d)
       return AttachSession(d, gui);
@@ -131,13 +131,13 @@ TProof *TProofMgr::AttachSession(Int_t id, Bool_t gui)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy version provided for completeness. Just returns a pointer to
+/// existing session 'id' (as shown by TProof::QuerySessions) or 0 if 'id' is
+/// not valid.
+
 TProof *TProofMgr::AttachSession(TProofDesc *d, Bool_t)
 {
-   // Dummy version provided for completeness. Just returns a pointer to
-   // existing session 'id' (as shown by TProof::QuerySessions) or 0 if 'id' is
-   // not valid.
-
    if (!d) {
       Warning("AttachSession","invalid description object - do nothing");
       return 0;
@@ -151,14 +151,14 @@ TProof *TProofMgr::AttachSession(TProofDesc *d, Bool_t)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Detach session with 'id' from its proofserv. The 'id' is the number
+/// shown by QuerySessions. The correspondent TProof object is deleted.
+/// If id == 0 all the known sessions are detached.
+/// Option opt="S" or "s" forces session shutdown.
+
 void TProofMgr::DetachSession(Int_t id, Option_t *opt)
 {
-   // Detach session with 'id' from its proofserv. The 'id' is the number
-   // shown by QuerySessions. The correspondent TProof object is deleted.
-   // If id == 0 all the known sessions are detached.
-   // Option opt="S" or "s" forces session shutdown.
-
    if (!IsValid()) {
       Warning("DetachSession","invalid TProofMgr - do nothing");
       return;
@@ -197,12 +197,12 @@ void TProofMgr::DetachSession(Int_t id, Option_t *opt)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Detach session 'p' from its proofserv. The instance 'p' is invalidated
+/// and should be deleted by the caller
+
 void TProofMgr::DetachSession(TProof *p, Option_t *opt)
 {
-   // Detach session 'p' from its proofserv. The instance 'p' is invalidated
-   // and should be deleted by the caller
-
    if (!IsValid()) {
       Warning("DetachSession","invalid TProofMgr - do nothing");
       return;
@@ -223,11 +223,11 @@ void TProofMgr::DetachSession(TProof *p, Option_t *opt)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list of sessions accessible to this manager.
+
 TList *TProofMgr::QuerySessions(Option_t *opt)
 {
-   // Get list of sessions accessible to this manager.
-
    if (opt && !strncasecmp(opt,"L",1))
       // Just return the existing list
       return fSessions;
@@ -284,46 +284,46 @@ TList *TProofMgr::QuerySessions(Option_t *opt)
    return fSessions;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a message to connected users. Only superusers can do this.
+/// The first argument specifies the message or the file from where to take
+/// the message.
+/// The second argument specifies the user to which to send the message: if
+/// empty or null the message is send to all the connected users.
+/// return 0 in case of success, -1 in case of error
+
 Int_t TProofMgr::SendMsgToUsers(const char *, const char *)
 {
-   // Send a message to connected users. Only superusers can do this.
-   // The first argument specifies the message or the file from where to take
-   // the message.
-   // The second argument specifies the user to which to send the message: if
-   // empty or null the message is send to all the connected users.
-   // return 0 in case of success, -1 in case of error
-
    Warning("SendMsgToUsers","functionality not supported");
 
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a cleanup request for the sessions associated with the current
+/// user.
+/// Not supported.
+
 Int_t TProofMgr::Reset(Bool_t, const char *)
 {
-   // Send a cleanup request for the sessions associated with the current
-   // user.
-   // Not supported.
-
    Warning("Reset","functionality not supported");
 
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show available workers
+
 void TProofMgr::ShowWorkers()
 {
-   // Show available workers
-
    AbstractMethod("ShowWorkers");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get TProofDesc instance corresponding to 'id'.
+
 TProofDesc *TProofMgr::GetProofDesc(Int_t id)
 {
-   // Get TProofDesc instance corresponding to 'id'.
-
    TProofDesc *d = 0;
    if (id > 0) {
       // Retrieve an updated list
@@ -340,11 +340,11 @@ TProofDesc *TProofMgr::GetProofDesc(Int_t id)
    return d;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get TProofDesc instance corresponding to TProof object 'p'.
+
 TProofDesc *TProofMgr::GetProofDesc(TProof *p)
 {
-   // Get TProofDesc instance corresponding to TProof object 'p'.
-
    TProofDesc *d = 0;
    if (p) {
       // Retrieve an updated list
@@ -361,11 +361,11 @@ TProofDesc *TProofMgr::GetProofDesc(TProof *p)
    return d;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Discard TProofDesc of session 'p' from the internal list
+
 void TProofMgr::DiscardSession(TProof *p)
 {
-   // Discard TProofDesc of session 'p' from the internal list
-
    if (p) {
       TProofDesc *d = 0;
       if (fSessions) {
@@ -381,12 +381,12 @@ void TProofMgr::DiscardSession(TProof *p)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new remote session (master and associated workers).
+
 TProof *TProofMgr::CreateSession(const char *cfg,
                                  const char *cfgdir, Int_t loglevel)
 {
-   // Create a new remote session (master and associated workers).
-
    // Create
    if (IsProofd())
       fUrl.SetOptions("std");
@@ -424,12 +424,12 @@ TProof *TProofMgr::CreateSession(const char *cfg,
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if 'url' refers to the same 'user@host:port' entity as the URL
+/// in memory
+
 Bool_t TProofMgr::MatchUrl(const char *url)
 {
-   // Checks if 'url' refers to the same 'user@host:port' entity as the URL
-   // in memory
-
    TUrl u(url);
 
    // Correct URL protocol
@@ -454,11 +454,11 @@ Bool_t TProofMgr::MatchUrl(const char *url)
    return kFALSE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extract pointers to PROOF managers from TROOT::fProofs.
+
 TList *TProofMgr::GetListOfManagers()
 {
-   // Extract pointers to PROOF managers from TROOT::fProofs.
-
    // Update the list with new entries
    if (gROOT->GetListOfProofs()) {
       TIter nxp(gROOT->GetListOfProofs());
@@ -492,12 +492,13 @@ TList *TProofMgr::GetListOfManagers()
    return &fgListOfManagers;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the appropriate TProofMgr object using
+/// the plugin manager.
+
 TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
                              const char *alias, Bool_t xpd)
 {
-   // Static method returning the appropriate TProofMgr object using
-   // the plugin manager.
    TProofMgr *m= 0;
 
    Bool_t isLite = kFALSE;
@@ -587,13 +588,13 @@ TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
    return m;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the constructor hook fro TXProofMgr.
+/// We do this without the plugin manager because it blocks the
+/// CINT mutex breaking the parallel startup.
+
 TProofMgr_t TProofMgr::GetXProofMgrHook()
 {
-   // Get the constructor hook fro TXProofMgr.
-   // We do this without the plugin manager because it blocks the
-   // CINT mutex breaking the parallel startup.
-
    if (!fgTXProofMgrHook) {
       // Load the appropriate library ...
       TString prooflib = "libProofx";
@@ -612,23 +613,23 @@ TProofMgr_t TProofMgr::GetXProofMgrHook()
    return fgTXProofMgrHook;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set hook to TXProofMgr ctor
+
 void TProofMgr::SetTXProofMgrHook(TProofMgr_t pmh)
 {
-   // Set hook to TXProofMgr ctor
-
    fgTXProofMgrHook = pmh;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Non-blocking check for a PROOF (or Xrootd, if checkxrd) service at 'url'
+/// Return
+///        0 if a XProofd (or Xrootd, if checkxrd) daemon is listening at 'url'
+///       -1 if nothing is listening on the port (connection cannot be open)
+///        1 if something is listening but not XProofd (or not Xrootd, if checkxrd)
+
 Int_t TProofMgr::Ping(const char *url, Bool_t checkxrd)
 {
-   // Non-blocking check for a PROOF (or Xrootd, if checkxrd) service at 'url'
-   // Return
-   //        0 if a XProofd (or Xrootd, if checkxrd) daemon is listening at 'url'
-   //       -1 if nothing is listening on the port (connection cannot be open)
-   //        1 if something is listening but not XProofd (or not Xrootd, if checkxrd)
-
    if (!url || (url && strlen(url) <= 0)) {
       ::Error("TProofMgr::Ping", "empty url - fail");
       return -1;
@@ -737,12 +738,12 @@ Int_t TProofMgr::Ping(const char *url, Bool_t checkxrd)
    return 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse file name extracting the directory subcomponents in dirs, stored
+/// as TObjStrings.
+
 void TProofMgr::ReplaceSubdirs(const char *fn, TString &fdst, TList &dirph)
 {
-   // Parse file name extracting the directory subcomponents in dirs, stored
-   // as TObjStrings.
-
    if (!fn || (fn && strlen(fn) <= 0)) return;
    if (dirph.GetSize() <= 0) return;
 
@@ -770,37 +771,37 @@ void TProofMgr::ReplaceSubdirs(const char *fn, TString &fdst, TList &dirph)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Upload files provided via the list 'src' (as TFileInfo or TObjString)
+/// to 'mss'. The path under 'mss' is determined by 'dest'; the following
+/// place-holders can be used in 'dest':
+///      <d0>, <d1>, <d2>, ...         referring to the n-th sub-component
+///                                    of the src path
+///      <bn>                          basename in the source path
+///      <bs>                          basename sans extension
+///      <ex>                          Extension
+///      <sn>                          serial number of file in the list
+///      <s0>                          as <sn> but zero padded
+///      <fn>                          the full file path
+///      <us>, <gr>                    the local user and group names.
+///      <pg>                          the users PROOF group
+///      <pa>                          immediate parent directory
+///      <gp>                          next-to immediate parent directory
+/// So, for example, if the source filename for the 99-th file is
+///               protosrc://host//d0/d1/d2/d3/d4/d5/myfile
+/// then with dest = '/pool/user/<d3>/<d4>/<d5>/<s>/<bn>' and
+///           mss = 'protodst://hostdst//nm/
+/// the corresponding destination path is
+///           protodst://hostdst//nm/pool/user/d3/d4/d5/99/myfile
+///
+/// If 'dest' is empty, <fn> is used.
+///
+/// Returns a TFileCollection with the destination files created; this
+/// TFileCollection is, for example, ready to be registered as dataset.
+
 TFileCollection *TProofMgr::UploadFiles(TList *src,
                                         const char *mss, const char *dest)
 {
-   // Upload files provided via the list 'src' (as TFileInfo or TObjString)
-   // to 'mss'. The path under 'mss' is determined by 'dest'; the following
-   // place-holders can be used in 'dest':
-   //      <d0>, <d1>, <d2>, ...         referring to the n-th sub-component
-   //                                    of the src path
-   //      <bn>                          basename in the source path
-   //      <bs>                          basename sans extension
-   //      <ex>                          Extension
-   //      <sn>                          serial number of file in the list
-   //      <s0>                          as <sn> but zero padded
-   //      <fn>                          the full file path
-   //      <us>, <gr>                    the local user and group names.
-   //      <pg>                          the users PROOF group
-   //      <pa>                          immediate parent directory
-   //      <gp>                          next-to immediate parent directory
-   // So, for example, if the source filename for the 99-th file is
-   //               protosrc://host//d0/d1/d2/d3/d4/d5/myfile
-   // then with dest = '/pool/user/<d3>/<d4>/<d5>/<s>/<bn>' and
-   //           mss = 'protodst://hostdst//nm/
-   // the corresponding destination path is
-   //           protodst://hostdst//nm/pool/user/d3/d4/d5/99/myfile
-   //
-   // If 'dest' is empty, <fn> is used.
-   //
-   // Returns a TFileCollection with the destination files created; this
-   // TFileCollection is, for example, ready to be registered as dataset.
-
    TFileCollection *ds = 0;
 
    // The inputs must be make sense
@@ -958,34 +959,34 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
    return ds;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Upload to 'mss' the files listed in the text file 'srcfiles' or contained
+/// in the directory 'srcfiles'.
+/// In the case 'srcfiles' is a text file, the files must be specified one per
+/// line, with line beginning by '#' ignored (i.e. considered comments).
+/// The path under 'mss' is defined by 'dest'; the following
+/// place-holders can be used in 'dest':
+///      <d0>, <d1>, <d2>, ...         referring to the n-th sub-component
+///                                    of the src path
+///      <bn>                          basename in the source path
+///      <sn>                          serial number of file in the list
+///      <fn>                          the full file path
+///      <us>, <gr>                    the local user and group names.
+/// So, for example, if the source filename for the 99-th file is
+///               protosrc://host//d0/d1/d2/d3/d4/d5/myfile
+/// then with dest = '/pool/user/<d3>/<d4>/<d5>/<s>/<bn>' and
+///           mss = 'protodst://hostdst//nm/
+/// the corresponding destination path is
+///           protodst://hostdst//nm/pool/user/d3/d4/d5/99/myfile
+///
+/// If 'dest' is empty, <fn> is used.
+///
+/// Returns a TFileCollection with the destination files created; this
+/// TFileCollection is, for example, ready to be registered as dataset.
+
 TFileCollection *TProofMgr::UploadFiles(const char *srcfiles,
                                         const char *mss, const char *dest)
 {
-   // Upload to 'mss' the files listed in the text file 'srcfiles' or contained
-   // in the directory 'srcfiles'.
-   // In the case 'srcfiles' is a text file, the files must be specified one per
-   // line, with line beginning by '#' ignored (i.e. considered comments).
-   // The path under 'mss' is defined by 'dest'; the following
-   // place-holders can be used in 'dest':
-   //      <d0>, <d1>, <d2>, ...         referring to the n-th sub-component
-   //                                    of the src path
-   //      <bn>                          basename in the source path
-   //      <sn>                          serial number of file in the list
-   //      <fn>                          the full file path
-   //      <us>, <gr>                    the local user and group names.
-   // So, for example, if the source filename for the 99-th file is
-   //               protosrc://host//d0/d1/d2/d3/d4/d5/myfile
-   // then with dest = '/pool/user/<d3>/<d4>/<d5>/<s>/<bn>' and
-   //           mss = 'protodst://hostdst//nm/
-   // the corresponding destination path is
-   //           protodst://hostdst//nm/pool/user/d3/d4/d5/99/myfile
-   //
-   // If 'dest' is empty, <fn> is used.
-   //
-   // Returns a TFileCollection with the destination files created; this
-   // TFileCollection is, for example, ready to be registered as dataset.
-
    TFileCollection *ds = 0;
 
    // The inputs must be make sense
@@ -1059,11 +1060,11 @@ TFileCollection *TProofMgr::UploadFiles(const char *srcfiles,
    return ds;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run 'rm' on 'what'. Locally it is just a call to TSystem::Unlink .
+
 Int_t TProofMgr::Rm(const char *what, const char *, const char *)
 {
-   // Run 'rm' on 'what'. Locally it is just a call to TSystem::Unlink .
-
    Int_t rc = -1;
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
@@ -1092,10 +1093,11 @@ Int_t TProofMgr::Rm(const char *what, const char *, const char *)
 
 ClassImp(TProofDesc)
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump the content to the screen.
+
 void TProofDesc::Print(Option_t *) const
 {
-   // Dump the content to the screen.
    const char *st[] = { "unknown", "idle", "processing", "shutting down"};
 
    Printf("// # %d", fLocalId);

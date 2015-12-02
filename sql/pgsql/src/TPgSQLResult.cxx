@@ -15,30 +15,30 @@
 
 ClassImp(TPgSQLResult)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PgSQL query result.
+
 TPgSQLResult::TPgSQLResult(void *result)
 {
-   // PgSQL query result.
-
    fResult     = (PGresult *) result;
    fRowCount   = fResult ? PQntuples(fResult) : 0;
    fCurrentRow = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup PgSQL query result.
+
 TPgSQLResult::~TPgSQLResult()
 {
-   // Cleanup PgSQL query result.
-
    if (fResult)
       Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close query result.
+
 void TPgSQLResult::Close(Option_t *)
 {
-   // Close query result.
-
    if (!fResult)
       return;
 
@@ -48,11 +48,11 @@ void TPgSQLResult::Close(Option_t *)
    fCurrentRow = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if result set is open and field index within range.
+
 Bool_t TPgSQLResult::IsValid(Int_t field)
 {
-   // Check if result set is open and field index within range.
-
    if (!fResult) {
       Error("IsValid", "result set closed");
       return kFALSE;
@@ -64,11 +64,11 @@ Bool_t TPgSQLResult::IsValid(Int_t field)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of fields in result.
+
 Int_t TPgSQLResult::GetFieldCount()
 {
-   // Get number of fields in result.
-
    if (!fResult) {
       Error("GetFieldCount", "result set closed");
       return 0;
@@ -76,11 +76,11 @@ Int_t TPgSQLResult::GetFieldCount()
    return PQnfields(fResult);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get name of specified field.
+
 const char *TPgSQLResult::GetFieldName(Int_t field)
 {
-   // Get name of specified field.
-
    if (!fResult) {
       Error("GetFieldName", "result set closed");
       return 0;
@@ -88,12 +88,12 @@ const char *TPgSQLResult::GetFieldName(Int_t field)
    return PQfname(fResult, field);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next query result row. The returned object must be
+/// deleted by the user.
+
 TSQLRow *TPgSQLResult::Next()
 {
-   // Get next query result row. The returned object must be
-   // deleted by the user.
-
    Int_t row;
 
    if (!fResult) {

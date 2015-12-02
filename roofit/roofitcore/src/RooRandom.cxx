@@ -41,81 +41,84 @@ TRandom* RooRandom::_theGenerator = 0;
 RooQuasiRandomGenerator* RooRandom::_theQuasiGenerator = 0;
 RooRandom::Guard RooRandom::guard;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooRandom::Guard::~Guard()
 { delete RooRandom::_theGenerator; delete RooRandom::_theQuasiGenerator; }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to a singleton random-number generator
+/// implementation. Creates the object the first time it is called.
+
 TRandom *RooRandom::randomGenerator() 
 {
-  // Return a pointer to a singleton random-number generator
-  // implementation. Creates the object the first time it is called.
-  
   if (!_theGenerator) _theGenerator= new TRandom3();
   return _theGenerator;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the random number generator; takes ownership of the object passed as parameter
+
 void RooRandom::setRandomGenerator(TRandom* gen)
 {
-  // set the random number generator; takes ownership of the object passed as parameter
   if (_theGenerator) delete _theGenerator;
   _theGenerator = gen;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to a singleton quasi-random generator
+/// implementation. Creates the object the first time it is called.
+
 RooQuasiRandomGenerator *RooRandom::quasiGenerator() 
 {
-  // Return a pointer to a singleton quasi-random generator
-  // implementation. Creates the object the first time it is called.
-  
   if(!_theQuasiGenerator) _theQuasiGenerator= new RooQuasiRandomGenerator();
   return _theQuasiGenerator;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a number uniformly distributed from (0,1)
+
 Double_t RooRandom::uniform(TRandom *generator) 
 {
-  // Return a number uniformly distributed from (0,1)
-
   return generator->Rndm();
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the vector provided with random numbers uniformly distributed from (0,1)
+
 void RooRandom::uniform(UInt_t dimension, Double_t vector[], TRandom *generator) 
 {
-  // Fill the vector provided with random numbers uniformly distributed from (0,1)
   generator->RndmArray(dimension, vector);
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an integer uniformly distributed from [0,n-1]
+
 UInt_t RooRandom::integer(UInt_t n, TRandom *generator) 
 {
-  // Return an integer uniformly distributed from [0,n-1]
-
   return generator->Integer(n);
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a Gaussian random variable with mean 0 and variance 1.
+
 Double_t RooRandom::gaussian(TRandom *generator) 
 {
-  // Return a Gaussian random variable with mean 0 and variance 1.
-
   return generator->Gaus();
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a quasi-random number in the range (0,1) using the
+/// Niederreiter base 2 generator described in Bratley, Fox, Niederreiter,
+/// ACM Trans. Model. Comp. Sim. 2, 195 (1992).
+
 Bool_t RooRandom::quasi(UInt_t dimension, Double_t vector[], RooQuasiRandomGenerator *generator) 
 {
-  // Return a quasi-random number in the range (0,1) using the
-  // Niederreiter base 2 generator described in Bratley, Fox, Niederreiter,
-  // ACM Trans. Model. Comp. Sim. 2, 195 (1992).
-
   return generator->generate(dimension,vector);
 }

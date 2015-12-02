@@ -79,46 +79,46 @@
 ClassImp(TNetFile)
 ClassImp(TNetSystem)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TNetFile object. This is actually done inside Create(), so
+/// for a description of the options and other arguments see Create().
+/// Normally a TNetFile is created via TFile::Open().
+
 TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
                    Int_t compress, Int_t netopt)
    : TFile(url, "NET", ftitle, compress), fEndpointUrl(url)
 {
-   // Create a TNetFile object. This is actually done inside Create(), so
-   // for a description of the options and other arguments see Create().
-   // Normally a TNetFile is created via TFile::Open().
-
    fSocket = 0;
    Create(url, option, netopt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TNetFile object. To be used by derived classes, that need
+/// to initialize the TFile base class but not open a connection at this
+/// moment.
+
 TNetFile::TNetFile(const char *url, const char *ftitle, Int_t compress, Bool_t)
    : TFile(url, "NET", ftitle, compress), fEndpointUrl(url)
 {
-   // Create a TNetFile object. To be used by derived classes, that need
-   // to initialize the TFile base class but not open a connection at this
-   // moment.
-
    fSocket    = 0;
    fProtocol  = 0;
    fErrorCode = 0;
    fNetopt    = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TNetFile dtor. Send close message and close socket.
+
 TNetFile::~TNetFile()
 {
-   // TNetFile dtor. Send close message and close socket.
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a remote file. Requires fOption to be set correctly.
+
 Int_t TNetFile::SysOpen(const char * /*file*/, Int_t /*flags*/, UInt_t /*mode*/)
 {
-   // Open a remote file. Requires fOption to be set correctly.
-
    if (!fSocket) {
 
       Create(fUrl.GetUrl(), fOption, fNetopt);
@@ -149,23 +149,23 @@ Int_t TNetFile::SysOpen(const char * /*file*/, Int_t /*flags*/, UInt_t /*mode*/)
    return -2;  // set as fD in ReOpen
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close currently open file.
+
 Int_t TNetFile::SysClose(Int_t /*fd*/)
 {
-   // Close currently open file.
-
    if (fSocket)
       fSocket->Send(kROOTD_CLOSE);
 
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return file stat information. The interface and return value is
+/// identical to TSystem::GetPathInfo().
+
 Int_t TNetFile::SysStat(Int_t, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime)
 {
-   // Return file stat information. The interface and return value is
-   // identical to TSystem::GetPathInfo().
-
    if (fProtocol < 3) return 1;
 
    if (!fSocket) return 1;
@@ -213,11 +213,11 @@ Int_t TNetFile::SysStat(Int_t, Long_t *id, Long64_t *size, Long_t *flags, Long_t
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close remote file.
+
 void TNetFile::Close(Option_t *opt)
 {
-   // Close remote file.
-
    if (!fSocket) return;
 
    TFile::Close(opt);
@@ -230,41 +230,41 @@ void TNetFile::Close(Option_t *opt)
    fD = -1;  // so TFile::IsOpen() returns false when in TFile::~TFile
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Flush file to disk.
+
 void TNetFile::Flush()
 {
-   // Flush file to disk.
-
    FlushWriteCache();
 
    if (fSocket && fWritable)
       fSocket->Send(kROOTD_FLUSH);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize a TNetFile object.
+
 void TNetFile::Init(Bool_t create)
 {
-   // Initialize a TNetFile object.
-
    Seek(0);
 
    TFile::Init(create);
    fD = -2;   // so TFile::IsOpen() returns true when in TFile::~TFile
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retruns kTRUE if file is open, kFALSE otherwise.
+
 Bool_t TNetFile::IsOpen() const
 {
-   // Retruns kTRUE if file is open, kFALSE otherwise.
-
    return fSocket == 0 ? kFALSE : kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print some info about the net file.
+
 void TNetFile::Print(Option_t *) const
 {
-   // Print some info about the net file.
-
    const char *fname = fUrl.GetFile();
    Printf("URL:           %s",   ((TUrl*)&fUrl)->GetUrl());
    Printf("Remote file:   %s",   &fname[1]);
@@ -275,26 +275,26 @@ void TNetFile::Print(Option_t *) const
    Printf("Bytes read:    %lld", fBytesRead);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print error string depending on error code.
+
 void TNetFile::PrintError(const char *where, Int_t err)
 {
-   // Print error string depending on error code.
-
    fErrorCode = err;
    Error(where, "%s", gRootdErrStr[err]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reopen a file with a different access mode, like from READ to
+/// UPDATE or from NEW, CREATE, RECREATE, UPDATE to READ. Thus the
+/// mode argument can be either "READ" or "UPDATE". The method returns
+/// 0 in case the mode was successfully modified, 1 in case the mode
+/// did not change (was already as requested or wrong input arguments)
+/// and -1 in case of failure, in which case the file cannot be used
+/// anymore.
+
 Int_t TNetFile::ReOpen(Option_t *mode)
 {
-   // Reopen a file with a different access mode, like from READ to
-   // UPDATE or from NEW, CREATE, RECREATE, UPDATE to READ. Thus the
-   // mode argument can be either "READ" or "UPDATE". The method returns
-   // 0 in case the mode was successfully modified, 1 in case the mode
-   // did not change (was already as requested or wrong input arguments)
-   // and -1 in case of failure, in which case the file cannot be used
-   // anymore.
-
    if (fProtocol < 7) {
       Error("ReOpen", "operation not supported by remote rootd (protocol = %d)",
             fProtocol);
@@ -304,12 +304,12 @@ Int_t TNetFile::ReOpen(Option_t *mode)
    return TFile::ReOpen(mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified byte range from remote file via rootd daemon.
+/// Returns kTRUE in case of error.
+
 Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
 {
-   // Read specified byte range from remote file via rootd daemon.
-   // Returns kTRUE in case of error.
-
    if (!fSocket) return kTRUE;
    if (len == 0)
       return kFALSE;
@@ -377,23 +377,23 @@ end:
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified byte range from remote file via rootd daemon.
+/// Returns kTRUE in case of error.
+
 Bool_t TNetFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
-   // Read specified byte range from remote file via rootd daemon.
-   // Returns kTRUE in case of error.
-
    SetOffset(pos);
    return ReadBuffer(buf, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a list of buffers given in pos[] and len[] and return it in a single
+/// buffer.
+/// Returns kTRUE in case of error.
+
 Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 {
-   // Read a list of buffers given in pos[] and len[] and return it in a single
-   // buffer.
-   // Returns kTRUE in case of error.
-
    if (!fSocket) return kTRUE;
 
    // If it's an old version of the protocol try the default TFile::ReadBuffers
@@ -492,12 +492,12 @@ end:
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write specified byte range to remote file via rootd daemon.
+/// Returns kTRUE in case of error.
+
 Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
 {
-   // Write specified byte range to remote file via rootd daemon.
-   // Returns kTRUE in case of error.
-
    if (!fSocket || !fWritable) return kTRUE;
 
    Bool_t result = kFALSE;
@@ -550,12 +550,12 @@ end:
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return status from rootd server and message kind. Returns -1 in
+/// case of error otherwise 8 (sizeof 2 words, status and kind).
+
 Int_t TNetFile::Recv(Int_t &status, EMessageTypes &kind)
 {
-   // Return status from rootd server and message kind. Returns -1 in
-   // case of error otherwise 8 (sizeof 2 words, status and kind).
-
    kind   = kROOTD_ERR;
    status = 0;
 
@@ -567,20 +567,21 @@ Int_t TNetFile::Recv(Int_t &status, EMessageTypes &kind)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set position from where to start reading.
+
 void TNetFile::Seek(Long64_t offset, ERelativeTo pos)
 {
-   // Set position from where to start reading.
-
    SetOffset(offset, pos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to remote rootd server.
+
 void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
                              Int_t tcpwindowsize, Bool_t forceOpen,
                              Bool_t forceRead)
 {
-   // Connect to remote rootd server.
    TString fn = fUrl.GetFile();
 
    // Create Authenticated socket
@@ -640,35 +641,35 @@ zombie:
    gDirectory = gROOT;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a NetFile object. A net file is the same as a TFile
+/// except that it is being accessed via a rootd server. The url
+/// argument must be of the form: root[s|k]://host.dom.ain/file.root.
+/// When protocol is "roots" try using SRP authentication.
+/// When protocol is "rootk" try using kerberos5 authentication.
+/// If the file specified in the URL does not exist, is not accessable
+/// or can not be created the kZombie bit will be set in the TNetFile
+/// object. Use IsZombie() to see if the file is accessable.
+/// If the remote daemon thinks the file is still connected, while you are
+/// sure this is not the case you can force open the file by preceding the
+/// option argument with an "-", e.g.: "-recreate". Do this only
+/// in cases when you are very sure nobody else is using the file.
+/// To bypass the writelock on a file, to allow the reading of a file
+/// that is being written by another process, explicitly specify the
+/// "+read" option ("read" being the default option).
+/// The netopt argument can be used to specify the size of the tcp window in
+/// bytes (for more info see: http://www.psc.edu/networking/perf_tune.html).
+/// The default and minimum tcp window size is 65535 bytes.
+/// If netopt < -1 then |netopt| is the number of parallel sockets that will
+/// be used to connect to rootd. This option should be used on fat pipes
+/// (i.e. high bandwidth, high latency links). The ideal number of parallel
+/// sockets depends on the bandwidth*delay product. Generally 5-7 is a good
+/// number.
+/// For a description of the option and other arguments see the TFile ctor.
+/// The preferred interface to this constructor is via TFile::Open().
+
 void TNetFile::Create(const char * /*url*/, Option_t *option, Int_t netopt)
 {
-   // Create a NetFile object. A net file is the same as a TFile
-   // except that it is being accessed via a rootd server. The url
-   // argument must be of the form: root[s|k]://host.dom.ain/file.root.
-   // When protocol is "roots" try using SRP authentication.
-   // When protocol is "rootk" try using kerberos5 authentication.
-   // If the file specified in the URL does not exist, is not accessable
-   // or can not be created the kZombie bit will be set in the TNetFile
-   // object. Use IsZombie() to see if the file is accessable.
-   // If the remote daemon thinks the file is still connected, while you are
-   // sure this is not the case you can force open the file by preceding the
-   // option argument with an "-", e.g.: "-recreate". Do this only
-   // in cases when you are very sure nobody else is using the file.
-   // To bypass the writelock on a file, to allow the reading of a file
-   // that is being written by another process, explicitly specify the
-   // "+read" option ("read" being the default option).
-   // The netopt argument can be used to specify the size of the tcp window in
-   // bytes (for more info see: http://www.psc.edu/networking/perf_tune.html).
-   // The default and minimum tcp window size is 65535 bytes.
-   // If netopt < -1 then |netopt| is the number of parallel sockets that will
-   // be used to connect to rootd. This option should be used on fat pipes
-   // (i.e. high bandwidth, high latency links). The ideal number of parallel
-   // sockets depends on the bandwidth*delay product. Generally 5-7 is a good
-   // number.
-   // For a description of the option and other arguments see the TFile ctor.
-   // The preferred interface to this constructor is via TFile::Open().
-
    Int_t tcpwindowsize = 65535;
 
    fErrorCode = -1;
@@ -753,15 +754,15 @@ zombie:
    gDirectory = gROOT;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a NetFile object using an existing connection (socket s).
+/// Provided for use in TXNetFile.
+/// See:
+///    TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
+/// for details about the arguments.
+
 void TNetFile::Create(TSocket *s, Option_t *option, Int_t netopt)
 {
-   // Create a NetFile object using an existing connection (socket s).
-   // Provided for use in TXNetFile.
-   // See:
-   //    TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
-   // for details about the arguments.
-
    // Import socket
    fSocket = s;
 
@@ -769,12 +770,12 @@ void TNetFile::Create(TSocket *s, Option_t *option, Int_t netopt)
    Create(s->GetUrl(), option, netopt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if 'url' matches the coordinates of this file.
+/// Check the full URL, including port and FQDN.
+
 Bool_t TNetFile::Matches(const char *url)
 {
-   // Return kTRUE if 'url' matches the coordinates of this file.
-   // Check the full URL, including port and FQDN.
-
    // Run standard check on fUrl, first
    Bool_t rc = TFile::Matches(url);
    if (rc)
@@ -804,15 +805,15 @@ Bool_t TNetFile::Matches(const char *url)
 // TNetSystem: the directory handler for net files
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create helper class that allows directory access via rootd.
+/// Use ftpowner = TRUE (default) if this instance is responsible
+/// for cleaning of the underlying TFTP connection; this allows
+/// to have control on the order of the final cleaning.
+
 TNetSystem::TNetSystem(Bool_t ftpowner)
            : TSystem("-root", "Net file Helper System")
 {
-   // Create helper class that allows directory access via rootd.
-   // Use ftpowner = TRUE (default) if this instance is responsible
-   // for cleaning of the underlying TFTP connection; this allows
-   // to have control on the order of the final cleaning.
-
    // name must start with '-' to bypass the TSystem singleton check
    SetName("root");
 
@@ -826,15 +827,15 @@ TNetSystem::TNetSystem(Bool_t ftpowner)
    fIsLocal = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create helper class that allows directory access via rootd.
+/// Use ftpowner = TRUE (default) if this instance is responsible
+/// for cleaning of the underlying TFTP connection; this allows
+/// to have control on the order of the final cleaning.
+
 TNetSystem::TNetSystem(const char *url, Bool_t ftpowner)
            : TSystem("-root", "Net file Helper System")
 {
-   // Create helper class that allows directory access via rootd.
-   // Use ftpowner = TRUE (default) if this instance is responsible
-   // for cleaning of the underlying TFTP connection; this allows
-   // to have control on the order of the final cleaning.
-
    // name must start with '-' to bypass the TSystem singleton check
    SetName("root");
 
@@ -843,11 +844,11 @@ TNetSystem::TNetSystem(const char *url, Bool_t ftpowner)
    Create(url);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse and save coordinates of the remote entity (user, host, port, ...)
+
 void TNetSystem::InitRemoteEntity(const char *url)
 {
-   // Parse and save coordinates of the remote entity (user, host, port, ...)
-
    TUrl turl(url);
 
    // Remote username: local as default
@@ -867,11 +868,11 @@ void TNetSystem::InitRemoteEntity(const char *url)
    fPort = turl.GetPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TNetSystem object.
+
 void TNetSystem::Create(const char *url, TSocket *sock)
 {
-   // Create a TNetSystem object.
-
    // If we got here protocol must be at least its short form "^root.*:" :
    // make sure that it is in the full form to avoid problems in TFTP
    TString surl(url);
@@ -945,11 +946,11 @@ void TNetSystem::Create(const char *url, TSocket *sock)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TNetSystem::~TNetSystem()
 {
-   // Destructor
-
    // Close FTP connection
    if (fFTPOwner) {
       if (fFTP) {
@@ -969,11 +970,11 @@ TNetSystem::~TNetSystem()
    fFTP  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a directory via rootd.
+
 Int_t TNetSystem::MakeDirectory(const char *dir)
 {
-   // Make a directory via rootd.
-
    // If local, use the local TSystem
    if (fIsLocal) {
       TString edir = TUrl(dir).GetFile();
@@ -990,12 +991,12 @@ Int_t TNetSystem::MakeDirectory(const char *dir)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a directory via rfiod. Returns an opaque pointer to a dir
+/// structure. Returns 0 in case of error.
+
 void *TNetSystem::OpenDirectory(const char *dir)
 {
-   // Open a directory via rfiod. Returns an opaque pointer to a dir
-   // structure. Returns 0 in case of error.
-
    // If local, use the local TSystem
    if (fIsLocal) {
       TString edir = TUrl(dir).GetFile();
@@ -1025,11 +1026,11 @@ void *TNetSystem::OpenDirectory(const char *dir)
       return (void *)0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free directory via rootd.
+
 void TNetSystem::FreeDirectory(void *dirp)
 {
-   // Free directory via rootd.
-
    // If local, use the local TSystem
    if (fIsLocal) {
       gSystem->FreeDirectory(dirp);
@@ -1050,11 +1051,11 @@ void TNetSystem::FreeDirectory(void *dirp)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get directory entry via rootd. Returns 0 in case no more entries.
+
 const char *TNetSystem::GetDirEntry(void *dirp)
 {
-   // Get directory entry via rootd. Returns 0 in case no more entries.
-
    // If local, use the local TSystem
    if (fIsLocal) {
       return gSystem->GetDirEntry(dirp);
@@ -1071,14 +1072,14 @@ const char *TNetSystem::GetDirEntry(void *dirp)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file. Info is returned in the form of a FileStat_t
+/// structure (see TSystem.h).
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 Int_t TNetSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file. Info is returned in the form of a FileStat_t
-   // structure (see TSystem.h).
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    // If local, use the local TSystem
    if (fIsLocal) {
       TString epath = TUrl(path).GetFile();
@@ -1096,13 +1097,13 @@ Int_t TNetSystem::GetPathInfo(const char *path, FileStat_t &buf)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns FALSE if one can access a file using the specified access mode.
+/// Mode is the same as for the Unix access(2) function.
+/// Attention, bizarre convention of return value!!
+
 Bool_t TNetSystem::AccessPathName(const char *path, EAccessMode mode)
 {
-   // Returns FALSE if one can access a file using the specified access mode.
-   // Mode is the same as for the Unix access(2) function.
-   // Attention, bizarre convention of return value!!
-
    // If local, use the local TSystem
    if (fIsLocal) {
       TString epath = TUrl(path).GetFile();
@@ -1119,12 +1120,12 @@ Bool_t TNetSystem::AccessPathName(const char *path, EAccessMode mode)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check consistency of this helper with the one required
+/// by 'path' or 'dirptr'.
+
 Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
 {
-   // Check consistency of this helper with the one required
-   // by 'path' or 'dirptr'.
-
    // Standard check: only the protocol part of 'path' is required to match
    Bool_t checkstd = TSystem::ConsistentWith(path, dirptr);
    if (!checkstd) return kFALSE;
@@ -1160,11 +1161,11 @@ Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
    return (checkstd && checknet);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a path
+
 Int_t TNetSystem::Unlink(const char *path)
 {
-   // Remove a path
-
    // If local, use the local TSystem
    if (fIsLocal) {
       TString epath = TUrl(path).GetFile();

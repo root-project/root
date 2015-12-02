@@ -56,7 +56,8 @@ public:
 
 ClassImp(TGL5DDataSetEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGL5DDataSetEditor::TGL5DDataSetEditor(const TGWindow *p,  Int_t width, Int_t height,
                                        UInt_t options, Pixel_t back) :
    TGedFrame(p,  width, height, options | kVerticalFrame, back),
@@ -117,11 +118,11 @@ TGL5DDataSetEditor::~TGL5DDataSetEditor()
    delete fHidden;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Connect signals to slots.
+
 void TGL5DDataSetEditor::ConnectSignals2Slots()
 {
-   //Connect signals to slots.
-
    //Controls from "Style" tab.
    fShowBoxCut->Connect("Toggled(Bool_t)", "TGL5DDataSetEditor", this, "BoxCutToggled()");
    fAlpha->Connect("ValueChanged(Long_t)", "TGL5DDataSetEditor", this, "AlphaChanged()");
@@ -173,7 +174,8 @@ namespace
 {
 
 //Auxilary functions.
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void make_slider_range_entries(TGCompositeFrame *parent, TGNumberEntryField *&minEntry,
                                const TString &minToolTip, TGNumberEntryField *&maxEntry,
                                const TString &maxToolTip)
@@ -194,7 +196,8 @@ void make_slider_range_entries(TGCompositeFrame *parent, TGNumberEntryField *&mi
    parent->AddFrame(frame, new TGLayoutHints(kLHintsTop, 5, 0, 0, 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGHorizontalFrame *make_labeled_hframe(TGCompositeFrame *p, const char *text)
 {
    TGHorizontalFrame *frame = new TGHorizontalFrame(p);
@@ -205,7 +208,8 @@ TGHorizontalFrame *make_labeled_hframe(TGCompositeFrame *p, const char *text)
    return frame;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGDoubleHSlider *make_double_hslider(TGCompositeFrame *parent, const char *labelName)
 {
    TGCompositeFrame *sliderFrame = new TGCompositeFrame(parent, 80, 20, kHorizontalFrame);
@@ -223,11 +227,11 @@ TGDoubleHSlider *make_double_hslider(TGCompositeFrame *parent, const char *label
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "Style" tab.
+
 void TGL5DDataSetEditor::CreateStyleTab()
 {
-   // Creates "Style" tab.
-
    TGHorizontalFrame *f;
    //MakeTitle("Update behaviour");
    fShowBoxCut  = new TGCheckButton(this, "Show Box Cut");
@@ -266,11 +270,12 @@ void TGL5DDataSetEditor::CreateStyleTab()
    AddFrame(fSlideRange, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 2, 2, 2));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Tab, containing controls to set
+///the ranges and number of cells in a grid.
+
 void TGL5DDataSetEditor::CreateGridTab()
 {
-   //Tab, containing controls to set
-   //the ranges and number of cells in a grid.
    TGCompositeFrame *tabFrame = CreateEditorTabSubFrame("Grid");
    //1. The first part of the tab - "Grid parameters" group.
    TGGroupFrame *gridGroup = new TGGroupFrame(tabFrame, "Grid parameters", kVerticalFrame);
@@ -324,10 +329,11 @@ void TGL5DDataSetEditor::CreateGridTab()
    tabFrame->AddFrame(horizontalFrame, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 2, 3, 0, 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Tab, containing controls to work with iso-surfaces.
+
 void TGL5DDataSetEditor::CreateIsoTab()
 {
-   //Tab, containing controls to work with iso-surfaces.
    TGCompositeFrame *tabFrame = CreateEditorTabSubFrame("Surfaces");
 
    //1. The first group - contains V4 range (read only number entries with min and max).
@@ -394,10 +400,11 @@ void TGL5DDataSetEditor::CreateIsoTab()
    tabFrame->AddFrame(newGroup, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 3, 0, 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set model or disables/hides viewer.
+
 void TGL5DDataSetEditor::SetModel(TObject* obj)
 {
-   //Set model or disables/hides viewer.
    fPainter = 0;
    Bool_t needUpdate = fSelectedSurface != -1;
 
@@ -435,21 +442,21 @@ void set_grid_range_widgets(const TAxis *a, const Rgl::Range_t r, TGDoubleHSlide
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set "Style" tab's controls from model.
+
 void TGL5DDataSetEditor::SetStyleTabWidgets()
 {
-   //Set "Style" tab's controls from model.
-
    fShowBoxCut->SetState(fPainter->IsBoxCutShown() ? kButtonDown : kButtonUp);
    fNumberOfPlanes->SetNumber(fPainter->GetNContours());
    fAlpha->SetNumber(fPainter->GetAlpha());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set "Grid" tab's controls from model.
+
 void TGL5DDataSetEditor::SetGridTabWidgets()
 {
-   //Set "Grid" tab's controls from model.
-
    const TAxis *xA = fDataSet->GetXAxis();
    const TAxis *yA = fDataSet->GetYAxis();
    const TAxis *zA = fDataSet->GetZAxis();
@@ -468,10 +475,11 @@ void TGL5DDataSetEditor::SetGridTabWidgets()
    set_grid_range_widgets(zA, zR, fZRangeSlider, fZRangeSliderMin, fZRangeSliderMax);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set "Surfaces" tab's controls from model.
+
 void TGL5DDataSetEditor::SetIsoTabWidgets()
 {
-   //Set "Surfaces" tab's controls from model.
    const Rgl::Range_t &v4R = fDataSet->GetV4Range();
    //V4 range.
    fV4MinEntry->SetNumber(v4R.first);
@@ -501,83 +509,92 @@ void TGL5DDataSetEditor::SetIsoTabWidgets()
    fSelectedSurface = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Some of controls in a "Grid" tab was modified.
+
 void TGL5DDataSetEditor::GridParametersChanged()
 {
-   //Some of controls in a "Grid" tab was modified.
    EnableGridTabButtons();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Grid parameters were changed, enable "Cancel" and "Apply" buttons.
+
 void TGL5DDataSetEditor::EnableGridTabButtons()
 {
-   //Grid parameters were changed, enable "Cancel" and "Apply" buttons.
    fCancelGridBtn->SetState(kButtonUp);
    fOkGridBtn->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Disable "Cancel" and "Apply" buttons.
+
 void TGL5DDataSetEditor::DisableGridTabButtons()
 {
-   //Disable "Cancel" and "Apply" buttons.
    fCancelGridBtn->SetState(kButtonDisabled);
    fOkGridBtn->SetState(kButtonDisabled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Surface was selected in a list box, enable some controls.
+
 void TGL5DDataSetEditor::EnableSurfaceControls()
 {
-   //Surface was selected in a list box, enable some controls.
    fVisibleCheck->SetState(kButtonUp);
 //   fShowCloud->SetState(kButtonUp);
 //   fSurfColorBtn->SetState(kButtonUp);
    fSurfRemoveBtn->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Disable surface controls.
+
 void TGL5DDataSetEditor::DisableSurfaceControls()
 {
-   //Disable surface controls.
    fVisibleCheck->SetState(kButtonDisabled);
    fShowCloud->SetState(kButtonDisabled);
 //   fSurfColorBtn->SetState(kButtonDisabled);
    fSurfRemoveBtn->SetState(kButtonDisabled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///X slider in a "Grid" tab.
+
 void TGL5DDataSetEditor::XSliderChanged()
 {
-   //X slider in a "Grid" tab.
    fXRangeSliderMin->SetNumber(fXRangeSlider->GetMinPosition());
    fXRangeSliderMax->SetNumber(fXRangeSlider->GetMaxPosition());
 
    EnableGridTabButtons();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Y slider in a "Grid" tab.
+
 void TGL5DDataSetEditor::YSliderChanged()
 {
-   //Y slider in a "Grid" tab.
    fYRangeSliderMin->SetNumber(fYRangeSlider->GetMinPosition());
    fYRangeSliderMax->SetNumber(fYRangeSlider->GetMaxPosition());
 
    EnableGridTabButtons();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Z slider in a "Grid" tab.
+
 void TGL5DDataSetEditor::ZSliderChanged()
 {
-   //Z slider in a "Grid" tab.
    fZRangeSliderMin->SetNumber(fZRangeSlider->GetMinPosition());
    fZRangeSliderMax->SetNumber(fZRangeSlider->GetMaxPosition());
 
    EnableGridTabButtons();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Value in a number entry was modified.
+
 void TGL5DDataSetEditor::XSliderSetMin()
 {
-   //Value in a number entry was modified.
    if (fXRangeSliderMin->GetNumber() < fXRangeSliderMax->GetNumber()) {
       fXRangeSlider->SetPosition(fXRangeSliderMin->GetNumber(),
                                  fXRangeSliderMax->GetNumber());
@@ -586,10 +603,11 @@ void TGL5DDataSetEditor::XSliderSetMin()
       fXRangeSliderMin->SetNumber(fXRangeSlider->GetMinPosition());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Value in a number entry was modified.
+
 void TGL5DDataSetEditor::XSliderSetMax()
 {
-   //Value in a number entry was modified.
    if (fXRangeSliderMin->GetNumber() < fXRangeSliderMax->GetNumber()) {
       fXRangeSlider->SetPosition(fXRangeSliderMin->GetNumber(),
                                  fXRangeSliderMax->GetNumber());
@@ -599,10 +617,11 @@ void TGL5DDataSetEditor::XSliderSetMax()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Value in a number entry was modified.
+
 void TGL5DDataSetEditor::YSliderSetMin()
 {
-   //Value in a number entry was modified.
    if (fYRangeSliderMin->GetNumber() < fYRangeSliderMax->GetNumber()) {
       fYRangeSlider->SetPosition(fYRangeSliderMin->GetNumber(),
                                  fYRangeSliderMax->GetNumber());
@@ -611,10 +630,11 @@ void TGL5DDataSetEditor::YSliderSetMin()
       fYRangeSliderMin->SetNumber(fYRangeSlider->GetMinPosition());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Value in a number entry was modified.
+
 void TGL5DDataSetEditor::YSliderSetMax()
 {
-   //Value in a number entry was modified.
    if (fYRangeSliderMin->GetNumber() < fYRangeSliderMax->GetNumber()) {
       fYRangeSlider->SetPosition(fYRangeSliderMin->GetNumber(),
                                  fYRangeSliderMax->GetNumber());
@@ -623,10 +643,11 @@ void TGL5DDataSetEditor::YSliderSetMax()
       fYRangeSliderMax->SetNumber(fYRangeSlider->GetMaxPosition());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Value in a number entry was modified.
+
 void TGL5DDataSetEditor::ZSliderSetMin()
 {
-   //Value in a number entry was modified.
    if (fZRangeSliderMin->GetNumber() < fZRangeSliderMax->GetNumber()) {
       fZRangeSlider->SetPosition(fZRangeSliderMin->GetNumber(),
                                  fZRangeSliderMax->GetNumber());
@@ -636,10 +657,11 @@ void TGL5DDataSetEditor::ZSliderSetMin()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Value in a number entry was modified.
+
 void TGL5DDataSetEditor::ZSliderSetMax()
 {
-   //Value in a number entry was modified.
    if (fZRangeSliderMin->GetNumber() < fZRangeSliderMax->GetNumber()) {
       fZRangeSlider->SetPosition(fZRangeSliderMin->GetNumber(),
                                  fZRangeSliderMax->GetNumber());
@@ -648,20 +670,22 @@ void TGL5DDataSetEditor::ZSliderSetMax()
       fYRangeSliderMax->SetNumber(fZRangeSlider->GetMaxPosition());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///"Cancel" button was pressed in a "Grid" tab.
+///Return old values.
+
 void TGL5DDataSetEditor::RollbackGridParameters()
 {
-   //"Cancel" button was pressed in a "Grid" tab.
-   //Return old values.
    SetGridTabWidgets();
    DisableGridTabButtons();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///"Apply" button was pressed in a "Grid" tab.
+///Modify all meshes.
+
 void TGL5DDataSetEditor::ApplyGridParameters()
 {
-   //"Apply" button was pressed in a "Grid" tab.
-   //Modify all meshes.
    DisableGridTabButtons();
    //
    fDataSet->GetXAxis()->Set(fNCellsXEntry->GetIntNumber(),
@@ -681,10 +705,11 @@ void TGL5DDataSetEditor::ApplyGridParameters()
       gPad->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Check, if selected surface must be highlighted.
+
 void TGL5DDataSetEditor::HighlightClicked()
 {
-   //Check, if selected surface must be highlighted.
    if (fSelectedSurface == -1)
       return;
 
@@ -694,12 +719,13 @@ void TGL5DDataSetEditor::HighlightClicked()
       gPad->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Surface was selected in a list box.
+///Enable surface controls and set them into
+///correct state.
+
 void TGL5DDataSetEditor::SurfaceSelected(Int_t id)
 {
-   //Surface was selected in a list box.
-   //Enable surface controls and set them into
-   //correct state.
    if (id >= 0) {
       //Check, if the index is valid.
       if (!fHidden->IsValid(id)) {
@@ -735,11 +761,11 @@ void TGL5DDataSetEditor::SurfaceSelected(Int_t id)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Hide/show selected surface.
+
 void TGL5DDataSetEditor::VisibleClicked()
 {
-   //Hide/show selected surface.
-
    //In principle, this control can be enabled,
    //only if some surface was selected and
    //fSelectedSurface != -1. But I do not trust to
@@ -751,11 +777,11 @@ void TGL5DDataSetEditor::VisibleClicked()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Change the color of the selected surface.
+
 void TGL5DDataSetEditor::ColorChanged(Pixel_t pixel)
 {
-   //Change the color of the selected surface.
-
    if (fSelectedSurface != -1) {
       fHidden->fIterators[fSelectedSurface]->fColor = Color_t(TColor::GetColor(pixel));
       if (gPad)
@@ -763,11 +789,11 @@ void TGL5DDataSetEditor::ColorChanged(Pixel_t pixel)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Change transparency of selected surface.
+
 void TGL5DDataSetEditor::AlphaChanged(Int_t alpha)
 {
-   //Change transparency of selected surface.
-
    if (fSelectedSurface != -1) {
       fHidden->fIterators[fSelectedSurface]->fAlpha = alpha;
       if (gPad)
@@ -775,10 +801,11 @@ void TGL5DDataSetEditor::AlphaChanged(Int_t alpha)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Remove selected surface.
+
 void TGL5DDataSetEditor::RemoveSurface()
 {
-   //Remove selected surface.
    if (fSelectedSurface != -1) {
 
       SurfIter_t it = fHidden->fIterators[fSelectedSurface];
@@ -794,10 +821,11 @@ void TGL5DDataSetEditor::RemoveSurface()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Add new iso-surface.
+
 void TGL5DDataSetEditor::AddNewSurface()
 {
-   //Add new iso-surface.
    fPainter->AddSurface(fNewIsoEntry->GetNumber());
    SetModel(fDataSet);
 
@@ -805,11 +833,11 @@ void TGL5DDataSetEditor::AddNewSurface()
       gPad->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the "Apply" button for alpha value.
+
 void TGL5DDataSetEditor::ApplyAlpha()
 {
-   // Slot connected to the "Apply" button for alpha value.
-
    if (fPainter) {
       fApplyAlpha->SetState(kButtonDisabled);
       fPainter->SetAlpha(fAlpha->GetNumber());
@@ -824,11 +852,11 @@ void TGL5DDataSetEditor::ApplyAlpha()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the Apply Planes button.
+
 void TGL5DDataSetEditor::ApplyPlanes()
 {
-   // Slot connected to the Apply Planes button.
-
    if (fPainter) {
       //fApplyPlanes->SetState(kButtonDisabled);
       fPainter->SetNContours((Int_t)fNumberOfPlanes->GetIntNumber());
@@ -842,29 +870,29 @@ void TGL5DDataSetEditor::ApplyPlanes()
       gPad->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the Show BoxCut check button.
+
 void TGL5DDataSetEditor::BoxCutToggled()
 {
-   // Slot connected to the Show BoxCut check button.
-
    if (fPainter)
       fPainter->ShowBoxCut(fShowBoxCut->IsOn());
    if (gPad)
       gPad->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the Alpha entry.
+
 void TGL5DDataSetEditor::AlphaChanged()
 {
-   // Slot connected to the Alpha entry.
-
    fApplyAlpha->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the Number of Planes value-entry.
+
 void TGL5DDataSetEditor::NContoursChanged()
 {
-   // Slot connected to the Number of Planes value-entry.
-
 //   fApplyPlanes->SetState(kButtonUp);
 }

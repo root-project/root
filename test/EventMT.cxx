@@ -88,11 +88,11 @@ ClassImp(Event)
 ClassImp(Track)
 ClassImp(HistogramManager)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an Event object.
+
 Event::Event() : fIsValid(kFALSE)
 {
-   // Create an Event object.
-
    fTracks = new TClonesArray("Track", 1000);
    fHighPt = new TRefArray;
    fMuons  = new TRefArray;
@@ -111,7 +111,8 @@ Event::Event() : fIsValid(kFALSE)
    fWebHistogram.SetAction(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Event::~Event()
 {
    Clear();
@@ -122,7 +123,8 @@ Event::~Event()
    if (fEventName) delete [] fEventName;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
   fIsValid = kTRUE;
   char etype[20];
@@ -174,15 +176,15 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
   TProcessID::SetObjectCount(ObjectNumber);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new track to the list of tracks for this event.
+/// To avoid calling the very time consuming operator new for each track,
+/// the standard but not well know C++ operator "new with placement"
+/// is called. If tracks[i] is 0, a new Track object will be created
+/// otherwise the previous Track[i] will be overwritten.
+
 Track *Event::AddTrack(Float_t random, Float_t ptmin)
 {
-   // Add a new track to the list of tracks for this event.
-   // To avoid calling the very time consuming operator new for each track,
-   // the standard but not well know C++ operator "new with placement"
-   // is called. If tracks[i] is 0, a new Track object will be created
-   // otherwise the previous Track[i] will be overwritten.
-
    TClonesArray &tracks = *fTracks;
    Track *track = new(tracks[fNtrack++]) Track(random);
    //Save reference to last Track in the collection of Tracks
@@ -194,7 +196,8 @@ Track *Event::AddTrack(Float_t random, Float_t ptmin)
    return track;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Event::Clear(Option_t * /*option*/)
 {
    fTracks->Clear("C"); //will also call Track::Clear
@@ -212,14 +215,16 @@ void Event::SetHeader(Int_t i, Int_t run, Int_t date, Float_t random)
    fH->Fill(random);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Event::SetMeasure(UChar_t which, Int_t what) {
    if (which<10) fMeasures[which] = what;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This delete is to test the relocation of variable length array
+
 void Event::SetRandomVertex() {
-   // This delete is to test the relocation of variable length array
    if (fClosestDistance) delete [] fClosestDistance;
    if (!fNvertex) {
       fClosestDistance = 0;
@@ -231,11 +236,11 @@ void Event::SetRandomVertex() {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a track object
+
 Track::Track(const Track &orig) : TObject(orig),fTriggerBits(orig.fTriggerBits)
 {
-   // Copy a track object
-
    fPx = orig.fPx;
    fPy = orig.fPy;
    fPz = orig.fPx;
@@ -268,12 +273,12 @@ Track::Track(const Track &orig) : TObject(orig),fTriggerBits(orig.fTriggerBits)
    fValid  = orig.fValid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a track object.
+/// Note that in this example, data members do not have any physical meaning.
+
 Track::Track(Float_t random) : TObject(),fTriggerBits(64)
 {
-   // Create a track object.
-   // Note that in this example, data members do not have any physical meaning.
-
    Float_t a,b,px,py;
    gRandom->Rannor(px,py);
    fPx = px;
@@ -320,11 +325,11 @@ Track::Track(Float_t random) : TObject(),fTriggerBits(64)
    fValid  = Int_t(0.6+gRandom->Rndm(1));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a track
+
 Track &Track::operator=(const Track &orig)
 {
-   // Copy a track
-
    TObject::operator=(orig);
    fPx = orig.fPx;
    fPy = orig.fPy;
@@ -377,7 +382,8 @@ Track &Track::operator=(const Track &orig)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Track::Clear(Option_t * /*option*/)
 {
    fTriggerBits.Clear();
@@ -385,12 +391,12 @@ void Track::Clear(Option_t * /*option*/)
    fPointValue=0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create histogram manager object. Histograms will be created
+/// in the "dir" directory.
+
 HistogramManager::HistogramManager(TDirectory *dir)
 {
-   // Create histogram manager object. Histograms will be created
-   // in the "dir" directory.
-
    // Save current directory and cd to "dir".
    TDirectory *saved = gDirectory;
    dir->cd();
@@ -420,20 +426,20 @@ HistogramManager::HistogramManager(TDirectory *dir)
    saved->cd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up all histograms.
+
 HistogramManager::~HistogramManager()
 {
-   // Clean up all histograms.
-
    // Nothing to do. Histograms will be deleted when the directory
    // in which tey are stored is closed.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill histograms.
+
 void HistogramManager::Hfill(Event *event)
 {
-   // Fill histograms.
-
    fNtrack->Fill(event->GetNtrack());
    fNseg->Fill(event->GetNseg());
    fTemperature->Fill(event->GetTemperature());

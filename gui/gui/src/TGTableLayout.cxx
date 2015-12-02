@@ -81,18 +81,18 @@
 ClassImp(TGTableLayout)
 ClassImp(TGTableLayoutHints)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTableLayout constructor.
+/// Note:
+/// - Number of rows first, number of Columns second
+/// - homogeneous == true means all table cells are the same size,
+///   set by the widest and the highest child frame.
+/// - s gives the amount of separation in pixels between cells
+/// - h are the hints, see TGTableLayoutHints.
+
 TGTableLayout::TGTableLayout(TGCompositeFrame *main, UInt_t nrows, UInt_t ncols,
                              Bool_t homogeneous, Int_t sep, Int_t hints)
 {
-   // TGTableLayout constructor.
-   // Note:
-   // - Number of rows first, number of Columns second
-   // - homogeneous == true means all table cells are the same size,
-   //   set by the widest and the highest child frame.
-   // - s gives the amount of separation in pixels between cells
-   // - h are the hints, see TGTableLayoutHints.
-
    fMain    = main;
    fList    = fMain->GetList();
    fSep     = sep;
@@ -104,21 +104,21 @@ TGTableLayout::TGTableLayout(TGCompositeFrame *main, UInt_t nrows, UInt_t ncols,
    fHomogeneous = homogeneous;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTableLayout constructor.
+
 TGTableLayout::~TGTableLayout()
 {
-   // TGTableLayout constructor.
-
    if (fRow) delete [] fRow;
    if (fCol) delete [] fCol;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the sizes of rows and columns needed to statisfy
+/// children's layout policies.
+
 void TGTableLayout::FindRowColSizes()
 {
-   // Find the sizes of rows and columns needed to statisfy
-   // children's layout policies.
-
    // This is equiv to GTK's requisition stage
 
    FindRowColSizesInit();
@@ -128,11 +128,11 @@ void TGTableLayout::FindRowColSizes()
    FindRowColSizesHomogeneous();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize values needed to determine the size of rows and columns.
+
 void TGTableLayout::FindRowColSizesInit()
 {
-   // Initialize values needed to determine the size of rows and columns.
-
    if (fRow) delete [] fRow;
    if (fCol) delete [] fCol;
    fRow = new TableData_t[fNrows];
@@ -145,11 +145,11 @@ void TGTableLayout::FindRowColSizesInit()
    for (i = 0; i < fNcols; ++i) fCol[i].fDefSize = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine the size of rows/cols needed for singly attached children.
+
 void TGTableLayout::FindRowColSizesSinglyAttached()
 {
-   // Determine the size of rows/cols needed for singly attached children.
-
    TIter next(fList);
    TGFrameElement *ptr;
 
@@ -178,12 +178,12 @@ void TGTableLayout::FindRowColSizesSinglyAttached()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If the table is homogeneous make sure all col/rows are same
+/// size as biggest col/row.
+
 void TGTableLayout::FindRowColSizesHomogeneous()
 {
-   // If the table is homogeneous make sure all col/rows are same
-   // size as biggest col/row.
-
    if (!fHomogeneous) return;
 
    UInt_t max_width = 0, max_height = 0, col, row;
@@ -200,11 +200,11 @@ void TGTableLayout::FindRowColSizesHomogeneous()
    for (row = 0; row < fNrows; ++row) fRow[row].fDefSize = max_height;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks any children which span multiple col/rows.
+
 void TGTableLayout::FindRowColSizesMultiplyAttached()
 {
-   // Checks any children which span multiple col/rows.
-
    TIter next(fList);
    TGFrameElement *ptr;
 
@@ -257,14 +257,14 @@ void TGTableLayout::FindRowColSizesMultiplyAttached()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If main frame is bigger or smaller than all children,
+/// expand/shrink to fill. This is symmetric under row<-->col
+/// switching so it is abstracted out to a normal function to save typing.
+
 void TGTableLayout::SetRowColResize(UInt_t real_size, UInt_t nthings,
                                     TableData_t *thing, Bool_t homogeneous)
 {
-   // If main frame is bigger or smaller than all children,
-   // expand/shrink to fill. This is symmetric under row<-->col
-   // switching so it is abstracted out to a normal function to save typing.
-
    if (homogeneous) {
       UInt_t ind, nshrink=0, nexpand=0, cur_size=0;
 
@@ -338,12 +338,12 @@ void TGTableLayout::SetRowColResize(UInt_t real_size, UInt_t nthings,
    } // not homogeneous
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This gets the new sizes needed to fit the table to the parent
+/// frame. To be called after FindRowColSizes.
+
 void TGTableLayout::SetRowColSizes()
 {
-   // This gets the new sizes needed to fit the table to the parent
-   // frame. To be called after FindRowColSizes.
-
    SetRowColSizesInit();
    UInt_t border_width = fMain->GetBorderWidth();
 
@@ -353,12 +353,12 @@ void TGTableLayout::SetRowColSizes()
                    fNrows, fRow, fHomogeneous);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize rows/cols. By default they do not expand and they
+/// do shrink. What the children want determine what the rows/cols do.
+
 void TGTableLayout::SetRowColSizesInit()
 {
-   // Initialize rows/cols. By default they do not expand and they
-   // do shrink. What the children want determine what the rows/cols do.
-
    UInt_t col;
    for (col = 0; col < fNcols; ++col) {
       fCol[col].fRealSize = fCol[col].fDefSize;
@@ -485,11 +485,11 @@ void TGTableLayout::SetRowColSizesInit()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sanity check various values.
+
 void TGTableLayout::CheckSanity()
 {
-   // Sanity check various values.
-
    TIter next(fList);
    TGFrameElement *ptr;
    UInt_t nerrors = 0;
@@ -546,11 +546,11 @@ void TGTableLayout::CheckSanity()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a table layout of all frames in the list.
+
 void TGTableLayout::Layout()
 {
-    // Make a table layout of all frames in the list.
-
    CheckSanity();
 
    FindRowColSizes();
@@ -634,11 +634,11 @@ void TGTableLayout::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default dimension of the table layout.
+
 TGDimension TGTableLayout::GetDefaultSize() const
 {
-   // Return default dimension of the table layout.
-
    TGDimension msize = fMain->GetSize();
    UInt_t options = fMain->GetOptions();
 

@@ -33,7 +33,8 @@
 
 ClassImp(TSQLObjectInfo)
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSQLObjectInfo::TSQLObjectInfo() :
    TObject(),
    fObjId(0),
@@ -42,7 +43,8 @@ TSQLObjectInfo::TSQLObjectInfo() :
 {
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSQLObjectInfo::TSQLObjectInfo(Long64_t objid, const char* classname, Version_t version) :
    TObject(),
    fObjId(objid),
@@ -51,7 +53,8 @@ TSQLObjectInfo::TSQLObjectInfo(Long64_t objid, const char* classname, Version_t 
 {
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSQLObjectInfo::~TSQLObjectInfo()
 {
 }
@@ -60,7 +63,9 @@ TSQLObjectInfo::~TSQLObjectInfo()
 
 ClassImp(TSQLObjectData)
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default contrsuctor
+
 TSQLObjectData::TSQLObjectData() :
       TObject(),
       fInfo(0),
@@ -79,10 +84,11 @@ TSQLObjectData::TSQLObjectData() :
       fBlobTypeName(0),
       fUnpack(0)
 {
-   // default contrsuctor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// normal contrsuctor,
+
 TSQLObjectData::TSQLObjectData(TSQLClassInfo* sqlinfo,
                                Long64_t       objid,
                                TSQLResult*    classdata,
@@ -106,8 +112,6 @@ TSQLObjectData::TSQLObjectData(TSQLClassInfo* sqlinfo,
    fBlobTypeName(0),
    fUnpack(0)
 {
-   // normal contrsuctor,
-
    // take ownership if no special row from data pool is provided
    if ((fClassData!=0) && (fClassRow==0)) {
       fOwner = kTRUE;
@@ -117,11 +121,11 @@ TSQLObjectData::TSQLObjectData(TSQLClassInfo* sqlinfo,
    ShiftBlobRow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor of TSQLObjectData object
+
 TSQLObjectData::~TSQLObjectData()
 {
-   // destructor of TSQLObjectData object
-
    if ((fClassData!=0) && fOwner) delete fClassData;
    if (fClassRow!=0) delete fClassRow;
    if (fBlobRow!=0) delete fBlobRow;
@@ -130,29 +134,29 @@ TSQLObjectData::~TSQLObjectData()
    if (fBlobStmt!=0) delete fBlobStmt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return number of columns in class table result
+
 Int_t TSQLObjectData::GetNumClassFields()
 {
-   // return number of columns in class table result
-
    if (fClassData!=0) return fClassData->GetFieldCount();
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get name of class table column
+
 const char* TSQLObjectData::GetClassFieldName(Int_t n)
 {
-   // get name of class table column
-
    if (fClassData!=0) return fClassData->GetFieldName(n);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// locate column of that name in results
+
 Bool_t TSQLObjectData::LocateColumn(const char* colname, Bool_t isblob)
 {
-   // locate column of that name in results
-
    if (fUnpack!=0) {
       fUnpack->Delete();
       delete fUnpack;
@@ -199,11 +203,11 @@ Bool_t TSQLObjectData::LocateColumn(const char* colname, Bool_t isblob)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// shift cursor to next blob value
+
 Bool_t TSQLObjectData::ShiftBlobRow()
 {
-   // shift cursor to next blob value
-
    if (fBlobStmt!=0) {
       Bool_t res = fBlobStmt->NextResultRow();
       if (!res) { delete fBlobStmt; fBlobStmt = 0; }
@@ -215,11 +219,11 @@ Bool_t TSQLObjectData::ShiftBlobRow()
    return fBlobRow!=0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// extract from curent blob row value and names identifiers
+
 Bool_t TSQLObjectData::ExtractBlobValues()
 {
-   // extract from curent blob row value and names identifiers
-
    const char* name = 0;
 
    Bool_t hasdata = kFALSE;
@@ -262,12 +266,12 @@ Bool_t TSQLObjectData::ExtractBlobValues()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add emulated data
+/// this used to place version or TObject raw data, read from normal tables
+
 void TSQLObjectData::AddUnpack(const char* tname, const char* value)
 {
-   // add emulated data
-   // this used to place version or TObject raw data, read from normal tables
-
    TNamed* str = new TNamed(tname, value);
    if (fUnpack==0) {
       fUnpack = new TObjArray();
@@ -279,21 +283,21 @@ void TSQLObjectData::AddUnpack(const char* tname, const char* value)
    fUnpack->Add(str);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// emulate integer value in raw data
+
 void TSQLObjectData::AddUnpackInt(const char* tname, Int_t value)
 {
-   // emulate integer value in raw data
-
    TString sbuf;
    sbuf.Form("%d", value);
    AddUnpack(tname, sbuf.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// shift to next column or next row in blob data
+
 void TSQLObjectData::ShiftToNextValue()
 {
-   // shift to next column or next row in blob data
-
    Bool_t doshift = kTRUE;
 
    if (fUnpack!=0) {
@@ -329,11 +333,11 @@ void TSQLObjectData::ShiftToNextValue()
       }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// checks if data type corresponds to that stored in raw table
+
 Bool_t TSQLObjectData::VerifyDataType(const char* tname, Bool_t errormsg)
 {
-   // checks if data type corresponds to that stored in raw table
-
    if (tname==0) {
       if (errormsg)
          Error("VerifyDataType","Data type not specified");
@@ -363,11 +367,11 @@ Bool_t TSQLObjectData::VerifyDataType(const char* tname, Bool_t errormsg)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prepare to read data from raw table
+
 Bool_t TSQLObjectData::PrepareForRawData()
 {
-   // prepare to read data from raw table
-
    if (!ExtractBlobValues()) return kFALSE;
 
    fCurrentBlob = kTRUE;
@@ -390,7 +394,8 @@ Bool_t TSQLObjectData::PrepareForRawData()
 
 ClassImp(TSQLObjectDataPool);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSQLObjectDataPool::TSQLObjectDataPool() :
    TObject(),
    fInfo(0),
@@ -400,7 +405,8 @@ TSQLObjectDataPool::TSQLObjectDataPool() :
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSQLObjectDataPool::TSQLObjectDataPool(TSQLClassInfo* info, TSQLResult* data) :
    TObject(),
    fInfo(info),
@@ -410,12 +416,12 @@ TSQLObjectDataPool::TSQLObjectDataPool(TSQLClassInfo* info, TSQLResult* data) :
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of TSQLObjectDataPool class
+/// Deletes not used rows and class data table
+
 TSQLObjectDataPool::~TSQLObjectDataPool()
 {
-   // Destructor of TSQLObjectDataPool class
-   // Deletes not used rows and class data table
-
    if (fClassData!=0) delete fClassData;
    if (fRowsPool!=0) {
       fRowsPool->Delete();
@@ -423,11 +429,11 @@ TSQLObjectDataPool::~TSQLObjectDataPool()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns single sql row with object data for that class
+
 TSQLRow* TSQLObjectDataPool::GetObjectRow(Long64_t objid)
 {
-   // Returns single sql row with object data for that class
-
    if (fClassData==0) return 0;
 
    Long64_t rowid;

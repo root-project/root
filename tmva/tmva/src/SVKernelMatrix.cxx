@@ -32,23 +32,25 @@
 #include <stdexcept>
 #include "TMVA/MsgLogger.h"
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::SVKernelMatrix::SVKernelMatrix()
    : fSize(0),
      fKernelFunction(0),
      fSVKernelMatrix(0),
      fLogger( new MsgLogger("ResultsRegression", kINFO) )
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::SVKernelMatrix::SVKernelMatrix( std::vector<TMVA::SVEvent*>* inputVectors, SVKernelFunction* kernelFunction )
    : fSize(inputVectors->size()),
      fKernelFunction(kernelFunction),
      fLogger( new MsgLogger("SVKernelMatrix", kINFO) )
 {
-   // constructor
    fSVKernelMatrix = new Float_t*[fSize];
    try{
       for (UInt_t i = 0; i < fSize; i++) fSVKernelMatrix[i] = new Float_t[i+1];
@@ -63,10 +65,11 @@ TMVA::SVKernelMatrix::SVKernelMatrix( std::vector<TMVA::SVEvent*>* inputVectors,
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::SVKernelMatrix::~SVKernelMatrix()
 {
-   // destructor
    for (UInt_t i = fSize -1; i > 0; i--) {
       delete[] fSVKernelMatrix[i];
       fSVKernelMatrix[i] = 0;
@@ -75,11 +78,11 @@ TMVA::SVKernelMatrix::~SVKernelMatrix()
    fSVKernelMatrix = 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns a row of the kernel matrix
+
 Float_t* TMVA::SVKernelMatrix::GetLine( UInt_t line )
 {
-   // returns a row of the kernel matrix
-
    Float_t* fLine = NULL;
    if (line >= fSize) {
       return NULL;
@@ -94,11 +97,11 @@ Float_t* TMVA::SVKernelMatrix::GetLine( UInt_t line )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns an element of the kernel matrix
+
 Float_t TMVA::SVKernelMatrix::GetElement(UInt_t i, UInt_t j)
 { 
-   // returns an element of the kernel matrix
-
    if (i > j) return fSVKernelMatrix[i][j]; 
    else       return fSVKernelMatrix[j][i]; // it's symmetric, ;)
 }

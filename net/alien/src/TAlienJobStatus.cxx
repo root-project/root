@@ -26,12 +26,12 @@
 
 ClassImp(TAlienJobStatus)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a TAlienJobStatus object.
+/// If a status map is provided it is copied to the status information.
+
 TAlienJobStatus::TAlienJobStatus(TMap *status)
 {
-   // Creates a TAlienJobStatus object.
-   // If a status map is provided it is copied to the status information.
-
    TObjString* key;
    TObjString* val;
 
@@ -44,19 +44,19 @@ TAlienJobStatus::TAlienJobStatus(TMap *status)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TAlienJobStatus::~TAlienJobStatus()
 {
-   // Cleanup.
-
    fStatus.DeleteAll();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browser interface to ob status.
+
 void TAlienJobStatus::Browse(TBrowser* b)
 {
-   // Browser interface to ob status.
-
    if (b) {
       TIterator *iter = fStatus.MakeIterator();
       TObject *obj = 0;
@@ -92,11 +92,11 @@ void TAlienJobStatus::Browse(TBrowser* b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the JDL key.
+
 const char *TAlienJobStatus::GetJdlKey(const char* key)
 {
-   // Return the JDL key.
-
    const char *jdl = GetKey("jdl");
    if (!jdl)
       return 0;
@@ -121,11 +121,11 @@ const char *TAlienJobStatus::GetJdlKey(const char* key)
    return fJdlTag.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a key.
+
 const char *TAlienJobStatus::GetKey(const char* key)
 {
-   // Return a key.
-
    TObject* obj = fStatus.FindObject(key);
    TPair* pair = dynamic_cast<TPair*>(obj);
    if (pair) {
@@ -135,12 +135,12 @@ const char *TAlienJobStatus::GetKey(const char* key)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gets the status of the job reduced to the subset defined
+/// in TGridJobStatus.
+
 TGridJobStatus::EGridJobStatus TAlienJobStatus::GetStatus() const
 {
-   // Gets the status of the job reduced to the subset defined
-   // in TGridJobStatus.
-
    TObject* obj = fStatus.FindObject("status");
    TPair* pair = dynamic_cast<TPair*>(obj);
 
@@ -175,20 +175,20 @@ TGridJobStatus::EGridJobStatus TAlienJobStatus::GetStatus() const
    return kUNKNOWN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints the job information.
+
 void TAlienJobStatus::Print(Option_t *) const
 {
-   // Prints the job information.
-
    PrintJob(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints this job.
+/// If full is kFALSE only the status is printed, otherwise all information.
+
 void TAlienJobStatus::PrintJob(Bool_t full) const
 {
-   // Prints this job.
-   // If full is kFALSE only the status is printed, otherwise all information.
-
    TObject* obj = fStatus.FindObject("status");
    TPair* pair = dynamic_cast<TPair*>(obj);
 

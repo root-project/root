@@ -39,7 +39,9 @@
 #include <vector>
 #include <iostream>
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::SVWorkingSet::SVWorkingSet() 
    : fdoRegression(kFALSE),
      fInputData(0),
@@ -53,10 +55,11 @@ TMVA::SVWorkingSet::SVWorkingSet()
      fTolerance(0.01),
      fLogger( new MsgLogger( "SVWorkingSet", kINFO ) )
 {
-   // constructor
 }  
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::SVWorkingSet::SVWorkingSet(std::vector<TMVA::SVEvent*>*inputVectors, SVKernelFunction* kernelFunction,
                                  Float_t tol, Bool_t doreg)
    : fdoRegression(doreg),
@@ -70,7 +73,6 @@ TMVA::SVWorkingSet::SVWorkingSet(std::vector<TMVA::SVEvent*>*inputVectors, SVKer
      fTolerance(tol),      
      fLogger( new MsgLogger( "SVWorkingSet", kINFO ) )
 {
-   // constructor
    fKMatrix = new TMVA::SVKernelMatrix(inputVectors, kernelFunction);
    Float_t *pt;
    for( UInt_t i = 0; i < fInputData->size(); i++){ 
@@ -107,15 +109,17 @@ TMVA::SVWorkingSet::SVWorkingSet(std::vector<TMVA::SVEvent*>*inputVectors, SVKer
    fTEventLow->SetErrorCache(fTEventUp->GetTarget());
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::SVWorkingSet::~SVWorkingSet() 
 {
-   // destructor
    if (fKMatrix   != 0) {delete fKMatrix; fKMatrix = 0;}
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMVA::SVWorkingSet::ExamineExample( TMVA::SVEvent* jevt ) 
 {   
    SVEvent* ievt=0;
@@ -170,7 +174,8 @@ Bool_t TMVA::SVWorkingSet::ExamineExample( TMVA::SVEvent* jevt )
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMVA::SVWorkingSet::TakeStep(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt ) 
 {
    if (ievt == jevt) return kFALSE;
@@ -360,18 +365,19 @@ Bool_t TMVA::SVWorkingSet::TakeStep(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t  TMVA::SVWorkingSet::Terminated() 
 {
    if((fB_up > fB_low - 2*fTolerance)) return kTRUE;
    return kFALSE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// train the SVM
+
 void TMVA::SVWorkingSet::Train(UInt_t nMaxIter) 
 {
-   // train the SVM
-   
    
    Int_t numChanged  = 0;
    Int_t examineAll  = 1;
@@ -420,7 +426,8 @@ void TMVA::SVWorkingSet::Train(UInt_t nMaxIter)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::SVWorkingSet::SetIndex( TMVA::SVEvent* event ) 
 {
    if( (0< event->GetAlpha()) && (event->GetAlpha()< event->GetCweight()))
@@ -440,7 +447,8 @@ void TMVA::SVWorkingSet::SetIndex( TMVA::SVEvent* event )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::SVWorkingSet::PrintStat() 
 {
    std::vector<TMVA::SVEvent*>::iterator idIter;
@@ -449,7 +457,8 @@ void TMVA::SVWorkingSet::PrintStat()
       if((*idIter)->GetAlpha() !=0) counter++;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::vector<TMVA::SVEvent*>* TMVA::SVWorkingSet::GetSupportVectors() 
 {
    std::vector<TMVA::SVEvent*>::iterator idIter;
@@ -658,7 +667,8 @@ Bool_t TMVA::SVWorkingSet::TakeStepReg(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMVA::SVWorkingSet::ExamineExampleReg(TMVA::SVEvent* jevt)
 {
    Float_t feps = 1e-7;// TODO check which value is the best

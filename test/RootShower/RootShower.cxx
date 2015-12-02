@@ -168,16 +168,16 @@ Int_t RootShower::fgDefaultXPosition = 20;
 Int_t RootShower::fgDefaultYPosition = 20;
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create (the) Event Display.
+///
+/// p = pointer to GMainFrame (not owner)
+/// w = width of RootShower frame
+/// h = width of RootShower frame
+
 RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
   TGMainFrame(p, w, h)
 {
-   // Create (the) Event Display.
-   //
-   // p = pointer to GMainFrame (not owner)
-   // w = width of RootShower frame
-   // h = width of RootShower frame
-
    fOk                 = kFALSE;
    fModified           = kFALSE;
    fSettingsModified   = kFALSE;
@@ -414,11 +414,11 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create menubar and popup menus.
+
 void RootShower::MakeMenuBarFrame()
 {
-   // Create menubar and popup menus.
-
    // layout hint items
    fMenuBarLayout = new TGLayoutHints(kLHintsTop| kLHintsLeft | kLHintsExpandX,
                                       0, 0, 0, 0);
@@ -490,11 +490,11 @@ void RootShower::MakeMenuBarFrame()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy menubar and popup menus.
+
 void RootShower::CloseMenuBarFrame()
 {
-   // Destroy menubar and popup menus.
-
    delete fMenuHelp;
    delete fMenuEvent;
    delete fMenuTools;
@@ -506,11 +506,11 @@ void RootShower::CloseMenuBarFrame()
    delete fMenuBarLayout;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show or hide toolbar.
+
 void RootShower::ShowToolBar(Bool_t show)
 {
-   // Show or hide toolbar.
-
    if (show) {
       ShowFrame(fToolBar);
       fMenuView->CheckEntry(M_VIEW_TOOLBAR);
@@ -520,12 +520,12 @@ void RootShower::ShowToolBar(Bool_t show)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy RootShower object. Delete all created widgets
+/// GUI MEMBERS
+
 RootShower::~RootShower()
 {
-   // Destroy RootShower object. Delete all created widgets
-   // GUI MEMBERS
-
    CloseMenuBarFrame();
 
    delete fContextMenu;
@@ -557,30 +557,30 @@ RootShower::~RootShower()
    delete fL1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the default position on the screen of new RootShower instances.
+
 void RootShower::setDefaultPosition(Int_t x, Int_t y)
 {
-   // Set the default position on the screen of new RootShower instances.
-
    fgDefaultXPosition = x;
    fgDefaultYPosition = y;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply layout on the main frame.
+
 void RootShower::Layout()
 {
-   // Apply layout on the main frame.
-
    TGMainFrame::Layout();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Got close message for this RootShower. The EventDislay and the
+/// application will be terminated.
+
 void RootShower::CloseWindow()
 {
-   // Got close message for this RootShower. The EventDislay and the
-   // application will be terminated.
-
    if (fModified) {
       new RootShowerMsgBox(gClient->GetRoot(),this, 400, 200);
       if ( fOk ) {
@@ -600,11 +600,11 @@ void RootShower::CloseWindow()
    gApplication->Terminate(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This event is generated when the frame is resized.
+
 Bool_t RootShower::HandleConfigureNotify(Event_t *event)
 {
-   // This event is generated when the frame is resized.
-
    TGFrame* f = (TGFrame*)this;
    if ((event->fWidth != f->GetWidth()) || (event->fHeight != f->GetHeight())) {
       UInt_t w = event->fWidth;
@@ -615,11 +615,11 @@ Bool_t RootShower::HandleConfigureNotify(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle messages send to the RootShower object.
+
 Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
-   // Handle messages send to the RootShower object.
-
    Window_t wdummy;
    int ax, ay;
    TRootHelpDialog *hd;
@@ -896,33 +896,33 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add item to the TGListTree of the event display. It will be connected
+/// to the current TGListTreeItem (i.e. fCurEventListItem)
+
 TGListTreeItem* RootShower::AddToTree(const char *name)
 {
-   // Add item to the TGListTree of the event display. It will be connected
-   // to the current TGListTreeItem (i.e. fCurEventListItem)
-
    TGListTreeItem *e = 0;
    e = fEventListTree->AddItem(fCurListItem, name);
    return e;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add recursively stations and layers (and cells) in TGListTree.
+
 void RootShower::BuildEventTree()
 {
-   // Add recursively stations and layers (and cells) in TGListTree.
-
    fCurListItem = 0;
    TGListTreeItem *eventLTItem = AddToTree("Event");
    fCurListItem = eventLTItem;
    gBaseLTI = eventLTItem;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize RootShower display.
+
 void RootShower::Initialize(Int_t set_angles)
 {
-   // Initialize RootShower display.
-
    Interrupt(kFALSE);
    fEventListTree->DeleteChildren(fCurListItem);
    fEventListTree->ClearViewPort();
@@ -952,11 +952,11 @@ void RootShower::Initialize(Int_t set_angles)
    fStatusBar->SetText("",1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce (generate) one event.
+
 void RootShower::Produce()
 {
-   // Produce (generate) one event.
-
    Int_t     local_num,local_last,local_end;
    Int_t     old_num;
    Bool_t    first_pass;
@@ -1022,11 +1022,11 @@ void RootShower::Produce()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize and generate one event.
+
 void RootShower::OnShowerProduce()
 {
-   // Initialize and generate one event.
-
    Int_t i, j;
    fStatusBar->SetText("",1);
 
@@ -1121,18 +1121,18 @@ void RootShower::OnShowerProduce()
       fTitleFrame->ChangeRightLogo(1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// No comment...
+
 void RootShower::HighLight(TGListTreeItem * /*item*/)
 {
-   // No comment...
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shows track which has been selected into the list tree
+
 void RootShower::OnShowSelected(TGListTreeItem *item)
 {
-   // Shows track which has been selected into the list tree
-
    Int_t i, j, retval;
 
    fCB->cd();
@@ -1170,11 +1170,11 @@ void RootShower::OnShowSelected(TGListTreeItem *item)
    fCB->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Opens a root file into which a previous event has been saved.
+
 void RootShower::OnOpenFile(const Char_t *filename)
 {
-   // Opens a root file into which a previous event has been saved.
-
    char   strtmp[256];
    Int_t  i,j;
    TFile *f = new TFile(filename);
@@ -1279,11 +1279,11 @@ void RootShower::OnOpenFile(const Char_t *filename)
    SetWindowName(strtmp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Saves current event into a Root file
+
 void RootShower::OnSaveFile(const Char_t *filename)
 {
-   // Saves current event into a Root file
-
    TFile *hfile;
    char  strtmp[256];
    gGeoManager->Export(filename, "detector");
@@ -1299,11 +1299,11 @@ void RootShower::OnSaveFile(const Char_t *filename)
    SetWindowName(strtmp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gives infos on current event
+
 void RootShower::ShowInfos()
 {
-   // Gives infos on current event
-
    Window_t wdummy;
    int ax, ay;
    TRootHelpDialog *hd;
@@ -1338,11 +1338,11 @@ void RootShower::ShowInfos()
    fClient->WaitFor(hd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle keyboard events.
+
 Bool_t RootShower::HandleKey(Event_t *event)
 {
-   // Handle keyboard events.
-
    char   input[10];
    UInt_t keysym;
 
@@ -1395,11 +1395,11 @@ Bool_t RootShower::HandleKey(Event_t *event)
    return TGMainFrame::HandleKey(event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logo animation timer handling.
+
 Bool_t RootShower::HandleTimer(TTimer *)
 {
-   // Logo animation timer handling.
-
    if (fPicIndex > fPicNumber) fPicIndex = 1;
    fTitleFrame->ChangeRightLogo(fPicIndex);
    fPicIndex++;
@@ -1407,11 +1407,11 @@ Bool_t RootShower::HandleTimer(TTimer *)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to objects in event
+
 Int_t RootShower::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to objects in event
-
    Int_t i, j;
    Int_t dist = 9999;
 
@@ -1432,11 +1432,11 @@ Int_t RootShower::DistancetoPrimitive(Int_t px, Int_t py)
    return gPad->GetView()->DistancetoPrimitive(px,py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process mouse clicks in TGListTree.
+
 void RootShower::Clicked(TGListTreeItem *item, Int_t x, Int_t y)
 {
-   // Process mouse clicks in TGListTree.
-
    MyParticle *part = (MyParticle *) item->GetUserData();
    if (part) {
       fContextMenu->Popup(x, y, part);
@@ -1444,11 +1444,11 @@ void RootShower::Clicked(TGListTreeItem *item, Int_t x, Int_t y)
    fEventListTree->ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main (entry point).
+
 int main(int argc, char **argv)
 {
-   // Main (entry point).
-
    Bool_t rint = kFALSE;
    for (int i = 0; i < argc; i++) {
       if (!strcmp(argv[i], "-d")) rint = kTRUE;

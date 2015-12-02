@@ -22,7 +22,8 @@
 
 ClassImp(TGraph2DErrors)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>Graph 2D class with errors</h2></center>
 A TGraph2DErrors is a TGraph2D with errors. It behaves like a TGraph2D and has
@@ -78,24 +79,24 @@ End_Macro
 */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraph2DErrors default constructor
+
 TGraph2DErrors::TGraph2DErrors(): TGraph2D()
 {
-   // TGraph2DErrors default constructor
-
    fEX = 0;
    fEY = 0;
    fEZ = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraph2DErrors normal constructor
+/// the arrays are preset to zero
+
 TGraph2DErrors::TGraph2DErrors(Int_t n)
                : TGraph2D(n)
 {
-   // TGraph2DErrors normal constructor
-   // the arrays are preset to zero
-
    if (n <= 0) {
       Error("TGraph2DErrors", "Invalid number of points (%d)", n);
       return;
@@ -113,13 +114,13 @@ TGraph2DErrors::TGraph2DErrors(Int_t n)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraph2DErrors constructor with doubles vectors as input.
+
 TGraph2DErrors::TGraph2DErrors(Int_t n, Double_t *x, Double_t *y, Double_t *z,
                                Double_t *ex, Double_t *ey, Double_t *ez, Option_t *)
                :TGraph2D(n, x, y, z)
 {
-   // TGraph2DErrors constructor with doubles vectors as input.
-
    if (n <= 0) {
       Error("TGraphErrors", "Invalid number of points (%d)", n);
       return;
@@ -140,22 +141,23 @@ TGraph2DErrors::TGraph2DErrors(Int_t n, Double_t *x, Double_t *y, Double_t *z,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraph2DErrors destructor.
+
 TGraph2DErrors::~TGraph2DErrors()
 {
-   // TGraph2DErrors destructor.
-
    delete [] fEX;
    delete [] fEY;
    delete [] fEZ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+/// Copy everything except list of functions
+
 TGraph2DErrors::TGraph2DErrors(const TGraph2DErrors &g)
 : TGraph2D(g), fEX(0), fEY(0), fEZ(0)
 {
-   // Copy constructor.
-   // Copy everything except list of functions
    if (fSize > 0) {
       fEX = new Double_t[fSize];
       fEY = new Double_t[fSize];
@@ -168,12 +170,12 @@ TGraph2DErrors::TGraph2DErrors(const TGraph2DErrors &g)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+/// Copy everything except list of functions
+
 TGraph2DErrors & TGraph2DErrors::operator=(const TGraph2DErrors &g)
 {
-   // Assignment operator
-   // Copy everything except list of functions
-
    if (this == &g) return *this;
 
    // call operator= on TGraph2D
@@ -197,115 +199,115 @@ TGraph2DErrors & TGraph2DErrors::operator=(const TGraph2DErrors &g)
    }
    return *this;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by Graph2DFitChisquare.
+/// It returns the error along X at point i.
+
 Double_t TGraph2DErrors::GetErrorX(Int_t i) const
 {
-   // This function is called by Graph2DFitChisquare.
-   // It returns the error along X at point i.
-
    if (i < 0 || i >= fNpoints) return -1;
    if (fEX) return fEX[i];
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by Graph2DFitChisquare.
+/// It returns the error along X at point i.
+
 Double_t TGraph2DErrors::GetErrorY(Int_t i) const
 {
-   // This function is called by Graph2DFitChisquare.
-   // It returns the error along X at point i.
-
    if (i < 0 || i >= fNpoints) return -1;
    if (fEY) return fEY[i];
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by Graph2DFitChisquare.
+/// It returns the error along X at point i.
+
 Double_t TGraph2DErrors::GetErrorZ(Int_t i) const
 {
-   // This function is called by Graph2DFitChisquare.
-   // It returns the error along X at point i.
-
    if (i < 0 || i >= fNpoints) return -1;
    if (fEZ) return fEZ[i];
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the X maximum with errors.
+
 Double_t TGraph2DErrors::GetXmaxE() const
 {
-   // Returns the X maximum with errors.
-
    Double_t v = fX[0]+fEX[0];
    for (Int_t i=1; i<fNpoints; i++) if (fX[i]+fEX[i]>v) v=fX[i]+fEX[i];
    return v;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the X minimum with errors.
+
 Double_t TGraph2DErrors::GetXminE() const
 {
-   // Returns the X minimum with errors.
-
    Double_t v = fX[0]-fEX[0];
    for (Int_t i=1; i<fNpoints; i++) if (fX[i]-fEX[i]<v) v=fX[i]-fEX[i];
    return v;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the Y maximum with errors.
+
 Double_t TGraph2DErrors::GetYmaxE() const
 {
-   // Returns the Y maximum with errors.
-
    Double_t v = fY[0]+fEY[0];
    for (Int_t i=1; i<fNpoints; i++) if (fY[i]+fEY[i]>v) v=fY[i]+fEY[i];
    return v;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the Y minimum with errors.
+
 Double_t TGraph2DErrors::GetYminE() const
 {
-   // Returns the Y minimum with errors.
-
    Double_t v = fY[0]+fEY[0];
    for (Int_t i=1; i<fNpoints; i++) if (fY[i]-fEY[i]<v) v=fY[i]-fEY[i];
    return v;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the Z maximum with errors.
+
 Double_t TGraph2DErrors::GetZmaxE() const
 {
-   // Returns the Z maximum with errors.
-
    Double_t v = fZ[0]+fEZ[0];
    for (Int_t i=1; i<fNpoints; i++) if (fZ[i]+fEZ[i]>v) v=fZ[i]+fEZ[i];
    return v;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the Z minimum with errors.
+
 Double_t TGraph2DErrors::GetZminE() const
 {
-   // Returns the Z minimum with errors.
-
    Double_t v = fZ[0]+fEZ[0];
    for (Int_t i=1; i<fNpoints; i++) if (fZ[i]-fEZ[i]<v) v=fZ[i]-fEZ[i];
    return v;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set number of points in the 2D graph.
+/// Existing coordinates are preserved.
+/// New coordinates above fNpoints are preset to 0.
+
 void TGraph2DErrors::Set(Int_t n)
 {
-   // Set number of points in the 2D graph.
-   // Existing coordinates are preserved.
-   // New coordinates above fNpoints are preset to 0.
-
    if (n < 0) n = 0;
    if (n == fNpoints) return;
    if (n >  fNpoints) SetPointError(n,0,0,0);
@@ -313,11 +315,11 @@ void TGraph2DErrors::Set(Int_t n)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set x, y and z values for point number i
+
 void TGraph2DErrors::SetPoint(Int_t i, Double_t x, Double_t y, Double_t z)
 {
-   // Set x, y and z values for point number i
-
    if (i < 0) return;
    if (i >= fNpoints) {
    // re-allocate the object
@@ -355,11 +357,11 @@ void TGraph2DErrors::SetPoint(Int_t i, Double_t x, Double_t y, Double_t z)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set ex, ey and ez values for point number i
+
 void TGraph2DErrors::SetPointError(Int_t i, Double_t ex, Double_t ey, Double_t ez)
 {
-   // Set ex, ey and ez values for point number i
-
    if (i < 0) return;
    if (i >= fNpoints) {
       // re-allocate the object
@@ -371,11 +373,11 @@ void TGraph2DErrors::SetPointError(Int_t i, Double_t ex, Double_t ey, Double_t e
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TGraphErrors.
+
 void TGraph2DErrors::Streamer(TBuffer &b)
 {
-   // Stream an object of class TGraphErrors.
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);

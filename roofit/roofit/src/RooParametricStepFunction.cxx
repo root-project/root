@@ -60,7 +60,9 @@ ClassImp(RooParametricStepFunction)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooParametricStepFunction::RooParametricStepFunction(const char* name, const char* title, 
 			     RooAbsReal& x, const RooArgList& coefList, TArrayD& limits, Int_t nBins) :
   RooAbsPdf(name, title),
@@ -68,7 +70,6 @@ RooParametricStepFunction::RooParametricStepFunction(const char* name, const cha
   _coefList("coefList","List of coefficients",this),
   _nBins(nBins)
 {
-  // Constructor
   _coefIter = _coefList.createIterator() ;
 
   // Check lowest order
@@ -97,30 +98,33 @@ RooParametricStepFunction::RooParametricStepFunction(const char* name, const cha
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooParametricStepFunction::RooParametricStepFunction(const RooParametricStepFunction& other, const char* name) :
   RooAbsPdf(other, name), 
   _x("x", this, other._x), 
   _coefList("coefList",this,other._coefList),
   _nBins(other._nBins)
 {
-  // Copy constructor
   _coefIter = _coefList.createIterator();
   (other._limits).Copy(_limits);
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooParametricStepFunction::~RooParametricStepFunction()
 {
-  // Destructor
   delete _coefIter ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooParametricStepFunction::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
@@ -129,7 +133,8 @@ Int_t RooParametricStepFunction::getAnalyticalIntegral(RooArgSet& allVars, RooAr
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooParametricStepFunction::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   R__ASSERT(code==1) ;
@@ -171,7 +176,8 @@ Double_t RooParametricStepFunction::analyticalIntegral(Int_t code, const char* r
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooParametricStepFunction::lastBinValue() const
 {
   Double_t sum(0.);
@@ -187,7 +193,8 @@ Double_t RooParametricStepFunction::lastBinValue() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooParametricStepFunction::evaluate() const 
 {
   Double_t value(0.);
@@ -227,13 +234,15 @@ Double_t RooParametricStepFunction::evaluate() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooParametricStepFunction::getnBins(){
   return _nBins;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t* RooParametricStepFunction::getLimits(){
   Double_t* limoutput = _limits.GetArray();
   return limoutput;

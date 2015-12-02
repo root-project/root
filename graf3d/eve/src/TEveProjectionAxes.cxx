@@ -23,7 +23,8 @@
 
 ClassImp(TEveProjectionAxes);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m, Bool_t useCS) :
    TEveElement(),
    TNamed("TEveProjectionAxes", ""),
@@ -51,27 +52,27 @@ TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m, Bool_t useCS) :
    fLabelOffset = 0.01;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveProjectionAxes::~TEveProjectionAxes()
 {
-   // Destructor.
-
    fManager->RemoveDependent(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this object. Only direct rendering is supported.
+
 void TEveProjectionAxes::Paint(Option_t*)
 {
-   // Paint this object. Only direct rendering is supported.
-
    PaintStandard(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TAttBBox; fill bounding-box information.
+
 void TEveProjectionAxes::ComputeBBox()
 {
-   // Virtual from TAttBBox; fill bounding-box information.
-
    static const TEveException eH("TEveProjectionManager::ComputeBBox ");
 
    BBoxZero();
@@ -84,10 +85,10 @@ void TEveProjectionAxes::ComputeBBox()
    AssertBBoxExtents(0.1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return TEveProjectionAxes icon.
+
 const TGPicture* TEveProjectionAxes::GetListTreeIcon(Bool_t)
 {
-   // Return TEveProjectionAxes icon.
-
    return TEveElement::fgListTreeIcons[6];
 }

@@ -16,10 +16,11 @@
 
 ClassImp(TODBCRow)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Single row of query result.
+
 TODBCRow::TODBCRow(SQLHSTMT stmt, Int_t fieldcount)
 {
-   // Single row of query result.
    fHstmt = stmt;
    fFieldCount = fieldcount;
 
@@ -37,19 +38,19 @@ TODBCRow::TODBCRow(SQLHSTMT stmt, Int_t fieldcount)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy row object.
+
 TODBCRow::~TODBCRow()
 {
-   // Destroy row object.
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close row.
+
 void TODBCRow::Close(Option_t *)
 {
-   // Close row.
-
    if (fBuffer!=0) {
       for (Int_t n = 0; n < fFieldCount; n++)
          delete[] fBuffer[n];
@@ -63,14 +64,14 @@ void TODBCRow::Close(Option_t *)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extracts field value from statement.
+/// First allocates 128 bytes for buffer.
+/// If there is not enouth space, bigger buffer is allocated and
+/// request is repeated
+
 void TODBCRow::CopyFieldValue(Int_t field)
 {
-   // Extracts field value from statement.
-   // First allocates 128 bytes for buffer.
-   // If there is not enouth space, bigger buffer is allocated and
-   // request is repeated
-
    #define buffer_len 128
 
    fBuffer[field] = new char[buffer_len];
@@ -107,21 +108,21 @@ void TODBCRow::CopyFieldValue(Int_t field)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get length in bytes of specified field.
+
 ULong_t TODBCRow::GetFieldLength(Int_t field)
 {
-   // Get length in bytes of specified field.
-
    if ((field<0) || (field>=fFieldCount)) return 0;
 
    return fLengths[field];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get specified field from row (0 <= field < GetFieldCount()).
+
 const char *TODBCRow::GetField(Int_t field)
 {
-   // Get specified field from row (0 <= field < GetFieldCount()).
-
    if ((field<0) || (field>=fFieldCount)) return 0;
 
    return fBuffer[field];

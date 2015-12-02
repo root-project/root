@@ -40,19 +40,19 @@
 
 ClassImp(THnBase);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a THnBase with "dim" dimensions,
+/// "nbins" holds the number of bins for each dimension;
+/// "xmin" and "xmax" the minimal and maximal value for each dimension.
+/// The arrays "xmin" and "xmax" can be NULL; in that case SetBinEdges()
+/// must be called for each dimension.
+
 THnBase::THnBase(const char* name, const char* title, Int_t dim,
                  const Int_t* nbins, const Double_t* xmin, const Double_t* xmax):
 TNamed(name, title), fNdimensions(dim), fAxes(dim), fBrowsables(dim),
 fEntries(0), fTsumw(0), fTsumw2(-1.), fTsumwx(dim), fTsumwx2(dim),
 fIntegral(0), fIntegralStatus(kNoInt)
 {
-   // Construct a THnBase with "dim" dimensions,
-   // "nbins" holds the number of bins for each dimension;
-   // "xmin" and "xmax" the minimal and maximal value for each dimension.
-   // The arrays "xmin" and "xmax" can be NULL; in that case SetBinEdges()
-   // must be called for each dimension.
-
    for (Int_t i = 0; i < fNdimensions; ++i) {
       TAxis* axis = new TAxis(nbins[i], xmin ? xmin[i] : 0., xmax ? xmax[i] : 1.);
       axis->SetName(TString::Format("axis%d", i));
@@ -62,21 +62,23 @@ fIntegral(0), fIntegralStatus(kNoInt)
    fAxes.SetOwner();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destruct a THnBase
+
 THnBase::~THnBase() {
-   // Destruct a THnBase
    if (fIntegralStatus != kNoInt) delete [] fIntegral;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new THnBase object that is of the same type as *this,
+/// but with dimensions and bins given by axes.
+/// If keepTargetAxis is true, the axes will keep their original xmin / xmax,
+/// else they will be restricted to the range selected (first / last).
+
 THnBase* THnBase::CloneEmpty(const char* name, const char* title,
                              const TObjArray* axes, Bool_t keepTargetAxis) const
 {
-   // Create a new THnBase object that is of the same type as *this,
-   // but with dimensions and bins given by axes.
-   // If keepTargetAxis is true, the axes will keep their original xmin / xmax,
-   // else they will be restricted to the range selected (first / last).
    THnBase* ret = (THnBase*)IsA()->New();
    Int_t chunkSize = 1024 * 16;
    if (InheritsFrom(THnSparse::Class())) {
@@ -87,12 +89,13 @@ THnBase* THnBase::CloneEmpty(const char* name, const char* title,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize axes and name.
+
 void THnBase::Init(const char* name, const char* title,
                    const TObjArray* axes, Bool_t keepTargetAxis,
                    Int_t chunkSize /*= 1024 * 16*/)
 {
-   // Initialize axes and name.
    SetNameTitle(name, title);
 
    TIter iAxis(axes);
@@ -132,14 +135,14 @@ void THnBase::Init(const char* name, const char* title,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an empty histogram with name and title with a given
+/// set of axes. Create a TH1D/TH2D/TH3D, depending on the number
+/// of elements in axes.
+
 TH1* THnBase::CreateHist(const char* name, const char* title,
                          const TObjArray* axes,
                          Bool_t keepTargetAxis ) const {
-   // Create an empty histogram with name and title with a given
-   // set of axes. Create a TH1D/TH2D/TH3D, depending on the number
-   // of elements in axes.
-
    const int ndim = axes->GetSize();
 
    TH1* hist = 0;
@@ -187,12 +190,12 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
    return hist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a THn / THnSparse object from a histogram deriving from TH1.
+
 THnBase* THnBase::CreateHnAny(const char* name, const char* title,
                               const TH1* h, Bool_t sparse, Int_t chunkSize)
 {
-   // Create a THn / THnSparse object from a histogram deriving from TH1.
-
    // Get the dimension of the TH1
    int ndim = h->GetDimension();
 
@@ -256,13 +259,14 @@ break;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a THnSparse (if "sparse") or THn  from "hn", possibly
+/// converting THn <-> THnSparse.
+
 THnBase* THnBase::CreateHnAny(const char* name, const char* title,
                               const THnBase* hn, Bool_t sparse,
                               Int_t chunkSize /*= 1024 * 16*/)
 {
-   // Create a THnSparse (if "sparse") or THn  from "hn", possibly
-   // converting THn <-> THnSparse.
    TClass* type = 0;
    if (hn->InheritsFrom(THnSparse::Class())) {
       if (sparse) type = hn->IsA();
@@ -319,11 +323,12 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the THnBase with the bins of hist that have content
+/// or error != 0.
+
 void THnBase::Add(const TH1* hist, Double_t c /*=1.*/)
 {
-   // Fill the THnBase with the bins of hist that have content
-   // or error != 0.
    Long64_t nbins = hist->GetNcells();
    int x[3] = {0,0,0};
    for (int i = 0; i < nbins; ++i) {
@@ -336,28 +341,28 @@ void THnBase::Add(const TH1* hist, Double_t c /*=1.*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   Fit a THnSparse with function f
+///
+///   since the data is sparse by default a likelihood fit is performed
+///   merging all the regions with empty bins for betetr performance efficiency
+///
+///  Since the THnSparse is not drawn no graphics options are passed
+///  Here is the list of possible options
+///
+///                = "I"  Use integral of function in bin instead of value at bin center
+///                = "X"  Use chi2 method (default is log-likelihood method)
+///                = "U"  Use a User specified fitting algorithm (via SetFCN)
+///                = "Q"  Quiet mode (minimum printing)
+///                = "V"  Verbose mode (default is between Q and V)
+///                = "E"  Perform better Errors estimation using Minos technique
+///                = "B"  Use this option when you want to fix one or more parameters
+///                       and the fitting function is like "gaus", "expo", "poln", "landau".
+///                = "M"  More. Improve fit results
+///                = "R"  Use the Range specified in the function range
+
 TFitResultPtr THnBase::Fit(TF1 *f ,Option_t *option ,Option_t *goption)
 {
-   //   Fit a THnSparse with function f
-   //
-   //   since the data is sparse by default a likelihood fit is performed
-   //   merging all the regions with empty bins for betetr performance efficiency
-   //
-   //  Since the THnSparse is not drawn no graphics options are passed
-   //  Here is the list of possible options
-   //
-   //                = "I"  Use integral of function in bin instead of value at bin center
-   //                = "X"  Use chi2 method (default is log-likelihood method)
-   //                = "U"  Use a User specified fitting algorithm (via SetFCN)
-   //                = "Q"  Quiet mode (minimum printing)
-   //                = "V"  Verbose mode (default is between Q and V)
-   //                = "E"  Perform better Errors estimation using Minos technique
-   //                = "B"  Use this option when you want to fix one or more parameters
-   //                       and the fitting function is like "gaus", "expo", "poln", "landau".
-   //                = "M"  More. Improve fit results
-   //                = "R"  Use the Range specified in the function range
-
 
    Foption_t fitOption;
 
@@ -379,14 +384,14 @@ TFitResultPtr THnBase::Fit(TF1 *f ,Option_t *option ,Option_t *goption)
    return ROOT::Fit::FitObject(this, f , fitOption , minOption, goption, range);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate an n-dimensional random tuple based on the histogrammed
+/// distribution. If subBinRandom, the returned tuple will be additionally
+/// randomly distributed within the randomized bin, using a flat
+/// distribution.
+
 void THnBase::GetRandom(Double_t *rand, Bool_t subBinRandom /* = kTRUE */)
 {
-   // Generate an n-dimensional random tuple based on the histogrammed
-   // distribution. If subBinRandom, the returned tuple will be additionally
-   // randomly distributed within the randomized bin, using a flat
-   // distribution.
-
    // check whether the integral array is valid
    if (fIntegralStatus != kValidInt)
       ComputeIntegral();
@@ -417,11 +422,11 @@ void THnBase::GetRandom(Double_t *rand, Bool_t subBinRandom /* = kTRUE */)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check whether bin coord is in range, as defined by TAxis::SetRange().
+
 Bool_t THnBase::IsInRange(Int_t *coord) const
 {
-   // Check whether bin coord is in range, as defined by TAxis::SetRange().
-
    Int_t min = 0;
    Int_t max = 0;
    for (Int_t i = 0; i < fNdimensions; ++i) {
@@ -435,20 +440,20 @@ Bool_t THnBase::IsInRange(Int_t *coord) const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project all bins into a ndim-dimensional THn / THnSparse (whatever
+/// *this is) or if (ndim < 4 and !wantNDim) a TH1/2/3 histogram,
+/// keeping only axes in dim (specifying ndim dimensions).
+/// If "option" contains "E" errors will be calculated.
+///                      "A" ranges of the taget axes will be ignored.
+///                      "O" original axis range of the taget axes will be
+///                          kept, but only bins inside the selected range
+///                          will be filled.
+
 TObject* THnBase::ProjectionAny(Int_t ndim, const Int_t* dim,
                                 Bool_t wantNDim,
                                 Option_t* option /*= ""*/) const
 {
-   // Project all bins into a ndim-dimensional THn / THnSparse (whatever
-   // *this is) or if (ndim < 4 and !wantNDim) a TH1/2/3 histogram,
-   // keeping only axes in dim (specifying ndim dimensions).
-   // If "option" contains "E" errors will be calculated.
-   //                      "A" ranges of the taget axes will be ignored.
-   //                      "O" original axis range of the taget axes will be
-   //                          kept, but only bins inside the selected range
-   //                          will be filled.
-
    TString name(GetName());
    name +="_proj";
 
@@ -596,13 +601,13 @@ TObject* THnBase::ProjectionAny(Int_t ndim, const Int_t* dim,
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scale contents and errors of this histogram by c:
+/// this = this * c
+/// It does not modify the histogram's number of entries.
+
 void THnBase::Scale(Double_t c)
 {
-   // Scale contents and errors of this histogram by c:
-   // this = this * c
-   // It does not modify the histogram's number of entries.
-
 
    Double_t nEntries = GetEntries();
    // Scale the contents & errors
@@ -621,12 +626,12 @@ void THnBase::Scale(Double_t c)
    SetEntries(nEntries);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add() implementation for both rebinned histograms and those with identical
+/// binning. See THnBase::Add().
+
 void THnBase::AddInternal(const THnBase* h, Double_t c, Bool_t rebinned)
 {
-   // Add() implementation for both rebinned histograms and those with identical
-   // binning. See THnBase::Add().
-
    if (fNdimensions != h->GetNdimensions()) {
       Warning("RebinnedAdd", "Different number of dimensions, cannot carry out operation on the histograms");
       return;
@@ -680,40 +685,40 @@ void THnBase::AddInternal(const THnBase* h, Double_t c, Bool_t rebinned)
    SetEntries(nEntries);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add contents of h scaled by c to this histogram:
+/// this = this + c * h
+/// Note that if h has Sumw2 set, Sumw2 is automatically called for this
+/// if not already set.
+
 void THnBase::Add(const THnBase* h, Double_t c)
 {
-   // Add contents of h scaled by c to this histogram:
-   // this = this + c * h
-   // Note that if h has Sumw2 set, Sumw2 is automatically called for this
-   // if not already set.
-
    // Check consistency of the input
    if (!CheckConsistency(h, "Add")) return;
 
    AddInternal(h, c, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add contents of h scaled by c to this histogram:
+/// this = this + c * h
+/// Note that if h has Sumw2 set, Sumw2 is automatically called for this
+/// if not already set.
+/// In contrast to Add(), RebinnedAdd() does not require consistent binning of
+/// this and h; instead, each bin's center is used to determine the target bin.
+
 void THnBase::RebinnedAdd(const THnBase* h, Double_t c)
 {
-   // Add contents of h scaled by c to this histogram:
-   // this = this + c * h
-   // Note that if h has Sumw2 set, Sumw2 is automatically called for this
-   // if not already set.
-   // In contrast to Add(), RebinnedAdd() does not require consistent binning of
-   // this and h; instead, each bin's center is used to determine the target bin.
-
    AddInternal(h, c, kTRUE);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge this with a list of THnBase's. All THnBase's provided
+/// in the list must have the same bin layout!
+
 Long64_t THnBase::Merge(TCollection* list)
 {
-   // Merge this with a list of THnBase's. All THnBase's provided
-   // in the list must have the same bin layout!
-
    if (!list) return 0;
    if (list->IsEmpty()) return (Long64_t)GetEntries();
 
@@ -741,14 +746,14 @@ Long64_t THnBase::Merge(TCollection* list)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply this histogram by histogram h
+/// this = this * h
+/// Note that if h has Sumw2 set, Sumw2 is automatically called for this
+/// if not already set.
+
 void THnBase::Multiply(const THnBase* h)
 {
-   // Multiply this histogram by histogram h
-   // this = this * h
-   // Note that if h has Sumw2 set, Sumw2 is automatically called for this
-   // if not already set.
-
    // Check consistency of the input
    if(!CheckConsistency(h, "Multiply"))return;
 
@@ -785,18 +790,18 @@ void THnBase::Multiply(const THnBase* h)
    delete [] coord;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: this = this*c*f1
+/// if errors are defined, errors are also recalculated.
+///
+/// Only bins inside the function range are recomputed.
+/// IMPORTANT NOTE: If you intend to use the errors of this histogram later
+/// you should call Sumw2 before making this operation.
+/// This is particularly important if you fit the histogram after
+/// calling Multiply()
+
 void THnBase::Multiply(TF1* f, Double_t c)
 {
-   // Performs the operation: this = this*c*f1
-   // if errors are defined, errors are also recalculated.
-   //
-   // Only bins inside the function range are recomputed.
-   // IMPORTANT NOTE: If you intend to use the errors of this histogram later
-   // you should call Sumw2 before making this operation.
-   // This is particularly important if you fit the histogram after
-   // calling Multiply()
-
    Int_t* coord = new Int_t[fNdimensions];
    Double_t* x = new Double_t[fNdimensions];
 
@@ -831,15 +836,15 @@ void THnBase::Multiply(TF1* f, Double_t c)
    delete [] coord;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divide this histogram by h
+/// this = this/(h)
+/// Note that if h has Sumw2 set, Sumw2 is automatically called for
+/// this if not already set.
+/// The resulting errors are calculated assuming uncorrelated content.
+
 void THnBase::Divide(const THnBase *h)
 {
-   // Divide this histogram by h
-   // this = this/(h)
-   // Note that if h has Sumw2 set, Sumw2 is automatically called for
-   // this if not already set.
-   // The resulting errors are calculated assuming uncorrelated content.
-
    // Check consistency of the input
    if (!CheckConsistency(h, "Divide"))return;
 
@@ -886,17 +891,17 @@ void THnBase::Divide(const THnBase *h)
    SetEntries(nEntries);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace contents of this histogram by multiplication of h1 by h2
+/// this = (c1*h1)/(c2*h2)
+/// Note that if h1 or h2 have Sumw2 set, Sumw2 is automatically called for
+/// this if not already set.
+/// The resulting errors are calculated assuming uncorrelated content.
+/// However, if option ="B" is specified, Binomial errors are computed.
+/// In this case c1 and c2 do not make real sense and they are ignored.
+
 void THnBase::Divide(const THnBase *h1, const THnBase *h2, Double_t c1, Double_t c2, Option_t *option)
 {
-   // Replace contents of this histogram by multiplication of h1 by h2
-   // this = (c1*h1)/(c2*h2)
-   // Note that if h1 or h2 have Sumw2 set, Sumw2 is automatically called for
-   // this if not already set.
-   // The resulting errors are calculated assuming uncorrelated content.
-   // However, if option ="B" is specified, Binomial errors are computed.
-   // In this case c1 and c2 do not make real sense and they are ignored.
-
 
    TString opt = option;
    opt.ToLower();
@@ -974,11 +979,11 @@ void THnBase::Divide(const THnBase *h1, const THnBase *h2, Double_t c1, Double_t
    SetEntries(h1->GetEntries());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Consistency check on (some of) the parameters of two histograms (for operations).
+
 Bool_t THnBase::CheckConsistency(const THnBase *h, const char *tag) const
 {
-   // Consistency check on (some of) the parameters of two histograms (for operations).
-
    if (fNdimensions != h->GetNdimensions()) {
       Warning(tag, "Different number of dimensions, cannot carry out operation on the histograms");
       return kFALSE;
@@ -992,27 +997,27 @@ Bool_t THnBase::CheckConsistency(const THnBase *h, const char *tag) const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the axis # of bins and bin limits on dimension idim
+
 void THnBase::SetBinEdges(Int_t idim, const Double_t* bins)
 {
-   // Set the axis # of bins and bin limits on dimension idim
-
    TAxis* axis = (TAxis*) fAxes[idim];
    axis->Set(axis->GetNbins(), bins);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change (i.e. set) the title.
+///
+/// If title is in the form "stringt;string0;string1;string2 ..."
+/// the histogram title is set to stringt, the title of axis0 to string0,
+/// of axis1 to string1, of axis2 to string2, etc, just like it is done
+/// for TH1/TH2/TH3.
+/// To insert the character ";" in one of the titles, one should use "#;"
+/// or "#semicolon".
+
 void THnBase::SetTitle(const char *title)
 {
-   // Change (i.e. set) the title.
-   //
-   // If title is in the form "stringt;string0;string1;string2 ..."
-   // the histogram title is set to stringt, the title of axis0 to string0,
-   // of axis1 to string1, of axis2 to string2, etc, just like it is done
-   // for TH1/TH2/TH3.
-   // To insert the character ";" in one of the titles, one should use "#;"
-   // or "#semicolon".
-
    fTitle = title;
    fTitle.ReplaceAll("#;",2,"#semicolon",10);
 
@@ -1041,14 +1046,14 @@ void THnBase::SetTitle(const char *title)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Combine the content of "group" neighboring bins into
+/// a new bin and return the resulting THnBase.
+/// For group=2 and a 3 dimensional histogram, all "blocks"
+/// of 2*2*2 bins will be put into a bin.
+
 THnBase* THnBase::RebinBase(Int_t group) const
 {
-   // Combine the content of "group" neighboring bins into
-   // a new bin and return the resulting THnBase.
-   // For group=2 and a 3 dimensional histogram, all "blocks"
-   // of 2*2*2 bins will be put into a bin.
-
    Int_t* ngroup = new Int_t[GetNdimensions()];
    for (Int_t d = 0; d < GetNdimensions(); ++d)
       ngroup[d] = group;
@@ -1057,14 +1062,14 @@ THnBase* THnBase::RebinBase(Int_t group) const
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Combine the content of "group" neighboring bins for each dimension
+/// into a new bin and return the resulting THnBase.
+/// For group={2,1,1} and a 3 dimensional histogram, pairs of x-bins
+/// will be grouped.
+
 THnBase* THnBase::RebinBase(const Int_t* group) const
 {
-   // Combine the content of "group" neighboring bins for each dimension
-   // into a new bin and return the resulting THnBase.
-   // For group={2,1,1} and a 3 dimensional histogram, pairs of x-bins
-   // will be grouped.
-
    Int_t ndim = GetNdimensions();
    TString name(GetName());
    for (Int_t d = 0; d < ndim; ++d)
@@ -1142,10 +1147,11 @@ THnBase* THnBase::RebinBase(const Int_t* group) const
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the histogram
+
 void THnBase::ResetBase(Option_t * /*option = ""*/)
 {
-   // Clear the histogram
    fEntries = 0.;
    fTsumw = 0.;
    fTsumw2 = -1.;
@@ -1155,11 +1161,11 @@ void THnBase::ResetBase(Option_t * /*option = ""*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the integral of the histogram
+
 Double_t THnBase::ComputeIntegral()
 {
-   // Calculate the integral of the histogram
-
    // delete old integral
    if (fIntegralStatus != kNoInt) {
       delete [] fIntegral;
@@ -1215,25 +1221,26 @@ Double_t THnBase::ComputeIntegral()
    return fIntegral[GetNbins()];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print bin with linex index "idx".
+/// For valid options see PrintBin(Long64_t idx, Int_t* bin, Option_t* options).
+
 void THnBase::PrintBin(Long64_t idx, Option_t* options) const
 {
-   // Print bin with linex index "idx".
-   // For valid options see PrintBin(Long64_t idx, Int_t* bin, Option_t* options).
    Int_t* coord = new Int_t[fNdimensions];
    PrintBin(idx, coord, options);
    delete [] coord;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print one bin. If "idx" is != -1 use that to determine the bin,
+/// otherwise (if "idx" == -1) use the coordinate in "bin".
+/// If "options" contains:
+///   '0': only print bins with an error or content != 0
+/// Return whether the bin was printed (depends on options)
+
 Bool_t THnBase::PrintBin(Long64_t idx, Int_t* bin, Option_t* options) const
 {
-   // Print one bin. If "idx" is != -1 use that to determine the bin,
-   // otherwise (if "idx" == -1) use the coordinate in "bin".
-   // If "options" contains:
-   //   '0': only print bins with an error or content != 0
-   // Return whether the bin was printed (depends on options)
-
    Double_t v = -42;
    if (idx == -1) {
       idx = GetBin(bin);
@@ -1270,15 +1277,15 @@ Bool_t THnBase::PrintBin(Long64_t idx, Int_t* bin, Option_t* options) const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print "howmany" entries starting at "from". If "howmany" is -1, print all.
+/// If "options" contains:
+///   'x': print in the order of axis bins, i.e. (0,0,...,0), (0,0,...,1),...
+///   '0': only print bins with content != 0
+
 void THnBase::PrintEntries(Long64_t from /*=0*/, Long64_t howmany /*=-1*/,
                            Option_t* options /*=0*/) const
 {
-   // Print "howmany" entries starting at "from". If "howmany" is -1, print all.
-   // If "options" contains:
-   //   'x': print in the order of axis bins, i.e. (0,0,...,0), (0,0,...,1),...
-   //   '0': only print bins with content != 0
-
    if (from < 0) from = 0;
    if (howmany == -1) howmany = GetNbins();
 
@@ -1318,16 +1325,16 @@ void THnBase::PrintEntries(Long64_t from /*=0*/, Long64_t howmany /*=-1*/,
    delete [] bin;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print a THnBase. If "option" contains:
+///   'a': print axis details
+///   'm': print memory usage
+///   's': print statistics
+///   'c': print its content, too (this can generate a LOT of output!)
+/// Other options are forwarded to PrintEntries().
+
 void THnBase::Print(Option_t* options) const
 {
-   // Print a THnBase. If "option" contains:
-   //   'a': print axis details
-   //   'm': print memory usage
-   //   's': print statistics
-   //   'c': print its content, too (this can generate a LOT of output!)
-   // Other options are forwarded to PrintEntries().
-
    Bool_t optAxis    = options && (strchr(options, 'A') || (strchr(options, 'a')));
    Bool_t optMem     = options && (strchr(options, 'M') || (strchr(options, 'm')));
    Bool_t optStat    = options && (strchr(options, 'S') || (strchr(options, 's')));
@@ -1369,11 +1376,12 @@ void THnBase::Print(Option_t* options) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse a THnSparse: create an entry (ROOT::THnSparseBrowsable) for each
+/// dimension.
+
 void THnBase::Browse(TBrowser *b)
 {
-   // Browse a THnSparse: create an entry (ROOT::THnSparseBrowsable) for each
-   // dimension.
    if (fBrowsables.IsEmpty()) {
       for (Int_t dim = 0; dim < fNdimensions; ++dim) {
          fBrowsables.AddAtAndExpand(new ROOT::THnBaseBrowsable(this, dim), dim);
@@ -1393,10 +1401,10 @@ void THnBase::Browse(TBrowser *b)
 //
 //    Iterator over THnBase bins; internal implementation.
 //
-//______________________________________________________________________________
-ROOT::THnBaseBinIter::~THnBaseBinIter() {
-   // Destruct a bin iterator.
+////////////////////////////////////////////////////////////////////////////////
+/// Destruct a bin iterator.
 
+ROOT::THnBaseBinIter::~THnBaseBinIter() {
    // Not much to do, but pin vtable
 }
 
@@ -1406,7 +1414,8 @@ ROOT::THnBaseBinIter::~THnBaseBinIter() {
 //
 //    Iterator over THnBase bins
 //
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(THnIter);
 
 THnIter::~THnIter() {
@@ -1421,14 +1430,16 @@ THnIter::~THnIter() {
 //
 // TBrowser helper for THnBase.
 //
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(ROOT::THnBaseBrowsable);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a THnBaseBrowsable.
+
 ROOT::THnBaseBrowsable::THnBaseBrowsable(THnBase* hist, Int_t axis):
 fHist(hist), fAxis(axis), fProj(0)
 {
-   // Construct a THnBaseBrowsable.
    TString axisName = hist->GetAxis(axis)->GetName();
    if (axisName.IsNull()) {
       axisName = TString::Format("axis%d", axis);
@@ -1439,17 +1450,19 @@ fHist(hist), fAxis(axis), fProj(0)
                                 hist->IsA()->GetName()).Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destruct a THnBaseBrowsable.
+
 ROOT::THnBaseBrowsable::~THnBaseBrowsable()
 {
-   // Destruct a THnBaseBrowsable.
    delete fProj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse an axis of a THnBase, i.e. draw its projection.
+
 void ROOT::THnBaseBrowsable::Browse(TBrowser* b)
 {
-   // Browse an axis of a THnBase, i.e. draw its projection.
    if (!fProj) {
       fProj = fHist->Projection(fAxis);
    }

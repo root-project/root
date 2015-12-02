@@ -26,61 +26,63 @@ ClassImp(TRealData)
 //  The list of TRealData members in TClass is built when functions like
 //  object.Inspect or object.DrawClass are called.
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*RealData default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ============================
+
 TRealData::TRealData() : TObject(), fDataMember(0), fThisOffset(-1),
    fStreamer(0), fIsObject(kFALSE)
 {
-//*-*-*-*-*-*-*-*-*-*-*RealData default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
-
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*Constructor to define one persistent data member*-*-*-*-*
+///*-*                ================================================
+///*-* datamember is the pointer to the data member descriptor.
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 TRealData::TRealData(const char *name, Long_t offset, TDataMember *datamember)
    : TObject(), fDataMember(datamember), fThisOffset(offset), fName(name),
      fStreamer(0), fIsObject(kFALSE)
 {
-//*-*-*-*-*-*-*-*-*-*Constructor to define one persistent data member*-*-*-*-*
-//*-*                ================================================
-//*-* datamember is the pointer to the data member descriptor.
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*RealData default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  =============================
+
 TRealData::~TRealData()
 {
-//*-*-*-*-*-*-*-*-*-*-*RealData default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =============================
-
    delete fStreamer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*Write one persistent data member on output buffer*-*-*-*-*-*-*-*
+///*-*      =================================================
+///*-* pointer points to the current persistent data member
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*
+
 void TRealData::WriteRealData(void *, char *&)
 {
-//*-*-*-*-*Write one persistent data member on output buffer*-*-*-*-*-*-*-*
-//*-*      =================================================
-//*-* pointer points to the current persistent data member
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///fDataMember->SetStreamer(str);
+///delete fStreamer;
+
 void TRealData::AdoptStreamer(TMemberStreamer *str)
 {
-   //fDataMember->SetStreamer(str);
-   //delete fStreamer;
    fStreamer = str;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the name of the data member as represented in the list of
+/// real data.
+
 void TRealData::GetName(TString &output, TDataMember *dm)
 {
-   // Return the name of the data member as represented in the list of
-   // real data.
-
    output.Clear();
    // keep an empty name if data member is not found
    if (dm) output = dm->GetName();
@@ -97,10 +99,11 @@ void TRealData::GetName(TString &output, TDataMember *dm)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the associate streamer object.
+
 TMemberStreamer *TRealData::GetStreamer() const
 {
-   // Return the associate streamer object.
    return fStreamer; // return fDataMember->GetStreamer();
 }
 

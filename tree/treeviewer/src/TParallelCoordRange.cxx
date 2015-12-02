@@ -36,12 +36,12 @@ ClassImp(TParallelCoordRange)
 //////////////////////////////////////////////////////////////////////////
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor.
+
 TParallelCoordRange::TParallelCoordRange()
    :TNamed("Range","Range"), TAttLine(), fSize(0.01)
 {
-   // default constructor.
-
    fMin = 0;
    fMax = 0;
    fVar = NULL;
@@ -51,19 +51,20 @@ TParallelCoordRange::TParallelCoordRange()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TParallelCoordRange::~TParallelCoordRange()
 {
-   // Destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+
 TParallelCoordRange::TParallelCoordRange(TParallelCoordVar *var, Double_t min, Double_t max, TParallelCoordSelect *sel)
    :TNamed("Range","Range"), TAttLine(1,1,1), fSize(0.01)
 {
-   // Normal constructor.
-
    if(min == max) {
       min = var->GetCurrentMin();
       max = var->GetCurrentMax();
@@ -89,11 +90,11 @@ TParallelCoordRange::TParallelCoordRange(TParallelCoordVar *var, Double_t min, D
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make the selection which owns the range to be drawn on top of the others.
+
 void TParallelCoordRange::BringOnTop()
 {
-   // Make the selection which owns the range to be drawn on top of the others.
-
    TList *list = fVar->GetParallel()->GetSelectList();
    list->Remove(fSelect);
    list->AddLast(fSelect);
@@ -101,22 +102,22 @@ void TParallelCoordRange::BringOnTop()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the range.
+
 void TParallelCoordRange::Delete(const Option_t* /*options*/)
 {
-   // Delete the range.
-
    fVar->GetRanges()->Remove(this);
    fVar->GetParallel()->CleanUpSelections(this);
    delete this;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the distance to the primitive.
+
 Int_t TParallelCoordRange::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute the distance to the primitive.
-
    if(TestBit(kShowOnPad)){
       Double_t xx,yy,thisx=0,thisy=0;
       xx = gPad->AbsPixeltoX(px);
@@ -137,20 +138,20 @@ Int_t TParallelCoordRange::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a TParallelCoordRange.
+
 void TParallelCoordRange::Draw(Option_t* options)
 {
-   // Draw a TParallelCoordRange.
-
    AppendPad(options);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the entry.
+
 void TParallelCoordRange::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
 {
-   // Execute the entry.
-
    if (!gPad) return;
    if (!gPad->IsEditable() && entry!=kMouseEnter) return;
 
@@ -322,11 +323,11 @@ void TParallelCoordRange::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the points of the line binding the two niddles of the range.
+
 TPoint* TParallelCoordRange::GetBindingLinePoints(Int_t pos,Int_t mindragged)
 {
-   // return the points of the line binding the two niddles of the range.
-
    Double_t txx,tyy,txxo,tyyo=0;
    if (fVar->GetVert()){
       txx = fVar->GetX();
@@ -360,11 +361,11 @@ TPoint* TParallelCoordRange::GetBindingLinePoints(Int_t pos,Int_t mindragged)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the points to paint the niddle at "value".
+
 TPoint* TParallelCoordRange::GetSliderPoints(Double_t value)
 {
-   // return the points to paint the niddle at "value".
-
    Double_t txx=0,tyy=0;
    fVar->GetXYfromValue(value,txx,tyy);
    Int_t tx[5];
@@ -390,11 +391,11 @@ TPoint* TParallelCoordRange::GetSliderPoints(Double_t value)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  return the points to paint the niddle at "pos".
+
 TPoint* TParallelCoordRange::GetSliderPoints(Int_t pos)
 {
-   //  return the points to paint the niddle at "pos".
-
    Double_t txx,tyy;
    if (fVar->GetVert()){
       txx = fVar->GetX();
@@ -427,20 +428,20 @@ TPoint* TParallelCoordRange::GetSliderPoints(Int_t pos)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate if the given value is within the range or not.
+
 Bool_t TParallelCoordRange::IsIn(Double_t evtval)
 {
-   // Evaluate if the given value is within the range or not.
-
    return evtval>=fMin && evtval<=fMax;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a TParallelCoordRange
+
 void TParallelCoordRange::Paint(Option_t* /*options*/)
 {
-   // Paint a TParallelCoordRange
-
    if(TestBit(kShowOnPad)){
       PaintSlider(fMin,kTRUE);
       PaintSlider(fMax,kTRUE);
@@ -448,11 +449,11 @@ void TParallelCoordRange::Paint(Option_t* /*options*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a slider.
+
 void TParallelCoordRange::PaintSlider(Double_t value, Bool_t fill)
 {
-   // Paint a slider.
-
    SetLineColor(fSelect->GetLineColor());
 
    TPolyLine *p= new TPolyLine();
@@ -489,20 +490,20 @@ void TParallelCoordRange::PaintSlider(Double_t value, Bool_t fill)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print info about the range.
+
 void TParallelCoordRange::Print(Option_t* /*options*/) const
 {
-   // Print info about the range.
-
    printf("On \"%s\" : min = %f, max = %f\n", fVar->GetTitle(), fMin, fMax);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make the selection which owns the range to be drawn under all the others.
+
 void TParallelCoordRange::SendToBack()
 {
-   // Make the selection which owns the range to be drawn under all the others.
-
    TList *list = fVar->GetParallel()->GetSelectList();
    list->Remove(fSelect);
    list->AddFirst(fSelect);
@@ -510,27 +511,28 @@ void TParallelCoordRange::SendToBack()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the selection line color.
+
 void  TParallelCoordRange::SetLineColor(Color_t col)
 {
-   // Set the selection line color.
-
    fSelect->SetLineColor(col);
    TAttLine::SetLineColor(col);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the selection line width.
+
 void  TParallelCoordRange::SetLineWidth(Width_t wid)
 {
-   // Set the selection line width.
-
    fSelect->SetLineWidth(wid);
 }
 
 
 ClassImp(TParallelCoordSelect)
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>Selections:</h2></center>
 <p>
@@ -541,35 +543,35 @@ End_Html
 */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TParallelCoordSelect::TParallelCoordSelect()
    : TList(), TAttLine(kBlue,1,1)
 {
-   // Default constructor.
-
    fTitle = "Selection";
    SetBit(kActivated,kTRUE);
    SetBit(kShowRanges,kTRUE);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+
 TParallelCoordSelect::TParallelCoordSelect(const char* title)
    : TList(), TAttLine(kBlue,1,1)
 {
-   // Normal constructor.
-
    fTitle = title;
    SetBit(kActivated,kTRUE);
    SetBit(kShowRanges,kTRUE);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TParallelCoordSelect::~TParallelCoordSelect()
 {
-   // Destructor.
-
    TIter next(this);
    TParallelCoordRange* range;
    while ((range = (TParallelCoordRange*)next())) range->GetVar()->GetRanges()->Remove(range);
@@ -577,11 +579,11 @@ TParallelCoordSelect::~TParallelCoordSelect()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate the selection.
+
 void TParallelCoordSelect::SetActivated(Bool_t on)
 {
-   // Activate the selection.
-
    TIter next(this);
    TParallelCoordRange* range;
    while ((range = (TParallelCoordRange*)next())) range->SetBit(TParallelCoordRange::kShowOnPad,on);
@@ -589,11 +591,11 @@ void TParallelCoordSelect::SetActivated(Bool_t on)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show the ranges niddles.
+
 void TParallelCoordSelect::SetShowRanges(Bool_t s)
 {
-   // Show the ranges niddles.
-
    TIter next(this);
    TParallelCoordRange* range;
    while ((range = (TParallelCoordRange*)next())) range->SetBit(TParallelCoordRange::kShowOnPad,s);

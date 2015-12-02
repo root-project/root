@@ -32,10 +32,11 @@
 
 namespace {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Not a bad idea to assert on gVirtualX != nullptr
+
 bool IsGradientFill(Color_t fillColorIndex)
 {
-   //Not a bad idea to assert on gVirtualX != nullptr
    return dynamic_cast<TColorGradient *>(gROOT->GetColor(fillColorIndex));
 }
 
@@ -52,7 +53,8 @@ bool IsGradientFill(Color_t fillColorIndex)
 
 ClassImp(TGLPadPainter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLPadPainter::TGLPadPainter()
                   : fIsHollowArea(kFALSE),
                     fLocked(kTRUE)
@@ -61,172 +63,196 @@ TGLPadPainter::TGLPadPainter()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 Color_t TGLPadPainter::GetLineColor() const
 {
-   //Delegate to gVirtualX.
    return gVirtualX->GetLineColor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 Style_t TGLPadPainter::GetLineStyle() const
 {
-   //Delegate to gVirtualX.
    return gVirtualX->GetLineStyle();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 Width_t TGLPadPainter::GetLineWidth() const
 {
-   //Delegate to gVirtualX.
    return gVirtualX->GetLineWidth();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 void TGLPadPainter::SetLineColor(Color_t lcolor)
 {
-   //Delegate to gVirtualX.
    gVirtualX->SetLineColor(lcolor);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 void TGLPadPainter::SetLineStyle(Style_t lstyle)
 {
-   //Delegate to gVirtualX.
    gVirtualX->SetLineStyle(lstyle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 void TGLPadPainter::SetLineWidth(Width_t lwidth)
 {
-   //Delegate to gVirtualX.
    gVirtualX->SetLineWidth(lwidth);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 Color_t TGLPadPainter::GetFillColor() const
 {
-   //Delegate to gVirtualX.
    return gVirtualX->GetFillColor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 Style_t TGLPadPainter::GetFillStyle() const
 {
-   //Delegate to gVirtualX.
    return gVirtualX->GetFillStyle();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+///IsTransparent is implemented as inline function in TAttFill.
+
 Bool_t TGLPadPainter::IsTransparent() const
 {
-   //Delegate to gVirtualX.
-   //IsTransparent is implemented as inline function in TAttFill.
    return gVirtualX->IsTransparent();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 void TGLPadPainter::SetFillColor(Color_t fcolor)
 {
-   //Delegate to gVirtualX.
    gVirtualX->SetFillColor(fcolor);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 void TGLPadPainter::SetFillStyle(Style_t fstyle)
 {
-   //Delegate to gVirtualX.
    gVirtualX->SetFillStyle(fstyle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 void TGLPadPainter::SetOpacity(Int_t percent)
 {
-   //Delegate to gVirtualX.
    gVirtualX->SetOpacity(percent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 Short_t TGLPadPainter::GetTextAlign() const
 {
-   //Delegate to gVirtualX.
    return gVirtualX->GetTextAlign();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 Float_t TGLPadPainter::GetTextAngle() const
 {
-   //Delegate to gVirtualX.
    return gVirtualX->GetTextAngle();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 Color_t TGLPadPainter::GetTextColor() const
 {
-   //Delegate to gVirtualX.
    return gVirtualX->GetTextColor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 Font_t TGLPadPainter::GetTextFont() const
 {
-   //Delegate to gVirtualX.
    return gVirtualX->GetTextFont();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 Float_t TGLPadPainter::GetTextSize() const
 {
-   //Delegate to gVirtualX.
    return gVirtualX->GetTextSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 Float_t TGLPadPainter::GetTextMagnitude() const
 {
-   //Delegate to gVirtualX.
    return gVirtualX->GetTextMagnitude();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 void TGLPadPainter::SetTextAlign(Short_t align)
 {
-   //Delegate to gVirtualX.
    gVirtualX->SetTextAlign(align);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 void TGLPadPainter::SetTextAngle(Float_t tangle)
 {
-   //Delegate to gVirtualX.
    gVirtualX->SetTextAngle(tangle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 void TGLPadPainter::SetTextColor(Color_t tcolor)
 {
-   //Delegate to gVirtualX.
    gVirtualX->SetTextColor(tcolor);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 void TGLPadPainter::SetTextFont(Font_t tfont)
 {
-   //Delegate to gVirtualX.
    gVirtualX->SetTextFont(tfont);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 void TGLPadPainter::SetTextSize(Float_t tsize)
 {
-   //Delegate to gVirtualX.
    gVirtualX->SetTextSize(tsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate to gVirtualX.
+
 void TGLPadPainter::SetTextSizePixels(Int_t npixels)
 {
-   //Delegate to gVirtualX.
    gVirtualX->SetTextSizePixels(npixels);
 }
 
@@ -234,39 +260,43 @@ void TGLPadPainter::SetTextSizePixels(Int_t npixels)
 "Pixmap" part of TGLPadPainter.
 */
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Not required at the moment.
+
 Int_t TGLPadPainter::CreateDrawable(UInt_t/*w*/, UInt_t/*h*/)
 {
-   //Not required at the moment.
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Not required at the moment.
+
 void TGLPadPainter::ClearDrawable()
 {
-   //Not required at the moment.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Not required at the moment.
+
 void TGLPadPainter::CopyDrawable(Int_t /*id*/, Int_t /*px*/, Int_t /*py*/)
 {
-   //Not required at the moment.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Not required at the moment.
+
 void TGLPadPainter::DestroyDrawable()
 {
-   //Not required at the moment.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///For gVirtualX this means select pixmap (or window)
+///and all subsequent drawings will go into
+///this pixmap. For OpenGL this means the change of
+///coordinate system and viewport.
+
 void TGLPadPainter::SelectDrawable(Int_t /*device*/)
 {
-   //For gVirtualX this means select pixmap (or window)
-   //and all subsequent drawings will go into
-   //this pixmap. For OpenGL this means the change of
-   //coordinate system and viewport.
-
    if (fLocked)
       return;
 
@@ -298,17 +328,18 @@ void TGLPadPainter::SelectDrawable(Int_t /*device*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Init gl-pad painter:
+///1. 2D painter does not use depth test, should not modify
+///   depth-buffer content (except initial cleanup).
+///2. Disable cull face.
+///3. Disable lighting.
+///4. Set viewport (to the whole canvas area).
+///5. Set camera.
+///6. Unlock painter.
+
 void TGLPadPainter::InitPainter()
 {
-   //Init gl-pad painter:
-   //1. 2D painter does not use depth test, should not modify
-   //   depth-buffer content (except initial cleanup).
-   //2. Disable cull face.
-   //3. Disable lighting.
-   //4. Set viewport (to the whole canvas area).
-   //5. Set camera.
-   //6. Unlock painter.
    glDisable(GL_DEPTH_TEST);
    glDisable(GL_CULL_FACE);
    glDisable(GL_LIGHTING);
@@ -333,12 +364,12 @@ void TGLPadPainter::InitPainter()
    fLocked = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///When TPad::Range for gPad is called, projection
+///must be changed in OpenGL.
+
 void TGLPadPainter::InvalidateCS()
 {
-   //When TPad::Range for gPad is called, projection
-   //must be changed in OpenGL.
-
    if (fLocked) return;
 
    glMatrixMode(GL_PROJECTION);
@@ -349,13 +380,13 @@ void TGLPadPainter::InvalidateCS()
    glMatrixMode(GL_MODELVIEW);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Locked state of painter means, that
+///GL context can be invalid, so no GL calls
+///can be executed.
+
 void TGLPadPainter::LockPainter()
 {
-   //Locked state of painter means, that
-   //GL context can be invalid, so no GL calls
-   //can be executed.
-
    if (fLocked) return;
 
    glFinish();
@@ -368,11 +399,11 @@ void TGLPadPainter::LockPainter()
 
 const Double_t lineWidthTS = 3.;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw line segment.
+
 void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   //Draw line segment.
-
    if (fLocked) {
       //GL pad painter can be called in non-standard situation:
       //not from TPad::Paint, but
@@ -412,11 +443,11 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw line segment in NDC coordinates.
+
 void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
-   //Draw line segment in NDC coordinates.
-
    if (fLocked) return;
 
    const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
@@ -429,11 +460,11 @@ void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t 
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw filled or hollow box.
+
 void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EBoxMode mode)
 {
-   //Draw filled or hollow box.
-
    if (fLocked) return;
 
    if (IsGradientFill(gVirtualX->GetFillColor())) {
@@ -456,10 +487,11 @@ void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw tesselated polygon (probably, outline only).
+
 void TGLPadPainter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
 {
-   //Draw tesselated polygon (probably, outline only).
    assert(x != 0 && "DrawFillArea, parameter 'x' is null");
    assert(y != 0 && "DrawFillArea, parameter 'y' is null");
 
@@ -484,12 +516,12 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
    DrawTesselation(n, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw tesselated polygon (never called, probably, since TPad::PaintFillArea for floats
+///is deprecated).
+
 void TGLPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
 {
-   //Draw tesselated polygon (never called, probably, since TPad::PaintFillArea for floats
-   //is deprecated).
-
    if (fLocked) return;
 
    if (!gVirtualX->GetFillStyle()) {
@@ -517,11 +549,11 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
    gluEndPolygon(t);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw poly-line in user coordinates.
+
 void TGLPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
 {
-   //Draw poly-line in user coordinates.
-
    if (fLocked) return;
 
    const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
@@ -554,11 +586,11 @@ void TGLPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Never called?
+
 void TGLPadPainter::DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y)
 {
-   //Never called?
-
    if (fLocked) return;
 
    const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
@@ -576,11 +608,11 @@ void TGLPadPainter::DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y)
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Poly line in NDC.
+
 void TGLPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
 {
-   //Poly line in NDC.
-
    if (fLocked) return;
 
    const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
@@ -604,33 +636,33 @@ void ConvertMarkerPoints(Int_t n, const ValueType *x, const ValueType *y, std::v
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Poly-marker.
+
 void TGLPadPainter::DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y)
 {
-   //Poly-marker.
-
    if (fLocked) return;
 
    ConvertMarkerPoints(n, x, y, fPoly);
    DrawPolyMarker();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Poly-marker.
+
 void TGLPadPainter::DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y)
 {
-   //Poly-marker.
-
    if (fLocked) return;
 
    ConvertMarkerPoints(n, x, y, fPoly);
    DrawPolyMarker();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Poly-marker.
+
 void TGLPadPainter::DrawPolyMarker()
 {
-   //Poly-marker.
-
    if (fLocked) return;
 
    SaveProjectionMatrix();
@@ -713,7 +745,8 @@ void TGLPadPainter::DrawPolyMarker()
    glMatrixMode(GL_MODELVIEW);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Char>
 void TGLPadPainter::DrawTextHelper(Double_t x, Double_t y, const Char *text, ETextMode /*mode*/)
 {
@@ -754,14 +787,14 @@ void TGLPadPainter::DrawTextHelper(Double_t x, Double_t y, const Char *text, ETe
    glMatrixMode(GL_MODELVIEW);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw text. This operation is especially
+///dangerous if in locked state -
+///ftgl will assert on zero texture size
+///(which is result of bad GL context).
+
 void TGLPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode mode)
 {
-   //Draw text. This operation is especially
-   //dangerous if in locked state -
-   //ftgl will assert on zero texture size
-   //(which is result of bad GL context).
-
    if (fLocked) return;
 
    if (!gVirtualX->GetTextSize())
@@ -770,14 +803,14 @@ void TGLPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode
    DrawTextHelper(x, y, text, mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw text. This operation is especially
+///dangerous if in locked state -
+///ftgl will assert on zero texture size
+///(which is result of bad GL context).
+
 void TGLPadPainter::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMode mode)
 {
-   //Draw text. This operation is especially
-   //dangerous if in locked state -
-   //ftgl will assert on zero texture size
-   //(which is result of bad GL context).
-
    if (fLocked) return;
 
    if (!gVirtualX->GetTextSize())
@@ -786,14 +819,14 @@ void TGLPadPainter::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextM
    DrawTextHelper(x, y, text, mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw text in NDC. This operation is especially
+///dangerous if in locked state -
+///ftgl will assert on zero texture size
+///(which is result of bad GL context).
+
 void TGLPadPainter::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode)
 {
-   //Draw text in NDC. This operation is especially
-   //dangerous if in locked state -
-   //ftgl will assert on zero texture size
-   //(which is result of bad GL context).
-
    if (fLocked) return;
 
    const Double_t xRange = gPad->GetX2() - gPad->GetX1();
@@ -801,14 +834,14 @@ void TGLPadPainter::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextM
    DrawText(gPad->GetX1() + u * xRange, gPad->GetY1() + v * yRange, text, mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw text in NDC. This operation is especially
+///dangerous if in locked state -
+///ftgl will assert on zero texture size
+///(which is result of bad GL context).
+
 void TGLPadPainter::DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETextMode mode)
 {
-   //Draw text in NDC. This operation is especially
-   //dangerous if in locked state -
-   //ftgl will assert on zero texture size
-   //(which is result of bad GL context).
-
    if (fLocked) return;
 
    const Double_t xRange = gPad->GetX2() - gPad->GetX1();
@@ -816,65 +849,71 @@ void TGLPadPainter::DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETe
    DrawText(gPad->GetX1() + u * xRange, gPad->GetY1() + v * yRange, text, mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Save the projection matrix.
+///Attention! GL_PROJECTION will become the current matrix
+///after this call!
+
 void TGLPadPainter::SaveProjectionMatrix()const
 {
-   //Save the projection matrix.
-   //Attention! GL_PROJECTION will become the current matrix
-   //after this call!
    glMatrixMode(GL_PROJECTION);
    glPushMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Restore the projection matrix.
+///Attention! GL_PROJECTION will become the current matrix
+///after this call!
+
 void TGLPadPainter::RestoreProjectionMatrix()const
 {
-   //Restore the projection matrix.
-   //Attention! GL_PROJECTION will become the current matrix
-   //after this call!
    glMatrixMode(GL_PROJECTION);
    glPopMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Save the modelview matrix.
+///Attention! GL_MODELVIEW will become the current matrix
+///after this call!
+
 void TGLPadPainter::SaveModelviewMatrix()const
 {
-   //Save the modelview matrix.
-   //Attention! GL_MODELVIEW will become the current matrix
-   //after this call!
    glMatrixMode(GL_MODELVIEW);
    glPushMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Restore the modelview matrix.
+///Attention! GL_MODELVIEW will become the current matrix
+///after this call!
+
 void TGLPadPainter::RestoreModelviewMatrix()const
 {
-   //Restore the modelview matrix.
-   //Attention! GL_MODELVIEW will become the current matrix
-   //after this call!
    glMatrixMode(GL_MODELVIEW);
    glPopMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Extract and save the current viewport.
+
 void TGLPadPainter::SaveViewport()
 {
-   //Extract and save the current viewport.
    glGetIntegerv(GL_VIEWPORT, fVp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Restore the saved viewport.
+
 void TGLPadPainter::RestoreViewport()
 {
-   //Restore the saved viewport.
    glViewport(fVp[0], fVp[1], fVp[2], fVp[3]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Using TImage save frame-buffer contents as a picture.
+
 void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const
 {
-   // Using TImage save frame-buffer contents as a picture.
-
    TVirtualPad *canvas = (TVirtualPad *)pad->GetCanvas();
    if (!canvas)
       return;
@@ -922,7 +961,8 @@ void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type
    image->WriteImage(fileName, (TImage::EImageFileTypes)type);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
                                Int_t dstX, Int_t dstY, Bool_t enableBlending)
 {
@@ -996,13 +1036,13 @@ void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UIn
 
 //Aux. functions - gradient and solid fill of arbitrary area.
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///At the moment I assume both linear and radial gradients will work the same way  -
+///using a stencil buffer and some big rectangle(s) to fill with a gradient.
+///Thus I have a 'common' part - the part responsible for a stencil test.
+
 void TGLPadPainter::DrawPolygonWithGradient(Int_t n, const Double_t *x, const Double_t *y)
 {
-   //At the moment I assume both linear and radial gradients will work the same way  -
-   //using a stencil buffer and some big rectangle(s) to fill with a gradient.
-   //Thus I have a 'common' part - the part responsible for a stencil test.
-
    assert(n > 2 && "DrawPolygonWithGradient, invalid number of points");
    assert(x != 0 && "DrawPolygonWithGradient, parameter 'x' is null");
    assert(y != 0 && "DrawPolygonWithGradient, parameter 'y' is null");
@@ -1053,7 +1093,8 @@ void TGLPadPainter::DrawPolygonWithGradient(Int_t n, const Double_t *x, const Do
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
                                  const Double_t *xs, const Double_t *ys)
 {
@@ -1231,7 +1272,8 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
    RestoreModelviewMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLPadPainter::DrawGradient(const TLinearGradient *grad, Int_t n,
                                  const Double_t *x, const Double_t *y)
 {
@@ -1351,7 +1393,8 @@ void TGLPadPainter::DrawGradient(const TLinearGradient *grad, Int_t n,
    RestoreModelviewMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLPadPainter::DrawTesselation(Int_t n, const Double_t *x, const Double_t *y)
 {
    assert(n > 2 && "DrawTesselation, invalid number of points");

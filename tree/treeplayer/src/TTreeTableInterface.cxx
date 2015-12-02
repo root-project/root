@@ -46,7 +46,9 @@ ClassImp(TTreeTableInterface)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TTreeTableInterface constructor.
+
 TTreeTableInterface::TTreeTableInterface (TTree *tree, const char *varexp,
    const char *selection, Option_t *option, Long64_t nentries,
    Long64_t firstentry)
@@ -54,8 +56,6 @@ TTreeTableInterface::TTreeTableInterface (TTree *tree, const char *varexp,
      fNEntries(nentries), fFirstEntry(firstentry), fManager(0), fSelect(0), fSelector(0), fInput(0),
      fForceDim(kFALSE), fEntries(0), fNRows(0), fNColumns(0)
 {
-   // TTreeTableInterface constructor.
-
    if (fTree == 0) {
       Error("TTreeTableInterface", "No tree supplied");
       return;
@@ -89,11 +89,11 @@ TTreeTableInterface::TTreeTableInterface (TTree *tree, const char *varexp,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TTreeTableInterface destructor.
+
 TTreeTableInterface::~TTreeTableInterface()
 {
-   // TTreeTableInterface destructor.
-
    fFormulas->Delete();
    delete fFormulas;
    delete fInput;
@@ -103,11 +103,11 @@ TTreeTableInterface::~TTreeTableInterface()
    delete fEntries;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compile the variables expression from the given varexp.
+
 void TTreeTableInterface::SetVariablesExpression(const char *varexp)
 {
-   // Compile the variables expression from the given varexp.
-
    // FIXME check if enough protection against wrong expressions is in place
 
    Bool_t allvar = kFALSE;
@@ -143,11 +143,11 @@ void TTreeTableInterface::SetVariablesExpression(const char *varexp)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the selection expression.
+
 void TTreeTableInterface::SetSelection(const char *selection)
 {
-   // Set the selection expression.
-
    // FIXME verify functionality
    if (fSelect) {
       fFormulas->Remove(fSelect);
@@ -170,11 +170,11 @@ void TTreeTableInterface::SetSelection(const char *selection)
    InitEntries();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sync the formulas using the TTreeFormulaManager.
+
 void TTreeTableInterface::SyncFormulas()
 {
-   // Sync the formulas using the TTreeFormulaManager.
-
    // FIXME verify functionality
 
    Int_t i = 0;
@@ -203,12 +203,12 @@ void TTreeTableInterface::SyncFormulas()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialise the TEntryList with the entries that match the
+/// selection criterium.
+
 void TTreeTableInterface::InitEntries()
 {
-   // Initialise the TEntryList with the entries that match the
-   // selection criterium.
-
    TEntryList *entrylist = new TEntryList(fTree);
 
    UInt_t ui = 0;
@@ -268,12 +268,12 @@ void TTreeTableInterface::InitEntries()
    SetEntryList(entrylist);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the value of row,column. If the position does not exist
+/// or does not contain a number, 0 is returned.
+
 Double_t TTreeTableInterface::GetValue(UInt_t row, UInt_t column)
 {
-   // Return the value of row,column. If the position does not exist
-   // or does not contain a number, 0 is returned.
-
    static UInt_t prow = 0;
 
    if (row < fNRows) {
@@ -304,12 +304,12 @@ Double_t TTreeTableInterface::GetValue(UInt_t row, UInt_t column)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the content of row,column as string to use in a
+/// TGTableCell label.
+
 const char *TTreeTableInterface::GetValueAsString(UInt_t row, UInt_t column)
 {
-   // Return the content of row,column as string to use in a
-   // TGTableCell label.
-
    static UInt_t prow = 0;
 
    if (row < fNRows) {
@@ -338,11 +338,11 @@ const char *TTreeTableInterface::GetValueAsString(UInt_t row, UInt_t column)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a string to use as a label for rowheader at column.
+
 const char *TTreeTableInterface::GetRowHeader(UInt_t row)
 {
-   // Return a string to use as a label for rowheader at column.
-
    if (row < fNRows) {
       return Form("%lld", fEntries->GetEntry(row));
    } else {
@@ -351,11 +351,11 @@ const char *TTreeTableInterface::GetRowHeader(UInt_t row)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a string to use as a label for columnheader at column.
+
 const char *TTreeTableInterface::GetColumnHeader(UInt_t column)
 {
-   // Return a string to use as a label for columnheader at column.
-
    TTreeFormula *formula = (TTreeFormula *)fFormulas->At(column);
    if (column < fNColumns) {
       return formula->GetTitle();
@@ -365,29 +365,29 @@ const char *TTreeTableInterface::GetColumnHeader(UInt_t column)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the amount of column available.
+
 UInt_t TTreeTableInterface::GetNColumns()
 {
-   // Return the amount of column available.
-
    return fNColumns;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the amount of rows in the Tree.
+
 UInt_t TTreeTableInterface::GetNRows()
 {
-   // Return the amount of rows in the Tree.
-
    return fNRows;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add column according ot expression at position,
+/// TGTable->Update() is needed afterwards to apply the change to
+/// the TGTable.
+
 void TTreeTableInterface::AddColumn(const char *expression, UInt_t position)
 {
-   // Add column according ot expression at position,
-   // TGTable->Update() is needed afterwards to apply the change to
-   // the TGTable.
-
    TString onerow = expression;
 
    if (onerow.Contains(':')) {
@@ -406,12 +406,12 @@ void TTreeTableInterface::AddColumn(const char *expression, UInt_t position)
    fNColumns++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add column with formula at position, TGTable->Update() is needed
+/// afterwards to apply the change to the TGTable.
+
 void TTreeTableInterface::AddColumn(TTreeFormula *formula, UInt_t position)
 {
-   // Add column with formula at position, TGTable->Update() is needed
-   // afterwards to apply the change to the TGTable.
-
    if (position > fNColumns) {
       Error("TTreeTableInterface::AddColumn", "Please specify a "
             "valid position.");
@@ -425,12 +425,12 @@ void TTreeTableInterface::AddColumn(TTreeFormula *formula, UInt_t position)
    fNColumns++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove column at position, TGTable->Update() is needed
+/// afterwards to apply the change to the TGTable.
+
 void TTreeTableInterface::RemoveColumn(UInt_t position)
 {
-   // Remove column at position, TGTable->Update() is needed
-   // afterwards to apply the change to the TGTable.
-
    if (position >= fNColumns) {
       Error("TTreeTableInterface::RemoveColumn", "Please specify a "
             "valid column.");
@@ -450,11 +450,11 @@ void TTreeTableInterface::RemoveColumn(UInt_t position)
    fNColumns--;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the TTreeFormula of position to formula.
+
 void TTreeTableInterface::SetFormula(TTreeFormula *formula, UInt_t position)
 {
-   // Set the TTreeFormula of position to formula.
-
    if (position >= fNColumns) {
       Error("TTreeTableInterface::SetFormula", "Please specify a "
             "valid position.");
@@ -473,11 +473,11 @@ void TTreeTableInterface::SetFormula(TTreeFormula *formula, UInt_t position)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the currently active entrylist.
+
 void TTreeTableInterface::SetEntryList(TEntryList *entrylist)
 {
-   // Set the currently active entrylist.
-
    // Untested
    if (fEntries) delete fEntries;
    fEntries = entrylist;

@@ -44,7 +44,8 @@ const GLenum pointSizePNAME = GLenum(GL_SMOOTH_POINT_SIZE_RANGE);
 Auxiliary class to converts ROOT's polygon stipples from
 RStipples.h into GL's stipples and hold them in a fStipples array.
 */
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PolygonStippleSet::PolygonStippleSet()
 {
     /*
@@ -100,7 +101,8 @@ PolygonStippleSet::PolygonStippleSet()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 UInt_t PolygonStippleSet::SwapBits(UInt_t b)
 {
 #ifdef WIN32
@@ -117,11 +119,12 @@ UInt_t PolygonStippleSet::SwapBits(UInt_t b)
 /*
 Class to manipulate fill parameters.
 */
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Polygon stipple, if required.
+
 FillAttribSet::FillAttribSet(const PolygonStippleSet &set, Bool_t ignoreStipple)
                   : fStipple(0), fAlpha(1.)
 {
-   //Polygon stipple, if required.
    const UInt_t style = gVirtualX->GetFillStyle() / 1000;
 
    if (!ignoreStipple) {
@@ -144,7 +147,8 @@ FillAttribSet::FillAttribSet(const PolygonStippleSet &set, Bool_t ignoreStipple)
    glColor4fv(rgba);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 FillAttribSet::~FillAttribSet()
 {
    if (fStipple)
@@ -167,12 +171,13 @@ const UInt_t gMaxStipple = sizeof gLineStipples / sizeof gLineStipples[0];
 /*
 Set/unset line attributes.
 */
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set up line parameters.
+///Smooth.
+
 LineAttribSet::LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, Bool_t setWidth)
                   : fSmooth(smooth), fStipple(stipple), fSetWidth(setWidth), fAlpha(0.8)
 {
-   //Set up line parameters.
-   //Smooth.
    if (fSmooth) {
       glEnable(GL_BLEND);
       glEnable(GL_LINE_SMOOTH);
@@ -207,7 +212,8 @@ LineAttribSet::LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, B
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 LineAttribSet::~LineAttribSet()
 {
    if (fSmooth || fAlpha<0.8) {
@@ -225,10 +231,11 @@ LineAttribSet::~LineAttribSet()
 /*
 Auxiliary class to draw markers in a gl-pad.
 */
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Simple 1-pixel dots.
+
 void MarkerPainter::DrawDot(UInt_t n, const TPoint *xy)const
 {
-   //Simple 1-pixel dots.
    glBegin(GL_POINTS);
 
    for (UInt_t i = 0; i < n; ++i)
@@ -237,10 +244,11 @@ void MarkerPainter::DrawDot(UInt_t n, const TPoint *xy)const
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///+ sign. 1 pixel width lines.
+
 void MarkerPainter::DrawPlus(UInt_t n, const TPoint *xy)const
 {
-   //+ sign. 1 pixel width lines.
    const Double_t im = 4 * gVirtualX->GetMarkerSize() + 0.5;
    glBegin(GL_LINES);
 
@@ -256,10 +264,11 @@ void MarkerPainter::DrawPlus(UInt_t n, const TPoint *xy)const
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///* - marker.
+
 void MarkerPainter::DrawStar(UInt_t n, const TPoint *xy)const
 {
-   //* - marker.
    SCoord_t im = SCoord_t(4 * gVirtualX->GetMarkerSize() + 0.5);
    fStar[0].fX = -im;  fStar[0].fY = 0;
    fStar[1].fX =  im;  fStar[1].fY = 0;
@@ -290,7 +299,8 @@ void MarkerPainter::DrawStar(UInt_t n, const TPoint *xy)const
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void MarkerPainter::DrawX(UInt_t n, const TPoint *xy)const
 {
    const Double_t im = 0.707 * (4 * gVirtualX->GetMarkerSize() + 0.5) + 0.5;
@@ -310,7 +320,8 @@ void MarkerPainter::DrawX(UInt_t n, const TPoint *xy)const
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void MarkerPainter::DrawFullDotSmall(UInt_t n, const TPoint *xy)const
 {
    glBegin(GL_LINES);
@@ -328,7 +339,8 @@ void MarkerPainter::DrawFullDotSmall(UInt_t n, const TPoint *xy)const
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void MarkerPainter::DrawFullDotMedium(UInt_t n, const TPoint *xy)const
 {
    for (UInt_t i = 0; i < n; ++i)
@@ -340,7 +352,8 @@ namespace {
 void CalculateCircle(std::vector<TPoint> &circle, Double_t r, UInt_t pts);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void MarkerPainter::DrawCircle(UInt_t n, const TPoint *xy)const
 {
    Double_t r = 4 * gVirtualX->GetMarkerSize() + 0.5;
@@ -361,7 +374,8 @@ void MarkerPainter::DrawCircle(UInt_t n, const TPoint *xy)const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void MarkerPainter::DrawFullDotLarge(UInt_t n, const TPoint *xy)const
 {
    fCircle.clear();
@@ -384,7 +398,8 @@ void MarkerPainter::DrawFullDotLarge(UInt_t n, const TPoint *xy)const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void MarkerPainter::DrawFullSquare(UInt_t n, const TPoint *xy)const
 {
    const Double_t im = 4 * gVirtualX->GetMarkerSize() + 0.5;
@@ -392,7 +407,8 @@ void MarkerPainter::DrawFullSquare(UInt_t n, const TPoint *xy)const
       glRectd(xy[i].fX - im, xy[i].fY - im, xy[i].fX + im, xy[i].fY + im);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void MarkerPainter::DrawFullTrianlgeUp(UInt_t n, const TPoint *xy)const
 {
    const Double_t im = 4 * gVirtualX->GetMarkerSize() + 0.5;
@@ -407,7 +423,8 @@ void MarkerPainter::DrawFullTrianlgeUp(UInt_t n, const TPoint *xy)const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void MarkerPainter::DrawFullTrianlgeDown(UInt_t n, const TPoint *xy)const
 {
    const Int_t im = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
@@ -423,7 +440,8 @@ void MarkerPainter::DrawFullTrianlgeDown(UInt_t n, const TPoint *xy)const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void MarkerPainter::DrawDiamond(UInt_t n, const TPoint *xy)const
 {
    const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
@@ -442,7 +460,8 @@ void MarkerPainter::DrawDiamond(UInt_t n, const TPoint *xy)const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void MarkerPainter::DrawCross(UInt_t n, const TPoint *xy)const
 {
    const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
@@ -469,10 +488,11 @@ void MarkerPainter::DrawCross(UInt_t n, const TPoint *xy)const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HIGZ full star pentagone
+
 void MarkerPainter::DrawFullStar(UInt_t n, const TPoint *xy)const
 {
-   // HIGZ full star pentagone
    const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
    const Int_t im1 = Int_t(0.66 * gVirtualX->GetMarkerSize() + 0.5);
    const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
@@ -521,10 +541,11 @@ void MarkerPainter::DrawFullStar(UInt_t n, const TPoint *xy)const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HIGZ full star pentagone
+
 void MarkerPainter::DrawOpenStar(UInt_t n, const TPoint *xy)const
 {
-   // HIGZ full star pentagone
    const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
    const Int_t im1 = Int_t(0.66 * gVirtualX->GetMarkerSize() + 0.5);
    const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
@@ -569,7 +590,8 @@ extern "C" {
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Begin(Int_t type)
 {
    Tesselation_t *dump = Tesselator::GetDump();
@@ -579,7 +601,8 @@ void Begin(Int_t type)
    dump->push_back(MeshPatch_t(type));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Vertex(const Double_t *v)
 {
    Tesselation_t *dump = Tesselator::GetDump();
@@ -592,14 +615,16 @@ void Vertex(const Double_t *v)
    vs.push_back(v[2]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void End()
 {
 }
 
 Tesselation_t *Tesselator::fVs = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Tesselator::Tesselator(Bool_t dump)
                : fTess(0)
 {
@@ -621,7 +646,8 @@ Tesselator::Tesselator(Bool_t dump)
    fTess = tess;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Tesselator::~Tesselator()
 {
    gluDeleteTess((GLUtesselator *)fTess);
@@ -631,20 +657,23 @@ Tesselator::~Tesselator()
 In future, this should be an interface to per-pad FBO.
 Currently, in only save sizes and coordinates (?)
 */
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 OffScreenDevice::OffScreenDevice(UInt_t w, UInt_t h, UInt_t x, UInt_t y, Bool_t top)
                    : fW(w), fH(h), fX(x), fY(y), fTop(top)
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 GLLimits::GLLimits()
             : fMaxLineWidth(0.),
               fMaxPointSize(0.)
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t GLLimits::GetMaxLineWidth()const
 {
    if (!fMaxLineWidth) {
@@ -656,7 +685,8 @@ Double_t GLLimits::GetMaxLineWidth()const
    return fMaxLineWidth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t GLLimits::GetMaxPointSize()const
 {
    if (!fMaxPointSize) {
@@ -669,7 +699,8 @@ Double_t GLLimits::GetMaxPointSize()const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void ExtractRGBA(Color_t colorIndex, Float_t *rgba)
 {
    const TColor *color = gROOT->GetColor(colorIndex);
@@ -679,7 +710,8 @@ void ExtractRGBA(Color_t colorIndex, Float_t *rgba)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class ValueType>
 BoundingRect<ValueType> FindBoundingRect(Int_t nPoints, const ValueType *xs, const ValueType *ys)
 {
@@ -720,7 +752,8 @@ template BoundingRect<SCoord_t> FindBoundingRect(Int_t nPoints, const SCoord_t *
 
 namespace {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void CalculateCircle(std::vector<TPoint> &circle, Double_t r, UInt_t pts)
 {
    const Double_t delta = TMath::TwoPi() / pts;

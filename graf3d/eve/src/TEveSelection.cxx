@@ -23,25 +23,25 @@
 
 ClassImp(TEveSelection);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveSelection::TEveSelection(const char* n, const char* t) :
    TEveElementList(n, t),
    fPickToSelect  (kPS_Projectable),
    fActive        (kTRUE),
    fIsMaster      (kTRUE)
 {
-   // Constructor.
-
    fSelElement       = &TEveElement::SelectElement;
    fIncImpSelElement = &TEveElement::IncImpliedSelected;
    fDecImpSelElement = &TEveElement::DecImpliedSelected;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set to 'highlight' mode.
+
 void TEveSelection::SetHighlightMode()
 {
-   // Set to 'highlight' mode.
-
    // Most importantly, this sets the pointers-to-function-members in
    // TEveElement that are used to mark elements as (un)selected and
    // implied-(un)selected.
@@ -59,12 +59,12 @@ void TEveSelection::SetHighlightMode()
 // Protected helpers
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select element indicated by the entry and fill its
+/// implied-selected set.
+
 void TEveSelection::DoElementSelect(TEveSelection::SelMap_i entry)
 {
-   // Select element indicated by the entry and fill its
-   // implied-selected set.
-
    TEveElement *el  = entry->first;
    Set_t       &set = entry->second;
 
@@ -74,12 +74,12 @@ void TEveSelection::DoElementSelect(TEveSelection::SelMap_i entry)
       ((*i)->*fIncImpSelElement)();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deselect element indicated by the entry and clear its
+/// implied-selected set.
+
 void TEveSelection::DoElementUnselect(TEveSelection::SelMap_i entry)
 {
-   // Deselect element indicated by the entry and clear its
-   // implied-selected set.
-
    TEveElement *el  = entry->first;
    Set_t       &set = entry->second;
 
@@ -94,21 +94,21 @@ void TEveSelection::DoElementUnselect(TEveSelection::SelMap_i entry)
 // Overrides of child-element-management virtuals from TEveElement
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pre-addition check. Deny addition if el is already selected.
+/// Virtual from TEveElement.
+
 Bool_t TEveSelection::AcceptElement(TEveElement* el)
 {
-   // Pre-addition check. Deny addition if el is already selected.
-   // Virtual from TEveElement.
-
    return el != this && fImpliedSelected.find(el) == fImpliedSelected.end() &&
           el->IsA()->InheritsFrom(TEveSelection::Class()) == kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an element into selection, virtual from TEveElement.
+
 void TEveSelection::AddElement(TEveElement* el)
 {
-   // Add an element into selection, virtual from TEveElement.
-
    TEveElementList::AddElement(el);
 
    SelMap_i i = fImpliedSelected.insert(std::make_pair(el, Set_t())).first;
@@ -119,21 +119,21 @@ void TEveSelection::AddElement(TEveElement* el)
    SelectionAdded(el);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an element into selection, virtual from TEveElement.
+/// Overriden here just so that a signal can be emitted.
+
 void TEveSelection::RemoveElement(TEveElement* el)
 {
-   // Add an element into selection, virtual from TEveElement.
-   // Overriden here just so that a signal can be emitted.
-
    TEveElementList::RemoveElement(el);
    SelectionRemoved(el);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TEveElement.
+
 void TEveSelection::RemoveElementLocal(TEveElement* el)
 {
-   // Virtual from TEveElement.
-
    SelMap_i i = fImpliedSelected.find(el);
 
    if (i != fImpliedSelected.end())
@@ -150,21 +150,21 @@ void TEveSelection::RemoveElementLocal(TEveElement* el)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an element into selection, virtual from TEveElement.
+/// Overriden here just so that a signal can be emitted.
+
 void TEveSelection::RemoveElements()
 {
-   // Add an element into selection, virtual from TEveElement.
-   // Overriden here just so that a signal can be emitted.
-
    TEveElementList::RemoveElements();
    SelectionCleared();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TEveElement.
+
 void TEveSelection::RemoveElementsLocal()
 {
-   // Virtual from TEveElement.
-
    if (fActive)
    {
       for (SelMap_i i = fImpliedSelected.begin(); i != fImpliedSelected.end(); ++i)
@@ -173,15 +173,15 @@ void TEveSelection::RemoveElementsLocal()
    fImpliedSelected.clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove element from all implied-selected sets.
+///
+/// This is called as part of the element destruction from
+/// TEveManager::PreDeleteElement() and should not be called
+/// directly.
+
 void TEveSelection::RemoveImpliedSelected(TEveElement* el)
 {
-   // Remove element from all implied-selected sets.
-   //
-   // This is called as part of the element destruction from
-   // TEveManager::PreDeleteElement() and should not be called
-   // directly.
-
    for (SelMap_i i = fImpliedSelected.begin(); i != fImpliedSelected.end(); ++i)
    {
       Set_i j = i->second.find(el);
@@ -190,13 +190,13 @@ void TEveSelection::RemoveImpliedSelected(TEveElement* el)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recalculate implied-selected state for given selection entry.
+/// Add new elements to implied-selected set and increase their
+/// implied-selected count.
+
 void TEveSelection::RecheckImpliedSet(SelMap_i smi)
 {
-   // Recalculate implied-selected state for given selection entry.
-   // Add new elements to implied-selected set and increase their
-   // implied-selected count.
-
    Set_t set;
    smi->first->FillImpliedSelectedSet(set);
    for (Set_i i = set.begin(); i != set.end(); ++i)
@@ -209,12 +209,12 @@ void TEveSelection::RecheckImpliedSet(SelMap_i smi)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If given element is selected or implied-selected with this
+/// selection and recheck implied-set for given selection entry.
+
 void TEveSelection::RecheckImpliedSetForElement(TEveElement* el)
 {
-   // If given element is selected or implied-selected with this
-   // selection and recheck implied-set for given selection entry.
-
    // Top-level selected.
    {
       SelMap_i i = fImpliedSelected.find(el);
@@ -237,35 +237,35 @@ void TEveSelection::RecheckImpliedSetForElement(TEveElement* el)
 // Signals
 //******************************************************************************
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit SelectionAdded signal.
+
 void TEveSelection::SelectionAdded(TEveElement* el)
 {
-   // Emit SelectionAdded signal.
-
    Emit("SelectionAdded(TEveElement*)", (Long_t)el);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit SelectionRemoved signal.
+
 void TEveSelection::SelectionRemoved(TEveElement* el)
 {
-   // Emit SelectionRemoved signal.
-
    Emit("SelectionRemoved(TEveElement*)", (Long_t)el);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit SelectionCleared signal.
+
 void TEveSelection::SelectionCleared()
 {
-   // Emit SelectionCleared signal.
-
    Emit("SelectionCleared()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when secondary selection changed internally.
+
 void TEveSelection::SelectionRepeated(TEveElement* el)
 {
-   // Called when secondary selection changed internally.
-
    Emit("SelectionRepeated(TEveElement*)", (Long_t)el);
 }
 
@@ -273,21 +273,21 @@ void TEveSelection::SelectionRepeated(TEveElement* el)
 // Activation / deactivation of selection
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate this selection.
+
 void TEveSelection::ActivateSelection()
 {
-   // Activate this selection.
-
    for (SelMap_i i = fImpliedSelected.begin(); i != fImpliedSelected.end(); ++i)
       DoElementSelect(i);
    fActive = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deactivate this selection.
+
 void TEveSelection::DeactivateSelection()
 {
-   // Deactivate this selection.
-
    fActive = kFALSE;
    for (SelMap_i i = fImpliedSelected.begin(); i != fImpliedSelected.end(); ++i)
       DoElementUnselect(i);
@@ -298,13 +298,13 @@ void TEveSelection::DeactivateSelection()
 // User input processing
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given element el that was picked or clicked by the user, find
+/// the parent/ancestor element that should actually become the main
+/// selected element according to current selection mode.
+
 TEveElement* TEveSelection::MapPickedToSelected(TEveElement* el)
 {
-   // Given element el that was picked or clicked by the user, find
-   // the parent/ancestor element that should actually become the main
-   // selected element according to current selection mode.
-
    if (el == 0)
       return 0;
 
@@ -358,14 +358,14 @@ TEveElement* TEveSelection::MapPickedToSelected(TEveElement* el)
    return el;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when user picks/clicks on an element. If multi is true,
+/// the user is requiring a multiple selection (usually this is
+/// associated with control-key being pressed at the time of pick
+/// event).
+
 void TEveSelection::UserPickedElement(TEveElement* el, Bool_t multi)
 {
-   // Called when user picks/clicks on an element. If multi is true,
-   // the user is requiring a multiple selection (usually this is
-   // associated with control-key being pressed at the time of pick
-   // event).
-
    TEveElement *edit_el = el ? el->ForwardEdit() : 0;
 
    el = MapPickedToSelected(el);
@@ -387,11 +387,11 @@ void TEveSelection::UserPickedElement(TEveElement* el, Bool_t multi)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when secondary selection becomes empty.
+
 void TEveSelection::UserRePickedElement(TEveElement* el)
 {
-   // Called when secondary selection becomes empty.
-
    el = MapPickedToSelected(el);
    if (el && HasChild(el))
    {
@@ -400,11 +400,11 @@ void TEveSelection::UserRePickedElement(TEveElement* el)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when secondary selection becomes empty.
+
 void TEveSelection::UserUnPickedElement(TEveElement* el)
 {
-   // Called when secondary selection becomes empty.
-
    el = MapPickedToSelected(el);
    if (el)
    {

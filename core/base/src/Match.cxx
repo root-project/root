@@ -64,13 +64,13 @@ enum Eaction {                  // These are put in the pattern string
 #define MAPSIZE 16              // need this many Pattern_t elements for
                                 // character class bit map
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Advance a pointer into the pattern template to the next pattern element,
+/// this is a+1 for all pattern elements but kCCL, where you have to skip
+/// past both the kCCL character and the bitmap that follows that character.
+
 inline void ADVANCE(const Pattern_t*& pat)
 {
-   // Advance a pointer into the pattern template to the next pattern element,
-   // this is a+1 for all pattern elements but kCCL, where you have to skip
-   // past both the kCCL character and the bitmap that follows that character.
-
    if (*pat++ == (Pattern_t) kCCL)
       pat += MAPSIZE;
 }
@@ -80,7 +80,8 @@ inline void ADVANCE(const Pattern_t*& pat)
 // test bit b to see if it was set previously.
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 #ifdef SETBIT // from Rtypes.h
 #undef SETBIT
 #endif
@@ -90,7 +91,8 @@ static void SETBIT(unsigned char b, Pattern_t* map)
    map[b >> 4] |= 1 << (b & 0x0f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static int TSTBIT(unsigned char b, const Pattern_t* map)
 {
    return map[b >> 4] & (1 << (b & 0x0f));
@@ -114,20 +116,20 @@ static int          esc(const char**);
 
 // ----------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a pattern template from the string pointed to by exp. Stop when
+/// '\0' is found in exp.  The pattern template is assembled
+/// in pat whose length is given by maxpat.
+///
+/// Return:
+/// E_ILLEGAL       Illegal input pattern.
+/// E_NOMEM         out of memory.
+/// E_PAT           pattern too long.
+
 int Makepat(const char*     exp,        // Regular expression
             Pattern_t*      pat,        // Assembled compiled pattern
             int             maxpat)     // Length of pat
 {
-   // Make a pattern template from the string pointed to by exp. Stop when
-   // '\0' is found in exp.  The pattern template is assembled
-   // in pat whose length is given by maxpat.
-   //
-   // Return:
-   // E_ILLEGAL       Illegal input pattern.
-   // E_NOMEM         out of memory.
-   // E_PAT           pattern too long.
-
    Pattern_t* cur;           // pointer to current pattern element
    Pattern_t* prev;          // pointer to previous pattern element
    int        theError = E_ILLEGAL;
@@ -212,14 +214,14 @@ exit:
    return theError;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Match a string with a pattern.
+
 const char *Matchs(const char*       str,
                    size_t            slen,
                    const Pattern_t*  pat,
                    const char**      startpat)
 {
-   // Match a string with a pattern.
-
    if (!pat) return 0;
    const char* endp = 0;
    if (*pat == (Pattern_t)kBOL) {
@@ -235,12 +237,12 @@ const char *Matchs(const char*       str,
    return endp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bits in the map corresponding to characters specified in the src
+/// character class.
+
 static const char *doccl(Pattern_t*  map, const char* src)
 {
-   // Set bits in the map corresponding to characters specified in the src
-   // character class.
-
    int negative;
 
    ++src;                        // skip past the [
@@ -273,20 +275,20 @@ static const char *doccl(Pattern_t*  map, const char* src)
    return src;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Like strcmp, but compares str against pat. Each element of str is
+/// compared with the template until either a mis-match is found or the end
+/// of the template is reached. In the former case a 0 is returned; in the
+/// latter, a pointer into str (pointing after the last character in the
+/// matched pattern) is returned. start points at the first character in
+/// the string, which might not be the same thing as str if the search
+/// started in the middle of the string.
+
 static const char *patcmp(const char*      str,
                           size_t           slen,
                           const Pattern_t* pat,
                           const char*      start)
 {
-   // Like strcmp, but compares str against pat. Each element of str is
-   // compared with the template until either a mis-match is found or the end
-   // of the template is reached. In the former case a 0 is returned; in the
-   // latter, a pointer into str (pointing after the last character in the
-   // matched pattern) is returned. start points at the first character in
-   // the string, which might not be the same thing as str if the search
-   // started in the middle of the string.
-
    if (!pat)                     // make sure pattern is valid
       return 0;
 
@@ -354,21 +356,21 @@ static const char *patcmp(const char*      str,
    return str;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Match one pattern element, pointed at by pat, against the character at
+/// **strp. Return 0 on a failure, 1 on success. *strp is advanced to skip
+/// over the matched character on a successful match. Closure is handled one
+/// level up by patcmp().
+///
+/// "start" points at the character at the left edge of the line. This might
+/// not be the same thing as *strp if the search is starting in the middle
+/// of the string. An end-of- line anchor matches end of string only.
+
 static int omatch(const char**      strp,
                   size_t*           slenp,
                   const Pattern_t*  pat,
                   const char*       start)
 {
-   // Match one pattern element, pointed at by pat, against the character at
-   // **strp. Return 0 on a failure, 1 on success. *strp is advanced to skip
-   // over the matched character on a successful match. Closure is handled one
-   // level up by patcmp().
-   //
-   // "start" points at the character at the left edge of the line. This might
-   // not be the same thing as *strp if the search is starting in the middle
-   // of the string. An end-of- line anchor matches end of string only.
-
    switch (*pat) {
    // Match beginning of line
    case kBOL:   return (*strp == start);
@@ -397,44 +399,44 @@ static int omatch(const char**      strp,
    return 2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert the hex digit represented by 'c' to an int. 'c'
+/// must be one of: 0123456789abcdefABCDEF
+
 static int hex2bin(int c)
 {
-   // Convert the hex digit represented by 'c' to an int. 'c'
-   // must be one of: 0123456789abcdefABCDEF
-
    return (isdigit(c) ? (c)-'0': ((toupper((unsigned char)c))-'A')+10)  & 0xf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert the hex digit represented by 'c' to an int. 'c'
+/// must be a digit in the range '0'-'7'.
+
 static int oct2bin(int c)
 {
-   // Convert the hex digit represented by 'c' to an int. 'c'
-   // must be a digit in the range '0'-'7'.
-
    return ( ((c)-'0')  &  0x7 );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map escape sequences into their equivalent symbols. Return
+/// the equivalent ASCII character. *s is advanced past the
+/// escape sequence. If no escape sequence is present, the
+/// current character is returned and the string is advanced by
+/// one. The following are recognized:
+///
+///  \b     backspace
+///  \f     formfeed
+///  \n     newline
+///  \r     carriage return
+///  \s     space
+///  \t     tab
+///  \e     ASCII ESC character ('\033')
+///  \DDD   number formed of 1-3 octal digits
+///  \xDD   number formed of 1-2 hex digits
+///  \^C    C = any letter. Control code
+
 static int esc(const char** s)
 {
-   // Map escape sequences into their equivalent symbols. Return
-   // the equivalent ASCII character. *s is advanced past the
-   // escape sequence. If no escape sequence is present, the
-   // current character is returned and the string is advanced by
-   // one. The following are recognized:
-   //
-   //  \b     backspace
-   //  \f     formfeed
-   //  \n     newline
-   //  \r     carriage return
-   //  \s     space
-   //  \t     tab
-   //  \e     ASCII ESC character ('\033')
-   //  \DDD   number formed of 1-3 octal digits
-   //  \xDD   number formed of 1-2 hex digits
-   //  \^C    C = any letter. Control code
-
    int rval;
 
    if (**s != '\\')

@@ -52,7 +52,8 @@ namespace ROOT {
 
 extern bool gSysLog;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int GetErrno()
 {
 #ifdef GLOBAL_ERRNO
@@ -62,7 +63,8 @@ int GetErrno()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void ResetErrno()
 {
 #ifdef GLOBAL_ERRNO
@@ -72,11 +74,11 @@ void ResetErrno()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write info message to syslog.
+
 void ErrorInfo(const char *va_(fmt), ...)
 {
-   // Write info message to syslog.
-
    char    buf[kMAXSECBUF];
    va_list ap;
 
@@ -91,19 +93,19 @@ void ErrorInfo(const char *va_(fmt), ...)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open syslog.
+
 void ErrorInit(const char *ident)
 {
-   // Open syslog.
-
    openlog(ident, (LOG_PID | LOG_CONS), LOG_DAEMON);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return in buf the message belonging to errno.
+
 void Perror(char *buf, int size)
 {
-   // Return in buf the message belonging to errno.
-
    int len = strlen(buf);
 #if (defined(__sun) && defined (__SVR4)) || defined (__linux) || \
    defined(_AIX) || defined(__MACH__)
@@ -114,11 +116,11 @@ void Perror(char *buf, int size)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write fatal message to syslog and exit.
+
 void Error(ErrorHandler_t func, int code, const char *va_(fmt), ...)
 {
-   // Write fatal message to syslog and exit.
-
    char    buf[kMAXSECBUF];
    va_list ap;
 

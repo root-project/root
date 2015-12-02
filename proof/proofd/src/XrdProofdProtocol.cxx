@@ -126,31 +126,31 @@ public:
    void RegisterDirectives();
 };
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 XrdProofdProtCfg::XrdProofdProtCfg(const char *cfg, XrdSysError *edest)
                  : XrdProofdConfig(cfg, edest)
 {
-   // Constructor
-
    fPort = -1;
    RegisterDirectives();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register directives for configuration
+
 void XrdProofdProtCfg::RegisterDirectives()
 {
-   // Register directives for configuration
-
    Register("port", new XrdProofdDirective("port", this, &DoDirectiveClass));
    Register("xrd.protocol", new XrdProofdDirective("xrd.protocol", this, &DoDirectiveClass));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse directives
+
 int XrdProofdProtCfg::DoDirective(XrdProofdDirective *d,
                                   char *val, XrdOucStream *cfg, bool)
 {
-   // Parse directives
-
    if (!d) return -1;
 
    XrdOucString port(val);
@@ -173,13 +173,13 @@ XrdVERSIONINFO(XrdgetProtocolPort,xproofd);
 #endif
 
 extern "C" {
-//_________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This protocol is meant to live in a shared library. The interface below is
+/// used by the server to obtain a copy of the protocol object that can be used
+/// to decide whether or not a link is talking a particular protocol.
+
 XrdProtocol *XrdgetProtocol(const char *, char *parms, XrdProtocol_Config *pi)
 {
-   // This protocol is meant to live in a shared library. The interface below is
-   // used by the server to obtain a copy of the protocol object that can be used
-   // to decide whether or not a link is talking a particular protocol.
-
    // Return the protocol object to be used if static init succeeds
    if (XrdProofdProtocol::Configure(parms, pi)) {
 
@@ -188,12 +188,12 @@ XrdProtocol *XrdgetProtocol(const char *, char *parms, XrdProtocol_Config *pi)
    return (XrdProtocol *)0;
 }
 
-//_________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called early on to determine the port we need to use. The
+/// The default is ostensibly 1093 but can be overidden; which we allow.
+
 int XrdgetProtocolPort(const char * /*pname*/, char * /*parms*/, XrdProtocol_Config *pi)
 {
-      // This function is called early on to determine the port we need to use. The
-      // The default is ostensibly 1093 but can be overidden; which we allow.
-
       // Default XPD_DEF_PORT (1093)
       int port = XPD_DEF_PORT;
 
@@ -212,11 +212,12 @@ int XrdgetProtocolPort(const char * /*pname*/, char * /*parms*/, XrdProtocol_Con
       return port;
 }}
 
-//__________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Protocol constructor
+
 XrdProofdProtocol::XrdProofdProtocol(XrdProtocol_Config *pi)
    : XrdProtocol("xproofd protocol handler"), fProtLink(this)
 {
-   // Protocol constructor
    fLink = 0;
    fArgp = 0;
    fPClient = 0;
@@ -230,10 +231,11 @@ XrdProofdProtocol::XrdProofdProtocol(XrdProtocol_Config *pi)
    Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get response instance corresponding to stream ID 'sid'
+
 XrdProofdResponse *XrdProofdProtocol::Response(kXR_unt16 sid)
 {
-   // Get response instance corresponding to stream ID 'sid'
    XPDLOC(ALL, "Protocol::Response")
 
    TRACE(HDBG, "sid: "<<sid<<", size: "<<fResponses.size());
@@ -245,10 +247,11 @@ XrdProofdResponse *XrdProofdProtocol::Response(kXR_unt16 sid)
    return (XrdProofdResponse *)0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create new response instance for stream ID 'sid'
+
 XrdProofdResponse *XrdProofdProtocol::GetNewResponse(kXR_unt16 sid)
 {
-   // Create new response instance for stream ID 'sid'
    XPDLOC(ALL, "Protocol::GetNewResponse")
 
    XrdOucString msg;
@@ -282,10 +285,11 @@ XrdProofdResponse *XrdProofdProtocol::GetNewResponse(kXR_unt16 sid)
    return fResponses[sid-1];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check whether the request matches this protocol
+
 XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
 {
-   // Check whether the request matches this protocol
    XPDLOC(ALL, "Protocol::Match")
 
    struct ClientInitHandShake hsdata;
@@ -371,11 +375,12 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
    return (XrdProtocol *)xp;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transfer the connection to a rootd daemon to serve a file access request
+/// Return 0 on success, -1 on failure
+
 int XrdProofdProtocol::StartRootd(XrdLink *lp, XrdOucString &emsg)
 {
-   // Transfer the connection to a rootd daemon to serve a file access request
-   // Return 0 on success, -1 on failure
    XPDLOC(ALL, "Protocol::StartRootd")
 
    const char *prog = fgMgr->RootdExe();
@@ -469,12 +474,12 @@ int XrdProofdProtocol::StartRootd(XrdLink *lp, XrdOucString &emsg)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return statistics info about the protocol.
+/// Not really implemented yet: this is a reduced XrdXrootd version.
+
 int XrdProofdProtocol::Stats(char *buff, int blen, int)
 {
-   // Return statistics info about the protocol.
-   // Not really implemented yet: this is a reduced XrdXrootd version.
-
    static char statfmt[] = "<stats id=\"xproofd\"><num>%ld</num></stats>";
 
    // If caller wants only size, give it to them
@@ -485,11 +490,11 @@ int XrdProofdProtocol::Stats(char *buff, int blen, int)
    return snprintf(buff, blen, statfmt, fgCount);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset static and local vars
+
 void XrdProofdProtocol::Reset()
 {
-   // Reset static and local vars
-
    // Init local vars
    fLink      = 0;
    fPid       = -1;
@@ -517,12 +522,13 @@ void XrdProofdProtocol::Reset()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Protocol configuration tool
+/// Function: Establish configuration at load time.
+/// Output: 1 upon success or 0 otherwise.
+
 int XrdProofdProtocol::Configure(char *, XrdProtocol_Config *pi)
 {
-   // Protocol configuration tool
-   // Function: Establish configuration at load time.
-   // Output: 1 upon success or 0 otherwise.
    XPDLOC(ALL, "Protocol::Configure")
 
    XrdOucString mp;
@@ -584,11 +590,12 @@ int XrdProofdProtocol::Configure(char *, XrdProtocol_Config *pi)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process the information received on the active link.
+/// (We ignore the argument here)
+
 int XrdProofdProtocol::Process(XrdLink *)
 {
-   // Process the information received on the active link.
-   // (We ignore the argument here)
    XPDLOC(ALL, "Protocol::Process")
 
    int rc = 0;
@@ -645,11 +652,12 @@ int XrdProofdProtocol::Process(XrdLink *)
    return Process2();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Local processing method: here the request is dispatched to the appropriate
+/// method
+
 int XrdProofdProtocol::Process2()
 {
-   // Local processing method: here the request is dispatched to the appropriate
-   // method
    XPDLOC(ALL, "Protocol::Process2")
 
    int rc = 0;
@@ -714,10 +722,11 @@ int XrdProofdProtocol::Process2()
    return rc;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recycle call. Release the instance and give it back to the stack.
+
 void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
 {
-   // Recycle call. Release the instance and give it back to the stack.
    XPDLOC(ALL, "Protocol::Recycle")
 
    const char *srvtype[6] = {"ANY", "MasterWorker", "MasterMaster",
@@ -806,11 +815,12 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate a buffer to handle quantum bytes; if argp points to an existing
+/// buffer, its size is checked and re-allocated if needed
+
 XrdBuffer *XrdProofdProtocol::GetBuff(int quantum, XrdBuffer *argp)
 {
-   // Allocate a buffer to handle quantum bytes; if argp points to an existing
-   // buffer, its size is checked and re-allocated if needed
    XPDLOC(ALL, "Protocol::GetBuff")
 
    TRACE(HDBG, "len: "<<quantum);
@@ -840,19 +850,20 @@ XrdBuffer *XrdProofdProtocol::GetBuff(int quantum, XrdBuffer *argp)
    return argp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release a buffer previously allocated via GetBuff
+
 void XrdProofdProtocol::ReleaseBuff(XrdBuffer *argp)
 {
-   // Release a buffer previously allocated via GetBuff
-
    XrdSysMutexHelper mh(fgBMutex);
    fgBPool->Release(argp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get data from the open link
+
 int XrdProofdProtocol::GetData(const char *dtype, char *buff, int blen)
 {
-   // Get data from the open link
    XPDLOC(ALL, "Protocol::GetData")
 
    int rlen;
@@ -883,11 +894,12 @@ int XrdProofdProtocol::GetData(const char *dtype, char *buff, int blen)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send data over the open link. Segmentation is done here, if required.
+
 int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
                                 kXR_int32 sid, XrdSrvBuffer **buf, bool savebuf)
 {
-   // Send data over the open link. Segmentation is done here, if required.
    XPDLOC(ALL, "Protocol::SendData")
 
    int rc = 0;
@@ -956,13 +968,14 @@ int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send data over the open client links of session 'xps'.
+/// Used when all the connected clients are eligible to receive the message.
+/// Segmentation is done here, if required.
+
 int XrdProofdProtocol::SendDataN(XrdProofdProofServ *xps,
                                  XrdSrvBuffer **buf, bool savebuf)
 {
-   // Send data over the open client links of session 'xps'.
-   // Used when all the connected clients are eligible to receive the message.
-   // Segmentation is done here, if required.
    XPDLOC(ALL, "Protocol::SendDataN")
 
    int rc = 0;
@@ -1007,10 +1020,11 @@ int XrdProofdProtocol::SendDataN(XrdProofdProofServ *xps,
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle a request to forward a message to another process
+
 int XrdProofdProtocol::SendMsg()
 {
-   // Handle a request to forward a message to another process
    XPDLOC(ALL, "Protocol::SendMsg")
 
    static const char *crecv[5] = {"master proofserv", "top master",
@@ -1131,10 +1145,11 @@ int XrdProofdProtocol::SendMsg()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle generic request of a urgent message to be forwarded to the server
+
 int XrdProofdProtocol::Urgent()
 {
-   // Handle generic request of a urgent message to be forwarded to the server
    XPDLOC(ALL, "Protocol::Urgent")
 
    unsigned int rc = 0;
@@ -1198,10 +1213,11 @@ int XrdProofdProtocol::Urgent()
    return 0;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle an interrupt request
+
 int XrdProofdProtocol::Interrupt()
 {
-   // Handle an interrupt request
    XPDLOC(ALL, "Protocol::Interrupt")
 
    int rc = 0;
@@ -1250,13 +1266,14 @@ int XrdProofdProtocol::Interrupt()
    return 0;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle a ping request.
+/// For internal connections, ping is done asynchronously to avoid locking
+/// problems; the session checker verifies that the admin file has been touched
+/// recently enough; touching is done in Process2, so we have nothing to do here
+
 int XrdProofdProtocol::Ping()
 {
-   // Handle a ping request.
-   // For internal connections, ping is done asynchronously to avoid locking
-   // problems; the session checker verifies that the admin file has been touched
-   // recently enough; touching is done in Process2, so we have nothing to do here
    XPDLOC(ALL, "Protocol::Ping")
 
    int rc = 0;
@@ -1386,11 +1403,12 @@ int XrdProofdProtocol::Ping()
    return 0;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Post change of session status
+
 void XrdProofdProtocol::PostSession(int on, const char *u, const char *g,
                                     XrdProofdProofServ *xps)
 {
-   // Post change of session status
    XPDLOC(ALL, "Protocol::PostSession")
 
    // Tell the priority manager
@@ -1427,10 +1445,11 @@ void XrdProofdProtocol::PostSession(int on, const char *u, const char *g,
    return;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recording time of the last request on this instance
+
 void XrdProofdProtocol::TouchAdminPath()
 {
-   // Recording time of the last request on this instance
    XPDLOC(ALL, "Protocol::TouchAdminPath")
 
    XPD_SETRESPV(this, "TouchAdminPath");
@@ -1458,10 +1477,11 @@ void XrdProofdProtocol::TouchAdminPath()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set and propagate a Ctrl-C request
+
 int XrdProofdProtocol::CtrlC()
 {
-   // Set and propagate a Ctrl-C request
    XPDLOC(ALL, "Protocol::CtrlC")
 
    TRACEP(this, ALL, "handling request");

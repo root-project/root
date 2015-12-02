@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 BEGIN_HTML
 <p>
@@ -83,19 +84,20 @@ using namespace RooFit;
 using namespace RooStats;
 using namespace std;
 
-//____________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 BernsteinCorrection::BernsteinCorrection(Double_t tolerance):
    fMaxDegree(10), fMaxCorrection(100), fTolerance(tolerance){
 }
 
 
-//____________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main method for Bernstein correction.
+
 Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks, 
 					      const char* nominalName, 
 					      const char* varName, 
 					      const char* dataName){
-  // Main method for Bernstein correction.
-
   // get ingredients out of workspace
   RooRealVar* x = wks->var(varName);
   RooAbsPdf* nominal = wks->pdf(nominalName);
@@ -206,7 +208,9 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
 }
 
 
-//____________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create sampling distribution for q given degree-1 vs. degree corrections
+
 void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks, 
 					       const char* nominalName, 
 					       const char* varName, 
@@ -215,8 +219,6 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
 					      TH1F* samplingDistExtra,
 					       Int_t degree, 
 					       Int_t nToys){
-  // Create sampling distribution for q given degree-1 vs. degree corrections
-
   // get ingredients out of workspace
   RooRealVar* x = wks->var(varName);
   RooAbsPdf* nominal = wks->pdf(nominalName);

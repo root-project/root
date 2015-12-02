@@ -32,14 +32,15 @@ using namespace Qt;
 
 ClassImp(TQRootDialog)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ctor
+
 TQRootDialog::TQRootDialog(QWidget *wparent, const char *wname, WFlags f,
                          TObject* obj, TMethod *method ) :
    QVBox(wparent,wname, f | WType_Modal | WStyle_Dialog   ),
    fLineEdit(0),
    fParent(wparent)
 {
-   // ctor
    fCurObj=obj;
    fCurMethod=method;
    setSizePolicy(QSizePolicy(QSizePolicy::Expanding,
@@ -54,11 +55,11 @@ TQRootDialog::TQRootDialog(QWidget *wparent, const char *wname, WFlags f,
    connect(bOk,SIGNAL( clicked() ), this, SLOT( ExecuteMethod() ));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute ROOT methods.
+
 void TQRootDialog::ExecuteMethod()
 {
-   // Execute ROOT methods.
-
    Bool_t deletion = kFALSE;
    TVirtualPad *psave =  gROOT->GetSelectedPad();
 
@@ -120,11 +121,11 @@ void TQRootDialog::ExecuteMethod()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dtor
+
 TQRootDialog::~TQRootDialog()
 {
-   // dtor
-
    if (fArgBox) delete fArgBox;
    if (fLineEdit) delete fLineEdit;
 #if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
@@ -135,11 +136,11 @@ TQRootDialog::~TQRootDialog()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add widgets for arguments.
+
 void TQRootDialog::Add(const char* argname, const char* value, const char* /*type*/)
 {
-   // Add widgets for arguments.
-
    QString s;
    s = value;
    new QLabel(argname,fArgBox);
@@ -152,18 +153,18 @@ void TQRootDialog::Add(const char* argname, const char* value, const char* /*typ
    fList.append( lineEdit );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show the dialog.
+
 void TQRootDialog::Popup()
 {
-   // Show the dialog.
-
    show();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle close event.
+
 void TQRootDialog::closeEvent( QCloseEvent* ce )
 {
-   // Handle close event.
-
    ce->accept();
 }

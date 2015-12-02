@@ -52,7 +52,8 @@
 
 ClassImp(TGLRnrCtx);
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fViewer    (viewer),
    fCamera    (0),
@@ -117,40 +118,40 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLRnrCtx::~TGLRnrCtx()
 {
-   // Destructor.
-
    gluDeleteQuadric(fQuadric);
    delete fPickRectangle;
    delete fSelectBuffer;
    delete fColorSetStack;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return current scene (based on scene-info data).
+
 TGLSceneBase * TGLRnrCtx::GetScene()
 {
-   // Return current scene (based on scene-info data).
-
    return  fSceneInfo->GetScene();
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return current scene (based on scene-info data).
+
 TGLSceneBase & TGLRnrCtx::RefScene()
 {
-   // Return current scene (based on scene-info data).
-
    return *fSceneInfo->GetScene();
 }
 
 /**************************************************************************/
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if current render-pass uses filled polygon style.
+
 Bool_t TGLRnrCtx::IsDrawPassFilled() const
 {
-   // Returns true if current render-pass uses filled polygon style.
-
    return fDrawPass == kPassFill || fDrawPass == kPassOutlineFill;
 }
 
@@ -159,11 +160,11 @@ Bool_t TGLRnrCtx::IsDrawPassFilled() const
 // Stopwatch
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start the stopwatch.
+
 void TGLRnrCtx:: StartStopwatch()
 {
-   // Start the stopwatch.
-
    if (fIsRunning)
       return;
 
@@ -172,20 +173,20 @@ void TGLRnrCtx:: StartStopwatch()
    fHasTimedOut = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stop the stopwatch.
+
 void TGLRnrCtx:: StopStopwatch()
 {
-   // Stop the stopwatch.
-
    fHasTimedOut = fStopwatch.End() > fRenderTimeOut;
    fIsRunning = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the stopwatch went beyond the render time limit.
+
 Bool_t TGLRnrCtx::HasStopwatchTimedOut()
 {
-   // Check if the stopwatch went beyond the render time limit.
-
    if (fHasTimedOut) return kTRUE;
    if (fIsRunning && fStopwatch.Lap() > fRenderTimeOut)
       fHasTimedOut = kTRUE;
@@ -197,12 +198,12 @@ Bool_t TGLRnrCtx::HasStopwatchTimedOut()
 // Selection & picking
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup context for running selection.
+/// x and y are in window coordinates.
+
 void TGLRnrCtx::BeginSelection(Int_t x, Int_t y, Int_t r)
 {
-   // Setup context for running selection.
-   // x and y are in window coordinates.
-
    fSelection    = kTRUE;
    fSecSelection = kFALSE;
    fPickRadius   = r;
@@ -212,11 +213,11 @@ void TGLRnrCtx::BeginSelection(Int_t x, Int_t y, Int_t r)
    glSelectBuffer(fSelectBuffer->GetBufSize(), fSelectBuffer->GetBuf());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// End selection.
+
 void TGLRnrCtx::EndSelection(Int_t glResult)
 {
-   // End selection.
-
    fSelection    = kFALSE;
    fSecSelection = kFALSE;
    fPickRadius   = 0;
@@ -241,20 +242,20 @@ void TGLRnrCtx::EndSelection(Int_t glResult)
    fSelectBuffer->ProcessResult(glResult);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return current pick rectangle. This is *zero* when
+/// selection is not set.
+
 TGLRect * TGLRnrCtx::GetPickRectangle()
 {
-   // Return current pick rectangle. This is *zero* when
-   // selection is not set.
-
    return fPickRectangle;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pick radius. If selection is not active it returns 0.
+
 Int_t TGLRnrCtx::GetPickRadius()
 {
-   // Return pick radius. If selection is not active it returns 0.
-
    return fPickRadius;
 }
 
@@ -263,28 +264,28 @@ Int_t TGLRnrCtx::GetPickRadius()
 // ColorSet access & management
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create copy of current color-set on the top of the stack.
+
 void TGLRnrCtx::PushColorSet()
 {
-   // Create copy of current color-set on the top of the stack.
-
    fColorSetStack->push_back(new TGLColorSet(*fColorSetStack->back()));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return reference to current color-set (top of hte stack).
+
 TGLColorSet& TGLRnrCtx::ColorSet()
 {
-   // Return reference to current color-set (top of hte stack).
-
    return * fColorSetStack->back();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pops the top-most color-set.
+/// If only one entry is available, error is printed and the entry remains.
+
 void TGLRnrCtx::PopColorSet()
 {
-   // Pops the top-most color-set.
-   // If only one entry is available, error is printed and the entry remains.
-
    if (fColorSetStack->size() >= 2)
    {
       delete fColorSetStack->back();
@@ -296,31 +297,31 @@ void TGLRnrCtx::PopColorSet()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the default/bottom color-set.
+/// Returns the previous color-set.
+
 TGLColorSet* TGLRnrCtx::ChangeBaseColorSet(TGLColorSet* set)
 {
-   // Change the default/bottom color-set.
-   // Returns the previous color-set.
-
    TGLColorSet* old = fColorSetStack->front();
    fColorSetStack->front() = set;
    return old;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the current base color-set.
+
 TGLColorSet* TGLRnrCtx::GetBaseColorSet()
 {
-   // Returns the current base color-set.
-
    return fColorSetStack->front();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set col if it is different from background, otherwise use
+/// current foreground color.
+
 void TGLRnrCtx::ColorOrForeground(Color_t col)
 {
-   // Set col if it is different from background, otherwise use
-   // current foreground color.
-
    if (fColorSetStack->back()->Background().GetColorIndex() == col)
       TGLUtil::Color(fColorSetStack->back()->Foreground());
    else
@@ -331,20 +332,20 @@ void TGLRnrCtx::ColorOrForeground(Color_t col)
 // Display-list state
 /******************************************************************************/
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start display-list capture.
+
 void TGLRnrCtx::OpenDLCapture()
 {
-   // Start display-list capture.
-
    assert(fDLCaptureOpen == kFALSE);
    fDLCaptureOpen = kTRUE;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// End display list capture.
+
 void TGLRnrCtx::CloseDLCapture()
 {
-   // End display list capture.
-
    assert(fDLCaptureOpen == kTRUE);
    fDLCaptureOpen = kFALSE;
 }
@@ -352,45 +353,45 @@ void TGLRnrCtx::CloseDLCapture()
 /******************************************************************************/
 // TGLFont interface
 /******************************************************************************/
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release font in the GL rendering context.
+
 void TGLRnrCtx::ReleaseFont(TGLFont& font)
 {
-   // Release font in the GL rendering context.
-
    fGLCtxIdentity->GetFontManager()->ReleaseFont(font);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get font in the GL rendering context.
+
 void TGLRnrCtx::RegisterFontNoScale(Int_t size, Int_t file, Int_t mode, TGLFont& out)
 {
-   // Get font in the GL rendering context.
-
    fGLCtxIdentity->GetFontManager()->RegisterFont( size, file, (TGLFont::EMode)mode, out);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get font in the GL rendering context.
+
 void TGLRnrCtx::RegisterFontNoScale(Int_t size, const char* name, Int_t mode, TGLFont& out)
 {
-   // Get font in the GL rendering context.
-
    fGLCtxIdentity->GetFontManager()->RegisterFont(size, name, (TGLFont::EMode)mode, out);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get font in the GL rendering context.
+/// The font is scaled relative to current render scale.
+
 void TGLRnrCtx::RegisterFont(Int_t size, Int_t file, Int_t mode, TGLFont& out)
 {
-   // Get font in the GL rendering context.
-   // The font is scaled relative to current render scale.
-
   RegisterFontNoScale(TMath::Nint(size*fRenderScale), file, mode, out);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get font in the GL rendering context.
+/// The font is scaled relative to current render scale.
+
 void TGLRnrCtx::RegisterFont(Int_t size, const char* name, Int_t mode, TGLFont& out)
 {
-   // Get font in the GL rendering context.
-   // The font is scaled relative to current render scale.
-
   RegisterFontNoScale(TMath::Nint(size*fRenderScale), name, mode, out);
 }
 
@@ -398,11 +399,11 @@ void TGLRnrCtx::RegisterFont(Int_t size, const char* name, Int_t mode, TGLFont& 
 // fQuadric's initialization.
 /******************************************************************************/
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize fQuadric.
+
 GLUquadric *TGLRnrCtx::GetGluQuadric()
 {
-   // Initialize fQuadric.
-
    if (!fQuadric) {
       if ((fQuadric = gluNewQuadric())) {
          gluQuadricOrientation(fQuadric, (GLenum)GLU_OUTSIDE);
@@ -446,11 +447,11 @@ void TGLRnrCtx::ProjectionMatrixPop()
 // Static helpers
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return string describing the style.
+
 const char* TGLRnrCtx::StyleName(Short_t style)
 {
-   // Return string describing the style.
-
    switch (style)
    {
       case TGLRnrCtx::kFill:       return "Filled Polys";

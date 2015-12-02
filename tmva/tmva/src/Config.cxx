@@ -39,7 +39,9 @@ TMVA::Config* TMVA::Config::fgConfigPtr = 0;
 
 TMVA::Config& TMVA::gConfig() { return TMVA::Config::Instance(); }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor - set defaults
+
 TMVA::Config::Config() :
    fUseColoredConsole    ( kTRUE  ),
    fSilent               ( kFALSE ),
@@ -47,8 +49,6 @@ TMVA::Config::Config() :
    fDrawProgressBar      ( kTRUE ),
    fLogger               ( new MsgLogger("Config") )
 {
-   // constructor - set defaults
-   
    // plotting
    fVariablePlotting.fTimesRMS = 8.0;
    fVariablePlotting.fNbins1D  = 40;
@@ -64,17 +64,19 @@ TMVA::Config::Config() :
    fIONames.fOptionsReferenceFileDir = "optionInfo";
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::Config::~Config()
 {
-   // destructor
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function: destroy TMVA instance
+
 void TMVA::Config::DestroyInstance()
 {
-   // static function: destroy TMVA instance
 #if __cplusplus > 199711L
   delete fgConfigPtr.exchange(0);
 #else
@@ -82,10 +84,11 @@ void TMVA::Config::DestroyInstance()
 #endif
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function: returns  TMVA instance
+
 TMVA::Config& TMVA::Config::Instance()
 {
-   // static function: returns  TMVA instance
 #if __cplusplus > 199711L
   if(!fgConfigPtr) {
     TMVA::Config* tmp = new Config();

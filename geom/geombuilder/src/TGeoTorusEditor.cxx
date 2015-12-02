@@ -46,12 +46,13 @@ enum ETGeoTorusWid {
    kTORUS_DPHI, kTORUS_APPLY, kTORUS_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for torus editor
+
 TGeoTorusEditor::TGeoTorusEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for torus editor
    fShape   = 0;
    fRi = fRmini = fRmaxi = fPhi1i = fDphii = 0.0;
    fNamei = "";
@@ -146,10 +147,11 @@ TGeoTorusEditor::TGeoTorusEditor(const TGWindow *p, Int_t width,
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoTorusEditor::~TGeoTorusEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -159,10 +161,11 @@ TGeoTorusEditor::~TGeoTorusEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoTorusEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoTorusEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoTorusEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoTorusEditor", this, "DoModified()");
@@ -180,10 +183,11 @@ void TGeoTorusEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoTorusEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoTorus::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -212,24 +216,27 @@ void TGeoTorusEditor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shape drawing is delayed.
+
 Bool_t TGeoTorusEditor::IsDelayed() const
 {
-// Check if shape drawing is delayed.
    return (fDelayed->GetState() == kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for name.
+
 void TGeoTorusEditor::DoName()
 {
-// Slot for name.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying current settings.
+
 void TGeoTorusEditor::DoApply()
 {
-// Slot for applying current settings.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t r = fER->GetNumber();
@@ -262,17 +269,19 @@ void TGeoTorusEditor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for notifying modifications.
+
 void TGeoTorusEditor::DoModified()
 {
-// Slot for notifying modifications.
    fApply->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoTorusEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fER->SetNumber(fRi);
    fERmin->SetNumber(fRmini);
    fERmax->SetNumber(fRmaxi);
@@ -283,10 +292,11 @@ void TGeoTorusEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
    
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for R.
+
 void TGeoTorusEditor::DoR()
 {
-// Slot for R.
    Double_t r = fER->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    if (r<rmax) {
@@ -297,10 +307,11 @@ void TGeoTorusEditor::DoR()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Rmin.
+
 void TGeoTorusEditor::DoRmin()
 {
-// Slot for Rmin.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    if (rmin>rmax) {
@@ -311,10 +322,11 @@ void TGeoTorusEditor::DoRmin()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Rmax.
+
 void TGeoTorusEditor::DoRmax()
 {
-// Slot for Rmax.
    Double_t r = fER->GetNumber();
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
@@ -330,10 +342,11 @@ void TGeoTorusEditor::DoRmax()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi.
+
 void TGeoTorusEditor::DoPhi1()
 {
-// Slot for phi.
    Double_t phi = fEPhi1->GetNumber();
    if (phi<0 || phi>360) {
       phi = 0;
@@ -343,10 +356,11 @@ void TGeoTorusEditor::DoPhi1()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Dphi.
+
 void TGeoTorusEditor::DoDphi()
 {
-// Slot for Dphi.
    Double_t dphi = fEDphi->GetNumber();
    if (dphi<=0 || dphi>360) {
       dphi = 1;

@@ -36,10 +36,11 @@ ClassImp(RooAbsDataStore)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooAbsDataStore::RooAbsDataStore() 
 {
-  // Default constructor
   _iterator = _vars.createIterator() ;
   _cacheIter = _cachedVars.createIterator() ;
   _doDirtyProp = kTRUE ;
@@ -48,12 +49,12 @@ RooAbsDataStore::RooAbsDataStore()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooAbsDataStore::RooAbsDataStore(const char* name, const char* title, const RooArgSet& vars) : 
   TNamed(name,title)
 {
-  // Default constructor
-
   // clone the fundamentals of the given data set into internal buffer
   _vars.add(vars) ;
 
@@ -65,7 +66,8 @@ RooAbsDataStore::RooAbsDataStore(const char* name, const char* title, const RooA
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooAbsDataStore::RooAbsDataStore(const RooAbsDataStore& other, const char* newname) : TNamed(other), RooPrintable(other)
 {
   if (newname) {
@@ -79,7 +81,8 @@ RooAbsDataStore::RooAbsDataStore(const RooAbsDataStore& other, const char* newna
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooAbsDataStore::RooAbsDataStore(const RooAbsDataStore& other, const RooArgSet& vars, const char* newname) : TNamed(other), RooPrintable(other)
 {
   if (newname) {
@@ -93,67 +96,72 @@ RooAbsDataStore::RooAbsDataStore(const RooAbsDataStore& other, const RooArgSet& 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooAbsDataStore::~RooAbsDataStore()
 {
-  // Destructor
   delete _iterator ;
   delete _cacheIter ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if currently loaded coordinate is considered valid within
+/// the current range definitions of all observables
+
 Bool_t RooAbsDataStore::valid() const 
 {
-  // Return true if currently loaded coordinate is considered valid within
-  // the current range definitions of all observables
   return kTRUE ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print name of dataset
+
 void RooAbsDataStore::printName(ostream& os) const 
 {
-  // Print name of dataset
-
   os << GetName() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print title of dataset
+
 void RooAbsDataStore::printTitle(ostream& os) const 
 {
-  // Print title of dataset
   os << GetTitle() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print class name of dataset
+
 void RooAbsDataStore::printClassName(ostream& os) const 
 {
-  // Print class name of dataset
   os << IsA()->GetName() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print value of the dataset, i.e. the sum of weights contained in the dataset
+
 void RooAbsDataStore::printValue(ostream& os) const 
 {
-  // Print value of the dataset, i.e. the sum of weights contained in the dataset
   os << numEntries() << " entries" ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print argument of dataset, i.e. the observable names
+
 void RooAbsDataStore::printArgs(ostream& os) const 
 {
-  // Print argument of dataset, i.e. the observable names
-
   os << "[" ;    
   _iterator->Reset() ;
   RooAbsArg* arg ;
@@ -174,11 +182,11 @@ void RooAbsDataStore::printArgs(ostream& os) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define default print options, for a given print style
+
 Int_t RooAbsDataStore::defaultPrintContents(Option_t* /*opt*/) const 
 {
-  // Define default print options, for a given print style
-
   return kName|kClassName|kArgs|kValue ;
 }
 
@@ -186,11 +194,11 @@ Int_t RooAbsDataStore::defaultPrintContents(Option_t* /*opt*/) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Detailed printing interface
+
 void RooAbsDataStore::printMultiline(ostream& os, Int_t /*content*/, Bool_t verbose, TString indent) const 
 {
-  // Detailed printing interface
-
   os << indent << "DataStore " << GetName() << " (" << GetTitle() << ")" << endl ;
   os << indent << "  Contains " << numEntries() << " entries" << endl;
 

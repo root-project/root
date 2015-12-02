@@ -447,12 +447,12 @@ void* TEmulatedCollectionProxy::Allocate(UInt_t n, Bool_t forceDelete)
    return fEnv->fObject;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert data into the container where data is a C-style array of the actual type contained in the collection
+/// of the given size.   For associative container (map, etc.), the data type is the pair<key,value>.
+
 void TEmulatedCollectionProxy::Insert(const void * /* data */, void * /*container*/, size_t /*size*/)
 {
-   // Insert data into the container where data is a C-style array of the actual type contained in the collection
-   // of the given size.   For associative container (map, etc.), the data type is the pair<key,value>.
-
    Fatal("Insert","Not yet implemented, require copy of objects.");
 }
 

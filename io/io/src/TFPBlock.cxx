@@ -31,11 +31,11 @@ using std::realloc;
 
 ClassImp(TFPBlock)
 
-//__________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TFPBlock::TFPBlock(Long64_t* offset, Int_t* length, Int_t nb)
 {
-   // Constructor.
-
    Long64_t aux = 0;
 
    fNblock = nb;
@@ -55,11 +55,11 @@ TFPBlock::TFPBlock(Long64_t* offset, Int_t* length, Int_t nb)
    fBuffer = (char*) calloc(fCapacity, sizeof(char));
 }
 
-//__________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TFPBlock::~TFPBlock()
 {
-   // Destructor.
-
    delete[] fPos;
    delete[] fLen;
    delete[] fRelOffset;
@@ -67,19 +67,20 @@ TFPBlock::~TFPBlock()
 }
 
 
-//__________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pos value for index idx.
+
 void TFPBlock::SetPos(Int_t idx, Long64_t value)
 {
-   // Set pos value for index idx.
-
    fPos[idx] = value;
 }
 
 
-//__________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set block buffer.
+
 void TFPBlock::SetBuffer(char* buf)
 {
-   // Set block buffer.
    if ( fBuffer ) {
      free(fBuffer);
    }
@@ -87,12 +88,12 @@ void TFPBlock::SetBuffer(char* buf)
 
 }
 
-//__________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reallocate the block's buffer based on the length
+/// of the elements it will contain.
+
 void TFPBlock::ReallocBlock(Long64_t* offset, Int_t* length, Int_t nb)
 {
-   // Reallocate the block's buffer based on the length
-   // of the elements it will contain.
-
    Long64_t newSize = 0;
 
    fPos = (Long64_t*) TStorage::ReAlloc(fPos, nb * sizeof(Long64_t), fNblock * sizeof(Long64_t));

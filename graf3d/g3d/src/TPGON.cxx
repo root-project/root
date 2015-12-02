@@ -35,38 +35,40 @@ ClassImp(TPGON)
 //     - z          array of dimension nz with z position of given plane
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PGON shape default constructor.
+
 TPGON::TPGON ()
 {
-   // PGON shape default constructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PGON shape normal constructor.
+///
+///  Parameters of the nz positions must be entered via TPCON::DefineSection.
+
 TPGON::TPGON (const char *name, const char *title, const char *material, Float_t phi1,
               Float_t dphi1, Int_t npdv, Int_t nz)
      : TPCON (name, title,material, phi1, dphi1, nz)
 {
-   // PGON shape normal constructor.
-   //
-   //  Parameters of the nz positions must be entered via TPCON::DefineSection.
-
    SetNumberOfDivisions (npdv);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PGON shape default destructor.
+
 TPGON::~TPGON ()
 {
-   // PGON shape default destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the table of cos and sin to prepare drawing
+
 void TPGON::FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const
 {
-   // Fill the table of cos and sin to prepare drawing
-
    Double_t factor = 1./TMath::Cos(angstep/2);
    Double_t ph = phi-angstep;
    for (Int_t j = 0; j < n; j++) {

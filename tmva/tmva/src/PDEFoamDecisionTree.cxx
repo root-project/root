@@ -56,63 +56,67 @@
 
 ClassImp(TMVA::PDEFoamDecisionTree)
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer, user should not use it.
+
 TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree()
    : PDEFoamDiscriminant()
    , fSepType(NULL)
 {
-   // Default constructor for streamer, user should not use it.
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parameters:
+///
+/// - name - name of the foam
+///
+/// - sepType - separation type used for the cell splitting (will be
+///   deleted in the destructor)
+///
+/// - cls - class to consider as signal when calcualting the purity
+
 TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree(const TString& name, SeparationBase *sepType, UInt_t cls)
    : PDEFoamDiscriminant(name, cls)
    , fSepType(sepType)
 {
-   // Parameters:
-   //
-   // - name - name of the foam
-   //
-   // - sepType - separation type used for the cell splitting (will be
-   //   deleted in the destructor)
-   //
-   // - cls - class to consider as signal when calcualting the purity
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy Constructor  NOT IMPLEMENTED (NEVER USED)
+
 TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree(const PDEFoamDecisionTree &from)
    : PDEFoamDiscriminant(from)
    , fSepType(from.fSepType)
 {
-   // Copy Constructor  NOT IMPLEMENTED (NEVER USED)
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+/// deletes fSepType
+
 TMVA::PDEFoamDecisionTree::~PDEFoamDecisionTree()
 {
-   // Destructor
-   // deletes fSepType
    if (fSepType)
       delete fSepType;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subprogram used by Create.  It explores newly defined
+/// cell with according to the decision tree logic.  The separation
+/// set via the 'sepType' option in the constructor.
+///
+/// The optimal division point for eventual future cell division is
+/// determined/recorded.  Note that links to parents and initial
+/// volume = 1/2 parent has to be already defined prior to calling
+/// this routine.
+///
+/// Note, that according to the decision tree logic, a cell is only
+/// split, if the number of (unweighted) events in each dautghter
+/// cell is greater than fNmin.
+
 void TMVA::PDEFoamDecisionTree::Explore(PDEFoamCell *cell)
 {
-   // Internal subprogram used by Create.  It explores newly defined
-   // cell with according to the decision tree logic.  The separation
-   // set via the 'sepType' option in the constructor.
-   //
-   // The optimal division point for eventual future cell division is
-   // determined/recorded.  Note that links to parents and initial
-   // volume = 1/2 parent has to be already defined prior to calling
-   // this routine.
-   //
-   // Note, that according to the decision tree logic, a cell is only
-   // split, if the number of (unweighted) events in each dautghter
-   // cell is greater than fNmin.
-
    if (!cell)
       Log() << kFATAL << "<DTExplore> Null pointer given!" << Endl;
 

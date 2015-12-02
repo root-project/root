@@ -14,29 +14,29 @@
 
 ClassImp(TPgSQLRow)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Single row of query result.
+
 TPgSQLRow::TPgSQLRow(void *res, ULong_t rowHandle)
 {
-   // Single row of query result.
-
    fResult = (PGresult *) res;
    fRowNum = (ULong_t) rowHandle;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy row object.
+
 TPgSQLRow::~TPgSQLRow()
 {
-   // Destroy row object.
-
    if (fRowNum)
       Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close row.
+
 void TPgSQLRow::Close(Option_t *)
 {
-   // Close row.
-
    if (!fRowNum)
       return;
 
@@ -44,11 +44,11 @@ void TPgSQLRow::Close(Option_t *)
    fRowNum = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if row is open and field index within range.
+
 Bool_t TPgSQLRow::IsValid(Int_t field)
 {
-   // Check if row is open and field index within range.
-
    if (field < 0 || field >= (Int_t)PQnfields(fResult)) {
       Error("IsValid", "field index out of bounds");
       return kFALSE;
@@ -56,11 +56,11 @@ Bool_t TPgSQLRow::IsValid(Int_t field)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get length in bytes of specified field.
+
 ULong_t TPgSQLRow::GetFieldLength(Int_t field)
 {
-   // Get length in bytes of specified field.
-
    if (!IsValid(field))
       return 0;
 
@@ -74,11 +74,11 @@ ULong_t TPgSQLRow::GetFieldLength(Int_t field)
    return fieldLength;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get specified field from row (0 <= field < GetFieldCount()).
+
 const char *TPgSQLRow::GetField(Int_t field)
 {
-   // Get specified field from row (0 <= field < GetFieldCount()).
-
    if (!IsValid(field))
       return 0;
 

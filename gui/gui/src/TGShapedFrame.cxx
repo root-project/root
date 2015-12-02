@@ -19,13 +19,13 @@
 
 ClassImp(TGShapedFrame)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shaped window default constructor
+
 TGShapedFrame::TGShapedFrame(const char *pname, const TGWindow *p, UInt_t w,
                              UInt_t h, UInt_t options) :
       TGCompositeFrame(p, w, h, options), fBgnd(0), fImage(0)
 {
-   // Shaped window default constructor
-
    TString picName;
    // set a few attributes
    if (options & kTempFrame) {
@@ -55,20 +55,20 @@ TGShapedFrame::TGShapedFrame(const char *pname, const TGWindow *p, UInt_t w,
    Resize(fBgnd->GetWidth(), fBgnd->GetHeight());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGShapedFrame::~TGShapedFrame()
 {
-   // Destructor.
-
    delete fImage;
    fClient->FreePicture(fBgnd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a shaped frame as a C++ statement(s) on output stream out.
+
 void TGShapedFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a shaped frame as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << std::endl << "   // shaped frame" << std::endl;

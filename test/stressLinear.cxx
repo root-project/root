@@ -327,10 +327,11 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
   printf("******************************************************************\n");
 }
 
-//------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Print test program number and its title
+
 void StatusPrint(Int_t id,const TString &title,Bool_t status)
 {
-  // Print test program number and its title
   const Int_t kMAX = 65;
   Char_t number[4];
   snprintf(number,4,"%2d",id);

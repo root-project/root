@@ -35,13 +35,13 @@
 
 ClassImp(TProofOutputFile)
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor
+
 TProofOutputFile::TProofOutputFile(const char *path,
                                    ERunType type, UInt_t opt, const char *dsname)
                  : TNamed(path, ""), fRunType(type), fTypeOpt(opt)
 {
-   // Main constructor
-
    fIsLocal = kFALSE;
    fMerged = kFALSE;
    fMerger = 0;
@@ -52,24 +52,24 @@ TProofOutputFile::TProofOutputFile(const char *path,
    Init(path, dsname);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with the old signature, kept for convenience and backard compatibility.
+/// Options:
+///             'M'      merge: finally merge the created files
+///             'L'      local: copy locally the files before merging (implies 'M')
+///             'D'      dataset: create a TFileCollection
+///             'R'      register: dataset run with dataset registration
+///             'O'      overwrite: force dataset replacement during registration
+///             'V'      verify: verify the registered dataset
+///             'H'      merge histograms in one go (option to TFileMerger)
+/// Special 'option' values for backward compatibility:
+///              ""      equivalent to "M"
+///         "LOCAL"      equivalent to "ML" or "L"
+
 TProofOutputFile::TProofOutputFile(const char *path,
                                    const char *option, const char *dsname)
                  : TNamed(path, "")
 {
-   // Constructor with the old signature, kept for convenience and backard compatibility.
-   // Options:
-   //             'M'      merge: finally merge the created files
-   //             'L'      local: copy locally the files before merging (implies 'M')
-   //             'D'      dataset: create a TFileCollection
-   //             'R'      register: dataset run with dataset registration
-   //             'O'      overwrite: force dataset replacement during registration
-   //             'V'      verify: verify the registered dataset
-   //             'H'      merge histograms in one go (option to TFileMerger)
-   // Special 'option' values for backward compatibility:
-   //              ""      equivalent to "M"
-   //         "LOCAL"      equivalent to "ML" or "L"
-
    fIsLocal = kFALSE;
    fMerged = kFALSE;
    fMerger = 0;
@@ -96,11 +96,11 @@ TProofOutputFile::TProofOutputFile(const char *path,
    Init(path, dsname);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initializer. Called by all constructors
+
 void TProofOutputFile::Init(const char *path, const char *dsname)
 {
-   // Initializer. Called by all constructors
-
    fLocalHost = TUrl(gSystem->HostName()).GetHostFQDN();
    Int_t port = gEnv->GetValue("ProofServ.XpdPort", -1);
    if (port > -1) {
@@ -227,20 +227,20 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
    TProofServ::ResolveKeywords(fWorkerOrdinal, 0);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main destructor
+
 TProofOutputFile::~TProofOutputFile()
 {
-   // Main destructor
-
    if (fDataSet) delete fDataSet;
    if (fMerger) delete fMerger;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the name of the output file; in the form of an Url.
+
 void TProofOutputFile::SetOutputFileName(const char *name)
 {
-   // Set the name of the output file; in the form of an Url.
-
    if (name && strlen(name) > 0) {
       fOutputFileName = name;
       TProofServ::ResolveKeywords(fOutputFileName);
@@ -251,11 +251,11 @@ void TProofOutputFile::SetOutputFileName(const char *name)
    SetBit(TProofOutputFile::kOutputFileNameSet);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open the file using the unique temporary name
+
 TFile* TProofOutputFile::OpenFile(const char* opt)
 {
-   // Open the file using the unique temporary name
-
    if (fFileName.IsNull()) return 0;
 
    // Create the path
@@ -268,12 +268,12 @@ TFile* TProofOutputFile::OpenFile(const char* opt)
    return retFile;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adopt a file already open.
+/// Return 0 if OK, -1 in case of failure
+
 Int_t TProofOutputFile::AdoptFile(TFile *f)
 {
-   // Adopt a file already open.
-   // Return 0 if OK, -1 in case of failure
-
    if (!f || (f && f->IsZombie())) {
       Error("AdoptFile", "file is undefined or zombie!");
       return -1;
@@ -309,11 +309,11 @@ Int_t TProofOutputFile::AdoptFile(TFile *f)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge objects from the list into this object
+
 Long64_t TProofOutputFile::Merge(TCollection* list)
 {
-   // Merge objects from the list into this object
-
    PDB(kOutput,2) Info("Merge","enter: merge? %d", IsMerge());
 
    // Needs somethign to merge
@@ -417,11 +417,11 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump the class content
+
 void TProofOutputFile::Print(Option_t *) const
 {
-   // Dump the class content
-
    Info("Print","-------------- %s : start (%s) ------------", GetName(), fLocalHost.Data());
    Info("Print"," dir:              %s", fDir.Data());
    Info("Print"," raw dir:          %s", fRawDir.Data());
@@ -445,11 +445,11 @@ void TProofOutputFile::Print(Option_t *) const
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notify error message
+
 void TProofOutputFile::NotifyError(const char *msg)
 {
-   // Notify error message
-
    if (msg) {
       if (gProofServ)
          gProofServ->SendAsynMessage(msg);
@@ -462,11 +462,11 @@ void TProofOutputFile::NotifyError(const char *msg)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add file to merger, checking the result
+
 void TProofOutputFile::AddFile(TFileMerger *merger, const char *path)
 {
-   // Add file to merger, checking the result
-
    if (merger && path) {
       if (!merger->AddFile(path))
          NotifyError(Form("TProofOutputFile::AddFile:"
@@ -474,11 +474,11 @@ void TProofOutputFile::AddFile(TFileMerger *merger, const char *path)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlink path
+
 void TProofOutputFile::Unlink(const char *path)
 {
-   // Unlink path
-
    if (path) {
       if (!gSystem->AccessPathName(path)) {
          if (gSystem->Unlink(path) != 0)
@@ -488,33 +488,33 @@ void TProofOutputFile::Unlink(const char *path)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get instance of the file collection to be used in 'dataset' mode
+
 TFileCollection *TProofOutputFile::GetFileCollection()
 {
-   // Get instance of the file collection to be used in 'dataset' mode
-
    if (!fDataSet)
       fDataSet = new TFileCollection(GetTitle());
    return fDataSet;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get instance of the file merger to be used in 'merge' mode
+
 TFileMerger *TProofOutputFile::GetFileMerger(Bool_t local)
 {
-   // Get instance of the file merger to be used in 'merge' mode
-
    if (!fMerger)
       fMerger = new TFileMerger(local, fMergeHistosOneGo);
    return fMerger;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assert directory path 'dirpath', with the ownership of the last already
+/// existing subpath.
+/// Return 0 on success, -1 on error
+
 Int_t TProofOutputFile::AssertDir(const char *dirpath)
 {
-   // Assert directory path 'dirpath', with the ownership of the last already
-   // existing subpath.
-   // Return 0 on success, -1 on error
-
    TString existsPath(dirpath);
    TList subPaths;
    while (existsPath != "/" && existsPath != "." && gSystem->AccessPathName(existsPath)) {

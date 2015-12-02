@@ -54,7 +54,8 @@
 
 ClassImp(TProofBenchRunDataRead)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TProofBenchRunDataRead::TProofBenchRunDataRead(TProofBenchDataSet *pbds, TPBReadType *readtype,
                                                TDirectory* dirproofbench, TProof* proof,
                                                TProofNodes* nodes, Long64_t nevents, Int_t ntries,
@@ -73,7 +74,6 @@ TProofBenchRunDataRead::TProofBenchRunDataRead(TProofBenchDataSet *pbds, TPBRead
                          fProfLegend_evt(0), fNormLegend_evt(0), fProfLegend_mb(0), fNormLegend_mb(0),
                          fCPerfProfiles(0), fName(0)
 {
-
    // Default constructor
 
    if (!fProof) fProof = gProof;
@@ -93,10 +93,11 @@ TProofBenchRunDataRead::TProofBenchRunDataRead(TProofBenchDataSet *pbds, TPBRead
    gStyle->SetOptStat(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TProofBenchRunDataRead::~TProofBenchRunDataRead()
 {
-   // Destructor
    fProof=0;
    fDirProofBench=0;
    SafeDelete(fListPerfPlots);
@@ -107,22 +108,22 @@ TProofBenchRunDataRead::~TProofBenchRunDataRead()
    SafeDelete(fNormLegend_mb);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run benchmark
+/// Input parameters
+///    dset:    Dataset on which to run
+///    start: Start scan with 'start' workers.
+///    stop: Stop scan at 'stop workers.
+///    step: Scan every 'step' workers.
+///    ntries: Number of tries. When it is -1, data member fNTries is used.
+///    debug: debug switch.
+///    Int_t: Ignored
+/// Returns
+///    Nothing
+
 void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
                                  Int_t step, Int_t ntries, Int_t debug, Int_t)
 {
-   // Run benchmark
-   // Input parameters
-   //    dset:    Dataset on which to run
-   //    start: Start scan with 'start' workers.
-   //    stop: Stop scan at 'stop workers.
-   //    step: Scan every 'step' workers.
-   //    ntries: Number of tries. When it is -1, data member fNTries is used.
-   //    debug: debug switch.
-   //    Int_t: Ignored
-   // Returns
-   //    Nothing
-
    if (!fProof){
       Error("Run", "Proof not set");
       return;
@@ -523,12 +524,12 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
    fDebug = fDebug_sav;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a subsample of dsname suited to run with 'nact' and option 'nx'.
+
 TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
                                                     Int_t nact, Bool_t nx)
 {
-   // Get a subsample of dsname suited to run with 'nact' and option 'nx'.
-
    TFileCollection *fcsub = 0;
 
    // Dataset must exists
@@ -630,10 +631,10 @@ TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
    return fcsub;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TProofBenchRunDataRead::FillPerfStatProfiles(TTree *t, Int_t nactive)
 {
-
    // Fill performance profiles using tree 't'(PROOF_PerfStats).
    // Input parameters
    //    t: Proof output tree (PROOF_PerfStat) containing performance
@@ -671,11 +672,11 @@ void TProofBenchRunDataRead::FillPerfStatProfiles(TTree *t, Int_t nactive)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the content of this object
+
 void TProofBenchRunDataRead::Print(Option_t* option) const
 {
-   // Print the content of this object
-
    Printf("Name         = %s", fName.Data());
    if (fProof) fProof->Print(option);
    Printf("fReadType    = %s%s", "k", GetNameStem().Data());
@@ -695,10 +696,11 @@ void TProofBenchRunDataRead::Print(Option_t* option) const
               fCPerfProfiles->GetName(), fCPerfProfiles->GetTitle());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get canvas
+
 void TProofBenchRunDataRead::DrawPerfProfiles()
 {
-   // Get canvas
    if (!fCPerfProfiles){
       TString canvasname = TString::Format("Performance Profiles %s", GetName());
       fCPerfProfiles = new TCanvas(canvasname.Data(), canvasname.Data());
@@ -727,11 +729,11 @@ void TProofBenchRunDataRead::DrawPerfProfiles()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get name for this run
+
 TString TProofBenchRunDataRead::GetNameStem()const
 {
-   // Get name for this run
-
    TString namestem("+++undef+++");
    if (fReadType) {
       switch (fReadType->GetType()) {
@@ -751,11 +753,11 @@ TString TProofBenchRunDataRead::GetNameStem()const
    return namestem;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameters
+
 Int_t TProofBenchRunDataRead::SetParameters()
 {
-   // Set parameters
-
    if (!fProof){
       Error("SetParameters", "Proof not set; Doing nothing");
       return 1;
@@ -768,10 +770,11 @@ Int_t TProofBenchRunDataRead::SetParameters()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete parameters set for this run
+
 Int_t TProofBenchRunDataRead::DeleteParameters()
 {
-   // Delete parameters set for this run
    if (!fProof){
       Error("DeleteParameters", "Proof not set; Doing nothing");
       return 1;
@@ -784,11 +787,11 @@ Int_t TProofBenchRunDataRead::DeleteParameters()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build histograms, profiles and graphs needed for this run
+
 void TProofBenchRunDataRead::BuildHistos(Int_t start, Int_t stop, Int_t step, Bool_t nx)
 {
-   // Build histograms, profiles and graphs needed for this run
-
    TObject *o = 0;
    Int_t quotient = (stop - start) / step;
    Int_t ndiv = quotient + 1;

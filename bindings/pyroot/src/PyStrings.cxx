@@ -51,7 +51,8 @@ PyObject* PyROOT::PyStrings::gSetFCN = 0;
 PyObject* PyROOT::PyStrings::gTClassDynCast = 0;
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 #define PYROOT_INITIALIZE_STRING( var, str )                                 \
    if ( ! ( PyStrings::var = PyROOT_PyUnicode_InternFromString( (char*)#str ) ) )    \
       return kFALSE
@@ -107,9 +108,10 @@ Bool_t PyROOT::CreatePyStrings() {
    return kTRUE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all cached python strings.
+
 PyObject* PyROOT::DestroyPyStrings() {
-// Remove all cached python strings.
    Py_DECREF( PyStrings::gBases ); PyStrings::gBases = 0;
    Py_DECREF( PyStrings::gBase ); PyStrings::gBase = 0;
    Py_DECREF( PyStrings::gClass ); PyStrings::gClass = 0;

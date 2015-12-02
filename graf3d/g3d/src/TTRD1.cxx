@@ -28,37 +28,38 @@ ClassImp(TTRD1)
 //     - dz         half-length along the z-axis
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TRD1 shape default constructor
+
 TTRD1::TTRD1()
 {
-   // TRD1 shape default constructor
-
    fDx2 = 0.;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TRD1 shape normal constructor
+
 TTRD1::TTRD1(const char *name, const char *title, const char *material, Float_t dx1, Float_t dx2, Float_t dy, Float_t dz)
       : TBRIK(name, title,material,dx1,dy,dz)
 {
-   // TRD1 shape normal constructor
-
    fDx2 = dx2;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TRD1 shape default destructor
+
 TTRD1::~TTRD1()
 {
-   // TRD1 shape default destructor
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TRD1 points
+
 void TTRD1::SetPoints(Double_t *points) const
 {
-   // Create TRD1 points
-
    Float_t dx1, dx2, dy, dz;
 
    dx1 = TBRIK::fDx;

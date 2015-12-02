@@ -53,19 +53,21 @@
 
 ClassImp(TQpDataSparse)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TQpDataSparse::TQpDataSparse(Int_t nx,Int_t my,Int_t mz)
 : TQpDataBase(nx,my,mz)
 {
-// Constructor
-
    fQ.ResizeTo(fNx,fNx);
    fA.ResizeTo(fMy,fNx);
    fC.ResizeTo(fMz,fNx);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TQpDataSparse::TQpDataSparse(TVectorD       &c_in,   TMatrixDSparse &Q_in,
                              TVectorD       &xlow_in,TVectorD       &ixlow_in,
                              TVectorD       &xupp_in,TVectorD       &ixupp_in,
@@ -74,8 +76,6 @@ TQpDataSparse::TQpDataSparse(TVectorD       &c_in,   TMatrixDSparse &Q_in,
                              TVectorD       &clow_in,TVectorD       &iclow_in,
                              TVectorD       &cupp_in,TVectorD       &icupp_in)
 {
-// Constructor
-
    fG       .ResizeTo(c_in)    ; fG        = c_in;
    fBa      .ResizeTo(bA_in)   ; fBa       = bA_in;
    fXloBound.ResizeTo(xlow_in) ; fXloBound = xlow_in;
@@ -110,86 +110,86 @@ TQpDataSparse::TQpDataSparse(TVectorD       &c_in,   TMatrixDSparse &Q_in,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TQpDataSparse::TQpDataSparse(const TQpDataSparse &another) : TQpDataBase(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate space for the appropriate number of non-zeros in the matrices
+
 void TQpDataSparse::SetNonZeros(Int_t nnzQ,Int_t nnzA,Int_t nnzC)
 {
-// Allocate space for the appropriate number of non-zeros in the matrices
-
    fQ.SetSparseIndex(nnzQ);
    fA.SetSparseIndex(nnzA);
    fC.SetSparseIndex(nnzC);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate y = beta*y + alpha*(fQ*x)
+
 void TQpDataSparse::Qmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x )
 {
-// calculate y = beta*y + alpha*(fQ*x)
-
    y *= beta;
    if (fQ.GetNoElements() > 0)
       y += alpha*(fQ*x);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate y = beta*y + alpha*(fA*x)
+
 void TQpDataSparse::Amult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
-// calculate y = beta*y + alpha*(fA*x)
-
    y *= beta;
    if (fA.GetNoElements() > 0)
       y += alpha*(fA*x);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate y = beta*y + alpha*(fC*x)
+
 void TQpDataSparse::Cmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
-// calculate y = beta*y + alpha*(fC*x)
-
    y *= beta;
    if (fC.GetNoElements() > 0)
       y += alpha*(fC*x);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate y = beta*y + alpha*(fA^T*x)
+
 void TQpDataSparse::ATransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
-// calculate y = beta*y + alpha*(fA^T*x)
-
    y *= beta;
    if (fA.GetNoElements() > 0)
       y += alpha*(TMatrixDSparse(TMatrixDSparse::kTransposed,fA)*x);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate y = beta*y + alpha*(fC^T*x)
+
 void TQpDataSparse::CTransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
-// calculate y = beta*y + alpha*(fC^T*x)
-
    y *= beta;
    if (fC.GetNoElements() > 0)
       y += alpha*(TMatrixDSparse(TMatrixDSparse::kTransposed,fC)*x);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the largest component of several vectors in the data class
+
 Double_t TQpDataSparse::DataNorm()
 {
-// Return the largest component of several vectors in the data class
-
    Double_t norm = 0.0;
 
    Double_t componentNorm = fG.NormInf();
@@ -230,11 +230,11 @@ Double_t TQpDataSparse::DataNorm()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print class members
+
 void TQpDataSparse::Print(Option_t * /*opt*/) const
 {
-// Print class members
-
    fQ.Print("Q");
    fG.Print("c");
 
@@ -256,52 +256,52 @@ void TQpDataSparse::Print(Option_t * /*opt*/) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert the Hessian Q into the matrix M at index (row,col) for the fundamental
+/// linear system
+
 void TQpDataSparse::PutQIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
-// Insert the Hessian Q into the matrix M at index (row,col) for the fundamental
-// linear system
-
    m.SetSub(row,col,fQ);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert the constraint matrix A into the matrix M at index (row,col) for the fundamental
+/// linear system
+
 void TQpDataSparse::PutAIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
-// Insert the constraint matrix A into the matrix M at index (row,col) for the fundamental
-// linear system
-
    m.SetSub(row,col,fA);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert the constraint matrix C into the matrix M at index (row,col) for the fundamental
+/// linear system
+
 void TQpDataSparse::PutCIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
-// Insert the constraint matrix C into the matrix M at index (row,col) for the fundamental
-// linear system
-
    m.SetSub(row,col,fC);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return in vector dq the diagonal of matrix fQ
+
 void TQpDataSparse::GetDiagonalOfQ(TVectorD &dq)
 {
-// Return in vector dq the diagonal of matrix fQ
-
    const Int_t n = TMath::Min(fQ.GetNrows(),fQ.GetNcols());
    dq.ResizeTo(n);
    dq = TMatrixDSparseDiag(fQ);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return value of the objective function
+
 Double_t TQpDataSparse::ObjectiveValue(TQpVar *vars)
 {
-// Return value of the objective function
-
    TVectorD tmp(fG);
    this->Qmult(1.0,tmp,0.5,vars->fX);
 
@@ -309,11 +309,11 @@ Double_t TQpDataSparse::ObjectiveValue(TQpVar *vars)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Choose randomly a QP problem
+
 void TQpDataSparse::DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s)
 {
-// Choose randomly a QP problem
-
    Double_t ix = 3074.20374;
 
    TVectorD xdual(fNx);
@@ -350,11 +350,11 @@ void TQpDataSparse::DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TQpDataSparse &TQpDataSparse::operator=(const TQpDataSparse &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TQpDataBase::operator=(source);
       fQ.ResizeTo(source.fQ); fQ = source.fQ;

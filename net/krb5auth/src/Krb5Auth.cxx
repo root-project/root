@@ -108,20 +108,20 @@ public:
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Kerberos v5 authentication code. Returns 0 in case authentication
+/// failed, 1 in case of success and 2 in case remote does not support
+/// Kerberos5.
+/// Protocol 'version':  3    supports alternate username
+///                      2    supports negotiation and auth reuse
+///                      1    first kerberos implementation
+///                      0    no kerberos support (function should not be called)
+/// user is used to input the target username and return the name in the
+/// principal used
+
 Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
                        Int_t version)
 {
-   // Kerberos v5 authentication code. Returns 0 in case authentication
-   // failed, 1 in case of success and 2 in case remote does not support
-   // Kerberos5.
-   // Protocol 'version':  3    supports alternate username
-   //                      2    supports negotiation and auth reuse
-   //                      1    first kerberos implementation
-   //                      0    no kerberos support (function should not be called)
-   // user is used to input the target username and return the name in the
-   // principal used
-
 
    TKrb5CleanUp cleanup;
 
@@ -706,12 +706,12 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if there are valid credentials in the cache.
+/// If not, tries to initialise them.
+
 Int_t Krb5InitCred(const char *clientPrincipal, Bool_t promptPrinc)
 {
-   // Checks if there are valid credentials in the cache.
-   // If not, tries to initialise them.
-
    if (gDebug > 2)
        Info("Krb5InitCred","enter: %s", clientPrincipal);
 
@@ -744,12 +744,12 @@ Int_t Krb5InitCred(const char *clientPrincipal, Bool_t promptPrinc)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if there are valid credentials.
+
 Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc,
                     TString principal, TDatime &expDate)
 {
-   // Checks if there are valid credentials.
-
    Int_t retval;
    Int_t now = time(0);
    Int_t valid = -1;
@@ -806,14 +806,14 @@ Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc,
    return valid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Krb5 version of CheckSecCtx to be passed to TAuthenticate::AuthExists
+/// Check if principal is matches the one used to instantiate Ctx
+/// Returns: 1 if ok, 0 if not
+/// Deactivates Ctx is not valid
+
 Int_t Krb5CheckSecCtx(const char *principal, TRootSecContext *ctx)
 {
-   // Krb5 version of CheckSecCtx to be passed to TAuthenticate::AuthExists
-   // Check if principal is matches the one used to instantiate Ctx
-   // Returns: 1 if ok, 0 if not
-   // Deactivates Ctx is not valid
-
    Int_t rc = 0;
 
    if (ctx->IsActive()) {

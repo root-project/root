@@ -27,26 +27,26 @@ ClassImp(TF12)
 //   f12->Draw();
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TF12 default constructor
+
 TF12::TF12(): TF1()
 {
-   // TF12 default constructor
-
    fCase = 0;
    fF2   = 0;
    fXY   = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TF12 normal constructor.
+///   Create a TF12 (special TF1) from a projection of a TF2
+///   for a fix value of Y if option="X" or X if option="Y"
+/// This value may be changed at any time via TF12::SetXY(xy)
+
 TF12::TF12(const char *name, TF2 *f2, Double_t xy, Option_t *option)
       :TF1(name,"x",0,0)
 {
-   // TF12 normal constructor.
-   //   Create a TF12 (special TF1) from a projection of a TF2
-   //   for a fix value of Y if option="X" or X if option="Y"
-   // This value may be changed at any time via TF12::SetXY(xy)
-
    SetName(name);
    fF2 = f2;
    TString opt=option;
@@ -68,27 +68,28 @@ TF12::TF12(const char *name, TF2 *f2, Double_t xy, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// F2 default destructor.
+
 TF12::~TF12()
 {
-   // F2 default destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TF12::TF12(const TF12 &f12) : TF1(f12)
 {
-   // Copy constructor.
-
    ((TF12&)f12).Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this F2 to a new F2.
+
 void TF12::Copy(TObject &obj) const
 {
-   // Copy this F2 to a new F2.
-
    TF1::Copy(obj);
    ((TF12&)obj).fXY      = fXY;
    ((TF12&)obj).fCase    = fCase;
@@ -96,22 +97,22 @@ void TF12::Copy(TObject &obj) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a copy of this function with its current attributes.
+///
+///  This function MUST be used instead of Draw when you want to draw
+///  the same function with different parameters settings in the same canvas.
+///
+/// Possible option values are:
+///   "SAME"  superimpose on top of existing picture
+///   "L"     connect all computed points with a straight line
+///   "C"     connect all computed points with a smooth curve.
+///
+/// Note that the default value is "F". Therefore to draw on top
+/// of an existing picture, specify option "SL"
+
 TF1 *TF12::DrawCopy(Option_t *option) const
 {
-   // Draw a copy of this function with its current attributes.
-   //
-   //  This function MUST be used instead of Draw when you want to draw
-   //  the same function with different parameters settings in the same canvas.
-   //
-   // Possible option values are:
-   //   "SAME"  superimpose on top of existing picture
-   //   "L"     connect all computed points with a straight line
-   //   "C"     connect all computed points with a smooth curve.
-   //
-   // Note that the default value is "F". Therefore to draw on top
-   // of an existing picture, specify option "SL"
-
    TF12 *newf2 = new TF12();
    Copy(*newf2);
    newf2->AppendPad(option);
@@ -120,13 +121,13 @@ TF1 *TF12::DrawCopy(Option_t *option) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate this formula
+///
+///   Computes the value of the referenced TF2 for a fix value of X or Y
+
 Double_t TF12::Eval(Double_t x, Double_t /*y*/, Double_t /*z*/, Double_t /*t*/) const
 {
-   // Evaluate this formula
-   //
-   //   Computes the value of the referenced TF2 for a fix value of X or Y
-
    if (!fF2) return 0;
    if (fCase == 0) {
       return fF2->Eval(x,fXY,0);
@@ -136,14 +137,14 @@ Double_t TF12::Eval(Double_t x, Double_t /*y*/, Double_t /*z*/, Double_t /*t*/) 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate this function at point x[0]
+///   x[0] is the value along X if fCase =0, the value along Y if fCase=1
+/// if params is non null, the array will be used instead of the internal TF2
+/// parameters
+
 Double_t TF12::EvalPar(const Double_t *x, const Double_t *params)
 {
-   // Evaluate this function at point x[0]
-   //   x[0] is the value along X if fCase =0, the value along Y if fCase=1
-   // if params is non null, the array will be used instead of the internal TF2
-   // parameters
-
    if (!fF2) return 0;
    Double_t xx[2];
    if (fCase == 0) {
@@ -158,24 +159,24 @@ Double_t TF12::EvalPar(const Double_t *x, const Double_t *params)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TF12::SavePrimitive(std::ostream & /*out*/, Option_t * /*option*/ /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    Error("SavePrimitive","Function not yet implemented");
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the value of the constant for the TF2
+///   constant in X when projecting along Y
+///   constant in Y when projecting along X
+///  The function title is set to include the value of the constant
+///  The current pad is updated
+
 void TF12::SetXY(Double_t xy)
 {
-   // set the value of the constant for the TF2
-   //   constant in X when projecting along Y
-   //   constant in Y when projecting along X
-   //  The function title is set to include the value of the constant
-   //  The current pad is updated
-
    fXY = xy;
    if (!fF2) return;
    if (fCase == 0) SetTitle(Form("%s (y=%g)",fF2->GetTitle(),xy));

@@ -48,12 +48,13 @@ enum ETGeoSphereWid {
    kSPHERE_APPLY, kSPHERE_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for sphere editor
+
 TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for sphere editor
    fShape   = 0;
    fRmini = fRmaxi = fTheta1i = fTheta2i = fPhi1i = fPhi2i = 0.0;
    fNamei = "";
@@ -178,10 +179,11 @@ TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t width,
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoSphereEditor::~TGeoSphereEditor()
 {
-// Destructor.
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -191,10 +193,11 @@ TGeoSphereEditor::~TGeoSphereEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoSphereEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoSphereEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoSphereEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoSphereEditor", this, "DoModified()");
@@ -210,10 +213,11 @@ void TGeoSphereEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to a given sphere.
+
 void TGeoSphereEditor::SetModel(TObject* obj)
 {
-   // Connect to a given sphere.
    if (obj == 0 || (obj->IsA()!=TGeoSphere::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -243,24 +247,27 @@ void TGeoSphereEditor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shape drawing is delayed.
+
 Bool_t TGeoSphereEditor::IsDelayed() const
 {
-// Check if shape drawing is delayed.
    return (fDelayed->GetState() == kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for name.
+
 void TGeoSphereEditor::DoName()
 {
-// Slot for name.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoSphereEditor::DoApply()
 {
-// Slot for applying modifications.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t rmin = fERmin->GetNumber();
@@ -290,17 +297,19 @@ void TGeoSphereEditor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for signaling modifications.
+
 void TGeoSphereEditor::DoModified()
 {
-// Slot for signaling modifications.
    fApply->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoSphereEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fERmin->SetNumber(fRmini);
    fERmax->SetNumber(fRmaxi);
    fEPhi1->SetNumber(fPhi1i);
@@ -314,10 +323,11 @@ void TGeoSphereEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
    
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Rmin.
+
 void TGeoSphereEditor::DoRmin()
 {
-// Slot for Rmin.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    if (rmin <= 0.) {
@@ -332,10 +342,11 @@ void TGeoSphereEditor::DoRmin()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Rmax.
+
 void TGeoSphereEditor::DoRmax()
 {
-// Slot for Rmax.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    if (rmax <= 0.) {
@@ -351,10 +362,11 @@ void TGeoSphereEditor::DoRmax()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi1.
+
 void TGeoSphereEditor::DoPhi1()
 {
-// Slot for phi1.
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
    if (phi1 > 360-1.e-10) {
@@ -373,10 +385,11 @@ void TGeoSphereEditor::DoPhi1()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi2.
+
 void TGeoSphereEditor::DoPhi2()
 {
-// Slot for phi2.
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t phi2 = fEPhi2->GetNumber();
    if (phi2-phi1 > 360.) {
@@ -395,10 +408,11 @@ void TGeoSphereEditor::DoPhi2()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi slider.
+
 void TGeoSphereEditor::DoPhi()
 {
-// Slot for phi slider.
    if (!fLock) {
       DoModified();
       fLock = kTRUE;
@@ -409,10 +423,11 @@ void TGeoSphereEditor::DoPhi()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for theta1.
+
 void TGeoSphereEditor::DoTheta1()
 {
-// Slot for theta1.
    Double_t theta1 = fETheta1->GetNumber();
    Double_t theta2 = fETheta2->GetNumber();
    if (theta2<theta1+1.e-10) {
@@ -427,10 +442,11 @@ void TGeoSphereEditor::DoTheta1()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for theta2.
+
 void TGeoSphereEditor::DoTheta2()
 {
-// Slot for theta2.
    Double_t theta1 = fETheta1->GetNumber();
    Double_t theta2 = fETheta2->GetNumber();
    if (theta2<theta1+1.e-10) {
@@ -445,10 +461,11 @@ void TGeoSphereEditor::DoTheta2()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for theta slider.
+
 void TGeoSphereEditor::DoTheta()
 {
-   // Slot for theta slider.
    if (!fLock) {
       DoModified();
       fLock = kTRUE;

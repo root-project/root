@@ -30,49 +30,49 @@
 
 ClassImp(TGLEmbeddedViewer);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+/// Argument 'border' specifies how many pixels to pad on each side of the
+/// viewer. This area can be used for highlightning of the active viewer.
+
 TGLEmbeddedViewer::TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad,
                                      Int_t border) :
    TGLViewer(pad, 0, 0, 400, 300),
    fFrame(0),
    fBorder(border)
 {
-   // Constructor.
-   // Argument 'border' specifies how many pixels to pad on each side of the
-   // viewer. This area can be used for highlightning of the active viewer.
-
    Init(parent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor allowing to also specify an GED editor to use.
+/// Argument 'border' specifies how many pixels to pad on each side of the
+/// viewer. This area can be used for highlightning of the active viewer.
+
 TGLEmbeddedViewer::TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad,
                                      TGedEditor *ged, Int_t border) :
    TGLViewer(pad, 0, 0, 400, 300),
    fFrame(0),
    fBorder(border)
 {
-   // Constructor allowing to also specify an GED editor to use.
-   // Argument 'border' specifies how many pixels to pad on each side of the
-   // viewer. This area can be used for highlightning of the active viewer.
-
    fGedEditor = ged;
    Init(parent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy standalone viewer object.
+
 TGLEmbeddedViewer::~TGLEmbeddedViewer()
 {
-   // Destroy standalone viewer object.
-
    delete fFrame;
    fGLWidget = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Common initialization from all constructors.
+
 void TGLEmbeddedViewer::Init(const TGWindow *parent)
 {
-   // Common initialization from all constructors.
-
    fFrame = new TGCompositeFrame(parent);
 
    CreateFrames();
@@ -82,11 +82,11 @@ void TGLEmbeddedViewer::Init(const TGWindow *parent)
    fFrame->Resize(400, 300);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal frames creation.
+
 void TGLEmbeddedViewer::CreateFrames()
 {
-   // Internal frames creation.
-
    fGLWidget = TGLWidget::Create(fFrame, kTRUE, kTRUE, 0, 10, 10);
 
    // Direct events from the TGWindow directly to the base viewer
@@ -97,12 +97,12 @@ void TGLEmbeddedViewer::CreateFrames()
                                                  fBorder, fBorder, fBorder, fBorder));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a GLwidget, it is an error if it is already created.
+/// This is needed for frame-swapping on mac.
+
 void TGLEmbeddedViewer::CreateGLWidget()
 {
-   // Create a GLwidget, it is an error if it is already created.
-   // This is needed for frame-swapping on mac.
-
    if (fGLWidget) {
       Error("CreateGLWidget", "Widget already exists.");
       return;
@@ -118,12 +118,12 @@ void TGLEmbeddedViewer::CreateGLWidget()
    fGLWidget->MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy the GLwidget, it is an error if it does not exist.
+/// This is needed for frame-swapping on mac.
+
 void TGLEmbeddedViewer::DestroyGLWidget()
 {
-   // Destroy the GLwidget, it is an error if it does not exist.
-   // This is needed for frame-swapping on mac.
-
    if (fGLWidget == 0) {
       Error("DestroyGLWidget", "Widget does not exist.");
       return;

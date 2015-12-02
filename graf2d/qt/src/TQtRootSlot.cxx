@@ -41,61 +41,67 @@
 #include <QString>
 
 TQtRootSlot *TQtRootSlot::fgTQtRootSlot = 0;
-//____________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create and return the singleton
+
 TQtRootSlot *TQtRootSlot::CintSlot()
 {
-   // create and return the singleton
    if (!fgTQtRootSlot) fgTQtRootSlot = new TQtRootSlot();
    return fgTQtRootSlot;
 }
-//____________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// slot to perform the standard "EndOfLine" ROOT action
+/// it used to update the current gPad
+
 void TQtRootSlot::EndOfLine()
 {
-   // slot to perform the standard "EndOfLine" ROOT action
-   // it used to update the current gPad
    if (gInterpreter)  gInterpreter->EndOfLineAction();
 }
 
-//____________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute the arbitrary ROOT /CINt command via
+/// CINT C++ interpreter and emit the result
+
 void TQtRootSlot::ProcessLine(const QString &command)
 {
-     // execute the arbitrary ROOT /CINt command via
-     // CINT C++ interpreter and emit the result
    std::string cmd = command.toStdString();
    ProcessLine(cmd.c_str());
 }
 
-//____________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute the arbitrary ROOT /CINt command via
+/// CINT C++ interpreter and emit the result
+
 void TQtRootSlot::ProcessLine(const char *command)
 {
-     // execute the arbitrary ROOT /CINt command via
-     // CINT C++ interpreter and emit the result
      int error;
      gROOT->ProcessLine(command,&error);
      emit Error(error);
 }
-//____________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the dedicated slot to terminate the ROOT application
+/// with "status"
+
 void TQtRootSlot::Terminate(int status)const
 {
-   // the dedicated slot to terminate the ROOT application
-   // with "status"
    if (gApplication) gApplication->Terminate(status);
 }
 
-//____________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the dedicated slot to terminate the ROOT application
+/// and return the "0" status
+
 void TQtRootSlot::Terminate()const
 {
-   // the dedicated slot to terminate the ROOT application
-   // and return the "0" status
    Terminate(0);
 }
 
-//____________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the dedicated  slot to terminate the ROOT application
+/// and quit the Qt Application if any
+
 void TQtRootSlot::TerminateAndQuit() const
 {
-    // the dedicated  slot to terminate the ROOT application
-    // and quit the Qt Application if any
-
    Bool_t rtrm = kTRUE;
    if (gApplication) {
       rtrm = gApplication->ReturnFromRun();
@@ -110,21 +116,23 @@ void TQtRootSlot::TerminateAndQuit() const
    }
 }
 
-//__________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect the Qt signal to the "execute C++ statement" via CINT SLOT
+/// The first parameter of the Qt signal must be "const char*"
+
 bool QConnectCint(const QObject * sender, const char * signal)
 {
-   // Connect the Qt signal to the "execute C++ statement" via CINT SLOT
-   // The first parameter of the Qt signal must be "const char*"
    return
    QObject::connect(sender,signal
       ,TQtRootSlot::CintSlot(),SLOT(ProcessLine(const char*)));
 }
 
-//__________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect the Qt signal to the "TApplication::Terminate" method
+/// Any extra parameters of the Qt signal are discarded
+
 bool QConnectTerminate(const QObject * sender, const char * signal)
 {
-   // Connect the Qt signal to the "TApplication::Terminate" method
-   // Any extra parameters of the Qt signal are discarded
    return
    QObject::connect(sender,signal
       ,TQtRootSlot::CintSlot(),SLOT(Terminate()));

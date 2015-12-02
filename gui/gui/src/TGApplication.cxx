@@ -35,15 +35,15 @@
 
 ClassImp(TGApplication)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a GUI application environment. Use this class if you only
+/// want to use the ROOT GUI and no other services. In all other cases
+/// use either TApplication or TRint.
+
 TGApplication::TGApplication(const char *appClassName,
                              int *argc, char **argv, void*, int)
    : TApplication(), fDisplay(0), fClient(0)
 {
-   // Create a GUI application environment. Use this class if you only
-   // want to use the ROOT GUI and no other services. In all other cases
-   // use either TApplication or TRint.
-
    if (gApplication) {
       Error("TGApplication", "only one instance of TGApplication allowed");
       return;
@@ -127,20 +127,20 @@ TGApplication::TGApplication(const char *appClassName,
    gROOT->SetLineHasBeenProcessed();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGApplication dtor.
+
 TGApplication::~TGApplication()
 {
-   // TGApplication dtor.
-
    delete fDisplay;
    delete fClient;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load shared libs necessary for GUI.
+
 void TGApplication::LoadGraphicsLibs()
 {
-   // Load shared libs necessary for GUI.
-
    TString name;
    TString title1 = "ROOT interface to ";
    TString nativex, title;
@@ -171,12 +171,12 @@ void TGApplication::LoadGraphicsLibs()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle command line arguments. Arguments handled are removed from the
+/// argument array. Currently only option "-display xserver" is considered.
+
 void TGApplication::GetOptions(Int_t *argc, char **argv)
 {
-   // Handle command line arguments. Arguments handled are removed from the
-   // argument array. Currently only option "-display xserver" is considered.
-
    if (!argc) return;
 
    int i, j;

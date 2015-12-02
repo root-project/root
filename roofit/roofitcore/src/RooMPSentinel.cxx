@@ -37,20 +37,21 @@ ClassImp(RooMPSentinel)
   ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooMPSentinel::RooMPSentinel() 
 {
-  // Constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Terminate all parallel processes still registered with
+/// the sentinel
+
 RooMPSentinel::~RooMPSentinel() 
 {
-  // Destructor. Terminate all parallel processes still registered with
-  // the sentinel
-
   TIterator *iter = _mpfeSet.createIterator() ;
   RooRealMPFE* mpfe ;
   while((mpfe=(RooRealMPFE*)iter->Next())) {
@@ -61,20 +62,20 @@ RooMPSentinel::~RooMPSentinel()
  
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register given multi-processor front-end object with the sentinel
+
 void RooMPSentinel::add(RooRealMPFE& mpfe) 
 {
-  // Register given multi-processor front-end object with the sentinel
-
   _mpfeSet.add(mpfe,kTRUE) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove given multi-processor front-end object from the sentinel
+
 void RooMPSentinel::remove(RooRealMPFE& mpfe) 
 {
-  // Remove given multi-processor front-end object from the sentinel
-
   _mpfeSet.remove(mpfe,kTRUE) ;
 }
