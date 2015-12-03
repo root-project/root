@@ -72,7 +72,7 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, 
       TClass* cl = TClass::GetClass( typeid(e) );
 
       PyObject* pyUserExcepts = PyObject_GetAttrString( gRootModule, "UserExceptions" );
-      std::string exception_type = cl->GetName();
+      std::string exception_type = cl ? cl->GetName() : typeid(e).name();
       PyObject* pyexc = PyDict_GetItemString( pyUserExcepts, exception_type.c_str() );
       if ( !pyexc ) {
          PyErr_Clear();
@@ -87,7 +87,7 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, 
       if ( pyexc ) {
          PyErr_Format( pyexc, "%s", e.what() );
       } else {
-         PyErr_Format( PyExc_Exception, "%s (C++ exception of type %s)", e.what(), cl->GetName() );
+         PyErr_Format( PyExc_Exception, "%s (C++ exception of type %s)", e.what(), exception_type.c_str() );
       }
       result = (PyObject*)TPyCPPExceptionMagic;
    } catch ( ... ) {
