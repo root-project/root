@@ -4,10 +4,6 @@
 #include <iterator>
 #include <type_traits>
 
-#ifndef ROOT_RtypesCore
-#include "RtypesCore.h"
-#endif
-
 /**
 \class ROOT::TSeq
 \brief A pseudo container class which is a generator of indices.
@@ -66,8 +62,9 @@ namespace ROOT {
       const T fStep;
    public:
       using value_type = T;
+      using difference_type = typename std::make_signed<T>::type;
 
-      TSeq(T end): fBegin(0), fEnd(end), fStep(1) {
+      TSeq(T end): fBegin(), fEnd(end), fStep(1) {
          checkIntegralType();
       }
       TSeq(T begin, T end, T step = 1):
@@ -75,7 +72,7 @@ namespace ROOT {
          checkIntegralType();
       }
 
-      class iterator: public std::iterator<std::random_access_iterator_tag, T> {
+      class iterator: public std::iterator<std::random_access_iterator_tag, T, difference_type> {
       private:
          T fCounter;
          T fStep;
@@ -88,28 +85,28 @@ namespace ROOT {
             fCounter += fStep;
             return *this;
          };
-         iterator operator++(Int_t) {
+         iterator operator++(int) {
             iterator tmp(*this);
             operator++();
             return tmp;
          }
-         Bool_t operator==(const iterator &other) {
+         bool operator==(const iterator &other) {
             return fCounter == other.fCounter;
          }
-         Bool_t operator!=(const iterator &other) {
+         bool operator!=(const iterator &other) {
             return fCounter != other.fCounter;
          }
-         T operator+(const iterator &s) {
-            return fCounter + s.fCounter;
+         T operator+(int v) {
+            return fCounter + v;
          }
-         T operator-(const iterator &s) {
-            return fCounter - s.fCounter;
+         T operator-(int v) {
+            return fCounter - v;
          }
          iterator &operator--() {
             fCounter -= fStep;
             return *this;
          }
-         iterator operator--(Int_t) {
+         iterator operator--(int) {
             iterator tmp(*this);
             operator--();
             return tmp;
@@ -133,24 +130,24 @@ namespace ROOT {
          return s * fStep + fBegin;
       }
 
-      size_t GetSize() const {
-         return ((fEnd - fBegin) / fStep);
+      std::size_t size() const {
+         return end() - begin();
       }
 
-      T GetStep() const {
+      T step() const {
          return fStep;
       }
 
-      Bool_t IsEmpty() const {
+      bool empty() const {
          return fEnd == fBegin;
       }
 
    };
 
-   using TSeqI = TSeq<Int_t>;
-   using TSeqU = TSeq<UInt_t>;
-   using TSeqL = TSeq<Long_t>;
-   using TSeqUL = TSeq<ULong_t>;
+   using TSeqI = TSeq<int>;
+   using TSeqU = TSeq<unsigned int>;
+   using TSeqL = TSeq<long>;
+   using TSeqUL = TSeq<unsigned long>;
 
    template<class T>
    TSeq<T> MakeSeq(T end)
@@ -178,7 +175,7 @@ namespace cling {
       std::ostringstream ret;
       ret << "Sequence of values. Begin: " << *val->begin()
           << " - End: " << *val->end()
-          << " - Step: " <<  val->GetStep();
+          << " - Step: " <<  val->step();
       return ret.str();
    }
 }
