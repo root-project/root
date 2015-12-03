@@ -960,7 +960,7 @@ Int_t TProof::Init(const char *, const char *conffile,
             return 0;
          // Client: Is Master in dynamic startup mode?
          if (!IsMaster()) {
-            Int_t dyn;
+            Int_t dyn = 0;
             GetRC("Proof.DynamicStartup", dyn);
             if (dyn != 0) fDynamicStartup = kTRUE;
          }

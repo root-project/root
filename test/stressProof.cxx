@@ -1733,7 +1733,7 @@ Int_t PT_CheckSimple(TQueryResult *qr, Long64_t nevt, Int_t nhist)
    }
 
    // Clean up
-   delete hist;
+   delete[] hist;
 
    // Done
    PutPoint();
