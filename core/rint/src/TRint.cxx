@@ -589,7 +589,8 @@ Bool_t TRint::HandleTermInput()
 
       if (gROOT->Timer()) timer.Start();
 
-      Bool_t added = kFALSE;
+      TTHREAD_TLS(Bool_t) added;
+      added = kFALSE; // reset on each call.
 
       // This is needed when working with remote sessions
       SetBit(kProcessRemotely);
