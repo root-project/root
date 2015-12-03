@@ -64,16 +64,16 @@ else()
                     DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
 endif()
 
-add_custom_command(OUTPUT rootcling_tmp.cxx
-                   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx ${CMAKE_CURRENT_BINARY_DIR}/rootcling_tmp.cxx
-                   DEPENDS  ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx)
+set(R__LLVMRESOURCEDIR ${CMAKE_BINARY_DIR}/etc/cling)
+configure_file(src/rootcling.cxx rootcling_tmp.cxx @ONLY)
+
 if(WIN32)
-  set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-D_WIN32 -DNOMINMAX -DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling")
+  set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-D_WIN32 -DNOMINMAX -DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR")
 else()
   if(CXX_HAS_fno_rtti)
-    set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling -fno-rtti")
+    set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR -fno-rtti")
   else()
-    set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling")
+    set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR")
   endif()
 endif()
 
