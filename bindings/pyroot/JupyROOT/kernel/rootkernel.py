@@ -16,8 +16,8 @@ from __future__ import print_function
 import sys, os, select, tempfile
 
 
-#trying to find ROOT lib path to PYTHONPATH 
-#NOTE: required for JupyterHub              
+#trying to find ROOT lib path to PYTHONPATH
+#NOTE: required for JupyterHub
 try:
     ROOT_PYTHON_PATH = os.popen("root-config --libdir")
     os.environ['PYTHONPATH'] = os.environ['PYTHONPATH']+":"+ROOT_PYTHON_PATH.read()
@@ -27,6 +27,11 @@ except Exception as e:
 #setting up PYTHONPATH
 os.environ['PYTHONPATH'] = os.environ['PYTHONPATH']+":"+os.path.dirname(__file__)
 
+try:
+    from metakernel import MetaKernel, Parser
+    from metakernel.display import HTML
+except ImportError:
+    raise Exception("Error: package metakernel not found.(install it running 'pip install metakernel')")
 
 #ROOT related imports
 try:
@@ -44,13 +49,6 @@ except ImportError:
 
 import IPython
 
-try:
-    from metakernel import MetaKernel, Parser
-    from metakernel.display import HTML
-except ImportError:
-    raise Exception("Error: package metakernel not found.(install it running 'pip install metakernel')")
-
-     
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
 
@@ -58,7 +56,7 @@ _debug = True
 
 def Debug(msg):
      print('out: %r' % msg, file=sys.__stderr__)
-        
+
 
 class ROOTKernel(MetaKernel):
     implementation = 'ROOT'
@@ -70,9 +68,9 @@ class ROOTKernel(MetaKernel):
                      'mimetype': ' text/x-c++src',
                      'file_extension': '.C'}
     banner = "CERN ROOT Kernel %s" % ROOT.gROOT.GetVersion()
-    
+
     def __init__(self,**kwargs):
-        
+
         MetaKernel.__init__(self,**kwargs)
         LoadDrawer()
         setStyle()
@@ -80,19 +78,19 @@ class ROOTKernel(MetaKernel):
         self.Executor  = GetExecutor()
         self.Declarer  = GetDeclarer()#required for %%cpp -d magic
         self.ACLiC     = ACLiC
-        self.magicloader = MagicLoader(self)        
+        self.magicloader = MagicLoader(self)
         self.parser = Parser(self.identifier_regex, self.func_call_regex,
                              self.magic_prefixes, self.help_suffix)
         self.completer = CppCompleter()
         self.completer.activate()
-        
+
 
     def get_completions(self, info):
         if _debug :Debug(info)
         return self.completer._completeImpl(info['code'])
-        
+
     def do_execute_direct(self, code, silent=False):
-        
+
         if not code.strip():
             return
 
@@ -105,10 +103,10 @@ class ROOTKernel(MetaKernel):
             self.ioHandler.InitCapture()
             root_status = self.Executor(str(code))
             self.ioHandler.EndCapture()
-            
+
             std_out = self.ioHandler.getStdout()
             std_err = self.ioHandler.getStderr()
-            
+
             canvaslist = ROOT.gROOT.GetListOfCanvases()
             if canvaslist:
                 for canvas in canvaslist:
@@ -119,8 +117,8 @@ class ROOTKernel(MetaKernel):
                         else:
                             self.Display(self.drawer.getPngImage())
                         canvas.ResetDrawn()
-        
-            
+
+
         except KeyboardInterrupt:
             self.interpreter.gROOT.SetInterrupt()
             status = 'interrupted'
@@ -134,7 +132,7 @@ class ROOTKernel(MetaKernel):
             if std_err != "":
                 stream_content_stderr = {'name': 'stderr', 'text': std_err}
                 self.send_response(self.iopub_socket, 'stream', stream_content_stderr)
-            
+
         reply = {'status': status,
                 'execution_count': self.execution_count,
                 'payload': [],
