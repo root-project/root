@@ -2224,11 +2224,17 @@ TClass* TBranchElement::GetCurrentClass()
          if (newInfo != brInfo) {
             TStreamerElement* newElems = (TStreamerElement*) newInfo->GetElements()->FindObject(currentStreamerElement->GetName());
             if (newElems) {
-               newType = newElems->GetClassPointer()->GetName();
+               if (newElems->GetClassPointer())
+                  newType = newElems->GetClassPointer()->GetName();
+               else
+                  newType = newElems->GetTypeName();
             }
          }
          if (newType.Length()==0) {
-            newType = currentStreamerElement->GetClassPointer()->GetName();
+            if (currentStreamerElement->GetClassPointer())
+               newType = currentStreamerElement->GetClassPointer()->GetName();
+            else
+               newType = currentStreamerElement->GetTypeName();
          }
       }
    } else {
