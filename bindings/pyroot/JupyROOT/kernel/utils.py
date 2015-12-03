@@ -16,7 +16,13 @@ from tempfile import NamedTemporaryFile
 
 from JupyROOT.kernel.handler import LoadHandlers
 
-import ROOT 
+try:
+    from JupyROOT.utils import invokeAclic
+    from JupyROOT.utils import isPlatformApple
+except ImportError:
+    raise Exception("Error: JupyROOT not found")
+
+import ROOT
 
 import __builtin__
 
@@ -31,7 +37,7 @@ def GetIOHandler():
         from ROOT import JupyROOTExecutorHandler
         _ioHandler = JupyROOTExecutorHandler()
     return _ioHandler
-    
+
 def GetExecutor():
     global _Executor
     if not _Executor:
@@ -52,13 +58,17 @@ def ACLiC(code):
      tmpfile.write(code)
      tmpfilename = tmpfile.name
      tmpfile.close()
-     Executor = GetExecutor()
-     status = Executor('.L %s+'%tmpfilename)
+     status = 0
+     if isPlatformApple():
+         invokeAclic(tmpfilename)
+     else:
+         Executor = GetExecutor()
+         status = Executor('.L %s+'%tmpfilename)
      return status
 
 class MagicLoader(object):
     '''Class to load JupyROOT Magics'''
-    def __init__(self,kernel):        
+    def __init__(self,kernel):
          magics_path = os.path.dirname(__file__)+"/magics/*.py"
          for file in glob(magics_path):
               if file != magics_path.replace("*.py","__init__.py"):
@@ -71,4 +81,4 @@ class MagicLoader(object):
 
 
 
-    
+

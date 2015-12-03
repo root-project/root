@@ -200,9 +200,12 @@ def _dumpToUniqueFile(code):
       ofile.write(code)
     return fileName
 
+def isPlatformApple():
+   return _getPlatform() == 'darwin';
+
 def invokeAclic(cell):
     fileName = _dumpToUniqueFile(cell)
-    if _getPlatform() == 'darwin':
+    if isPlatformApple():
         _invokeAclicMac(fileName)
     else:
         processCppCode(".L %s+" %fileName)
