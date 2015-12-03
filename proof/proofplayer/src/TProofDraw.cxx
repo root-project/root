@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofDraw                                                           //
-//                                                                      //
-// Implement Tree drawing using PROOF.                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofDraw
+\ingroup proof
+
+Implement Tree drawing using PROOF
+
+*/
 
 
 #include "TProofDraw.h"

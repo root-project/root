@@ -10,13 +10,12 @@
  *************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TStatsFeedback                                                       //
-//                                                                      //
-// Utility class to display PROOF stats feedback histos during queries. //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TStatsFeedback
+\ingroup proof
+
+Utility class to display PROOF stats feedback histos during queries
+
+*/
 
 #include "TStatsFeedback.h"
 
