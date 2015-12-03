@@ -1286,7 +1286,7 @@ template<typename VectorType, typename EntryType> struct VectorShift<32, 8, Vect
 };
 template<typename VectorType, typename EntryType> struct VectorShift<16, 8, VectorType, EntryType>
 {
-    enum {
+    enum JustSomeName__ {
         EntryTypeSizeof = sizeof(EntryType)
     };
     static Vc_INTRINSIC VectorType shifted(VC_ALIGNED_PARAMETER(VectorType) v, int amount)
@@ -1319,7 +1319,7 @@ template<size_t SIMDWidth, size_t Size, typename VectorType, typename EntryType>
 template<typename VectorType, typename EntryType> struct VectorRotate<32, 4, VectorType, EntryType>
 {
     typedef typename SseVectorType<VectorType>::Type SmallV;
-    enum {
+    enum JustSomeName__ {
         EntryTypeSizeof = sizeof(EntryType)
     };
     static Vc_INTRINSIC VectorType rotated(VC_ALIGNED_PARAMETER(VectorType) v, int amount)
@@ -1338,7 +1338,7 @@ template<typename VectorType, typename EntryType> struct VectorRotate<32, 4, Vec
 template<typename VectorType, typename EntryType> struct VectorRotate<32, 8, VectorType, EntryType>
 {
     typedef typename SseVectorType<VectorType>::Type SmallV;
-    enum {
+    enum JustSomeName__ {
         EntryTypeSizeof = sizeof(EntryType)
     };
     static Vc_INTRINSIC VectorType rotated(VC_ALIGNED_PARAMETER(VectorType) v, int amount)
@@ -1360,7 +1360,7 @@ template<typename VectorType, typename EntryType> struct VectorRotate<32, 8, Vec
 };
 template<typename VectorType, typename EntryType> struct VectorRotate<16, 8, VectorType, EntryType>
 {
-    enum {
+    enum JustSomeName__ {
         EntryTypeSizeof = sizeof(EntryType)
     };
     static Vc_INTRINSIC VectorType rotated(VC_ALIGNED_PARAMETER(VectorType) v, int amount)

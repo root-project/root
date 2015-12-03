@@ -1389,7 +1389,7 @@ template<> Vc_ALWAYS_INLINE Vector<double> Vector<double>::Random()
 // shifted / rotated {{{1
 template<typename T> Vc_INTRINSIC Vc_PURE Vector<T> Vector<T>::shifted(int amount) const
 {
-    enum {
+    enum JustSomeName__ {
         EntryTypeSizeof = sizeof(EntryType)
     };
     switch (amount) {
@@ -1415,7 +1415,7 @@ template<typename T> Vc_INTRINSIC Vc_PURE Vector<T> Vector<T>::shifted(int amoun
 }
 template<> Vc_INTRINSIC Vc_PURE sfloat_v sfloat_v::shifted(int amount) const
 {
-    enum {
+    enum JustSomeName__ {
         EntryTypeSizeof = sizeof(EntryType)
     };
     switch (amount) {
@@ -1439,7 +1439,7 @@ template<> Vc_INTRINSIC Vc_PURE sfloat_v sfloat_v::shifted(int amount) const
 }
 template<typename T> Vc_INTRINSIC Vc_PURE Vector<T> Vector<T>::rotated(int amount) const
 {
-    enum {
+    enum JustSomeName__ {
         EntryTypeSizeof = sizeof(EntryType)
     };
     const __m128i v = mm128_reinterpret_cast<__m128i>(d.v());
@@ -1460,7 +1460,7 @@ template<typename T> Vc_INTRINSIC Vc_PURE Vector<T> Vector<T>::rotated(int amoun
 }
 template<> Vc_INTRINSIC Vc_PURE sfloat_v sfloat_v::rotated(int amount) const
 {
-    enum {
+    enum JustSomeName__ {
         EntryTypeSizeof = sizeof(EntryType)
     };
     const __m128i v0 = sse_cast<__m128i>(d.v()[0]);
