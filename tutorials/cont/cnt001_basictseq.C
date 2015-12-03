@@ -34,5 +34,5 @@ void cnt001_basictseq()
 	for (auto i : MakeSeq(1000000000000UL, 1000000000003UL)) {
 		cout << "Element " << i << endl;
 	}
-
 }
+
