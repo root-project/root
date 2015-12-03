@@ -1,6 +1,6 @@
 if (ROOT_python_FOUND AND NOT ROOT_CLASSIC_BUILD) # Do not run with classic build
 
-set (MODULES_LOCATION ${ROOTSYS}/lib/ROOTaaS/iPyROOT/)
+set (MODULES_LOCATION ${ROOTSYS}/lib/JupyROOT/)
 set(NBDIFFUTIL ${CMAKE_CURRENT_SOURCE_DIR}/nbdiff.py )
 
 # List of notebook files
@@ -8,8 +8,7 @@ set(NBDIFFUTIL ${CMAKE_CURRENT_SOURCE_DIR}/nbdiff.py )
 # documentation and as tutorials. In order to spot problems with downloads
 # one should not use GLOB but rather list explicitely all the files
 set(NOTEBOOKS ${CMAKE_CURRENT_SOURCE_DIR}/importROOT.ipynb
-              ${CMAKE_CURRENT_SOURCE_DIR}/simpleCppMagic.ipynb
-              ${CMAKE_CURRENT_SOURCE_DIR}/magicsInCpp.ipynb)
+              ${CMAKE_CURRENT_SOURCE_DIR}/simpleCppMagic.ipynb)
 
 find_python_module(IPython)
 
