@@ -36,14 +36,18 @@ namespace Math {
    //    seed_uniquestream(fRngState, clusterID,  machineID,  runID,   streamID);
    // }
 
+   // set decimation number
+   void MixMaxEngine::SetSkipNumber(int nskip) {
+      set_skip_number(nskip);
+   }
+   
    void MixMaxEngine::SetSeed(unsigned int seed) { 
       seed_spbox(fRngState, seed);
-      iterate(fRngState);                    
+      // no need to call iterate. The iteration will happen anyway
    }
 
    void MixMaxEngine::SetSeed64(uint64_t seed) { 
       seed_spbox(fRngState, seed);
-      iterate(fRngState);                    
    }
 
    // unsigned int MixMaxEngine::GetSeed() const { 

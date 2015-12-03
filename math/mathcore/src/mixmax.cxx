@@ -1,30 +1,16 @@
-// $Id:$
-// -*- C++ -*-
-//
-// -----------------------------------------------------------------------
-//            MixMax Matrix PseudoRandom Number Generator
-//                        --- MixMax ---
-//                       class header file
-// -----------------------------------------------------------------------
-//
-//
-//  Created by Konstantin Savvidy on Sun Feb 22 2004.
-//  As of version 0.99 and later, the code is being released under
-//  GNU Lesser General Public License v3
-//
-//	Generator described in 
-//	N.Z.Akopov, G.K.Savvidy and N.G.Ter-Arutyunian, Matrix Generator of Pseudorandom Numbers, 
-//	J.Comput.Phys. 97, 573 (1991); 
-//	Preprint EPI-867(18)-86, Yerevan Jun.1986;
-//
-//  and
-//
-//  K.Savvidy
-//  The MIXMAX random number generator
-//  Comp. Phys. Commun. (2015)
-//  http://dx.doi.org/10.1016/j.cpc.2015.06.003
-//
-// -----------------------------------------------------------------------
+/*
+ *  mixmax.c
+ *  A Pseudo-Random Number Generator
+ *
+ *  Created by Konstantin Savvidy on Sun Feb 22 2004.
+ *  As of version 0.99 and later, the code is being released under GNU Lesser General Public License v3
+ *
+ *	Generator described in 
+ *	N.Z.Akopov, G.K.Savvidy and N.G.Ter-Arutyunian, Matrix Generator of Pseudorandom Numbers, 
+ *	J.Comput.Phys. 97, 573 (1991); 
+ *	Preprint EPI-867(18)-86, Yerevan Jun.1986;
+ */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,61 +22,59 @@
 
 #include "mixmax.h"
 
+int nskip = 2;  // number of iterations we want to skip (default is 2)
 
-int iterate(rng_state_t* X){
-	X->sumtot = iterate_raw_vec(X->V, X->sumtot);
-	return 0;
+void set_skip_number(int n){
+   nskip = n; 
+}
+int get_skip_number(){
+   return nskip; 
 }
 
-#if (SPECIALMUL!=0)
-inline uint64_t MULWU (uint64_t k){ return (( (k)<<(SPECIALMUL) & M61) | ( (k) >> (BITS-SPECIALMUL))  )  ;}
-#elif (SPECIALMUL==0)
-inline uint64_t MULWU (uint64_t k){ (void)k; return 0;}
-#else
-#error SPECIALMUL not undefined
-#endif
+
+int iterate(rng_state_t* X){
+   int niter = nskip+1; 
+   for (int i = 0; i < niter; ++i) 
+      X->sumtot = iterate_raw_vec(X->V, X->sumtot);
+   return 0;
+}
 
 myuint iterate_raw_vec(myuint* Y, myuint sumtotOld){
 	// operates with a raw vector, uses known sum of elements of Y
 	int i;
-#ifdef SPECIAL
-    myuint temp2 = Y[1];
-#endif
 	myuint  tempP, tempV;
-    Y[0] = ( tempV = sumtotOld);
-    myuint sumtot = Y[0], ovflow = 0; // will keep a running sum of all new elements (except Y[0])
+#if (SPECIAL != 0)
+	myuint temp2 = Y[1];
+#endif
+	Y[0] = (tempV = modadd(Y[0] , sumtotOld));
+	__uint128_t sumtot = 0; // will keep a running sum of all new elements (except Y[0])
 	tempP = 0;              // will keep a partial sum of all old elements (except Y[0])
 	for (i=1; i<N; i++){
-#if (SPECIALMUL!=0)
-        myuint tempPO = MULWU(tempP);
         tempP = modadd(tempP,Y[i]);
-        tempV = MOD_MERSENNE(tempV + tempP + tempPO); // edge cases ?
-#else
-        tempP = modadd(tempP , Y[i]);
-        tempV = modadd(tempV , tempP);
-#endif
-        Y[i] = tempV;
-		sumtot += tempV; if (sumtot < tempV) {ovflow++;}
+        Y[i] = ( tempV = modadd(tempV,tempP) );
+		sumtot += tempV;
 	}
-#ifdef SPECIAL
-    temp2 = MOD_MULSPEC(temp2);
-    Y[2] = modadd( Y[2] , temp2 );
-    sumtot += temp2; if (sumtot < temp2) {ovflow++;}
+#if (SPECIAL != 0)
+	temp2 = MOD_MULSPEC(temp2);
+	Y[2] = modadd( Y[2] , temp2 );
+	sumtot += temp2;
 #endif
-	return MOD_MERSENNE(MOD_MERSENNE(sumtot) + (ovflow <<3 ));
+	return mod128(sumtot);
 }
 
 myuint get_next(rng_state_t* X) {
     int i;
     i=X->counter;
-    
     if (i<(N) ){
         X->counter++;
         return X->V[i];
     }else{
-        X->sumtot = iterate_raw_vec(X->V, X->sumtot);
-        X->counter=1;
-        return X->V[0];
+       int niter = nskip + 1;
+        for (int iter = 0; iter < niter; ++iter) {
+           X->sumtot = iterate_raw_vec(X->V, X->sumtot);
+        }
+        X->counter=2;
+        return X->V[1]; 
     }
 }
 
@@ -102,8 +86,8 @@ double get_next_float(rng_state_t* X){
     int64_t Z=(int64_t)get_next(X);
 #if defined(__SSE__) && defined(USE_INLINE_ASM)
     double F;
-    __asm__ ("pxor %0, %0; "
-             "cvtsi2sdq %1, %0; "
+    __asm__ ("pxor %0, %0;"
+             "cvtsi2sdq %1, %0;"
              :"=x"(F)
              :"r"(Z)
              );
@@ -120,7 +104,9 @@ void fill_array(rng_state_t* X, unsigned int n, double *array)
     unsigned int i,j;
     const int M=N-1;
     for (i=0; i<(n/M); i++){
-        iterate_and_fill_array(X, array+i*M);
+        int niter = nskip+1;
+        for (int iter = 0; iter < niter; ++iter) 
+           iterate_and_fill_array(X, array+i*M);
     }
     unsigned int rem=(n % M);
     if (rem) {
@@ -143,29 +129,30 @@ void iterate_and_fill_array(rng_state_t* X, double *array){
 #endif
     Y[0] = (tempV = modadd(Y[0] , X->sumtot));
     //array[0] = (double)tempV * (double)(INV_MERSBASE);
-    myuint sumtot = 0, ovflow = 0; // will keep a running sum of all new elements (except Y[0])
+    __uint128_t sumtot = 0; // will keep a running sum of all new elements (except Y[0])
     tempP = 0;             // will keep a partial sum of all old elements (except Y[0])
     for (i=1; i<N; i++){
         tempP = modadd(tempP,Y[i]);
         Y[i] = ( tempV = modadd(tempV,tempP) );
-        sumtot += tempV; if (sumtot < tempV) {ovflow++;}
+        sumtot += tempV;
         array[i-1] = (int64_t)tempV * (double)(INV_MERSBASE);
     }
 #if (SPECIAL != 0)
     temp2 = MOD_MULSPEC(temp2);
     Y[2] = modadd( Y[2] , temp2 );
-    sumtot += temp2; if (sumtot < temp2) {ovflow++;}
+    array[2] = (int64_t)Y[2] * (double)(INV_MERSBASE);
+    sumtot += temp2;
 #endif
-    X->sumtot = MOD_MERSENNE(MOD_MERSENNE(sumtot) + (ovflow <<3 ));
+    X->sumtot = mod128(sumtot);
 }
 
 myuint modadd(myuint foo, myuint bar){
 #if defined(__x86_64__) && defined(USE_INLINE_ASM)
     myuint out;
     /* Assembler trick suggested by Andrzej Görlich     */
-    __asm__ ("addq %2, %0; "
-             "btrq $61, %0; "
-             "adcq $0, %0; "
+    __asm__ ("addq %2, %0;"
+             "btr $61, %0;"
+             "adcq $0, %0;"
              :"=r"(out)
              :"0"(foo), "r"(bar)
              );
@@ -197,15 +184,17 @@ rng_state_t*  rng_copy(myuint *Y)
 	 Partial sums on this new state are recalculated, and counter set to zero, so that when get_next is called, 
 	 it will output the initial vector before any new numbers are produced, call iterate(X) if you want to advance right away */
 	rng_state_t* X = rng_alloc();
-    myuint sumtot=0,ovflow=0;
-	X->counter = 2;
-    int i;
-	for ( i=0; i < N; i++){
-		X->V[i] = Y[i];
-        sumtot += X->V[(i)]; if (sumtot < X->V[(i)]) {ovflow++;}
+	__uint128_t sumtmp;
 
+	X->counter = 2;
+	sumtmp = 0;
+	X->V[0] = Y[0];
+    int i;
+	for ( i=1; i < N; i++){
+		X->V[i] = Y[i]; 
+		sumtmp +=  X->V[(i)] ; 
 	}
-	X->sumtot = MOD_MERSENNE(MOD_MERSENNE(sumtot) + (ovflow <<3 ));
+	X->sumtot = mod128(sumtmp);
 	return X;
 }
 
@@ -222,7 +211,7 @@ int i;
 	}
 	X->counter = N;  // set the counter to N if iteration should happen right away
 	//precalc(X);
-    X->sumtot = 1; //(index ? 1:0);
+	X->sumtot = (index ? 1:0);
 	if (X->fh==NULL){X->fh=stdout;}	
 }
 
@@ -230,30 +219,31 @@ void seed_spbox(rng_state_t* X, myuint seed)
 { // a 64-bit LCG from Knuth line 26, in combination with a bit swap is used to seed
 	const myuint MULT64=6364136223846793005ULL; 
 	int i;
-    myuint sumtot=0,ovflow=0;
+	__uint128_t sumtmp;
 	if (seed == 0){
 		fprintf(stderr, " try seeding with nonzero seed next time!\n");
 		exit(SEED_WAS_ZERO);
 	}
 	
 	myuint l = seed;
+	sumtmp = 0; 
 
-	//X->V[0] = l & MERSBASE;
+	X->V[0] = l & MERSBASE;
 	if (X->fh==NULL){X->fh=stdout;} // if the filehandle is not yet set, make it stdout
-	for (i=0; i < N; i++){
+	for (i=1; i < N; i++){
 		l*=MULT64; l = (l << 32) ^ (l>>32);
 		X->V[i] = l & MERSBASE;
-        sumtot += X->V[(i)]; if (sumtot < X->V[(i)]) {ovflow++;}
+		sumtmp += (X->V[i]);
 	}
 	X->counter = N;  // set the counter to N if iteration should happen right away
-    X->sumtot = MOD_MERSENNE(MOD_MERSENNE(sumtot) + (ovflow <<3 ));
+	X->sumtot= mod128(sumtmp);
 }
 
 myuint precalc(rng_state_t* X){
 	int i;
 	myuint temp;
 	temp = 0;
-	for (i=0; i < N; i++){
+	for (i=1; i < N; i++){
 		temp = MOD_MERSENNE(temp + X->V[i]);
 	}	
 	X->sumtot = temp; 
@@ -263,46 +253,27 @@ myuint precalc(rng_state_t* X){
 
 int rng_get_N(void){return N;}
 
-//#define MASK32 0xFFFFFFFFULL
+#define MASK32 0xFFFFFFFFULL
 
-
-//inline myuint modmulM61(myuint a, myuint b){
-//	// my best modmul so far
-//	__uint128_t temp;
-//	temp = (__uint128_t)a*(__uint128_t)b;
-//	return mod128(temp);
-//}
-
-#if defined(__x86_64__)
 inline myuint mod128(__uint128_t s){
-    myuint s1;
-    s1 = ( (  ((myuint)s)&MERSBASE )    + (  ((myuint)(s>>64)) * 8 )  + ( ((myuint)s) >>BITS) );
-    return	MOD_MERSENNE(s1);
+	myuint s1;
+	s1 = ( (  ((myuint)s)&MERSBASE )    + (  ((myuint)(s>>64)) * 8 )  + ( ((myuint)s) >>BITS) );
+	return	MOD_MERSENNE(s1);
 }
+
+inline myuint modmulM61(myuint a, myuint b){
+	// my best modmul so far
+	__uint128_t temp;
+	temp = (__uint128_t)a*(__uint128_t)b;
+	return mod128(temp);
+}
+
 
 inline myuint fmodmulM61(myuint cum, myuint a, myuint b){
 	__uint128_t temp;
 	temp = (__uint128_t)a*(__uint128_t)b + cum;
 	return mod128(temp);
 }
-
-#else // on all other platforms, including 32-bit linux, PPC and PPC64 and all Windows
-#define MASK32 0xFFFFFFFFULL
-
-inline myuint fmodmulM61(myuint cum, myuint s, myuint a)
-{
-    register myuint o,ph,pl,ah,al;
-    o=(s)*a;
-    ph = ((s)>>32);
-    pl = (s) & MASK32;
-    ah = a>>32;
-    al = a & MASK32;
-    o = (o & M61) + ((ph*ah)<<3) + ((ah*pl+al*ph + ((al*pl)>>32))>>29) ;
-    o += cum;
-    o = (o & M61) + ((o>>61));
-    return o;
-}
-#endif
 
 void print_state(rng_state_t* X){
     int j;
@@ -368,7 +339,7 @@ void read_state(rng_state_t* X, const char filename[] ){
         fprintf(stderr, "mixmax -> checksum error while reading state from file %s - corrupted?\n", filename);
         exit(ERROR_READING_STATE_CHECKSUM);
     }
-//    else{fprintf(stderr, "mixmax -> read_state: checksum ok: %llu == %llu\n",X->sumtot,  sumtot);}
+    else{fprintf(stderr, "mixmax -> read_state: checksum ok: %llu == %llu\n",X->sumtot,  sumtot);}
     fclose(fin);
 }
 
@@ -417,13 +388,14 @@ myuint apply_bigskip(myuint* Vout, myuint* Vin, myID_t clusterID, myID_t machine
 	const	myuint skipMat[128][N] = 
 	
 #if (N==88) 
-#include "mixmax_skip_N88.icc"  // to make this file, delete all except some chosen 128 rows of the coefficients table
+#include "mixmax_skip_N88.c"  // to make this file, delete all except some chosen 128 rows of the coefficients table
 #elif (N==256) 
 #include "mixmax_skip_N256.icc"
+//#include "mixmax_skip_N256.dev.c"
 #elif (N==1000) 
-#include "mixmax_skip_N1000.icc"
+#include "mixmax_skip_N1000.c"
 #elif (N==3150) 
-#include "mixmax_skip_N3150.icc"
+#include "mixmax_skip_N3150.c"
 #endif
 	;
 	
@@ -433,10 +405,9 @@ myuint apply_bigskip(myuint* Vout, myuint* Vin, myID_t clusterID, myID_t machine
 	myuint Y[N], cum[N];
 	myuint coeff;
 	myuint* rowPtr;
-    myuint sumtot=0;
+	__uint128_t sumtot = 0;
 	
-
-    for (i=0; i<N; i++) { Y[i] = Vin[i]; sumtot = modadd( sumtot, Vin[i]); } ;
+	for (i=0; i<N; i++) { Y[i] = Vin[i]; sumtot += Vin[i]; } ; sumtot -= Vin[0]; sumtot = mod128(sumtot) ;
 	for (IDindex=0; IDindex<4; IDindex++) { // go from lower order to higher order ID
 		id=IDvec[IDindex];
 		//printf("now doing ID at level %d, with ID = %d\n", IDindex, id);     
@@ -452,15 +423,15 @@ myuint apply_bigskip(myuint* Vout, myuint* Vin, myID_t clusterID, myID_t machine
 					FUSEDMODMULVEC;
 					sumtot = iterate_raw_vec(Y, sumtot); 
 				}
-                sumtot=0;
-                for (i=0; i<N; i++){ Y[i] = cum[i]; sumtot = modadd( sumtot, cum[i]); } ;
+				sumtot=0;
+				for (i=0; i<N; i++){ Y[i] = cum[i]; sumtot += cum[i]; } sumtot -= Y[0]; sumtot = mod128(sumtot) ;	
 			}
 		id = (id >> 1); r++; // bring up the r-th bit in the ID		
 		}		
 	}
-    sumtot=0;
-	for (i=0; i<N; i++){ Vout[i] = Y[i]; sumtot = modadd( sumtot, Y[i]); } ;  // returns sumtot, and copy the vector over to Vout
-	return (sumtot) ;
+	sumtot=0;
+	for (i=0; i<N; i++){ Vout[i] = Y[i]; sumtot += Y[i]; } ; sumtot -= Y[0]; // returns sumtot, and copy the vector over to Vout 
+	return mod128(sumtot) ;
 }
 #else
 #warning For this N, we dont have the skipping coefficients yet, using alternative method to seed
@@ -479,7 +450,5 @@ void seed_uniquestream( rng_state_t* Xin, myID_t clusterID, myID_t machineID, my
     Xin->sumtot = iterate_raw_vec(Xin->V, Xin->sumtot);
 }
 #endif // SKIPISON
-
-
 
 

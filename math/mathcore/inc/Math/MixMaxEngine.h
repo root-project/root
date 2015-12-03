@@ -80,6 +80,10 @@ namespace ROOT {
          /// generate a 64  bit integer number
          uint64_t IntRndm();
 
+         /// set the number we want to use to skip generation
+         /// higher value means higher luxury but slower
+         static void SetSkipNumber(int nskip); 
+
       private:
 
          /// implementation function to generrate the random number
