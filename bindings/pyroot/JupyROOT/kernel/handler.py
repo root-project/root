@@ -9,18 +9,6 @@
 #-----------------------------------------------------------------------------
 from ROOT import gInterpreter
 
-
-#required c header for i/o
-CHeaders =  'extern "C"\n'
-CHeaders += '{\n'
-CHeaders += '  #include<string.h>\n'
-CHeaders += '  #include <stdio.h>\n'
-CHeaders += '  #include <stdlib.h>\n'
-CHeaders += '  #include <unistd.h>\n'
-CHeaders += '  #include<fcntl.h>\n'
-CHeaders += '}\n'
-
-
 #required class to capture i/o
 #NOTE: this class required a system to flush in a fork
 #if pipe is 1M 1024*1024 size then hung up
@@ -35,7 +23,6 @@ CPPIOClass +='class JupyROOTExecutorHandler{'
 CPPIOClass +='private:'
 CPPIOClass +='  bool capturing;'
 CPPIOClass +='  long MAX_PIPE_SIZE=1048575;'#size of the pipi to capture stdout/stderr
-CPPIOClass +='  Bool_t fStatus=kFALSE;'
 #CPPIOClass +='  //this values are to capture stdout, stderr'
 CPPIOClass +='  std::string    stdoutpipe;'
 CPPIOClass +='  std::string    stderrpipe;'
@@ -112,57 +99,29 @@ CPPIOClass +='}'
 CPPIOClass +='};'
 
 
-#function to execute capturing segfault
-CPPIOFunctions ='Bool_t JupyROOTExecutor(TString code)'
-CPPIOFunctions +='{'
-CPPIOFunctions +='  Bool_t status=kFALSE;'
-CPPIOFunctions +='  TRY {'
-CPPIOFunctions +='    if(gInterpreter->ProcessLine(code.Data()))'
-CPPIOFunctions +='    {'
-CPPIOFunctions +='      status=kTRUE;'
-CPPIOFunctions +='    }'
-CPPIOFunctions +='  } CATCH(excode) {'
-CPPIOFunctions +='    status=kTRUE;'
-CPPIOFunctions +='  } ENDTRY;'
-CPPIOFunctions +='  return status;'
-CPPIOFunctions +='}'
+CPPIOFunctionTemplate ='Bool_t %s(const char* code)'
+CPPIOFunctionTemplate +='{'
+CPPIOFunctionTemplate +='  Bool_t status=kFALSE;'
+CPPIOFunctionTemplate +='  TRY {'
+CPPIOFunctionTemplate +='    if(gInterpreter->%s(code))'
+CPPIOFunctionTemplate +='    {'
+CPPIOFunctionTemplate +='      status=kTRUE;'
+CPPIOFunctionTemplate +='    }'
+CPPIOFunctionTemplate +='  } CATCH(excode) {'
+CPPIOFunctionTemplate +='    status=kTRUE;'
+CPPIOFunctionTemplate +='  } ENDTRY;'
+CPPIOFunctionTemplate +='  return status;'
+CPPIOFunctionTemplate +='}'
 
-
-#function to declare capturing segfault
-CPPIOFunctions +='Bool_t JupyROOTDeclarer(TString code)'
-CPPIOFunctions +='{'
-CPPIOFunctions +='  Bool_t status=kFALSE;'
-CPPIOFunctions +='  TRY {'
-CPPIOFunctions +='    if(gInterpreter->Declare(code.Data()))'
-CPPIOFunctions +='    {'
-CPPIOFunctions +='      status=kTRUE;'
-CPPIOFunctions +='    }'
-CPPIOFunctions +='  } CATCH(excode) {'
-CPPIOFunctions +='    status=kTRUE;'
-CPPIOFunctions +='  } ENDTRY;'
-CPPIOFunctions +='  return status;'
-CPPIOFunctions +='}'
-
-def _LoadHeaders():
-    gInterpreter.ProcessLine("#include<TRint.h>")
-    gInterpreter.ProcessLine("#include<TApplication.h>")
-    gInterpreter.ProcessLine("#include<TException.h>")
-    gInterpreter.ProcessLine("#include<TInterpreter.h>")
-    gInterpreter.ProcessLine("#include <TROOT.h>")
-    gInterpreter.ProcessLine("#include<string>")
-    gInterpreter.ProcessLine("#include<sstream>")
-    gInterpreter.ProcessLine("#include<iostream>")
-    gInterpreter.ProcessLine("#include<fstream>")    
-    gInterpreter.ProcessLine(CHeaders)
+CPPIOFunctions = CPPIOFunctionTemplate %("JupyROOTExecutor", "ProcessLine")
+CPPIOFunctions += CPPIOFunctionTemplate %("JupyROOTDeclarer", "Declare")
 
 def _LoadClass():
     gInterpreter.Declare(CPPIOClass)
 
-
 def _LoadFunctions():
     gInterpreter.Declare(CPPIOFunctions)
-    
+
 def LoadHandlers():
-    _LoadHeaders()
     _LoadClass()
     _LoadFunctions()
