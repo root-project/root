@@ -15,6 +15,7 @@
 #include "TClass.h"           // for exception types (to move to Cppyy.cxx)
 #include "TException.h"       // for TRY ... CATCH
 #include "TVirtualMutex.h"    // for R__LOCKGUARD2
+#include "TClassEdit.h"       // demangler
 
 // Standard
 #include <assert.h>
@@ -23,7 +24,7 @@
 #include <sstream>
 #include <string>
 #include <typeinfo>
-
+#include <memory>
 
 //- data and local helpers ---------------------------------------------------
 namespace PyROOT {
@@ -72,7 +73,14 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, 
       TClass* cl = TClass::GetClass( typeid(e) );
 
       PyObject* pyUserExcepts = PyObject_GetAttrString( gRootModule, "UserExceptions" );
-      std::string exception_type = cl ? cl->GetName() : typeid(e).name();
+      std::string exception_type;
+      if (cl) exception_type = cl->GetName();
+      else {
+	int errorCode;
+        std::unique_ptr<char[]> demangled(TClassEdit::DemangleTypeIdName(typeid(e),errorCode));
+        if (errorCode) exception_type = typeid(e).name();
+        else exception_type = demangled.get();
+      }
       PyObject* pyexc = PyDict_GetItemString( pyUserExcepts, exception_type.c_str() );
       if ( !pyexc ) {
          PyErr_Clear();
