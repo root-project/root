@@ -1581,36 +1581,36 @@ const char* TSpectrum::SmoothMarkov(Double_t *source, int ssize, int averWindow)
 /// where h(i) is the impulse response function, x, y are input and output
 /// vectors, respectively, N is the length of x and h vectors. In matrix form
 /// we have:
-///
-/// \f[
-/// \begin{bmatrix}
-///     y(0)    \\
-///     y(1)    \\
-///     \dots   \\
-///     y(2N-2) \\
-///     y(2N-1)
-/// \end{bmatrix}
-/// =
-/// \begin{bmatrix}
-///     h(0)    & 0      & 0      & \dots & 0         \\
-///     h(1)    & h(0)   & 0      & \dots & \dots     \\
-///     \dots   & h(1)   & h(0)   & \dots & \dots     \\
-///     \dots   & \dots  & h(1)   & \dots & \dots     \\
-///     \dots   & \dots  & \dots  & \dots & \dots     \\
-///     h(N-1)  & \dots  & \dots  &\dots  & 0         \\
-///     0       & h(N-1) & \dots   & \dots & h(0)     \\
-///     0       & 0      & h(N-1)  & \dots & h(1)     \\
-///     \dots   & \dots  & \dots   & \dots & \dots    \\
-///     0       & 0      & 0       & \dots & h(N-1)
-/// \end{bmatrix}
-/// \begin{bmatrix}
-///     x(0)  \\
-///     x(1)  \\
-///     \dots \\
-///     x(N-1)
-/// \end{bmatrix}
-/// \f]
-///
+/**
+ \f[
+ \begin{bmatrix}
+     y(0)    \\
+     y(1)    \\
+     \dots   \\
+     y(2N-2) \\
+     y(2N-1)
+ \end{bmatrix}
+ =
+ \begin{bmatrix}
+     h(0)    & 0      & 0      & \dots & 0         \\
+     h(1)    & h(0)   & 0      & \dots & \dots     \\
+     \dots   & h(1)   & h(0)   & \dots & \dots     \\
+     \dots   & \dots  & h(1)   & \dots & \dots     \\
+     \dots   & \dots  & \dots  & \dots & \dots     \\
+     h(N-1)  & \dots  & \dots  &\dots  & 0         \\
+     0       & h(N-1) & \dots   & \dots & h(0)     \\
+     0       & 0      & h(N-1)  & \dots & h(1)     \\
+     \dots   & \dots  & \dots   & \dots & \dots    \\
+     0       & 0      & 0       & \dots & h(N-1)
+ \end{bmatrix}
+ \begin{bmatrix}
+     x(0)  \\
+     x(1)  \\
+     \dots \\
+     x(N-1)
+ \end{bmatrix}
+ \f]
+*/
 /// Let us assume that we know the response and the output vector (spectrum) of
 /// the above given system. The deconvolution represents solution of the
 /// overdetermined system of linear equations, i.e., the calculation of the
@@ -1621,16 +1621,16 @@ const char* TSpectrum::SmoothMarkov(Double_t *source, int ssize, int averWindow)
 /// process positive definite data (e.g. histograms).
 ///
 /// #### Gold deconvolution algorithm:
-///
-/// \f[
-/// y = Hx \\
-/// H^{T}y = H^{T}Hx \\
-/// y^{'} = H^{'}x \\
-/// x_{i}^{(k+1)} = \frac{y_{i}^{'}}{\sum_{m=0}^{N-1}H_{im}^{'}x_{m}{(k)}}x_{i}{(k)},  i=0,1,2,...,N-1 \\
-/// k = 1,2,3,...,L
-/// x^{0} = [1,1, ..., 1]^T
-/// \f]
-///
+/**
+ \f[
+ y = Hx \\
+ H^{T}y = H^{T}Hx \\
+ y^{'} = H^{'}x \\
+ x_{i}^{(k+1)} = \frac{y_{i}^{'}}{\sum_{m=0}^{N-1}H_{im}^{'}x_{m}{(k)}}x_{i}{(k)},  i=0,1,2,...,N-1 \\
+ k = 1,2,3,...,L
+ x^{0} = [1,1, ..., 1]^T
+ \f]
+*/
 /// Where L is given number of iterations (numberIterations parameter).
 ///
 /// #### Boosted deconvolution:
@@ -2006,12 +2006,12 @@ const char *TSpectrum::Deconvolution(Double_t *source, const Double_t *response,
 /// ### Richardson-Lucy deconvolution algorithm:
 ///
 /// For discrete systems it has the form:
-///
-/// \f[
-/// x^{(n)}(i) = x^{(n-1)}(i) \sum_{j=0}^{N-1}h(i,j)\frac{y(j)}{\sum_{k=0}^{M-1}h(j,k)x^{(n-1)}(k)} \\
-/// i \in \left<0,M-1\right>
-/// \f]
-///
+/**
+ \f[
+ x^{(n)}(i) = x^{(n-1)}(i) \sum_{j=0}^{N-1}h(i,j)\frac{y(j)}{\sum_{k=0}^{M-1}h(j,k)x^{(n-1)}(k)} \\
+ i \in \left<0,M-1\right>
+ \f]
+*/
 /// for positive input data and response matrix this iterative method forces
 /// the deconvoluted spectra to be non-negative. The Richardson-Lucy
 /// iteration converges to the maximum likelihood solution for Poisson statistics
@@ -2272,29 +2272,29 @@ const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *respons
 /// \f[
 /// y(i) = \sum_{k=0}^{N_y-1} h(i,k)x(k), i = 0,1,2,...,N_x-1
 /// \f]
-///
-/// \f[
-/// \begin{bmatrix}
-///     y(0) \\
-///     y(1) \\
-///     \dots \\
-///     y(N_x-1)
-/// \end{bmatrix}
-/// =
-/// \begin{bmatrix}
-///     h(0,0)       & h(0,1) & \dots & h(0,N_y-1) \\
-///     h(1,0)       & h(1,1) & \dots & h(1,N_y-1) \\
-/// \dots \\
-///     h(N_x-1,0)   & h(N_x-1,1) & \dots & h(N_x-1,N_y-1)
-/// \end{bmatrix}
-/// \begin{bmatrix}
-///     x(0) \\
-///     x(1) \\
-///     \dots \\
-///     x(N_x-1)
-/// \end{bmatrix}
-/// \f]
-///
+/**
+ \f[
+ \begin{bmatrix}
+     y(0) \\
+     y(1) \\
+     \dots \\
+     y(N_x-1)
+ \end{bmatrix}
+ =
+ \begin{bmatrix}
+     h(0,0)       & h(0,1) & \dots & h(0,N_y-1) \\
+     h(1,0)       & h(1,1) & \dots & h(1,N_y-1) \\
+ \dots \\
+     h(N_x-1,0)   & h(N_x-1,1) & \dots & h(N_x-1,N_y-1)
+ \end{bmatrix}
+ \begin{bmatrix}
+     x(0) \\
+     x(1) \\
+     \dots \\
+     x(N_x-1)
+ \end{bmatrix}
+ \f]
+*/
 /// #### References:
 ///
 ///  1. Jandel M., Morhac; M., Kliman J., Krupa L., Matouoek
