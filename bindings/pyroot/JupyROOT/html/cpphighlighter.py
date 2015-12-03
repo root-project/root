@@ -1,8 +1,8 @@
 """This preprocessor marks cell's metadata so that the appropriate
 highlighter can be used in the `highlight` filter afterwards.
 More precisely, the language of a cell is set to C++ in two scenarios:
-- Python notebooks: cells with `%%cpp` or `%%dcl` magic extensions.
-- ROOT prompt C++ notebooks: all cells.
+- Python notebooks: cells with `%%cpp` magic extension.
+- ROOT C++ notebooks: all cells.
 This preprocessor relies on the metadata section of the notebook to
 find out about the notebook's language.
 """
@@ -16,7 +16,7 @@ class CppHighlighter(Preprocessor):
     Detects and tags code cells that use the C++ language.
     """
 
-    magics = [ '%%cpp', '%%dcl' ]
+    magics = [ '%%cpp' ]
     cpp = 'cpp'
     python = 'python'
 

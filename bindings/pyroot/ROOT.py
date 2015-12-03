@@ -570,7 +570,7 @@ if '__IPYTHON__' in __builtins__ and __IPYTHON__:
    pre_execute_callbacks = get_ipython().events.callbacks['pre_execute']
    zmqIshellName = 'ZMQInteractiveShell'
    if any(zmqIshellName == callBack.im_class.__name__ for callBack in pre_execute_callbacks if hasattr(callBack, 'im_class')):
-      import ROOTaaS.iPyROOT
+      import JupyROOT
 
 ### b/c of circular references, the facade needs explicit cleanup ---------------
 import atexit

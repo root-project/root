@@ -1,8 +1,4 @@
-/* ROOTaaS CSS */
-
-div#header-container {
-height: 64px;
-}
+/* JupyROOT CSS */
 
 div#ipython_notebook img {
 display:block;
@@ -12,15 +8,6 @@ height: 33px;
 padding-left: 99px;
 -moz-box-sizing: border-box;
 box-sizing: border-box;
-}
-
-div#ipython_notebook::after {
-content:"Notebook Beta";
-color: red;
-font-weight: bold;
-font-family: Arial;
-padding-top: 5px;
-font-size: 18px;
 }
 
 span#login_widget {
@@ -47,13 +34,3 @@ display: block;
 margin: 0 auto;
 }
 
-div#notebook_beta_message {
-padding-bottom: 20px;
-}
-
-div#notebook_beta_message h2 {
-font-family: Arial;
-font-weight: bold;
-color: red;
-text-align: center;
-}

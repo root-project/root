@@ -14,9 +14,7 @@ from IPython.display import HTML
 from IPython.core.extensions import ExtensionManager
 import IPython.display
 import ROOT
-import cpptransformer
 import cppcompleter
-
 
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
@@ -109,7 +107,7 @@ def _getLibExtension(thePlatform):
     return pExtMap.get(thePlatform, '.so')
 
 def welcomeMsg():
-    print "Welcome to ROOTaaS %s" %ROOT.gROOT.GetVersion()
+    print "Welcome to JupyROOT %s" %ROOT.gROOT.GetVersion()
 
 @contextmanager
 def _setIgnoreLevel(level):
@@ -220,7 +218,7 @@ class StreamCapture(object):
         # Platform independent flush
         # With ctypes, the name of the libc library is not known a priori
         # We use jitted function
-        flushFunctionName='_ROOTaaS_Flush'
+        flushFunctionName='_JupyROOT_Flush'
         if (not hasattr(ROOT,flushFunctionName)):
            declareCppCode("void %s(){fflush(nullptr);};" %flushFunctionName)
         self.flush = getattr(ROOT,flushFunctionName)
@@ -261,22 +259,6 @@ class CaptureDrawnCanvases(object):
     def register(self):
         self.shell.events.register('pre_execute', self._pre_execute)
         self.shell.events.register('post_execute', self._post_execute)
-
-
-captures = [StreamCapture(sys.stderr),
-            StreamCapture(sys.stdout),
-            CaptureDrawnCanvases()]
-
-def toCpp():
-    '''
-    Change the mode of the notebook to CPP. It is preferred to use cell magic,
-    but this option is handy to set up servers and for debugging purposes.
-    '''
-    ip = get_ipython()
-    cpptransformer.load_ipython_extension(ip)
-    # Change highlight mode
-    IPython.display.display_javascript(_jsDefaultHighlight.format(mimeType = cppMIME), raw=True)
-    print "Notebook is in Cpp mode"
 
 class CanvasDrawer(object):
     '''
@@ -386,18 +368,23 @@ def setStyle():
     style.SetMarkerColor(ROOT.kBlue)
     style.SetPalette(57)
 
+captures = []
+
 def loadExtensionsAndCapturers():
-    extNames = ["ROOTaaS.iPyROOT." + name for name in ["cppmagic"]]
+    global captures
+    extNames = ["JupyROOT.magics." + name for name in ["cppmagic"]]
     ip = get_ipython()
     extMgr = ExtensionManager(ip)
     for extName in extNames:
         extMgr.load_extension(extName)
     cppcompleter.load_ipython_extension(ip)
+    captures.append(StreamCapture(sys.stderr))
+    captures.append(StreamCapture(sys.stdout))
+    captures.append(CaptureDrawnCanvases())
 
     for capture in captures: capture.register()
 
 def enhanceROOTModule():
-    ROOT.toCpp = toCpp
     ROOT.enableJSVis = enableJSVis
     ROOT.disableJSVis = disableJSVis
     ROOT.enableJSVisDebug = enableJSVisDebug
@@ -407,8 +394,6 @@ def enhanceROOTModule():
 
 def enableCppHighlighting():
     ipDispJs = IPython.display.display_javascript
-    #Make sure clike JS lexer is loaded
-    ipDispJs("require(['codemirror/mode/clike/clike'], function(Clike) { console.log('ROOTaaS - C++ CodeMirror module loaded'); });", raw=True)
     # Define highlight mode for %%cpp magic
     ipDispJs(_jsMagicHighlight.format(cppMIME = cppMIME), raw=True)
 

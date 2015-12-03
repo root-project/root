@@ -40,7 +40,6 @@ class CppCompleter(object):
     TH2C
     TH2D
     TH2F
-    TH2GL
     TH2I
     TH2Poly
     TH2PolyBin
