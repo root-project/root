@@ -324,9 +324,18 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       }
 
       if (fDict != branchActualType) {
-         Error("TTreeReaderValueBase::CreateProxy()", "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderValue<%s>",
-               fBranchName.Data(), branchActualType->GetName(), fDict->GetName());
-         return;
+         TDataType *dictdt = dynamic_cast<TDataType*>(fDict);
+         TDataType *actualdt = dynamic_cast<TDataType*>(branchActualType);
+         if (dictdt && actualdt && dictdt->GetType()>0
+             && dictdt->GetType() == actualdt->GetType()) {
+            // Same numerical type but different TDataType, likely Long64_t
+         } else {
+            Error("TTreeReaderValueBase::CreateProxy()",
+                  "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderValue<%s>",
+                  fBranchName.Data(), branchActualType->GetName(),
+                  fDict->GetName());
+            return;
+         }
       }
    }
 
@@ -388,11 +397,14 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
          if (dict && dict->IsA() == TDataType::Class()) {
             // Resolve the typedef.
             dict = TDictionary::GetDictionary(((TDataType*)dict)->GetTypeName());
-            if (dict != fDict) {
-               dict = TClass::GetClass(brElement->GetTypeName());
-            }
-            if (dict != fDict) {
-               dict = brElement->GetCurrentClass();
+            if (dict->IsA() != TDataType::Class()) {
+               // Might be a class.
+               if (dict != fDict) {
+                  dict = TClass::GetClass(brElement->GetTypeName());
+               }
+               if (dict != fDict) {
+                  dict = brElement->GetCurrentClass();
+               }
             }
          }
          else if (!dict) {
