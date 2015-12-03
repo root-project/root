@@ -313,7 +313,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       }
    }
 
-   if (!myLeaf && !fStaticClassOffsets.size()){
+   if (!myLeaf && !fStaticClassOffsets.size()) {
       const char* branchActualTypeName = GetBranchDataType(branch, branchActualType);
 
       if (!branchActualType) {
@@ -385,12 +385,13 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
          }
 
          if (brElement->GetTypeName()) dict = TDictionary::GetDictionary(brElement->GetTypeName());
-         if (dict && dict->IsA() == TDataType::Class()){
+         if (dict && dict->IsA() == TDataType::Class()) {
+            // Resolve the typedef.
             dict = TDictionary::GetDictionary(((TDataType*)dict)->GetTypeName());
-            if (dict != fDict){
+            if (dict != fDict) {
                dict = TClass::GetClass(brElement->GetTypeName());
             }
-            if (dict != fDict){
+            if (dict != fDict) {
                dict = brElement->GetCurrentClass();
             }
          }
