@@ -207,6 +207,7 @@ set(benchmarks-depends tutorial-hsimple
                        tutorial-hist-h1draw
                        tutorial-geom-na49view
                        tutorial-tree-ntuple1
+                       tutorial-tree-spider
                        tutorial-io-hadd
                        tutorial-io-loopdir
                        tutorial-io-copyFiles)
