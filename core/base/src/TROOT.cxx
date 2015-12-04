@@ -369,11 +369,11 @@ namespace Internal {
 
    static GetROOTFun_t gGetROOT = &GetROOT1;
 
-   void *GetSymInLibThread(const char *funcname)
+   static Func_t GetSymInLibThread(const char *funcname)
    {
-      const static auto loadSuccess = -1 != gSystem->Load("libThread");
+      const static bool loadSuccess = -1 != gSystem->Load("libThread");
       if (loadSuccess) {
-         if (auto sym = dlsym(RTLD_DEFAULT, funcname)) {
+         if (auto sym = gSystem->DynFindSymbol(nullptr, funcname)) {
             return sym;
          } else {
             Error("GetSymInLibThread", "Cannot get symbol %s.", funcname);
@@ -406,9 +406,18 @@ namespace Internal {
    }
 
    ////////////////////////////////////////////////////////////////////////////////
-   /// Enables the implicit multi-threading in ROOT.
-   /// @param[in] numthreads Number of threads to use. If not specified, it is
-   ///            automatically decided by the implementation.
+   /// Globally enables the implicit multi-threading in ROOT, activating the
+   /// parallel execution of those methods in ROOT that provide an internal
+   /// parallelisation.
+   /// The 'numthreads' parameter allows to control the number of threads to
+   /// be used by the implicit multi-threading. However, this parameter is just
+   /// a hint for ROOT, which will try to satisfy the request if the execution
+   /// scenario allows it. For example, if ROOT is configured to use an external
+   /// scheduler, setting a value for 'numthreads' might not have any effect.
+   /// @param[in] numthreads Number of threads to use. If not specified or
+   ///                       set to zero, the number of threads is automatically
+   ///                       decided by the implementation. Any other value is
+   ///                       used as a hint.
    void EnableImplicitMT(UInt_t numthreads)
    {
       static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableImplicitMT");
