@@ -2,7 +2,7 @@
 A software layer to integrate Jupyter notebooks and ROOT.
 
 ## Set a local server up
-1. Install ROOT6 (> 6.05)
+1. [Install ROOT6](https://root.cern.ch/building-root) (> 6.05)
 2. Install Jupyter: pip install jupyter
 3. Install metakernel: pip install metakernel
 4. Type "root --notebook"
