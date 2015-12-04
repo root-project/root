@@ -239,6 +239,7 @@ please have a look at the the mentioned functions.
 | Wilson | kFWilson | TEfficiency::Wilson | false | total events, passed events, confidence level |
 | Agresti-Coull | kFAC | TEfficiency::AgrestiCoull | false | total events, passed events. confidence level |
 | Feldman-Cousins | kFFC | TEfficiency::FeldmanCousins | false | total events, passed events, confidence level |
+| Mid-P Lancaster | kMidP | TEfficiency::MidPInterval | false | total events, passed events, confidence level |
 | Jeffrey | kBJeffrey | TEfficiency::Bayesian | true | total events, passed events, confidence level, fBeta_alpha = 0.5, fBeta_beta = 0.5 |
 | Uniform prior | kBUniform |TEfficiency::Bayesian | true |total events, passed events, confidence level, fBeta_alpha = 1, fBeta_beta = 1 |
 | custom prior | kBBayesian |TEfficiency::Bayesian | true |total events, passed events, confidence level, fBeta_alpha, fBeta_beta |
@@ -1110,6 +1111,44 @@ Bool_t TEfficiency::FeldmanCousinsInterval(Double_t total,Double_t passed,Double
    upper = fc.Upper();
    return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+Calculates the boundaries using the  mid-P binomial
+interval (Lancaster method)  from B. Cousing and J. Tucker. 
+See http://arxiv.org/abs/0905.3831 for a description and references for the method
+
+Modify equal_tailed to get the kind of interval you want.
+Can also be converted to interval on ratio of poisson means X/Y by the substitutions
+ X = passed
+ total = X + Y
+ lower_poisson = lower/(1 - lower)
+ upper_poisson = upper/(1 - upper)
+*/
+Double_t TEfficiency::MidPInterval(Double_t total,Double_t passed,Double_t level,Bool_t bUpper)
+{
+   const double alpha = 1. - level;
+   const bool equal_tailed = true;  // change if you don;t want equal tailed interval
+   const double alpha_min = equal_tailed ? alpha/2 : alpha;
+   const double tol = 1e-9; // tolerance 
+   double pmin = 0;
+   double pmax = 0;
+   double p = 0;
+   
+   pmin = 0; pmax = 1;
+   while (std::abs(pmax - pmin) > tol) {
+      p = (pmin + pmax)/2;
+      double v = 0.5 * ROOT::Math::binomial_pdf(int(passed), p, int(total));
+      if (passed > 0) v += ROOT::Math::binomial_cdf(int(passed - 1), p, int(total));
+      double vmin =  (bUpper) ? alpha_min : 1.- alpha_min;
+      if (v > vmin)
+         pmin = p;
+      else
+         pmax = p;
+   }
+   return p; 
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -3328,6 +3367,9 @@ Bool_t TEfficiency::SetPassedHistogram(const TH1& rPassed,Option_t* opt)
 /// - kBBayesian (=7)   : using a custom prior defined by fBeta_alpha and fBeta_beta
 ///                      sets kIsBayesian = true
 ///                      see also Bayesian
+/// - kMidP (=8)       : using the Lancaster Mid-P method
+///                      sets kIsBayesian = false
+
 
 void TEfficiency::SetStatisticOption(EStatOption option)
 {
@@ -3353,6 +3395,10 @@ void TEfficiency::SetStatisticOption(EStatOption option)
          break;
       case kFFC:
          fBoundary = &FeldmanCousins;
+         SetBit(kIsBayesian,false);
+         break;
+      case kMidP:
+         fBoundary = &MidPInterval;
          SetBit(kIsBayesian,false);
          break;
       case kBJeffrey:
