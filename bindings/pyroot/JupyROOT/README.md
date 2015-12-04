@@ -21,6 +21,7 @@ jupyter notebook
 ```
 
 Once the server is up, you can use ROOT with two kernels:
+
 1. ROOT C++: new kernel provided by ROOT
 2. Python 2: already provided by Jupyter
 
