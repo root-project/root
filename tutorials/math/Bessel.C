@@ -1,14 +1,20 @@
-// Show the different kinds of Bessel functions available in ROOT
-// To execute the macro type in:
-//
-// root[0]: .x Bessel.C
-//
-// It will create one canvas with the representation
-// of the  cylindrical and spherical Bessel functions
-// regular and modified
-
-//
-//  Author: Magdalena Slawinska
+/// \file
+/// \ingroup tutorial_math
+/// Show the different kinds of Bessel functions available in ROOT
+/// To execute the macro type in:
+///
+/// ~~~ {.cpp}
+/// root[0]: .x Bessel.C
+/// ~~~
+///
+/// It will create one canvas with the representation
+/// of the  cylindrical and spherical Bessel functions
+/// regular and modified
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Magdalena Slawinska
 
 #include "TMath.h"
 #include "TF1.h"
@@ -29,7 +35,7 @@ void Bessel()
   gSystem->Load("libMathMore");
 
   TCanvas *DistCanvas = new TCanvas("DistCanvas",
-     "Bessel functions example", 10, 10, 1000, 800);
+     "Bessel functions example", 10, 10, 800, 600);
   DistCanvas->SetFillColor(17);
   DistCanvas->Divide(2, 2);
   DistCanvas->cd(1);
