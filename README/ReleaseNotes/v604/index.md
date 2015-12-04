@@ -984,17 +984,29 @@ hostname is looked up and Locate() returns the full url, including the path.
 
 ***
 
+## Release 6.04/12
+
+### I/O
+- Add to the TClass StreamerInfo for non-stl collections. A 'collection' here is a class for which there is a TVirtualCollectionProxy. 
+  For example this applies to ATLAS' DataVector.
+- TWebFile. Fixed ROOT-7809. Returns an error for a redirect which does not specify the new URI, rather than going into a loop.
+
+### Interpreter
+- Cache ROOT specials (ROOT-7830 and friends).
+- Accelerated calls as seen e.g. in PyROOT [ROOT-7840]. This fixes a PyROOT performance regression between 6.02 and 6.04, seen by ATLAS.
+
+### Documentation
+- Apply THtml->doxygen transformation for func doc. Eases cherry picking.
+
+### Bugs and Improvements
+
+*   [[ROOT-7789](https://sft.its.cern.ch/jira/browse/ROOT-7789)] - ROOTConfig.cmake should not set CMAKE_MODULE_PATH nor install FindX modules
+*   [[ROOT-7809](https://sft.its.cern.ch/jira/browse/ROOT-7809)] - TWebFile infinite loop for 301 redirects without Location
+*   [[ROOT-7817](https://sft.its.cern.ch/jira/browse/ROOT-7817)] -  Avoid a crash under some circumstances when trying to open an invalid path.
+*   [[ROOT-7787](https://sft.its.cern.ch/jira/browse/ROOT-7787)] - CMake: allow disabling ncurses
+
+***
 
 ## HEAD of the v6-04-00-patches branch
 
-Changes will be part of the future 6.04/12
-
-### TWebFile
-Fixed ROOT-7809. Returns an error for a redirect which does not specify the new
-URI, rather than going into a loop.
-
-Fixed ROOT-7817. Avoid a crash under some circumstances when trying to open an
-invalid path.
-
-### Interpreter
-- Accelerated calls as seen e.g. in PyROOT [ROOT-7840].
+Changes will be part of the future 6.04/14
