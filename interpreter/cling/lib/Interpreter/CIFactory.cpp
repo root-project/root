@@ -41,6 +41,7 @@
 #include <cstdio>
 
 #include <memory>
+#include <sstream>
 
 // Include the necessary headers to interface with the Windows registry and
 // environment.
@@ -49,7 +50,6 @@
   #define NOGDI
   #define NOMINMAX
   #include <Windows.h>
-  #include <sstream>
   #include <direct.h>
   #define popen _popen
   #define pclose _pclose
@@ -289,6 +289,15 @@ static bool getVisualStudioDir(std::string &path) {
   return false;
 }
 
+#else // _MSC_VER
+void insertIncludePaths(const std::string& s, std::vector<std::string>& HostCXXI) {
+  std::stringstream ss(s);
+  std::string includePath;
+  while (std::getline(ss, includePath, ':')) {
+    HostCXXI.push_back("-I");
+    HostCXXI.push_back(includePath);
+  }
+}
 #endif // _MSC_VER
 
 namespace {
@@ -426,12 +435,19 @@ namespace {
         }
       }
 #else // _MSC_VER
+      const char* RootInclude = std::getenv("ROOT_INCLUDE");
+      if (RootInclude) {
+        HostCXXI.push_back("-nostdinc++");
+        insertIncludePaths(RootInclude, HostCXXI);
+      }
+
       static const char *CppInclQuery =
         "echo | LC_ALL=C " LLVM_CXX " -xc++ -E -v - 2>&1 >/dev/null "
         "| awk '/^#include </,/^End of search"
         "/{if (!/^#include </ && !/^End of search/){ print }}' "
         "| grep -E \"(c|g)\\+\\+\"";
-      if (FILE *pf = ::popen(CppInclQuery, "r")) {
+      FILE *pf = NULL;
+      if (!HostCXXI.size() && (pf = ::popen(CppInclQuery, "r"))) {
 
         HostCXXI.push_back("-nostdinc++");
         char buf[2048];
