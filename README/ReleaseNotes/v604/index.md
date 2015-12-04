@@ -995,3 +995,6 @@ URI, rather than going into a loop.
 
 Fixed ROOT-7817. Avoid a crash under some circumstances when trying to open an
 invalid path.
+
+### Interpreter
+- Accelerated calls as seen e.g. in PyROOT [ROOT-7840].
