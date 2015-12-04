@@ -12,7 +12,7 @@ SQLITEDIR    := $(MODDIR)
 SQLITEDIRS   := $(SQLITEDIR)/src
 SQLITEDIRI   := $(SQLITEDIR)/inc
 
-##### libSQLite #####
+##### libRSQLite #####
 SQLITEL      := $(MODDIRI)/LinkDef.h
 SQLITEDS     := $(call stripsrc,$(MODDIRS)/G__SQLite.cxx)
 SQLITEDO     := $(SQLITEDS:.cxx=.o)
