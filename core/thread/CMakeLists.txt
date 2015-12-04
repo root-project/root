@@ -26,7 +26,7 @@ else()
                          TWin32Thread.cxx TWin32ThreadFactory.cxx)
 endif()
 
-if (mt)
+if (imt)
   set(sources_imt TImplicitMT.cxx)
 endif()
 

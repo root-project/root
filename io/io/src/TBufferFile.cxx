@@ -3555,7 +3555,14 @@ TProcessID *TBufferFile::ReadProcessID(UShort_t pidf)
       if (!pidf) return TProcessID::GetPID(); //may happen when cloning an object
       return 0;
    }
-   return file->ReadProcessID(pidf);
+
+   TProcessID *pid = nullptr;
+   {
+      R__LOCKGUARD_IMT(gInterpreterMutex); // Lock for parallel TTree I/O
+      pid = file->ReadProcessID(pidf);
+   }
+
+   return pid;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
