@@ -393,6 +393,11 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
             }
          }
 
+         if (brElement->GetType() == 3 || brElement->GetType() == 4) {
+            dict = brElement->GetCurrentClass();
+            return brElement->GetTypeName();
+         }
+
          if (brElement->GetTypeName()) dict = TDictionary::GetDictionary(brElement->GetTypeName());
          if (dict && dict->IsA() == TDataType::Class()) {
             // Resolve the typedef.
