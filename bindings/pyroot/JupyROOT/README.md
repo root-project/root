@@ -1,30 +1,59 @@
 # JupyROOT
 A software layer to integrate Jupyter notebooks and ROOT.
 
-## Set a local server up
+## Installation
 1. [Install ROOT6](https://root.cern.ch/building-root) (> 6.05)
-2. Install Jupyter: pip install jupyter
-3. Install metakernel: pip install metakernel
-4. Type "root --notebook"
+2. Install dependencies: pip install jupyter metakernel
 
-To find the ROOT kernel among the ones automatically detected by Jupyter, just
-type:
+## Start using ROOTbooks
+Set up the ROOT environment (`. $ROOTSYS/bin/thisroot.[c]sh`) and type in your
+shell:
 ```
-cp -r $ROOTSYS/etc/notebook/kernels/root  ~/.local/share/jupyter/kernels/
+root --notebook
 ```
-before starting a ROOTbook make sure you have the ROOT environment properly set
-up, i.e. you ran `. $ROOTSYS/bin/thisroot.[c]sh`.
+This will start a ROOT-flavoured notebook server in your computer.
 
-## Example usage
+Alternatively, if you would like to use the Jupyter command directly, you 
+can do:
+```
+cp -r $ROOTSYS/etc/notebook/kernels/root ~/.local/share/jupyter/kernels
+jupyter notebook
+```
+
+Once the server is up, you can use ROOT with two kernels:
+1. ROOT C++: new kernel provided by ROOT
+2. Python 2: already provided by Jupyter
+
+##  C++ ROOTbook
+ROOT offers a C++ kernel that transforms the notebook in a ROOT prompt.
+Embedded graphics, syntax highlighting and tab completion are among
+the features provided by this kernel.
+
+An example of how you would plot a histogram in a C++ ROOTbook is:
+```cpp
+TCanvas c;
+TH1F h("h","ROOT Histo;X;Y",64,-4,4);
+h.FillRandom("gaus");
+h.Draw();
+c.Draw();
+``` 
+
+## Python ROOTbook
+If you prefer to use Python, you can create a new Python 2 kernel and
+import the ROOT libraries:
 ```python
 import ROOT
-c = ROOT.TCanvas()
-h = ROOT.TH1F("h","iPython Histo;X;Y",64,-4,4)
-h.FillRandom("gaus")
-h.Draw()
-c.Draw()
 ```
-
-## Magics and interaction with C++
- * ROOT C++ Kernel
- * %%cpp for marking a cell for C++
+And then you could write something like:
+```python
+c = ROOT.TCanvas("c")
+h = ROOT.TH1F("h","ROOT Histo;X;Y",64,-4,4)
+```
+Additionally, you can mix Python and C++ in the same notebook
+by using the **%%cpp** magic:
+```cpp
+%%cpp
+h->FillRandom("gaus");
+h->Draw();
+c->Draw();
+```
