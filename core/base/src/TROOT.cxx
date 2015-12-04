@@ -371,15 +371,13 @@ namespace Internal {
 
    static Func_t GetSymInLibThread(const char *funcname)
    {
-      const static bool loadSuccess = -1 != gSystem->Load("libThread");
+      const static bool loadSuccess = 0 <= gSystem->Load("libThread");
       if (loadSuccess) {
          if (auto sym = gSystem->DynFindSymbol(nullptr, funcname)) {
             return sym;
          } else {
             Error("GetSymInLibThread", "Cannot get symbol %s.", funcname);
          }
-      } else {
-         Error("GetSymInLibThread", "Cannot load Thread library.");
       }
       return nullptr;
    }
