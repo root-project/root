@@ -119,8 +119,19 @@ TString TMakeProject::GetHeaderName(const char *in_name, const TList *extrainfos
                   ChopFileName(result,255);
                   return result;
                }
+#ifndef WIN32
             }
             result.Append('_');
+#else
+            }
+            if (name[i+1] == '/') {
+               // don't replace the colon ':' in the case it's part of the drive name in a Windows path
+               // e.g. don't convert from "c:/root/..." to "c_/root/..."
+               result.Append(name[i]);
+            } else {
+               result.Append('_');
+            }
+#endif
             break;
          case ',':
          case '*':
