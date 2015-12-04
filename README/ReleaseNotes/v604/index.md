@@ -1010,3 +1010,6 @@ hostname is looked up and Locate() returns the full url, including the path.
 ## HEAD of the v6-04-00-patches branch
 
 Changes will be part of the future 6.04/14
+
+### Build system
+- Added build option builtin_openssl to build OpenSSL internally. This is specially needed for the lastest Mac OSX (El Capitan) 
