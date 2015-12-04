@@ -11,8 +11,8 @@
 /**
   \defgroup proof PROOF Libraries
 
-  The PROOF libraries (libProof, libProofPlayer, libProofx) contain the classes defining
-  the PROOF facility, a ROOT-based framework for parallel analysis of ROOT TTrees. 
+  The PROOF libraries (libProof, libProofPlayer, libProofDraw) contain the classes defining
+  the kernel of PROOF facility, a ROOT-based framework for parallel analysis of ROOT TTrees. 
 
 */
 
