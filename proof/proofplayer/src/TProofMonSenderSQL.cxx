@@ -11,7 +11,7 @@
 
 
 /** \class TProofMonSenderSQL
-\ingroup proof
+\ingroup proofkernel
 
 TProofMonSender implementation for the SQL writers
 

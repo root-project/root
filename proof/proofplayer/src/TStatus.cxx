@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TStatus
-\ingroup proof
+\ingroup proofkernel
 
 This class holds the status of an ongoing operation and collects
 error messages. It provides a Merge() operation allowing it to

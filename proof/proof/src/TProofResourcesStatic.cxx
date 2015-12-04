@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofResourcesStatic
-\ingroup proof
+\ingroup proofkernel
 
 The purpose of this class is to provide a standard interface to
 static config files. It interprets Proof config files (proof.conf)

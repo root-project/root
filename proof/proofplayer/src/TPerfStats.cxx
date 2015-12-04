@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TPerfStats
-\ingroup proof
+\ingroup proofkernel
 
 Provides the interface for the PROOF internal performance measurement
 and event tracing.

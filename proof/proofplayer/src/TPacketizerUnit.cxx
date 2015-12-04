@@ -11,7 +11,7 @@
  *************************************************************************/
 
 /** \class TPacketizerUnit
-\ingroup proof
+\ingroup proofkernel
 
 This packetizer generates packets of generic units, representing the
 number of times an operation cycle has to be repeated by the worker

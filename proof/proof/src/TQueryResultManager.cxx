@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TQueryResultManager
-\ingroup proof
+\ingroup proofkernel
 
 Class managing the query-result area
 

@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofLog
-\ingroup proof
+\ingroup proofkernel
 
 Implementation of the PROOF session log handler.
 

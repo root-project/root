@@ -11,7 +11,7 @@
  *************************************************************************/
 
 /** \class TEventIter
-\ingroup proof
+\ingroup proofkernel
 
 Special iterator class used in TProofPlayer to iterate over events
 or objects in the packets.

@@ -11,7 +11,7 @@
 
 
 /** \class TProofMonSender
-\ingroup proof
+\ingroup proofkernel
 
 Provides the interface for PROOF monitoring to different writers.
 Allows to decouple the information sent from the backend.

@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TSlave
-\ingroup proof
+\ingroup proofkernel
 
 Class describing a PROOF worker server. It contains information like the
 workers host name, ordinal number, performance index, socket, etc.

@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TOutputListSelectorDataMap
-\ingroup proof
+\ingroup proofkernel
 
 Set the selector's data members to the corresponding elements of the
 output list.

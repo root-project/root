@@ -9,15 +9,24 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 /**
-  \defgroup proof PROOF Libraries
+  \defgroup proof PROOF
 
-  The PROOF libraries (libProof, libProofPlayer, libProofDraw) contain the classes defining
-  the kernel of PROOF facility, a ROOT-based framework for parallel analysis of ROOT TTrees. 
+  Classes defining the Parallel ROOT Facility, PROOF, a framework for parallel analysis of ROOT TTrees. 
+
+*/
+
+/**
+  \defgroup proofkernel PROOF kernel Libraries
+  \ingroup proof
+
+  The PROOF kernel libraries (libProof, libProofPlayer, libProofDraw) contain the classes defining
+  the kernel of the PROOF facility, i.e. the protocol and the utilities to steer data processing
+  and handling of results. 
 
 */
 
 /** \class TProof
-\ingroup proof
+\ingroup proofkernel
 
 This class controls a Parallel ROOT Facility, PROOF, cluster.
 It fires the worker servers, it keeps track of how many workers are

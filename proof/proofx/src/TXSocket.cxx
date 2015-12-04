@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXSocket                                                             //
-//                                                                      //
-// High level handler of connections to xproofd.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TXSocket
+\ingroup proofx
+
+High level handler of connections to XProofD.
+See TSocket for details.
+
+*/
 
 #include "MessageTypes.h"
 #include "TEnv.h"

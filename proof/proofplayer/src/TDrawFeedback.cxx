@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TDrawFeedback
-\ingroup proof
+\ingroup proofkernel
 
 Utility class to draw objects in the feedback list during queries.
 Draws histograms in separated canvases and user-defined objects via

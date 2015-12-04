@@ -10,7 +10,7 @@
 *************************************************************************/
 
 /** \class TPacketizerMulti
-\ingroup proof
+\ingroup proofkernel
 
 This class allows to do multiple runs in the same query; each run
 can be a, for example, different dataset or the same dataset with

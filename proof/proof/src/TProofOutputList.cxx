@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofOutputList
-\ingroup proof
+\ingroup proofkernel
 
 Derivation of TList with an overload of ls() and Print() allowing to filter
 out some of the variables

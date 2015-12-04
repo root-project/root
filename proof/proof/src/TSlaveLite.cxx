@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TSlaveLite
-\ingroup proof
+\ingroup proofkernel
 
 Version of TSlave for local worker servers.
 See TSlave for details.

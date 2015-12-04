@@ -10,19 +10,11 @@
  *************************************************************************/
 
 /** \class TProofMgrLite
-\ingroup proof
+\ingroup proofkernel
 
-Basic TProofMgr functionality implementation in the case of Lite sessions.
+Basic TProofMgr functionality implementation in the case of Lite session.
 
 */
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofMgrLite                                                        //
-//                                                                      //
-// Basic functionality implementtaion in the case of Lite sessions      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include <errno.h>
 #ifdef WIN32

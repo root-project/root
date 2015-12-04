@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofDraw
-\ingroup proof
+\ingroup proofkernel
 
 Implement Tree drawing using PROOF
 

@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofServ
-\ingroup proof
+\ingroup proofkernel
 
 Class providing the PROOF server. It can act either as the master
 server or as a slave server, depending on its startup arguments. It

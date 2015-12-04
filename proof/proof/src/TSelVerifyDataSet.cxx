@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TSelVerifyDataSet
-\ingroup proof
+\ingroup proofkernel
 
 Selector to verify dataset in parallel on workers
 

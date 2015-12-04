@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofPlayer
-\ingroup proof
+\ingroup proofkernel
 
 Internal class steering processing in PROOF.
 Instances of the TProofPlayer class are created on the worker nodes

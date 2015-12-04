@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofNodeInfo
-\ingroup proof
+\ingroup proofkernel
 
 The purpose of this class is to provide a complete node description
 for masters, submasters and workers.

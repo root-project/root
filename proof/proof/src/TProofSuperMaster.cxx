@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofSuperMaster
-\ingroup proof
+\ingroup proofkernel
 
 Implementation of TProof controlling PROOF federated clusters.
 

@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofMgr
-\ingroup proof
+\ingroup proofkernel
 
 The PROOF manager interacts with the PROOF server coordinator to
 create or destroy a PROOF session, attach to or detach from

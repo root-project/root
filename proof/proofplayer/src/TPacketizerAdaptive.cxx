@@ -10,7 +10,7 @@
 *************************************************************************/
 
 /** \class TPacketizerAdaptive
-\ingroup proof
+\ingroup proofkernel
 
 This packetizer is based on TPacketizer but uses different
 load-balancing algorithms and data structures.

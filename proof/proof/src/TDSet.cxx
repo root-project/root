@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TDSetElement
-\ingroup proof
+\ingroup proofkernel
 Manages an element of a TDSet.
 
 See TDSet.
@@ -649,7 +649,7 @@ TObject *TDSetElement::GetAssocObj(Long64_t i, Bool_t isentry)
 
 
 /** \class TDSet
-\ingroup proof
+\ingroup proofkernel
 
 This class implements a data set to be used for PROOF processing.
 The TDSet defines the class of which objects will be processed,

@@ -11,7 +11,7 @@
 
 
 /** \class TProofMonSenderML
-\ingroup proof
+\ingroup proofkernel
 
 TProofMonSender implementation for the ML writer
 

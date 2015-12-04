@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofOutputFile
-\ingroup proof
+\ingroup proofkernel
 
 Class to steer the merging of files produced on the workers
 

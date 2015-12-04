@@ -11,7 +11,7 @@
 
 
 /** \class TStatsFeedback
-\ingroup proof
+\ingroup proofkernel
 
 Utility class to display PROOF stats feedback histos during queries
 

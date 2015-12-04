@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofProgressStatus
-\ingroup proof
+\ingroup proofkernel
 
 Container class for processing statistics
 

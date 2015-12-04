@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofLite
-\ingroup proof
+\ingroup proofkernel
 
 This class starts a PROOF session on the local machine: no daemons,
 client and master merged, communications via UNIX-like sockets.

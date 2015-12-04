@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TVirtualPacketizer
-\ingroup proof
+\ingroup proofkernel
 
 The packetizer is a load balancing object created for each query.
 It generates packets to be processed on PROOF worker servers.

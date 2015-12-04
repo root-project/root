@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXSlave                                                              //
-//                                                                      //
-// This is the version of TSlave for slave servers based on XRD.        //
-// See TSlave for details.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TXSlave
+\ingroup proofx
+
+This is the version of TSlave for workers servers based on XProofD.
+See TSlave and TXSocket for details.
+
+*/
 
 #include "TXSlave.h"
 #include "TProof.h"

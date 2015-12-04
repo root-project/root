@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofServLite
-\ingroup proof
+\ingroup proofkernel
 
 Version of the PROOF worker server for local running. The client starts
 directly the desired number of these workers; the master and daemons are

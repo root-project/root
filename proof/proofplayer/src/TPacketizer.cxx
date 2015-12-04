@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TPacketizer
-\ingroup proof
+\ingroup proofkernel
 
 This class generates packets to be processed on PROOF worker servers.
 A packet is an event range (begin entry and number of entries) or

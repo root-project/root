@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofQueryResult
-\ingroup proof
+\ingroup proofkernel
 
 TQueryResult version adapted to PROOF neeeds
 

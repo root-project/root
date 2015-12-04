@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TPacketizerFile
-\ingroup proof
+\ingroup proofkernel
 
 This packetizer generates packets which contain a single file path
 to be used in process. Used for tasks generating files, like in

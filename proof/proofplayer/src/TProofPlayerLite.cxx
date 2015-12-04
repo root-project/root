@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofPlayerLite
-\ingroup proof
+\ingroup proofkernel
 
 Version of TProofPlayerRemote merges the functionality needed by clients
 and masters. It is used in optmized local sessions.

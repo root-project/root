@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TProofLimitsFinder
-\ingroup proof
+\ingroup proofkernel
 
 Class to find axis limits and synchronize them between workers
 
