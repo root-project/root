@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 // FIXME: workaround until JIT supports exceptions
 #include <setjmp.h>
@@ -43,6 +44,7 @@ namespace clang {
   class NamedDecl;
   class Parser;
   class QualType;
+  class RecordDecl;
   class Sema;
   class SourceLocation;
   class SourceManager;
@@ -149,6 +151,9 @@ namespace cling {
     ///\brief Cling's reflection information query.
     ///
     std::unique_ptr<LookupHelper> m_LookupHelper;
+
+    ///\brief Cache of compiled destructors wrappers.
+    std::unordered_map<const clang::RecordDecl*, void*> m_DtorWrappers;
 
     ///\brief Counter used when we need unique names.
     ///
@@ -597,6 +602,10 @@ namespace cling {
     ///\returns the address of the function or 0 if the compilation failed.
     void* compileFunction(llvm::StringRef name, llvm::StringRef code,
                           bool ifUniq = true, bool withAccessControl = true);
+
+    ///\brief Compile (and cache) destructor calls for a record decl. Used by ~Value.
+    /// They are of type extern "C" void()(void* pObj).
+    void* compileDtorCallFor(const clang::RecordDecl* RD);
 
     ///\brief Gets the address of an existing global and whether it was JITted.
     ///
