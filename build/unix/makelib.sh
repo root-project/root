@@ -33,7 +33,7 @@ rm -f $LIB
 
 if [ $PLATFORM = "macosx" ]; then
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
-   if [ $macosx_minor -ge 5 ] && [ $LD != "icpc" ]; then
+   if [ $macosx_minor -ge 5 ]; then
       soext="so"
    else
       soext="dylib"

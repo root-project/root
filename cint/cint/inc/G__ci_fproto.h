@@ -15,7 +15,7 @@
 #ifndef G__CI_FPROTO_INCLUDE
 #define G__CI_FPROTO_INCLUDE
 
-#if defined(__clang__)
+#if defined(__clang__) && !defined(__ICC)
 # if __has_warning("-Wreturn-type-c-linkage")
 /* 'G__getfunction' has C-linkage specified, but returns
    user-defined type 'G__value' which is incompatible with C

@@ -407,7 +407,7 @@ check_libcompat() {
             ;;
         esac
         ;;
-    macosx64)
+    macosx64|macosxicc)
         case $chklibcompat in
         *.tbd)
             ret=1
@@ -2573,6 +2573,9 @@ if test "x$enable_cxx11" = "xyes"; then
         if test "x$platform" = "xmacosx" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
             enable_libcxx="yes"
         fi
+        if test "x$platform" = "xmacosx" && echo $altcxx | grep 'icc' > /dev/null 2>&1; then
+            enable_libcxx="yes"
+        fi
         result "yes"
     fi
     fi
@@ -2600,6 +2603,9 @@ if test "x$enable_cxx14" = "xyes"; then
         if test "x$platform" = "xmacosx" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
             enable_libcxx="yes"
         fi
+        if test "x$platform" = "xmacosx" && echo $altcxx | grep 'icc' > /dev/null 2>&1; then
+            enable_libcxx="yes"
+        fi
         result "yes"
     fi
 fi
@@ -2612,6 +2618,9 @@ fi
 
 # OSX 10.9 only has libc++ with clang so make sure this option is turned on
 if test "x$macosx109" = "xyes" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
+    enable_libcxx="yes"
+fi
+if test "x$macosx109" = "xyes" && echo $altcxx | grep 'icc' > /dev/null 2>&1; then
     enable_libcxx="yes"
 fi
 # iOS 7.0 only has libc++ with clang so make sure this option is turned on

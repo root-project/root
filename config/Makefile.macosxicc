@@ -95,12 +95,7 @@ SOFLAGS       = -dynamiclib -single_module \
 endif
 endif
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
-ifeq ($(findstring $(ICC_MAJOR),10 9),)
 SOEXT         = so
-# not yet supported by icc 10.x xilibtool
-else
-SOEXT         = dylib
-endif
 else
 SOEXT         = dylib
 endif
