@@ -159,7 +159,7 @@ void TSVDUnfoldExample()
    leg->AddEntry(data,"Reconstructed Data","l");
    leg->AddEntry(xini,"True MC","l");
 
-   TCanvas *c1 = new TCanvas( "c1", "Unfolding toy example with TSVDUnfold", 900, 800 );
+   TCanvas *c1 = new TCanvas( "c1", "Unfolding toy example with TSVDUnfold", 800, 700 );
 
    // --- Style settings -----------------------------------------
    Int_t c_Canvas    = TColor::GetColor( "#f0f0f0" );

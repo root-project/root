@@ -1,45 +1,70 @@
-// Author: Stefan Schmitt
-// DESY, 14.10.2008
-
-//  Version 17.0, updated for using the classes TUnfoldDensity, TUnfoldBinning
-//
-//  History:
-//    Version 16.1, parallel to changes in TUnfold
-//    Version 16.0, parallel to changes in TUnfold
-//    Version 15, with automated L-curve scan
-//    Version 14, with changes in TUnfoldSys.cxx
-//    Version 13, include test of systematic errors
-//    Version 12, catch error when defining the input
-//    Version 11,  print chi**2 and number of degrees of freedom
-//    Version 10,  with bug-fix in TUnfold.cxx
-//    Version 9,  with bug-fix in TUnfold.cxx and TUnfold.h
-//    Version 8,  with bug-fix in TUnfold.cxx and TUnfold.h
-//    Version 7,  with bug-fix in TUnfold.cxx and TUnfold.h
-//    Version 6a, fix problem with dynamic array allocation under windows
-//    Version 6, bug-fixes in TUnfold.C
-//    Version 5, replace main() by testUnfold1()
-//    Version 4, with bug-fix in TUnfold.C
-//    Version 3, with bug-fix in TUnfold.C
-//    Version 2, with changed ScanLcurve() arguments
-//    Version 1, remove L curve analysis, use ScanLcurve() method instead
-//    Version 0, L curve analysis included here
-
-/*
-  This file is part of TUnfold.
-
-  TUnfold is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  TUnfold is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/// \file
+/// \ingroup tutorial_unfold
+/// Test program for the classes TUnfold and related
+///
+///  1. Generate Monte Carlo and Data events
+///      The events consist of
+///       - signal
+///       - background
+///
+///      The signal is a resonance. It is generated with a Breit-Wigner,
+///      smeared by a Gaussian
+///
+///  2. Unfold the data. The result is:
+///      The background level
+///      The shape of the resonance, corrected for detector effects
+///
+///      Systematic errors from the MC shape variation are included
+///      and propagated to the result
+///
+///  3. fit the unfolded distribution, including the correlation matrix
+///
+///  4. save six plots to a file testUnfold1.ps
+///       - 1  2  3
+///       - 4  5  6
+///      1. 2d-plot of the matrix decsribing the migrations
+///      2. generator-level distributions
+///            - blue: unfolded data, total errors
+///            - green: unfolded data, statistical errors
+///            - red: generated data
+///            - black: fit to green data points
+///      3. detector level distributions
+///            - blue: unfoldede data, folded back through the matrix
+///            - black: Monte Carlo (with wrong peal position)
+///            - blue: data
+///      4. global correlation coefficients
+///      5. \f$ \chi^2 \f$ as a function of log(tau)
+///          - the star indicates the final choice of tau
+///      6. the L curve
+///
+///  Version 17.0, updated for using the classes TUnfoldDensity, TUnfoldBinning
+///
+///  History:
+///   - Version 16.1, parallel to changes in TUnfold
+///   - Version 16.0, parallel to changes in TUnfold
+///   - Version 15, with automated L-curve scan
+///   - Version 14, with changes in TUnfoldSys.cxx
+///   - Version 13, include test of systematic errors
+///   - Version 12, catch error when defining the input
+///   - Version 11,  print chi**2 and number of degrees of freedom
+///   - Version 10,  with bug-fix in TUnfold.cxx
+///   - Version 9,  with bug-fix in TUnfold.cxx and TUnfold.h
+///   - Version 8,  with bug-fix in TUnfold.cxx and TUnfold.h
+///   - Version 7,  with bug-fix in TUnfold.cxx and TUnfold.h
+///   - Version 6a, fix problem with dynamic array allocation under windows
+///   - Version 6, bug-fixes in TUnfold.C
+///   - Version 5, replace main() by testUnfold1()
+///   - Version 4, with bug-fix in TUnfold.C
+///   - Version 3, with bug-fix in TUnfold.C
+///   - Version 2, with changed ScanLcurve() arguments
+///   - Version 1, remove L curve analysis, use ScanLcurve() method instead
+///   - Version 0, L curve analysis included here
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Stefan Schmitt, DESY
 
 #include <TError.h>
 #include <TMath.h>
@@ -56,47 +81,6 @@
 // #define VERBOSE_LCURVE_SCAN
 
 using namespace std;
-
-///////////////////////////////////////////////////////////////////////
-//
-//  Test program for the classes TUnfold and related
-//
-//  (1) Generate Monte Carlo and Data events
-//      The events consist of
-//        signal
-//        background
-//
-//      The signal is a resonance. It is generated with a Breit-Wigner,
-//      smeared by a Gaussian
-//
-//  (2) Unfold the data. The result is:
-//      The background level
-//      The shape of the resonance, corrected for detector effects
-//
-//      Systematic errors from the MC shape variation are included
-//      and propagated to the result
-//
-//  (3) fit the unfolded distribution, including the correlation matrix
-//
-//  (4) save six plots to a file testUnfold1.ps
-//        1  2  3
-//        4  5  6
-//      1: 2d-plot of the matrix decsribing the migrations
-//      2: generator-level distributions
-//             blue: unfolded data, total errors
-//             green: unfolded data, statistical errors
-//             red: generated data
-//             black: fit to green data points
-//      3: detector level distributions
-//             blue: unfoldede data, folded back through the matrix
-//             black: Monte Carlo (with wrong peal position)
-//             blue: data
-//      4: global correlation coefficients
-//      5: chi**2 as a function of log(tau)
-//           the star indicates the final choice of tau
-//      6: the L curve
-//
-///////////////////////////////////////////////////////////////////////
 
 TRandom *rnd=0;
 
