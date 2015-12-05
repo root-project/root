@@ -1013,3 +1013,6 @@ Changes will be part of the future 6.04/14
 
 ### Build system
 - Added build option builtin_openssl to build OpenSSL internally. This is specially needed for the lastest Mac OSX (El Capitan) 
+
+### GL
+- Mattias Ellert fixed a memory leak [[PR114](https://github.com/root-mirror/root/pull/114/files)]
