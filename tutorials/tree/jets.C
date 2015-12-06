@@ -1,12 +1,20 @@
-// script illustrating the use of a Tree using the JetEvent class.
-// The JetEvent class has several collections (TClonesArray)
-// and other collections (TRefArray) referencing objects
-// in the TClonesArrays.
-// The JetEvent class is in $ROOTSYS/tutorials/JetEvent.h,cxx
-// to execute the script, do
-// .x jets.C
-//
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_tree
+///
+/// Usage of a Tree using the JetEvent class.
+///
+/// The JetEvent class has several collections (TClonesArray)
+/// and other collections (TRefArray) referencing objects
+/// in the TClonesArrays.
+/// The JetEvent class is in $ROOTSYS/tutorials/tree/JetEvent.h,cxx
+/// to execute the script, do
+/// ~~~
+/// .x jets.C
+/// ~~~
+///
+/// \macro_code
+/// \author Rene Brun
+
 
 #ifdef JETS_SECOND_RUN
 
