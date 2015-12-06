@@ -1,5 +1,10 @@
-// Playing with a Tree containing variables of type character
-// Author: Rene Brun
+/// \file
+/// \ingroup tutorial_tree
+///
+/// Playing with a Tree containing variables of type character
+/// \macro_image
+/// \macro_code
+/// \author Rene Brun
 void cernstaff () {
    TString dir = gSystem->DirName(__FILE__);
    if (gSystem->AccessPathName("cernstaff.root")) {
@@ -9,7 +14,6 @@ void cernstaff () {
    TFile *f = new TFile("cernstaff.root");
    TTree *T = (TTree*)f->Get("T");
    TCanvas *c1 = new TCanvas("c1","CERN staff",10,10,1000,750);
-   c1->SetFillColor(17);
    c1->Divide(2,2);
    // make table of number of people per Nation & Division
    c1->cd(1); gPad->SetGrid();
@@ -77,7 +81,7 @@ void cernstaff () {
    arrow->Draw();
 
    TPaveText *pt = new TPaveText(0.12,0.8,0.55,0.88,"brNDC");
-   pt->SetFillColor(18);
+   pt->SetFillColor(kWhite);
    pt->AddText("People at CERN in 1988");
    pt->AddText("and retired in 2002");
    pt->Draw();
