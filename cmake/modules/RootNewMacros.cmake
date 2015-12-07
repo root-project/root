@@ -775,6 +775,7 @@ function(ROOT_ADD_TEST test)
 
   if(ARG_OUTCNVCMD)
     string(REPLACE ";" "^" _outcnvcmd "${ARG_OUTCNVCMD}")
+    string(REPLACE "=" "@" _outcnvcmd "${_outcnvcmd}")
     set(_command ${_command} -DCNVCMD=${_outcnvcmd})
   endif()
 

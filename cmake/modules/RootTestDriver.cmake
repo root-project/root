@@ -155,6 +155,7 @@ if(CMD)
 
     if(CNVCMD)
       string(REPLACE "^" ";" _outcnvcmd "${CNVCMD}^${OUT}")
+      string(REPLACE "@" "=" _outcnvcmd "${_outcnvcmd}")
       execute_process(COMMAND ${_outcnvcmd} ${_chkout} ${_chkerr} RESULT_VARIABLE _rc)
       file(WRITE ${OUT} "${_outvar}")
       if(_rc)
