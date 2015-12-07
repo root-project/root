@@ -54,14 +54,14 @@ def GetDeclarer():
 
 
 def ACLiC(code):
-     tmpfile = NamedTemporaryFile(delete=False,suffix='.C',dir=os.getcwd())#will be removed when library is created
-     tmpfile.write(code)
-     tmpfilename = tmpfile.name
-     tmpfile.close()
      status = 0
      if isPlatformApple():
-         invokeAclic(tmpfilename)
+         invokeAclic(code)
      else:
+         tmpfile = NamedTemporaryFile(delete=False,suffix='.C',dir=os.getcwd())#will be removed when library is created
+         tmpfile.write(code)
+         tmpfilename = tmpfile.name
+         tmpfile.close()
          Executor = GetExecutor()
          status = Executor('.L %s+'%tmpfilename)
      return status
