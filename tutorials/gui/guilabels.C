@@ -1,11 +1,16 @@
-//
-// Author: Ilka Antcheva   1/12/2006
+/// \file
+/// \ingroup tutorial_gui
+/// This macro gives an example of how to create different kind of labels and the possibility to enable/disable them.
+/// To run it do either:
+/// ~~~ 
+/// .x guilabels.C
+/// .x guilabels.C++
+/// ~~~ 
+///
+/// \macro_code
+///
+/// \author Ilka Antcheva   1/12/2006
 
-// This macro gives an example of how to create different kind of labels
-// and the possibility to enable/disable them.
-// To run it do either:
-// .x guilabels.C
-// .x guilabels.C++
 
 #include <TApplication.h>
 #include <TGClient.h>

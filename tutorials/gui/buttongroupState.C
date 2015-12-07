@@ -1,7 +1,10 @@
-// A simple example that shows the enabled and disabled state
-// of a button group with radio and check buttons.
-//
-// Author: Roel Aaij   4/07/2007
+/// \file
+/// \ingroup tutorial_gui
+/// A simple example that shows the enabled and disabled state of a button group with radio and check buttons.
+///
+/// \macro_code
+///
+/// \author Roel Aaij   4/07/2007
 
 #include <TApplication.h>
 #include <TGClient.h>
