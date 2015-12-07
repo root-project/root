@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSelHandleDataSet                                                    //
-//                                                                      //
-// PROOF selector for file cache release.                               //
-// List of files to be cleaned for each node is provided by client.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSelHandleDataSet
+\ingroup proofbench
+
+PROOF selector for file cache release.
+List of files to be cleaned for each node is provided by client.
+
+*/
 
 #define TSelHandleDataSet_cxx
 

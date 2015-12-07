@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofBenchDataSet                                                   //
-//                                                                      //
-// Handle operations on datasets used by ProofBench                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofBenchDataSet
+\ingroup proofbench
+
+Handle operations on datasets used by ProofBench
+
+*/
 
 #include "RConfigure.h"
 

@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofBenchRunCPU                                                    //
-//                                                                      //
-// CPU-intensive PROOF benchmark test generates events and fill 1, 2,   //
-// or 3-D histograms. No I/O activity is involved.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofBenchRunCPU
+\ingroup proofbench
+
+CPU-intensive PROOF benchmark test generates events and fill 1, 2, or 3-D histograms.
+No I/O activity is involved.  
+
+*/
 
 #include "RConfigure.h"
 
