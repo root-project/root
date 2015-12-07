@@ -8,13 +8,7 @@
 ///
 /// \author Rene Brun
 void staff() {
-   // Some weight lifting to get the input file
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("staff.C","");
-   dir.ReplaceAll("/./","/");
-
-   auto f = TFile::Open(Form("%scernstaff.root",dir.Data()));
-   if (!f) return;
+   auto f = TFile::Open("cernstaff.root");  
    TTree *T = nullptr;
    f->GetObject("T",T);
    T->Draw("Grade:Age:Cost:Division:Nation","","gl5d");
