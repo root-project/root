@@ -21,7 +21,7 @@ jupyter notebook
 ```
 and on OSx:
 ```
-cp -r $ROOTSYS/etc/notebook/kernels/root /Users/danilopiparo/Library/Jupyter/kernels/
+cp -r $ROOTSYS/etc/notebook/kernels/root /Users/$USER/Library/Jupyter/kernels/
 jupyter notebook
 ```
 
