@@ -3034,8 +3034,8 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
       if (!branch || !branch->TestBit(kDoNotProcess)) {
          continue;
       }
-//      TObjArray* branches = newtree->GetListOfBranches();
-//      Int_t nb = branches->GetEntriesFast();
+      // size might change at each iteration of the loop over the leaves.
+      nb = branches->GetEntriesFast();
       for (Long64_t i = 0; i < nb; ++i) {
          TBranch* br = (TBranch*) branches->UncheckedAt(i);
          if (br == branch) {
