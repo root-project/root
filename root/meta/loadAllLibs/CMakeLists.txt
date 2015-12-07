@@ -1,5 +1,5 @@
 
-if(ROOTTEST_OS_ID MATCHES Scientific)
+if(ROOTTEST_OS_ID MATCHES Scientific OR ROOTTEST_OS_ID MATCHES CentOS)
   set(ROOTTEST_ENV_EXTRA LD_PRELOAD=/usr/lib64/libGL.so)
 endif()
 

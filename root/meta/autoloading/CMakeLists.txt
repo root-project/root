@@ -12,5 +12,5 @@ configure_file(aHeader.h . COPYONLY)
 #--With ACLiC---------------------------------------------------------
 set(execTypeinfo-suffix +)
 
-ROOTTEST_ADD_AUTOMACROS(DEPENDS ${GENERATE_REFLEX_TEST})
+ROOTTEST_ADD_AUTOMACROS(DEPENDS ${depends})
 ROOTTEST_ADD_TESTDIRS()
