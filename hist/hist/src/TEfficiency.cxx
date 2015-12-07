@@ -1134,19 +1134,36 @@ Double_t TEfficiency::MidPInterval(Double_t total,Double_t passed,Double_t level
    double pmin = 0;
    double pmax = 0;
    double p = 0;
-   
+
    pmin = 0; pmax = 1;
+
+
+   // treat special case for 0<passed<1
+   // do a linear interpolation of the upper limit values
+   if ( passed > 0 && passed < 1) { 
+      double p0 =  MidPInterval(total,0.0,level,bUpper);
+      double p1 =  MidPInterval(total,1.0,level,bUpper);
+      p = (p1 - p0) * passed + p0;
+      return p; 
+   }
+
    while (std::abs(pmax - pmin) > tol) {
       p = (pmin + pmax)/2;
-      double v = 0.5 * ROOT::Math::binomial_pdf(int(passed), p, int(total));
-      if (passed > 0) v += ROOT::Math::binomial_cdf(int(passed - 1), p, int(total));
+      //double v = 0.5 * ROOT::Math::binomial_pdf(int(passed), p, int(total));
+      // make it work for non integer using the binomial - beta relationship
+      double v = 0.5 * ROOT::Math::beta_pdf(p, passed+1., total-passed+1)/(total+1);
+      //if (passed > 0) v += ROOT::Math::binomial_cdf(int(passed - 1), p, int(total));
+      // compute the binomial cdf at passed -1
+      if ( (passed-1) >= 0) v += ROOT::Math::beta_cdf_c(p, passed, total-passed+1);
+
       double vmin =  (bUpper) ? alpha_min : 1.- alpha_min;
       if (v > vmin)
          pmin = p;
       else
          pmax = p;
    }
-   return p; 
+
+   return p;
 }
 
 
