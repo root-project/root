@@ -1,13 +1,9 @@
 ROOTTEST_ADD_TESTDIRS()
 
 # Workaround (k)ubuntu bug: runtime issue when using pthread and gcc48
-if(NOT WIN32 AND NOT APPLE)
-  execute_process(COMMAND lsb_release -is OUTPUT_VARIABLE osid OUTPUT_STRIP_TRAILING_WHITESPACE)
-  if(osid MATCHES Ubuntu)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
-  endif()
+if(ROOTTEST_OS_ID MATCHES Ubuntu)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 endif()
-
 
 ROOTTEST_GENERATE_EXECUTABLE(procPoolTreeTest tProcPoolTreeTest.cpp LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist)
 
@@ -110,12 +106,18 @@ ROOTTEST_GENERATE_EXECUTABLE(fork fork.cpp LIBRARIES Core)
 configure_file(commands1.txt . COPYONLY)
 configure_file(commands2.txt . COPYONLY)
 
-ROOTTEST_ADD_TEST(fork
-                  EXEC fork
-                  FAILREGEX "Error in"
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST} tsenums tclass_methods)
 
 ROOTTEST_ADD_TEST(semaphore
                  MACRO  tSemaphore.C
                  OUTCNVCMD grep -v -e  "tSemaphore"
                  OUTREF tSemaphore.ref)
+
+if(ROOTTEST_OS_ID MATCHES Scientific)
+  set(ROOTTEST_ENV_EXTRA LD_PRELOAD=/usr/lib64/libGL.so)
+endif()
+
+ROOTTEST_ADD_TEST(fork
+                  EXEC fork
+                  FAILREGEX "Error in" "cannot load any more object with static TLS"
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST} tsenums tclass_methods)
+

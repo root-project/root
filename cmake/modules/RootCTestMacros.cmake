@@ -118,7 +118,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 function(ROOTTEST_ADD_TEST testname)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL"
                             "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT"
-                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS" ${ARGN})
+                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT" ${ARGN})
   # Test name
   ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
   if(testname MATCHES "^roottest-")
@@ -273,11 +273,14 @@ function(ROOTTEST_ADD_TEST testname)
   string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
   string(REPLACE ";" ":" _librarypath "${ROOTTEST_ENV_LIBRARYPATH}")
 
+
   set(environment ENVIRONMENT
+                  ${ROOTTEST_ENV_EXTRA}
+                  ${ARG_ENVIRONMENT}
                   ROOTSYS=${ROOTSYS}
                   PATH=${_path}:$ENV{PATH}
                   PYTHONPATH=${_pythonpath}:$ENV{PYTHONPATH}
-                  ${ld_library_path}=${_librarypath}:$ENV{${ld_library_path}} )
+                  ${ld_library_path}=${_librarypath}:$ENV{${ld_library_path}})
 
   if(ARG_WORKING_DIR)
     get_filename_component(test_working_dir ${ARG_WORKING_DIR} ABSOLUTE)
