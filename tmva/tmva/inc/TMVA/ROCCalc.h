@@ -47,11 +47,17 @@ namespace TMVA {
     TH1* GetMvaSpdf(){return fmvaSpdf;}
     TH1* GetMvaBpdf(){return fmvaBpdf;}
     
+    //false if is found some error in mvaS or mvaB
+    Bool_t GetStatus(){return fStatus;}
+    void ResetStatus(){fStatus=kTRUE;}
+    
   private:
     Double_t        Root(Double_t);
     Double_t        GetEffForRoot( Double_t theCut );
     Int_t           fMaxIter;  // maximum number of iterations
     Double_t        fAbsTol;   // absolute tolerance deviation
+    
+    Bool_t          fStatus; //false if is found some error in mvaS or mvaB 
     
     UInt_t          fNbins;
     Bool_t          fUseSplines;
@@ -68,6 +74,9 @@ namespace TMVA {
     Int_t           fnStot, fnBtot;
     TH1*            fSignificance;
     TH1*            fPurity;
+    TH1D*           effBvsS;
+    TH1D*           rejBvsS;
+    TH1D*           inveffBvsS;
 
     Double_t        fSignalCut;  // MVA cut value for last demanded background rejection or signal efficiency
 

@@ -156,13 +156,13 @@ Long64_t TMVA::DataSet::GetNClassEvents( Int_t type, UInt_t classNumber )
    } 
    catch (std::out_of_range excpt) {
       ClassInfo* ci = fdsi.GetClassInfo( classNumber );
-      Log() << kFATAL << "No " << (type==0?"training":(type==1?"testing":"_unknown_type_")) 
+      Log() << kFATAL << Form("Dataset[%s] : ",fdsi.GetName()) << "No " << (type==0?"training":(type==1?"testing":"_unknown_type_")) 
             << " events for class " << (ci==NULL?"_no_name_known_":ci->GetName().Data()) << " (index # "<<classNumber<<")"
             << " available. Check if all class names are spelled correctly and if events are" 
             << " passing the selection cuts." << Endl;
    } 
    catch (...) {
-      Log() << kFATAL << "ERROR/CAUGHT : DataSet/GetNClassEvents, .. unknown error" << Endl;
+      Log() << kFATAL << Form("Dataset[%s] : ",fdsi.GetName()) << "ERROR/CAUGHT : DataSet/GetNClassEvents, .. unknown error" << Endl;
    }
    return 0;
 }
@@ -318,19 +318,19 @@ void TMVA::DataSet::DeleteResults( const TString & resultsName,
    if (fResults.empty()) return;
 
    if (UInt_t(type) > fResults.size()){
-      Log()<<kFATAL<< "you asked for an Treetype (training/testing/...)"
+      Log()<<kFATAL<< Form("Dataset[%s] : ",fdsi.GetName()) << "you asked for an Treetype (training/testing/...)"
            << " whose index " << type << " does not exist " << Endl;
    }
    std::map< TString, Results* >& resultsForType = fResults[UInt_t(type)];
    std::map< TString, Results* >::iterator it = resultsForType.find(resultsName);
    if (it!=resultsForType.end()) {
-      Log() << kDEBUG << " Delete Results previous existing result:" << resultsName 
+      Log() << kDEBUG << Form("Dataset[%s] : ",fdsi.GetName()) << " Delete Results previous existing result:" << resultsName 
             << " of type " << type << Endl;
       delete it->second;
       resultsForType.erase(it->first);
    }
    else {
-      Log() << kINFO << "could not fine Result class of " << resultsName 
+      Log() << kINFO << Form("Dataset[%s] : ",fdsi.GetName()) << "could not fine Result class of " << resultsName 
             << " of type " << type << " which I should have deleted" << Endl;
    }
 }
@@ -482,7 +482,7 @@ void TMVA::DataSet::CreateSampling() const
    if (!fSampling.at(treeIdx) ) return;
 
    if (fSamplingRandom == 0 )
-      Log() << kFATAL
+      Log() << kFATAL<< Form("Dataset[%s] : ",fdsi.GetName()) 
             << "no random generator present for creating a random/importance sampling (initialized?)" << Endl;
 
    // delete the previous selection
@@ -553,7 +553,7 @@ void TMVA::DataSet::EventResult( Bool_t successful, Long64_t evtNumber )
    }
    for ( Long64_t iEvt = start; iEvt <= stop; iEvt++ ){
       if (Long64_t(fSamplingEventList.at(fCurrentTreeIdx).size()) < iEvt) {
-         Log() << kWARNING << "event number (" << iEvt 
+         Log() << kWARNING << Form("Dataset[%s] : ",fdsi.GetName()) << "event number (" << iEvt 
                << ") larger than number of sampled events (" 
                << fSamplingEventList.at(fCurrentTreeIdx).size() << " of tree " << fCurrentTreeIdx << ")" << Endl;
          return;
@@ -578,7 +578,7 @@ void TMVA::DataSet::EventResult( Bool_t successful, Long64_t evtNumber )
 
 TTree* TMVA::DataSet::GetTree( Types::ETreeType type ) 
 { 
-   Log() << kDEBUG << "GetTree(" << ( type==Types::kTraining ? "training" : "testing" ) << ")" << Endl;
+   Log() << kDEBUG << Form("Dataset[%s] : ",fdsi.GetName()) << "GetTree(" << ( type==Types::kTraining ? "training" : "testing" ) << ")" << Endl;
 
    // the dataset does not hold the tree, this function returns a new tree everytime it is called
 
@@ -589,7 +589,7 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
    SetCurrentType(type);
    const UInt_t t = TreeIndex(type);
    if (fResults.size() <= t) {
-      Log() << kWARNING << "No results for treetype " << ( type==Types::kTraining ? "training" : "testing" ) 
+      Log() << kWARNING << Form("Dataset[%s] : ",fdsi.GetName()) << "No results for treetype " << ( type==Types::kTraining ? "training" : "testing" ) 
             << " found. Size=" << fResults.size() << Endl;
    }
 
@@ -651,7 +651,7 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
         itMethod != fResults.at(t).end(); itMethod++) {
 
 
-      Log() << kDEBUG << "analysis type: " << (itMethod->second->GetAnalysisType()==Types::kRegression ? "Regression" :
+      Log() << kDEBUG << Form("Dataset[%s] : ",fdsi.GetName()) << "analysis type: " << (itMethod->second->GetAnalysisType()==Types::kRegression ? "Regression" :
                                                (itMethod->second->GetAnalysisType()==Types::kMulticlass ? "Multiclass" : "Classification" )) << Endl;
       
       if (itMethod->second->GetAnalysisType() == Types::kClassification) {
@@ -666,7 +666,7 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
             leafList.Append( fdsi.GetClassInfo( iCls )->GetName() );
             leafList.Append( "/F" );
          }
-         Log() << kDEBUG << "itMethod->first " << itMethod->first <<  "    LEAFLIST: " 
+         Log() << kDEBUG << Form("Dataset[%s] : ",fdsi.GetName()) << "itMethod->first " << itMethod->first <<  "    LEAFLIST: " 
                << leafList << "    itMethod->second " << itMethod->second <<  Endl;
          tree->Branch( itMethod->first, (metVals[n]), leafList );
       } 
@@ -679,12 +679,12 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
             //            leafList.Append( fdsi.GetTargetInfo( iTgt ).GetLabel() );
             leafList.Append( "/F" );
          }
-         Log() << kDEBUG << "itMethod->first " << itMethod->first <<  "    LEAFLIST: " 
+         Log() << kDEBUG << Form("Dataset[%s] : ",fdsi.GetName()) << "itMethod->first " << itMethod->first <<  "    LEAFLIST: " 
                << leafList << "    itMethod->second " << itMethod->second <<  Endl;
          tree->Branch( itMethod->first, (metVals[n]), leafList );
       } 
       else {
-         Log() << kWARNING << "Unknown analysis type for result found when writing TestTree." << Endl;
+         Log() << kWARNING << Form("Dataset[%s] : ",fdsi.GetName()) << "Unknown analysis type for result found when writing TestTree." << Endl;
       }
       n++;
 
@@ -741,7 +741,7 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
       tree->Fill();
    }
 
-   Log() << kINFO << "Created tree '" << tree->GetName() << "' with " << tree->GetEntries() << " events" << Endl;
+   Log() << kINFO << Form("Dataset[%s] : ",fdsi.GetName()) << "Created tree '" << tree->GetName() << "' with " << tree->GetEntries() << " events" << Endl;
 
    SetCurrentType(savedType);
 
