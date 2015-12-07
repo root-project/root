@@ -41,7 +41,6 @@
 #include <cstdio>
 
 #include <memory>
-#include <sstream>
 
 // Include the necessary headers to interface with the Windows registry and
 // environment.
