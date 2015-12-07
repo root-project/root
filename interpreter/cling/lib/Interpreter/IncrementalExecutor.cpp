@@ -91,16 +91,25 @@ std::unique_ptr<TargetMachine>
   CodeModel::Model CMModel = CodeModel::JITDefault;
   CodeGenOpt::Level OptLevel = CodeGenOpt::Less;
 
-  const char* OptLevelEnvConfig = std::getenv("ROOT_OPTIMIZATION_LEVEL");
-  if (OptLevelEnvConfig) {
-    if (!std::string("O0").compare(OptLevelEnvConfig) || !std::string("None").compare(OptLevelEnvConfig)) {
-      OptLevel = CodeGenOpt::None;
-    } else if (!std::string("O1").compare(OptLevelEnvConfig) || !std::string("Less").compare(OptLevelEnvConfig)) {
-      OptLevel = CodeGenOpt::Less;
-    } else if (!std::string("O2").compare(OptLevelEnvConfig) || !std::string("Default").compare(OptLevelEnvConfig)) {
-      OptLevel = CodeGenOpt::Default;
-    } else if (!std::string("O3").compare(OptLevelEnvConfig) || !std::string("Aggressive").compare(OptLevelEnvConfig)) {
-      OptLevel = CodeGenOpt::Aggressive;
+  for (int i = 0; i < argc; ++i) {
+    const std::string arg(argv[i]);
+    if (arg.length() != 3 || arg.rfind("-O", 0) != 0) {
+      continue;
+    }
+
+    switch (argv[i][2]) {
+      case '0':
+        OptLevel = CodeGenOpt::None;
+        break;
+      case '1':
+        OptLevel = CodeGenOpt::Less;
+        break;
+      case '2':
+        OptLevel = CodeGenOpt::Default;
+        break;
+      case '3':
+        OptLevel = CodeGenOpt::Aggressive;
+        break;
     }
   }
 
