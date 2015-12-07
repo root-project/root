@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
-// GoFTest tutorial macro
+/// GoFTest tutorial macro
 ///
 /// Using Anderson-Darling and Kolmogorov-Smirnov goodness of fit tests
 /// 1 sample test is performed comparing data with a log-normal distribution
