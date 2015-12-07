@@ -323,7 +323,7 @@ class CanvasDrawer(object):
 
 
     def _jsDisplay(self):
-        thisJsCode = getJsCode()
+        thisJsCode = self.getJsCode()
         # display is the key point of this hook
         IPython.display.display(HTML(thisJsCode))
         return 0
