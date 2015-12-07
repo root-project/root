@@ -58,6 +58,7 @@ public:
    static char          *ReAllocChar(char *vp, size_t size, size_t oldsize);
    static Int_t         *ReAllocInt(Int_t *vp, size_t size, size_t oldsize);
    static void          *ObjectAlloc(size_t size);
+   static void          *ObjectAllocArray(size_t size);
    static void          *ObjectAlloc(size_t size, void *vp);
    static void           ObjectDealloc(void *vp);
    static void           ObjectDealloc(void *vp, void *ptr);

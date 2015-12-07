@@ -328,6 +328,16 @@ void *TStorage::ObjectAlloc(size_t sz)
 }
 
 //______________________________________________________________________________
+void *TStorage::ObjectAllocArray(size_t sz)
+{
+   // Used to allocate array of TObject on the heap (via TObject::operator new[]()).
+   // Unlike the 'singular' ObjectAlloc, we do not mark those object has being
+   // allocated on the heap as they can not be individually deleted.
+   void* space =  ::operator new(sz);
+   return space;
+}
+
+//______________________________________________________________________________
 void *TStorage::ObjectAlloc(size_t , void *vp)
 {
    // Used to allocate a TObject on the heap (via TObject::operator new(size_t,void*))
