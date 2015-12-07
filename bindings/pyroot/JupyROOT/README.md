@@ -14,9 +14,14 @@ root --notebook
 This will start a ROOT-flavoured notebook server in your computer.
 
 Alternatively, if you would like to use the Jupyter command directly, you 
-can do:
+can do on Linux:
 ```
 cp -r $ROOTSYS/etc/notebook/kernels/root ~/.local/share/jupyter/kernels
+jupyter notebook
+```
+and on OSx:
+```
+cp -r $ROOTSYS/etc/notebook/kernels/root /Users/danilopiparo/Library/Jupyter/kernels/
 jupyter notebook
 ```
 
