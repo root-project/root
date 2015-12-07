@@ -11,6 +11,7 @@
 // ROOT
 #include "TBufferFile.h"      // for pickling
 #include "TClass.h"           // id.
+#include "TPyException.h"     // for TPy{CPP}ExceptionMagic
 #include "TObject.h"          // for gROOT life-check
 #include "TROOT.h"            // id.
 
@@ -39,11 +40,23 @@ namespace PyROOT {
    R__EXTERN PyObject* gRootModule;    // needed for pickling
 }
 
+namespace {
+   static bool object_is_exception_magic(void* pobj) {
+      return pobj == PyROOT::TPyExceptionMagic || pobj == PyROOT::TPyCPPExceptionMagic;
+   }
+   static bool object_proxies_exception_magic(PyROOT::ObjectProxy* pyobj) {
+      if ( pyobj->fFlags & PyROOT::ObjectProxy::kIsSmartPtr )
+         return object_is_exception_magic( pyobj->fSmartPtr );
+      return object_is_exception_magic( pyobj->GetObject() );
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destroy the held C++ object, if owned; does not deallocate the proxy.
 
 void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
-   if ( gROOT && !gROOT->TestBit( TObject::kInvalidObject ) ) {
+   if ( gROOT && !gROOT->TestBit( TObject::kInvalidObject )
+        && ! object_proxies_exception_magic( pyobj ) ) {
       if ( pyobj->fFlags & ObjectProxy::kIsValue ) {
          if ( ! (pyobj->fFlags & ObjectProxy::kIsSmartPtr) ) {
             Cppyy::CallDestructor( pyobj->ObjectIsA(), pyobj->GetObject() );
@@ -209,7 +222,9 @@ namespace {
    void op_dealloc( ObjectProxy* pyobj )
    {
       op_dealloc_nofree( pyobj );
-      Py_TYPE(pyobj)->tp_free( (PyObject*)pyobj );
+      if ( ! object_proxies_exception_magic( pyobj ) ) {
+         Py_TYPE(pyobj)->tp_free( (PyObject*)pyobj );
+      }
    }
 
 ////////////////////////////////////////////////////////////////////////////////
