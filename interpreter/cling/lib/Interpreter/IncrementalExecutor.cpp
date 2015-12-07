@@ -43,7 +43,7 @@ using namespace llvm;
 
 namespace cling {
 
-IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& diags):
+IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& diags, const int& argc, const char* const *argv):
   m_CurrentAtExitModule(0)
 #if 0
   : m_Diags(diags)
@@ -57,14 +57,14 @@ IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& diags):
   // can use this object yet.
   m_AtExitFuncs.reserve(256);
 
-  m_JIT.reset(new IncrementalJIT(*this, std::move(CreateHostTargetMachine())));
+  m_JIT.reset(new IncrementalJIT(*this, std::move(CreateHostTargetMachine(argc, argv))));
 }
 
 // Keep in source: ~unique_ptr<ClingJIT> needs ClingJIT
 IncrementalExecutor::~IncrementalExecutor() {}
 
 std::unique_ptr<TargetMachine>
-  IncrementalExecutor::CreateHostTargetMachine() const {
+  IncrementalExecutor::CreateHostTargetMachine(const int& argc, const char* const *argv) const {
   // TODO: make this configurable.
   Triple TheTriple(sys::getProcessTriple());
 #ifdef _WIN32
