@@ -96,6 +96,8 @@ In TSeqCollection::Merge, we no longer delete the object in the case where the o
 
 Several tweaks to if and when, resources held by the global ROOT object (TROOT, TApplication) are deleted.  When the default TApplication is replaced by a user provide TApplication, do not call EndOfProcessCleanups and co. and thus do not delete TFiles, TSockets or TColors that have already been created.  In EndOfProcessCleanups, we now delete the objects held in TROOT's TDirectory part.  If the libCling library is unloaded, this now induces an immediate tear down of the ROOT resources; consequently objects might be deleted sooner in the process tear down process on some platforms.
 
+TObject instances allocated as part of an array and made part of a collection, as for example the TCanvas instances into the global list of instances, are not longer deleted if the content of the collection is deleted.  Technically the element of the array are now treated by collections as if they have been allocated on the stack.  This fixes the issue described at [ROOT-7846].
+
 ### Code Cleanups.
 
 Several definition where moved from the global or ROOT namespace to the ROOT::Internal namespace as they are not intended to be used outside of ROOT, including: `gROOTLocal` and related functions, `TSchemaHelper`, `TSchemaMatch`, `TSchemaType`, `RStl`, `ROOT::TROOTAllocator`, `TSchemaRuleProcessor`, `TStdBitsetHelper`, `TInitBehavior`, `TDefaultInitBehavior`, `DefineBehavior`, `THnBaseBrowsable`, `THnBaseBinIter`, `GenericShowMembers`, `TOperatorNewHelper` and `BranchProxy` implementations classes.
