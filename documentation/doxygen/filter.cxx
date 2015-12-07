@@ -42,15 +42,15 @@
 /// This example shows that three new directives have been implemented:
 ///
 ///  1. `\macro_image`
-///  The image produced by this macro is shown. A caption can be added to document
-///  the picture: `\macro_image This is a picture`
+///  The images produced by this macro are shown. A caption can be added to document
+///  the pictures: `\macro_image This is a picture`
 ///
 ///  2. `\macro_code`
 ///  The macro code is shown.  A caption can be added: `\macro_code This is code`
 ///
 ///  3. `\macro_output`
 ///  The output produced by this macro is shown. A caption can be added:
-///  `\macro_image This the macro output`
+///  `\macro_output This the macro output`
 ///
 /// Note that the doxygen directive `\authors` or `\author` must be the last one
 /// of the macro header.
@@ -70,6 +70,8 @@ using namespace std;
 void   FilterClass();
 void   FilterTutorial();
 void   GetClassName();
+int    NumberOfImages();
+string ImagesList(string&);
 void   ExecuteMacro();
 void   ExecuteCommand(string);
 void   ReplaceAll(string&, const string&, const string&);
@@ -198,7 +200,7 @@ void FilterClass()
             } else {
                if (m) fprintf(m,"%s",gLineString.c_str());
                if (BeginsWith(gLineString,"}")) {
-                  ReplaceAll(gLineString,"}", StringFormat("\\image html %s_%3.3d.png", gClassName.c_str(), gImageID));
+                  ReplaceAll(gLineString,"}", StringFormat("\\image html pict1_%s_%3.3d.png", gClassName.c_str(), gImageID));
                } else {
                   gLineString = "\n";
                }
@@ -250,7 +252,7 @@ void FilterTutorial()
       if (gLineString.find("\\macro_image") != string::npos) {
          ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false)\"",
                                         gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
-         ReplaceAll(gLineString, "\\macro_image", StringFormat("\\image html %s",gImageName.c_str()));
+         ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName));
          remove(gOutputName.c_str());
       }
 
@@ -323,7 +325,7 @@ void GetClassName()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Execute the macro in gLineString and produce the corresponding picture
+/// Execute the macro in gLineString and produce the corresponding picture.
 
 void ExecuteMacro()
 {
@@ -348,9 +350,9 @@ void ExecuteMacro()
    ExecuteCommand(gLineString);
 
    if (gImageSource) {
-      gLineString = StringFormat("\\include %s\n\\image html %s\n", gMacroName.c_str(), gImageName.c_str());
+      gLineString = StringFormat("\\include %s\n\\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
    } else {
-      gLineString = StringFormat("\n\\image html %s\n", gImageName.c_str());
+      gLineString = StringFormat("\n\\image html pict1_%s\n", gImageName.c_str());
    }
 }
 
@@ -364,6 +366,19 @@ void ExecuteCommand(string command)
    system(command.c_str());
    dup2(o,fileno(stdout));
    close(o);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the number of images in NumberOfImages.dat after makeimage.C is executed.
+
+int NumberOfImages()
+{
+   int ImageNum;
+   FILE *f = fopen("NumberOfImages.dat", "r");
+   fscanf(f, "%d", &ImageNum);
+   fclose(f);
+   remove("NumberOfImages.dat");
+   return ImageNum;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -385,7 +400,7 @@ void ReplaceAll(string& str, const string& from, const string& to) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// std::string formatting like sprintf
+/// std::string formatting like sprintf.
 
 string StringFormat(const string fmt_str, ...) {
    int final_n, n = ((int)fmt_str.size()) * 2; /* Reserve two times as much as the length of the fmt_str */
@@ -405,7 +420,24 @@ string StringFormat(const string fmt_str, ...) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// find if a string ends with another string
+/// Return the image list after a tutorial macro execution.
+
+string ImagesList(string& name) {
+
+   int N = NumberOfImages();
+
+   char val[300];
+   int len = 0;
+   for (int i = 1; i <= N; i++){
+      if (i>1) sprintf(&val[len]," \n/// \\image html pict%d_%s",i,name.c_str());
+      else     sprintf(&val[len],"\\image html pict%d_%s",i,name.c_str());
+      len = (int)strlen(val);
+   }
+   return (string)val;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find if a string ends with another string.
 
 bool EndsWith(string const &fullString, string const &ending) {
    if (fullString.length() >= ending.length()) {
@@ -416,7 +448,7 @@ bool EndsWith(string const &fullString, string const &ending) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// find if a string begins with another string
+/// Find if a string begins with another string.
 
 bool BeginsWith(const string& haystack, const string& needle) {
    return needle.length() <= haystack.length() && equal(needle.begin(), needle.end(), haystack.begin());
