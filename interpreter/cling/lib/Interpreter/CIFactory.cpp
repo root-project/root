@@ -289,15 +289,6 @@ static bool getVisualStudioDir(std::string &path) {
   return false;
 }
 
-#else // _MSC_VER
-void insertIncludePaths(const std::string& s, std::vector<std::string>& HostCXXI) {
-  std::stringstream ss(s);
-  std::string includePath;
-  while (std::getline(ss, includePath, ':')) {
-    HostCXXI.push_back("-I");
-    HostCXXI.push_back(includePath);
-  }
-}
 #endif // _MSC_VER
 
 namespace {
@@ -435,10 +426,11 @@ namespace {
         }
       }
 #else // _MSC_VER
-      const char* RootInclude = std::getenv("ROOT_INCLUDE");
-      if (RootInclude) {
-        HostCXXI.push_back("-nostdinc++");
-        insertIncludePaths(RootInclude, HostCXXI);
+      // Skip LLVM_CXX execution if -nostdinc++ was provided.
+      for (const auto arg : args) {
+        if (!strcmp(arg, "-nostdinc++")) {
+          return;
+        }
       }
 
       static const char *CppInclQuery =
@@ -446,8 +438,7 @@ namespace {
         "| awk '/^#include </,/^End of search"
         "/{if (!/^#include </ && !/^End of search/){ print }}' "
         "| grep -E \"(c|g)\\+\\+\"";
-      FILE *pf = NULL;
-      if (!HostCXXI.size() && (pf = ::popen(CppInclQuery, "r"))) {
+      if (FILE *pf = ::popen(CppInclQuery, "r")) {
 
         HostCXXI.push_back("-nostdinc++");
         char buf[2048];
