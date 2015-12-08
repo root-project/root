@@ -1016,3 +1016,6 @@ Changes will be part of the future 6.04/14
 
 ### GL
 - Mattias Ellert fixed a memory leak [[PR114](https://github.com/root-mirror/root/pull/114/files)]
+
+### Interpreter
+- Update automatic variables if gDirectory changes [ROOT-7830]
