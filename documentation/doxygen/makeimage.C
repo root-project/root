@@ -2,9 +2,10 @@
 
 #include <stdio.h>
 
-void makeimage(const char *MacroName, const char *ImageName, const char *OutDir, bool cp)
+void makeimage(const char *MacroName, const char *ImageName, const char *OutDir, bool cp, bool py)
 {
-   gROOT->ProcessLine(Form(".x %s",MacroName));
+   if (!py) gROOT->ProcessLine(Form(".x %s",MacroName));
+   else     gROOT->ProcessLine(Form("TPython::ExecScript(\"%s\");",MacroName));
    if (cp) gSystem->Exec(TString::Format("cp %s %s/macros", MacroName, OutDir));
 
    TIter iCanvas(gROOT->GetListOfCanvases());
