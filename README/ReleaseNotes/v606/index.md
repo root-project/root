@@ -1,5 +1,5 @@
 % ROOT Version 6.06 Release Notes
-% 2015-11-27
+% 2015-12-08
 <a name="TopOfPage"></a>
 
 ## Introduction
