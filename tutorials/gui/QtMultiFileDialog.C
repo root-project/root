@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_gui
-/// This is a small ROOT macro to use Qt 3.3 class :[QFileDialog](http://doc.trolltech.com/3.3/qfiledialog.html)
-/// See: [http://doc.trolltech.com/3.3/qfiledialog.html#getOpenFileNames](http://doc.trolltech.com/3.3/qfiledialog.html#getOpenFileNames)
+/// This is a small ROOT macro to use Qt 3.3 class :[QFileDialog](https://doc.qt.io/archives/3.3/qfiledialog.html)
+/// See: [https://doc.qt.io/archives/3.3/qfiledialog.html#getOpenFileNames](https://doc.qt.io/archives/3.3/qfiledialog.html#getOpenFileNames)
 ///
 /// To use, invoke ACLiC from the ROOT prompt:
 /// ~~~

@@ -1,8 +1,8 @@
 /// \file
 /// \ingroup tutorial_gui
-/// This is a small ROOT macro to use Qt 3.3 class: [QPrinter](http://doc.trolltech.com/3.3/qprinter.html)
+/// This is a small ROOT macro to use Qt 3.3 class: [QPrinter](https://doc.qt.io/archives/3.3/qprinter.html)
 /// to setup the printer via Qt "setup printer dialog"
-/// See: [Printer setup dialog box](http://doc.trolltech.com/3.3/qprinter.html#setup)
+/// See: [Printer setup dialog box](https://doc.qt.io/archives/3.3/qprinter.html#setup)
 /// and print out the ROOT TCanvas object either via the "can" pointer provided or the current one.
 ///
 /// To use, invoke ACLiC from the ROOT prompt:
