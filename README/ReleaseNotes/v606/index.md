@@ -296,7 +296,7 @@ Add new TMVA plug-in based on R and Python (using Scikit-Learn)
 ### THistPainter
 
 Improve the algorithm to compute the lower limit of an axis in log scale when its
-real lower limit is 0. The problem was reported in ROOT-7414.
+real lower limit is 0. The problem was reported in [ROOT-7414].
 
 Using the `COL` option with histograms having some negative bins; the empty bins
 (containing 0) are drawn. In some cases one wants to not draw empty bins
@@ -437,15 +437,15 @@ If host has several network interfaces, one could select one for binding:
     new THttpServer("http:192.168.1.17:8080")
 
 ### TNetXNGFileStager
-Fixed ROOT-7703. This restores the behavior of Locate() to that found with
+Fixed [ROOT-7703]. This restores the behavior of Locate() to that found with
 TXNetFileStager: Rather than return only the xrootd server's reply, the endpoint
 hostname is looked up and Locate() returns the full url, including the path.
 
 ### TWebFile
-Fixed ROOT-7809. Returns an error for a redirect which does not specify the new
+Fixed [ROOT-7809]. Returns an error for a redirect which does not specify the new
 URI, rather than going into a loop.
 
-Fixed ROOT-7817. Avoid a crash under some circumstances when trying to open an
+Fixed [ROOT-7817]. Avoid a crash under some circumstances when trying to open an
 invalid path.
 
 ## GUI Libraries
