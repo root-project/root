@@ -68,9 +68,6 @@
 #ifndef ROOT_TMVA_TransformationHandler
 #include "TMVA/TransformationHandler.h"
 #endif
-#ifndef ROOT_TMVA_OptimizeConfigParameters
-#include "TMVA/OptimizeConfigParameters.h"
-#endif
 
 class TGraph;
 class TTree;
