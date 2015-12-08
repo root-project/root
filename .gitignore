@@ -806,6 +806,7 @@ root/tree/stl/vecptr.root
 /root/tree/treeproblem/reader
 /root/tree/treeproblem/writer
 /root/tree/treeproblem/memory.root
+/root/tree/treeproblem/trial.root
 
 # /root/treedraw/
 /root/treedraw/*.ps
