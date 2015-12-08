@@ -9,4 +9,4 @@
 # Replace {"t":"Str","c":"[ROOT-7392]"}
 # with {"t":"Link","c":[[{"t":"Str","c":"ROOT-7290"}],["https://sft.its.cern.ch/jira/browse/ROOT-7290",""]]}
 
-sed -E 's@\{"t":"Str","c":"\[ROOT-([[:digit:]]+)\]"\}@{"t":"Link","c":[[{"t":"Str","c":"ROOT-\1"}],["https://sft.its.cern.ch/jira/browse/ROOT-\1",""]]}@g'
+sed -E 's@\{"t":"Str","c":"\[ROOT-([[:digit:]]+)\]([^"]+)?"\}@{"t":"Link","c":[[{"t":"Str","c":"ROOT-\1"}],["https://sft.its.cern.ch/jira/browse/ROOT-\1",""]]},{"t":"Str","c":"\2"}@g'
