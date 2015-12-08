@@ -6337,11 +6337,12 @@ TObject* TCling::GetObjectAddress(const char *Name, void *&LookupCtx)
    // ... and we _know_ we are in the middle of parsing, so let's make
    // sure to save the state and then restore it.
 
-   if (LookupCtx) {
-      auto iSpecObjMap = fSpecialObjectMaps.find(LookupCtx);
+   if (gDirectory) {
+      auto iSpecObjMap = fSpecialObjectMaps.find(gDirectory);
       if (iSpecObjMap != fSpecialObjectMaps.end()) {
          auto iSpecObj = iSpecObjMap->second.find(Name);
          if (iSpecObj != iSpecObjMap->second.end()) {
+            LookupCtx = gDirectory;
             return iSpecObj->second;
          }
       }
