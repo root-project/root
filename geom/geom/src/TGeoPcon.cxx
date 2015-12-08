@@ -1130,6 +1130,7 @@ Double_t TGeoPcon::Safety(const Double_t *point, Bool_t in) const
       // check increasing iplanes
       iplane = ipl+1;
       saftmp = 0.;
+/*
       while ((iplane<fNz-1) && saftmp<1E10) {
          saftmp = TMath::Abs(SafetyToSegment(point,iplane,kFALSE,safmin));
          if (saftmp<safmin) safmin=saftmp;
@@ -1143,6 +1144,7 @@ Double_t TGeoPcon::Safety(const Double_t *point, Bool_t in) const
          if (saftmp<safmin) safmin=saftmp;
          iplane--;
       }
+*/
       return safmin;
    }
    //---> point is outside pcon
