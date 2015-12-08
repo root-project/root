@@ -4,7 +4,7 @@
 ///
 /// \macro_code
 ///
-/// \author Ilka Fons Rademakers   2/9/2004
+/// \authors Ilka Antcheva, Fons Rademakers
 
 #include <stdio.h>
 #include <stdlib.h>

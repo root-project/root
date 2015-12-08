@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_gui
-/// This is a small ROOT macro to use Qt 3.3 class :begin_html <a href="http://doc.trolltech.com/3.3/qfiledialog.html">QFileDialog</a> end_html
-/// See: begin_html <a href="http://doc.trolltech.com/3.3/qfiledialog.html#getOpenFileNames">http://doc.trolltech.com/3.3/qfiledialog.html#getOpenFileNames</a> end_html
+/// This is a small ROOT macro to use Qt 3.3 class :[QFileDialog](http://doc.trolltech.com/3.3/qfiledialog.html)
+/// See: [http://doc.trolltech.com/3.3/qfiledialog.html#getOpenFileNames](http://doc.trolltech.com/3.3/qfiledialog.html#getOpenFileNames)
 ///
 /// To use, invoke ACLiC from the ROOT prompt:
 /// ~~~
@@ -25,7 +25,7 @@
 ///         Try: "windows", "motif", "kde", "platinum" etc
 ///
 /// The full list of the Qt classes available from Cint is defined by
-/// begin_html <a href="http://root.bnl.gov/QtRoot/htmldoc/src/qtclasses.h.html">by $ROOTSYS/cint/lib/qtclasses.h</a> end_html
+/// [by $ROOTSYS/cint/lib/qtclasses.h](http://root.bnl.gov/QtRoot/htmldoc/src/qtclasses.h.html)
 ///
 /// All Qt classes can be used from ACLiC though.
 ///

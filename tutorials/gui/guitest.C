@@ -4,14 +4,14 @@
 /// Exactly like $ROOTSYS/test/guitest.cxx but using the new signal and slots communication mechanism.
 /// It is now possible to run this entire test program in the interpreter.
 /// Do either:
-/// ~~~ 
-// .x guitest.C
-// .x guitest.C++
-/// ~~~ 
+/// ~~~ {.cpp}
+/// .x guitest.C
+/// .x guitest.C++
+/// ~~~
 ///
 /// \macro_code
 ///
-/// \author Ilka Antcheva, Bertrand Bellenot, Fons Rademakers, Valeri Onuchin
+/// \authors Ilka Antcheva, Bertrand Bellenot, Fons Rademakers, Valeri Onuchin
 
 #include <stdlib.h>
 
