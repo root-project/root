@@ -34,12 +34,13 @@ The following people have contributed to this new version:
  Fons Rademakers, CERN/IT/Openlab,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Liza Sakellari, CERN/SFT,\
- Manuel Tobias Schiller,\
+ Manuel Tobias Schiller,CERN, LHCb\
  David Smith, CERN/IT,\
  Matevz Tadel, UCSD/CMS, Eve, \
  Vassil Vassilev, CERN/SFT \
  Wouter Verkerke, NIKHEF/Atlas, RooFit, \
- Maciej Zimnoch
+ Omar, Zapata, Medellin, Columbia \
+ Maciej Zimnoch, GSoC, Poland
 
 ## ROOT reference manual
 
@@ -223,7 +224,18 @@ In a ROOT session, you can do:
 
 ## Histogram Libraries
 
-### Change `TGraph::ComputeRange`: in case of log scale the minimum along X and
+### TH1
+
+* Fix a bug in using the buffer with weights different than one
+* Remove the `kCanRebin` bit, that it was not used anymore. Its functionality is replaced by the `TH1::SetCanExtend` function.
+
+
+
+### TGraph
+
+* `TGraph::GetHistogram()` was resetting the TimeDisplay attribute of axis.
+The problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-7766).
+* Change `TGraph::ComputeRange`: in case of log scale the minimum along X and
 Y axis are now set to the lowest positive values of the graph. Previously a % of the
 maximum was used which may hide some points like in the following example
 ``` {.cpp}
@@ -238,20 +250,45 @@ maximum was used which may hide some points like in the following example
 ```
 The problem was reported [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20484).
 
-### TGraph
 
-`TGraph::GetHistogram()` was resetting the TimeDisplay attribute of axis.
-The problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-7766).
+### TGraph2D
+
+Add a new implementation for Delauney interpolation using the triangle code from Jonathan Shewchuk, see [[ http://www.cs.cmu.edu/~quake/triangle.html ]]. 
+A new class for Delauney triangulator and interpolation has been added in the MathCore library  ( `ROOT::Math::Delauney2D` ).
+
 
 ### Fitting
 
-* Improve thread safety of TH1::Fit by making static member of TVirtualFitter and TMinuitMinimize thread local.  This fixes [ROOT-7791].
+* Improve thread safety of TH1::Fit by making static member of TVirtualFitter and TMinuitMinimizer thread local.  This fixes [ROOT-7791].
+* Fix some bugs in TF1NormSum (to fit normalized sum of functions) and in TF1Convolution
+* Add a new histogram fitting option, `WIDTH` to fit directly density. The bin content in this case is scaled by the histogram bin width
+
+### TFormula
+
+* Fix several bugs in the new TFormula class.
+* Add as new pre-defined functions: `crystalball`, `breitwigner` nd `cheb0,cheb1,...cheb10` for the Chebyshev polynomials. 
 
 ## Math Libraries
 
+### Random numbers
+
+* Move from MathMore to MathCore the class `ROOT::Math::Random`. Make it a new interface class for random number generation. Add interfaces for standard
+ROOT random engines, GSL random engines and random engines provided by the C++ standard library (`std::random`).
+* Add a new randomengine, `MIXMAX` based on matrix-recursive random number generator from Kostas and George Savvidy. See this [paper](http://dx.doi.org/10.1016/j.cpc.2015.06.003).
+
+## R Interace
+
+Apply several improvements in the interface to R, allowing to use R functions within ROOT.
+See more at the [ROOT-R User Guide](http://oproject.org/tiki-index.php?page=ROOT%20R%20Users%20Guide). 
+
+## TMVA
+
+Add new TMVA plug-in based on R and Python (using Scikit-Learn) 
+* See the [RMVA Web page](http://oproject.org/tiki-index.php?page=RMVA) for a detailed description of the new TMVA method based on R
+* See the [PyMVA Wb page](http://oproject.org/tiki-index.php?page=PyMVA) for detauiled description of the machine learning methods added in TMVA and based on the Python Scikit-Learn package.
 
 ## RooFit Libraries
-
+  
 
 ## 2D Graphics Libraries
 
