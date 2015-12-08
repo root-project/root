@@ -20,7 +20,7 @@
 /// \macro_output
 /// \macro_code
 ///
-/// \author: Lorenzo Moneta
+/// \author Lorenzo Moneta
 
 #include "TMatrixD.h"
 #include "TVectorD.h"

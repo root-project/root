@@ -1,38 +1,45 @@
-//+______________________________________________________________________________
-// Performance test of all the ROOT random generator (TRandom, TRandom1, TRandom2 and TRandom3)
-// Tests the generator TRandom3 against some ref values
-// and creates a timing table against TRandom, TRandom1 and TRandom2.
-//
-// E.g. on an an Intel Xeon Quad-core Harpertown (E5410) 2.33 GHz running
-// Linux SLC4 64 bit and compiled with gcc 3.4
-//
-// Distribution            nanoseconds/call
-//                     TRandom  TRandom1 TRandom2 TRandom3
-// Rndm..............    5.000  105.000    7.000   10.000
-// RndmArray.........    4.000  104.000    6.000    9.000
-// Gaus..............   36.000  180.000   40.000   48.000
-// Rannor............  118.000  220.000  120.000  124.000
-// Landau............   22.000  123.000   26.000   31.000
-// Exponential.......   93.000  198.000   98.000  104.000
-// Binomial(5,0.5)...   30.000  548.000   46.000   65.000
-// Binomial(15,0.5)..   75.000 1615.000  125.000  178.000
-// Poisson(3)........   96.000  494.000  109.000  125.000
-// Poisson(10).......  138.000 1236.000  165.000  203.000
-// Poisson(70).......  818.000 1195.000  835.000  844.000
-// Poisson(100)......  837.000 1218.000  849.000  864.000
-// GausTF1...........   83.000  180.000   87.000   88.000
-// LandauTF1.........   80.000  180.000   83.000   86.000
-// GausUNURAN........   40.000  139.000   41.000   44.000
-// PoissonUNURAN(10).   85.000  271.000   92.000  102.000
-// PoissonUNURAN(100)   62.000  256.000   69.000   78.000
-//
-//
-// Note that this tutorial can be executed in interpreted or compiled mode
-//  Root > .x testrandom.C
-//  Root > .x testrandom.C++
-//
-//Authors: Rene Brun, Lorenzo Moneta
-
+/// \file
+/// \ingroup tutorial_math
+/// Performance test of all the ROOT random generator (TRandom, TRandom1, TRandom2 and TRandom3)
+/// Tests the generator TRandom3 against some ref values
+/// and creates a timing table against TRandom, TRandom1 and TRandom2.
+///
+/// E.g. on an an Intel Xeon Quad-core Harpertown (E5410) 2.33 GHz running
+/// Linux SLC4 64 bit and compiled with gcc 3.4
+///
+/// ~~~
+/// Distribution        nanoseconds/call
+///                     TRandom  TRandom1 TRandom2 TRandom3
+/// Rndm..............    5.000  105.000    7.000   10.000
+/// RndmArray.........    4.000  104.000    6.000    9.000
+/// Gaus..............   36.000  180.000   40.000   48.000
+/// Rannor............  118.000  220.000  120.000  124.000
+/// Landau............   22.000  123.000   26.000   31.000
+/// Exponential.......   93.000  198.000   98.000  104.000
+/// Binomial(5,0.5)...   30.000  548.000   46.000   65.000
+/// Binomial(15,0.5)..   75.000 1615.000  125.000  178.000
+/// Poisson(3)........   96.000  494.000  109.000  125.000
+/// Poisson(10).......  138.000 1236.000  165.000  203.000
+/// Poisson(70).......  818.000 1195.000  835.000  844.000
+/// Poisson(100)......  837.000 1218.000  849.000  864.000
+/// GausTF1...........   83.000  180.000   87.000   88.000
+/// LandauTF1.........   80.000  180.000   83.000   86.000
+/// GausUNURAN........   40.000  139.000   41.000   44.000
+/// PoissonUNURAN(10).   85.000  271.000   92.000  102.000
+/// PoissonUNURAN(100)   62.000  256.000   69.000   78.000
+/// ~~~
+///
+/// Note that this tutorial can be executed in interpreted or compiled mode
+///
+/// ~~~ {.cpp}
+///  Root > .x testrandom.C
+///  Root > .x testrandom.C++
+/// ~~~
+///
+/// \macro_output
+/// \macro_code
+///
+/// \authors Rene Brun, Lorenzo Moneta
 
 #include <TRandom1.h>
 #include <TRandom2.h>
