@@ -1,5 +1,5 @@
 % ROOT Version 6.06 Release Notes
-% 2015-11-27
+% 2015-12-08
 <a name="TopOfPage"></a>
 
 ## Introduction
@@ -35,12 +35,13 @@ The following people have contributed to this new version:
  Fons Rademakers, CERN/IT/Openlab,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Liza Sakellari, CERN/SFT,\
- Manuel Tobias Schiller,\
+ Manuel Tobias Schiller,CERN, LHCb\
  David Smith, CERN/IT,\
  Matevz Tadel, UCSD/CMS, Eve, \
  Vassil Vassilev, CERN/SFT \
  Wouter Verkerke, NIKHEF/Atlas, RooFit, \
- Maciej Zimnoch
+ Omar, Zapata, Medellin, Columbia \
+ Maciej Zimnoch, GSoC, Poland
 
 ## ROOT reference manual
 
@@ -107,13 +108,13 @@ Several definition where moved from the global or ROOT namespace to the ROOT::De
 
 ## Interpreter
 
-ROOT can now dump the contect of STL collections, for instance `map<string,int>`. A few ROOT types print their content, too.
+ROOT can now dump the context of STL collections, for instance `map<string,int>`. A few ROOT types print their content, too.
 
 Fixed the handling of the current directory in `#include` of system headers, avoid problem with local files named `new` or `vector`.
 
 Fixed the issue with the ROOT special variable where the objects were read from the file at each and every access by caching those object.  See [ROOT-7830] for example.
 
-This release contains everal bug fixes and improvements, notably in unloading and performance.
+This release contains several bug fixes and improvements, notably in unloading and performance.
 
 > NOTE: The GCC 5 ABI is *not* supported yet, due to a lack of support in clang.
 
@@ -224,7 +225,18 @@ In a ROOT session, you can do:
 
 ## Histogram Libraries
 
-### Change `TGraph::ComputeRange`: in case of log scale the minimum along X and
+### TH1
+
+* Fix a bug in using the buffer with weights different than one
+* Remove the `kCanRebin` bit, that it was not used anymore. Its functionality is replaced by the `TH1::SetCanExtend` function.
+
+
+
+### TGraph
+
+* `TGraph::GetHistogram()` was resetting the TimeDisplay attribute of axis.
+The problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-7766).
+* Change `TGraph::ComputeRange`: in case of log scale the minimum along X and
 Y axis are now set to the lowest positive values of the graph. Previously a % of the
 maximum was used which may hide some points like in the following example
 ``` {.cpp}
@@ -239,20 +251,45 @@ maximum was used which may hide some points like in the following example
 ```
 The problem was reported [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20484).
 
-### TGraph
 
-`TGraph::GetHistogram()` was resetting the TimeDisplay attribute of axis.
-The problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-7766).
+### TGraph2D
+
+Add a new implementation for Delauney interpolation using the triangle code from Jonathan Shewchuk, see [[ http://www.cs.cmu.edu/~quake/triangle.html ]]. 
+A new class for Delauney triangulator and interpolation has been added in the MathCore library  ( `ROOT::Math::Delauney2D` ).
+
 
 ### Fitting
 
-* Improve thread safety of TH1::Fit by making static member of TVirtualFitter and TMinuitMinimize thread local.  This fixes [ROOT-7791].
+* Improve thread safety of TH1::Fit by making static member of TVirtualFitter and TMinuitMinimizer thread local.  This fixes [ROOT-7791].
+* Fix some bugs in TF1NormSum (to fit normalized sum of functions) and in TF1Convolution
+* Add a new histogram fitting option, `WIDTH` to fit directly density. The bin content in this case is scaled by the histogram bin width
+
+### TFormula
+
+* Fix several bugs in the new TFormula class.
+* Add as new pre-defined functions: `crystalball`, `breitwigner` and `cheb0,cheb1,...cheb10` for the Chebyshev polynomials. 
 
 ## Math Libraries
 
+### Random numbers
+
+* Move from MathMore to MathCore the class `ROOT::Math::Random`. Make it a new interface class for random number generation. Add interfaces for standard
+ROOT random engines, GSL random engines and random engines provided by the C++ standard library (`std::random`).
+* Add a new randomengine, `MIXMAX` based on matrix-recursive random number generator from Kostas and George Savvidy. See this [paper](http://dx.doi.org/10.1016/j.cpc.2015.06.003).
+
+## R Interface
+
+Apply several improvements in the interface to R, allowing to use R functions within ROOT.
+See more at the [ROOT-R User Guide](http://oproject.org/tiki-index.php?page=ROOT%20R%20Users%20Guide). 
+
+## TMVA
+
+Add new TMVA plug-in based on R and Python (using Scikit-Learn) 
+* See the [RMVA Web page](http://oproject.org/tiki-index.php?page=RMVA) for a detailed description of the new TMVA method based on R
+* See the [PyMVA Web page](http://oproject.org/tiki-index.php?page=PyMVA) for detailed description of the machine learning methods added in TMVA and based on the Python Scikit-Learn package.
 
 ## RooFit Libraries
-
+  
 
 ## 2D Graphics Libraries
 
@@ -328,7 +365,7 @@ based on pixel to avoid the problem reported
 ### TCanvas
 
 When the first canvas created by ROOT was in batch mode, it was note possible to
-comme back in interactive mode for the next canvases. this problem was reported
+come back in interactive mode for the next canvases. this problem was reported
 [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20354).
 
 ### Cocoa Backend
@@ -421,7 +458,7 @@ invalid path.
 
 With this version we introduce a new module, core/multiproc, for multi-processing on multi-core machines. This module is based on fork technology and offers an interface inspired from Python multiprocessor module. The new interface, implemented in the class TProcPool, provides the possibility to perform in parallel a very generic set of tasks, described by macros, functions or lambdas.
 
-This illustrates te usage of lambdas:
+This illustrates the usage of lambdas:
 
 ``` {.cpp}
 {
@@ -497,7 +534,7 @@ ROOT uses the CMake cross-platform build-generator tool as a primary build syste
 
 We added full support for C++14.
 
-Minor chages in the build system:
+Minor changes in the build system:
 
 - Renamed build option POSTGRESQL_LIBRARIES to POSTGRESQL_LIBRARY
-- Added build option `builtin_openssl` to build OpenSSL internally. This is specially needed for the lastest Mac OSX (El Capitan)
+- Added build option `builtin_openssl` to build OpenSSL internally. This is specially needed for the latest Mac OSX (El Capitan)
