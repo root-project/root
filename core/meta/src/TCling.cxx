@@ -1842,7 +1842,7 @@ static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
    try {
       return metaProcessor->process(input_line, compRes, result);
    }
-   catch (cling::NullDerefException& ex)
+   catch (cling::InvalidDerefException& ex)
    {
       Info("Handle", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
       ex.diagnose();
