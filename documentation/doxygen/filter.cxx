@@ -93,6 +93,7 @@ string gSourceDir;     // Source directory
 string gOutputName;    // File containing a macro std::out
 bool   gHeader;        // True if the input file is a header
 bool   gSource;        // True if the input file is a source file
+bool   gPython;        // True if the input file is a Python script.
 bool   gImageSource;   // True the source of the current macro should be shown
 int    gInMacro;       // >0 if parsing a macro in a class documentation.
 int    gImageID;       // Image Identifier.
@@ -109,6 +110,7 @@ int main(int argc, char *argv[])
    gFileName      = argv[1];
    gHeader        = false;
    gSource        = false;
+   gPython        = false;
    gImageSource   = false;
    gInMacro       = 0;
    gImageID       = 0;
@@ -117,6 +119,7 @@ int main(int argc, char *argv[])
    gShowTutSource = 0;
    if (EndsWith(gFileName,".cxx")) gSource = true;
    if (EndsWith(gFileName,".h"))   gHeader = true;
+   if (EndsWith(gFileName,".py"))  gPython = true;
    GetClassName();
 
    // Retrieve the current working directory
@@ -168,7 +171,7 @@ void FilterClass()
             if (m) {
                fclose(m);
                m = 0;
-               ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true)\""
+               ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false)\""
                                               , StringFormat("%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str()
                                               , StringFormat("%s_%3.3d.png", gClassName.c_str(), gImageID).c_str()
                                               , gOutDir.c_str()));
@@ -250,8 +253,13 @@ void FilterTutorial()
 
       // \macro_image found
       if (gLineString.find("\\macro_image") != string::npos) {
-         ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false)\"",
-                                        gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+         if (gPython) {
+            ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,true)\"",
+                                         gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+         } else {
+            ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                                         gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+         }
          ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName));
          remove(gOutputName.c_str());
       }
@@ -345,7 +353,7 @@ void ExecuteMacro()
    // Build the ROOT command to be executed.
    gLineString.insert(0, StringFormat("root -l -b -q \"makeimage.C(\\\""));
    int l = gLineString.length();
-   gLineString.replace(l-2,1,StringFormat("C\\\",\\\"%s\\\",\\\"%s\\\",true)\"", gImageName.c_str(), gOutDir.c_str()));
+   gLineString.replace(l-2,1,StringFormat("C\\\",\\\"%s\\\",\\\"%s\\\",true,false)\"", gImageName.c_str(), gOutDir.c_str()));
 
    ExecuteCommand(gLineString);
 
