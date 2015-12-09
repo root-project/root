@@ -49,7 +49,7 @@
 
 /** \addtogroup Hist
 @{
-\class TH1C \brief tomato 1-D histogram with a bype per channel (see TH1 documentation)
+\class TH1C \brief tomato 1-D histogram with a byte per channel (see TH1 documentation)
 \class TH1S \brief tomato 1-D histogram with a short per channel (see TH1 documentation)
 \class TH1I \brief tomato 1-D histogram with a int per channel (see TH1 documentation)}
 \class TH1F \brief tomato 1-D histogram with a float per channel (see TH1 documentation)}
@@ -57,39 +57,31 @@
 @}
 */
 
-////////////////////////////////////////////////////////////////////////////////
 /** \class TH1
-The TH1 histogram class
-<h2>The Histogram classes</h2>
+The TH1 histogram class.
+
+### The Histogram classes
 ROOT supports the following histogram types:
-<ul>
-  <li>1-D histograms:
-   <ul>
-         <li>TH1C : histograms with one byte per channel.   Maximum bin content = 127
-         <li>TH1S : histograms with one short per channel.  Maximum bin content = 32767
-         <li>TH1I : histograms with one int per channel.    Maximum bin content = 2147483647
-         <li>TH1F : histograms with one float per channel.  Maximum precision 7 digits
-         <li>TH1D : histograms with one double per channel. Maximum precision 14 digits
-   </ul>
 
-  <li>2-D histograms:
-   <ul>
-         <li>TH2C : histograms with one byte per channel.   Maximum bin content = 127
-         <li>TH2S : histograms with one short per channel.  Maximum bin content = 32767
-         <li>TH2I : histograms with one int per channel.    Maximum bin content = 2147483647
-         <li>TH2F : histograms with one float per channel.  Maximum precision 7 digits
-         <li>TH2D : histograms with one double per channel. Maximum precision 14 digits
-   </ul>
-
-  <li>3-D histograms:
-   <ul>
-         <li>TH3C : histograms with one byte per channel.   Maximum bin content = 127
-         <li>TH3S : histograms with one short per channel.  Maximum bin content = 32767
-         <li>TH3I : histograms with one int per channel.    Maximum bin content = 2147483647
-         <li>TH3F : histograms with one float per channel.  Maximum precision 7 digits
-         <li>TH3D : histograms with one double per channel. Maximum precision 14 digits
-   </ul>
-  <li>Profile histograms: See classes  TProfile, TProfile2D and TProfile3D.
+  - 1-D histograms:
+      - TH1C : histograms with one byte per channel.   Maximum bin content = 127
+      - TH1S : histograms with one short per channel.  Maximum bin content = 32767
+      - TH1I : histograms with one int per channel.    Maximum bin content = 2147483647
+      - TH1F : histograms with one float per channel.  Maximum precision 7 digits
+      - TH1D : histograms with one double per channel. Maximum precision 14 digits
+  - 2-D histograms:
+      - TH2C : histograms with one byte per channel.   Maximum bin content = 127
+      - TH2S : histograms with one short per channel.  Maximum bin content = 32767
+      - TH2I : histograms with one int per channel.    Maximum bin content = 2147483647
+      - TH2F : histograms with one float per channel.  Maximum precision 7 digits
+      - TH2D : histograms with one double per channel. Maximum precision 14 digits
+  - 3-D histograms:
+      - TH3C : histograms with one byte per channel.   Maximum bin content = 127
+      - TH3S : histograms with one short per channel.  Maximum bin content = 32767
+      - TH3I : histograms with one int per channel.    Maximum bin content = 2147483647
+      - TH3F : histograms with one float per channel.  Maximum precision 7 digits
+      - TH3D : histograms with one double per channel. Maximum precision 14 digits
+  - Profile histograms: See classes  TProfile, TProfile2D and TProfile3D.
       Profile histograms are used to display the mean value of Y and its standard deviation
       for each bin in X. Profile histograms are in many cases an elegant
       replacement of two-dimensional histograms : the inter-relation of two
@@ -97,16 +89,16 @@ ROOT supports the following histogram types:
       histogram or scatter-plot; If Y is an unknown (but single-valued)
       approximate function of X, this function is displayed by a profile
       histogram with much better precision than by a scatter-plot.
-</ul>
+
 
 All histogram classes are derived from the base class TH1
-<pre>
+~~~ {.cpp}
                                 TH1
                                  ^
                                  |
                                  |
                                  |
-         -----------------------------------------------------------
+                +----------------+-------+------+------+-----+-----+
                 |                |       |      |      |     |     |
                 |                |      TH1C   TH1S   TH1I  TH1F  TH1D
                 |                |                                 |
@@ -114,14 +106,14 @@ All histogram classes are derived from the base class TH1
                 |               TH2                             TProfile
                 |                |
                 |                |
-                |                ----------------------------------
+                |                +-------+------+------+-----+-----+
                 |                        |      |      |     |     |
                 |                       TH2C   TH2S   TH2I  TH2F  TH2D
                 |                                                  |
                TH3                                                 |
                 |                                               TProfile2D
                 |
-                -------------------------------------
+                +-------+------+------+------+------+
                         |      |      |      |      |
                        TH3C   TH3S   TH3I   TH3F   TH3D
                                                     |
@@ -133,34 +125,34 @@ All histogram classes are derived from the base class TH1
       The TH*I classes also inherit from the array class TArrayI.
       The TH*F classes also inherit from the array class TArrayF.
       The TH*D classes also inherit from the array class TArrayD.
-</pre>
+~~~
 
-<h4>Creating histograms</h4>
-<p>
-     Histograms are created by invoking one of the constructors, e.g.
-<pre>
+#### Creating histograms
+
+Histograms are created by invoking one of the constructors, e.g.
+~~~ {.cpp}
        TH1F *h1 = new TH1F("h1", "h1 title", 100, 0, 4.4);
        TH2F *h2 = new TH2F("h2", "h2 title", 40, 0, 4, 30, -3, 3);
-</pre>
-<p>  Histograms may also be created by:
-  <ul>
-      <li> calling the Clone function, see below
-      <li> making a projection from a 2-D or 3-D histogram, see below
-      <li> reading an histogram from a file
-   </ul>
-<p>  When an histogram is created, a reference to it is automatically added
-     to the list of in-memory objects for the current file or directory.
-     This default behaviour can be changed by:
-<pre>
+~~~
+Histograms may also be created by:
+
+  -  calling the Clone function, see below
+  -  making a projection from a 2-D or 3-D histogram, see below
+  -  reading an histogram from a file
+
+  When an histogram is created, a reference to it is automatically added
+ to the list of in-memory objects for the current file or directory.
+ This default behaviour can be changed by:
+~~~ {.cpp}
        h->SetDirectory(0);          for the current histogram h
        TH1::AddDirectory(kFALSE);   sets a global switch disabling the reference
-</pre>
+~~~
      When the histogram is deleted, the reference to it is removed from
      the list of objects in memory.
      When a file is closed, all histograms in memory associated with this file
      are automatically deleted.
 
-<h4>Fix or variable bin size</h4>
+#### Fix or variable bin size
 
  All histogram types support either fix or variable bin sizes.
  2-D histograms may have fix size bins along X and variable size bins
@@ -169,100 +161,96 @@ All histogram classes are derived from the base class TH1
 
  Each histogram always contains 3 objects TAxis: fXaxis, fYaxis and fZaxis
  o access the axis parameters, do:
-<pre>
+~~~ {.cpp}
         TAxis *xaxis = h->GetXaxis(); etc.
         Double_t binCenter = xaxis->GetBinCenter(bin), etc.
-</pre>
+~~~
  See class TAxis for a description of all the access functions.
  The axis range is always stored internally in double precision.
 
-<h4>Convention for numbering bins</h4>
+#### Convention for numbering bins
 
  For all histogram types: nbins, xlow, xup
-<pre>
+~~~ {.cpp}
         bin = 0;       underflow bin
         bin = 1;       first bin with low-edge xlow INCLUDED
         bin = nbins;   last bin with upper-edge xup EXCLUDED
         bin = nbins+1; overflow bin
-</pre>
+~~~
  In case of 2-D or 3-D histograms, a "global bin" number is defined.
  For example, assuming a 3-D histogram with (binx, biny, binz), the function
-<pre>
+~~~ {.cpp}
         Int_t gbin = h->GetBin(binx, biny, binz);
-</pre>
+~~~
  returns a global/linearized gbin number. This global gbin is useful
  to access the bin content/error information independently of the dimension.
  Note that to access the information other than bin content and errors
  one should use the TAxis object directly with e.g.:
-<pre>
+~~~ {.cpp}
          Double_t xcenter = h3->GetZaxis()->GetBinCenter(27);
-</pre>
+~~~
  returns the center along z of bin number 27 (not the global bin)
  in the 3-D histogram h3.
 
-<h4>Alphanumeric Bin Labels</h4>
+#### Alphanumeric Bin Labels
 
  By default, an histogram axis is drawn with its numeric bin labels.
  One can specify alphanumeric labels instead with:
-<ul>
-       <li> call TAxis::SetBinLabel(bin, label);
-           This can always be done before or after filling.
-           When the histogram is drawn, bin labels will be automatically drawn.
-           See example in $ROOTSYS/tutorials/graphs/labels1.C, labels2.C
-       <li> call to a Fill function with one of the arguments being a string, e.g.
-<pre>
-           hist1->Fill(somename, weigth);
+
+  -  call TAxis::SetBinLabel(bin, label);
+     This can always be done before or after filling.
+     When the histogram is drawn, bin labels will be automatically drawn.
+     See example in $ROOTSYS/tutorials/graphs/labels1.C, labels2.C
+  -  call to a Fill function with one of the arguments being a string, e.g.
+~~~ {.cpp}
+           hist1->Fill(somename, weight);
            hist2->Fill(x, somename, weight);
            hist2->Fill(somename, y, weight);
            hist2->Fill(somenamex, somenamey, weight);
-</pre>
+~~~
  See example in $ROOTSYS/tutorials/hist/hlabels1.C, hlabels2.C
-       <li> via TTree::Draw.
+       -  via TTree::Draw.
            see for example $ROOTSYS/tutorials/tree/cernstaff.C
-<pre>
+~~~ {.cpp}
            tree.Draw("Nation::Division");
-</pre>
+~~~
            where "Nation" and "Division" are two branches of a Tree.
-</ul>
 
-<p>When using the options 2 or 3 above, the labels are automatically
+
+When using the options 2 or 3 above, the labels are automatically
  added to the list (THashList) of labels for a given axis.
  By default, an axis is drawn with the order of bins corresponding
  to the filling sequence. It is possible to reorder the axis
 
-<ul>
-          <li>alphabetically
-          <li>by increasing or decreasing values
-</ul>
+  - alphabetically
+  - by increasing or decreasing values
 
-<p> The reordering can be triggered via the TAxis context menu by selecting
+ The reordering can be triggered via the TAxis context menu by selecting
  the menu item "LabelsOption" or by calling directly
  TH1::LabelsOption(option, axis) where
-<ul>
-          <li>axis may be "X", "Y" or "Z"
-          <li>option may be:
-           <ul>
-             <li>"a" sort by alphabetic order
-             <li>">" sort by decreasing values
-             <li>"<" sort by increasing values
-             <li>"h" draw labels horizontal
-             <li>"v" draw labels vertical
-             <li>"u" draw labels up (end of label right adjusted)
-             <li>"d" draw labels down (start of label left adjusted)
-           </ul>
-</ul>
-<p> When using the option 2 above, new labels are added by doubling the current
+
+  - axis may be "X", "Y" or "Z"
+  - option may be:
+    - "a" sort by alphabetic order
+    - ">" sort by decreasing values
+    - "<" sort by increasing values
+    - "h" draw labels horizontal
+    - "v" draw labels vertical
+    - "u" draw labels up (end of label right adjusted)
+    - "d" draw labels down (start of label left adjusted)
+
+ When using the option 2 above, new labels are added by doubling the current
  number of bins in case one label does not exist yet.
  When the Filling is terminated, it is possible to trim the number
  of bins to match the number of active labels by calling
-<pre>
+~~~ {.cpp}
            TH1::LabelsDeflate(axis) with axis = "X", "Y" or "Z"
-</pre>
+~~~
  This operation is automatic when using TTree::Draw.
  Once bin labels have been created, they become persistent if the histogram
  is written to a file or when generating the C++ code via SavePrimitive.
 
-<h4>Histograms with automatic bins</h4>
+#### Histograms with automatic bins
 
  When an histogram is created with an axis lower limit greater or equal
  to its upper limit, the SetBuffer is automatically called with an
@@ -271,58 +259,58 @@ All histogram classes are derived from the base class TH1
  The axis limits will be automatically computed when the buffer will
  be full or when the function BufferEmpty is called.
 
-<h4>Filling histograms</h4>
+#### Filling histograms
 
  An histogram is typically filled with statements like:
-<pre>
+~~~ {.cpp}
        h1->Fill(x);
        h1->Fill(x, w); //fill with weight
        h2->Fill(x, y)
        h2->Fill(x, y, w)
        h3->Fill(x, y, z)
        h3->Fill(x, y, z, w)
-</pre>
+~~~
  or via one of the Fill functions accepting names described above.
  The Fill functions compute the bin number corresponding to the given
  x, y or z argument and increment this bin by the given weight.
  The Fill functions return the bin number for 1-D histograms or global
  bin number for 2-D and 3-D histograms.
-<p> If TH1::Sumw2 has been called before filling, the sum of squares of
+ If TH1::Sumw2 has been called before filling, the sum of squares of
  weights is also stored.
  One can also increment directly a bin number via TH1::AddBinContent
  or replace the existing content via TH1::SetBinContent.
  To access the bin content of a given bin, do:
-<pre>
+~~~ {.cpp}
        Double_t binContent = h->GetBinContent(bin);
-</pre>
+~~~
 
-<p> By default, the bin number is computed using the current axis ranges.
+ By default, the bin number is computed using the current axis ranges.
  If the automatic binning option has been set via
-<pre>
+~~~ {.cpp}
        h->SetCanExtend(kAllAxes);
-</pre>
+~~~
  then, the Fill Function will automatically extend the axis range to
  accomodate the new value specified in the Fill argument. The method
  used is to double the bin size until the new value fits in the range,
  merging bins two by two. This automatic binning options is extensively
  used by the TTree::Draw function when histogramming Tree variables
  with an unknown range.
-<p> This automatic binning option is supported for 1-D, 2-D and 3-D histograms.
+ This automatic binning option is supported for 1-D, 2-D and 3-D histograms.
 
  During filling, some statistics parameters are incremented to compute
  the mean value and Root Mean Square with the maximum precision.
 
-<p> In case of histograms of type TH1C, TH1S, TH2C, TH2S, TH3C, TH3S
+ In case of histograms of type TH1C, TH1S, TH2C, TH2S, TH3C, TH3S
  a check is made that the bin contents do not exceed the maximum positive
  capacity (127 or 32767). Histograms of all types may have positive
  or/and negative bin contents.
 
-<h4>Rebinning</h4>
+#### Rebinning
  At any time, an histogram can be rebinned via TH1::Rebin. This function
  returns a new histogram with the rebinned contents.
  If bin errors were stored, they are recomputed during the rebinning.
 
-<h4>Associated errors</h4>
+#### Associated errors
  By default, for each bin, the sum of weights is computed at fill time.
  One can also call TH1::Sumw2 to force the storage and computation
  of the sum of the square of weights per bin.
@@ -330,31 +318,31 @@ All histogram classes are derived from the base class TH1
  sqrt(sum of squares of weights), otherwise the error is set equal
  to the sqrt(bin content).
  To return the error for a given bin number, do:
-<pre>
+~~~ {.cpp}
         Double_t error = h->GetBinError(bin);
-</pre>
+~~~
 
-<h4>Associated functions</h4>
+#### Associated functions
  One or more object (typically a TF1*) can be added to the list
  of functions (fFunctions) associated to each histogram.
  When TH1::Fit is invoked, the fitted function is added to this list.
  Given an histogram h, one can retrieve an associated function
  with:
-<pre>
+~~~ {.cpp}
         TF1 *myfunc = h->GetFunction("myfunc");
-</pre>
+~~~
 
-<h4>Operations on histograms</h4>
+#### Operations on histograms
 
  Many types of operations are supported on histograms or between histograms
-<ul>
-     <li> Addition of an histogram to the current histogram.
-     <li> Additions of two histograms with coefficients and storage into the current
-       histogram.
-     <li> Multiplications and Divisions are supported in the same way as additions.
-     <li> The Add, Divide and Multiply functions also exist to add, divide or multiply
-       an histogram by a function.
-</ul>
+
+  -  Addition of an histogram to the current histogram.
+  -  Additions of two histograms with coefficients and storage into the current
+     histogram.
+  -  Multiplications and Divisions are supported in the same way as additions.
+  -  The Add, Divide and Multiply functions also exist to add, divide or multiply
+     an histogram by a function.
+
  If an histogram has associated error bars (TH1::Sumw2 has been called),
  the resulting error bars are also computed assuming independent histograms.
  In case of divisions, Binomial errors are also supported.
@@ -362,7 +350,7 @@ All histogram classes are derived from the base class TH1
    myhist.SetBit(TH1::kIsAverage);
  When adding (see TH1::Add) average histograms, the histograms are averaged and not summed.
 
-<h4>Fitting histograms</h4>
+#### Fitting histograms
 
  Histograms (1-D, 2-D, 3-D and Profiles) can be fitted with a user
  specified function via TH1::Fit. When an histogram is fitted, the
@@ -371,62 +359,61 @@ All histogram classes are derived from the base class TH1
  associated functions is also persistent. Given a pointer (see above)
  to an associated function myfunc, one can retrieve the function/fit
  parameters with calls such as:
-<pre>
+~~~ {.cpp}
        Double_t chi2 = myfunc->GetChisquare();
        Double_t par0 = myfunc->GetParameter(0); value of 1st parameter
        Double_t err0 = myfunc->GetParError(0);  error on first parameter
-</pre>
+~~~
 
-<h4>Projections of histograms</h4>
+#### Projections of histograms
 
-<p> One can:
-<ul>
-      <li> make a 1-D projection of a 2-D histogram or Profile
-        see functions TH2::ProjectionX,Y, TH2::ProfileX,Y, TProfile::ProjectionX
-      <li> make a 1-D, 2-D or profile out of a 3-D histogram
-        see functions TH3::ProjectionZ, TH3::Project3D.
-</ul>
+ One can:
 
-<p> One can fit these projections via:
-<pre>
+  -  make a 1-D projection of a 2-D histogram or Profile
+     see functions TH2::ProjectionX,Y, TH2::ProfileX,Y, TProfile::ProjectionX
+  -  make a 1-D, 2-D or profile out of a 3-D histogram
+     see functions TH3::ProjectionZ, TH3::Project3D.
+
+ One can fit these projections via:
+~~~ {.cpp}
       TH2::FitSlicesX,Y, TH3::FitSlicesZ.
-</pre>
+~~~
 
-<h4>Random Numbers and histograms</h4>
+#### Random Numbers and histograms
 
  TH1::FillRandom can be used to randomly fill an histogram using
  the contents of an existing TF1 function or another
  TH1 histogram (for all dimensions).
-<p> For example the following two statements create and fill an histogram
+ For example the following two statements create and fill an histogram
  10000 times with a default gaussian distribution of mean 0 and sigma 1:
-<pre>
+~~~ {.cpp}
        TH1F h1("h1", "histo from a gaussian", 100, -3, 3);
        h1.FillRandom("gaus", 10000);
-</pre>
+~~~
  TH1::GetRandom can be used to return a random number distributed
  according the contents of an histogram.
 
-<h4>Making a copy of an histogram</h4>
+#### Making a copy of an histogram
  Like for any other ROOT object derived from TObject, one can use
  the Clone() function. This makes an identical copy of the original
  histogram including all associated errors and functions, e.g.:
-<pre>
+~~~ {.cpp}
        TH1F *hnew = (TH1F*)h->Clone("hnew");
-</pre>
+~~~
 
-<h4>Normalizing histograms</h4>
+#### Normalizing histograms
 
  One can scale an histogram such that the bins integral is equal to
  the normalization parameter via TH1::Scale(Double_t norm), where norm
  is the desired normalization divided by the integral of the histogram.
 
-<h4>Drawing histograms</h4>
+#### Drawing histograms
 
  Histograms are drawn via the THistPainter class. Each histogram has
  a pointer to its own painter (to be usable in a multithreaded program).
  Many drawing options are supported.
  See THistPainter::Paint() for more details.
-<p>
+
  The same histogram can be drawn with different options in different pads.
  When an histogram drawn in a pad is deleted, the histogram is
  automatically removed from the pad or pads where it was drawn.
@@ -434,18 +421,18 @@ All histogram classes are derived from the base class TH1
  of the histogram will be automatically shown in the pad next time
  the pad is updated. One does not need to redraw the histogram.
  To draw the current version of an histogram in a pad, one can use
-<pre>
+~~~ {.cpp}
         h->DrawCopy();
-</pre>
+~~~
  This makes a clone (see Clone below) of the histogram. Once the clone
  is drawn, the original histogram may be modified or deleted without
  affecting the aspect of the clone.
-<p>
+
  One can use TH1::SetMaximum() and TH1::SetMinimum() to force a particular
  value for the maximum or the minimum scale on the plot. (For 1-D
  histograms this means the y-axis, while for 2-D histograms these
  functions affect the z-axis).
-<p>
+
  TH1::UseCurrentStyle() can be used to change all histogram graphics
  attributes to correspond to the current selected style.
  This function must be called for each histogram.
@@ -453,8 +440,7 @@ All histogram classes are derived from the base class TH1
  the histograms to inherit automatically the current graphics style
  by calling before gROOT->ForceStyle().
 
-
-<h4>Setting Drawing histogram contour levels (2-D hists only)</h4>
+#### Setting Drawing histogram contour levels (2-D hists only)
 
  By default contours are automatically generated at equidistant
  intervals. A default value of 20 levels is used. This can be modified
@@ -462,59 +448,59 @@ All histogram classes are derived from the base class TH1
  the contours level info is used by the drawing options "cont", "surf",
  and "lego".
 
-<h4>Setting histogram graphics attributes</h4>
+#### Setting histogram graphics attributes
 
  The histogram classes inherit from the attribute classes:
  TAttLine, TAttFill, and TAttMarker.
  See the member functions of these classes for the list of options.
 
-<h4>Giving titles to the X, Y and Z axis</h4>
-<pre>
+#### Giving titles to the X, Y and Z axis
+~~~ {.cpp}
        h->GetXaxis()->SetTitle("X axis title");
        h->GetYaxis()->SetTitle("Y axis title");
-</pre>
+~~~
  The histogram title and the axis titles can be any TLatex string.
  The titles are part of the persistent histogram.
  It is also possible to specify the histogram title and the axis
  titles at creation time. These titles can be given in the "title"
  parameter. They must be separated by ";":
-<pre>
+~~~ {.cpp}
         TH1F* h=new TH1F("h", "Histogram title;X Axis;Y Axis;Z Axis", 100, 0, 1);
-</pre>
+~~~
  Any title can be omitted:
-<pre>
+~~~ {.cpp}
         TH1F* h=new TH1F("h", "Histogram title;;Y Axis", 100, 0, 1);
         TH1F* h=new TH1F("h", ";;Y Axis", 100, 0, 1);
-</pre>
+~~~
  The method SetTitle has the same syntax:
-<pre>
-</pre>
+~~~ {.cpp}
         h->SetTitle("Histogram title;Another X title Axis");
+~~~
 
-<h4>Saving/Reading histograms to/from a ROOT file</h4>
+#### Saving/Reading histograms to/from a ROOT file
 
  The following statements create a ROOT file and store an histogram
  on the file. Because TH1 derives from TNamed, the key identifier on
  the file is the histogram name:
-<pre>
+~~~ {.cpp}
         TFile f("histos.root", "new");
         TH1F h1("hgaus", "histo from a gaussian", 100, -3, 3);
         h1.FillRandom("gaus", 10000);
         h1->Write();
-</pre>
+~~~
  To read this histogram in another Root session, do:
-<pre>
+~~~ {.cpp}
         TFile f("histos.root");
         TH1F *h = (TH1F*)f.Get("hgaus");
-</pre>
+~~~
  One can save all histograms in memory to the file by:
-<pre>
+~~~ {.cpp}
         file->Write();
-</pre>
+~~~
 
-<h4>Miscelaneous operations</h4>
+#### Miscellaneous operations
 
-<pre>
+~~~ {.cpp}
         TH1::KolmogorovTest(): statistical test of compatibility in shape
                              between two histograms
         TH1::Smooth() smooths the bin contents of a 1-d histogram
@@ -523,7 +509,7 @@ All histogram classes are derived from the base class TH1
         TH1::GetStdDev(int axis)  returns the sigma distribution along axis
         TH1::GetEntries() returns the number of entries
         TH1::Reset() resets the bin contents and errors of an histogram
-</pre>
+~~~
 */
 
 TF1 *gF1=0;  //left for back compatibility (use TVirtualFitter::GetUserFunc instead)
@@ -548,7 +534,6 @@ class DifferentBinLimits: public std::exception {};
 class DifferentLabels: public std::exception {};
 
 ClassImp(TH1)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Histogram default constructor.
@@ -576,7 +561,6 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
    fZaxis.SetParent(this);
    UseCurrentStyle();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Histogram default destructor.
@@ -619,7 +603,6 @@ TH1::~TH1()
    fPainter = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor for fix bin size histograms. Creates the main histogram structure.
 /// \param[in] name name of histogram (avoid blanks)
@@ -647,7 +630,6 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
    fNcells = fXaxis.GetNbins()+2;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor for variable bin size histograms. Creates the main histogram structure.
 /// \param[in] name name of histogram (avoid blanks)
@@ -668,7 +650,6 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    else       fXaxis.Set(nbins,0,1);
    fNcells = fXaxis.GetNbins()+2;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor for variable bin size histograms.
@@ -692,7 +673,6 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    fNcells = fXaxis.GetNbins()+2;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 /// The list of functions is not copied. (Use Clone if needed)
@@ -702,7 +682,6 @@ TH1::TH1(const TH1 &h) : TNamed(), TAttLine(), TAttFill(), TAttMarker()
    ((TH1&)h).Copy(*this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///static function: cannot be inlined on Windows/NT
 
@@ -711,16 +690,14 @@ Bool_t TH1::AddDirectoryStatus()
    return fgAddDirectory;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Browe the Histogram object.
+/// Browse the Histogram object.
 
 void TH1::Browse(TBrowser *b)
 {
    Draw(b ? b->GetDrawOption() : "");
    gPad->Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates histogram basic data structure.
@@ -760,7 +737,6 @@ void TH1::Build()
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Performs the operation: this = this + c1*f1
@@ -836,7 +812,6 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
    return kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Performs the operation: this = this + c1*h1
 /// If errors are defined (see TH1::Sumw2), errors are also recalculated.
@@ -880,25 +855,25 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
    } catch(DifferentNumberOfBins&) {
       if (useMerge)
          Info("Add","Attempt to add histograms with different number of bins - trying to use TH1::Merge");
-      else { 
-         Error("Add","Attempt to add histograms with different number of bins : nbins h1 = %d , nbins h2 =  %d",GetNbinsX(), h1->GetNbinsX());      
+      else {
+         Error("Add","Attempt to add histograms with different number of bins : nbins h1 = %d , nbins h2 =  %d",GetNbinsX(), h1->GetNbinsX());
          return kFALSE;
       }
    } catch(DifferentAxisLimits&) {
-      if (useMerge) 
+      if (useMerge)
          Info("Add","Attempt to add histograms with different axis limits - trying to use TH1::Merge");
-      else 
+      else
          Warning("Add","Attempt to add histograms with different axis limits");
    } catch(DifferentBinLimits&) {
-      if (useMerge) 
+      if (useMerge)
          Info("Add","Attempt to add histograms with different bin limits - trying to use TH1::Merge");
-      else 
+      else
          Warning("Add","Attempt to add histograms with different bin limits");
-   } catch(DifferentLabels&) {      
+   } catch(DifferentLabels&) {
       // in case of different labels -
-      if (useMerge) 
+      if (useMerge)
          Info("Add","Attempt to add histograms with different labels - trying to use TH1::Merge");
-      else 
+      else
          Info("Warning","Attempt to add histograms with different labels");
    }
 
@@ -915,7 +890,7 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
    //   - Add statistics
    Double_t entries = TMath::Abs( GetEntries() + c1 * h1->GetEntries() );
 
-   // statistics can be preserbed only in case of positive coefficients
+   // statistics can be preserved only in case of positive coefficients
    // otherwise with negative c1 (histogram subtraction) one risks to get negative variances
    Bool_t resetStats = (c1 < 0);
    Double_t s1[kNstat] = {0};
@@ -995,7 +970,6 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
    return kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace contents of this histogram by the addition of h1 and h2.
 ///
@@ -1039,7 +1013,7 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 
    if (h1 != h2) {
       bool useMerge = (c1 == 1. && c2 == 1. &&  !this->TestBit(kIsAverage) && !h1->TestBit(kIsAverage) );
-      
+
       try {
          CheckConsistency(h1,h2);
          CheckConsistency(this,h1);
@@ -1048,24 +1022,24 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
          if (useMerge)
             Info("Add","Attempt to add histograms with different number of bins - trying to use TH1::Merge");
          else {
-            Error("Add","Attempt to add histograms with different number of bins : nbins h1 = %d , nbins h2 =  %d",GetNbinsX(), h1->GetNbinsX());      
+            Error("Add","Attempt to add histograms with different number of bins : nbins h1 = %d , nbins h2 =  %d",GetNbinsX(), h1->GetNbinsX());
             return kFALSE;
          }
       } catch(DifferentAxisLimits&) {
-         if (useMerge) 
+         if (useMerge)
             Info("Add","Attempt to add histograms with different axis limits - trying to use TH1::Merge");
-         else 
+         else
             Warning("Add","Attempt to add histograms with different axis limits");
       } catch(DifferentBinLimits&) {
-         if (useMerge) 
+         if (useMerge)
             Info("Add","Attempt to add histograms with different bin limits - trying to use TH1::Merge");
-         else 
+         else
             Warning("Add","Attempt to add histograms with different bin limits");
-      } catch(DifferentLabels&) {      
+      } catch(DifferentLabels&) {
          // in case of different labels -
-         if (useMerge) 
+         if (useMerge)
             Info("Add","Attempt to add histograms with different labels - trying to use TH1::Merge");
-         else 
+         else
             Info("Warning","Attempt to add histograms with different labels");
       }
 
@@ -1074,7 +1048,7 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
          // why TList takes non-const pointers ????
          l.Add(const_cast<TH1*>(h1));
          l.Add(const_cast<TH1*>(h2));
-         Reset("ICE"); 
+         Reset("ICE");
          auto iret = Merge(&l);
          return (iret >= 0);
       }
@@ -1197,7 +1171,6 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    return kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
 
@@ -1206,7 +1179,6 @@ void TH1::AddBinContent(Int_t)
    AbstractMethod("AddBinContent");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by a weight w.
 
@@ -1214,7 +1186,6 @@ void TH1::AddBinContent(Int_t, Double_t)
 {
    AbstractMethod("AddBinContent");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the flag controlling the automatic add of histograms in memory
@@ -1232,7 +1203,6 @@ void TH1::AddDirectory(Bool_t add)
 {
    fgAddDirectory = add;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram with all entries in the buffer.
@@ -1302,9 +1272,9 @@ Int_t TH1::BufferEmpty(Int_t action)
    // call DoFillN which will not put entries in the buffer as FillN does
    // set fBuffer to zero to avoid re-emptying the buffer from functions called
    // by DoFillN (e.g Sumw2)
-   buffer = fBuffer; fBuffer = 0; 
+   buffer = fBuffer; fBuffer = 0;
    DoFillN(nbentries,&buffer[2],&buffer[1],2);
-   fBuffer = buffer; 
+   fBuffer = buffer;
 
    // if action == 1 - delete the buffer
    if (action > 0) {
@@ -1323,7 +1293,6 @@ Int_t TH1::BufferEmpty(Int_t action)
    }
    return nbentries;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// accumulate arguments in buffer. When buffer is full, empty the buffer
@@ -1363,7 +1332,6 @@ Int_t TH1::BufferFill(Double_t x, Double_t w)
    return -2;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool TH1::CheckBinLimits(const TAxis* a1, const TAxis * a2)
@@ -1388,7 +1356,6 @@ bool TH1::CheckBinLimits(const TAxis* a1, const TAxis * a2)
 
    return true;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// check that axis have same labels
@@ -1421,7 +1388,6 @@ bool TH1::CheckBinLabels(const TAxis* a1, const TAxis * a2)
    return true;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Check that the axis limits of the histograms are the same
 /// if a first and last bin is passed the axis is compared between the given range
@@ -1435,7 +1401,6 @@ bool TH1::CheckAxisLimits(const TAxis *a1, const TAxis *a2 )
    }
    return true;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check that the axis are the same
@@ -1470,7 +1435,6 @@ bool TH1::CheckEqualAxes(const TAxis *a1, const TAxis *a2 )
 
    return true;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check that two sub axis are the same
@@ -1508,7 +1472,6 @@ bool TH1::CheckConsistentSubAxes(const TAxis *a1, Int_t firstBin1, Int_t lastBin
 
    return true;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check histogram compatibility
@@ -1559,9 +1522,8 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
    return ret;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// chi^{2} test for comparing weighted and unweighted histograms
+/// \f$ \chi^{2} \f$ test for comparing weighted and unweighted histograms
 ///
 /// Function: Returns p-value. Other return values are specified by the 3rd parameter
 ///
@@ -1573,12 +1535,12 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 ///   - "WW" = MC MC comparison (weighted-weighted)
 ///   - "NORM" = to be used when one or both of the histograms is scaled
 ///              but the histogram originally was unweighted
-///   - by default underflows and overlows are not included:
+///   - by default underflows and overflows are not included:
 ///      * "OF" = overflows included
 ///      * "UF" = underflows included
 ///   - "P" = print chi2, ndf, p_value, igood
 ///   - "CHI2" = returns chi2 instead of p-value
-///   - "CHI2/NDF" = returns #chi^{2}/ndf
+///   - "CHI2/NDF" = returns \f$ \chi^{2} \f$/ndf
 /// \param[in] res not empty - computes normalized residuals and returns them in this array
 ///
 /// The current implementation is based on the papers chi^{2} test for comparison
@@ -1589,11 +1551,11 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 /// Introduction:
 ///
 /// A frequently used technique in data analysis is the comparison of
-/// histograms. First suggested by Pearson [1] the #chi^{2}  test of
+/// histograms. First suggested by Pearson [1] the \f$ \chi^{2} \f$  test of
 /// homogeneity is used widely for comparing usual (unweighted) histograms.
-/// This paper describes the implementation modified #chi^{2} tests
+/// This paper describes the implementation modified \f$ \chi^{2} \f$ tests
 /// for comparison of weighted and unweighted  histograms and two weighted
-/// histograms [2] as well as usual Pearson's #chi^{2} test for
+/// histograms [2] as well as usual Pearson's \f$ \chi^{2} \f$ test for
 /// comparison two usual (unweighted) histograms.
 ///
 /// Overview:
@@ -1604,18 +1566,18 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 /// lower then some significance level. Traditionally significance levels
 /// 0.1, 0.05 and 0.01 are used. The comparison procedure should include an
 /// analysis of the residuals which is often helpful in identifying the
-/// bins of histograms responsible for a significant overall #chi^{2} value.
+/// bins of histograms responsible for a significant overall \f$ \chi^{2} \f$ value.
 /// Residuals are the difference between bin contents and expected bin
 /// contents. Most convenient for analysis are the normalized residuals. If
 /// hypotheses of identity are valid then normalized residuals are
 /// approximately independent and identically distributed random variables
 /// having N(0,1) distribution. Analysis of residuals expect test of above
 /// mentioned properties of residuals. Notice that indirectly the analysis
-/// of residuals increase the power of #chi^{2} test.
+/// of residuals increase the power of \f$ \chi^{2} \f$ test.
 ///
 /// Methods of comparison:
 ///
-/// #chi^{2} test for comparison two (unweighted) histograms:
+/// \f$ \chi^{2} \f$ test for comparison two (unweighted) histograms:
 /// Let us consider two  histograms with the  same binning and the  number
 /// of bins equal to r. Let us denote the number of events in the ith bin
 /// in the first histogram as ni and as mi in the second one. The total
@@ -1657,14 +1619,14 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 /// has approximately a \f$ \chi^{2}_{(r-1)} \f$ distribution [3].
 /// The comparison procedure can include an analysis of the residuals which
 /// is often helpful in identifying the bins of histograms responsible for
-/// a significant overall #chi^{2} value. Most convenient for
+/// a significant overall \f$ \chi^{2} \f$ value. Most convenient for
 /// analysis are the adjusted (normalized) residuals [4]
 /// \f[
 ///  r_{i} = \frac{n_{i}-N\hat{p}_{i}}{\sqrt{N\hat{p}_{i}}\sqrt{(1-N/(N+M))(1-(n_{i}+m_{i})/(N+M))}}
 /// \f]
 /// If hypotheses of  homogeneity are valid then residuals ri are
 /// approximately independent and identically distributed random variables
-/// having N(0,1) distribution. The application of the #chi^{2} test has
+/// having N(0,1) distribution. The application of the \f$ \chi^{2} \f$ test has
 /// restrictions related to the value of the expected frequencies Npi,
 /// Mpi, i=1,...,r. A conservative rule formulated in [5] is that all the
 /// expectations must be 1 or greater for both histograms. In practical
@@ -1792,10 +1754,10 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 /// End_Macro
 /// Fig 1. An example of comparison of the unweighted histogram with 200 events
 /// and the weighted histogram with 500 events:
-///   a) unweighted histogram;
-///   b) weighted histogram;
-///   c) normalized residuals plot;
-///   d) normal Q-Q plot of residuals.
+///   1. unweighted histogram;
+///   2. weighted histogram;
+///   3. normalized residuals plot;
+///   4. normal Q-Q plot of residuals.
 ///
 /// The value of the test statistic \f$ \chi^{2} \f$ is equal to
 /// 21.09 with p-value equal to 0.33, therefore the hypothesis of identity of
@@ -1814,10 +1776,10 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 ///End_Macro
 /// Fig 2. An example of comparison of the unweighted histogram with 217 events
 /// and the weighted histogram with 500 events:
-///   a) unweighted histogram;
-///   b) weighted histogram;
-///   c) normalized residuals plot;
-///   d) normal Q-Q plot of residuals.
+///   1. unweighted histogram;
+///   2. weighted histogram;
+///   3. normalized residuals plot;
+///   4. normal Q-Q plot of residuals.
 ///
 /// The value of the test statistic \f$ \chi^{2} \f$ is equal to
 /// 32.33 with p-value equal to 0.029, therefore the hypothesis of identity of
@@ -1828,23 +1790,23 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 ///
 /// References:
 ///
-/// [1] Pearson, K., 1904. On the Theory of Contingency and Its Relation to
-///  Association and Normal Correlation. Drapers' Co. Memoirs, Biometric
-///  Series No. 1, London.
-/// [2] Gagunashvili, N., 2006. \f$ \sigma^{2} \f$ test for comparison
-///  of weighted and unweighted histograms. Statistical Problems in Particle
-///  Physics, Astrophysics and Cosmology, Proceedings of PHYSTAT05,
-///  Oxford, UK, 12-15 September 2005, Imperial College Press, London, 43-44.
-///  Gagunashvili,N., Comparison of weighted and unweighted histograms,
-///  arXiv:physics/0605123, 2006.
-/// [3] Cramer, H., 1946. Mathematical methods of statistics.
-///  Princeton University Press, Princeton.
-/// [4] Haberman, S.J., 1973. The analysis of residuals in cross-classified tables.
-///  Biometrics 29, 205-220.
-/// [5] Lewontin, R.C. and Felsenstein, J., 1965. The robustness of homogeneity
-///  test in 2xN tables. Biometrics 21, 19-33.
-/// [6] Seber, G.A.F., Lee, A.J., 2003, Linear Regression Analysis.
-///  John Wiley & Sons Inc., New York.
+///  - [1] Pearson, K., 1904. On the Theory of Contingency and Its Relation to
+///    Association and Normal Correlation. Drapers' Co. Memoirs, Biometric
+///    Series No. 1, London.
+///  - [2] Gagunashvili, N., 2006. \f$ \sigma^{2} \f$ test for comparison
+///    of weighted and unweighted histograms. Statistical Problems in Particle
+///    Physics, Astrophysics and Cosmology, Proceedings of PHYSTAT05,
+///    Oxford, UK, 12-15 September 2005, Imperial College Press, London, 43-44.
+///    Gagunashvili,N., Comparison of weighted and unweighted histograms,
+///    arXiv:physics/0605123, 2006.
+///  - [3] Cramer, H., 1946. Mathematical methods of statistics.
+///    Princeton University Press, Princeton.
+///  - [4] Haberman, S.J., 1973. The analysis of residuals in cross-classified tables.
+///    Biometrics 29, 205-220.
+///  - [5] Lewontin, R.C. and Felsenstein, J., 1965. The robustness of homogeneity
+///    test in 2xN tables. Biometrics 21, 19-33.
+///  - [6] Seber, G.A.F., Lee, A.J., 2003, Linear Regression Analysis.
+///    John Wiley & Sons Inc., New York.
 
 Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
 {
@@ -1869,7 +1831,6 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
 
    return prob;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The computation routine of the Chisquare test. For the method description,
@@ -2409,7 +2370,6 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
    return fIntegral[nbins];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///  Return a pointer to the array of bins integral.
 ///  if the pointer fIntegral is null, TH1::ComputeIntegral is called
@@ -2423,7 +2383,6 @@ Double_t *TH1::GetIntegral()
    if (!fIntegral) ComputeIntegral();
    return fIntegral;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Return a pointer to an histogram containing the cumulative The
@@ -2451,24 +2410,24 @@ TH1 *TH1::GetCumulative(Bool_t forward, const char* suffix) const
    if (forward) { // Forward computation
       Double_t sum = 0.;
       for (Int_t binz = 1; binz <= nbinsz; ++binz) {
-	 for (Int_t biny = 1; biny <= nbinsy; ++biny) {
-	    for (Int_t binx = 1; binx <= nbinsx; ++binx) {
-	       const Int_t bin = hintegrated->GetBin(binx, biny, binz);
-	       sum += GetBinContent(bin);
-	       hintegrated->SetBinContent(bin, sum);
-	    }
-	 }
+    for (Int_t biny = 1; biny <= nbinsy; ++biny) {
+       for (Int_t binx = 1; binx <= nbinsx; ++binx) {
+          const Int_t bin = hintegrated->GetBin(binx, biny, binz);
+          sum += GetBinContent(bin);
+          hintegrated->SetBinContent(bin, sum);
+       }
+    }
       }
    } else { // Backward computation
       Double_t sum = 0.;
       for (Int_t binz = nbinsz; binz >= 1; --binz) {
-	 for (Int_t biny = nbinsy; biny >= 1; --biny) {
-	    for (Int_t binx = nbinsx; binx >= 1; --binx) {
-	       const Int_t bin = hintegrated->GetBin(binx, biny, binz);
-	       sum += GetBinContent(bin);
-	       hintegrated->SetBinContent(bin, sum);
-	    }
-	 }
+    for (Int_t biny = nbinsy; biny >= 1; --biny) {
+       for (Int_t binx = nbinsx; binx >= 1; --binx) {
+          const Int_t bin = hintegrated->GetBin(binx, biny, binz);
+          sum += GetBinContent(bin);
+          hintegrated->SetBinContent(bin, sum);
+       }
+    }
       }
    }
    return hintegrated;
@@ -2556,7 +2515,6 @@ void TH1::Copy(TObject &obj) const
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a complete copy of the underlying object.  If 'newname' is set,
 /// the copy's name will be set to that name.
@@ -2568,7 +2526,7 @@ TObject* TH1::Clone(const char* newname) const
 
    //Now handle the parts that Copy doesn't do
    if(fFunctions) {
-      if (obj->fFunctions) delete obj->fFunctions; 
+      if (obj->fFunctions) delete obj->fFunctions;
       obj->fFunctions = (TList*)fFunctions->Clone();
    }
    if(newname && strlen(newname) ) {
@@ -2596,7 +2554,6 @@ void TH1::DirectoryAutoAdd(TDirectory *dir)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a line.
 ///
@@ -2613,7 +2570,6 @@ Int_t TH1::DistancetoPrimitive(Int_t px, Int_t py)
    if (!fPainter) return 9999;
    return fPainter->DistancetoPrimitive(px,py);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Performs the operation: this = this/(c1*f1)
@@ -2677,7 +2633,6 @@ Bool_t TH1::Divide(TF1 *f1, Double_t c1)
    return kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Divide this histogram by h1.
 ///
@@ -2737,7 +2692,6 @@ Bool_t TH1::Divide(const TH1 *h1)
    ResetStats();
    return kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace contents of this histogram by the division of h1 by h2.
@@ -2843,7 +2797,6 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    return kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this histogram with options.
 ///
@@ -2909,7 +2862,6 @@ void TH1::Draw(Option_t *option)
    AppendPad(opt2.Data());
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this histogram and Draw in the current pad.
 ///
@@ -2934,7 +2886,6 @@ TH1 *TH1::DrawCopy(Option_t *option, const char * name_postfix) const
    return newth1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///  Draw a normalized copy of this histogram.
 ///
@@ -2944,7 +2895,7 @@ TH1 *TH1::DrawCopy(Option_t *option, const char * name_postfix) const
 ///  sum of weights (excluding under and overflow) is equal to norm.
 ///  Note that the returned normalized histogram is not added to the list
 ///  of histograms in the current directory in memory.
-///  It is the user's responsability to delete this histogram.
+///  It is the user's responsibility to delete this histogram.
 ///  The kCanDelete bit is set for the returned object. If a pad containing
 ///  this copy is cleared, the histogram will be automatically deleted.
 ///
@@ -2976,7 +2927,6 @@ TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
    return h;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Display a panel with all histogram drawing options.
 ///
@@ -2987,7 +2937,6 @@ void TH1::DrawPanel()
    if (!fPainter) {Draw(); if (gPad) gPad->Update();}
    if (fPainter) fPainter->DrawPanel();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate function f1 at the center of bins of this histogram.
@@ -3040,7 +2989,6 @@ void TH1::Eval(TF1 *f1, Option_t *option)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
@@ -3053,7 +3001,6 @@ void TH1::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    if (fPainter) fPainter->ExecuteEvent(event, px, py);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function allows to do discrete Fourier transforms of TH1 and TH2.
@@ -3142,7 +3089,6 @@ TH1* TH1::FFT(TH1* h_output, Option_t *option)
    return h_output;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin with abscissa X by 1.
 ///
@@ -3174,7 +3120,6 @@ Int_t TH1::Fill(Double_t x)
    fTsumwx2 += x*x;
    return bin;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin with abscissa X with a weight w.
@@ -3211,7 +3156,6 @@ Int_t TH1::Fill(Double_t x, Double_t w)
    return bin;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin with namex with a weight w
 ///
@@ -3247,13 +3191,12 @@ Int_t TH1::Fill(const char *namex, Double_t w)
    return bin;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill this histogram with an array x and weights w.
 ///
 /// \param[in] ntimes number of entries in arrays x and w (array size must be ntimes*stride)
 /// \param[in] x array of values to be histogrammed
-/// \param[in[ w array of weighs
+/// \param[in] w array of weighs
 /// \param[in] stride step size through arrays x and w
 ///
 /// If the weight is not equal to 1, the storage of the sum of squares of
@@ -3310,7 +3253,6 @@ void TH1::DoFillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stri
       fTsumwx2 += z*x[i]*x[i];
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in function fname.
@@ -3377,7 +3319,6 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
    delete [] integral;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in histogram h.
 ///
@@ -3419,7 +3360,7 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
             if (fSumw2.fN) fSumw2.fArray[bin] += cont;
          }
 
-         // fix for the fluctations in the total number n
+         // fix for the fluctuations in the total number n
          // since we use Poisson instead of multinomial
          // add a correction to have ntimes as generated entries
          Int_t i;
@@ -3462,7 +3403,6 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return Global bin number corresponding to x,y,z
 ///
@@ -3495,7 +3435,6 @@ Int_t TH1::FindBin(Double_t x, Double_t y, Double_t z)
    }
    return -1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return Global bin number corresponding to x,y,z.
@@ -3530,7 +3469,6 @@ Int_t TH1::FindFixBin(Double_t x, Double_t y, Double_t z) const
    return -1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find first bin with content > threshold for axis (1=x, 2=y, 3=z)
 /// if no bins with content > threshold is found the function returns -1.
@@ -3538,7 +3476,7 @@ Int_t TH1::FindFixBin(Double_t x, Double_t y, Double_t z) const
 Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis) const
 {
    if (fBuffer) ((TH1*)this)->BufferEmpty();
-   
+
    if (axis != 1) {
       Warning("FindFirstBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
@@ -3550,7 +3488,6 @@ Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis) const
    return -1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find last bin with content > threshold for axis (1=x, 2=y, 3=z)
 /// if no bins with content > threshold is found the function returns -1.
@@ -3558,7 +3495,7 @@ Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis) const
 Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis) const
 {
    if (fBuffer) ((TH1*)this)->BufferEmpty();
-   
+
    if (axis != 1) {
       Warning("FindLastBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
@@ -3570,7 +3507,6 @@ Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis) const
    return -1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// search object named name in the list of functions
 
@@ -3580,7 +3516,6 @@ TObject *TH1::FindObject(const char *name) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// search object obj in the list of functions
 
@@ -3589,7 +3524,6 @@ TObject *TH1::FindObject(const TObject *obj) const
    if (fFunctions) return fFunctions->FindObject(obj);
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fit histogram with function fname.
@@ -3632,7 +3566,6 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
       return Fit(f1,option,goption,xxmin,xxmax);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fit histogram with function f1.
@@ -3763,7 +3696,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// When using option "WW" these bins will be considered in the chi2 fit with an error of 1.
 /// Note that if the histogram is having bins with zero content and non zero-errors they are considered as
 /// any other bins in the fit. Instead bins with zero error and non-zero content are excluded in the chi2 fit.
-/// A likelihood fit should also not be peformed on such an histogram, since we are assuming a wrong pdf for each bin.
+/// A likelihood fit should also not be performed on such an histogram, since we are assuming a wrong pdf for each bin.
 /// In general, one should not fit an histogram with non-empty bins and zero errors, apart if all the bins have zero errors.
 /// In this case one could use the option "w", which gives a weight=1 for each bin (unweighted least-square fit).
 ///
@@ -3867,7 +3800,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///
 /// ## Access to the Minimizer information during fitting
 /// This function calls, the ROOT::Fit::FitObject function implemented in HFitImpl.cxx
-/// which uses the ROOT::Fit::Fitter class. The Fitter class creates the objective fuction
+/// which uses the ROOT::Fit::Fitter class. The Fitter class creates the objective function
 /// (e.g. chi2 or likelihood) and uses an implementation of the  Minimizer interface for minimizing
 /// the function.
 /// The default minimizer is Minuit (class TMinuitMinimizer which calls TMinuit).
@@ -3877,7 +3810,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// A different fitter can also be set via ROOT::Math::MinimizerOptions::SetDefaultMinimizer
 /// (or TVirtualFitter::SetDefaultFitter).
 /// For example ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiMin","BFGS");
-/// will set the usdage of the BFGS algorithm of the GSL multi-dimensional minimization
+/// will set the usage of the BFGS algorithm of the GSL multi-dimensional minimization
 /// (implemented in libMathMore). ROOT::Math::MinimizerOptions can be used also to set other
 /// default options, like maximum number of function calls, minimization tolerance or print
 /// level. See the documentation of this class.
@@ -3901,7 +3834,6 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 
    return ROOT::Fit::FitObject(this, f1 , fitOption , minOption, goption, range);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Display a panel with all histogram fit options.
@@ -3929,7 +3861,6 @@ void TH1::FitPanel()
          Error("FitPanel", "Unable to find the FitPanel plug-in");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return an histogram containing the asymmetry of this histogram with h2,
 /// where the asymmetry is defined as:
@@ -3941,7 +3872,7 @@ void TH1::FitPanel()
 /// histograms, and dc2 is the error on this weight.  This is useful, for example,
 /// when forming an asymmetry between two histograms from 2 different data sets that
 /// need to be normalized to each other in some way.  The function calculates
-/// the errors asumming Poisson statistics on h1 and h2 (that is, dh = sqrt(h)).
+/// the errors assuming Poisson statistics on h1 and h2 (that is, dh = sqrt(h)).
 ///
 /// example:  assuming 'h1' and 'h2' are already filled
 ///
@@ -4022,7 +3953,6 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
    return asym;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// static function
 /// return the default buffer size for automatic histograms
@@ -4033,7 +3963,6 @@ Int_t TH1::GetDefaultBufferSize()
    return fgBufferSize;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// return kTRUE if TH1::Sumw2 must be called when creating new histograms.
 /// see TH1::SetDefaultSumw2.
@@ -4042,7 +3971,6 @@ Bool_t TH1::GetDefaultSumw2()
 {
    return fgDefaultSumw2;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return the current number of entries
@@ -4057,13 +3985,12 @@ Double_t TH1::GetEntries() const
    return fEntries;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// number of effective entries of the histogram,
 /// neff = (Sum of weights )^2 / (Sum of weight^2 )
 /// In case of an unweighted histogram this number is equivalent to the
 /// number of entries of the histogram.
-/// For a weighted histogram, this number corresponds to the hypotetical number of unweighted entries
+/// For a weighted histogram, this number corresponds to the hypothetical number of unweighted entries
 /// a histogram would need to have the same statistical power as this weighted histogram.
 /// Note: The underflow/overflow are included if one has set the TH1::StatOverFlows flag
 /// and if the statistics has been computed at filling time.
@@ -4076,7 +4003,6 @@ Double_t TH1::GetEffectiveEntries() const
    return (s[1] ? s[0]*s[0]/s[1] : TMath::Abs(s[0]) );
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Redefines TObject::GetObjectInfo.
 /// Displays the histogram info (bin number, contents, integral up to bin
@@ -4086,7 +4012,6 @@ char *TH1::GetObjectInfo(Int_t px, Int_t py) const
 {
    return ((TH1*)this)->GetPainter()->GetObjectInfo(px,py);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return pointer to painter
@@ -4110,7 +4035,6 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 
    return fPainter;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Quantiles for this histogram
@@ -4216,7 +4140,6 @@ Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    return nq;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Decode string choptin and fill fitOption structure.
 
@@ -4225,7 +4148,6 @@ Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &fitOption)
    ROOT::Fit::FitOptionsMake(ROOT::Fit::kHistogram, choptin,fitOption);
    return 1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Initial values of parameters for a gaussian.
@@ -4283,7 +4205,6 @@ void H1InitGaus()
    f1->SetParLimits(2,0,10*stddev);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Initial values of parameters for an exponential.
 
@@ -4303,7 +4224,6 @@ void H1InitExpo()
    f1->SetParameter(1,slope);
 
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Initial values of parameters for a polynom.
@@ -4327,7 +4247,6 @@ void H1InitPolynom()
    }
    for (Int_t i=0;i<npar;i++) f1->SetParameter(i, fitpar[i]);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Least squares lpolynomial fitting without weights.
@@ -4392,7 +4311,6 @@ void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a)
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Least square linear fit without weights.
 ///
@@ -4439,7 +4357,6 @@ void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifai
    a1 = (fn*xybar - xbar*ybar) / det;
 
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Extracted from CERN Program library routine DSEQN.
@@ -4505,7 +4422,6 @@ void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k,
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return Global bin number corresponding to binx,y,z.
 ///
@@ -4540,7 +4456,6 @@ Int_t TH1::GetBin(Int_t binx, Int_t, Int_t) const
    return binx;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// return binx, biny, binz corresponding to the global bin number globalbin
 /// see TH1::GetBin function above
@@ -4568,7 +4483,6 @@ void TH1::GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) cons
       binz = ((binglobal-binx)/nx -biny)/ny;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return a random number distributed according the histogram bin contents.
@@ -4606,7 +4520,6 @@ Double_t TH1::GetRandom() const
    return x;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return content of bin number bin.
 ///
@@ -4634,7 +4547,6 @@ Double_t TH1::GetBinContent(Int_t bin) const
    return RetrieveBinContent(bin);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// compute first binx in the range [firstx,lastx] for which
 /// diff = abs(bin_content-c) <= maxdiff
@@ -4658,7 +4570,7 @@ Double_t TH1::GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx, Int_t las
    }
 
    if (fBuffer) ((TH1*)this)->BufferEmpty();
-   
+
    if (firstx <= 0) firstx = 1;
    if (lastx < firstx) lastx = fXaxis.GetNbins();
    Int_t binminx = 0;
@@ -4672,7 +4584,6 @@ Double_t TH1::GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx, Int_t las
    return curmax;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Given a point x, approximates the value via linear interpolation
 /// based on the two nearest bin centers
@@ -4681,7 +4592,7 @@ Double_t TH1::GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx, Int_t las
 Double_t TH1::Interpolate(Double_t x)
 {
    if (fBuffer) ((TH1*)this)->BufferEmpty();
-    
+
    Int_t xbin = FindBin(x);
    Double_t x0,x1,y0,y1;
 
@@ -4705,7 +4616,6 @@ Double_t TH1::Interpolate(Double_t x)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 Double_t TH1::Interpolate(Double_t, Double_t)
@@ -4715,22 +4625,20 @@ Double_t TH1::Interpolate(Double_t, Double_t)
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+// /Not yet implemented
 
 Double_t TH1::Interpolate(Double_t, Double_t, Double_t)
 {
-   //Not yet implemented
    Error("Interpolate","This function must be called with 1 argument for a TH1");
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Return true if the bin is overflow.
 
 Bool_t TH1::IsBinOverflow(Int_t bin) const
 {
-   // Return true if the bin is overflow.
    Int_t binx, biny, binz;
    GetBinXYZ(bin, binx, biny, binz);
 
@@ -4747,12 +4655,11 @@ Bool_t TH1::IsBinOverflow(Int_t bin) const
       return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Return true if the bin is overflow.
 
 Bool_t TH1::IsBinUnderflow(Int_t bin) const
 {
-   // Return true if the bin is overflow.
    Int_t binx, biny, binz;
    GetBinXYZ(bin, binx, biny, binz);
 
@@ -4765,7 +4672,6 @@ Bool_t TH1::IsBinUnderflow(Int_t bin) const
    else
       return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reduce the number of bins for the axis passed in the option to the number of bins having a label.
@@ -4833,7 +4739,6 @@ void TH1::LabelsDeflate(Option_t *ax)
    delete hold;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Double the number of bins for axis.
 /// Refill histogram
@@ -4885,7 +4790,6 @@ void TH1::LabelsInflate(Option_t *ax)
    delete hold;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set option(s) to draw axis with labels
 /// \param[in] option
@@ -4896,6 +4800,7 @@ void TH1::LabelsInflate(Option_t *ax)
 ///     - "v" draw labels vertical
 ///     - "u" draw labels up (end of label right adjusted)
 ///     - "d" draw labels down (start of label left adjusted)
+/// \param[in] ax axis
 
 void TH1::LabelsOption(Option_t *option, Option_t *ax)
 {
@@ -5142,14 +5047,12 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
    delete labold;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static inline Bool_t AlmostEqual(Double_t a, Double_t b, Double_t epsilon = 0.00000001)
 {
    return TMath::Abs(a - b) < epsilon;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -5175,7 +5078,6 @@ static inline bool IsEquidistantBinning(const TAxis& axis)
    }
    return isEquidistant;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Same limits and bins.
@@ -5260,7 +5162,6 @@ Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
    return kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add all histograms in the collection to this histogram.
 /// This function computes the min/max for the x axis,
@@ -5280,24 +5181,24 @@ Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
 ///
 /// ~~~{.cpp}
 /// void atest() {
-/// TH1F *h1 = new TH1F("h1","h1",110,-110,0);
-/// TH1F *h2 = new TH1F("h2","h2",220,0,110);
-/// TH1F *h3 = new TH1F("h3","h3",330,-55,55);
-/// TRandom r;
-/// for (Int_t i=0;i<10000;i++) {
-///   h1->Fill(r.Gaus(-55,10));
-///   h2->Fill(r.Gaus(55,10));
-///   h3->Fill(r.Gaus(0,10));
-/// }
+///   TH1F *h1 = new TH1F("h1","h1",110,-110,0);
+///   TH1F *h2 = new TH1F("h2","h2",220,0,110);
+///   TH1F *h3 = new TH1F("h3","h3",330,-55,55);
+///   TRandom r;
+///   for (Int_t i=0;i<10000;i++) {
+///      h1->Fill(r.Gaus(-55,10));
+///      h2->Fill(r.Gaus(55,10));
+///      h3->Fill(r.Gaus(0,10));
+///   }
 ///
-/// TList *list = new TList;
-/// list->Add(h1);
-/// list->Add(h2);
-/// list->Add(h3);
-/// TH1F *h = (TH1F*)h1->Clone("h");
-/// h->Reset();
-/// h->Merge(list);
-/// h->Draw();
+///   TList *list = new TList;
+///   list->Add(h1);
+///   list->Add(h2);
+///   list->Add(h3);
+///   TH1F *h = (TH1F*)h1->Clone("h");
+///   h->Reset();
+///   h->Merge(list);
+///   h->Draw();
 /// }
 /// ~~~
 
@@ -5538,7 +5439,7 @@ Long64_t TH1::Merge(TCollection *li)
                   if (!allSameLimits)  {
                      if ( binx==0 || binx== nx+1) {
                         Error("Merge", "Cannot merge histograms - the histograms have"
-                              " different limits and undeflows/overflows are present."
+                              " different limits and underflows/overflows are present."
                               " The initial histogram is now broken!");
                         return -1;
                      }
@@ -5604,7 +5505,6 @@ Long64_t TH1::Merge(TCollection *li)
    return (Long64_t)nentries;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Performs the operation: this = this*c1*f1
 /// if errors are defined (see TH1::Sumw2), errors are also recalculated.
@@ -5663,7 +5563,6 @@ Bool_t TH1::Multiply(TF1 *f1, Double_t c1)
    return kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Multiply this histogram by h1.
 ///
@@ -5721,7 +5620,6 @@ Bool_t TH1::Multiply(const TH1 *h1)
    ResetStats();
    return kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace contents of this histogram by multiplication of h1 by h2.
@@ -5787,7 +5685,6 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
    return kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Control routine to paint any kind of histograms.
 ///
@@ -5803,7 +5700,6 @@ void TH1::Paint(Option_t *option)
       else                    fPainter->Paint(fOption.Data());
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Rebin this histogram
@@ -6021,7 +5917,6 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    return hnew;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// finds new limits for the axis so that *point* is within the range and
 /// the limits are compatible with the previous ones (see TH1::Merge).
@@ -6074,7 +5969,6 @@ Bool_t TH1::FindNewAxisLimits(const TAxis* axis, const Double_t point, Double_t&
 
    return kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Histogram is resized along axis such that x is in the axis range.
@@ -6139,7 +6033,6 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
    delete hold;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Recursively remove object from the list of functions
 
@@ -6149,7 +6042,6 @@ void TH1::RecursiveRemove(TObject *obj)
       if (!fFunctions->TestBit(kInvalidObject)) fFunctions->RecursiveRemove(obj);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Multiply this histogram by a constant c1.
@@ -6189,7 +6081,6 @@ void TH1::Scale(Double_t c1, Option_t *option)
    for (Int_t i = 0; i < ncontours; ++i) levels[i] *= c1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// returns true if all axes are extendable
 
@@ -6201,7 +6092,6 @@ Bool_t TH1::CanExtendAllAxes() const
 
    return canExtend;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// make the histogram axes extendable / not extendable according to the bit mask
@@ -6230,7 +6120,6 @@ UInt_t TH1::SetCanExtend(UInt_t extendBitMask)
    return oldExtendBitMask;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// static function to set the default buffer size for automatic histograms.
 /// When an histogram is created with one of its axis lower limit greater
@@ -6242,7 +6131,6 @@ void TH1::SetDefaultBufferSize(Int_t buffersize)
    fgBufferSize = buffersize > 0 ? buffersize : 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// static function.
 /// When this static function is called with sumw2=kTRUE, all new
@@ -6253,7 +6141,6 @@ void TH1::SetDefaultSumw2(Bool_t sumw2)
 {
    fgDefaultSumw2 = sumw2;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change (i.e. set) the title
@@ -6307,7 +6194,6 @@ void TH1::SetTitle(const char *title)
 
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// smooth array xx, translation of Hbook routine hsmoof.F
@@ -6427,7 +6313,6 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Smooth bin contents of this histogram.
 /// if option contains "R" smoothing is applied only to the bins
@@ -6477,7 +6362,6 @@ void  TH1::Smooth(Int_t ntimes, Option_t *option)
    if (gPad) gPad->Modified();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// if flag=kTRUE, underflows and overflows are used by the Fill functions
 /// in the computation of statistics (mean value, StdDev).
@@ -6487,7 +6371,6 @@ void  TH1::StatOverflows(Bool_t flag)
 {
    fgStatOverflows = flag;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream a class object.
@@ -6558,7 +6441,6 @@ void TH1::Streamer(TBuffer &b)
       b.WriteClassBuffer(TH1::Class(),this);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print some global quantities for this histogram.
@@ -6644,7 +6526,6 @@ void TH1::Print(Option_t *option) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Using the current bin info, recompute the arrays for contents and errors
 
@@ -6655,7 +6536,6 @@ void TH1::Rebuild(Option_t *)
       fSumw2.Set(fNcells);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset this histogram: contents, errors, etc.
@@ -6714,7 +6594,6 @@ void TH1::Reset(Option_t *option)
    if(stats) fFunctions->Add(stats);
    fContour.Set(0);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
@@ -6855,7 +6734,6 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TH1::SavePrimitiveHelp(out, hname, option);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// helper function for the SavePrimitive functions from TH1
 /// or classes derived from TH1, eg TProfile, TProfile2D.
@@ -6942,7 +6820,6 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///Copy current attributes from/to current style
 
@@ -6987,7 +6864,6 @@ void TH1::UseCurrentStyle()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// For axis = 1,2 or 3 returns the mean value of the histogram along
 /// X,Y or Z axis.
@@ -7028,7 +6904,6 @@ Double_t TH1::GetMean(Int_t axis) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return standard error of mean of this histogram along the X axis.
 ///
@@ -7045,7 +6920,6 @@ Double_t TH1::GetMeanError(Int_t axis) const
 {
    return GetMean(axis+10);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the Standard Deviation (Sigma).
@@ -7085,7 +6959,6 @@ Double_t TH1::GetStdDev(Int_t axis) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return error of standard deviation estimation for Normal distribution
 ///
@@ -7105,7 +6978,6 @@ Double_t TH1::GetStdDevError(Int_t axis) const
 {
    return GetStdDev(axis+10);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///For axis = 1, 2 or 3 returns skewness of the histogram along x, y or z axis.
@@ -7175,7 +7047,6 @@ Double_t TH1::GetSkewness(Int_t axis) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///For axis =1, 2 or 3 returns kurtosis of the histogram along x, y or z axis.
 ///Kurtosis(gaussian(0, 1)) = 0.
@@ -7243,7 +7114,6 @@ Double_t TH1::GetKurtosis(Int_t axis) const
       return 0;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// fill the array stats from the contents of this histogram
@@ -7315,7 +7185,6 @@ void TH1::GetStats(Double_t *stats) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace current statistics with the values in array stats
 
@@ -7326,7 +7195,6 @@ void TH1::PutStats(Double_t *stats)
    fTsumwx  = stats[2];
    fTsumwx2 = stats[3];
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the statistics including the number of entries
@@ -7345,7 +7213,6 @@ void TH1::ResetStats()
    // use effective entries for weighted histograms:  (sum_w) ^2 / sum_w2
    if (fSumw2.fN > 0 && fTsumw > 0 && stats[1] > 0 ) fEntries = stats[0]*stats[0]/ stats[1];
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the sum of weights excluding under/overflows.
@@ -7367,7 +7234,6 @@ Double_t TH1::GetSumOfWeights() const
    return sum;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///Return integral of bin contents. Only bins in the bins range are considered.
 /// By default the integral is computed as the sum of bin contents in the range.
@@ -7378,7 +7244,6 @@ Double_t TH1::Integral(Option_t *option) const
 {
    return Integral(fXaxis.GetFirst(),fXaxis.GetLast(),option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Return integral of bin contents in range [binx1,binx2]
@@ -7392,20 +7257,18 @@ Double_t TH1::Integral(Int_t binx1, Int_t binx2, Option_t *option) const
    return DoIntegral(binx1,binx2,0,-1,0,-1,err,option);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///Return integral of bin contents in range [binx1,binx2] and its error
 /// By default the integral is computed as the sum of bin contents in the range.
 /// if option "width" is specified, the integral is the sum of
 /// the bin contents multiplied by the bin width in x.
-/// the error is computed using error propagation from the bin errors assumming that
+/// the error is computed using error propagation from the bin errors assuming that
 /// all the bins are uncorrelated
 
 Double_t TH1::IntegralAndError(Int_t binx1, Int_t binx2, Double_t & error, Option_t *option) const
 {
    return DoIntegral(binx1,binx2,0,-1,0,-1,error,option,kTRUE);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// internal function compute integral and optionally the error  between the limits
@@ -7415,7 +7278,7 @@ Double_t TH1::DoIntegral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int
                           Option_t *option, Bool_t doError) const
 {
    if (fBuffer) ((TH1*)this)->BufferEmpty();
-   
+
    Int_t nx = GetNbinsX() + 2;
    if (binx1 < 0) binx1 = 0;
    if (binx2 >= nx || binx2 < binx1) binx2 = nx - 1;
@@ -7472,7 +7335,6 @@ Double_t TH1::DoIntegral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int
    return integral;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Statistical test of compatibility in shape between
 /// this histogram and h2, using the Anderson-Darling 2 sample test.
@@ -7509,7 +7371,7 @@ Double_t TH1::AndersonDarlingTest(const TH1 *h2, Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Same funciton as above but returning also the test statistic value
+/// Same function as above but returning also the test statistic value
 
 Double_t TH1::AndersonDarlingTest(const TH1 *h2, Double_t & advalue) const
 {
@@ -7521,10 +7383,10 @@ Double_t TH1::AndersonDarlingTest(const TH1 *h2, Double_t & advalue) const
    // empty the buffer. Probably we could add as an unbinned test
    if (fBuffer) ((TH1*)this)->BufferEmpty();
 
-   // use the BinData class 
-   ROOT::Fit::BinData data1; 
+   // use the BinData class
+   ROOT::Fit::BinData data1;
    ROOT::Fit::BinData data2;
-   
+
    ROOT::Fit::FillData(data1, this, 0);
    ROOT::Fit::FillData(data2, h2, 0);
 
@@ -7543,6 +7405,7 @@ Double_t TH1::AndersonDarlingTest(const TH1 *h2, Double_t & advalue) const
 ///
 /// Default: Ignore under- and overflow bins in comparison
 ///
+/// \param[in] h2 histogram
 /// \param[in] option is a character string to specify options
 ///    - "U" include Underflows in test  (also for 2-dim)
 ///    -  "O" include Overflows     (also valid for 2-dim)
@@ -7764,7 +7627,6 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    else                       return prob;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace bin contents by the contents of array content
 
@@ -7774,7 +7636,6 @@ void TH1::SetContent(const Double_t *content)
    fTsumw = 0;
    for (Int_t i = 0; i < fNcells; ++i) UpdateBinContent(i, content[i]);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return contour values into array levels if pointer levels is non zero
@@ -7798,7 +7659,6 @@ Int_t TH1::GetContour(Double_t *levels)
    return nlevels;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return value of contour number level
 /// use GetContour to return the array of all contour levels
@@ -7807,7 +7667,6 @@ Double_t TH1::GetContourLevel(Int_t level) const
 {
    return (level >= 0 && level < fContour.fN) ? fContour.fArray[level] : 0.0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the value of contour number "level" in Pad coordinates ie: if the Pad
@@ -7829,7 +7688,6 @@ Double_t TH1::GetContourLevelPad(Int_t level) const
    return zlevel;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// set the maximum number of entries to be kept in the buffer
 
@@ -7849,7 +7707,6 @@ void TH1::SetBuffer(Int_t buffersize, Option_t * /*option*/)
    fBuffer = new Double_t[fBufferSize];
    memset(fBuffer,0,sizeof(Double_t)*fBufferSize);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the number and values of contour levels.
@@ -7895,7 +7752,6 @@ void TH1::SetContour(Int_t  nlevels, const Double_t *levels)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set value for one contour level.
 
@@ -7905,7 +7761,6 @@ void TH1::SetContourLevel(Int_t level, Double_t value)
    SetBit(kUserContour);
    fContour.fArray[level] = value;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return maximum value smaller than maxval of bins in the range,
@@ -7944,7 +7799,6 @@ Double_t TH1::GetMaximum(Double_t maxval) const
    return maximum;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return location of bin with maximum value in the range.
 
@@ -7953,7 +7807,6 @@ Int_t TH1::GetMaximumBin() const
    Int_t locmax, locmay, locmaz;
    return GetMaximumBin(locmax, locmay, locmaz);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return location of bin with maximum value in the range.
@@ -7990,7 +7843,6 @@ Int_t TH1::GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const
    }
    return locm;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return minimum value larger than minval of bins in the range,
@@ -8029,7 +7881,6 @@ Double_t TH1::GetMinimum(Double_t minval) const
    return minimum;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return location of bin with minimum value in the range.
 
@@ -8039,7 +7890,6 @@ Int_t TH1::GetMinimumBin() const
    return GetMinimumBin(locmix, locmiy, locmiz);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return location of bin with minimum value in the range.
 
@@ -8047,7 +7897,7 @@ Int_t TH1::GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz) const
 {
       // empty the buffer
    if (fBuffer) ((TH1*)this)->BufferEmpty();
-   
+
    Int_t bin, binx, biny, binz;
    Int_t locm;
    Int_t xfirst  = fXaxis.GetFirst();
@@ -8076,7 +7926,6 @@ Int_t TH1::GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz) const
    return locm;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Redefine  x axis parameters.
 ///
@@ -8102,7 +7951,6 @@ void TH1::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
       fSumw2.Set(fNcells);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Redefine  x axis parameters with variable bin sizes.
@@ -8131,7 +7979,6 @@ void TH1::SetBins(Int_t nx, const Double_t *xBins)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Redefine  x and y axis parameters.
 ///
@@ -8158,7 +8005,6 @@ void TH1::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymi
       fSumw2.Set(fNcells);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Redefine  x and y axis parameters with variable bin sizes.
@@ -8188,7 +8034,6 @@ void TH1::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBi
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Redefine  x, y and z axis parameters.
 ///
@@ -8216,7 +8061,6 @@ void TH1::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymi
       fSumw2.Set(fNcells);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Redefine  x, y and z axis parameters with variable bin sizes.
@@ -8248,7 +8092,6 @@ void TH1::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBi
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// By default when an histogram is created, it is added to the list
 /// of histogram objects in the current directory in memory.
@@ -8270,7 +8113,6 @@ void TH1::SetDirectory(TDirectory *dir)
    if (fDirectory) fDirectory->Append(this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace bin errors by values in array error.
 
@@ -8278,7 +8120,6 @@ void TH1::SetError(const Double_t *error)
 {
    for (Int_t i = 0; i < fNcells; ++i) SetBinError(i, error[i]);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the name of this histogram
@@ -8295,7 +8136,6 @@ void TH1::SetName(const char *name)
    if (fDirectory) fDirectory->Append(this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the name and title of this histogram
 
@@ -8306,7 +8146,6 @@ void TH1::SetNameTitle(const char *name, const char *title)
    SetName(name);
    SetTitle(title);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set statistics option on/off
@@ -8331,7 +8170,6 @@ void TH1::SetStats(Bool_t stats)
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create structure to store sum of squares of weights.
@@ -8370,7 +8208,6 @@ void TH1::Sumw2(Bool_t flag)
          fSumw2.fArray[i] = TMath::Abs(RetrieveBinContent(i));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to function with name.
 ///
@@ -8382,7 +8219,6 @@ TF1 *TH1::GetFunction(const char *name) const
 {
    return (TF1*)fFunctions->FindObject(name);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return value of error associated to bin number bin.
@@ -8400,7 +8236,6 @@ Double_t TH1::GetBinError(Int_t bin) const
 
    return TMath::Sqrt(TMath::Abs(RetrieveBinContent(bin)));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return lower error associated to bin number bin.
@@ -8429,7 +8264,6 @@ Double_t TH1::GetBinErrorLow(Int_t bin) const
    if (n == 0) return 0;
    return c - ROOT::Math::gamma_quantile( alpha/2, n, 1.);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return upper error associated to bin number bin.
@@ -8463,7 +8297,7 @@ Double_t TH1::GetBinErrorUp(Int_t bin) const
 
 //L.M. These following getters are useless and should be probably deprecated
 ////////////////////////////////////////////////////////////////////////////////
-/// return bin center for 1D historam
+/// return bin center for 1D histogram
 /// Better to use h1.GetXaxis().GetBinCenter(bin)
 
 Double_t TH1::GetBinCenter(Int_t bin) const
@@ -8474,7 +8308,7 @@ Double_t TH1::GetBinCenter(Int_t bin) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return bin lower edge for 1D historam
+/// return bin lower edge for 1D histogram
 /// Better to use h1.GetXaxis().GetBinLowEdge(bin)
 
 Double_t TH1::GetBinLowEdge(Int_t bin) const
@@ -8485,7 +8319,7 @@ Double_t TH1::GetBinLowEdge(Int_t bin) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return bin width for 1D historam
+/// return bin width for 1D histogram
 /// Better to use h1.GetXaxis().GetBinWidth(bin)
 
 Double_t TH1::GetBinWidth(Int_t bin) const
@@ -8531,7 +8365,6 @@ void TH1::SetBinError(Int_t bin, Double_t error)
    fSumw2.fArray[bin] = error * error;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set bin content
 /// see convention for numbering bins in TH1::GetBin
@@ -8555,7 +8388,6 @@ void TH1::SetBinContent(Int_t bin, Double_t content)
    UpdateBinContent(bin, content);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// see convention for numbering bins in TH1::GetBin
 
@@ -8565,7 +8397,6 @@ void TH1::SetBinError(Int_t binx, Int_t biny, Double_t error)
    if (biny < 0 || biny > fYaxis.GetNbins() + 1) return;
    SetBinError(GetBin(binx, biny), error);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// see convention for numbering bins in TH1::GetBin
@@ -8577,7 +8408,6 @@ void TH1::SetBinError(Int_t binx, Int_t biny, Int_t binz, Double_t error)
    if (binz < 0 || binz > fZaxis.GetNbins() + 1) return;
    SetBinError(GetBin(binx, biny, binz), error);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function calculates the background spectrum in this histogram.
@@ -8615,7 +8445,6 @@ TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
                                             (ULong_t)this, niter, option));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface to TSpectrum::Search.
 /// The function finds peaks in this histogram where the width is > sigma
@@ -8629,8 +8458,6 @@ Int_t TH1::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
    return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum::StaticSearch((TH1*)0x%lx,%g,\"%s\",%g)",
                                              (ULong_t)this, sigma, option, threshold));
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// For a given transform (first parameter), fills the histogram (second parameter)
@@ -8759,7 +8586,6 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
    return hout;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// raw retrieval of bin content on internal data structure
 /// see convention for numbering bins in TH1::GetBin
@@ -8769,7 +8595,6 @@ Double_t TH1::RetrieveBinContent(Int_t) const
    AbstractMethod("RetrieveBinContent");
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// raw update of bin content on internal data structure
@@ -8789,14 +8614,12 @@ std::string cling::printValue(TH1 *val) {
   return strm.str();
 }
 
-
 //______________________________________________________________________________
 //                     TH1C methods
 // TH1C : histograms with one byte per channel.   Maximum bin content = 127
 //______________________________________________________________________________
 
 ClassImp(TH1C)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -8807,7 +8630,6 @@ TH1C::TH1C(): TH1(), TArrayC()
    SetBinsLength(3);
    if (fgDefaultSumw2) Sumw2();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with fix bins of type char (one byte per channel)
@@ -8823,7 +8645,6 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    if (fgDefaultSumw2) Sumw2();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with variable bins of type char (one byte per channel)
 /// (see TH1::TH1 for explanation of parameters)
@@ -8835,7 +8656,6 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with variable bins of type char (one byte per channel)
@@ -8849,14 +8669,12 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    if (fgDefaultSumw2) Sumw2();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TH1C::~TH1C()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
@@ -8866,7 +8684,6 @@ TH1C::TH1C(const TH1C &h1c) : TH1(), TArrayC()
    ((TH1C&)h1c).Copy(*this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
 
@@ -8874,7 +8691,6 @@ void TH1C::AddBinContent(Int_t bin)
 {
    if (fArray[bin] < 127) fArray[bin]++;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
@@ -8887,7 +8703,6 @@ void TH1C::AddBinContent(Int_t bin, Double_t w)
    if (newval >  127) fArray[bin] =  127;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this to newth1
 
@@ -8895,7 +8710,6 @@ void TH1C::Copy(TObject &newth1) const
 {
    TH1::Copy(newth1);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset.
@@ -8905,7 +8719,6 @@ void TH1C::Reset(Option_t *option)
    TH1::Reset(option);
    TArrayC::Reset();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set total number of bins including under/overflow
@@ -8918,7 +8731,6 @@ void TH1C::SetBinsLength(Int_t n)
    TArrayC::Set(n);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
@@ -8927,8 +8739,6 @@ TH1C& TH1C::operator=(const TH1C &h1)
    if (this != &h1)  ((TH1C&)h1).Copy(*this);
    return *this;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
@@ -8941,7 +8751,6 @@ TH1C operator*(Double_t c1, const TH1C &h1)
    return hnew;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
@@ -8952,7 +8761,6 @@ TH1C operator+(const TH1C &h1, const TH1C &h2)
    hnew.SetDirectory(0);
    return hnew;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator -
@@ -8965,7 +8773,6 @@ TH1C operator-(const TH1C &h1, const TH1C &h2)
    return hnew;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
@@ -8976,7 +8783,6 @@ TH1C operator*(const TH1C &h1, const TH1C &h2)
    hnew.SetDirectory(0);
    return hnew;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
@@ -8989,15 +8795,12 @@ TH1C operator/(const TH1C &h1, const TH1C &h2)
    return hnew;
 }
 
-
-
 //______________________________________________________________________________
 //                     TH1S methods
 // TH1S : histograms with one short per channel.  Maximum bin content = 32767
 //______________________________________________________________________________
 
 ClassImp(TH1S)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -9008,7 +8811,6 @@ TH1S::TH1S(): TH1(), TArrayS()
    SetBinsLength(3);
    if (fgDefaultSumw2) Sumw2();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with fix bins of type short
@@ -9024,7 +8826,6 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    if (fgDefaultSumw2) Sumw2();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with variable bins of type short
 /// (see TH1::TH1 for explanation of parameters)
@@ -9036,7 +8837,6 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    TArrayS::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with variable bins of type short
@@ -9050,14 +8850,12 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    if (fgDefaultSumw2) Sumw2();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TH1S::~TH1S()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
@@ -9067,7 +8865,6 @@ TH1S::TH1S(const TH1S &h1s) : TH1(), TArrayS()
    ((TH1S&)h1s).Copy(*this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
 
@@ -9075,7 +8872,6 @@ void TH1S::AddBinContent(Int_t bin)
 {
    if (fArray[bin] < 32767) fArray[bin]++;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w
@@ -9088,7 +8884,6 @@ void TH1S::AddBinContent(Int_t bin, Double_t w)
    if (newval >  32767) fArray[bin] =  32767;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this to newth1
 
@@ -9096,7 +8891,6 @@ void TH1S::Copy(TObject &newth1) const
 {
    TH1::Copy(newth1);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset.
@@ -9106,7 +8900,6 @@ void TH1S::Reset(Option_t *option)
    TH1::Reset(option);
    TArrayS::Reset();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set total number of bins including under/overflow
@@ -9119,7 +8912,6 @@ void TH1S::SetBinsLength(Int_t n)
    TArrayS::Set(n);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
@@ -9128,7 +8920,6 @@ TH1S& TH1S::operator=(const TH1S &h1)
    if (this != &h1)  ((TH1S&)h1).Copy(*this);
    return *this;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
@@ -9141,7 +8932,6 @@ TH1S operator*(Double_t c1, const TH1S &h1)
    return hnew;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
@@ -9152,7 +8942,6 @@ TH1S operator+(const TH1S &h1, const TH1S &h2)
    hnew.SetDirectory(0);
    return hnew;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator -
@@ -9165,7 +8954,6 @@ TH1S operator-(const TH1S &h1, const TH1S &h2)
    return hnew;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
@@ -9176,7 +8964,6 @@ TH1S operator*(const TH1S &h1, const TH1S &h2)
    hnew.SetDirectory(0);
    return hnew;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
@@ -9189,14 +8976,12 @@ TH1S operator/(const TH1S &h1, const TH1S &h2)
    return hnew;
 }
 
-
 //______________________________________________________________________________
 //                     TH1I methods
 // TH1I : histograms with one int per channel.    Maximum bin content = 2147483647
 //______________________________________________________________________________
 
 ClassImp(TH1I)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -9207,7 +8992,6 @@ TH1I::TH1I(): TH1(), TArrayI()
    SetBinsLength(3);
    if (fgDefaultSumw2) Sumw2();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with fix bins of type integer
@@ -9223,7 +9007,6 @@ TH1I::TH1I(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    if (fgDefaultSumw2) Sumw2();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with variable bins of type integer
 /// (see TH1::TH1 for explanation of parameters)
@@ -9235,7 +9018,6 @@ TH1I::TH1I(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with variable bins of type integer
@@ -9249,14 +9031,12 @@ TH1I::TH1I(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    if (fgDefaultSumw2) Sumw2();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TH1I::~TH1I()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
@@ -9266,7 +9046,6 @@ TH1I::TH1I(const TH1I &h1i) : TH1(), TArrayI()
    ((TH1I&)h1i).Copy(*this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
 
@@ -9274,7 +9053,6 @@ void TH1I::AddBinContent(Int_t bin)
 {
    if (fArray[bin] < 2147483647) fArray[bin]++;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w
@@ -9287,7 +9065,6 @@ void TH1I::AddBinContent(Int_t bin, Double_t w)
    if (newval >  2147483647) fArray[bin] =  2147483647;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this to newth1
 
@@ -9295,7 +9072,6 @@ void TH1I::Copy(TObject &newth1) const
 {
    TH1::Copy(newth1);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset.
@@ -9305,7 +9081,6 @@ void TH1I::Reset(Option_t *option)
    TH1::Reset(option);
    TArrayI::Reset();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set total number of bins including under/overflow
@@ -9318,7 +9093,6 @@ void TH1I::SetBinsLength(Int_t n)
    TArrayI::Set(n);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
@@ -9327,7 +9101,6 @@ TH1I& TH1I::operator=(const TH1I &h1)
    if (this != &h1)  ((TH1I&)h1).Copy(*this);
    return *this;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9341,7 +9114,6 @@ TH1I operator*(Double_t c1, const TH1I &h1)
    return hnew;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
@@ -9352,7 +9124,6 @@ TH1I operator+(const TH1I &h1, const TH1I &h2)
    hnew.SetDirectory(0);
    return hnew;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator -
@@ -9365,7 +9136,6 @@ TH1I operator-(const TH1I &h1, const TH1I &h2)
    return hnew;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
@@ -9376,7 +9146,6 @@ TH1I operator*(const TH1I &h1, const TH1I &h2)
    hnew.SetDirectory(0);
    return hnew;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
@@ -9389,14 +9158,12 @@ TH1I operator/(const TH1I &h1, const TH1I &h2)
    return hnew;
 }
 
-
 //______________________________________________________________________________
 //                     TH1F methods
 // TH1F : histograms with one float per channel.  Maximum precision 7 digits
 //______________________________________________________________________________
 
 ClassImp(TH1F)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -9407,7 +9174,6 @@ TH1F::TH1F(): TH1(), TArrayF()
    SetBinsLength(3);
    if (fgDefaultSumw2) Sumw2();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with fix bins of type float
@@ -9423,7 +9189,6 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    if (fgDefaultSumw2) Sumw2();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with variable bins of type float
 /// (see TH1::TH1 for explanation of parameters)
@@ -9436,7 +9201,6 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    if (fgDefaultSumw2) Sumw2();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with variable bins of type float
 /// (see TH1::TH1 for explanation of parameters)
@@ -9448,7 +9212,6 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a histogram from a TVectorF
@@ -9467,7 +9230,6 @@ TH1F::TH1F(const TVectorF &v)
    if (fgDefaultSumw2) Sumw2();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy Constructor.
 
@@ -9476,14 +9238,12 @@ TH1F::TH1F(const TH1F &h) : TH1(), TArrayF()
    ((TH1F&)h).Copy(*this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TH1F::~TH1F()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this to newth1.
@@ -9493,7 +9253,6 @@ void TH1F::Copy(TObject &newth1) const
    TH1::Copy(newth1);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset.
 
@@ -9502,7 +9261,6 @@ void TH1F::Reset(Option_t *option)
    TH1::Reset(option);
    TArrayF::Reset();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set total number of bins including under/overflow
@@ -9515,7 +9273,6 @@ void TH1F::SetBinsLength(Int_t n)
    TArrayF::Set(n);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
@@ -9524,7 +9281,6 @@ TH1F& TH1F::operator=(const TH1F &h1)
    if (this != &h1)  ((TH1F&)h1).Copy(*this);
    return *this;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
@@ -9537,7 +9293,6 @@ TH1F operator*(Double_t c1, const TH1F &h1)
    return hnew;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
@@ -9548,7 +9303,6 @@ TH1F operator+(const TH1F &h1, const TH1F &h2)
    hnew.SetDirectory(0);
    return hnew;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator -
@@ -9561,7 +9315,6 @@ TH1F operator-(const TH1F &h1, const TH1F &h2)
    return hnew;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
@@ -9572,7 +9325,6 @@ TH1F operator*(const TH1F &h1, const TH1F &h2)
    hnew.SetDirectory(0);
    return hnew;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
@@ -9585,15 +9337,12 @@ TH1F operator/(const TH1F &h1, const TH1F &h2)
    return hnew;
 }
 
-
-
 //______________________________________________________________________________
 //                     TH1D methods
 // TH1D : histograms with one double per channel. Maximum precision 14 digits
 //______________________________________________________________________________
 
 ClassImp(TH1D)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -9604,7 +9353,6 @@ TH1D::TH1D(): TH1(), TArrayD()
    SetBinsLength(3);
    if (fgDefaultSumw2) Sumw2();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with fix bins of type double
@@ -9620,7 +9368,6 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    if (fgDefaultSumw2) Sumw2();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with variable bins of type double
 /// (see TH1::TH1 for explanation of parameters)
@@ -9633,7 +9380,6 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    if (fgDefaultSumw2) Sumw2();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 1-Dim histogram with variable bins of type double
 /// (see TH1::TH1 for explanation of parameters)
@@ -9645,7 +9391,6 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a histogram from a TVectorD
@@ -9664,14 +9409,12 @@ TH1D::TH1D(const TVectorD &v)
    if (fgDefaultSumw2) Sumw2();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TH1D::~TH1D()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -9681,7 +9424,6 @@ TH1D::TH1D(const TH1D &h1d) : TH1(), TArrayD()
    ((TH1D&)h1d).Copy(*this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this to newth1
 
@@ -9689,7 +9431,6 @@ void TH1D::Copy(TObject &newth1) const
 {
    TH1::Copy(newth1);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset.
@@ -9699,7 +9440,6 @@ void TH1D::Reset(Option_t *option)
    TH1::Reset(option);
    TArrayD::Reset();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set total number of bins including under/overflow
@@ -9712,7 +9452,6 @@ void TH1D::SetBinsLength(Int_t n)
    TArrayD::Set(n);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
@@ -9721,7 +9460,6 @@ TH1D& TH1D::operator=(const TH1D &h1)
    if (this != &h1)  ((TH1D&)h1).Copy(*this);
    return *this;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
@@ -9734,7 +9472,6 @@ TH1D operator*(Double_t c1, const TH1D &h1)
    return hnew;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
@@ -9745,7 +9482,6 @@ TH1D operator+(const TH1D &h1, const TH1D &h2)
    hnew.SetDirectory(0);
    return hnew;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator -
@@ -9758,7 +9494,6 @@ TH1D operator-(const TH1D &h1, const TH1D &h2)
    return hnew;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
@@ -9770,7 +9505,6 @@ TH1D operator*(const TH1D &h1, const TH1D &h2)
    return hnew;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
 
@@ -9781,7 +9515,6 @@ TH1D operator/(const TH1D &h1, const TH1D &h2)
    hnew.SetDirectory(0);
    return hnew;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///return pointer to histogram with name
@@ -9795,7 +9528,6 @@ TH1 *R__H(Int_t hid)
    else         hname.Form("h_%d",hid);
    return (TH1*)gDirectory->Get(hname);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///return pointer to histogram with name hname
