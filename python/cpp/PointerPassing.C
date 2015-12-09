@@ -1,5 +1,9 @@
 class Z {
 public:
+   static Z* getZ(int idx) {
+      static Z z[2];
+      return &(z[idx]);
+   }
    static long GimeAddressPtr( void* obj ) {
       return reinterpret_cast< long >( obj );
    }
@@ -25,6 +29,13 @@ public:
    static long GimeAddressObject( TObject* obj ) {
       return reinterpret_cast< long >( obj );
    }
+
+   static bool checkAddressOfZ(Z*& pZ) {
+      bool ret = (pZ == getZ(0));
+      pZ = getZ(1);
+      return ret;
+   }
+   int Grow = {};
 };
 
 class Z_ {

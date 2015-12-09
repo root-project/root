@@ -143,6 +143,10 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       o = TObject()
       self.assertEqual( AddressOf( o )[0], Z.GimeAddressPtr( o ) )
       self.assertEqual( AddressOf( o )[0], Z.GimeAddressPtrRef( o ) )
+      
+      pZ = Z.getZ(0)
+      self.assertEqual( Z.checkAddressOfZ( pZ ), True )
+      self.assertEqual( pZ , Z.getZ(1) )
 
       import array
       if hasattr( array.array, 'buffer_info' ):   # not supported in p2.2
