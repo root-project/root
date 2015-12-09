@@ -162,9 +162,12 @@ namespace TMVA {
       //evaluate all variables combinations
       void EvaluateImportanceAll( DataLoader *loader,Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
       //evaluate given a number of seeds
-      void EvaluateImportanceSeeds( DataLoader *loader,UInt_t nseeds, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
+//       void EvaluateImportanceSeeds( DataLoader *loader,UInt_t nseeds, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
       
       TCanvas* PlotImportance(const int nbits,std::vector<Double_t> importances,std::vector<TString> varNames);
+      
+      //method to do a copy of TTrees in subseeds in Variable Importance
+      void VIDataLoaderCopy(DataLoader *des,DataLoader *src);
       
       void WriteDataInformation(DataSetInfo&     fDataSetInfo);
 
