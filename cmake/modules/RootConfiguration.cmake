@@ -486,6 +486,22 @@ else()
   set(hasstdexpstringview undef)
 endif()
 
+if(found_stdstringview)
+  CHECK_CXX_SOURCE_COMPILES("#include <string_view>
+     int main() { size_t pos; std::string_view str; std::stod(str,&pos); return 0;}" found_stod_stringview)
+elseif(found_stdexpstringview)
+  CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
+     int main() { size_t pos; std::experimental::string_view str; std::stod(str,&pos); return 0;}" found_stod_stringview)
+else()
+  set(found_stod_stringview false)
+endif()
+
+if(found_stod_stringview)
+  set(hasstodstringview define)
+else()
+  set(hasstodstringview undef)
+endif()
+
 #---root-config----------------------------------------------------------------------------------------------
 ROOT_SHOW_OPTIONS(features)
 string(REPLACE "c++11" "cxx11" features ${features}) # change the name of the c++11 feature needed for root-config.in
