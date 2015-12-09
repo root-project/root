@@ -117,7 +117,7 @@ if(builtin_pcre)
     ExternalProject_Add(
       PCRE
       URL ${CMAKE_SOURCE_DIR}/core/pcre/src/pcre-${pcre_version}.tar.gz
-      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --disable-shared
+      CONFIGURE_COMMAND ./configure --with-pic --disable-shared
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_pcre_cflags}
       INSTALL_COMMAND ""     
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
