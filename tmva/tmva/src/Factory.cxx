@@ -89,8 +89,11 @@
 #include "TMVA/ResultsRegression.h"
 #include "TMVA/ResultsMulticlass.h"
 #include <list>
+#include <bitset>
 
 #include "TMVA/Types.h"
+
+#include <TCanvas.h>
 
 const Int_t  MinNoTrainingEvents = 10;
 //const Int_t  MinNoTestEvents     = 1;
@@ -1469,4 +1472,182 @@ void TMVA::Factory::EvaluateAllMethods( void )
    // references for citation
    gTools().TMVACitation( Log(), Tools::kHtmlLink );
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate Variable Importance
+
+void TMVA::Factory::EvaluateImportance(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
+{
+  
+  //getting number of variables and variable names from loader
+  const int nbits = loader->DefaultDataSetInfo().GetNVariables();
+  if(nbits<10) EvaluateImportanceAll(loader,theMethod,methodTitle,theOption);
+//   else EvaluateImportanceSeeds(loader,pow(2,nbits),theMethod,methodTitle,theOption);
+}
+
+void TMVA::Factory::EvaluateImportanceAll(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
+{
+  
+  uint64_t x = 0;
+  uint64_t y = 0;
+  
+  //getting number of variables and variable names from loader
+  const int nbits = loader->DefaultDataSetInfo().GetNVariables();
+  std::vector<TString> varNames = loader->DefaultDataSetInfo().GetListOfVariables();
+  
+  long int range = pow(2, nbits);
+  
+  //vector to save importances
+  std::vector<Double_t> importances(nbits);
+  //vector to save ROC
+  std::vector<Double_t> ROC(range);
+  ROC[0]=0.5;
+  Double_t importances_norm = 0;
+  for (int i = 0; i < nbits; i++)importances[i] = 0;
+  
+  Double_t SROC, SSROC; //computed ROC value
+  for ( x = 1; x <range ; x++) {
+    
+    std::bitset<32>  xbitset(x);
+    if (x == 0) continue; //dataloader need at least one variable
+    
+    //creating loader for seed
+    TMVA::DataLoader *seedloader = new TMVA::DataLoader(xbitset.to_string());
+    
+    //adding variables from seed
+    for (int index = 0; index < nbits; index++) {
+      if (xbitset[index]) seedloader->AddVariable(varNames[index], 'F');
+    }
+    
+    //Loading Dataset from DataInputHandler
+    for( std::vector<TreeInfo>::const_iterator treeinfo=loader->DataInput().Sbegin();treeinfo!=loader->DataInput().Send();treeinfo++)
+    {
+      
+      seedloader->AddSignalTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
+    }
+
+    for( std::vector<TreeInfo>::const_iterator treeinfo=loader->DataInput().Bbegin();treeinfo!=loader->DataInput().Bend();treeinfo++)
+    {
+      seedloader->AddBackgroundTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
+    }
+    
+    seedloader->PrepareTrainingAndTestTree(loader->DefaultDataSetInfo().GetCut("Signal"), loader->DefaultDataSetInfo().GetCut("Background"), loader->DefaultDataSetInfo().GetSplitOptions());
+    
+    //Booking Seed
+    BookMethod(seedloader, theMethod, methodTitle, theOption);
+    
+    //Train/Test/Evaluation
+    TrainAllMethods();
+    TestAllMethods();
+    EvaluateAllMethods();
+    
+    //getting ROC
+    ROC[x] = GetROCIntegral(xbitset.to_string(), methodTitle);
+        
+    //cleaning information to process subseeds
+    TMVA::MethodBase *smethod=dynamic_cast<TMVA::MethodBase*>(fMethodsMap[xbitset.to_string().c_str()][0][0]);
+    TMVA::ResultsClassification  *sresults = (TMVA::ResultsClassification*)smethod->Data()->GetResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
+    sresults->Delete();
+    delete sresults;
+    fgTargetFile->cd();
+    fgTargetFile->Delete(seedloader->GetName());
+    fgTargetFile->Delete(Form("%s;1",seedloader->GetName()));
+    fgTargetFile->Flush();
+    delete seedloader;
+    std::vector<TMVA::VariableTransformBase *>::iterator trfIt = fDefaultTrfs.begin();
+    gSystem->Exec(Form("rm -rf %s", xbitset.to_string().c_str()));
+    
+    this->DeleteAllMethods();
+    
+    fMethodsMap.clear();
+    //removing global result because it is requiring alot amount of RAM for all seeds
+  }
+  
+  
+  for ( x = 0; x <range ; x++) 
+  {
+    SROC=ROC[x];
+    for (uint32_t i = 0; i < 32; ++i) {
+      if (x & (1 << i)) {
+	y = x & ~(1 << i);
+	std::bitset<32>  ybitset(y);
+	//need at least one variable
+	//NOTE: if subssed is zero then is the special case
+	//that count in xbitset is 1
+	Double_t ny = log(x - y) / 0.693147;
+	if (y == 0) {
+	  importances[ny] = SROC - 0.5;
+	  continue;
+	}
+	
+	//getting ROC
+	SSROC = ROC[y];
+	importances[ny] += SROC - SSROC;
+	//cleaning information
+      }
+      
+    }
+  }
+  
+  PlotImportance(nbits,importances,varNames);
+}
+
+
+TCanvas* TMVA::Factory::PlotImportance(const int nbits,std::vector<Double_t> importances,std::vector<TString> varNames)
+{
+  TCanvas *canvas = new TCanvas("RelativeScaleImportance", "RelativaScaleImportance", 800, 600);
+  canvas->Divide(1, 1);
+  TH1F *vih1  = new TH1F("vih1", "", nbits, 0, nbits);
+  TH1F *vi2h1  = new TH1F("vi2h1", "", nbits, 0, nbits);
+  
+  gStyle->SetOptStat(000000);
+  
+  Float_t normalization = 0.0;
+  for (int i = 0; i < nbits; i++) {
+    normalization = normalization + importances[i];
+  }
+  
+  Float_t roc = 0.0;
+  
+  gStyle->SetTitleXOffset(0.4);
+  gStyle->SetTitleXOffset(1.2);
+  
+  
+  Double_t x_ie[nbits], y_ie[nbits];
+  for (Int_t i = 1; i < nbits + 1; i++) {
+    x_ie[i - 1] = (i - 1) * 1.;
+    roc = 100.0 * importances[i - 1] / normalization;
+    y_ie[i - 1] = roc;
+    vih1->GetXaxis()->SetBinLabel(i, varNames[i - 1].Data());
+    vih1->SetBinContent(i, roc);
+  }
+  TGraph *g_ie = new TGraph(nbits + 2, x_ie, y_ie);
+  g_ie->SetTitle("");
+  
+  canvas->cd(1);
+  vih1->LabelsOption("v >", "X");
+  vih1->SetBarWidth(0.97);
+  vi2h1->SetBarWidth(0.97);
+  Int_t ci, ca;
+  ca = TColor::GetColor("#006600");
+  vih1->SetFillColor(ca);
+  ci = TColor::GetColor("#990000");
+  vi2h1->SetFillColor(ci);
+  
+  vih1->GetYaxis()->SetTitle("Importance (%)");
+  vih1->GetYaxis()->SetTitleSize(0.045);
+  vih1->GetYaxis()->CenterTitle();
+  vih1->GetYaxis()->SetTitleOffset(1.24);
+  
+  vih1->GetYaxis()->SetRangeUser(-7, 50);
+  vih1->SetDirectory(0);
+  
+  vih1->Draw("B");
+  vi2h1->Draw("B same");
+  
+  canvas->Update();
+  canvas->Draw();
+  return canvas;
+}
+
 

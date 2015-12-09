@@ -17,7 +17,7 @@
  *      Omar Zapata <Omar.Zapata@cern.ch>  - ITM/UdeA, Colombia                   *
  *      Sergei Gleyzer<sergei.gleyzer@cern.ch> - CERN, Switzerland                *
  *                                                                                *
- * Copyright (c) 2005-2011:                                                       *
+ * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
  *      ITM/UdeA, Colombia                                                        *
  *                                                                                *

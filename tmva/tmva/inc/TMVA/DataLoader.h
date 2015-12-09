@@ -203,7 +203,7 @@ namespace TMVA {
       Int_t                                     fATreeType;          // type of event (=classIndex)
       Float_t                                   fATreeWeight;        // weight of the event
       Float_t*                                  fATreeEvent;         // event variables
-
+      
       Types::EAnalysisType                      fAnalysisType;    //! the training type
 
    protected:
