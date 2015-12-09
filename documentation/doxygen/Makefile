@@ -1,5 +1,5 @@
 
-.PHONY: filter doxygen clean
+.PHONY: filter folders mathjax images doxygen
 
 DOXYGEN_OUTPUT_DIRECTORY ?= $(HOME)/rootdoc
 export DOXYGEN_OUTPUT_DIRECTORY
@@ -10,22 +10,28 @@ export DOXYGEN_IMAGE_PATH := $(DOXYGEN_OUTPUT_DIRECTORY)/html
 export DOXYGEN_STRIP_PATH := $(shell cd $(PWD)/../..; pwd)
 export DOXYGEN_INCLUDE_PATH := $(shell find $(DOXYGEN_STRIP_PATH) -type d -name dictpch -prune -o -type d -name inc)
 
-all: filter doxygen
+all: filter folders mathjax images doxygen
 
 filter:
 	`root-config --cxx` -o filter filter.cxx -std=c++11
 
-doxygen:
+folders:
 	if [ ! -d $(DOXYGEN_OUTPUT_DIRECTORY) ]; then mkdir $(DOXYGEN_OUTPUT_DIRECTORY); fi
 	if [ ! -d $(DOXYGEN_EXAMPLE_PATH) ]; then mkdir $(DOXYGEN_EXAMPLE_PATH); fi
-	if [ ! -d $(DOXYGEN_IMAGE_PATH) ]; then mkdir $(DOXYGEN_IMAGE_PATH); fi
 	if [ ! -d $(DOXYGEN_MATHJAX_PATH) ]; then mkdir $(DOXYGEN_MATHJAX_PATH); fi
-	./makehtmlfooter.sh > htmlfooter.html
-	cp images/* $(DOXYGEN_IMAGE_PATH)
+	if [ ! -d $(DOXYGEN_IMAGE_PATH) ]; then mkdir $(DOXYGEN_IMAGE_PATH); fi
+
+mathjax:
 	tar xfz mathjax.tar.gz -C $(DOXYGEN_OUTPUT_DIRECTORY)/html
+
+images:
+	cp images/* $(DOXYGEN_IMAGE_PATH)
+
+doxygen: filter
+	./makehtmlfooter.sh > htmlfooter.html
 	doxygen
-	rm -rf files filter c1* *.ps *.png *.svg *.pdf *.root *.xpm stdout.dat htmlfooter.html
+	rm -rf files c1* *.ps *.png *.svg *.pdf *.root *.xpm *.out stdout.dat
 
 clean:
-	rm -r $(DOXYGEN_OUTPUT_DIRECTORY)
+	rm -r $(DOXYGEN_OUTPUT_DIRECTORY) filter htmlfooter.html
 
