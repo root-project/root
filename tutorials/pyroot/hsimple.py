@@ -1,19 +1,20 @@
-#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-#*-*
-#*-*  This program creates :
-#*-*    - a one dimensional histogram
-#*-*    - a two dimensional histogram
-#*-*    - a profile histogram
-#*-*    - a memory-resident ntuple
-#*-*
-#*-*  These objects are filled with some random numbers and saved on a file.
-#*-*
-#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+## \file
+## \ingroup tutorial_pyroot
+##  This program creates :
+##    - a one dimensional histogram
+##    - a two dimensional histogram
+##    - a profile histogram
+##    - a memory-resident ntuple
+##
+##  These objects are filled with some random numbers and saved on a file.
+##
+## \macro_image
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TFile, TProfile, TNtuple, TH1F, TH2F
 from ROOT import gROOT, gBenchmark, gRandom, gSystem, Double
-
-
 
 # Create a new canvas, and customize it.
 c1 = TCanvas( 'c1', 'Dynamic Filling Example', 200, 10, 700, 500 )
@@ -91,6 +92,6 @@ hfile.Write()
 hpx.SetFillColor( 48 )
 c1.Modified()
 c1.Update()
-  
+
 # Note that the file is automatically closed when application terminates
 # or when the file destructor is called.
