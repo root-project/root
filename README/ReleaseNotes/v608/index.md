@@ -76,6 +76,7 @@ Custom streamers need to #include TBuffer.h explicitly (see
 
 ## TTree Libraries
 
+* Repair setting the branch address of a leaflist style branch taking directly the address of the struct.  (Note that leaflist is nonetheless still deprecated and declaring the struct to the interpreter and passing the object directly to create the branch is much better).
 
 ## Histogram Libraries
 
