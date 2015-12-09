@@ -2846,6 +2846,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       } else {
          // In this case, it is okay if the first data member is of the right type (to support the case where we are being passed
          // a struct).
+         bool found = false;
          if (ptrClass->IsLoaded()) {
             TIter next(ptrClass->GetListOfRealData());
             TRealData *rdm;
@@ -2855,7 +2856,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
                   if (dmtype) {
                      EDataType etype = (EDataType)dmtype->GetType();
                      if (etype == expectedType) {
-                        return kMatch;
+                        found = true;
                      }
                   }
                   break;
@@ -2870,11 +2871,19 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
                   if (dmtype) {
                      EDataType etype = (EDataType)dmtype->GetType();
                      if (etype == expectedType) {
-                        return kMatch;
+                        found = true;
                      }
                   }
                   break;
                }
+            }
+         }
+         if (found) {
+            // let's check the size.
+            TLeaf *last = (TLeaf*)branch->GetListOfLeaves()->Last();
+            long len = last->GetOffset() + last->GetLenType() * last->GetLen();
+            if (len <= ptrClass->Size()) {
+               return kMatch;
             }
          }
          Error("SetBranchAddress", "The pointer type given \"%s\" does not correspond to the type needed \"%s\" (%d) by the branch: %s",
