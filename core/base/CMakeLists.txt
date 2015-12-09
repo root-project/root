@@ -34,7 +34,7 @@ list(REMOVE_ITEM sources TROOT.cxx roota.cxx)
 ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${sources})
 
 if(builtin_pcre)
-  add_dependencies(Base PCRE)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(Base PCRE)
 endif()
 
 ROOT_INSTALL_HEADERS()
