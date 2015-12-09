@@ -1,6 +1,12 @@
-#
-# To see the output of this macro, click begin_html <a href="gif/graph.gif">here</a>. end_html
-#
+## \file
+## \ingroup tutorial_pyroot
+## A Simple Graph Example
+##
+## \macro_image
+## \macro_output
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TGraph
 from ROOT import gROOT
