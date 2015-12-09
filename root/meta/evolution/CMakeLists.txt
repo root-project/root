@@ -29,13 +29,15 @@ ROOTTEST_ADD_TEST(baseClass_53410_v1
                   COPY_TO_BUILDDIR  baseClass_53410_v1.root
                   MACRO execBaseClass_v2.cxx+
                   MACROARG "\"baseClass_53410_v1.root\""
-                  OUTREF baseClass_53410_v1.ref)
+                  OUTREF baseClass_53410_v1.ref
+                  DEPENDS execBaseClass_v2)
 
 ROOTTEST_ADD_TEST(baseClass_53410_v2
                   COPY_TO_BUILDDIR  baseClass_53410_v2.root
                   MACRO execBaseClass_v2.cxx+
                   MACROARG "\"baseClass_53410_v2.root\""
-                  OUTREF baseClass_53410_v2.ref)
+                  OUTREF baseClass_53410_v2.ref
+                  DEPENDS execBaseClass_v2)
                   
 ROOTTEST_ADD_TEST(baseClass_merge1
                   PRECMD hadd -f  baseClass_merge1.root baseClass_v1.root baseClass_v2.root
