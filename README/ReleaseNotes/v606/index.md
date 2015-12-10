@@ -4,7 +4,7 @@
 
 ## Introduction
 
-ROOT version 6.06/00 was release on December 10, 2015.
+ROOT version 6.06/00 was released on December 10, 2015.
 
 For more information, see:
 
