@@ -32,7 +32,9 @@ INCLUDEFILES += $(CONTDEP)
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(CONTDIRI)/%.h
-		mkdir -p include/ROOT
+		@(if [ ! -d "include/ROOT" ]; then     \
+		   mkdir -p include/ROOT;              \
+		fi)
 		cp $< $@
 
 all-$(MODNAME): $(CONTO)
