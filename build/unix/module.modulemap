@@ -2213,10 +2213,10 @@ module "rpddefs.h" { header "rpddefs.h" export * }
 module "rpderr.h" { header "rpderr.h" export * }
 module "rpdp.h" { header "rpdp.h" export * }
 module "rpdpriv.h" { header "rpdpriv.h" export * }
-module "rsaaux.h" [extern_c] { header "rsaaux.h" export * }
-module "rsadef.h" [extern_c] { header "rsadef.h" export * }
-module "rsafun.h" [extern_c] { header "rsafun.h" export * }
-module "rsalib.h" [extern_c] { header "rsalib.h" export * }
+module "rsaaux.h" { header "rsaaux.h" export * }
+module "rsadef.h" { header "rsadef.h" export * }
+module "rsafun.h" { header "rsafun.h" export * }
+module "rsalib.h" { header "rsalib.h" export * }
 module "snprintf.h" { header "snprintf.h" export * }
 module "strlcpy.h" { header "strlcpy.h" export * }
 module "tableDescriptor.h" { header "tableDescriptor.h" export * }

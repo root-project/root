@@ -108,6 +108,7 @@ IOSSDK         := @iossdk@
 
 CXX11          := @c++11@
 CXX14          := @c++14@
+CXXMODULES     := @cxxmodules@
 LIBCXX         := @libc++@
 
 EXPLICITLINK   := @explicitlink@

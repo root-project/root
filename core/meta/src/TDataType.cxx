@@ -186,7 +186,7 @@ const char *TDataType::GetFullTypeName() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Set type id depending on name.
 
-EDataType TDataType::GetType(const type_info &typeinfo)
+EDataType TDataType::GetType(const std::type_info &typeinfo)
 {
    EDataType retType = kOther_t;
 

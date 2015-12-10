@@ -86,7 +86,7 @@ $(call pcmrule,TMVA)
 $(TMVADS):      $(TMVAINCH) $(TMVAL0) $(TMVALS) $(ROOTCLINGEXE) $(call pcmdep,TMVA)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TMVA) -c -writeEmptyRootPCM -I$(ROOT_SRCDIR) $(TMVAINCH) $(TMVAL0)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TMVA) -c -writeEmptyRootPCM $(patsubst include/%,%,$(TMVAINCH)) -I$(ROOT_SRCDIR) $(TMVAL0)
 
 $(TMVAMAP):     $(TMVAINCH) $(TMVAL0) $(TMVALS) $(ROOTCLINGEXE) $(call pcmdep,TMVA)
 		$(MAKEDIR)
@@ -105,3 +105,12 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -rf include/TMVA
 
 distclean::     distclean-$(MODNAME)
+
+#FIXME: Disable modules build the TMVA's dictionary on macos because there is
+#a bug in the toolchain (ROOT, clang?) saying there are too many open files.
+ifeq ($(CXXMODULES),yes)
+ifeq ($(PLATFORM),macosx)
+$(TMVADO): CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
+         CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
+endif
+endif

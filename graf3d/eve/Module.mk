@@ -61,7 +61,7 @@ INCLUDEFILES += $(EVEDEP)
 include/%.h:    $(EVEDIRI)/%.h
 		cp $< $@
 
-$(EVELIB):      EVELIBCXXMODULE $(EVEO) $(EVEDO) $(ORDER_) $(MAINLIBS) $(EVELIBDEP) \
+$(EVELIB):      $(EVEO) $(EVEDO) $(ORDER_) $(MAINLIBS) $(EVELIBDEP) \
                 $(FTGLLIB) $(GLEWLIB)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libEve.$(SOEXT) $@ "$(EVEO) $(EVEDO)" \
@@ -95,13 +95,13 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 ifeq ($(ARCH),win32)
-EVELIBCXXMODULE $(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
+$(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
 else
-EVELIBCXXMODULE $(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
-EVELIBCXXMODULE $(EVEO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
+$(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
+$(EVEO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
 endif
 ifeq ($(MACOSX_GLU_DEPRECATED),yes)
-EVELIBCXXMODULE $(EVEO) $(EVEDO): CXXFLAGS += -Wno-deprecated-declarations
+$(EVEO) $(EVEDO): CXXFLAGS += -Wno-deprecated-declarations
 endif
 
 $(MODNAME)-echo-h1:
@@ -114,12 +114,10 @@ $(MODNAME)-echo-h2:
 $(EVEDO1): NOOPT = $(OPT)
 $(EVEDO2): NOOPT = $(OPT)
 
-# glew.h is special (see $ROOTSYS/build/unix/module.modulemap for details.
-# We need to prebuild a pcm disabling the system module maps.
-# A pcm per set of options is necessary, this is why this is duplicated in glew and gl, too.
-EVELIBCXXMODULE:
-ifneq ($(CXXMODULES),)
-	@echo "Prebuilding pcm for glew.h"
-	@echo '#include "TGLIncludes.h"' | \
-	$(CXX) $(CXXFLAGS) -fno-implicit-module-maps -xc++ -c -
+#FIXME: Disable modules build for graf3d until the glew.h issue gets fixed.
+ifeq ($(CXXMODULES),yes)
+ifeq ($(PLATFORM),macosx)
+$(EVEO): CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
+         CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
+endif
 endif

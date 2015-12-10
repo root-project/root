@@ -1245,7 +1245,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load, Bool_t silent) const
 /// Return pointer to class from its name. Obsolete, use TClass::GetClass directly
 /// See TClass::GetClass
 
-TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load, Bool_t silent) const
+TClass *TROOT::GetClass(const std::type_info& typeinfo, Bool_t load, Bool_t silent) const
 {
    return TClass::GetClass(typeinfo,load,silent);
 }
