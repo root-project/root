@@ -42,7 +42,7 @@ except ImportError:
 try:
     from JupyROOT.utils import setStyle
     from JupyROOT.kernel.draw import LoadDrawer, CanvasDrawer
-    from JupyROOT.kernel.cppcompleter import CppCompleter
+    from JupyROOT.cppcompleter import CppCompleter
     from JupyROOT.kernel.utils import GetIOHandler, GetExecutor, GetDeclarer, ACLiC, MagicLoader
 except ImportError:
     raise Exception("Error: JupyROOT not found")
