@@ -73,7 +73,7 @@ INCLUDEFILES += $(GLDEP)
 include/%.h:    $(GLDIRI)/%.h
 		cp $< $@
 
-$(GLLIB):       GLLIBCXXMODULE $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) \
+$(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) \
                 $(GLEWLIB)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
@@ -106,12 +106,12 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 ifeq ($(ARCH),win32)
-GLLIBCXXMODULE $(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
+$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
                             $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
 $(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
                              $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
 else
-GLLIBCXXMODULE $(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%)
+$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%)
 $(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%)
 endif
 
@@ -120,21 +120,21 @@ $(call stripsrc,$(GLDIRS)/TGLText.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINC) $(FT
 
 $(call stripsrc,$(GLDIRS)/TGLFontManager.o): $(FREETYPEDEP)
 $(call stripsrc,$(GLDIRS)/TGLFontManager.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
-GLLIBCXXMODULE $(GLO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
 
-# Optimize dictionary with stl containers.
-GLLIBCXXMODULE $(GLDO): NOOPT = $(OPT)
-
-ifeq ($(MACOSX_GLU_DEPRECATED),yes)
-GLLIBCXXMODULE $(GLO) $(GLDO): CXXFLAGS += -Wno-deprecated-declarations
+#FIXME: Disable modules build for graf3d until the glew.h issue gets fixed.
+ifeq ($(CXXMODULES),yes)
+ifeq ($(PLATFORM),macosx)
+$(call stripsrc,$(GLDIRS)/TGLFontManager.o) \
+$(call stripsrc,$(GLDIRS)/TGLText.o): CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
+        CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
+endif
 endif
 
-# glew.h is special (see $ROOTSYS/build/unix/module.modulemap for details.
-# We need to prebuild a pcm disabling the system module maps.
-# A pcm per set of options is necessary, this is why this is duplicated in eve and glew, too.
-GLLIBCXXMODULE:
-ifneq ($(CXXMODULES),)
-	@echo "Prebuilding pcm for glew.h"
-	@echo '#include "TGLIncludes.h"' | \
-	$(CXX) $(CXXFLAGS) -fno-implicit-module-maps -xc++ -c -
+$(GLO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
+
+# Optimize dictionary with stl containers.
+$(GLDO): NOOPT = $(OPT)
+
+ifeq ($(MACOSX_GLU_DEPRECATED),yes)
+$(GLO) $(GLDO): CXXFLAGS += -Wno-deprecated-declarations
 endif

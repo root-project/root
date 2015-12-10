@@ -105,3 +105,12 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -rf include/TMVA
 
 distclean::     distclean-$(MODNAME)
+
+#FIXME: Disable modules build the TMVA's dictionary on macos because there is
+#a bug in the toolchain (ROOT, clang?) saying there are too many open files.
+ifeq ($(CXXMODULES),yes)
+ifeq ($(PLATFORM),macosx)
+$(TMVADO): CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
+         CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
+endif
+endif

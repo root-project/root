@@ -592,8 +592,15 @@ endif
 
 ##### all #####
 
-# Copy the modulemap in the right place first.
+ifeq ($(CXXMODULES),yes)
+# Copy the modulemap in $ROOTSYS/include first.
 ALLHDRS      := include/module.modulemap
+ROOT_CXXMODULES_FLAGS = -fmodules -fmodule-map-file=$(ROOT_OBJDIR)/include/module.modulemap -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
+CXXFLAGS += $(ROOT_CXXMODULES_FLAGS)
+CFLAGS   += $(ROOT_CXXMODULES_FLAGS)
+endif
+
+
 ALLLIBS      := $(CORELIB)
 ALLMAPS      := $(COREMAP)
 ALLEXECS     :=
