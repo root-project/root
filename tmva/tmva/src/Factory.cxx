@@ -10,7 +10,7 @@
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
  *                                                                                *
- * Authors (alphabetical):                                                        *
+ * Authors :                                                                      *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <stelzer@cern.ch>        - DESY, Germany                  *
  *      Peter Speckmayer <peter.speckmayer@cern.ch> - CERN, Switzerland           *
@@ -22,7 +22,7 @@
  *      Lorenzo Moneta  <Lorenzo.Moneta@cern.ch> - CERN, Switzerland              *
  *      Sergei Gleyzer  <Sergei.Gleyzer@cern.ch> - U of Florida & CERN            *
  *                                                                                *
- * Copyright (c) 2005-2011:                                                       *
+ * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
  *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
@@ -75,6 +75,7 @@
 #include "TMVA/MethodBoost.h"
 #include "TMVA/MethodCategory.h"
 #include "TMVA/ROCCalc.h"
+#include "TMVA/ROCCurve.h"
 #include "TMVA/MsgLogger.h"
 
 #include "TMVA/VariableIdentityTransform.h"
@@ -543,73 +544,43 @@ Double_t TMVA::Factory::GetROCIntegral(TMVA::DataLoader *loader,TString theMetho
 //_______________________________________________________________________
 Double_t TMVA::Factory::GetROCIntegral(TString datasetname,TString theMethodName)
 {
-      if(fMethodsMap.find(datasetname)==fMethodsMap.end())
-      {
-	Log() << kERROR<< Form("DataSet = %s not found in methods map.",datasetname.Data()) << Endl;
-	return 0;
+   if (fMethodsMap.find(datasetname) == fMethodsMap.end()) {
+      Log() << kERROR << Form("DataSet = %s not found in methods map.", datasetname.Data()) << Endl;
+      return 0;
+   }
+   MVector *methods = fMethodsMap[datasetname.Data()];
+   MVector::iterator itrMethod = methods->begin();
+   TMVA::MethodBase *method = 0;
+   while (itrMethod != methods->end()) {
+      TMVA::MethodBase *cmethod = dynamic_cast<TMVA::MethodBase *>(*itrMethod);
+      if (!cmethod) {
+         //msg of error here
+         itrMethod++;
+         continue;
       }
-      MVector *methods=fMethodsMap[datasetname.Data()];
-      MVector::iterator itrMethod=methods->begin();
-      TMVA::MethodBase *method=0;
-      while(itrMethod!=methods->end())
-      {
-	TMVA::MethodBase *cmethod=dynamic_cast<TMVA::MethodBase*>(*itrMethod);
-	if(!cmethod)
-	{
-	 //msg of error here
-	 itrMethod++;
-	 continue;
-	}
-	if(cmethod->GetMethodName()==theMethodName)
-	{
-	  method=cmethod;
-	  break;
-	}
-	itrMethod++;
+      if (cmethod->GetMethodName() == theMethodName) {
+         method = cmethod;
+         break;
       }
-      
-      if(!method)
-      {
-	Log() << kERROR<< Form("Method = %s not found with Dataset = %s ",theMethodName.Data(),datasetname.Data()) << Endl;
-	return 0;
-      }
-      
-      TMVA::Results *results=method->Data()->GetResults(method->GetMethodName(),Types::kTesting,Types::kClassification);
+      itrMethod++;
+   }
 
-      TH1D *mvaS=0;
-      TH1D *mvaB=0;
-      
-      mvaS=dynamic_cast<TH1D*>(results->GetStorage()->FindObject(Form("MVA_%s_S",method->GetMethodName().Data())));
-      mvaB=dynamic_cast<TH1D*>(results->GetStorage()->FindObject(Form("MVA_%s_B",method->GetMethodName().Data())));
-	
-      if(mvaS==0||mvaB==0)
-      {
-	mvaS=dynamic_cast<TH1D*>(results->GetStorage()->FindObject(Form("[%s]MVA_%s_S",method->DataInfo().GetName(),method->GetMethodName().Data())));
-	mvaB=dynamic_cast<TH1D*>(results->GetStorage()->FindObject(Form("[%s]MVA_%s_B",method->DataInfo().GetName(),method->GetMethodName().Data())));			
-      }
-      TMVA::ROCCalc *fROCalc=0;
-      if(mvaS==0||mvaB==0)
-      {
-	  Log() << kERROR <<Form("Cannot cal ROCCal intergral for DataSet = [%s] in Method = %s",method->DataInfo().GetName(),method->GetMethodName().Data())<<Endl; 
-      }else
-      {
-	fROCalc=new TMVA::ROCCalc(mvaS,mvaB);
-      }
-      Double_t fROCalcValue=0;
-      if(fROCalc)
-      {
-	//looking for errors in ROCCalc constructor
-	if(!fROCalc->GetStatus())
-	  Log() << kERROR <<Form("ROCalc in ERROR status for DataSet = [%s] in Method = %s",method->DataInfo().GetName(),method->GetMethodName().Data())<<Endl; 
-	  fROCalc->ResetStatus(); 
-	  fROCalcValue=fROCalc->GetROCIntegral();
-	//looking for errors in ROCCalc after call GetROCIntegral()
-	if(!fROCalc->GetStatus())
-	  Log() << kERROR <<Form("ROCalc in ERROR status for DataSet = [%s] in Method = %s",method->DataInfo().GetName(),method->GetMethodName().Data())<<Endl; 
-	delete fROCalc;
-      }
-      
-      return fROCalcValue;
+   if (!method) {
+      Log() << kERROR << Form("Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
+      return 0;
+   }
+
+   TMVA::Results *results = method->Data()->GetResults(method->GetMethodName(), Types::kTesting, Types::kClassification);
+
+   std::vector<Float_t> *mvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
+   std::vector<Bool_t>  *mvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
+
+   TMVA::ROCCurve *fROCCurve = new TMVA::ROCCurve(*mvaRes, *mvaResType);
+   if (!fROCCurve) Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
+
+   Double_t fROCalcValue = fROCCurve->GetROCIntegral();
+
+   return fROCalcValue;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1354,7 +1325,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 		Log() << kINFO << "Evaluation results ranked by best signal efficiency and purity (area)" << Endl;
 		Log() << kINFO << hLine << Endl;
 		Log() << kINFO << "DataSet              MVA              Signal efficiency at bkg eff.(error):                | Sepa-    Signifi- "   << Endl;
-		Log() << kINFO << "Name:                Method:          @B=0.01    @B=0.10    @B=0.30    ROC-integ    ROCCalc| ration:  cance:   "   << Endl;
+		Log() << kINFO << "Name:                Method:          @B=0.01    @B=0.10    @B=0.30    ROC-integ    ROCCurve| ration:  cance:   "   << Endl;
 		Log() << kINFO << hLine << Endl;
 		for (Int_t k=0; k<2; k++) {
 		  if (k == 1 && nmeth_used[k] > 0) {
@@ -1367,38 +1338,11 @@ void TMVA::Factory::EvaluateAllMethods( void )
 		      MethodBase* theMethod = dynamic_cast<MethodBase*>((*methods)[i]);
 		      if(theMethod==0) continue;
 		      TMVA::Results *results=theMethod->Data()->GetResults(mname[k][i],Types::kTesting,Types::kClassification);
-
-		      TH1D *mvaS=0;
-		      TH1D *mvaB=0;
+                      std::vector<Float_t> *mvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
+                      std::vector<Bool_t>  *mvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
+		      TMVA::ROCCurve *fROCCurve = new TMVA::ROCCurve(*mvaRes, *mvaResType);
+		      Double_t fROCalcValue = fROCCurve->GetROCIntegral();
 		      
-		      mvaS=dynamic_cast<TH1D*>(results->GetStorage()->FindObject(Form("MVA_%s_S",mname[k][i].Data())));
-		      mvaB=dynamic_cast<TH1D*>(results->GetStorage()->FindObject(Form("MVA_%s_B",mname[k][i].Data())));
-			
-		      if(mvaS==0||mvaB==0)
-		      {
-			mvaS=dynamic_cast<TH1D*>(results->GetStorage()->FindObject(Form("[%s]MVA_%s_S",theMethod->DataInfo().GetName(),mname[k][i].Data())));
-			mvaB=dynamic_cast<TH1D*>(results->GetStorage()->FindObject(Form("[%s]MVA_%s_B",theMethod->DataInfo().GetName(),mname[k][i].Data())));			
-		      }
-		      TMVA::ROCCalc *fROCalc=0;
-		      if(mvaS==0||mvaB==0)
-		      {
-			  Log() << kERROR <<Form("Cannot cal ROCCal intergral for DataSet = [%s] in Method = %s",theMethod->DataInfo().GetName(),mname[k][i].Data())<<Endl; 
-		      }else
-		      {
-			fROCalc=new TMVA::ROCCalc(mvaS,mvaB);
-		      }
-		      Double_t fROCalcValue=0;
-		      if(fROCalc)
-		      {
-			//looking for errors in ROCCalc constructor
-			if(!fROCalc->GetStatus())
-			  Log() << kERROR <<Form("ROCalc in ERROR status for DataSet = [%s] in Method = %s",theMethod->DataInfo().GetName(),mname[k][i].Data())<<Endl; 
-			 fROCalc->ResetStatus(); 
-			 fROCalcValue=fROCalc->GetROCIntegral();
-			//looking for errors in ROCCalc after call GetROCIntegral()
-			if(!fROCalc->GetStatus())
-			  Log() << kERROR <<Form("ROCalc in ERROR status for DataSet = [%s] in Method = %s",theMethod->DataInfo().GetName(),mname[k][i].Data())<<Endl; 
-		      }
 		        if (sep[k][i] < 0 || sig[k][i] < 0) {
 			  // cannot compute separation/significance -> no MVA (usually for Cuts)
 			  
@@ -1420,7 +1364,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 						  effArea[k][i],fROCalcValue, 
 						  sep[k][i], sig[k][i]) << Endl;
 			}
-			if(fROCalc) delete fROCalc;
+			delete fROCCurve;
 		  }
 		}
 		Log() << kINFO << hLine << Endl;

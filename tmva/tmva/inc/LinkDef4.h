@@ -37,5 +37,6 @@
 #pragma link C++ class TMVA::VariableNormalizeTransform+;
 #pragma link C++ class TMVA::VariableRearrangeTransform+;
 #pragma link C++ class TMVA::ROCCalc+;
+#pragma link C++ class TMVA::ROCCurve+;
 
 #endif
