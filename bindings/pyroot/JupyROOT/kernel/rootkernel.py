@@ -40,9 +40,9 @@ except ImportError:
     raise Exception("Error: PyROOT not found")
 
 try:
-    from JupyROOT.utils import setStyle
-    from JupyROOT.kernel.draw import LoadDrawer, CanvasDrawer
+    from JupyROOT.utils import setStyle, invokeAclic
     from JupyROOT.cppcompleter import CppCompleter
+    from JupyROOT.kernel.draw import LoadDrawer, CanvasDrawer
     from JupyROOT.kernel.utils import GetIOHandler, GetExecutor, GetDeclarer, ACLiC, MagicLoader
 except ImportError:
     raise Exception("Error: JupyROOT not found")
@@ -77,7 +77,7 @@ class ROOTKernel(MetaKernel):
         self.ioHandler = GetIOHandler()
         self.Executor  = GetExecutor()
         self.Declarer  = GetDeclarer()#required for %%cpp -d magic
-        self.ACLiC     = ACLiC
+        self.ACLiC     = invokeAclic
         self.magicloader = MagicLoader(self)
         self.parser = Parser(self.identifier_regex, self.func_call_regex,
                              self.magic_prefixes, self.help_suffix)

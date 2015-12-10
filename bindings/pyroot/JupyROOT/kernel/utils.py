@@ -12,12 +12,10 @@
 import sys
 import os
 from glob import glob
-from tempfile import NamedTemporaryFile
 
 from JupyROOT.kernel.handler import LoadHandlers
 
 try:
-    from JupyROOT.utils import invokeAclic
     from JupyROOT.utils import isPlatformApple
 except ImportError:
     raise Exception("Error: JupyROOT not found")
@@ -51,20 +49,6 @@ def GetDeclarer():
         from ROOT import JupyROOTDeclarer
         _Declarer = JupyROOTDeclarer
     return _Declarer
-
-
-def ACLiC(code):
-     status = 0
-     if isPlatformApple():
-         invokeAclic(code)
-     else:
-         tmpfile = NamedTemporaryFile(delete=False,suffix='.C',dir=os.getcwd())#will be removed when library is created
-         tmpfile.write(code)
-         tmpfilename = tmpfile.name
-         tmpfile.close()
-         Executor = GetExecutor()
-         status = Executor('.L %s+'%tmpfilename)
-     return status
 
 class MagicLoader(object):
     '''Class to load JupyROOT Magics'''
