@@ -6,7 +6,13 @@ void makeimage(const char *MacroName, const char *ImageName, const char *OutDir,
 {
    if (!py) gROOT->ProcessLine(Form(".x %s",MacroName));
    else     gROOT->ProcessLine(Form("TPython::ExecScript(\"%s\");",MacroName));
-   if (cp) gSystem->Exec(TString::Format("cp %s %s/macros", MacroName, OutDir));
+   if (cp) {
+      TString MN = MacroName;
+      Int_t i = MN.Index("(");
+      Int_t l = MN.Length();
+      if (i>0) MN.Remove(i, l);
+      gSystem->Exec(TString::Format("cp %s %s/macros", MN.Data(), OutDir));
+   }
 
    TIter iCanvas(gROOT->GetListOfCanvases());
    TVirtualPad* pad = 0;

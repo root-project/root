@@ -30,7 +30,7 @@ images:
 doxygen: filter
 	./makehtmlfooter.sh > htmlfooter.html
 	doxygen
-	rm -rf files c1* *.ps *.png *.svg *.pdf *.root *.xpm *.out stdout.dat
+	rm -rf files c1* *.ps *.png *.svg *.pdf *.root *.xpm *.out *.dat
 
 clean:
 	rm -r $(DOXYGEN_OUTPUT_DIRECTORY) filter htmlfooter.html

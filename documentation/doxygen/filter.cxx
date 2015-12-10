@@ -181,7 +181,7 @@ void FilterClass()
 
          if (gInMacro) {
             if (gInMacro == 1) {
-               if (EndsWith(gLineString,".C\n")) {
+               if (EndsWith(gLineString,".C\n") || (gLineString.find(".C(") != string::npos)) {
                   ExecuteMacro();
                   gInMacro++;
                } else {
@@ -281,7 +281,8 @@ void FilterTutorial()
 
       // \author is the last comment line.
       if (gLineString.find("\\author")  != string::npos) {
-         printf("%s",StringFormat("%s \n/// \\cond \n",gLineString.c_str()).c_str());
+         if (!gPython) printf("%s",StringFormat("%s \n## \\cond \n",gLineString.c_str()).c_str());
+         else          printf("%s",StringFormat("%s \n/// \\cond \n",gLineString.c_str()).c_str());
          if (gShowTutSource == 1) gShowTutSource = 2;
       } else {
          printf("%s",gLineString.c_str());
@@ -352,16 +353,24 @@ void ExecuteMacro()
    gMacroName = gLineString.substr(i1,i2-i1+1);
 
    // Build the ROOT command to be executed.
+   bool ts = false;
+   if (BeginsWith(gLineString,"///")) ts = true;
+   if (ts) ReplaceAll(gLineString,"///", "");
+   if (ts) ReplaceAll(gLineString," ", "");
    gLineString.insert(0, StringFormat("root -l -b -q \"makeimage.C(\\\""));
    int l = gLineString.length();
-   gLineString.replace(l-2,1,StringFormat("C\\\",\\\"%s\\\",\\\"%s\\\",true,false)\"", gImageName.c_str(), gOutDir.c_str()));
+   gLineString.replace(l-1,1,StringFormat("\\\",\\\"%s\\\",\\\"%s\\\",true,false)\"", gImageName.c_str(), gOutDir.c_str()));
 
+   // Execute the macro
    ExecuteCommand(gLineString);
 
+   // Inline the directives to show the picture and/or the code
    if (gImageSource) {
-      gLineString = StringFormat("\\include %s\n\\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
+      if (ts) gLineString = StringFormat("/// \\include %s\n/// \\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
+      else    gLineString = StringFormat("\\include %s\n\\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
    } else {
-      gLineString = StringFormat("\n\\image html pict1_%s\n", gImageName.c_str());
+      if (ts) gLineString = StringFormat("\n/// \\image html pict1_%s\n", gImageName.c_str());
+      else    gLineString = StringFormat("\n\\image html pict1_%s\n", gImageName.c_str());
    }
 }
 
