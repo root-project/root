@@ -1424,16 +1424,17 @@ void TMVA::Factory::EvaluateAllMethods( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate Variable Importance
 
-void TMVA::Factory::EvaluateImportance(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
+void TMVA::Factory::EvaluateImportance(DataLoader *loader,VIType vitype, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
 {
   
   //getting number of variables and variable names from loader
   const int nbits = loader->DefaultDataSetInfo().GetNVariables();
-//   EvaluateImportanceAll(loader,theMethod,methodTitle,theOption);
-  EvaluateImportanceDefault(loader,theMethod,methodTitle,theOption);
-  
-//   if(nbits<10) EvaluateImportanceAll(loader,theMethod,methodTitle,theOption);
-//   else EvaluateImportanceSeeds(loader,pow(2,nbits),theMethod,methodTitle,theOption);
+  if(vitype==VIType::kShort)
+  EvaluateImportanceShort(loader,theMethod,methodTitle,theOption);
+  if(vitype==VIType::kAll)
+  EvaluateImportanceAll(loader,theMethod,methodTitle,theOption);
+  if(vitype==VIType::kRandom)
+  EvaluateImportanceRandom(loader,pow(2,nbits),theMethod,methodTitle,theOption);
 }
 
 void TMVA::Factory::VIDataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src)
@@ -1553,7 +1554,7 @@ static long int sum(long int i)
 }
 
 
-void TMVA::Factory::EvaluateImportanceDefault(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
+void TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
 {
   
   uint64_t x = 0;
@@ -1668,6 +1669,131 @@ void TMVA::Factory::EvaluateImportanceDefault(DataLoader *loader, Types::EMVA th
   }
   PlotImportance(nbits,importances,varNames);      
 }
+
+void TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
+{
+   TRandom3 *rangen = new TRandom3(0);  //Random Gen.
+
+   uint64_t x = 0;
+   uint64_t y = 0;
+
+   //getting number of variables and variable names from loader
+   const int nbits = loader->DefaultDataSetInfo().GetNVariables();
+   std::vector<TString> varNames = loader->DefaultDataSetInfo().GetListOfVariables();
+
+   long int range = pow(2, nbits);
+
+   //vector to save importances
+   std::vector<Double_t> importances(nbits);
+   Double_t importances_norm = 0;
+   for (int i = 0; i < nbits; i++)importances[i] = 0;
+
+   Double_t SROC, SSROC; //computed ROC value
+   for (UInt_t n = 0; n < nseeds; n++) {
+      x = rangen -> Integer(range);
+
+      std::bitset<32>  xbitset(x);
+      if (x == 0) continue; //dataloader need at least one variable
+
+
+      //creating loader for seed
+      TMVA::DataLoader *seedloader = new TMVA::DataLoader(xbitset.to_string());
+
+      //adding variables from seed
+      for (int index = 0; index < nbits; index++) {
+         if (xbitset[index]) seedloader->AddVariable(varNames[index], 'F');
+      }
+
+      //Loading Dataset
+      VIDataLoaderCopy(seedloader,loader);
+
+      //Booking Seed
+      BookMethod(seedloader, theMethod, methodTitle, theOption);
+
+      //Train/Test/Evaluation
+      TrainAllMethods();
+      TestAllMethods();
+      EvaluateAllMethods();
+
+      //getting ROC
+      SROC = GetROCIntegral(xbitset.to_string(), methodTitle);
+      std::cout << "Seed: n " << n << " x " << x << " xbitset:" << xbitset << "  ROC " << SROC << std::endl;
+
+      //cleaning information to process subseeds
+      TMVA::MethodBase *smethod=dynamic_cast<TMVA::MethodBase*>(fMethodsMap[xbitset.to_string().c_str()][0][0]);
+      TMVA::ResultsClassification  *sresults = (TMVA::ResultsClassification*)smethod->Data()->GetResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
+      sresults->Delete();
+      delete sresults;
+      fgTargetFile->cd();
+      fgTargetFile->Delete(seedloader->GetName());
+      fgTargetFile->Delete(Form("%s;1",seedloader->GetName()));
+      fgTargetFile->Flush();
+      delete seedloader;
+      std::vector<TMVA::VariableTransformBase *>::iterator trfIt = fDefaultTrfs.begin();
+      gSystem->Exec(Form("rm -rf %s", xbitset.to_string().c_str()));
+      
+      this->DeleteAllMethods();
+      
+      fMethodsMap.clear();
+      //removing global result because it is requiring alot amount of RAM for all seeds
+      
+      for (uint32_t i = 0; i < 32; ++i) {
+         if (x & (1 << i)) {
+            y = x & ~(1 << i);
+            std::bitset<32>  ybitset(y);
+            //need at least one variable
+            //NOTE: if subssed is zero then is the special case
+            //that count in xbitset is 1
+            Double_t ny = log(x - y) / 0.693147;
+            if (y == 0) {
+               importances[ny] = SROC - 0.5;
+               importances_norm += importances[ny];
+             //  std::cout << "SubSeed: " << y << " y:" << ybitset << "ROC " << 0.5 << std::endl;
+               continue;
+            }
+
+            //creating loader for subseed
+            TMVA::DataLoader *subseedloader = new TMVA::DataLoader(ybitset.to_string());
+            //adding variables from subseed
+            for (int index = 0; index < nbits; index++) {
+               if (ybitset[index]) subseedloader->AddVariable(varNames[index], 'F');
+            }
+
+            //Loading Dataset
+            VIDataLoaderCopy(subseedloader,loader);
+
+            //Booking SubSeed
+            BookMethod(subseedloader, theMethod, methodTitle, theOption);
+
+            //Train/Test/Evaluation
+            TrainAllMethods();
+            TestAllMethods();
+            EvaluateAllMethods();
+
+            //getting ROC
+            SSROC = GetROCIntegral(ybitset.to_string(), methodTitle);
+            importances[ny] += SROC - SSROC;
+           std::cout << "SubSeed: " << y << " y:" << ybitset << " x-y " << x - y << " " << std::bitset<32>(x - y) << " ny " << ny << " SROC " << SROC << " SSROC " << SSROC << " Importance = " << importances[ny] << std::endl;
+            //cleaning information
+	    TMVA::MethodBase *ssmethod=dynamic_cast<TMVA::MethodBase*>(fMethodsMap[ybitset.to_string().c_str()][0][0]);
+            TMVA::ResultsClassification *ssresults = (TMVA::ResultsClassification*)ssmethod->Data()->GetResults(ssmethod->GetMethodName(), Types::kTesting, Types::kClassification);
+	    ssresults->Delete();
+            delete ssresults;
+            fgTargetFile->cd();
+            fgTargetFile->Delete(subseedloader->GetName());//deleting directories in global file
+            fgTargetFile->Delete(Form("%s;1",subseedloader->GetName()));//deleting directories in global file
+            fgTargetFile->Flush();
+            delete subseedloader;
+            this->DeleteAllMethods();
+            fMethodsMap.clear();
+            gSystem->Exec(Form("rm -rf %s", ybitset.to_string().c_str()));            
+         }
+      }
+   }
+     PlotImportance(nbits,importances,varNames);      
+}
+
+
 
 TCanvas* TMVA::Factory::PlotImportance(const int nbits,std::vector<Double_t> importances,std::vector<TString> varNames)
 {
