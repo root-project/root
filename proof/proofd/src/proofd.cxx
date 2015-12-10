@@ -215,10 +215,6 @@ extern "C" int gethostname(char *, unsigned int);
 #endif
 
 #include "proofdp.h"
-extern "C" {
-#include "rsadef.h"
-#include "rsalib.h"
-}
 
 // General globals
 int     gDebug                   = 0;
