@@ -1,6 +1,6 @@
 // @(#)root/hist:$Id$
 // TH2Poly v2.1
-// Author: Olivier Couet, Deniz Gunceler
+// Author: Olivier Couet, Deniz Gunceler, Danilo Piparo
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -10,21 +10,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
-#include "TClass.h"
 #include "TH2Poly.h"
-#include "TCutG.h"
-#include "TList.h"
-#include "TMath.h"
 #include "TMultiGraph.h"
 #include "TGraph.h"
-#include "TStyle.h"
-#include "TCanvas.h"
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-#include "Riostream.h"
+#include "TClass.h"
+#include "TList.h"
+#include "TMath.h"
 
 ClassImp(TH2Poly)
 
@@ -281,21 +272,21 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
 
    // Check if number of bins is the same.
    if (h1p->GetNumberOfBins() != fNcells) {
-      Error("Add","Attempt to add histograms with different number of bins");
+      Error("Add", "Attempt to add histograms with different number of bins");
       return kFALSE;
    }
 
    // Check if the bins are the same.
    TList *h1pBins = h1p->GetBins();
    TH2PolyBin *thisBin, *h1pBin;
-   for (bin=1;bin<=fNcells;bin++) {
-      thisBin = (TH2PolyBin*)fBins->At(bin-1);
-      h1pBin  = (TH2PolyBin*)h1pBins->At(bin-1);
-      if(thisBin->GetXMin() != h1pBin->GetXMin() ||
-         thisBin->GetXMax() != h1pBin->GetXMax() ||
-         thisBin->GetYMin() != h1pBin->GetYMin() ||
-         thisBin->GetYMax() != h1pBin->GetYMax()) {
-         Error("Add","Attempt to add histograms with different bin limits");
+   for (bin = 1; bin <= fNcells; bin++) {
+      thisBin = (TH2PolyBin *)fBins->At(bin - 1);
+      h1pBin  = (TH2PolyBin *)h1pBins->At(bin - 1);
+      if (thisBin->GetXMin() != h1pBin->GetXMin() ||
+            thisBin->GetXMax() != h1pBin->GetXMax() ||
+            thisBin->GetYMin() != h1pBin->GetYMin() ||
+            thisBin->GetYMax() != h1pBin->GetYMax()) {
+         Error("Add", "Attempt to add histograms with different bin limits");
          return kFALSE;
       }
    }
@@ -303,18 +294,43 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
    // Create Sumw2 if h1p has Sumw2 set
    if (fSumw2.fN == 0 && h1p->GetSumw2N() != 0) Sumw2();
 
+   // statistics can be preserbed only in case of positive coefficients
+   // otherwise with negative c1 (histogram subtraction) one risks to get negative variances
+   Bool_t resetStats = (c1 < 0);
+   Double_t s1[kNstat] = {0};
+   Double_t s2[kNstat] = {0};
+   if (!resetStats) {
+      // need to initialize to zero s1 and s2 since
+      // GetStats fills only used elements depending on dimension and type
+      GetStats(s1);
+      h1->GetStats(s2);
+   }
+
    // Perform the Add.
-   Double_t factor =1;
+   Double_t factor = 1;
    if (h1p->GetNormFactor() != 0)
-      factor = h1p->GetNormFactor()/h1p->GetSumOfWeights();
-   for (bin=1;bin<=fNcells;bin++) {
-      thisBin = (TH2PolyBin*)fBins->At(bin-1);
-      h1pBin  = (TH2PolyBin*)h1pBins->At(bin-1);
-      thisBin->SetContent(thisBin->GetContent()+c1*h1pBin->GetContent());
+      factor = h1p->GetNormFactor() / h1p->GetSumOfWeights();
+   for (bin = 1; bin <= fNcells; bin++) {
+      thisBin = (TH2PolyBin *)fBins->At(bin - 1);
+      h1pBin  = (TH2PolyBin *)h1pBins->At(bin - 1);
+      thisBin->SetContent(thisBin->GetContent() + c1 * h1pBin->GetContent());
       if (fSumw2.fN) {
-         Double_t e1 = factor*h1p->GetBinError(bin);
-         fSumw2.fArray[bin] += c1*c1*e1*e1;
+         Double_t e1 = factor * h1p->GetBinError(bin);
+         fSumw2.fArray[bin] += c1 * c1 * e1 * e1;
       }
+   }
+
+   // update statistics (do here to avoid changes by SetBinContent)
+   if (resetStats)  {
+      // statistics need to be reset in case coefficient are negative
+      ResetStats();
+   } else {
+      for (Int_t i = 0; i < kNstat; i++) {
+         if (i == 1) s1[i] += c1 * c1 * s2[i];
+         else        s1[i] += c1 * s2[i];
+      }
+      PutStats(s1);
+      SetEntries(std::abs(GetEntries() + c1 * h1->GetEntries()));
    }
    return kTRUE;
 }
@@ -1109,12 +1125,18 @@ Bool_t TH2Poly::IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TH2Poly cannot be merged.
-
-Long64_t TH2Poly::Merge(TCollection *)
+/// Merge TH2Polys
+/// Given the special nature of the TH2Poly, the merge is implemented in
+/// terms of subsequent TH2Poly::Add calls.
+Long64_t TH2Poly::Merge(TCollection *coll)
 {
-   Error("Merge","Cannot merge TH2Poly");
-   return 0;
+   for (auto h2pAsObj : *coll) {
+      if (!Add((TH1*)h2pAsObj, 1.)) {
+         Warning("Merge", "An issue was encountered during the merge operation.");
+         return 0L;
+      }
+   }
+   return GetEntries();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
