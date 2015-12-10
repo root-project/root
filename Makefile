@@ -805,13 +805,15 @@ endif
 $(COMPILEDATA): $(ROOT_SRCDIR)/config/Makefile.$(ARCH) config/Makefile.comp Makefile \
                 $(MAKECOMPDATA) $(wildcard MyRules.mk) $(wildcard MyConfig.mk) $(wildcard MyModules.mk)
 	@$(MAKECOMPDATA) $(COMPILEDATA) "$(CXX)" "$(OPTFLAGS)" "$(DEBUGFLAGS)" \
-	   "$(filter-out -fmodules,$(CXXFLAGS))" "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" \
+	   "$(CXXFLAGS)" "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" \
 	   "$(LIBDIR)" "$(BOOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" \
 	   "$(MAKESHAREDLIB)" "$(MAKEEXE)" "$(ARCH)" "$(ROOTBUILD)" \
 	   "$(EXPLICITLINK)"
 
+ifeq ($(CXXMODULES),yes)
 include/module.modulemap:    $(ROOT_SRCDIR)/build/unix/module.modulemap
 	cp $< $@
+endif
 
 # We rebuild GITCOMMITH only when we would re-link libCore anyway.
 # Thus it depends on all dependencies of libCore (minus TROOT.o
@@ -1116,9 +1118,15 @@ changelog:
 
 releasenotes:
 	@$(MAKERELNOTES)
+ROOTCLING_CXXFLAGS := $(CXXFLAGS)
+# rootcling doesn't know what to do with these flags.
+# FIXME: Disable until until somebody teaches it.
+ifeq ($(CXXMODULES),yes)
+ROOTCLING_CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
+endif
 
 $(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
-	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(CXXFLAGS)
+	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTCLING_CXXFLAGS)
 	@$(MAKEPCH) $@
 
 $(MAKEPCH): $(ROOT_SRCDIR)/$(MAKEPCH)
