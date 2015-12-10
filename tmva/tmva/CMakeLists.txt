@@ -34,7 +34,7 @@ set(headers4 TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivation
          TActivationTanh.h TActivationRadial.h TActivationReLU.h TNeuronInputChooser.h TNeuronInput.h TNeuronInputSum.h
 	     TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h
 	     VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h 
-	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h ROCCalc.h)
+	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h ROCCalc.h ROCCurve.h)
 
 #---Need to suffix each header name by TMVA/  -----------------
 foreach(hs headers1 headers2 headers3 headers4)
