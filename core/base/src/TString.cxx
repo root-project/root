@@ -279,6 +279,19 @@ TString& TString::operator=(const std::string &s)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Assign std::string s to TString.
+
+TString& TString::operator=(const std::string_view &s)
+{
+   if (s.length()==0) {
+      UnLink();
+      Zero();
+      return *this;
+   }
+   return Replace(0, Length(), s.data(), s.length());
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator.
 
 TString& TString::operator=(const TString &rhs)
