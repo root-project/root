@@ -58,6 +58,7 @@ if(builtin_freetype)
       FREETYPE
       URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/win32 builds/windows/visualc/.
+      CONFIGURE_COMMAND ""
       BUILD_COMMAND ${CMAKE_COMMAND} -E chdir builds/windows/visualc/
                     nmake -nologo -f freetype.mak CFG=${freetypebuild} NMAKECXXFLAGS=-D_CRT_SECURE_NO_DEPRECATE 
       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypeliba} ./libs/freetype.lib     
