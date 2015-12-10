@@ -1,3 +1,6 @@
+ROOTTEST_ADD_TEST(mergeTH2Poly
+                  MACRO th2PolyMerge.C)
+
 ROOTTEST_ADD_TEST(assertSparseToTHn
                   MACRO assertSparseToTHn.C
                   COPY_TO_BUILDDIR effectiveCorrection.root)
