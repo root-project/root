@@ -41,13 +41,6 @@
 using namespace std;
 
 
-// TMVA::ROCCurve::ROCCurve(std::vector<Float_t> mvas,std::vector<Float_t> mvab) :
-//    mvaS(mvas),
-//    mvaB(mvab),
-//    fLogger ( new TMVA::MsgLogger("ROCCurve") )
-// {
-// }
-
 TMVA::ROCCurve::ROCCurve(std::vector<Float_t> mva,std::vector<Bool_t> mvat) :
    fLogger ( new TMVA::MsgLogger("ROCCurve") )
 {

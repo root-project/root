@@ -122,7 +122,7 @@ namespace TMVA {
       void EvaluateAllMethods( void );
       void EvaluateAllVariables(DataLoader *loader, TString options = "" ); 
   
-      void EvaluateImportance( DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
+      void EvaluateImportance( DataLoader *loader,VIType vitype, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
 
       // delete all methods and reset the method vector
       void DeleteAllMethods( void );
@@ -158,11 +158,11 @@ namespace TMVA {
       void Greetings();
       
       //evaluate the simple case that is removing 1 variable at time
-      void EvaluateImportanceDefault( DataLoader *loader,Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
+      void EvaluateImportanceShort( DataLoader *loader,Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
       //evaluate all variables combinations
       void EvaluateImportanceAll( DataLoader *loader,Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
-      //evaluate given a number of seeds
-//       void EvaluateImportanceSeeds( DataLoader *loader,UInt_t nseeds, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
+      //evaluate randomly given a number of seeds
+      void EvaluateImportanceRandom( DataLoader *loader,UInt_t nseeds, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
       
       TCanvas* PlotImportance(const int nbits,std::vector<Double_t> importances,std::vector<TString> varNames);
       
@@ -171,7 +171,7 @@ namespace TMVA {
       
       void WriteDataInformation(DataSetInfo&     fDataSetInfo);
 
-      void                     SetInputTreesFromEventAssignTrees();
+      void SetInputTreesFromEventAssignTrees();
 
    private:
 

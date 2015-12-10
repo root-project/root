@@ -43,7 +43,6 @@ namespace TMVA {
   class ROCCurve {
     
   public:
-//     ROCCurve( std::vector<Float_t> mvaS, std::vector<Float_t> mvaB);
     ROCCurve( std::vector<Float_t> mvaS,std::vector<Bool_t> mvat);
     
     ~ROCCurve();
