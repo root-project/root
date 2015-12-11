@@ -281,8 +281,8 @@ void FilterTutorial()
 
       // \author is the last comment line.
       if (gLineString.find("\\author")  != string::npos) {
-         if (!gPython) printf("%s",StringFormat("%s \n## \\cond \n",gLineString.c_str()).c_str());
-         else          printf("%s",StringFormat("%s \n/// \\cond \n",gLineString.c_str()).c_str());
+         if (gPython) printf("%s",StringFormat("%s \n## \\cond \n",gLineString.c_str()).c_str());
+         else         printf("%s",StringFormat("%s \n/// \\cond \n",gLineString.c_str()).c_str());
          if (gShowTutSource == 1) gShowTutSource = 2;
       } else {
          printf("%s",gLineString.c_str());
@@ -290,7 +290,11 @@ void FilterTutorial()
       }
    }
 
-   if (m) fclose(m);
+   if (m) {
+      if (gPython) printf("## \\endcond \n");
+      else         printf("/// \\endcond \n");
+      fclose(m);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
