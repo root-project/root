@@ -1,6 +1,15 @@
-#
-# To see the output of this macro, click begin_html <a href="gif/shapes.gif" >here</a> end_html
-#
+## \file
+## \ingroup tutorial_pyroot
+##  Draw the geometry using the x3d viewver.
+##  Note that this viewver may also be invoked from the "View" menu in
+##  the canvas tool bar
+##
+## once in x3d viewer, type m to see the menu.
+## For example typing r will show a solid model of this geometry.
+##
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 import ROOT
 
@@ -83,10 +92,3 @@ for l, o in locals().items():
 node1.cd()
 node1.Draw( 'gl' )
 c1.Update()
-#
-#  Draw the geometry using the x3d viewver.
-#  Note that this viewver may also be invoked from the "View" menu in
-#  the canvas tool bar
-#
-# once in x3d viewer, type m to see the menu.
-# For example typing r will show a solid model of this geometry.

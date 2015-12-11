@@ -1,8 +1,13 @@
+## \file
+## \ingroup tutorial_pyroot
+## Ntuple drawing example.
+##
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TPad, TFile, TPaveText
 from ROOT import gBenchmark, gStyle, gROOT
-
-#gROOT.Reset()
 
 c1 = TCanvas('c1','The Ntuple canvas',200,10,700,780)
 

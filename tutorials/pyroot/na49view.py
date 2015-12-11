@@ -1,8 +1,21 @@
-#
-# This macro generates
-# a begin_html <a href="gif/na49canvas.gif">Canvas</a> end_html
-# with 2 views of the NA49 detector.
-#
+## \file
+## \ingroup tutorial_pyroot
+## This macro generates two views of the NA49 detector.
+##
+## To have a better and dynamic view of any of these pads,
+## you can click with the middle button of your mouse to select it.
+## Then select "View with x3d" in the VIEW menu of the Canvas.
+## Once in x3d, you are in wireframe mode by default.
+## You can switch to:
+##  - Hidden Line mode by typing E
+##  - Solid mode by typing R
+##  - Wireframe mode by typing W
+##  - Stereo mode by clicking S (and you need special glasses)
+##  - To leave x3d type Q
+##
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 import ROOT
 
@@ -31,14 +44,3 @@ TOFR1.Draw()
 c1.Update()
 
 ROOT.gBenchmark.Show( 'na49view' )
-
-# To have a better and dynamic view of any of these pads,
-# you can click with the middle button of your mouse to select it.
-# Then select "View with x3d" in the VIEW menu of the Canvas.
-# Once in x3d, you are in wireframe mode by default.
-# You can switch to:
-#   - Hidden Line mode by typing E
-#   - Solid mode by typing R
-#   - Wireframe mode by typing W
-#   - Stereo mode by clicking S (and you need special glasses)
-#   - To leave x3d type Q
