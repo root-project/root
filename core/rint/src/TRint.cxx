@@ -20,6 +20,7 @@
 
 #include "TROOT.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TVirtualX.h"
 #include "TStyle.h"
 #include "TObjectTable.h"
@@ -608,10 +609,24 @@ Bool_t TRint::HandleTermInput()
          } ENDTRY;
       }
       // handle every exception
+      catch (std::exception& e) {
+         // enable again intput handler
+         if (!added) fInputHandler->Activate();
+
+         int err;
+         char *demangledType_c = TClassEdit::DemangleTypeIdName(typeid(e), err);
+         const char* demangledType = demangledType_c;
+         if (err) {
+            demangledType_c = nullptr;
+            demangledType = "<UNKNOWN>";
+         }
+         Error("HandleTermInput()", "%s caught: %s", demangledType, e.what());
+         free(demangledType_c);
+      }
       catch (...) {
          // enable again intput handler
          if (!added) fInputHandler->Activate();
-         throw;
+         Error("HandleTermInput()", "Exception caught!");
       }
 
       if (gROOT->Timer()) timer.Print("u");
