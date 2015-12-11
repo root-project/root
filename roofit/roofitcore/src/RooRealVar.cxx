@@ -147,8 +147,10 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
   _asymErrHi(other._asymErrHi)
 {
   _sharedProp =  (RooRealVarSharedProperties*) _sharedPropList.registerProperties(other.sharedProp()) ;
-  _binning = other._binning->clone() ;
-  _binning->insertHook(*this) ;
+  if (other._binning) { 
+     _binning = other._binning->clone() ;
+     _binning->insertHook(*this) ;
+  }
   _fast = kTRUE ;
 
   //cout << "RooRealVar::cctor(this = " << this << " name = " << GetName() << ", other = " << &other << ")" << endl ;
