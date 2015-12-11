@@ -1,4 +1,27 @@
-// comparison of MCMC and PLC in a multi-variate gaussian problem
+/// \file
+/// \ingroup tutorial_roostats
+/// Comparison of MCMC and PLC in a multi-variate gaussian problem
+///
+/// This tutorial produces an N-dimensional multivariate Gaussian
+/// with a non-trivial covariance matrix.  By default N=4 (called "dim").
+///
+/// A subset of these are considered parameters of interest.
+/// This problem is tractable analytically.
+///
+/// We use this mainly as a test of Markov Chain Monte Carlo
+/// and we compare the result to the profile likelihood ratio.
+///
+/// We use the proposal helper to create a customized
+/// proposal function for this problem.
+///
+/// For N=4 and 2 parameters of interest it takes about 10-20 seconds
+/// and the acceptance rate is 37%
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \authors Kevin Belasco and Kyle Cranmer
 
 #include "RooGlobalFunc.h"
 #include <stdlib.h>
@@ -32,25 +55,6 @@ using namespace RooStats;
 
 void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
 {
-  /*
-    Authors: Kevin Belasco and Kyle Cranmer.
-
-    This tutorial produces an N-dimensional multivariate Gaussian
-    with a non-trivial covariance matrix.  By default N=4 (called "dim").
-
-    A subset of these are considered parameters of interest.
-    This problem is tractable analytically.
-
-    We use this mainly as a test of Markov Chain Monte Carlo
-    and we compare the result to the profile likelihood ratio.
-
-    We use the proposal helper to create a customized
-    proposal function for this problem.
-
-    For N=4 and 2 parameters of interest it takes about 10-20 seconds
-    and the acceptance rate is 37%
-   */
-
   // let's time this challenging example
   TStopwatch t;
   t.Start();
