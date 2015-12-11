@@ -63,10 +63,10 @@ for i in xrange( 25000 ):
    random = rndm(1)
 
  # Fill histograms.
-   hpxFill( px )
-   hpxpyFill( px, py )
-   hprofFill( px, pz )
-   ntupleFill( px, py, pz, random, i )
+   hpx.Fill( px )
+   hpxpy.Fill( px, py )
+   hprof.Fill( px, pz )
+   ntuple.Fill( px, py, pz, random, i )
 
  # Update display every kUPDATE events.
    if i and i%kUPDATE == 0:
