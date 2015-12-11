@@ -72,6 +72,8 @@ Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
 
 ### Interpreter Library
 
+Exceptions are now caught in the interactive ROOT session, instead of terminating ROOT.
+
 
 ## I/O Libraries
 Custom streamers need to #include TBuffer.h explicitly (see
