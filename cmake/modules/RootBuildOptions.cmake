@@ -95,7 +95,7 @@ ROOT_BUILD_OPTION(exceptions ON "Turn on compiler exception handling capability"
 ROOT_BUILD_OPTION(explicitlink ON "Explicitly link with all dependent libraries")
 ROOT_BUILD_OPTION(fftw3 ON "Fast Fourier Transform support, requires libfftw3")
 ROOT_BUILD_OPTION(fitsio ON "Read images and data from FITS files, requires cfitsio")
-ROOT_BUILD_OPTION(fortran ${fortran_defvalue} "Enable the Fortran components of ROOT")
+ROOT_BUILD_OPTION(fortran ON "Enable the Fortran components of ROOT")
 set(gcctoolchain "" CACHE PATH "Path for the gcctoolchain in case not the system gcc is used to build clang/LLVM")
 ROOT_BUILD_OPTION(gviz ON "Graphs visualization support, requires graphviz")
 ROOT_BUILD_OPTION(gdml OFF "GDML writer and reader")
