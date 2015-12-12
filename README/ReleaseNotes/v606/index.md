@@ -546,3 +546,4 @@ Changes will be part of the future 6.04/14
 ### PyROOT
 
 - Fix case where c++ exception in a constructor were not propagated to python [ROOT-7864]
+- Fix case where PyROOT was unable to call copy constructo [ROOT-7783]
