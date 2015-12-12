@@ -141,6 +141,17 @@ namespace {
       return left->GetPriority() > right->GetPriority();
    }
 
+// return helper
+   inline void ResetCallState( ObjectProxy*& selfnew, ObjectProxy* selfold, Bool_t clear ) {
+      if ( selfnew != selfold ) {
+         Py_XDECREF( selfnew );
+         selfnew = selfold;
+      }
+
+      if ( clear )
+         PyErr_Clear();
+   }
+
 // helper to factor out return logic of mp_call
    inline PyObject* HandleReturn( MethodProxy* pymeth, ObjectProxy* oldSelf, PyObject* result ) {
 
@@ -172,10 +183,7 @@ namespace {
       }
 
    // reset self as necessary to allow re-use of the MethodProxy
-      if ( pymeth->fSelf != oldSelf ) {
-         Py_XDECREF( pymeth->fSelf );
-         pymeth->fSelf = oldSelf;
-      }
+      ResetCallState( pymeth->fSelf, oldSelf, kFALSE );
 
       return result;
    }
@@ -597,7 +605,7 @@ namespace {
             return result;
 
       // fall through: python is dynamic, and so, the hashing isn't infallible
-         PyErr_Clear();
+         ResetCallState( pymeth->fSelf, oldSelf, kTRUE );
       }
 
    // ... otherwise loop over all methods and find the one that does not fail
@@ -628,6 +636,7 @@ namespace {
          PyError_t e;
          PyErr_Fetch( &e.fType, &e.fValue, &e.fTrace );
          errors.push_back( e );
+         ResetCallState( pymeth->fSelf, oldSelf, kFALSE );
       }
 
    // first summarize, then add details
