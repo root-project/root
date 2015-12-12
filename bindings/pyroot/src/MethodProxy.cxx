@@ -145,7 +145,7 @@ namespace {
    inline PyObject* HandleReturn( MethodProxy* pymeth, ObjectProxy* oldSelf, PyObject* result ) {
 
    // special case for python exceptions, propagated through C++ layer
-      if ( result != (PyObject*)TPyExceptionMagic && result != (PyObject*)TPyCPPExceptionMagic ) {
+      if ( result ) {
 
       // if this method creates new objects, always take ownership
          if ( IsCreator( pymeth->fMethodInfo->fFlags ) ) {
@@ -169,8 +169,6 @@ namespace {
                   PyErr_Clear();     // ignored
             }
          }
-      } else { // result is TPyExceptionMagic or TPyCPPExceptionMagic
-         result = nullptr;         // exception info was already set
       }
 
    // reset self as necessary to allow re-use of the MethodProxy
@@ -611,16 +609,6 @@ namespace {
       std::vector< PyError_t > errors;
       for ( Int_t i = 0; i < nMethods; ++i ) {
          PyObject* result = methods[i]->Call( pymeth->fSelf, args, kwds, &ctxt );
-
-         if ( result == (PyObject*)TPyCPPExceptionMagic ) {
-            std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
-            return 0;               // only interested in this exception!
-         }
-
-         if ( result == (PyObject*)TPyExceptionMagic ) {
-            std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
-            return 0;              // exception info was already set
-         }
 
          if ( result != 0 ) {
          // success: update the dispatch map for subsequent calls

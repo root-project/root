@@ -21,24 +21,6 @@
 
 //- data ---------------------------------------------------------------------
 ClassImp(PyROOT::TPyException)
-void* PyROOT::TPyExceptionMagic = (PyObject*)1;
-void* PyROOT::TPyCPPExceptionMagic = (PyObject*)2;
-
-namespace {
-
-   class TManageMagic {  // ensures that no valid PyObject can occupy the magic
-   public:
-      TManageMagic() { 
-        PyROOT::TPyExceptionMagic = new int(1);
-        PyROOT::TPyCPPExceptionMagic = new int(2);
-      }
-      ~TManageMagic() {
-        delete (int*)PyROOT::TPyExceptionMagic;
-        delete (int*)PyROOT::TPyCPPExceptionMagic;
-      }
-   } manageMagic;
-
-} // unnamed namespace
 
 
 //- constructors/destructor --------------------------------------------------
