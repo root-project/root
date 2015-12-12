@@ -538,3 +538,11 @@ Minor changes in the build system:
 
 - Renamed build option POSTGRESQL_LIBRARIES to POSTGRESQL_LIBRARY
 - Added build option `builtin_openssl` to build OpenSSL internally. This is specially needed for the latest Mac OSX (El Capitan)
+
+## HEAD of the v6-06-00-patches branch
+
+Changes will be part of the future 6.04/14
+
+### PyROOT
+
+- Fix case where c++ exception in a constructor were not propagated to python [ROOT-7864]
