@@ -28,6 +28,7 @@
 #include "TMVA/GeneticFitter.h"
 #include "TMVA/IFitterTarget.h"
 #include "TMVA/Factory.h"
+#include "TMVA/DataLoader.h"//required to load dataset
 #include "TMVA/Reader.h"
 
 using namespace std;
@@ -68,32 +69,35 @@ void Training(){
 
    // ===================== background 0
    TMVA::Factory *factory = new TMVA::Factory( "TMVAMultiBkg0", outputFile, factoryOptions );
-   factory->AddVariable( "var1", "Variable 1", "", 'F' );
-   factory->AddVariable( "var2", "Variable 2", "", 'F' );
-   factory->AddVariable( "var3", "Variable 3", "units", 'F' );
-   factory->AddVariable( "var4", "Variable 4", "units", 'F' );
+   TMVA::DataLoader *dataloader=new TMVA::DataLoader("datasetBkg0");
+   
+   dataloader->AddVariable( "var1", "Variable 1", "", 'F' );
+   dataloader->AddVariable( "var2", "Variable 2", "", 'F' );
+   dataloader->AddVariable( "var3", "Variable 3", "units", 'F' );
+   dataloader->AddVariable( "var4", "Variable 4", "units", 'F' );
 
-   factory->AddSignalTree    ( signal,     signalWeight       );
-   factory->AddBackgroundTree( background0, background0Weight );
+   dataloader->AddSignalTree    ( signal,     signalWeight       );
+   dataloader->AddBackgroundTree( background0, background0Weight );
 
 //   factory->SetBackgroundWeightExpression("weight");
    TCut mycuts = ""; // for example: TCut mycuts = "abs(var1)<0.5 && abs(var2-0.5)<1";
    TCut mycutb = ""; // for example: TCut mycutb = "abs(var1)<0.5";
 
    // tell the factory to use all remaining events in the trees after training for testing:
-   factory->PrepareTrainingAndTestTree( mycuts, mycutb,
+   dataloader->PrepareTrainingAndTestTree( mycuts, mycutb,
                                         "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" );
 
    // Boosted Decision Trees
-   factory->BookMethod( TMVA::Types::kBDT, "BDTG",
+   factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDTG",
 			"!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.30:UseBaggedBoost:BaggedSampleFraction=0.6:SeparationType=GiniIndex:nCuts=20:MaxDepth=2" );
    factory->TrainAllMethods();
    factory->TestAllMethods();
    factory->EvaluateAllMethods();
 
    outputFile->Close();
-
+   
    delete factory;
+   delete dataloader;
 
 
 
@@ -101,24 +105,25 @@ void Training(){
 
    outfileName = "TMVASignalBackground1.root";
    outputFile = TFile::Open( outfileName, "RECREATE" );
+   dataloader=new TMVA::DataLoader("datasetBkg1");
 
    factory = new TMVA::Factory( "TMVAMultiBkg1", outputFile, factoryOptions );
-   factory->AddVariable( "var1", "Variable 1", "", 'F' );
-   factory->AddVariable( "var2", "Variable 2", "", 'F' );
-   factory->AddVariable( "var3", "Variable 3", "units", 'F' );
-   factory->AddVariable( "var4", "Variable 4", "units", 'F' );
+   dataloader->AddVariable( "var1", "Variable 1", "", 'F' );
+   dataloader->AddVariable( "var2", "Variable 2", "", 'F' );
+   dataloader->AddVariable( "var3", "Variable 3", "units", 'F' );
+   dataloader->AddVariable( "var4", "Variable 4", "units", 'F' );
 
-   factory->AddSignalTree    ( signal,     signalWeight       );
-   factory->AddBackgroundTree( background1, background1Weight );
+   dataloader->AddSignalTree    ( signal,     signalWeight       );
+   dataloader->AddBackgroundTree( background1, background1Weight );
 
-//   factory->SetBackgroundWeightExpression("weight");
+//   dataloader->SetBackgroundWeightExpression("weight");
 
    // tell the factory to use all remaining events in the trees after training for testing:
-   factory->PrepareTrainingAndTestTree( mycuts, mycutb,
+   dataloader->PrepareTrainingAndTestTree( mycuts, mycutb,
                                         "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" );
 
    // Boosted Decision Trees
-   factory->BookMethod( TMVA::Types::kBDT, "BDTG",
+   factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDTG",
 			"!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.30:UseBaggedBoost:BaggedSampleFraction=0.6:SeparationType=GiniIndex:nCuts=20:MaxDepth=2" );
    factory->TrainAllMethods();
    factory->TestAllMethods();
@@ -127,6 +132,7 @@ void Training(){
    outputFile->Close();
 
    delete factory;
+   delete dataloader;
 
 
 
@@ -136,22 +142,24 @@ void Training(){
    outputFile = TFile::Open( outfileName, "RECREATE" );
 
    factory = new TMVA::Factory( "TMVAMultiBkg2", outputFile, factoryOptions );
-   factory->AddVariable( "var1", "Variable 1", "", 'F' );
-   factory->AddVariable( "var2", "Variable 2", "", 'F' );
-   factory->AddVariable( "var3", "Variable 3", "units", 'F' );
-   factory->AddVariable( "var4", "Variable 4", "units", 'F' );
+   dataloader=new TMVA::DataLoader("datasetBkg2");
 
-   factory->AddSignalTree    ( signal,     signalWeight       );
-   factory->AddBackgroundTree( background2, background2Weight );
+   dataloader->AddVariable( "var1", "Variable 1", "", 'F' );
+   dataloader->AddVariable( "var2", "Variable 2", "", 'F' );
+   dataloader->AddVariable( "var3", "Variable 3", "units", 'F' );
+   dataloader->AddVariable( "var4", "Variable 4", "units", 'F' );
 
-//   factory->SetBackgroundWeightExpression("weight");
+   dataloader->AddSignalTree    ( signal,     signalWeight       );
+   dataloader->AddBackgroundTree( background2, background2Weight );
 
-   // tell the factory to use all remaining events in the trees after training for testing:
-   factory->PrepareTrainingAndTestTree( mycuts, mycutb,
+//   dataloader->SetBackgroundWeightExpression("weight");
+
+   // tell the dataloader to use all remaining events in the trees after training for testing:
+   dataloader->PrepareTrainingAndTestTree( mycuts, mycutb,
                                         "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" );
 
    // Boosted Decision Trees
-   factory->BookMethod( TMVA::Types::kBDT, "BDTG",
+   factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDTG",
 			"!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.30:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20:MaxDepth=2" );
    factory->TrainAllMethods();
    factory->TestAllMethods();
@@ -160,6 +168,7 @@ void Training(){
    outputFile->Close();
 
    delete factory;
+   delete dataloader;
    
 }
 
@@ -216,9 +225,9 @@ void ApplicationCreateCombinedTree(){
 
    // ====== load the weight files for the readers
    TString method =  "BDT method";
-   reader0->BookMVA( "BDT method", "weights/TMVAMultiBkg0_BDTG.weights.xml" );
-   reader1->BookMVA( "BDT method", "weights/TMVAMultiBkg1_BDTG.weights.xml" );
-   reader2->BookMVA( "BDT method", "weights/TMVAMultiBkg2_BDTG.weights.xml" );
+   reader0->BookMVA( "BDT method", "datasetBkg0/weights/TMVAMultiBkg0_BDTG.weights.xml" );
+   reader1->BookMVA( "BDT method", "datasetBkg1/weights/TMVAMultiBkg1_BDTG.weights.xml" );
+   reader2->BookMVA( "BDT method", "datasetBkg2/weights/TMVAMultiBkg2_BDTG.weights.xml" );
 
    // ===== load the input file
    TFile *input(0);

@@ -153,7 +153,7 @@ void TMVAClassificationApplication( TString myMethodList = "" )
 
    // --- Book the MVA methods
 
-   TString dir    = "weights/";
+   TString dir    = "dataset/weights/";
    TString prefix = "TMVAClassification";
 
    // Book method(s)
