@@ -15,7 +15,7 @@ if(CTEST_BUILD_NAME MATCHES icc)  #  sse tests of vc fail for icc compiler
       vc-math_VC_LOG_ILP2_sse
       vc-math_VC_LOG_ILP_sse
       stressVdt)
-elseif(CTEST_BUILD_NAME MATCHES clang7)
+elseif(CTEST_BUILD_NAME MATCHES clang7 OR CTEST_BUILD_NAME MATCHES gcc51)
   set(CTEST_CUSTOM_TESTS_IGNORE ${CTEST_CUSTOM_TESTS_IGNORE}
       vc-swizzles_avx)
 endif()
