@@ -121,3 +121,15 @@ ROOTTEST_ADD_TEST(fork
                   FAILREGEX "Error in" "cannot load any more object with static TLS"
                   DEPENDS ${GENERATE_EXECUTABLE_TEST} tsenums tclass_methods)
 
+if(imt)
+   ROOTTEST_ADD_TEST(generate_imt_tree
+                     MACRO generate_imt_tree.C+)
+
+   ROOTTEST_GENERATE_EXECUTABLE(ttree_read_imt ttree_read_imt.cpp LIBRARIES Core Thread Tree)
+
+   ROOTTEST_ADD_TEST(ttree_read_imt
+                     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ttree_read_imt.sh
+                     FAILREGEX "ERROR"
+                     OUTREF ttree_read_imt.ref
+                     DEPENDS generate_imt_tree ${GENERATE_EXECUTABLE_TEST})
+endif()
