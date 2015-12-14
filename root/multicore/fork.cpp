@@ -48,9 +48,6 @@ int main()
 {
    printf("Starting\n");
 
-   // This line can be removed after ROOT-6921 is fixed
-   gSystem->Load("libHist");
-
    gInterpreter->ProcessLine("TGraph g;");
 
    pid_t pid = fork();
