@@ -86,6 +86,7 @@ Custom streamers need to #include TBuffer.h explicitly (see
 
 ## Histogram Libraries
 
+* TH2Poly has a functional Merge method.
 
 ## Math Libraries
 
@@ -119,6 +120,12 @@ Custom streamers need to #include TBuffer.h explicitly (see
 
 ## Language Bindings
 
+### Notebook integration
+
+  * Refactoring of the Jupyter integration layer into the new package JupyROOT
+  * Added ROOT [Jupyter Kernel for ROOT](https://root.cern.ch/root-has-its-jupyter-kernel)
+    * Magics are now invoked with standard syntax "%%", for example "%%cpp"
+    * The methods "toCpp" and "toPython" have been removed
 
 ## JavaScript ROOT
 
@@ -127,7 +134,6 @@ Custom streamers need to #include TBuffer.h explicitly (see
 
 
 ## Class Reference Guide
-
 
 ## Build, Configuration and Testing Infrastructure
 
