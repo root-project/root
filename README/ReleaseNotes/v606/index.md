@@ -543,9 +543,13 @@ Minor changes in the build system:
 
 Changes will be part of the future 6.04/14
 
+### Core
+
+- Make TListOfFunctions::Get thread-safe
+
 ### Histogram Libraries
 
--  Protect access to TROOT::GetListOfGlobalFunctions in TFormula
+- Protect access to TROOT::GetListOfGlobalFunctions in TFormula
 
 ### PyROOT
 
