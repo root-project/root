@@ -543,6 +543,10 @@ Minor changes in the build system:
 
 Changes will be part of the future 6.04/14
 
+### Histogram Libraries
+
+-  Protect access to TROOT::GetListOfGlobalFunctions in TFormula
+
 ### PyROOT
 
 - Fix case where c++ exception in a constructor were not propagated to python [ROOT-7864]
