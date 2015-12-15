@@ -225,7 +225,7 @@ if(mathmore OR builtin_gsl)
       endif()
     endif()
   else()
-    set(gsl_version 1.15)
+    set(gsl_version 2.1)
     message(STATUS "Downloading and building GSL version ${gsl_version}")
     ExternalProject_Add(
       GSL
