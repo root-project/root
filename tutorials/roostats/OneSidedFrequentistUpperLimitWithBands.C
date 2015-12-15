@@ -1,104 +1,106 @@
-/*
-OneSidedFrequentistUpperLimitWithBands
-
-Author: Kyle Cranmer,
-Contributions from Haichen Wang and Daniel Whiteson
-date: Dec. 2010 - Feb. 2011
-v1. Jan 28
-
-This is a standard demo that can be used with any ROOT file
-prepared in the standard way.  You specify:
- - name for input ROOT file
- - name of workspace inside ROOT file that holds model and data
- - name of ModelConfig that specifies details for calculator tools
- - name of dataset
-
-With default parameters the macro will attempt to run the
-standard hist2workspace example and read the ROOT file
-that it produces.
-
-The first ~100 lines define a new test statistic, then the main macro starts.
-You may want to control:
-  double confidenceLevel=0.95;
-  int nPointsToScan = 30;
-  int nToyMC = 200;
-
-This uses a modified version of the profile likelihood ratio as
-a test statistic for upper limits (eg. test stat = 0 if muhat>mu).
-
-Based on the observed data, one defines a set of parameter points
-to be tested based on the value of the parameter of interest
-and the conditional MLE (eg. profiled) values of the nuisance parameters.
-
-At each parameter point, pseudo-experiments are generated using this
-fixed reference model and then the test statistic is evaluated.
-Note, the nuisance parameters are floating in the fits.  For each point,
-the threshold that defines the 95% acceptance region is found.  This
-forms a "Confidence Belt".
-
-After constructing the confidence belt, one can find the confidence
-interval for any particular dataset by finding the intersection
-of the observed test statistic and the confidence belt.  First
-this is done on the observed data to get an observed 1-sided upper limt.
-
-Finally, there expected limit and bands (from background-only) are
-formed by generating background-only data and finding the upper limit.
-This is done by hand for now, will later be part of the RooStats tools.
-
-On a technical note, this technique is NOT the Feldman-Cousins technique,
-because that is a 2-sided interval BY DEFINITION.  However, like the
-Feldman-Cousins technique this is a Neyman-Construction.  For technical
-reasons the easiest way to implement this right now is to use the
-FeldmanCousins tool and then change the test statistic that it is using.
-
-Building the confidence belt can be computationally expensive.  Once it is built,
-one could save it to a file and use it in a separate step.
-
-We can use PROOF to speed things along in parallel, however,
-the test statistic has to be installed on the workers
-so either turn off PROOF or include the modified test statistic
-in your $ROOTSYS/roofit/roostats/inc directory,
-add the additional line to the LinkDef.h file,
-and recompile root.
-
-Note, if you have a boundary on the parameter of interest (eg. cross-section)
-the threshold on the one-sided test statistic starts off very small because we
-are only including downward fluctuations.  You can see the threshold in these printouts:
-
-[#0] PROGRESS:Generation -- generated toys: 500 / 999
-NeymanConstruction: Prog: 12/50 total MC = 39 this test stat = 0
- SigXsecOverSM=0.69 alpha_syst1=0.136515 alpha_syst3=0.425415 beta_syst2=1.08496 [-1e+30, 0.011215]  in interval = 1
-
-this tells you the values of the parameters being used to generate the pseudo-experiments
-and the threshold in this case is 0.011215.  One would expect for 95% that the threshold
-would be ~1.35 once the cross-section is far enough away from 0 that it is essentially
-unaffected by the boundary.  As one reaches the last points in the scan, the
-theshold starts to get artificially high.  This is because the range of the parameter in
-the fit is the same as the range in the scan.  In the future, these should be independently
-controled, but they are not now.  As a result the ~50% of pseudo-experiments that have an
-upward fluctuation end up with muhat = muMax.  Because of this, the upper range of the
-parameter should be well above the expected upper limit... but not too high or one will
-need a very large value of nPointsToScan to resolve the relevant region.  This can be
-improved, but this is the first version of this script.
-
-Important note: when the model includes external constraint terms, like a Gaussian
-constraint to a nuisance parameter centered around some nominal value there is
-a subtlety.  The asymptotic results are all based on the assumption that all the
-measurements fluctuate... including the nominal values from auxiliary measurements.
-If these do not fluctuate, this corresponds to an "conditional ensemble".  The
-result is that the distribution of the test statistic can become very non-chi^2.
-This results in thresholds that become very large. This can be seen in the following
-thought experiment.  Say the model is
-   Pois(N | s + b) * G(b0|b,sigma)
-where G(b0|b,sigma) is the external constraint and b0 is 100.  If N is also 100
-then the profiled value of b given s is going to be some trade off betwen 100-s and b0.
-If sigma is \sqrt(N), then the profiled value of b is probably 100 - s/2   So for
-s=60 we are going to have a profiled value of b~70.  Now when we generate pseudo-experiments
-for s=60, b=70 we will have N~130 and the average shat will be 30, not 60.  In practice,
-this is only an issue for values of s that are very excluded.  For values of s near the 95%
-limit this should not be a big effect.  This can be avoided if the nominal values of the constraints also fluctuate, but that requires that those parameters are RooRealVars in the model.
-This version does not deal with this issue, but it will be addressed in a future version.
-*/
+/// \file
+/// \ingroup tutorial_roostats
+/// OneSidedFrequentistUpperLimitWithBands
+///
+/// This is a standard demo that can be used with any ROOT file
+/// prepared in the standard way.  You specify:
+///  - name for input ROOT file
+///  - name of workspace inside ROOT file that holds model and data
+///  - name of ModelConfig that specifies details for calculator tools
+///  - name of dataset
+///
+/// With default parameters the macro will attempt to run the
+/// standard hist2workspace example and read the ROOT file
+/// that it produces.
+///
+/// The first ~100 lines define a new test statistic, then the main macro starts.
+/// You may want to control:
+/// ~~~ {.cpp}
+///   double confidenceLevel=0.95;
+///   int nPointsToScan = 30;
+///   int nToyMC = 200;
+/// ~~~
+/// This uses a modified version of the profile likelihood ratio as
+/// a test statistic for upper limits (eg. test stat = 0 if muhat>mu).
+///
+/// Based on the observed data, one defines a set of parameter points
+/// to be tested based on the value of the parameter of interest
+/// and the conditional MLE (eg. profiled) values of the nuisance parameters.
+///
+/// At each parameter point, pseudo-experiments are generated using this
+/// fixed reference model and then the test statistic is evaluated.
+/// Note, the nuisance parameters are floating in the fits.  For each point,
+/// the threshold that defines the 95% acceptance region is found.  This
+/// forms a "Confidence Belt".
+///
+/// After constructing the confidence belt, one can find the confidence
+/// interval for any particular dataset by finding the intersection
+/// of the observed test statistic and the confidence belt.  First
+/// this is done on the observed data to get an observed 1-sided upper limt.
+///
+/// Finally, there expected limit and bands (from background-only) are
+/// formed by generating background-only data and finding the upper limit.
+/// This is done by hand for now, will later be part of the RooStats tools.
+///
+/// On a technical note, this technique is NOT the Feldman-Cousins technique,
+/// because that is a 2-sided interval BY DEFINITION.  However, like the
+/// Feldman-Cousins technique this is a Neyman-Construction.  For technical
+/// reasons the easiest way to implement this right now is to use the
+/// FeldmanCousins tool and then change the test statistic that it is using.
+///
+/// Building the confidence belt can be computationally expensive.  Once it is built,
+/// one could save it to a file and use it in a separate step.
+///
+/// We can use PROOF to speed things along in parallel, however,
+/// the test statistic has to be installed on the workers
+/// so either turn off PROOF or include the modified test statistic
+/// in your `$ROOTSYS/roofit/roostats/inc` directory,
+/// add the additional line to the LinkDef.h file,
+/// and recompile root.
+///
+/// Note, if you have a boundary on the parameter of interest (eg. cross-section)
+/// the threshold on the one-sided test statistic starts off very small because we
+/// are only including downward fluctuations.  You can see the threshold in these printouts:
+/// ~~~ {.cpp}
+/// [#0] PROGRESS:Generation -- generated toys: 500 / 999
+/// NeymanConstruction: Prog: 12/50 total MC = 39 this test stat = 0
+///  SigXsecOverSM=0.69 alpha_syst1=0.136515 alpha_syst3=0.425415 beta_syst2=1.08496 [-1e+30, 0.011215]  in interval = 1
+/// ~~~
+/// this tells you the values of the parameters being used to generate the pseudo-experiments
+/// and the threshold in this case is 0.011215.  One would expect for 95% that the threshold
+/// would be ~1.35 once the cross-section is far enough away from 0 that it is essentially
+/// unaffected by the boundary.  As one reaches the last points in the scan, the
+/// theshold starts to get artificially high.  This is because the range of the parameter in
+/// the fit is the same as the range in the scan.  In the future, these should be independently
+/// controlled, but they are not now.  As a result the ~50% of pseudo-experiments that have an
+/// upward fluctuation end up with muhat = muMax.  Because of this, the upper range of the
+/// parameter should be well above the expected upper limit... but not too high or one will
+/// need a very large value of nPointsToScan to resolve the relevant region.  This can be
+/// improved, but this is the first version of this script.
+///
+/// Important note: when the model includes external constraint terms, like a Gaussian
+/// constraint to a nuisance parameter centered around some nominal value there is
+/// a subtlety.  The asymptotic results are all based on the assumption that all the
+/// measurements fluctuate... including the nominal values from auxiliary measurements.
+/// If these do not fluctuate, this corresponds to an "conditional ensemble".  The
+/// result is that the distribution of the test statistic can become very non-chi^2.
+/// This results in thresholds that become very large. This can be seen in the following
+/// thought experiment.  Say the model is
+/// \f$ Pois(N | s + b)G(b0|b,sigma) \f$
+/// where \f$ G(b0|b,sigma) \f$ is the external constraint and b0 is 100.  If N is also 100
+/// then the profiled value of b given s is going to be some trade off between 100-s and b0.
+/// If sigma is \f$ \sqrt(N) \f$, then the profiled value of b is probably 100 - s/2   So for
+/// s=60 we are going to have a profiled value of b~70.  Now when we generate pseudo-experiments
+/// for s=60, b=70 we will have N~130 and the average shat will be 30, not 60.  In practice,
+/// this is only an issue for values of s that are very excluded.  For values of s near the 95%
+/// limit this should not be a big effect.  This can be avoided if the nominal values of the constraints also fluctuate, but that requires that those parameters are RooRealVars in the model.
+/// This version does not deal with this issue, but it will be addressed in a future version.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Author: Kyle Cranmer, Contributions from Haichen Wang and Daniel Whiteson
 
 #include "TFile.h"
 #include "TROOT.h"
@@ -261,7 +263,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
   // in your $ROOTSYS/roofit/roostats/inc directory,
   // add the additional line to the LinkDef.h file,
   // and recompile root.
-  if (useProof) { 
+  if (useProof) {
      ProofConfig pc(*w, nworkers, "", false);
      toymcsampler->SetProofConfig(&pc); // enable proof
   }

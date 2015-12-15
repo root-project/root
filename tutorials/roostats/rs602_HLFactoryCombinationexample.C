@@ -1,14 +1,15 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'High Level Factory Example' RooStats tutorial macro #602
-// author: Danilo Piparo
-// date August. 2009
-//
-// This tutorial shows an example of creating a combined
-// model using the High Level model Factory.
-//
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roostats
+/// 'High Level Factory Example' RooStats tutorial macro #602
+///
+/// This tutorial shows an example of creating a combined
+/// model using the High Level model Factory.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Danilo Piparo
 
 #include <fstream>
 #include "TString.h"
