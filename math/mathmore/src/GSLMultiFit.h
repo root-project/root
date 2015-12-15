@@ -31,6 +31,7 @@
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_multifit_nlin.h"
 #include "gsl/gsl_blas.h"
+#include "gsl/gsl_version.h"
 #include "GSLMultiFitFunctionWrapper.h"
 
 #include "Math/IFunction.h"
@@ -127,20 +128,24 @@ public:
    int Iterate() { 
       if (fSolver == 0) return -1; 
       return gsl_multifit_fdfsolver_iterate(fSolver); 
-   }
-
-   /// parameter values at the minimum 
-   const double * X() const { 
-      if (fSolver == 0) return 0; 
-      gsl_vector * x =  gsl_multifit_fdfsolver_position(fSolver);       
-      return x->data; 
    } 
 
-   /// gradient value at the minimum 
-   const double * Gradient() const { 
-      if (fSolver == 0) return 0; 
-      gsl_multifit_gradient(fSolver->J, fSolver->f,fVec);       
-      return fVec->data; 
+   /// parameter values at the minimum
+   const double * X() const {
+      if (fSolver == 0) return 0;
+      gsl_vector * x =  gsl_multifit_fdfsolver_position(fSolver);
+      return x->data;
+   }
+
+   /// gradient value at the minimum
+   const double * Gradient() const {
+      if (fSolver == 0) return 0;
+#if GSL_MAJOR_VERSION  > 1
+      fType->gradient(fSolver->state, fVec);
+#else
+      gsl_multifit_gradient(fSolver->J, fSolver->f,fVec);
+#endif
+      return fVec->data;
    }
 
    /// return covariance matrix of the parameters
@@ -150,9 +155,16 @@ public:
       unsigned int npar = fSolver->fdf->p; 
       fCov = gsl_matrix_alloc( npar, npar ); 
       static double kEpsrel = 0.0001;
+#if GSL_MAJOR_VERSION > 1
+      gsl_matrix* J = gsl_matrix_alloc(npar,npar);
+      gsl_multifit_fdfsolver_jac (fSolver, J);
+      int ret = gsl_multifit_covar(J, kEpsrel, fCov);
+      gsl_matrix_free(J);
+#else
       int ret = gsl_multifit_covar(fSolver->J, kEpsrel, fCov);
-      if (ret != GSL_SUCCESS) return 0; 
-      return fCov->data; 
+#endif
+      if (ret != GSL_SUCCESS) return 0;
+      return fCov->data;
    }
 
    /// test gradient (ask from solver gradient vector)
