@@ -1,29 +1,30 @@
-// Standard demo of the Bayesian MCMC calculator
-
-/*
-
-Author: Kyle Cranmer
-date: Dec. 2010
-updated: July 2011 for 1-sided upper limit and SequentialProposalFunction
-
-This is a standard demo that can be used with any ROOT file
-prepared in the standard way.  You specify:
- - name for input ROOT file
- - name of workspace inside ROOT file that holds model and data
- - name of ModelConfig that specifies details for calculator tools
- - name of dataset
-
-With default parameters the macro will attempt to run the
-standard hist2workspace example and read the ROOT file
-that it produces.
-
-The actual heart of the demo is only about 10 lines long.
-
-The MCMCCalculator is a Bayesian tool that uses
-the Metropolis-Hastings algorithm to efficiently integrate
-in many dimensions.  It is not as accurate as the BayesianCalculator
-for simple problems, but it scales to much more complicated cases.
-*/
+/// \file
+/// \ingroup tutorial_roostats
+/// Standard demo of the Bayesian MCMC calculator
+///
+/// This is a standard demo that can be used with any ROOT file
+/// prepared in the standard way.  You specify:
+///  - name for input ROOT file
+///  - name of workspace inside ROOT file that holds model and data
+///  - name of ModelConfig that specifies details for calculator tools
+///  - name of dataset
+///
+/// With default parameters the macro will attempt to run the
+/// standard hist2workspace example and read the ROOT file
+/// that it produces.
+///
+/// The actual heart of the demo is only about 10 lines long.
+///
+/// The MCMCCalculator is a Bayesian tool that uses
+/// the Metropolis-Hastings algorithm to efficiently integrate
+/// in many dimensions.  It is not as accurate as the BayesianCalculator
+/// for simple problems, but it scales to much more complicated cases.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer
 
 #include "TFile.h"
 #include "TROOT.h"
@@ -60,7 +61,7 @@ void StandardBayesianMCMCDemo(const char* infile = "",
   // or create the standard example file if it doesn't exist
   ////////////////////////////////////////////////////////////
 
-   
+
 
    const char* filename = "";
    if (!strcmp(infile,"")) {
@@ -148,13 +149,13 @@ void StandardBayesianMCMCDemo(const char* infile = "",
   mcmc.SetNumIters(1000000);         // Metropolis-Hastings algorithm iterations
   mcmc.SetNumBurnInSteps(50);       // first N steps to be ignored as burn-in
 
-  // default is the shortest interval.  
+  // default is the shortest interval.
   if (intervalType == 0)  mcmc.SetIntervalType(MCMCInterval::kShortest); // for shortest interval (not really needed)
   if (intervalType == 1)  mcmc.SetLeftSideTailFraction(0.5); // for central interval
-  if (intervalType == 2)  mcmc.SetLeftSideTailFraction(0.); // for upper limit                                    
+  if (intervalType == 2)  mcmc.SetLeftSideTailFraction(0.); // for upper limit
 
   RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
-  if (maxPOI != -999) 
+  if (maxPOI != -999)
      firstPOI->setMax(maxPOI);
 
   MCMCInterval* interval = mcmc.GetInterval();

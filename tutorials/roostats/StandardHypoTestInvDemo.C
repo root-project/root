@@ -1,31 +1,35 @@
-/* -*- mode: c++ -*- */
-// Standard tutorial macro for performing an inverted  hypothesis test for computing an interval
-//
-// This macro will perform a scan of the p-values for computing the interval or limit
-//
-//Author:  L. Moneta
-//
-// Usage:
-//
-// root>.L StandardHypoTestInvDemo.C
-// root> StandardHypoTestInvDemo("fileName","workspace name","S+B modelconfig name","B model name","data set name",calculator type, test statistic type, use CLS,
-//                                number of points, xmin, xmax, number of toys, use number counting)
-//
-//
-// type = 0 Freq calculator
-// type = 1 Hybrid calculator
-// type = 2 Asymptotic calculator
-// type = 3 Asymptotic calculator using nominal Asimov data sets (not using fitted parameter values but nominal ones)
-//
-// testStatType = 0 LEP
-//              = 1 Tevatron
-//              = 2 Profile Likelihood two sided
-//              = 3 Profile Likelihood one sided (i.e. = 0 if mu < mu_hat)
-//              = 4 Profile Likelihood signed ( pll = -pll if mu < mu_hat)
-//              = 5 Max Likelihood Estimate as test statistic
-//              = 6 Number of observed event as test statistic
-//
-
+/// \file
+/// \ingroup tutorial_roostats
+/// Standard tutorial macro for performing an inverted  hypothesis test for computing an interval
+///
+/// This macro will perform a scan of the p-values for computing the interval or limit
+///
+/// Usage:
+///
+/// ~~~ {.cpp}
+/// root>.L StandardHypoTestInvDemo.C
+/// root> StandardHypoTestInvDemo("fileName","workspace name","S+B modelconfig name","B model name","data set name",calculator type, test statistic type, use CLS,
+///                                number of points, xmin, xmax, number of toys, use number counting)
+///
+/// type = 0 Freq calculator
+/// type = 1 Hybrid calculator
+/// type = 2 Asymptotic calculator
+/// type = 3 Asymptotic calculator using nominal Asimov data sets (not using fitted parameter values but nominal ones)
+///
+/// testStatType = 0 LEP
+///              = 1 Tevatron
+///              = 2 Profile Likelihood two sided
+///              = 3 Profile Likelihood one sided (i.e. = 0 if mu < mu_hat)
+///              = 4 Profile Likelihood signed ( pll = -pll if mu < mu_hat)
+///              = 5 Max Likelihood Estimate as test statistic
+///              = 6 Number of observed event as test statistic
+/// ~~~
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 #include "TFile.h"
 #include "RooWorkspace.h"
@@ -97,7 +101,7 @@ std::string massValue = "";              // extra string to tag output file of r
 std::string  minimizerType = "";                  // minimizer type (default is what is in ROOT::Math::MinimizerOptions::DefaultMinimizerType()
 int   printLevel = 0;                    // print level for debugging PL test statistics and calculators
 
-bool useNLLOffset = false;               // use NLL offset when fitting (this increase stability of fits) 
+bool useNLLOffset = false;               // use NLL offset when fitting (this increase stability of fits)
 
 
 // internal class to run the inverter and more
@@ -387,7 +391,7 @@ StandardHypoTestInvDemo(const char * infile = 0,
    calc.SetParameter("AsimovBins",nAsimovBins);
 
    // enable offset for all roostats
-   if (useNLLOffset) RooStats::UseNLLOffset(true); 
+   if (useNLLOffset) RooStats::UseNLLOffset(true);
 
    RooWorkspace * w = dynamic_cast<RooWorkspace*>( file->Get(wsName) );
    HypoTestInverterResult * r = 0;
