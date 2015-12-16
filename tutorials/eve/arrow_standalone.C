@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// How to use EVE without the standard window.
 /// Type
 ///   `gEve->GetBrowser()->MapWindow()`

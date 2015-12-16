@@ -1,6 +1,3 @@
-if(builtin_freetype)
-  add_subdirectory(freetype)
-endif()
 add_subdirectory(gpad)
 add_subdirectory(graf)
 add_subdirectory(postscript)

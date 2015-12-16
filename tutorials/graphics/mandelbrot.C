@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// Using TExec to handle keyboard events and TComplex to draw the Mandelbrot set.
 ///
 /// Pressing the keys 'z' and 'u' will zoom and unzoom the picture

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Evaluate the performance of THnSparse vs TH1/2/3/nF
 /// for different numbers of dimensions and bins per dimension.
 ///

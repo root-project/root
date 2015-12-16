@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// Example illustrating a TPaveText with Latex inside.
 ///
 /// \macro_image

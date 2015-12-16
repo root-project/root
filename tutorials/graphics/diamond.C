@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// Draw a diamond.
 ///
 /// \macro_image

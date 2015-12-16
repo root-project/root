@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Create grey scale of `200 x 200` boxes.
 ///
 /// \macro_image

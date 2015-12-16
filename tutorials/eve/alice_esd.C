@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Complex example showing ALICE ESD track visualization.
 ///
 ///  alice_esd.C - a simple event-display for ALICE ESD tracks and clusters

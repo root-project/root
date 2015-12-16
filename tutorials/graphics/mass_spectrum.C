@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// This macro makes use of some basic graphics primitives such as line, arrow
 /// and text. It as been written using the TCanvas ToolBar to produce a first
 /// draft and was then modified for fine adjustments. Note also the use

@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TArrayL
+\ingroup Containers
 Array of longs (32 or 64 bits per element).
 */
 

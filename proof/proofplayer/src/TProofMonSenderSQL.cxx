@@ -10,13 +10,12 @@
  *************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofMonSenderSQL                                                   //
-//                                                                      //
-// TProofMonSender implementation for SQL writers.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofMonSenderSQL
+\ingroup proofkernel
+
+TProofMonSender implementation for the SQL writers
+
+*/
 
 #include "TProofMonSenderSQL.h"
 

@@ -84,8 +84,10 @@ TWebSocket::~TWebSocket()
 
 void TWebSocket::ReOpen()
 {
-   if (fWebFile->fSocket)
+   if (fWebFile->fSocket) {
       delete fWebFile->fSocket;
+      fWebFile->fSocket = 0;
+   }
 
    TUrl connurl;
    if (fWebFile->fProxy.IsValid())
@@ -138,7 +140,7 @@ ClassImp(TWebFile)
 /// to see if the file is accessible. The preferred interface to this
 /// constructor is via TFile::Open().
 
-TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB")
+TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB"), fSocket(0)
 {
    TString option = opt;
    fNoProxy = kFALSE;
@@ -171,7 +173,7 @@ TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB")
 /// the kZombie bit will be set in the TWebFile object. Use IsZombie()
 /// to see if the file is accessible.
 
-TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB")
+TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB"), fSocket(0)
 {
    TString option = opt;
    fNoProxy = kFALSE;
@@ -660,12 +662,19 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
    Int_t n, ret = 0, nranges = 0, ltot = 0, redirect = 0;
    TString boundary, boundaryEnd;
    Long64_t first = -1, last = -1, tot;
+   TString redir;
 
    while ((n = GetLine(fSocket, line, sizeof(line))) >= 0) {
       if (n == 0) {
          if (ret < 0)
             return ret;
          if (redirect) {
+            if (redir.IsNull()) {
+              // Some sites (s3.amazonaws.com) do not return a Location field on 301
+              Error("GetFromWeb10", "error - redirect without location from host %s", fUrl.GetHost());
+              return -1;
+            }
+
             ws.ReOpen();
             // set message to reflect the redirectLocation and add bytes field
             TString msg_1 = fMsgReadBuffer10;
@@ -775,12 +784,17 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
 #endif
          if (fSize == -1) fSize = tot;
       } else if (res.BeginsWith("Location:") && redirect) {
-         TString redir = res(10, 1000);
+         redir = res(10, 1000);
          if (redirect == 2)   // temp redirect
             SetMsgReadBuffer10(redir, kTRUE);
          else               // permanent redirect
             SetMsgReadBuffer10(redir, kFALSE);
       }
+   }
+
+   if (redirect && redir.IsNull()) {
+      ret = -1;
+      Error("GetFromWeb10", "error - redirect without location from host %s", fUrl.GetHost());
    }
 
    if (n == -1 && fHTTP11) {
@@ -945,6 +959,7 @@ Int_t TWebFile::GetHead()
 
    char line[8192];
    Int_t n, ret = 0, redirect = 0;
+   TString redir;
 
    while ((n = GetLine(s, line, sizeof(line))) >= 0) {
       if (n == 0) {
@@ -958,8 +973,14 @@ Int_t TWebFile::GetHead()
          }
          if (ret < 0)
             return ret;
-         if (redirect)
+         if (redirect) {
+            if (redir.IsNull()) {
+               // Some sites (s3.amazonaws.com) do not return a Location field on 301
+               Error("GetHead", "error - redirect without location from host %s", fUrl.GetHost());
+               return -1;
+            }
             return GetHead();
+         }
          return 0;
       }
 
@@ -1015,7 +1036,7 @@ Int_t TWebFile::GetHead()
          TString slen = res(16, 1000);
          fSize = slen.Atoll();
       } else if (res.BeginsWith("Location:") && redirect) {
-         TString redir = res(10, 1000);
+         redir = res(10, 1000);
          if (redirect == 2)   // temp redirect
             SetMsgReadBuffer10(redir, kTRUE);
          else               // permanent redirect

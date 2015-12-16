@@ -4,7 +4,7 @@
  *****************************************************************************/ 
 
 /** \class Roo2DMomentMorphFunction
-    \ingroup Roofitpdf
+    \ingroup Roofit
 
 2-dimensional morph function between a list of function-numbers as a function of two input parameters (m1 and m2).
 The matrix mrefpoints assigns a function value to each m1,m2 coordinate.

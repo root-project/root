@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstrates usage of class TEveText - 2D & 3D text in GL.
 ///
 /// \image html eve_text.png

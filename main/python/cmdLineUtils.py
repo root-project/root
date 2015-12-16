@@ -82,6 +82,9 @@ import glob
 import fnmatch
 import logging
 
+LOG_FORMAT = '%(levelname)s: %(message)s'
+logging.basicConfig(format=LOG_FORMAT)
+
 # The end of imports
 ##########
 
@@ -436,6 +439,8 @@ def getSourceListOptDict(parser, wildcards = True):
     Get the list of tuples and the dictionary with options
     """
     sourceList, args = getSourceListArgs(parser, wildcards)
+    if sourceList == []:
+        logging.error("Input file(s) not found!")
     return sourceList, vars(args)
 
 def getSourceDestListOptDict(parser, wildcards = True):

@@ -1,14 +1,14 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'SPECIAL PDFS' RooFit tutorial macro #703
-// 
-// Using a product of an (acceptance) efficiency and a p.d.f as p.d.f.
-//
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'SPECIAL PDFS' RooFit tutorial macro #703
+///
+///  Using a product of an (acceptance) efficiency and a p.d.f as p.d.f.
+///
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

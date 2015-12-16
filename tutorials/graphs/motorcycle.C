@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphs
+/// \ingroup tutorial_graphs
 /// Macro to test scatterplot smoothers: ksmooth, lowess, supsmu
 /// as described in:
 ///

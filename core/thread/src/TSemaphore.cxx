@@ -69,6 +69,8 @@ Int_t TSemaphore::Wait(Int_t millisec)
          cvs = fCond.wait_for(lk,std::chrono::milliseconds(millisec));
       } while (fWakeups < 1 && cvs != std::cv_status::timeout);
       if (cvs == std::cv_status::timeout) {
+         // Give back the token ...
+         fValue++;
          rc = 1;
       } else {
          // We have been waken-up: decrease the related counter

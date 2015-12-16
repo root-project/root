@@ -66,7 +66,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! \class THistPainter
-\ingroup Hist
+\ingroup Histpainter
 \brief The histogram painter class. Implements all histograms' drawing's options.
 
 - [Introduction](#HP00)
@@ -325,7 +325,7 @@ Histograms use the current style (`gStyle`). When one changes the current
 style and would like to propagate the changes to the histogram,
 `TH1::UseCurrentStyle` should be called. Call `UseCurrentStyle` on
 each histogram is needed.
-<br>
+
 To force all the histogram to use the current style use:
 
     gROOT->ForceStyle();
@@ -734,7 +734,7 @@ bar-chart is drawn with the options `bar`, `bar0`,
 `bar1`, `bar2`, `bar3`, `bar4`.
 An horizontal bar-chart is drawn with the options `hbar`,
 `hbar0`, `hbar1`, `hbar2``, `hbar3`,
-`hbar4`.
+`hbar4` (hbars.C).
 
 - The bar is filled with the histogram fill color.
 - The left side of the bar is drawn with a light fill color.
@@ -746,18 +746,16 @@ An horizontal bar-chart is drawn with the options `hbar`,
    - 30% for option "(h)bar3"
    - 40% for option "(h)bar4"
 
-
-
 Begin_Macro(source)
 ../../../tutorials/hist/hbars.C
 End_Macro
 
 To control the bar width (default is the bin width) `TH1::SetBarWidth()`
 should be used.
-<br>
+
 To control the bar offset (default is 0) `TH1::SetBarOffset()` should
 be used.
-<br>
+
 These two parameters are useful when several histograms are plotted using
 the option `SAME`. They allow to plot the histograms next to each other.
 
@@ -1333,14 +1331,14 @@ To access the first graph in the list one should do:
     TGraph *gr1 = (TGraph*)list->First();
 
 
-The following example shows how to use this functionality.
+The following example (ContourList.C) shows how to use this functionality.
 
 Begin_Macro(source)
 ../../../tutorials/hist/ContourList.C
 End_Macro
 
 The following options select the `CONT4` option and are useful for
-sky maps or exposure maps.
+sky maps or exposure maps (earth.C).
 
 | Option       | Description                                                   |
 |--------------|---------------------------------------------------------------|
@@ -1862,7 +1860,7 @@ End_Macro
 
 Rectangular bins are a frequent case. The special version of
 the `AddBin` method allows to define them more easily like
-shown in the following example.
+shown in the following example (th2polyBoxes.C).
 
 Begin_Macro(source)
 ../../../tutorials/hist/th2polyBoxes.C
@@ -2010,7 +2008,7 @@ The red, green, and blue components of a color can be changed thanks to
 Using a `TCutG` object, it is possible to draw a sub-range of a 2D
 histogram. One must create a graphical cut (mouse or C++) and specify the name
 of the cut between `[]` in the `Draw()` option.
-For example, with a `TCutG` named `cutg`, one can call:
+For example (fit2a.C), with a `TCutG` named `cutg`, one can call:
 
     myhist->Draw("surf1 [cutg]");
 
@@ -2116,7 +2114,7 @@ If the option `PADS` is specified, the current pad/canvas is
 subdivided into a number of pads equal to the number of histograms and each
 histogram is paint into a separate pad.
 
-The following example shows various types of stacks.
+The following example shows various types of stacks (hstack.C).
 
 Begin_Macro(source)
 ../../../tutorials/hist/hstack.C

@@ -30,90 +30,95 @@
 class TVirtualMCApplication : public TNamed {
 
 public:
-   // Standard constructor
+   /// Standard constructor
    TVirtualMCApplication(const char *name, const char *title);
 
-   // Default constructor
+   /// Default constructor
    TVirtualMCApplication();
 
-   // Destructor
+   /// Destructor
    virtual ~TVirtualMCApplication();
 
-   // Static access method
+   /// Static access method
    static TVirtualMCApplication* Instance();
 
    //
    // methods
    //
 
-   // Construct user geometry
+   /// Construct user geometry
    virtual void ConstructGeometry() = 0;
 
-   // Misalign user geometry (optional)
+   /// Misalign user geometry (optional)
    virtual Bool_t MisalignGeometry() {return kFALSE;}
 
-   // Define parameters for optical processes (optional)
+   /// Define parameters for optical processes (optional)
    virtual void ConstructOpGeometry() {}
 
-   // Initialize geometry
-   // (Usually used to define sensitive volumes IDs)
+   /// Initialize geometry
+   /// (Usually used to define sensitive volumes IDs)
    virtual void InitGeometry() = 0;
 
-   // Add user defined particles (optional)
+   /// Add user defined particles (optional)
    virtual void AddParticles() {}
 
-   // Add user defined ions (optional)
+   /// Add user defined ions (optional)
    virtual void AddIons() {}
 
-   // Generate primary particles
+   /// Generate primary particles
    virtual void GeneratePrimaries() = 0;
 
-   // Define actions at the beginning of the event
+   /// Define actions at the beginning of the event
    virtual void BeginEvent() = 0;
 
-   // Define actions at the beginning of the primary track
+   /// Define actions at the beginning of the primary track
    virtual void BeginPrimary() = 0;
 
-   // Define actions at the beginning of each track
+   /// Define actions at the beginning of each track
    virtual void PreTrack() = 0;
 
-   // Define action at each step
+   /// Define action at each step
    virtual void Stepping() = 0;
 
-   // Define actions at the end of each track
+   /// Define actions at the end of each track
    virtual void PostTrack() = 0;
 
-   // Define actions at the end of the primary track
+   /// Define actions at the end of the primary track
    virtual void FinishPrimary() = 0;
 
-   // Define actions at the end of the event
+   /// Define actions at the end of the event
    virtual void FinishEvent() = 0;
 
-   // Define maximum radius for tracking (optional)
+   /// Define maximum radius for tracking (optional)
    virtual Double_t TrackingRmax() const { return DBL_MAX; }
 
-   // Define maximum z for tracking (optional)
+   /// Define maximum z for tracking (optional)
    virtual Double_t TrackingZmax() const { return DBL_MAX; }
 
-   // Calculate user field \a b at point \a x
+   /// Calculate user field \a b at point \a x
    virtual void Field(const Double_t* x, Double_t* b) const;
 
-   // Define action at each step for Geane
+   /// Define action at each step for Geane
    virtual void GeaneStepping() {;}
 
    // New functions for multi-threading applications
+   /// Clone MC application on worker
    virtual TVirtualMCApplication* CloneForWorker() const { return 0;}
+   /// Initialize MC application on worker
    virtual void InitForWorker() const {}
+   /// Define actions at the beginning of the worker run if needed
    virtual void BeginWorkerRun() const {}
+   /// Define actions at the end of the worker run if needed
    virtual void FinishWorkerRun() const {}
+   /// Merge the data accumulated on workers to the master if needed
    virtual void Merge(TVirtualMCApplication* /*localMCApplication*/) {}
 
 private:
    // static data members
 #if !defined(__CINT__)
-   static TMCThreadLocal TVirtualMCApplication* fgInstance; // singleton instance
+   static TMCThreadLocal TVirtualMCApplication* fgInstance; ///< Singleton instance
 #else
-   static                TVirtualMCApplication* fgInstance; // singleton instance
+   static                TVirtualMCApplication* fgInstance; ///< Singleton instance
 #endif
 
    ClassDef(TVirtualMCApplication,1)  //Interface to MonteCarlo application

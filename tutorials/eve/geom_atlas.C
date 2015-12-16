@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Shows ATLAS geometry.
 ///
 /// \image html eve_geom_atlas.png

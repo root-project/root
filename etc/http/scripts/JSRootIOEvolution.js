@@ -6,17 +6,11 @@
       // AMD. Register as an anonymous module.
       define( ['JSRootCore', 'rawinflate'], factory );
    } else {
-      if (typeof JSROOT == 'undefined') {
-         var e1 = new Error("This extension requires JSRootCore.js");
-         e1.source = "JSRootIOEvolution.js";
-         throw e1;
-      }
+      if (typeof JSROOT == 'undefined')
+         throw new Error("This extension requires JSRootCore.js", "JSRootIOEvolution.js");
 
-      if (typeof JSROOT.IO == "object") {
-         var e1 = new Error("This JSROOT IO already loaded");
-         e1.source = "JSRootIOEvolution.js";
-         throw e1;
-      }
+      if (typeof JSROOT.IO == "object")
+         throw new Error("This JSROOT IO already loaded", "JSRootIOEvolution.js");
 
       factory(JSROOT);
    }
@@ -1190,11 +1184,8 @@
 
    // ctor
    JSROOT.TDirectory = function(file, dirname, cycle) {
-      if (! (this instanceof arguments.callee) ) {
-         var error = new Error("you must use new to instantiate this class");
-         error.source = "JSROOT.TDirectory.ctor";
-         throw error;
-      }
+      if (! (this instanceof arguments.callee) )
+         throw new Error("you must use new to instantiate this class", "JSROOT.TDirectory.ctor");
 
       this.fFile = file;
       this._typename = "TDirectory";
@@ -1338,11 +1329,8 @@
 
    // ctor
    JSROOT.TFile = function(url, newfile_callback) {
-      if (! (this instanceof arguments.callee) ) {
-         var error = new Error("you must use new to instantiate this class");
-         error.source = "JSROOT.TFile.ctor";
-         throw error;
-      }
+      if (! (this instanceof arguments.callee) )
+         throw new Error("you must use new to instantiate this class", "JSROOT.TFile.ctor");
 
       this._typename = "TFile";
       this.fOffset = 0;
@@ -1451,11 +1439,11 @@
          case this.ERelativeTo.kEnd:
             // this option is not used currently in the ROOT code
             if (this.fEND == 0)
-               throw  "Seek : seeking from end in file with fEND==0 is not supported";
+               throw new Error("Seek : seeking from end in file with fEND==0 is not supported");
             this.fOffset = this.fEND - offset;
             break;
          default:
-            throw  "Seek : unknown seek option (" + pos + ")";
+            throw new Error("Seek : unknown seek option (" + pos + ")");
             break;
       }
    }

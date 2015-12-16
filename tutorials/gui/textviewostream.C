@@ -1,12 +1,16 @@
-// Author: Bertrand Bellenot  06/01/2015
-//
-// This macro gives an example of how to use the TGTextViewostream widget.
-// Simply type a command in the "Command" text entry, then the output is redirected to 
-// theTGTextViewostream
-//
-// To run it do either:
-// .x textviewostream.C
-// .x textviewostream.C++
+/// \file
+/// \ingroup tutorial_gui
+/// This macro gives an example of how to use the TGTextViewostream widget.
+/// Simply type a command in the "Command" text entry, then the output is redirected to theTGTextViewostream.
+/// To run it do either:
+/// ~~~
+/// .x textviewostream.C
+/// .x textviewostream.C++
+/// ~~~
+///
+/// \macro_code
+///
+/// \author Bertrand Bellenot  06/01/2015
 
 #include "TGButton.h"
 #include "TGButtonGroup.h"

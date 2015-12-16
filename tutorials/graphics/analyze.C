@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// This macro produces the flowchart of TFormula::Analyze.
 ///
 /// \macro_image

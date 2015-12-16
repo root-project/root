@@ -1,6 +1,11 @@
-#
-# To see the output of this macro, click begin_html <a href="gif/gerrors.gif">here</a>. end_html
-#
+## \file
+## \ingroup tutorial_pyroot
+## A Simple Graph with error bars
+##
+## \macro_image
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TGraphErrors
 from ROOT import gROOT

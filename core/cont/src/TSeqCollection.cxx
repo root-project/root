@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TSeqCollection
+\ingroup Containers
 Sequenceable collection abstract base class. TSeqCollection's have
 an ordering relation, i.e. there is a first and last element.
 */

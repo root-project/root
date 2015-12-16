@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TBtree
+\ingroup Containers
 B-tree class. TBtree inherits from the TSeqCollection ABC.
 
 ## B-tree Implementation notes

@@ -2536,7 +2536,7 @@ Int_t TBufferXML::WriteFastArray(void **startp, const TClass *cl, Int_t n, Bool_
 ////////////////////////////////////////////////////////////////////////////////
 /// steram object to/from buffer
 
-void TBufferXML::StreamObject(void *obj, const type_info &typeinfo, const TClass* /* onFileClass */ )
+void TBufferXML::StreamObject(void *obj, const std::type_info &typeinfo, const TClass* /* onFileClass */ )
 {
    StreamObject(obj, TClass::GetClass(typeinfo));
 }

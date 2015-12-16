@@ -39,6 +39,7 @@ namespace PyROOT {
    R__EXTERN PyObject* gRootModule;    // needed for pickling
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destroy the held C++ object, if owned; does not deallocate the proxy.
 

@@ -1,14 +1,14 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'DATA AND CATEGORIES' RooFit tutorial macro #407
-// 
-// Latex printing of lists and sets of RooArgSets
-//
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'DATA AND CATEGORIES' RooFit tutorial macro #407
+///
+///  Latex printing of lists and sets of RooArgSets
+///
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

@@ -3,7 +3,7 @@
 #---------------------------------------------------------------------------------------------------
 
 #---Enable FORTRAN (unfortunatelly is not not possible in all cases)-------------------------------
-if(fortran AND NOT WIN32 AND NOT CMAKE_GENERATOR STREQUAL Xcode AND NOT CMAKE_GENERATOR STREQUAL Ninja)
+if(fortran)
   #--Work-around for CMake issue 0009220
   if(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
     set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
@@ -56,7 +56,11 @@ else()
 endif()
 
 #---Set a default build type for single-configuration CMake generators if no build type is set------
-set(CMAKE_CONFIGURATION_TYPES Release MinSizeRel Debug RelWithDebInfo Optimized)
+if(WIN32)
+  set(CMAKE_CONFIGURATION_TYPES Release MinSizeRel Debug RelWithDebInfo)
+else()
+  set(CMAKE_CONFIGURATION_TYPES Release MinSizeRel Debug RelWithDebInfo Optimized)
+endif()
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build, options are: Release, MinSizeRel, Debug, RelWithDebInfo, Optimized." FORCE)
 endif()
@@ -122,10 +126,10 @@ if(cxxmodules)
   if (CXX_SUPPORTS_MODULES)
     file(COPY ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap DESTINATION ${ROOT_INCLUDE_DIR})
 
-    #append_if(CXX_SUPPORTS_MODULES "-fmodules" CMAKE_C_FLAGS)
-    #append_if(CXX_SUPPORTS_MODULES "-fmodules -fcxx-modules" CMAKE_CXX_FLAGS)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmodules -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmodules -fcxx-modules -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
+    # This var is useful when we want to compile things without cxxmodules.
+    set(ROOT_CXXMODULES_FLAGS " -fmodules -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_FLAGS}")
   else()
     message(FATAL_ERROR "cxxmodules is not supported by this compiler")
   endif()

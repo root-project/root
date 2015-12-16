@@ -2846,12 +2846,19 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       } else {
          // In this case, it is okay if the first data member is of the right type (to support the case where we are being passed
          // a struct).
-         bool good = false;
+         bool found = false;
          if (ptrClass->IsLoaded()) {
             TIter next(ptrClass->GetListOfRealData());
             TRealData *rdm;
             while ((rdm = (TRealData*)next())) {
                if (rdm->GetThisOffset() == 0) {
+                  TDataType *dmtype = rdm->GetDataMember()->GetDataType();
+                  if (dmtype) {
+                     EDataType etype = (EDataType)dmtype->GetType();
+                     if (etype == expectedType) {
+                        found = true;
+                     }
+                  }
                   break;
                }
             }
@@ -2863,16 +2870,24 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
                   TDataType *dmtype = dm->GetDataType();
                   if (dmtype) {
                      EDataType etype = (EDataType)dmtype->GetType();
-                     good = (etype == expectedType);
+                     if (etype == expectedType) {
+                        found = true;
+                     }
                   }
                   break;
                }
             }
          }
-         if (!good) {
-            Error("SetBranchAddress", "The pointer type given \"%s\" does not correspond to the type needed \"%s\" (%d) by the branch: %s",
-                  ptrClass->GetName(), TDataType::GetTypeName(expectedType), expectedType, branch->GetName());
+         if (found) {
+            // let's check the size.
+            TLeaf *last = (TLeaf*)branch->GetListOfLeaves()->Last();
+            long len = last->GetOffset() + last->GetLenType() * last->GetLen();
+            if (len <= ptrClass->Size()) {
+               return kMatch;
+            }
          }
+         Error("SetBranchAddress", "The pointer type given \"%s\" does not correspond to the type needed \"%s\" (%d) by the branch: %s",
+               ptrClass->GetName(), TDataType::GetTypeName(expectedType), expectedType, branch->GetName());
       }
       return kMismatch;
    }
@@ -3034,8 +3049,8 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
       if (!branch || !branch->TestBit(kDoNotProcess)) {
          continue;
       }
-//      TObjArray* branches = newtree->GetListOfBranches();
-//      Int_t nb = branches->GetEntriesFast();
+      // size might change at each iteration of the loop over the leaves.
+      nb = branches->GetEntriesFast();
       for (Long64_t i = 0; i < nb; ++i) {
          TBranch* br = (TBranch*) branches->UncheckedAt(i);
          if (br == branch) {

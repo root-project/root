@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup proof
+/// \ingroup tutorial_proof
 ///
 /// Macro to finalize queries run with the macro tutorials/runProof .
 /// This macro uses an existing PROOF session or starts one at the indicated URL.

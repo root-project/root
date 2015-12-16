@@ -1,21 +1,22 @@
-/////////////////////////////////////////////////////////////////
-//
-// rs102_hypotestwithshapes for RooStats project
-// Author: Kyle Cranmer <cranmer@cern.ch>
-//
-// Modified from version of February 29, 2008
-//
-// This tutorial macro shows a typical search for a new particle
-// by studying an invariant mass distribution.
-// The macro creates a simple signal model and two background models,
-// which are added to a RooWorkspace.
-// The macro creates a toy dataset, and then uses a RooStats
-// ProfileLikleihoodCalculator to do a hypothesis test of the
-// background-only and signal+background hypotheses.
-// In this example, shape uncertainties are not taken into account, but
-// normalization uncertainties are.
-//
-/////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roostats
+/// rs102_hypotestwithshapes for RooStats project
+///
+/// This tutorial macro shows a typical search for a new particle
+/// by studying an invariant mass distribution.
+/// The macro creates a simple signal model and two background models,
+/// which are added to a RooWorkspace.
+/// The macro creates a toy dataset, and then uses a RooStats
+/// ProfileLikleihoodCalculator to do a hypothesis test of the
+/// background-only and signal+background hypotheses.
+/// In this example, shape uncertainties are not taken into account, but
+/// normalization uncertainties are.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"
@@ -81,7 +82,7 @@ void rs102_hypotestwithshapes() {
 void AddModel(RooWorkspace* wks){
 
   // Make models for signal (Higgs) and background (Z+jets and QCD)
-  // In real life, this part requires an intellegent modeling
+  // In real life, this part requires an intelligent modeling
   // of signal and background -- this is only an example.
 
   // set range of observable
@@ -241,7 +242,7 @@ void MakePlots(RooWorkspace* wks) {
 
   model->fitTo(*data,Save(kTRUE),Minos(kFALSE), Hesse(kFALSE),PrintLevel(-1));
 
-  //plot sig candidates, full model, and individual componenets
+  //plot sig candidates, full model, and individual components
   new TCanvas();
   RooPlot* frame = invMass->frame() ;
   data->plotOn(frame ) ;

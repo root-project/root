@@ -125,7 +125,7 @@ system clock catches up.
 #include <sys/sysinfo.h>
 #endif
 #endif
-
+#include <chrono>
 
 ClassImp(TUUID)
 
@@ -142,15 +142,20 @@ TUUID::TUUID()
    if (firstTime) {
       R__LOCKGUARD2(gROOTMutex); // rand and random are not thread safe.
 
+      UInt_t seed;
       if (gSystem) {
          // try to get a unique seed per process
-         UInt_t seed = (UInt_t) (Long64_t(gSystem->Now()) + gSystem->GetPid());
-#ifdef R__WIN32
-         srand(seed);
-#else
-         srandom(seed);
-#endif
+         seed = (UInt_t)(Long64_t(gSystem->Now()) + gSystem->GetPid());
+      } else {
+         using namespace std::chrono;
+         system_clock::time_point today = system_clock::now();
+         seed = (UInt_t)(system_clock::to_time_t ( today )) + ::getpid();
       }
+#ifdef R__WIN32
+      srand(seed);
+#else
+      srandom(seed);
+#endif
       GetCurrentTime(time_last_ptr);
 #ifdef R__WIN32
       clockseq = 1+(UShort_t)(65536*rand()/(RAND_MAX+1.0));

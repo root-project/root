@@ -9,35 +9,20 @@
       define( ['jquery', 'jquery-ui', 'd3', 'JSRootPainter'], factory );
    } else {
 
-      if (typeof jQuery == 'undefined') {
-         var e1 = new Error('jQuery not defined ');
-         e1.source = 'JSRootPainter.jquery.js';
-         throw e1;
-      }
+      if (typeof jQuery == 'undefined')
+         throw new Error('jQuery not defined', 'JSRootPainter.jquery.js');
 
-      if (typeof jQuery.ui == 'undefined') {
-         var e1 = new Error('jQuery-ui not defined ');
-         e1.source = 'JSRootPainter.jquery.js';
-         throw e1;
-      }
+      if (typeof jQuery.ui == 'undefined')
+         throw new Error('jQuery-ui not defined', 'JSRootPainter.jquery.js');
 
-      if (typeof d3 != 'object') {
-         var e1 = new Error('This extension requires d3.v3.js');
-         e1.source = 'JSRootPainter.jquery.js';
-         throw e1;
-      }
+      if (typeof d3 != 'object')
+         throw new Error('This extension requires d3.v3.js', 'JSRootPainter.jquery.js');
 
-      if (typeof JSROOT == 'undefined') {
-         var e1 = new Error('JSROOT is not defined');
-         e1.source = 'JSRootPainter.jquery.js';
-         throw e1;
-      }
+      if (typeof JSROOT == 'undefined')
+         throw new Error('JSROOT is not defined', 'JSRootPainter.jquery.js');
 
-      if (typeof JSROOT.Painter != 'object') {
-         var e1 = new Error('JSROOT.Painter not defined');
-         e1.source = 'JSRootPainter.jquery.js';
-         throw e1;
-      }
+      if (typeof JSROOT.Painter != 'object')
+         throw new Error('JSROOT.Painter not defined', 'JSRootPainter.jquery.js');
 
       // Browser globals
       factory(jQuery, jQuery.ui, d3, JSROOT);

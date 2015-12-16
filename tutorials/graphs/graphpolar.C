@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphs
+/// \ingroup tutorial_graphs
 /// Create and draw a polar graph.
 /// \macro_image
 /// \macro_code

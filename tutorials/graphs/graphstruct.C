@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphs
+/// \ingroup tutorial_graphs
 /// Draw a simple graph structure.
 /// The graph layout is made using graphviz. This macro creates some
 /// nodes and edges and change a few graphical attributes on some of them.

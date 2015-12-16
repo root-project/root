@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup multicore
+/// \ingroup tutorial_multicore
 /// Fill n-tuples in distinct workers.
 /// This tutorial illustrates the basics of how it's possible with ROOT to
 /// offload heavy operations on multiple threads and how it's possible to write
@@ -60,7 +60,7 @@ Int_t mt101_fillNtuples(UInt_t nWorkers = 4)
 
    // The first, fundamental operation to be performed in order to make ROOT
    // thread-aware.
-   ROOT::EnableMT();
+   ROOT::EnableThreadSafety();
 
    // We define our work item
    auto workItem = [&fillRandom](UInt_t workerID, UInt_t workSize) {

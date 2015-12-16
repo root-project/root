@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// An example with basic graphics illustrating the Object Oriented User Interface of ROOT.
 ///
 /// \macro_image

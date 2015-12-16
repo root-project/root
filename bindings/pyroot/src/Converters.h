@@ -207,6 +207,7 @@ namespace PyROOT {
       Cppyy::TCppType_t fClass;
    };
 
+   template <bool ISREFERENCE>
    class TCppObjectPtrConverter : public TCppObjectConverter {
    public:
       using TCppObjectConverter::TCppObjectConverter;
@@ -216,6 +217,9 @@ namespace PyROOT {
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
    };
+
+   extern template class TCppObjectPtrConverter<true>;
+   extern template class TCppObjectPtrConverter<false>;
 
    class TCppObjectArrayConverter : public TCppObjectConverter {
    public:

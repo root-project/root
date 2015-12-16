@@ -41,7 +41,7 @@ include/GL/%.h: $(GLEWDIRI)/GL/%.h
 		fi)
 		cp $< $@
 
-$(GLEWLIB):     GLEWCXXMODULE $(GLEWO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) $(GLEWLIBDEP)
+$(GLEWLIB):     $(GLEWO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) $(GLEWLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGLEW.$(SOEXT) $@ \
 		   "$(GLEWO)" \
@@ -64,12 +64,10 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 $(GLEWO): CFLAGS += $(OPENGLINCDIR:%=-I%)
 
-# glew.h is special (see $ROOTSYS/build/unix/module.modulemap for details.
-# We need to prebuild a pcm disabling the system module maps.
-# A pcm per set of options is necessary, this is why this is duplicated in eve and gl, too.
-GLEWCXXMODULE:
-ifneq ($(CXXMODULES),)
-	@echo "Prebuilding pcm for glew.h"
-	@echo '#include "TGLIncludes.h"' | \
-	$(CXX) $(CXXFLAGS) -fno-implicit-module-maps -xc++ -c -
+#FIXME: Disable modules build for graf3d until the glew.h issue gets fixed.
+ifeq ($(CXXMODULES),yes)
+ifeq ($(PLATFORM),macosx)
+$(GLEWO): CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
+          CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
+endif
 endif

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstrates usage of EVE window-manager.
 ///
 /// \image html eve_window_manager.png

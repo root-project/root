@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup multicore
+/// \ingroup tutorial_multicore
 /// Read n-tuples in distinct workers, fill histograms, merge them and fit.
 /// Knowing that other facilities like TProcPool might be more adequate for
 /// this operation, this tutorial complements mc101, reading and merging.
@@ -44,7 +44,7 @@ Int_t mt102_readNtuplesFillHistosAndFit()
 
    // The first, fundamental operation to be performed in order to make ROOT
    // thread-aware.
-   ROOT::EnableMT();
+   ROOT::EnableThreadSafety();
 
    // We adapt our parallelisation to the number of input files
    const auto nFiles = inputChain.GetListOfFiles()->GetEntries();

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstrates usage of class TEveTriangleSet.
 ///
 /// \image html eve_triangleset.png

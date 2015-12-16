@@ -292,7 +292,7 @@ void TBuffer::SetWriteMode()
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward to TROOT::GetClass().
 
-TClass *TBuffer::GetClass(const type_info &typeinfo)
+TClass *TBuffer::GetClass(const std::type_info &typeinfo)
 {
    return TClass::GetClass(typeinfo);
 }

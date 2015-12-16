@@ -193,6 +193,11 @@ get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
 
 
 string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS})
+if(cxxmodules)
+  # rootcling doesn't know what to do with these flags.
+  # FIXME: Disable until until somebody teaches it.
+  string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
+endif(cxxmodules)
 add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                           etc/dictpch/allHeaders.h
                           etc/dictpch/allCppflags.txt

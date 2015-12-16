@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup multicore
+/// \ingroup tutorial_multicore
 /// Read n-tuples in distinct workers, fill histograms, merge them and fit.
 /// We express parallelism with multiprocessing as it is done with multithreading
 /// in mt102_readNtuplesFillHistosAndFit.

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Loading and display of basic 3DS models.
 ///
 /// \image html eve_view3ds.png

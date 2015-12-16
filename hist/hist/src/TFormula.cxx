@@ -1435,7 +1435,11 @@ void TFormula::ExtractFunctors(TString &formula)
             //std::cout << "check if character : " << i << " " << formula[i] << " from name " << name << "  is a function " << std::endl;
 
             // check if function is provided by gROOT
-            TObject *obj = gROOT->GetListOfFunctions()->FindObject(name);
+            TObject *obj = 0;
+            {
+               R__LOCKGUARD2(gROOTMutex);
+               obj = gROOT->GetListOfFunctions()->FindObject(name);
+            }
             TFormula * f = dynamic_cast<TFormula*> (obj);
             if (!f) {
                // maybe object is a TF1
@@ -1602,7 +1606,11 @@ void TFormula::ProcessFormula(TString &formula)
          if(!fun.fFound)
          {
             // try to look into all the global functions in gROOT
-            TFunction * f = (TFunction*) gROOT->GetListOfGlobalFunctions(true)->FindObject(fun.fName);
+           TFunction* f;
+            {
+               R__LOCKGUARD2(gROOTMutex);
+               f = (TFunction*) gROOT->GetListOfGlobalFunctions(true)->FindObject(fun.fName);
+            }
             // if found a function with matching arguments
             if (f && fun.GetNargs() <=  f->GetNargs() && fun.GetNargs() >=  f->GetNargs() - f->GetNargsOpt() )
             {
@@ -1620,7 +1628,11 @@ void TFormula::ProcessFormula(TString &formula)
       }
       else
       {
-         TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(gNamePrefix + fun.fName);
+         TFormula* old = 0;
+         {
+            R__LOCKGUARD2(gROOTMutex);
+            old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(gNamePrefix + fun.fName);
+         }
          if(old)
          {
             // we should not go here (this analysis is done before in ExtractFunctors)

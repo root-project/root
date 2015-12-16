@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Plays back event-recording of a root session running geom_cms.C tutorial.
 /// [ Recorded using "new TGRecorder" command. ]
 ///

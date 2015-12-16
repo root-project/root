@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofMgrLite                                                        //
-//                                                                      //
-// Basic functionality implementtaion in the case of Lite sessions      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofMgrLite
+\ingroup proofkernel
+
+Basic TProofMgr functionality implementation in the case of Lite session.
+
+*/
 
 #include <errno.h>
 #ifdef WIN32

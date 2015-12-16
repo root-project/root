@@ -395,6 +395,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t 
 /// - n     : normal approximation propagation (see TEfficiency::Normal)
 /// - ac    : Agresti-Coull interval (see TEfficiency::AgrestiCoull)
 /// - fc    : Feldman-Cousins interval (see TEfficiency::FeldmanCousinsInterval)
+/// - midp  : Lancaster mid-P interval (see TEfficiency::MidPInterval)
 /// - b(a,b): bayesian interval using a prior probability ~Beta(a,b); a,b > 0
 ///           (see TEfficiency::Bayesian)
 /// - mode  : use mode of posterior for Bayesian interval (default is mean)
@@ -508,7 +509,12 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       option.ReplaceAll("fc","");
       pBound = &TEfficiency::FeldmanCousins;
    }
-
+   // mid-P Lancaster interval
+   if(option.Contains("midp")) {
+      option.ReplaceAll("midp","");
+      pBound = &TEfficiency::MidPInterval;
+   }
+   
    //bayesian with prior
    if(option.Contains("b(")) {
       Double_t a = 0;
@@ -715,9 +721,8 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
                if (upper > 1) upper = 1.;
             }
          }
-
          else {
-            // when not using weights or weights with POisson ratio
+            // when not using weights (all cases) or in case of  Poisson ratio with weights
             if(t)
                eff = ((Double_t)p)/t;
 

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup multicore
+/// \ingroup tutorial_multicore
 /// Fill n-tuples in distinct workers.
 /// This tutorial illustrates the basics of how it's possible with ROOT to
 /// offload heavy operations on multiple processes and how it's possible to write

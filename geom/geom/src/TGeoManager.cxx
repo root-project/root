@@ -962,7 +962,7 @@ void TGeoManager::SetMaxThreads(Int_t nthreads)
       return;
    }
    if (!fMultiThread) {
-      ROOT::EnableMT();
+      ROOT::EnableThreadSafety();
       Long_t threadId =TThread::SelfId();
       NavigatorsMap_t::const_iterator it = fNavigators.find(0);
       if (it != fNavigators.end()) {

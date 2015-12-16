@@ -21,6 +21,7 @@ extern "C" {
 #include "cfortran.h"
 #endif
 
+/// HEPEVT common block
 typedef struct {
    Int_t    nevhep;
    Int_t    nhep;

@@ -676,7 +676,7 @@ Bool_t TPgSQLStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_
 
 Bool_t TPgSQLStatement::SetNull(Int_t npar)
 {
-   fBind[npar][0] = 0;
+   fBind[npar] = 0;
 
    return kTRUE;
 }

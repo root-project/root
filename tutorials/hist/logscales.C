@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Draw parametric functions with log scales.
 ///
 /// \macro_image

@@ -9,15 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofNodeInfo                                                       //
-//                                                                      //
-// Implementation of PROOF node info.                                   //
-// The purpose of this class is to provide a complete node description  //
-// for masters, submasters and workers.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofNodeInfo
+\ingroup proofkernel
+
+The purpose of this class is to provide a complete node description
+for masters, submasters and workers.
+
+*/
 
 #include "TObjArray.h"
 #include "TObjString.h"

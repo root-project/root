@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup proof
+/// \ingroup tutorial_proof
 ///
 /// Attaches to a PROOF session, possibly at the indicated URL.
 /// If no existing PROOF session is found and no URL is given,

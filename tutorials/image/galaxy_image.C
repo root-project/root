@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup image
+/// \ingroup tutorial_image
 /// Importing an image and manipulating it.
 ///
 /// \image html image_galaxy_image.png

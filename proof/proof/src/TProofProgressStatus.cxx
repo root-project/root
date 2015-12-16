@@ -9,19 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class TProofProgressStatus
+\ingroup proofkernel
+
+Container class for processing statistics
+
+*/
+
 #include "TProofProgressStatus.h"
 #include "TObject.h"
 #include "TString.h"
 #include "TSystem.h"
 #include "TTime.h"
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofProgressStatus                                                 //
-//                                                                      //
-// Small class including processing statistics                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 ClassImp(TProofProgressStatus)
 

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup multicore
+/// \ingroup tutorial_multicore
 /// Fill histograms in parallel and write them on file.
 /// The simplest meaningful possible example which shows ROOT thread awareness.
 ///
@@ -15,7 +15,7 @@ Int_t mt001_fillHistos(UInt_t nWorkers = 4)
 
    // The first, fundamental operation to be performed in order to make ROOT
    // thread-aware.
-   ROOT::EnableMT();
+   ROOT::EnableThreadSafety();
 
    // We define our work item
    auto workItem = [nNumbers](UInt_t workerID) {

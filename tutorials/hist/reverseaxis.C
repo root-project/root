@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Example showing an histogram with reverse axis.
 ///
 /// \macro_image

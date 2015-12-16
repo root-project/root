@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Calorimeter detailed view by using TEveCaloDataVec as data-source.
 /// Demonstrates how to plot calorimeter data with irregular bins.
 ///

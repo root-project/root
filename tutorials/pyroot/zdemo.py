@@ -1,17 +1,19 @@
-# This macro is an example of graphs in log scales with annotations.
-#
-# The  begin_html <a href="gif/zdemo.gif" >presented results</a> end_html
-#  are predictions of invariant cross-section of Direct Photons produced
-#  at RHIC energies, based on the universality of scaling function H(z).
-#
-#    Authors: Michael Tokarev and Elena Potrebenikova (JINR Dubna)
-#
-#  These Figures were published in JINR preprint E2-98-64, Dubna,
-#  1998 and submitted to CPC.
-#
-# Note that the way greek symbols, super/subscripts are obtained
-# illustrate the current limitations of Root in this area.
-#
+## \file
+## \ingroup tutorial_pyroot
+## This macro is an example of graphs in log scales with annotations.
+##
+## The presented results
+##  are predictions of invariant cross-section of Direct Photons produced
+##  at RHIC energies, based on the universality of scaling function H(z).
+##
+##
+##  These Figures were published in JINR preprint E2-98-64, Dubna,
+##  1998 and submitted to CPC.
+##
+## \macro_image
+## \macro_code
+##
+## \authors Michael Tokarev, Elena Potrebenikova (JINR Dubna)
 
 import ROOT
 from array import array

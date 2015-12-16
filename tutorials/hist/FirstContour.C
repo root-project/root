@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Make a contour plot and get the first contour in a TPolyMarker.
 /// This macro generates a color contour plot by selecting entries
 /// from an ntuple file.

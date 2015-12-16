@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// Illustrate some basic primitives.
 ///
 /// \macro_image

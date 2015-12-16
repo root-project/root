@@ -1,9 +1,59 @@
 // @(#)root/test:$name:  $:$id: filter.cxx,v 1.0 exp $
 // Author: O.Couet
 
-//
-//    filters doc files.
-//
+/// The ROOT doxygen filter implements ROOT's specific directives used to generate
+/// the ROOT reference guide.
+///
+/// ## In the ROOT classes
+///
+/// ### `Begin_Macro` and `End_Macro`
+/// The two tags where used the THtml version to generate images from ROOT code.
+/// The genererated picture is inlined exactly at the place where the macro is
+/// defined. The Macro can be defined in two way:
+///  - by direct in-lining of the the C++ code
+///  - by a reference to a C++ file
+/// The tag `Begin_Macro` can have the parameter `(source)`. The directive becomes:
+/// `Begin_Macro(source)`. This parameter allows to show the macro's code in addition.
+///
+/// ## In the ROOT tutorials
+///
+/// ROOT tutorials are also included in the ROOT documentation. The tutorials'
+/// macros headers should look like:
+///
+/// ~~~ {.cpp}
+/// \file
+/// \ingroup tutorial_hist
+/// Getting Contours From TH2D.
+///
+/// #### Image produced by `.x ContourList.C`
+/// The contours values are drawn next to each contour.
+/// \macro_image
+///
+/// #### Output produced by `.x ContourList.C`
+/// It shows that 6 contours and 12 graphs were found.
+/// \macro_output
+///
+/// #### `ContourList.C`
+/// \macro_code
+///
+/// \authors  Josh de Bever, Olivier Couet
+/// ~~~
+///
+/// This example shows that three new directives have been implemented:
+///
+///  1. `\macro_image`
+///  The images produced by this macro are shown. A caption can be added to document
+///  the pictures: `\macro_image This is a picture`
+///
+///  2. `\macro_code`
+///  The macro code is shown.  A caption can be added: `\macro_code This is code`
+///
+///  3. `\macro_output`
+///  The output produced by this macro is shown. A caption can be added:
+///  `\macro_output This the macro output`
+///
+/// Note that the doxygen directive `\authors` or `\author` must be the last one
+/// of the macro header.
 
 #include <unistd.h>
 #include <stdio.h>
@@ -17,7 +67,11 @@
 using namespace std;
 
 // Auxiliary functions
+void   FilterClass();
+void   FilterTutorial();
 void   GetClassName();
+int    NumberOfImages();
+string ImagesList(string&);
 void   ExecuteMacro();
 void   ExecuteCommand(string);
 void   ReplaceAll(string&, const string&, const string&);
@@ -26,23 +80,26 @@ bool   EndsWith(string const &, string const &);
 bool   BeginsWith(const string&, const string&);
 
 // Global variables.
-char   gLine[255];   // Current line in the current input file
-string gFileName;    // Input file name
-string gLineString;  // Current line (as a string) in the current input file
-string gClassName;   // Current class name
-string gImageName;   // Current image name
-string gMacroName;   // Current macro name
-string gCwd;         // Current working directory
-string gOutDir;      // Output directory
-string gSourceDir;   // Source directory
-bool   gHeader;      // True if the input file is a header
-bool   gSource;      // True if the input file is a source file
-bool   gImageSource; // True the source of the current macro should be shown
-bool   gInClassDef;
-bool   gClass;
-int    gInMacro;
-int    gImageID;
-int    gMacroID;
+FILE  *f;              // Pointer to the file being parsed.
+char   gLine[255];     // Current line in the current input file
+string gFileName;      // Input file name
+string gLineString;    // Current line (as a string) in the current input file
+string gClassName;     // Current class name
+string gImageName;     // Current image name
+string gMacroName;     // Current macro name
+string gCwd;           // Current working directory
+string gOutDir;        // Output directory
+string gSourceDir;     // Source directory
+string gOutputName;    // File containing a macro std::out
+bool   gHeader;        // True if the input file is a header
+bool   gSource;        // True if the input file is a source file
+bool   gPython;        // True if the input file is a Python script.
+bool   gImageSource;   // True the source of the current macro should be shown
+int    gInMacro;       // >0 if parsing a macro in a class documentation.
+int    gImageID;       // Image Identifier.
+int    gMacroID;       // Macro identifier in class documentation.
+int    gShowTutSource; // >0 if the tutorial source code should be shown
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Filter ROOT files for Doxygen.
@@ -50,18 +107,19 @@ int    gMacroID;
 int main(int argc, char *argv[])
 {
    // Initialisation
-
-   gFileName    = argv[1];
-   gHeader      = false;
-   gSource      = false;
-   gInClassDef  = false;
-   gClass       = false;
-   gImageSource = false;
-   gInMacro     = 0;
-   gImageID     = 0;
-   gMacroID     = 0;
+   gFileName      = argv[1];
+   gHeader        = false;
+   gSource        = false;
+   gPython        = false;
+   gImageSource   = false;
+   gInMacro       = 0;
+   gImageID       = 0;
+   gMacroID       = 0;
+   gOutputName    = "stdout.dat";
+   gShowTutSource = 0;
    if (EndsWith(gFileName,".cxx")) gSource = true;
    if (EndsWith(gFileName,".h"))   gHeader = true;
+   if (EndsWith(gFileName,".py"))  gPython = true;
    GetClassName();
 
    // Retrieve the current working directory
@@ -77,8 +135,17 @@ int main(int argc, char *argv[])
    ReplaceAll(gSourceDir,"\"","");
 
    // Open the input file name.
-   FILE *f = fopen(gFileName.c_str(),"r");
+   f = fopen(gFileName.c_str(),"r");
 
+   if (gFileName.find("tutorials") != string::npos) FilterTutorial();
+   else                                             FilterClass();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Filter ROOT class for Doxygen.
+
+void FilterClass()
+{
    // File for inline macros.
    FILE *m = 0;
 
@@ -86,25 +153,16 @@ int main(int argc, char *argv[])
    if (gHeader) {
       while (fgets(gLine,255,f)) {
          gLineString = gLine;
-
-         if (BeginsWith(gLineString,"class"))              gInClassDef = true;
-         if (gLineString.find("ClassDef") != string::npos) gInClassDef = false;
-
          printf("%s",gLineString.c_str());
       }
       fclose(f);
-      return 0;
+      return;
    }
 
    // Source file.
    if (gSource) {
       while (fgets(gLine,255,f)) {
          gLineString = gLine;
-
-         if (gLineString.find("/*! \\class")  != string::npos ||
-             gLineString.find("/// \\class")  != string::npos ||
-             gLineString.find("/** \\class")  != string::npos ||
-             gLineString.find("///! \\class") != string::npos) gClass = true;
 
          if (gLineString.find("End_Macro") != string::npos) {
             ReplaceAll(gLineString,"End_Macro","");
@@ -113,7 +171,7 @@ int main(int argc, char *argv[])
             if (m) {
                fclose(m);
                m = 0;
-               ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\")\""
+               ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false)\""
                                               , StringFormat("%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str()
                                               , StringFormat("%s_%3.3d.png", gClassName.c_str(), gImageID).c_str()
                                               , gOutDir.c_str()));
@@ -123,7 +181,7 @@ int main(int argc, char *argv[])
 
          if (gInMacro) {
             if (gInMacro == 1) {
-               if (EndsWith(gLineString,".C\n")) {
+               if (EndsWith(gLineString,".C\n") || (gLineString.find(".C(") != string::npos)) {
                   ExecuteMacro();
                   gInMacro++;
                } else {
@@ -145,7 +203,7 @@ int main(int argc, char *argv[])
             } else {
                if (m) fprintf(m,"%s",gLineString.c_str());
                if (BeginsWith(gLineString,"}")) {
-                  ReplaceAll(gLineString,"}", StringFormat("\\image html %s_%3.3d.png", gClassName.c_str(), gImageID));
+                  ReplaceAll(gLineString,"}", StringFormat("\\image html pict1_%s_%3.3d.png", gClassName.c_str(), gImageID));
                } else {
                   gLineString = "\n";
                }
@@ -163,7 +221,7 @@ int main(int argc, char *argv[])
          printf("%s",gLineString.c_str());
       }
       fclose(f);
-      return 0;
+      return;
    }
 
    // Output anything not header nor source
@@ -172,7 +230,71 @@ int main(int argc, char *argv[])
       printf("%s",gLineString.c_str());
    }
    fclose(f);
-   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Filter ROOT tutorials for Doxygen.
+
+void FilterTutorial()
+{
+   // File for inline macros.
+   FILE *m = 0;
+
+   // Extract the macro name
+   int i1      = gFileName.rfind('/')+1;
+   int i2      = gFileName.rfind('C');
+   gMacroName  = gFileName.substr(i1,i2-i1+1);
+   gImageName  = StringFormat("%s.png", gMacroName.c_str()); // Image name
+   gOutputName = StringFormat("%s.out", gMacroName.c_str()); // output name
+
+   // Parse the source and generate the image if needed
+   while (fgets(gLine,255,f)) {
+      gLineString = gLine;
+
+      // \macro_image found
+      if (gLineString.find("\\macro_image") != string::npos) {
+         if (gPython) {
+            ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,true)\"",
+                                         gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+         } else {
+            ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                                         gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+         }
+         ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName));
+         remove(gOutputName.c_str());
+      }
+
+      // \macro_code found
+      if (gLineString.find("\\macro_code") != string::npos) {
+         gShowTutSource = 1;
+         m = fopen(StringFormat("%s/macros/%s",gOutDir.c_str(),gMacroName.c_str()).c_str(), "w");
+         ReplaceAll(gLineString, "\\macro_code", StringFormat("\\include %s",gMacroName.c_str()));
+      }
+
+      // \macro_output found
+      if (gLineString.find("\\macro_output") != string::npos) {
+         if (!gPython) ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()).c_str());
+         else          ExecuteCommand(StringFormat("python %s", gFileName.c_str()).c_str());
+         rename(gOutputName.c_str(), StringFormat("%s/macros/%s",gOutDir.c_str(), gOutputName.c_str()).c_str());
+         ReplaceAll(gLineString, "\\macro_output", StringFormat("\\include %s",gOutputName.c_str()));
+      }
+
+      // \author is the last comment line.
+      if (gLineString.find("\\author")  != string::npos) {
+         if (gPython) printf("%s",StringFormat("%s \n## \\cond \n",gLineString.c_str()).c_str());
+         else         printf("%s",StringFormat("%s \n/// \\cond \n",gLineString.c_str()).c_str());
+         if (gShowTutSource == 1) gShowTutSource = 2;
+      } else {
+         printf("%s",gLineString.c_str());
+         if (m && gShowTutSource == 2) fprintf(m,"%s",gLineString.c_str());
+      }
+   }
+
+   if (m) {
+      if (gPython) printf("## \\endcond \n");
+      else         printf("/// \\endcond \n");
+      fclose(m);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -214,12 +336,10 @@ void GetClassName()
    }
 
    fclose(f);
-
-   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Execute the macro in gLineString and produce the corresponding picture
+/// Execute the macro in gLineString and produce the corresponding picture.
 
 void ExecuteMacro()
 {
@@ -237,16 +357,24 @@ void ExecuteMacro()
    gMacroName = gLineString.substr(i1,i2-i1+1);
 
    // Build the ROOT command to be executed.
+   bool ts = false;
+   if (BeginsWith(gLineString,"///")) ts = true;
+   if (ts) ReplaceAll(gLineString,"///", "");
+   if (ts) ReplaceAll(gLineString," ", "");
    gLineString.insert(0, StringFormat("root -l -b -q \"makeimage.C(\\\""));
    int l = gLineString.length();
-   gLineString.replace(l-2,1,StringFormat("C\\\",\\\"%s\\\",\\\"%s\\\")\"", gImageName.c_str(), gOutDir.c_str()));
+   gLineString.replace(l-1,1,StringFormat("\\\",\\\"%s\\\",\\\"%s\\\",true,false)\"", gImageName.c_str(), gOutDir.c_str()));
 
+   // Execute the macro
    ExecuteCommand(gLineString);
 
+   // Inline the directives to show the picture and/or the code
    if (gImageSource) {
-      gLineString = StringFormat("\\include %s\n\\image html %s\n", gMacroName.c_str(), gImageName.c_str());
+      if (ts) gLineString = StringFormat("/// \\include %s\n/// \\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
+      else    gLineString = StringFormat("\\include %s\n\\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
    } else {
-      gLineString = StringFormat("\n\\image html %s\n", gImageName.c_str());
+      if (ts) gLineString = StringFormat("\n/// \\image html pict1_%s\n", gImageName.c_str());
+      else    gLineString = StringFormat("\n\\image html pict1_%s\n", gImageName.c_str());
    }
 }
 
@@ -256,14 +384,27 @@ void ExecuteMacro()
 void ExecuteCommand(string command)
 {
    int o = dup(fileno(stdout));
-   freopen("stdout.dat","a",stdout);
+   freopen(gOutputName.c_str(),"a",stdout);
    system(command.c_str());
    dup2(o,fileno(stdout));
    close(o);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace all instances of of a string with another string.
+/// Get the number of images in NumberOfImages.dat after makeimage.C is executed.
+
+int NumberOfImages()
+{
+   int ImageNum;
+   FILE *f = fopen("NumberOfImages.dat", "r");
+   fscanf(f, "%d", &ImageNum);
+   fclose(f);
+   remove("NumberOfImages.dat");
+   return ImageNum;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Replace all instances of a string with another string.
 
 void ReplaceAll(string& str, const string& from, const string& to) {
    if (from.empty()) return;
@@ -281,7 +422,7 @@ void ReplaceAll(string& str, const string& from, const string& to) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// std::string formatting like sprintf
+/// std::string formatting like sprintf.
 
 string StringFormat(const string fmt_str, ...) {
    int final_n, n = ((int)fmt_str.size()) * 2; /* Reserve two times as much as the length of the fmt_str */
@@ -301,7 +442,24 @@ string StringFormat(const string fmt_str, ...) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// find if a string ends with another string
+/// Return the image list after a tutorial macro execution.
+
+string ImagesList(string& name) {
+
+   int N = NumberOfImages();
+
+   char val[300];
+   int len = 0;
+   for (int i = 1; i <= N; i++){
+      if (i>1) sprintf(&val[len]," \n/// \\image html pict%d_%s",i,name.c_str());
+      else     sprintf(&val[len],"\\image html pict%d_%s",i,name.c_str());
+      len = (int)strlen(val);
+   }
+   return (string)val;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find if a string ends with another string.
 
 bool EndsWith(string const &fullString, string const &ending) {
    if (fullString.length() >= ending.length()) {
@@ -312,7 +470,7 @@ bool EndsWith(string const &fullString, string const &ending) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// find if a string begins with another string
+/// Find if a string begins with another string.
 
 bool BeginsWith(const string& haystack, const string& needle) {
    return needle.length() <= haystack.length() && equal(needle.begin(), needle.end(), haystack.begin());

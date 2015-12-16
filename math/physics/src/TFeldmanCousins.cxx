@@ -10,39 +10,40 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////
-// TFeldmanCousins
-//
-// class to calculate the CL upper limit using
-// the Feldman-Cousins method as described in PRD V57 #7, p3873-3889
-//
-// The default confidence interval calvculated using this method is 90%
-// This is set either by having a default the constructor, or using the
-// appropriate fraction when instantiating an object of this class (e.g. 0.9)
-//
-// The simple extension to a gaussian resolution function bounded at zero
-// has not been addressed as yet -> `time is of the essence' as they write
-// on the wall of the maze in that classic game ...
-//
-//    VARIABLES THAT CAN BE ALTERED
-//    -----------------------------
-// => depending on your desired precision: The intial values of fMuMin,
-// fMuMax, fMuStep and fNMax are those used in the PRD:
-//   fMuMin = 0.0
-//   fMuMax = 50.0
-//   fMuStep= 0.005
-// but there is total flexibility in changing this should you desire.
-//
-//
-// see example of use in $ROOTSYS/tutorials/math/FeldmanCousins.C
-//
-// see note about: "Should I use TRolke, TFeldmanCousins, TLimit?"
-//  in the TRolke class description.
-//
-// Author: Adrian Bevan, Liverpool University
-//
-// Copyright Liverpool University 2001       bevan@slac.stanford.edu
-///////////////////////////////////////////////////////////////////////////
+/** \class TFeldmanCousins
+    \ingroup Physics
+
+Class to calculate the CL upper limit using
+the Feldman-Cousins method as described in PRD V57 #7, p3873-3889
+
+The default confidence interval calculated using this method is 90%
+This is set either by having a default the constructor, or using the
+appropriate fraction when instantiating an object of this class (e.g. 0.9)
+
+The simple extension to a gaussian resolution function bounded at zero
+has not been addressed as yet -> `time is of the essence' as they write
+on the wall of the maze in that classic game ...
+
+#### VARIABLES THAT CAN BE ALTERED
+=> depending on your desired precision: The initial values of fMuMin,
+fMuMax, fMuStep and fNMax are those used in the PRD:
+~~~ {.cpp}
+  fMuMin = 0.0
+  fMuMax = 50.0
+  fMuStep= 0.005
+~~~
+but there is total flexibility in changing this should you desire.
+
+
+see example of use in $ROOTSYS/tutorials/math/FeldmanCousins.C
+
+see note about: "Should I use TRolke, TFeldmanCousins, TLimit?"
+ in the TRolke class description.
+
+\author: Adrian Bevan, Liverpool University
+
+Copyright Liverpool University 2001       bevan@slac.stanford.edu
+*/
 
 #include "Riostream.h"
 #include "TMath.h"
@@ -51,7 +52,7 @@
 ClassImp(TFeldmanCousins)
 
 ////////////////////////////////////////////////////////////////////////////////
-///constructor
+/// Constructor.
 
 TFeldmanCousins::TFeldmanCousins(Double_t newFC, TString options)
 {
@@ -73,18 +74,16 @@ TFeldmanCousins::TFeldmanCousins(Double_t newFC, TString options)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// Destructor.
 
 TFeldmanCousins::~TFeldmanCousins()
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////
-/// given Nobserved and Nbackground, try different values of mu that give lower limits that//
-/// are consistent with Nobserved.  The closed interval (plus any stragglers) corresponds  //
-/// to the F&C interval                                                                    //
-/////////////////////////////////////////////////////////////////////////////////////////////
+/// given Nobserved and Nbackground, try different values of mu that give lower limits that
+/// are consistent with Nobserved.  The closed interval (plus any stragglers) corresponds
+/// to the F&C interval
 
 Double_t TFeldmanCousins::CalculateLowerLimit(Double_t Nobserved, Double_t Nbackground)
 {
@@ -94,11 +93,9 @@ Double_t TFeldmanCousins::CalculateLowerLimit(Double_t Nobserved, Double_t Nback
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////
-/// given Nobserved and Nbackground, try different values of mu that give upper limits that//
-/// are consistent with Nobserved.  The closed interval (plus any stragglers) corresponds  //
-/// to the F&C interval                                                                    //
-/////////////////////////////////////////////////////////////////////////////////////////////
+/// given Nobserved and Nbackground, try different values of mu that give upper limits that
+/// are consistent with Nobserved.  The closed interval (plus any stragglers) corresponds
+/// to the F&C interval
 
 Double_t TFeldmanCousins::CalculateUpperLimit(Double_t Nobserved, Double_t Nbackground)
 {
@@ -150,13 +147,10 @@ Double_t TFeldmanCousins::CalculateUpperLimit(Double_t Nobserved, Double_t Nback
    return max;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////
-/// calculate the probability table for a given mu for n = 0, NMAX//
-/// and return 1 if the number of observed events is consistent   //
-/// with the CL bad                                               //
-////////////////////////////////////////////////////////////////////
+/// calculate the probability table for a given mu for n = 0, NMAX
+/// and return 1 if the number of observed events is consistent
+/// with the CL bad
 
 Int_t TFeldmanCousins::FindLimitsFromTable( Double_t mu )
 {
@@ -201,12 +195,8 @@ Int_t TFeldmanCousins::FindLimitsFromTable( Double_t mu )
    else return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////
-/// calculate the poissonian probability for   //
-/// a mean of mu+B events with a variance of N //
-/////////////////////////////////////////////////
+/// Calculate the poissonian probability for a mean of mu+B events with a variance of N.
 
 Double_t TFeldmanCousins::Prob(Int_t N, Double_t mu, Double_t B)
 {
@@ -214,7 +204,7 @@ Double_t TFeldmanCousins::Prob(Int_t N, Double_t mu, Double_t B)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///set maximum value of signal to use in calculating the tables
+/// Set maximum value of signal to use in calculating the tables.
 
 void TFeldmanCousins::SetMuMax(Double_t newMax)
 {
@@ -224,7 +214,7 @@ void TFeldmanCousins::SetMuMax(Double_t newMax)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///set the step in signal to use when generating tables
+/// Set the step in signal to use when generating tables.
 
 void TFeldmanCousins::SetMuStep(Double_t newMuStep)
 {

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstrates usage of EVE calorimetry classes.
 ///
 /// \image html eve_calorimeters.png

@@ -1,22 +1,23 @@
-// StandardFrequentistDiscovery
-
-/*
- StandardFrequentistDiscovery
-
- Author: Sven Kreiss, Kyle Cranmer
- date: May 2012
-
- This is a standard demo that can be used with any ROOT file
- prepared in the standard way.  You specify:
- - name for input ROOT file
- - name of workspace inside ROOT file that holds model and data
- - name of ModelConfig that specifies details for calculator tools
- - name of dataset
-
- With default parameters the macro will attempt to run the
- standard hist2workspace example and read the ROOT file
- that it produces.
- */
+/// \file
+/// \ingroup tutorial_roostats
+/// StandardFrequentistDiscovery
+///
+///  This is a standard demo that can be used with any ROOT file
+///  prepared in the standard way.  You specify:
+///  - name for input ROOT file
+///  - name of workspace inside ROOT file that holds model and data
+///  - name of ModelConfig that specifies details for calculator tools
+///  - name of dataset
+///
+///  With default parameters the macro will attempt to run the
+///  standard hist2workspace example and read the ROOT file
+///  that it produces.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \authors Sven Kreiss, Kyle Cranmer
 
 #include "TFile.h"
 #include "TROOT.h"

@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TRefTable
+\ingroup Containers
 A TRefTable maintains the association between a referenced object
 and the parent object supporting this referenced object.
 

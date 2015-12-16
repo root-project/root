@@ -1,13 +1,18 @@
-# example of macro to read data from an ascii file and
-# create a root file with a Tree.
-#
-# NOTE: comparing the results of this macro with those of staff.C, you'll
-# notice that the resultant file is a couple of bytes smaller, because the
-# code below strips all white-spaces, whereas the .C version does not.
+## \file
+## \ingroup tutorial_pyroot
+## example of macro to read data from an ascii file and
+## create a root file with a Tree.
+##
+## NOTE: comparing the results of this macro with those of staff.C, you'll
+## notice that the resultant file is a couple of bytes smaller, because the
+## code below strips all white-spaces, whereas the .C version does not.
+##
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 import re, array, os
 from ROOT import *
-
 
 ### a C/C++ structure is required, to allow memory based access
 gROOT.ProcessLine(

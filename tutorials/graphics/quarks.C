@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// Example illustrating divided pads and Latex.
 ///
 /// \macro_image

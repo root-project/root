@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooConstVar represent a constant real-valued object
-// END_HTML
-//
+/**
+\file RooConstVar.cxx
+\class RooConstVar
+\ingroup Roofitcore
+
+RooConstVar represent a constant real-valued object
+**/
 
 
 #include "RooFit.h"

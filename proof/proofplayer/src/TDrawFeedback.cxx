@@ -9,16 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TDrawFeedback                                                        //
-//                                                                      //
-// Utility class to draw objects in the feedback list during queries.   //
-// Draws histograms in separated canvases and user-defined objects via  //
-// Draw(). Users requiring advanced treatment should implement their    //
-// own version following this example. See also TStatsFeedback.         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TDrawFeedback
+\ingroup proofkernel
+
+Utility class to draw objects in the feedback list during queries.
+Draws histograms in separated canvases and user-defined objects via
+Draw(). Users requiring advanced treatment should implement their
+own version following this example. See also TStatsFeedback.
+
+*/
 
 #include "TDrawFeedback.h"
 

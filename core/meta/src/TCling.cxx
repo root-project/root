@@ -98,6 +98,7 @@ clang/LLVM technology.
 #include "cling/Interpreter/Transaction.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
+#include "cling/Interpreter/Exception.h"
 
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/Module.h"
@@ -133,7 +134,7 @@ clang/LLVM technology.
 #include <mach-o/dyld.h>
 #endif // __APPLE__
 
-#ifdef R__LINUX
+#ifdef R__UNIX
 #include <dlfcn.h>
 #endif
 
@@ -564,33 +565,7 @@ extern "C" void TCling__LibraryUnloadedRTTI(const void* dyLibHandle,
 
 extern "C"
 TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx) {
-   // The call to FindSpecialObject might induces any kind of use
-   // of the interpreter ... (library loading, function calling, etc.)
-   // ... and we _know_ we are in the middle of parsing, so let's make
-   // sure to save the state and then restore it.
-
-   cling::Interpreter *interpreter = ((TCling*)gCling)->GetInterpreter();
-
-   // Save state of the PP
-   Sema &SemaR = interpreter->getSema();
-   ASTContext& C = SemaR.getASTContext();
-   Preprocessor &PP = SemaR.getPreprocessor();
-   Parser& P = const_cast<Parser&>(interpreter->getParser());
-   Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
-   Parser::ParserCurTokRestoreRAII savedCurToken(P);
-   // After we have saved the token reset the current one to something which
-   // is safe (semi colon usually means empty decl)
-   Token& Tok = const_cast<Token&>(P.getCurToken());
-   Tok.setKind(tok::semi);
-
-   // We can't PushDeclContext, because we go up and the routine that pops
-   // the DeclContext assumes that we drill down always.
-   // We have to be on the global context. At that point we are in a
-   // wrapper function so the parent context must be the global.
-   Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
-                                          SemaR.TUScope);
-
-   return gROOT->FindSpecialObject(Name, LookupCtx);
+   return ((TCling*)gCling)->GetObjectAddress(Name, LookupCtx);
 }
 
 extern "C" const Decl* TCling__GetObjectDecl(TObject *obj) {
@@ -1853,6 +1828,28 @@ void TCling::UnRegisterTClassUpdate(const TClass *oldcl)
 /// (float and double return values will be truncated).
 ///
 
+// Method for handling the interpreter exceptions.
+// the MetaProcessor is passing in as argument to teh function, because
+// cling::Interpreter::CompilationResult is a nested class and it cannot be
+// forward declared, thus this method cannot be a static member function
+// of TCling.
+
+static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
+                                 const char* input_line,
+                                 cling::Interpreter::CompilationResult& compRes,
+                                 cling::Value* result)
+{
+   try {
+      return metaProcessor->process(input_line, compRes, result);
+   }
+   catch (cling::InvalidDerefException& ex)
+   {
+      Info("Handle", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
+      ex.diagnose();
+   }
+   return 0;
+}
+
 Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
 {
    // Copy the passed line, it comes from a static buffer in TApplication
@@ -1952,7 +1949,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
                const char *function = gSystem->BaseName(fname);
                mod_line = function + arguments + io;
                cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-               indent = fMetaProcessor->process(mod_line, compRes, &result);
+               indent = HandleInterpreterException(fMetaProcessor, mod_line, compRes, &result);
             }
          }
       } else {
@@ -1982,7 +1979,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          } else {
             // No DynLookup for .x, .L of named macros.
             fInterpreter->enableDynamicLookup(false);
-            indent = fMetaProcessor->process(mod_line, compRes, &result);
+            indent = HandleInterpreterException(fMetaProcessor, mod_line, compRes, &result);
          }
          fCurExecutingMacros.pop_back();
       }
@@ -1997,9 +1994,9 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          bool isInclusionDirective = sLine.Contains("\n#include");
          if (isInclusionDirective) {
             SuspendAutoParsing autoParseRaii(this);
-            indent = fMetaProcessor->process(sLine, compRes, &result);
+            indent = HandleInterpreterException(fMetaProcessor, sLine, compRes, &result);
          } else {
-            indent = fMetaProcessor->process(sLine, compRes, &result);
+            indent = HandleInterpreterException(fMetaProcessor, sLine, compRes, &result);
          }
       }
    }
@@ -2038,11 +2035,16 @@ void TCling::PrintIntro()
 ////////////////////////////////////////////////////////////////////////////////
 /// Add the given path to the list of directories in which the interpreter
 /// looks for include files. Only one path item can be specified at a
-/// time, i.e. "path1:path2" is not supported.
+/// time, i.e. "path1:path2" is NOT supported.
 
 void TCling::AddIncludePath(const char *path)
 {
    R__LOCKGUARD(gInterpreterMutex);
+   // Favorite source of annoyance: gSystem->AddIncludePath() needs "-I",
+   // gCling->AddIncludePath() does not! Work around that inconsistency:
+   if (path[0] == '-' && path[1] == 'I')
+      path += 2;
+
    fInterpreter->AddIncludePath(path);
 }
 
@@ -2764,7 +2766,7 @@ Int_t TCling::Load(const char* filename, Bool_t system)
          // FIXME: Here we lose the information about kLoadLibAlreadyLoaded case.
          cling::Interpreter::CompilationResult compRes;
          cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-         fMetaProcessor->process(Form(".L %s", canonLib.c_str()), compRes, /*cling::Value*/0);
+         HandleInterpreterException(fMetaProcessor, Form(".L %s", canonLib.c_str()), compRes, /*cling::Value*/0);
          if (compRes == cling::Interpreter::kSuccess)
             res = cling::DynamicLibraryManager::kLoadLibSuccess;
       }
@@ -6144,7 +6146,7 @@ int TCling::LoadFile(const char* path) const
 {
    cling::Interpreter::CompilationResult compRes;
    cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-   fMetaProcessor->process(TString::Format(".L %s", path), compRes, /*cling::Value*/0);
+   HandleInterpreterException(fMetaProcessor, TString::Format(".L %s", path), compRes, /*cling::Value*/0);
    return compRes == cling::Interpreter::kFailure;
 }
 
@@ -6284,7 +6286,7 @@ int TCling::UnloadFile(const char* path) const
    // Unload a shared library or a source file.
    cling::Interpreter::CompilationResult compRes;
    cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-   fMetaProcessor->process(Form(".U %s", canonical.c_str()), compRes, /*cling::Value*/0);
+   HandleInterpreterException(fMetaProcessor, Form(".U %s", canonical.c_str()), compRes, /*cling::Value*/0);
    return compRes == cling::Interpreter::kFailure;
 }
 
@@ -6319,6 +6321,61 @@ void TCling::RegisterTemporary(const cling::Value& value)
       R__LOCKGUARD(gInterpreterMutex);
       fTemporaries->push_back(value);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// If the interpreter encounters Name, check whether that is an object ROOT
+/// could retrieve. To not re-read objects from disk, cache the name/object
+/// pair for a given LookupCtx.
+
+TObject* TCling::GetObjectAddress(const char *Name, void *&LookupCtx)
+{
+   cling::Interpreter *interpreter = ((TCling*)gCling)->GetInterpreter();
+
+   // The call to FindSpecialObject might induces any kind of use
+   // of the interpreter ... (library loading, function calling, etc.)
+   // ... and we _know_ we are in the middle of parsing, so let's make
+   // sure to save the state and then restore it.
+
+   if (gDirectory) {
+      auto iSpecObjMap = fSpecialObjectMaps.find(gDirectory);
+      if (iSpecObjMap != fSpecialObjectMaps.end()) {
+         auto iSpecObj = iSpecObjMap->second.find(Name);
+         if (iSpecObj != iSpecObjMap->second.end()) {
+            LookupCtx = gDirectory;
+            return iSpecObj->second;
+         }
+      }
+   }
+
+   // Save state of the PP
+   Sema &SemaR = interpreter->getSema();
+   ASTContext& C = SemaR.getASTContext();
+   Preprocessor &PP = SemaR.getPreprocessor();
+   Parser& P = const_cast<Parser&>(interpreter->getParser());
+   Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+   Parser::ParserCurTokRestoreRAII savedCurToken(P);
+   // After we have saved the token reset the current one to something which
+   // is safe (semi colon usually means empty decl)
+   Token& Tok = const_cast<Token&>(P.getCurToken());
+   Tok.setKind(tok::semi);
+
+   // We can't PushDeclContext, because we go up and the routine that pops
+   // the DeclContext assumes that we drill down always.
+   // We have to be on the global context. At that point we are in a
+   // wrapper function so the parent context must be the global.
+   Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
+                                          SemaR.TUScope);
+
+   TObject* specObj = gROOT->FindSpecialObject(Name, LookupCtx);
+   if (specObj) {
+      if (!LookupCtx) {
+         Error("GetObjectAddress", "Got a special object without LookupCtx!");
+      } else {
+         fSpecialObjectMaps[LookupCtx][Name] = specObj;
+      }
+   }
+   return specObj;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

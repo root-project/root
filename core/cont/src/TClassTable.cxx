@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TClassTable
+\ingroup Containers
 This class registers for all classes their name, id and dictionary
 function in a hash table. Classes are automatically added by the
 ctor of a special init class when a global of this init class is
@@ -72,7 +73,7 @@ namespace ROOT {
       Version_t        fId;
       Int_t            fBits;
       DictFuncPtr_t    fDict;
-      const type_info *fInfo;
+      const std::type_info *fInfo;
       TProtoClass     *fProto;
       TClassRec       *fNext;
    };
@@ -303,7 +304,7 @@ namespace ROOT { class TForNamespace {}; } // Dummy class to give a typeid to na
 /// Add a class to the class table (this is a static function).
 /// Note that the given cname *must* be already normalized.
 
-void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
+void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &info,
                       DictFuncPtr_t dict, Int_t pragmabits)
 {
    if (!gClassTable)
@@ -542,10 +543,10 @@ DictFuncPtr_t TClassTable::GetDict(const char *cname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Given the type_info returns the Dictionary() function of a class
-/// (uses hash of type_info::name()).
+/// Given the std::type_info returns the Dictionary() function of a class
+/// (uses hash of std::type_info::name()).
 
-DictFuncPtr_t TClassTable::GetDict(const type_info& info)
+DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
 {
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s at 0x%lx", info.name(), (Long_t)&info);
@@ -704,7 +705,7 @@ void TClassTable::Terminate()
 /// (see the ClassImp macro).
 
 void ROOT::AddClass(const char *cname, Version_t id,
-                    const type_info& info,
+                    const std::type_info& info,
                     DictFuncPtr_t dict,
                     Int_t pragmabits)
 {

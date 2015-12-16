@@ -1,13 +1,13 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #604
-// 
-// Fitting with constraints
-//
-//
-// 07/2008 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #604
+///
+///  Fitting with constraints
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

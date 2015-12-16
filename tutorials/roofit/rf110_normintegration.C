@@ -1,15 +1,15 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #110
-// 
-// Examples on normalization of p.d.f.s,
-// integration of p.d.fs, construction
-// of cumulative distribution functions from p.d.f.s
-// in one dimension
-//
-// 07/2008 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'BASIC FUNCTIONALITY' RooFit tutorial macro #110
+///
+///  Examples on normalization of p.d.f.s,
+///  integration of p.d.fs, construction
+///  of cumulative distribution functions from p.d.f.s
+///  in one dimension
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

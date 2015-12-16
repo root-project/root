@@ -62,6 +62,10 @@ while ! [ "x$1" = "x" -o "x$1" = "x--" ]; do
     shift
 done
 
+# Add ad hoc headers which are not in dictionaries and are not stl
+echo '#include "ROOT/TSeq.h"' >> $allheaders
+
+
 if [ "x$1" = "x--" ]; then
     shift
 fi

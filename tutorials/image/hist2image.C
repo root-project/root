@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup image
+/// \ingroup tutorial_image
 /// Create an image from a 2-D histogram and manipulate it.
 ///
 /// \image html image_hist2image.png

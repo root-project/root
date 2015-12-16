@@ -90,8 +90,17 @@ namespace cling {
     typedef std::map<clang::FunctionDecl*, std::bitset<32> > decl_map_t;
     std::map<clang::FunctionDecl*, std::bitset<32> > m_NonNullArgIndexs;
 
+    ///\brief Needed for the AST transformations, owned by Sema.
+    ///
+    ASTContext& m_Context;
+
+    ///\brief cling_runtime_internal_throwIfInvalidPointer cache.
+    ///
+    LookupResult* m_LookupResult;
+
   public:
-    IfStmtInjector(Sema& S) : m_Sema(S) {}
+    IfStmtInjector(Sema& S) : m_Sema(S), m_Context(S.getASTContext()),
+    m_LookupResult(0) {}
     CompoundStmt* Inject(CompoundStmt* CS) {
       NodeContext result = VisitCompoundStmt(CS);
       return cast<CompoundStmt>(result.getStmt());
@@ -191,68 +200,45 @@ namespace cling {
       return result;
     }
 
+    NodeContext VisitCXXMemberCallExpr(CXXMemberCallExpr* CME) {
+       NodeContext result(CME);
+       Expr* Callee = CME->getCallee();
+       if (isa<MemberExpr>(Callee)) {
+         NodeContext ME = Visit(Callee);
+         if (!ME.isSingleStmt())
+           result.prepend(ME.getStmts()[0]);
+       }
+       return result;
+    }
+
   private:
     Stmt* SynthesizeCheck(SourceLocation Loc, Expr* Arg) {
       assert(Arg && "Cannot call with Arg=0");
-      ASTContext& Context = m_Sema.getASTContext();
-      //copied from DynamicLookup.cpp
-      // Lookup Sema type
-      CXXRecordDecl* SemaRD
-        = dyn_cast<CXXRecordDecl>(utils::Lookup::Named(&m_Sema, "Sema",
-                                   utils::Lookup::Namespace(&m_Sema, "clang")));
 
-      QualType SemaRDTy = Context.getTypeDeclType(SemaRD);
-      Expr* VoidSemaArg = utils::Synthesize::CStyleCastPtrExpr(&m_Sema,SemaRDTy,
-                                                             (uint64_t)&m_Sema);
+      if(!m_LookupResult)
+        FindAndCacheRuntimeLookupResult();
 
-      // Lookup Expr type
-      CXXRecordDecl* ExprRD
-        = dyn_cast<CXXRecordDecl>(utils::Lookup::Named(&m_Sema, "Expr",
-                                   utils::Lookup::Namespace(&m_Sema, "clang")));
+      Expr* VoidSemaArg = utils::Synthesize::CStyleCastPtrExpr(&m_Sema,
+                                                            m_Context.VoidPtrTy,
+                                                            (uint64_t)&m_Sema);
 
-      QualType ExprRDTy = Context.getTypeDeclType(ExprRD);
-      Expr* VoidExprArg = utils::Synthesize::CStyleCastPtrExpr(&m_Sema,ExprRDTy,
-                                                               (uint64_t)Arg);
+      Expr* VoidExprArg = utils::Synthesize::CStyleCastPtrExpr(&m_Sema,
+                                                          m_Context.VoidPtrTy,
+                                                          (uint64_t)Arg);
 
-      Expr *args[] = {VoidSemaArg, VoidExprArg};
+      Expr *args[] = {VoidSemaArg, VoidExprArg, Arg};
 
       Scope* S = m_Sema.getScopeForContext(m_Sema.CurContext);
-      DeclarationName Name
-        = &Context.Idents.get("cling__runtime__internal__throwNullDerefException");
-
       SourceLocation noLoc;
-      LookupResult R(m_Sema, Name, noLoc, Sema::LookupOrdinaryName,
-                   Sema::ForRedeclaration);
-      m_Sema.LookupQualifiedName(R, Context.getTranslationUnitDecl());
-      assert(!R.empty() && "Cannot find valuePrinterInternal::Select(...)");
-
       CXXScopeSpec CSS;
-      Expr* UnresolvedLookup
-        = m_Sema.BuildDeclarationNameExpr(CSS, R, /*ADL*/ false).get();
 
-      Expr* call = m_Sema.ActOnCallExpr(S, UnresolvedLookup, noLoc,
+      Expr* unresolvedLookup
+        = m_Sema.BuildDeclarationNameExpr(CSS, *m_LookupResult,
+                                         /*ADL*/ false).get();
+
+      Expr* call = m_Sema.ActOnCallExpr(S, unresolvedLookup, noLoc,
                                         args, noLoc).get();
-      // Check whether we can get the argument'value. If the argument is
-      // null, throw an exception direclty. If the argument is not null
-      // then ignore this argument and continue to deal with the next
-      // argument with the nonnull attribute.
-      bool Result = false;
-      if (Arg->EvaluateAsBooleanCondition(Result, Context)) {
-        if(!Result) {
-          return call;
-        }
-        return Arg;
-      }
-      // The argument's value cannot be decided, so we add a UnaryOp
-      // operation to check its value at runtime.
-      ExprResult ER = m_Sema.ActOnUnaryOp(S, Loc, tok::exclaim, Arg);
-
-      Decl* varDecl = 0;
-      Stmt* varStmt = 0;
-      Sema::FullExprArg FullCond(m_Sema.MakeFullExpr(ER.get()));
-      StmtResult IfStmt = m_Sema.ActOnIfStmt(Loc, FullCond, varDecl,
-                                             call, Loc, varStmt);
-      return IfStmt.get();
+      return call;
     }
 
     bool isDeclCandidate(FunctionDecl * FDecl) {
@@ -276,6 +262,22 @@ namespace cling {
         return true;
       }
       return false;
+    }
+
+    void FindAndCacheRuntimeLookupResult() {
+      assert(!m_LookupResult && "Called multiple times!?");
+
+      DeclarationName Name
+        = &m_Context.Idents.get("cling_runtime_internal_throwIfInvalidPointer");
+
+      SourceLocation noLoc;
+      m_LookupResult = new LookupResult(m_Sema, Name, noLoc,
+                                        Sema::LookupOrdinaryName,
+                                        Sema::ForRedeclaration);
+      m_Sema.LookupQualifiedName(*m_LookupResult,
+                                 m_Context.getTranslationUnitDecl());
+      assert(!m_LookupResult->empty() &&
+              "cling_runtime_internal_throwIfInvalidPointer");
     }
   };
 

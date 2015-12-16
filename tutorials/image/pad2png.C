@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup image
+/// \ingroup tutorial_image
 /// Create a canvas and save as png.
 ///
 /// \macro_image

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 ///
 /// \image html eve_hierarchical_scene.png
 /// \macro_code

@@ -1,6 +1,11 @@
-#
-# This macro displays the Tree data structures
-#
+## \file
+## \ingroup tutorial_pyroot
+## This macro displays the Tree data structures
+##
+## \macro_image
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TPaveLabel, TPaveText, TPavesText, TText
 from ROOT import TArrow, TLine

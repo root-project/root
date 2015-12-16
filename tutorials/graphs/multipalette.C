@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphs
+/// \ingroup tutorial_graphs
 /// Draw color plots using different color palettes.
 ///
 /// \macro_image

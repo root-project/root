@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup ProofFriends
+/// \ingroup tutorial_ProofFriends
 ///
 /// Selector to process tree friends
 ///

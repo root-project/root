@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// Example of a graph of data moving in time.
 /// Use the canvas "File/Quit" to exit from this example
 ///

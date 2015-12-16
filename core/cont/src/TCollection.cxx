@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TCollection
+\ingroup Containers
 Collection abstract base class. This class describes the base
 protocol all collection classes have to implement. The ROOT
 collection classes always store pointers to objects that inherit

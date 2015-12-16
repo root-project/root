@@ -34,7 +34,7 @@ ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           ${winnt_objects}
                           LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
                                     ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
-                                    ${CMAKE_TINFO_LIBS} ${corelinklibs})
+                                    ${corelinklibs})
 
 add_dependencies(rootcling CLING LLVMRES)
 
@@ -64,16 +64,16 @@ else()
                     DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
 endif()
 
-add_custom_command(OUTPUT rootcling_tmp.cxx
-                   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx ${CMAKE_CURRENT_BINARY_DIR}/rootcling_tmp.cxx
-                   DEPENDS  ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx)
+set(R__LLVMRESOURCEDIR ${CMAKE_BINARY_DIR}/etc/cling)
+configure_file(src/rootcling.cxx rootcling_tmp.cxx @ONLY)
+
 if(WIN32)
-  set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-D_WIN32 -DNOMINMAX -DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling")
+  set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-D_WIN32 -DNOMINMAX -DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR")
 else()
   if(CXX_HAS_fno_rtti)
-    set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling -fno-rtti")
+    set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR -fno-rtti")
   else()
-    set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling")
+    set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR")
   endif()
 endif()
 
@@ -83,7 +83,7 @@ ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx src/DictSelectionReader.cxx
                               $<TARGET_OBJECTS:Clib>
                               $<TARGET_OBJECTS:MetaUtils>
                               $<TARGET_OBJECTS:MetaUtilsLLVM>
-                              LIBRARIES ${CLING_LIBRARIES}  ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_TINFO_LIBS}
+                              LIBRARIES ${CLING_LIBRARIES}  ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                               NOINSTALL)
 add_dependencies(rootcling_tmp CLING LLVMRES)
 set_source_files_properties(src/LinkdefReader.cxx PROPERTIES COMPILE_FLAGS -fno-rtti)
@@ -110,7 +110,7 @@ foreach(file  Interpreter/DynamicExprInfo.h
               Interpreter/DynamicLookupLifetimeHandler.h
               Interpreter/Interpreter.h
               Interpreter/InvocationOptions.h
-              Interpreter/RuntimeException.h
+              Interpreter/Exception.h
               Interpreter/RuntimePrintValue.h
               Interpreter/RuntimeUniverse.h
               Interpreter/Value.h)

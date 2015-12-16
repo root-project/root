@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Shows CMS geometry.
 ///
 /// \image html eve_geom_lhcb.png

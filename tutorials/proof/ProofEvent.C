@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup ProofEvent
+/// \ingroup tutorial_ProofEvent
 ///
 /// Selector for generic processing with Event
 ///

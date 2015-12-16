@@ -1,10 +1,14 @@
+/// \file
+/// \ingroup tutorial_tree
+/// TSpider example
+/// \macro_code
+///
+/// \author Bastien Dallapiazza
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TNtuple.h"
 #include "TSpider.h"
 
-// script illustrating the use of the TSpider class
-//Author: Bastien Dallapiazza
 void spider() {
    TCanvas *c1 = new TCanvas("c1","TSpider example",200,10,700,700);
    TFile *f = new TFile("hsimple.root");

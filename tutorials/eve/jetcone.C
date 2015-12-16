@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstrates usage of TEveJetCone class.
 ///
 /// \image html eve_jetcone.png

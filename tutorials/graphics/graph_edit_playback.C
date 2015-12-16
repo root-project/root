@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphics
+/// \ingroup tutorial_graphics
 /// This macro plays a recorded ROOT session showing how to perform various
 /// interactive graphical editing operations. The initial graphics setup
 /// was created using the following root commands:

@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TQueryResultManager                                                  //
-//                                                                      //
-// This class manages the query-result area.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TQueryResultManager
+\ingroup proofkernel
+
+Class managing the query-result area
+
+*/
 
 #include <errno.h>
 #ifdef WIN32

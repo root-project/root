@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TList
+\ingroup Containers
 A doubly linked list.
 
 All classes inheriting from TObject can be

@@ -9,19 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// This is an abstract base class !
-// No
-// implementation
-// needed.
-// andreas.morsch@cern.ch
+/** \class  TVirtualMCDecayer
+    \ingroup eg
+
+Abstract base class for particle decays.
+
+Clients are the transport code and the primary particle generators
+
+andreas.morsch@cern.ch
+*/
 
 #include "TVirtualMCDecayer.h"
-
-//______________________________________________________________________________
-//
-// Abstract base class for particle decays.
-// Clients are the transport code and the primary particle generators
-// This is an abstract base class !
-//______________________________________________________________________________
 
 ClassImp(TVirtualMCDecayer)

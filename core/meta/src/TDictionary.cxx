@@ -93,7 +93,7 @@ TDictionary* TDictionary::GetDictionary(const char* name)
    return TClass::GetClass(name, true);
 }
 
-TDictionary* TDictionary::GetDictionary(const type_info &typeinfo)
+TDictionary* TDictionary::GetDictionary(const std::type_info &typeinfo)
 {
    // Retrieve the type (class, fundamental type, typedef etc)
    // with typeid typeinfo. Returned object is either a TClass or TDataType.

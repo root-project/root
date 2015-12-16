@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Example displaying two histograms and their ratio.
 ///
 /// \macro_image

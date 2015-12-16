@@ -1,2 +1,3 @@
-\defgroup image Image tutorials
-\brief Examples showing the TImage class uasge.
+\defgroup tutorial_image Image tutorials
+\ingroup Tutorials
+\brief Examples showing the TImage class usage.

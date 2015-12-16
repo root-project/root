@@ -1,11 +1,16 @@
-//  Example of a circular Tree
-//  Circular Trees are interesting in online real time environments
-//  to store the results of the last maxEntries events.
-//  for more info, see TTree::SetCircular
-// Author: Rene Brun
+/// \file
+/// \ingroup tutorial_tree
+///
+/// Example of a circular Tree
+///
+/// Circular Trees are interesting in online real time environments
+/// to store the results of the last maxEntries events.
+/// for more info, see TTree::SetCircular.
+/// Circular trees must be memory resident.
+/// \macro_code
+/// \author Rene Brun
 void circular() {
-   gROOT->cd(); //make sure that the Tree is memory resident
-   TTree *T = new TTree("T","test circular buffers");
+   auto T = new TTree("T","test circular buffers");
    TRandom r;
    Float_t px,py,pz;
    Double_t random;

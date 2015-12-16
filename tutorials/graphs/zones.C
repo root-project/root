@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphs
+/// \ingroup tutorial_graphs
 /// Example of script showing how to divide a canvas
 /// into adjacent subpads + axis labels on the top and right side
 /// of the pads.

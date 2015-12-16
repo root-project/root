@@ -15,7 +15,7 @@
  *****************************************************************************/
 
 /** \class RooArgusBG
-    \ingroup Roofitpdf
+    \ingroup Roofit
 
 RooArgusBG is a RooAbsPdf implementation describing the ARGUS background shape.
 */

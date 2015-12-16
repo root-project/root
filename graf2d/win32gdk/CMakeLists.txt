@@ -98,7 +98,7 @@ ROOT_LINKER_LIBRARY(Win32gdk *.cxx *.c G__Win32gdk.cxx LIBRARIES Cling Core Graf
 add_dependencies(Win32gdk GDKLIB glib)
 
 if(builtin_freetype)
-  add_dependencies(Win32gdk FREETYPE)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(Win32gdk FREETYPE)
 endif()
 					
 install(FILES  ${gdkdlla}

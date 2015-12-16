@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Html table and event summary for alice_esd.C
 ///
 /// \macro_code

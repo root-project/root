@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstates usage of 2D digit class TEveQuadSet.
 ///
 /// \image html eve_quadset.png

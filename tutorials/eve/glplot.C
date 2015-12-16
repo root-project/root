@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Preliminary demo for showing Timur's GL plots in EVE.
 /// Author: Matevz Tadel, July 2009
 ///

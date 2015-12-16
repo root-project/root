@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup hist
+/// \ingroup tutorial_hist
 /// Use a THStack to show a 2-D hist with cells with different colors.
 /// ~~~ {.cpp}
 ///  root > .x multicolor.C

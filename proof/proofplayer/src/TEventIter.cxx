@@ -10,14 +10,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TEventIter                                                           //
-//                                                                      //
-// Special iterator class used in TProofPlayer to iterate over events   //
-// or objects in the packets.                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TEventIter
+\ingroup proofkernel
+
+Special iterator class used in TProofPlayer to iterate over events
+or objects in the packets.
+
+*/
 
 #include "TEnv.h"
 #include "TEventIter.h"

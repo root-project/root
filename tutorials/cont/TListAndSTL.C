@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup cont
+/// \ingroup tutorial_cont
 /// This is an example of using TList with STL algoritms in CINT.
 ///
 /// #### Output produced by `.x TListAndSTL.C`

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Shows CMS geometry in stereo mode.
 /// This requires quad-buffer support in the OpenGL hardware / driver,
 /// otheriwse a fatal error occurs.

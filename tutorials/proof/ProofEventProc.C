@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup ProofEventProc
+/// \ingroup tutorial_ProofEventProc
 ///
 /// Selector to process trees containing Event structures
 ///

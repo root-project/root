@@ -2457,7 +2457,7 @@ Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Int_t n,
 ////////////////////////////////////////////////////////////////////////////////
 /// stream object to/from buffer
 
-void TBufferJSON::StreamObject(void *obj, const type_info &typeinfo,
+void TBufferJSON::StreamObject(void *obj, const std::type_info &typeinfo,
                                const TClass * /* onFileClass */)
 {
    StreamObject(obj, TClass::GetClass(typeinfo));

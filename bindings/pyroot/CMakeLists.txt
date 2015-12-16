@@ -40,9 +40,9 @@ foreach(pyfile ${pyfiles})
   file(COPY ${pyfile} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
 endforeach()
 
-set( ROOTaaSDirName "ROOTaaS")
-install (DIRECTORY ${ROOTaaSDirName} DESTINATION ${runtimedir})
-file(COPY ${ROOTaaSDirName} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
+set( JupyROOTDirName "JupyROOT")
+install (DIRECTORY ${JupyROOTDirName} DESTINATION ${runtimedir})
+file(COPY ${JupyROOTDirName} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
 
 #---Install headers----------------------------------------------------------
 ROOT_INSTALL_HEADERS()

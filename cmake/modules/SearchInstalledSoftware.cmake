@@ -27,9 +27,7 @@ if(NOT builtin_zlib)
    endif()
 endif()
 if(builtin_zlib)
-  if(WIN32)
-    set(ZLIB_LIBRARY "")
-  endif()
+  set(ZLIB_LIBRARY "" CACHE PATH "" FORCE)
 endif()
 
 #---Check for Freetype---------------------------------------------------------------
@@ -44,13 +42,45 @@ if(NOT builtin_freetype)
   endif()
 endif()
 if(builtin_freetype)
-  set(FREETYPE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/graf2d/freetype/freetype-2.6.1/include)
-  set(FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR})
+  set(freetype_version 2.6.1)
+  message(STATUS "Building freetype version ${freetype_version} included in ROOT itself")
   if(WIN32)
-    set(FREETYPE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/freetype.lib)
+    if(winrtdebug)
+      set(freetypeliba objs/freetype261MT_D.lib)
+      set(freetypebuild "freetype - Win32 Debug Multithreaded")
+    else()
+      set(freetypeliba objs/freetype261MT.lib)
+      set(freetypebuild "freetype - Win32 Release Multithreaded")
+    endif()
+    ExternalProject_Add(
+      FREETYPE
+      URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/win32 builds/windows/visualc/.
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND ${CMAKE_COMMAND} -E chdir builds/windows/visualc/
+                    nmake -nologo -f freetype.mak CFG=${freetypebuild} NMAKECXXFLAGS=-D_CRT_SECURE_NO_DEPRECATE 
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypeliba} ./libs/freetype.lib     
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
   else()
-    set(FREETYPE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libfreetype.a)
+    set(_freetype_cflags -O)
+    if(ROOT_ARCHITECTURE MATCHES aix)
+      set(_freetype_zlib --without-zlib)
+    endif()
+    ExternalProject_Add(
+      FREETYPE
+      URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
+      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic 
+                         --disable-shared --with-png=no --with-bzip2=no 
+                         --with-harfbuzz=no ${_freetype_zlib}
+                          CC=${CMAKE_C_COMPILER} CFLAGS=${_freetype_cflags}
+      INSTALL_COMMAND ""                    
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
   endif()
+  ExternalProject_Get_Property(FREETYPE SOURCE_DIR)
+  set(FREETYPE_INCLUDE_DIR ${SOURCE_DIR}/include)
+  set(FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR})
+  set(FREETYPE_LIBRARY ${SOURCE_DIR}/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set(FREETYPE_LIBRARIES ${FREETYPE_LIBRARY})
 endif()
 
 #---Check for PCRE-------------------------------------------------------------------
@@ -64,12 +94,37 @@ if(NOT builtin_pcre)
   endif()
 endif()
 if(builtin_pcre)
-  set(PCRE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/core/pcre/pcre-8.37)
+  set(pcre_version 8.37)
+  message(STATUS "Building pcre version ${pcre_version} included in ROOT itself")
   if(WIN32)
-    set(PCRE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libpcre.lib)
+    if(winrtdebug)
+      set(pcrebuild "libpcre - Win32 Debug")
+     else()
+      set(pcrebuild "libpcre - Win32 Release")
+    endif()
+    ExternalProject_Add(
+      PCRE
+      URL ${CMAKE_SOURCE_DIR}/core/pcre/src/pcre-${pcre_version}.tar.gz
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/core/pcre/src/win32 .
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND ${CMAKE_COMMAND} nmake -nologo -f Makefile.msc 
+                                     CFG=${pcrebuild} NMCXXFLAGS=${CMAKE_CC_FLAGS}
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different libpcre-8.37.lib .libs/pcre.lib
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
   else()
-    set(PCRE_LIBRARIES "-L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} -lpcre")
+    set(_pcre_cflags -O)
+    ExternalProject_Add(
+      PCRE
+      URL ${CMAKE_SOURCE_DIR}/core/pcre/src/pcre-${pcre_version}.tar.gz
+      CONFIGURE_COMMAND ./configure --with-pic --disable-shared
+                        CC=${CMAKE_C_COMPILER} CFLAGS=${_pcre_cflags}
+      INSTALL_COMMAND ""     
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
   endif()
+  ExternalProject_Get_Property(PCRE SOURCE_DIR)
+  set(PCRE_INCLUDE_DIR ${SOURCE_DIR})
+  set(PCRE_LIBRARY ${SOURCE_DIR}/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}pcre${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set(PCRE_LIBRARIES ${PCRE_LIBRARY})
 endif()
 
 #---Check for LZMA-------------------------------------------------------------------
@@ -94,9 +149,7 @@ if(builtin_lzma)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND "" BUILD_COMMAND ""
       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy lib/liblzma.dll <INSTALL_DIR>/bin
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
-      BUILD_IN_SOURCE 1
-    )
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
     install(FILES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.dll DESTINATION ${CMAKE_INSTALL_BINDIR})
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
@@ -115,9 +168,7 @@ if(builtin_lzma)
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --libdir <INSTALL_DIR>/lib
                         --with-pic --disable-shared --quiet
                         CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${LZMA_CFLAGS} LDFLAGS=${LZMA_LDFLAGS}
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
-      BUILD_IN_SOURCE 1
-)
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   endif()
@@ -170,16 +221,6 @@ else()
 endif()
 
 
-#---Check for AfterImage---------------------------------------------------------------
-if(NOT builtin_afterimage)
-  message(STATUS "Looking for AfterImage")
-  find_package(AfterImage)
-  if(NOT AFTERIMAGE_FOUND)
-    message(STATUS "AfterImage not found. Switching on builtin_afterimage option")
-    set(builtin_afterimage ON CACHE BOOL "" FORCE)
-  endif()
-endif()
-
 #---Check for all kind of graphics includes needed by libAfterImage--------------------
 if(asimage)
   if(NOT x11 AND NOT cocoa)
@@ -208,6 +249,72 @@ if(asimage)
   endif()
 endif()
 
+#---Check for AfterImage---------------------------------------------------------------
+if(NOT builtin_afterimage)
+  message(STATUS "Looking for AfterImage")
+  find_package(AfterImage)
+  if(NOT AFTERIMAGE_FOUND)
+    message(STATUS "AfterImage not found. Switching on builtin_afterimage option")
+    set(builtin_afterimage ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+if(builtin_afterimage)
+  if(WIN32)
+    if(winrtdebug)
+      set(astepbld "libAfterImage - Win32 Debug")
+    else()
+      set(astepbld "libAfterImage - Win32 Release")
+    endif()
+    ExternalProject_Add(
+      AFTERIMAGE
+      DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      BUILD_COMMAND nmake -nologo -f libAfterImage.mak FREETYPEDIRI=-I${FREETYPE_INCLUDE_DIR}
+                    CFG=${astepbld} NMAKECXXFLAGS="${CMAKE_CXX_FLAGS} /wd4244"
+      INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different libAfterImage.lib <INSTALL_DIR>/lib/.
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
+  else()
+    message(STATUS "Building AfterImage library included in ROOT itself")
+    if(JPEG_FOUND)
+      set(_jpeginclude --with-jpeg-includes=${JPEG_INCLUDE_DIR})
+    endif()
+    if(PNG_FOUND)
+      set(_pnginclude  --with-png-includes=${PNG_PNG_INCLUDE_DIR})
+    endif()
+    if(TIFF_FOUND)
+      set(_tiffinclude --with-tiff-includes=${TIFF_INCLUDE_DIR})
+    else()
+      set(_tiffinclude --with-tiff=no)
+    endif()
+    if(cocoa)
+      set(_jpeginclude --without-x --with-builtin-jpeg)
+      set(_pnginclude  --with-builtin-png)
+      set(_tiffinclude --with-tiff=no)
+    endif()
+    if(builtin_freetype)
+      set(_ttf_include --with-ttf-includes=-I${FREETYPE_INCLUDE_DIR})
+      set(_after_cflags "${_after_cflags} -DHAVE_FREETYPE_FREETYPE")
+    endif()
+    ExternalProject_Add(
+      AFTERIMAGE
+      DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-ttf ${_ttf_include} --with-afterbase=no 
+                        --without-svg --disable-glx ${_after_mmx} 
+                        --with-builtin-ungif  --with-jpeg ${_jpeginclude} 
+                        --with-png ${_pnginclude} ${_tiffinclude}
+                        CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
+  endif()
+  if(builtin_freetype)
+    add_dependencies(AFTERIMAGE FREETYPE)
+  endif()
+    
+  ExternalProject_Get_Property(AFTERIMAGE INSTALL_DIR)
+  set(AFTERIMAGE_INCLUDE_DIR ${INSTALL_DIR}/include/libAfterImage)
+  set(AFTERIMAGE_LIBRARIES ${INSTALL_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
+endif()
+
 #---Check for GSL library---------------------------------------------------------------
 if(mathmore OR builtin_gsl)
   message(STATUS "Looking for GSL")
@@ -225,14 +332,14 @@ if(mathmore OR builtin_gsl)
       endif()
     endif()
   else()
-    set(gsl_version 1.15)
+    set(gsl_version 2.1)
     message(STATUS "Downloading and building GSL version ${gsl_version}")
     ExternalProject_Add(
       GSL
       # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
       URL ${repository_tarfiles}/gsl-${gsl_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no CFLAGS=${CMAKE_C_FLAGS}
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no CC=${CMAKE_C_COMPILER} CFLAGS=${CMAKE_C_FLAGS}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     )
     set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
@@ -703,12 +810,6 @@ else()
 endif()
 
 #---Check for cling and llvm --------------------------------------------------------
-find_library(CMAKE_TINFO_LIBS NAMES tinfo ncurses)
-mark_as_advanced(CMAKE_TINFO_LIBS)
-if(NOT CMAKE_TINFO_LIBS)
-  set(CMAKE_TINFO_LIBS "")   #  Often if not found is still OK
-endif()
-
 if(cling)
   if(builtin_llvm)
     set(LLVM_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/include
@@ -876,6 +977,8 @@ if(davix OR builtin_davix)
       DAVIX
       # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
       URL ${repository_tarfiles}/davix-embedded-${DAVIX_VERSION}.tar.gz
+      # Patch need. see https://github.com/cern-it-sdc-id/davix/issues/6
+      PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch 
       CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -938,7 +1041,6 @@ if(vc)
 endif()
 
 #---Check for TCMalloc---------------------------------------------------------------
-
 if (tcmalloc)
   message(STATUS "Looking for tcmalloc")
   find_package(tcmalloc)
@@ -948,7 +1050,6 @@ if (tcmalloc)
 endif()
 
 #---Check for JEMalloc---------------------------------------------------------------
-
 if (jemalloc)
   if (tcmalloc)
    message(FATAL_ERROR "Both tcmalloc and jemalloc were selected: this is an inconsistent setup.")
@@ -1003,7 +1104,6 @@ if(geocad)
     endif()
   endif()
 endif()
-
 
 #---Report non implemented options---------------------------------------------------
 foreach(opt afs glite sapdb srp)

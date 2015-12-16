@@ -1,5 +1,5 @@
 /// \file EmptyInclude.h
-/// \ingroup proof
+/// \ingroup tutorial_proof
 ///
 /// Empty file to test TProof::Load in runProof.C and StressProof.cxx in
 /// conjunction with ProcFileElements and ProofEventProc .

@@ -21,31 +21,31 @@
 #include <stdlib.h>
 
 
-////////////////////////////////////////////////////////////////////////
-//
-//  Particle database manager class
-//
-//  This manager creates a list of particles which by default is
-//  initialised from with the constants used by PYTHIA6 (plus some
-//  other particles added). See definition and the format of the default
-//  particle list in $ROOTSYS/etc/pdg_table.txt
-//
-//  there are 2 ways of redefining the name of the file containing the
-//  particle properties
-//
-//  1. one can define the name in .rootrc file:
-//
-//  Root.DatabasePDG: $(HOME)/my_pdg_table.txt
-//
-//  2. one can use TDatabasePDG::ReadPDGTable method explicitly:
-//
-//     - TDatabasePDG *pdg = new TDatabasePDG();
-//     - pdg->ReadPDGtable(filename)
-//
-//  See TParticlePDG for the description of a static particle properties.
-//  See TParticle    for the description of a dynamic particle particle.
-//
-////////////////////////////////////////////////////////////////////////
+/** \class TDatabasePDG
+    \ingroup eg
+
+Particle database manager class
+
+This manager creates a list of particles which by default is
+initialised from with the constants used by PYTHIA6 (plus some
+other particles added). See definition and the format of the default
+particle list in $ROOTSYS/etc/pdg_table.txt
+
+There are 2 ways of redefining the name of the file containing the
+particle properties
+
+-# One can define the name in .rootrc file:
+
+Root.DatabasePDG: $(HOME)/my_pdg_table.txt
+
+-# One can use TDatabasePDG::ReadPDGTable method explicitly:
+
+   - TDatabasePDG *pdg = new TDatabasePDG();
+   - pdg->ReadPDGtable(filename)
+
+See TParticlePDG for the description of a static particle properties.
+See TParticle    for the description of a dynamic particle particle.
+*/
 
 ClassImp(TDatabasePDG)
 

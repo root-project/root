@@ -1,13 +1,16 @@
 // @(#)root/pythia6:$Id$
 // Author: Piotr Golonka   17/09/97
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-//  class TMCParticle                                                         //
-//                                                                            //
-// This class serves as a data storage for description of one particle.       //
-// It is especially convenient to store information taken from LUJETS common, //
-// which is done by interface class TPythia.                                  //
-////////////////////////////////////////////////////////////////////////////////
+
+/** \class TMCParticle
+    \ingroup pythia6
+
+This class serves as a data storage for description of one particle.
+
+It is especially convenient to store information taken from LUJETS common,
+which is done by interface class TPythia.
+
+Author: Piotr Golonka   17/09/97
+*/
 
 #include "TMCParticle.h"
 #include "TPrimary.h"

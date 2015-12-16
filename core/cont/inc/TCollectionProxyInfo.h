@@ -233,6 +233,7 @@ namespace Detail {
       size_t              fSpace;
    };
    template <typename T> struct Environ : public EnvironBase {
+      Environ() : fIterator() {}
       typedef T           Iter_t;
       Iter_t              fIterator;
       T& iter() { return fIterator; }
@@ -491,7 +492,7 @@ namespace Detail {
 
    public:
 #ifndef __CINT__
-      const type_info &fInfo;
+      const std::type_info &fInfo;
 #endif
       size_t fIterSize;
       size_t fValueDiff;
@@ -530,7 +531,7 @@ namespace Detail {
       // Otherwise just call the iterator's destructor.
 
    public:
-      TCollectionProxyInfo(const type_info& info,
+      TCollectionProxyInfo(const std::type_info& info,
                            size_t iter_size,
                            size_t value_diff,
                            int    value_offset,

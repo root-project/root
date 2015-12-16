@@ -1,7 +1,13 @@
-void quantiles() {
-   // demo for quantiles
-   // Authors: Rene Brun, Eddy Offermann
+/// \file
+/// \ingroup tutorial_math
+/// Demo for quantiles
+///
+/// \macro_image
+/// \macro_code
+///
+/// \authors Rene Brun, Eddy Offermann
 
+void quantiles() {
    const Int_t nq = 100;
    const Int_t nshots = 10;
    Double_t xq[nq];  // position where to compute the quantiles in [0,1]
@@ -63,4 +69,3 @@ void quantiles() {
    legend->AddEntry(gr70," q70","lp");
    legend->Draw();
 }
-

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphs
+/// \ingroup tutorial_graphs
 /// This macro illustrates the use of the time mode on the axis
 /// with different time intervals and time formats.
 /// Through all this script, the time is expressed in UTC. some

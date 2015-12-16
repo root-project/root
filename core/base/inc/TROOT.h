@@ -74,7 +74,11 @@ namespace Internal {
 namespace ROOT {
    // Enable support for multi-threading within the ROOT code,
    // in particular, enables the global mutex to make ROOT thread safe/aware.
-   void EnableMT();
+   void EnableThreadSafety();
+   // Manage implicit multi-threading within ROOT
+   void EnableImplicitMT(UInt_t numthreads = 0);
+   void DisableImplicitMT();
+   Bool_t IsImplicitMTEnabled();
 }
 
 class TROOT : public TDirectory {
@@ -193,7 +197,7 @@ public:
    TApplication     *GetApplication() const { return fApplication; }
    TInterpreter     *GetInterpreter() const { return fInterpreter; }
    TClass           *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE) const;
-   TClass           *GetClass(const type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE) const;
+   TClass           *GetClass(const std::type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE) const;
    TColor           *GetColor(Int_t color) const;
    const char       *GetConfigOptions() const { return fConfigOptions; }
    const char       *GetConfigFeatures() const { return fConfigFeatures; }

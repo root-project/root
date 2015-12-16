@@ -130,6 +130,7 @@
 #include "TMVA/MethodBase.h"
 #include "TMVA/MisClassificationError.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/OptimizeConfigParameters.h"
 #include "TMVA/PDF.h"
 #include "TMVA/Ranking.h"
 #include "TMVA/Results.h"

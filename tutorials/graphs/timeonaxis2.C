@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup graphs
+/// \ingroup tutorial_graphs
 /// Define the time offset as 2003, January 1st.
 ///
 /// \macro_image

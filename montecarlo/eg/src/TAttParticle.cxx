@@ -9,14 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TAttParticle                                                         //
-//                                                                      //
-// Particle definition, partly based on GEANT3 particle definition      //
-//                                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TAttParticle
+    \ingroup eg
+
+Particle definition, partly based on GEANT3 particle definition
+*/
 
 #include "TAttParticle.h"
 #include "THashList.h"

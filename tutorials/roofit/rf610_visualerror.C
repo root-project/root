@@ -1,14 +1,14 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #610
-// 
-// Visualization of errors from a covariance matrix
-//
-// 
-//
-// 04/2009 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #610
+///
+///  Visualization of errors from a covariance matrix
+///
+///
+///
+/// \macro_code
+/// \author 04/2009 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

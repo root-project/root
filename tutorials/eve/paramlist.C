@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Demonstrates usage of simple configuration via TEveParamList class.
 ///
 /// \macro_code

@@ -1,21 +1,25 @@
-/*
-StandardTestStatDistributionDemo.C
-author Kyle Cranmer
-date: summer solstice, 2011
-
-This simple script plots the sampling distribution of the profile likelihood
-ratio test statistic based on the input Model File.  To do this one needs to
-specify the value of the parameter of interest that will be used for evaluating
-the test statistic and the value of the parameters used for generating the toy data.
-In this case, it uses the upper-limit estimated from the ProfileLikleihoodCalculator,
-which assumes the asymptotic chi-square distribution for -2 log profile likleihood ratio.
-Thus, the script is handy for checking to see if the asymptotic approximations are valid.
-To aid, that comparison, the script overlays a chi-square distribution as well.
-The most common parameter of interest is a parameter proportional to the signal rate,
-and often that has a lower-limit of 0, which breaks the standard chi-square distribution.
-Thus the script allows the parameter to be negative so that the overlay chi-square is
-the correct asymptotic distribution.
-*/
+/// \file
+/// \ingroup tutorial_roostats
+/// StandardTestStatDistributionDemo.C
+///
+/// This simple script plots the sampling distribution of the profile likelihood
+/// ratio test statistic based on the input Model File.  To do this one needs to
+/// specify the value of the parameter of interest that will be used for evaluating
+/// the test statistic and the value of the parameters used for generating the toy data.
+/// In this case, it uses the upper-limit estimated from the ProfileLikleihoodCalculator,
+/// which assumes the asymptotic chi-square distribution for -2 log profile likleihood ratio.
+/// Thus, the script is handy for checking to see if the asymptotic approximations are valid.
+/// To aid, that comparison, the script overlays a chi-square distribution as well.
+/// The most common parameter of interest is a parameter proportional to the signal rate,
+/// and often that has a lower-limit of 0, which breaks the standard chi-square distribution.
+/// Thus the script allows the parameter to be negative so that the overlay chi-square is
+/// the correct asymptotic distribution.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer
 
 #include "TFile.h"
 #include "TROOT.h"
@@ -165,11 +169,11 @@ void StandardTestStatDistributionDemo(const char* infile = "",
   firstPOI->setVal(plcUpperLimit); // set POI value for generation
   sampler.SetParametersForTestStat(*mc->GetParametersOfInterest()); // set POI value for evaluation
 
-  if (useProof) { 
+  if (useProof) {
      ProofConfig pc(*w, nworkers, "",false);
      sampler.SetProofConfig(&pc); // enable proof
   }
-     
+
   firstPOI->setVal(plcUpperLimit);
   RooArgSet allParameters;
   allParameters.add(*mc->GetParametersOfInterest());

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Complex example showing ALICE VSD visualization.
 ///
 ///  alice_vsd.C - a simple event-display for ALICE

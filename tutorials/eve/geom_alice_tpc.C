@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup eve
+/// \ingroup tutorial_eve
 /// Shows geometry of ALICE TPC.
 ///
 /// \image html eve_geom_alice_tpc.png
