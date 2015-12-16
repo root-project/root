@@ -30,15 +30,24 @@ static tbb::task_scheduler_init &GetScheduler()
    return scheduler;
 }
 
+static bool &GetIMTFlag()
+{
+   static bool enabled = false;
+   return enabled;
+}
+
 extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 {
-   if (!GetScheduler().is_active()) {
-      TThread::Initialize();
+   if (!GetIMTFlag()) {
+      if (!GetScheduler().is_active()) { 
+         TThread::Initialize();
 
-      if (numthreads == 0)
-         numthreads = tbb::task_scheduler_init::automatic;
+         if (numthreads == 0)
+            numthreads = tbb::task_scheduler_init::automatic;
 
-      GetScheduler().initialize(numthreads);
+         GetScheduler().initialize(numthreads);
+      }
+      GetIMTFlag() = true;
    }
    else {
       ::Warning("ROOT_TImplicitMT_EnableImplicitMT", "Implicit multi-threading is already enabled");
@@ -47,8 +56,8 @@ extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 
 extern "C" void ROOT_TImplicitMT_DisableImplicitMT()
 {
-   if (GetScheduler().is_active()) {
-      GetScheduler().terminate();
+   if (GetIMTFlag()) {
+      GetIMTFlag() = false;
    }
    else {
       ::Warning("ROOT_TImplicitMT_DisableImplicitMT", "Implicit multi-threading is already disabled");
@@ -57,6 +66,6 @@ extern "C" void ROOT_TImplicitMT_DisableImplicitMT()
 
 extern "C" bool ROOT_TImplicitMT_IsImplicitMTEnabled()
 {
-   return GetScheduler().is_active();
+   return GetIMTFlag();
 };
 
