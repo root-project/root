@@ -74,6 +74,8 @@ Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
 
 Exceptions are now caught in the interactive ROOT session, instead of terminating ROOT.
 
+## Parallelisation
+Three methods have been added to manage implicit multi-threading in ROOT: ROOT::EnableImplicitMT(numthreads), ROOT::DisableImplicitMT and ROOT::IsImplicitMTEnabled. They can be used to enable, disable and check the status of the global implicit multi-threading in ROOT, respectively.
 
 ## I/O Libraries
 Custom streamers need to #include TBuffer.h explicitly (see
@@ -83,6 +85,7 @@ Custom streamers need to #include TBuffer.h explicitly (see
 ## TTree Libraries
 
 * Repair setting the branch address of a leaflist style branch taking directly the address of the struct.  (Note that leaflist is nonetheless still deprecated and declaring the struct to the interpreter and passing the object directly to create the branch is much better).
+* Provide an implicitly parallel implementation of TTree::GetEntry. The approach is based on creating a task per top-level branch in order to do the reading, unzipping and deserialisation in parallel. In addition, a getter and a setter methods are provided to check the status and enable/disable implicit multi-threading for that tree (see Parallelisation section for more information about implicit multi-threading).
 
 ## Histogram Libraries
 
