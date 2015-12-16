@@ -61,25 +61,6 @@
    }
 
    ReadFile = function() {
-      var navigator_version = navigator.appVersion;
-      if (typeof ActiveXObject == "function") { // Windows
-         // detect obsolete browsers
-         if ((navigator_version.indexOf("MSIE 8") != -1) ||
-               (navigator_version.indexOf("MSIE 7") != -1))  {
-            alert("You need at least MS Internet Explorer version 9.0. Note you can also use any other web browser");
-            return;
-         }
-      }
-      else {
-         // Safari 5.1.7 on MacOS X doesn't work properly
-         if ((navigator_version.indexOf("Windows NT") == -1) &&
-               (navigator_version.indexOf("Safari") != -1) &&
-               (navigator_version.indexOf("Version/5.1.7") != -1)) {
-            alert("There are know issues with Safari 5.1.7 on MacOS X. It may become unresponsive or even hangs. You can use any other web browser");
-            return;
-         }
-      }
-
       var filename = $("#urlToLoad").val();
       filename.trim();
       if (filename.length == 0) return;
@@ -91,7 +72,6 @@
       else
          hpainter.OpenRootFile(filename);
    }
-
 
    BuildSimpleGUI = function() {
 
@@ -113,11 +93,11 @@
 
       if (online) {
          guiCode += '<h1><font face="Verdana" size="4"><div id="toptitle">ROOT online server</div></font></h1>'
-            + "<p><font face='Verdana' size='1px'><a href='http://root.cern.ch/js/'>JSROOT</a> version <span style='color:green'><b>" + JSROOT.version + "</b></span></font></p>"
+            + "<p><font face='Verdana' size='1px'><a href='https://github.com/linev/jsroot'>JSROOT</a> version <span style='color:green'><b>" + JSROOT.version + "</b></span></font></p>"
             + '<p> Hierarchy in <a href="h.json">json</a> and <a href="h.xml">xml</a> format</p>'
             + ' <input type="checkbox" name="monitoring" id="monitoring"/> Monitoring '
             + ' <select style="padding:2px; margin-left:10px; margin-top:5px;" id="layout">'
-            + '   <option>simple</option><option>collapsible</option><option>grid 2x2</option><option>grid 3x3</option><option>grid 4x4</option><option>tabs</option>'
+            +'  <option>simple</option><option>collapsible</option><option>flex</option><option>tabs</option><option>grid 1x2</option><option>grid 2x2</option><option>grid 1x3</option><option>grid 2x3</option><option>grid 3x3</option><option>grid 4x4</option>'
             + ' </select>';
       } else {
 
@@ -130,7 +110,7 @@
          var arrFiles = files.split(';');
 
          guiCode += "<h1><font face='Verdana' size='4'>Read a ROOT file</font></h1>"
-            + "<p><font face='Verdana' size='1px'><a href='http://root.cern.ch/js/'>JSROOT</a> version <span style='color:green'><b>" + JSROOT.version + "</b></span></font></p>";
+            + "<p><font face='Verdana' size='1px'><a href='https://root.cern.ch/js/'>JSROOT</a> version <span style='color:green'><b>" + JSROOT.version + "</b></span></font></p>";
 
          if (JSROOT.GetUrlOption("noselect")==null) {
             guiCode += '<form name="ex">'
@@ -141,14 +121,14 @@
             for (var i in arrFiles)
                guiCode += '<option value = "' + path + arrFiles[i] + '">' + arrFiles[i] + '</option>';
             guiCode += '</select><br/>'
-               +'<p><small>Other file URLs might not work because of <a href="http://en.wikipedia.org/wiki/Same-origin_policy">same-origin security policy</a>, '
-               +'see e.g. <a href="https://developer.mozilla.org/en/http_access_control">developer.mozilla.org</a> on how to avoid it.</small></p>'
+               +'<p><small><a href="https://github.com/linev/jsroot/blob/master/docs/JSROOT.md#reading-root-files-from-other-servers">Read docu</a>'
+               +' how to open files from other servers.</small></p>'
                +'<input style="padding:2px; margin-top:5px;"'
                +'       onclick="ReadFile()" type="button" title="Read the Selected File" value="Load"/>'
                +'<input style="padding:2px; margin-left:10px;"'
                +'       onclick="ResetUI()" type="button" title="Clear All" value="Reset"/>'
                +'<select style="padding:2px; margin-left:10px; margin-top:5px;" title="layout kind" id="layout">'
-               +'  <option>simple</option><option>collapsible</option><option>grid 2x2</option><option>grid 3x3</option><option>grid 4x4</option><option>tabs</option>'
+               +'  <option>simple</option><option>collapsible</option><option>flex</option><option>tabs</option><option>grid 1x2</option><option>grid 2x2</option><option>grid 1x3</option><option>grid 2x3</option><option>grid 3x3</option><option>grid 4x4</option>'
                +'</select><br/>'
                +'</form>';
          }
@@ -172,7 +152,7 @@
 
       hpainter = new JSROOT.HierarchyPainter('root', 'browser');
 
-      hpainter.SetDisplay(guiLayout(), drawDivId);
+      hpainter.SetDisplay(null, drawDivId);
 
       JSROOT.Painter.ConfigureVSeparator(hpainter);
 
