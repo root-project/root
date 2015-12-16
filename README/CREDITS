@@ -620,7 +620,7 @@ D: libRDAVIX, the davix client code
 
 N: Lorenzo Moneta
 E: Lorenzo.Moneta@cern.ch
-D: Math libraries
+D: Math libraries, ROOT-R, TMVA
 
 N: Miroslav Morhac
 E: fyzimiro@savba.sk (died on August 11 2011)
@@ -935,3 +935,11 @@ D: contributed to Reflex
 N: Andreas Zoglauer
 E: zog@mpe.mpg.de
 D: contributed to TStyle::CreateGradientColorTable()
+
+N: Omar Andres Zapata Mesa
+E: Omar.Zapata@cern.ch
+D: ROOT-R, JupyROOT, TMVA
+
+N: Sergei Gleyzer
+E: Sergei.Gleyzer@cern.ch
+D: TMVA
