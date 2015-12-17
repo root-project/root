@@ -10,20 +10,23 @@
  *************************************************************************/
 
 
-//______________________________________________________________________________
-//
-// Two-dimensional graphics function
-//
-// TSpectrum2Painter is a set of graphical functions developed by Miroslav
-// Morhac to paint 2D-histograms in three dimensions. This package is accessed
-// via THistPainter in a transparent way. For the ROOT user it is enough to use
-// the "SPEC" option to draw a 2D-Histogram. This option offers many
-// functionalities detailed in the header of the PaintSpectrum function.
-//
-// Reference:
-// Morhac M., Kliman J., Matousek V., Turzo I.: Sophisticated visualization
-// algorithms for analysis of multidimensional experimental nuclear data. Acta
-// Pysica Slovaca Vol. 54/ 4 (2004), pp. 385-400.
+/** \class TSpectrum2Painter
+    \ingroup Spectrumpainter
+
+Two-dimensional graphics function
+
+TSpectrum2Painter is a set of graphical functions developed by Miroslav
+Morhac to paint 2D-histograms in three dimensions. This package is accessed
+via THistPainter in a transparent way. For the ROOT user it is enough to use
+the "SPEC" option to draw a 2D-Histogram. This option offers many
+functionalities detailed in the header of the PaintSpectrum function.
+
+Reference:
+
+Morhac M., Kliman J., Matousek V., Turzo I.: Sophisticated visualization
+algorithms for analysis of multidimensional experimental nuclear data. Acta
+Pysica Slovaca Vol. 54/ 4 (2004), pp. 385-400.
+*/
 
 #include <climits>
 
@@ -109,7 +112,7 @@ TSpectrum2Painter::TSpectrum2Painter(TH2* h2, Int_t bs)
                         // simple display modes algorithm group.
 
    fColorAlg = kColorAlgRgbSmooth; // Applies only for rainbowed display modes
-                                   // (rgb smooth alorithm, rgb modulo color
+                                   // (rgb smooth algorithm, rgb modulo color
                                    // component, cmy smooth algorithm, cmy
                                    // modulo color component, cie smooth
                                    // algorithm, cie modulo color component,
@@ -187,9 +190,9 @@ TSpectrum2Painter::~TSpectrum2Painter()
 /// Reads out the value from histogram and calculates screen coordinates
 ///
 /// Parameters:
-///    -it - node in x- direction
-///    -jt - node in y- direction
-///    -zmt - control variable
+///    - it - node in x- direction
+///    - jt - node in y- direction
+///    - zmt - control variable
 
 void TSpectrum2Painter::Transform(Int_t it,Int_t jt,Int_t zmt)
 {
@@ -377,8 +380,8 @@ Double_t TSpectrum2Painter::ColorCalculation(
 ////////////////////////////////////////////////////////////////////////////////
 /// Determines whether the center of the triangle in 3-d space
 /// given by function parameters:
-///   -xtaz,ytaz,ztaz
-///   is in shadow or not. If yes it return 1 otherwise it returns 0.
+///   - xtaz,ytaz,ztaz
+///     is in shadow or not. If yes it return 1 otherwise it returns 0.
 
 Double_t TSpectrum2Painter::ShadowColorCalculation(Double_t xtaz, Double_t ytaz,
                                                    Double_t ztaz,
@@ -902,7 +905,7 @@ l1:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Ensures hidden surfuce removal for Bars, BarsX and BarsY
+/// Ensures hidden surface removal for Bars, BarsX and BarsY
 /// display modes.
 
 void TSpectrum2Painter::EnvelopeBars(Int_t x1,Int_t y1,Int_t x2,Int_t y2)
@@ -1162,369 +1165,423 @@ void TSpectrum2Painter::CopyEnvelope(Double_t xr, Double_t xs, Double_t yr,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paints histogram according to preset parameters.
-///Begin_Html <!--
+/// ### Visualization
+/// #### Goal: to present 2-dimensional spectra in suitable visual form
+/// This package has several display mode groups and display modes, which can be
+/// employed for the presentation of 2-dimensional histograms
+/// #### Display modes groups:
+///
+///   - `kModeGroupSimple`      - it covers simple display modes using one
+///                                       color only
+///   - `kModeGroupLight`       - in this group the shading is carried out
+///                                       according to the position of the fictive
+///                                       light source
+///   - `kModeGroupHeight`      - in this group the shading is carried out
+///                                       according to the channel contents
+///   - `kModeGroupLightHeight` - combination of two previous shading
+///                                       algorithms. One can control the weight
+///                                       between both algorithms.
+///
+/// #### Display modes:
+///
+///   - `kDisplayModePoints, `
+///   - `kDisplayModeGrid, `
+///   - `kDisplayModeContours,`
+///   - `kDisplayModeBars,`
+///   - `kDisplayModeLinesX,`
+///   - `kDisplayModeLinesY,`
+///   - `kDisplayModeBarsX,`
+///   - `kDisplayModeBarsY,`
+///   - `kDisplayModeNeedles,`
+///   - `kDisplayModeSurface,`
+///   - `kDisplayModeTriangles.`
+///
+/// one can combine the above given modes groups and display modes. The meaningful
+/// combinations (denoted by x) are given in the next table.
+///
+/// |           | Simple | Light | Height | Light-Height |
+/// |-----------|--------|-------|--------|--------------|
+/// | Points    |    X   |   X   |    X   |       X      |
+/// | Grid      |    X   |   X   |    X   |       X      |
+/// | Contours  |    X   |   -   |    X   |       -      |
+/// | Bars      |    X   |   -   |    X   |       -      |
+/// | LinesX    |    X   |   X   |    X   |       X      |
+/// | LinesY    |    X   |   X   |    X   |       X      |
+/// | BarsX     |    X   |   -   |    X   |       -      |
+/// | BarsY     |    X   |   -   |    X   |       -      |
+/// | Needles   |    X   |   -   |    -   |       -      |
+/// | Surface   |    -   |   X   |    X   |       X      |
+/// | Triangles |    X   |   X   |    X   |       X      |
+///
+/// #### Function: void TSpectrum2Painter::SetDisplayMode (Int_t modeGroup, Int_t displayMode)
+///
+/// This function controls the display mode group and display mode of the
+/// histogram drawing. To illustrate the possible effects of the various display
+/// modes we introduce a set of examples. Default values:
+///
+///   - `modeGroup = kModeGroupLightHeight `
+///   - `displayMode = kDisplayModeSurface `
+///
+/// \image html spectrumpainter001.jpg
+///
+/// Simple modes group, display mode = points, 256 x 256 channels.
+/// \image html spectrumpainter002.jpg
+///
+/// Simple modes group, display mode = grid, 64 x 64 channels.
+/// \image html spectrumpainter003.jpg
+///
+/// Simple modes group, display mode = contours, 64 x 64 channels.
+/// \image html spectrumpainter004.jpg
+///
+/// Simple modes group, display mode = bars, 64 x 64 channels.
+/// \image html spectrumpainter005.jpg
+///
+/// Simple modes group, display mode = linesX, 64 x 64 channels.
+/// \image html spectrumpainter006.jpg
+///
+/// Simple modes group, display mode = linesY, 64 x 64 channels.
+/// \image html spectrumpainter007.jpg
+///
+/// Simple modes group, display mode = barsX, 64 x 64 channels.
+/// \image html spectrumpainter008.jpg
+///
+/// Simple modes group, display mode = barsY, 64 x 64 channels.
+/// \image html spectrumpainter009.jpg
+///
+/// Simple modes group, display mode = needles, 64 x 64 channels.
+/// \image html spectrumpainter010.jpg
+///
+/// Simple modes group, display mode = triangles, 64 x 64 channels.
+/// \image html spectrumpainter011.jpg
+///
+/// Light modes group, display mode = points, 256 x 256 channels.
+/// \image html spectrumpainter012.jpg
+///
+/// Light modes group, display mode = grid, 256 x 256 channels.
+/// \image html spectrumpainter013.jpg
+///
+/// Light modes group, display mode = surface, 64 x 64 channels.
+/// \image html spectrumpainter014.jpg
+///
+/// Light modes group, display mode = triangles, 64 x 64 channels.
+/// \image html spectrumpainter015.jpg
+///
+/// Height modes group, display mode = points, 256 x 256 channels.
+/// \image html spectrumpainter016.jpg
+///
+/// Height modes group, display mode = grid, 256 x 256 channels.
+/// \image html spectrumpainter017.jpg
+///
+/// Height modes group, display mode = contours, 64 x 64 channels.
+/// \image html spectrumpainter018.jpg
+///
+/// Height modes group, display mode = bars, 64 x 64 channels.
+/// \image html spectrumpainter019.jpg
+///
+/// Height modes group, display mode = surface, 64 x 64 channels.
+/// \image html spectrumpainter020.jpg
+///
+/// Height modes group, display mode = triangles, 64 x 64 channels.
+/// \image html spectrumpainter021.jpg
+///
+/// Light - height modes group, display mode = surface, 64 x 64 channels. The weight
+/// between both shading algorithms is set to 0.5. One can observe the influence of
+/// both shadings.
+///
+/// #### Function: TSpectrum2Painter::SetPenAttr(Int_t color,Int_t style,Int_t width)
+///
+/// Using this function one can change pen color, pen style and pen width.
+/// Possible pen styles are:
+///
+///   - ` kPenStyleSolid,`
+///   - ` kPenStyleDash,`
+///   - ` kPenStyleDot,`
+///   - ` kPenStyleDashDot.`
+///
+/// Default values:
+///
+///   - ` color = kBlack`
+///   - ` style = kPenStyleSolid`
+///   - ` width = 1`
+///
+/// \image html spectrumpainter022.jpg
+///
+/// Simple modes group, display mode = linesX, 64 x 64 channels. Pen width = 3.
+///
+/// #### Function: TSpectrum2Painter::SetNodes(Int_t nodesx,Int_t nodesy)
+///
+/// Sometimes the displayed region is rather large. When displaying all channels
+/// pictures become very dense and complicated. It is very difficult to understand
+/// overall shape of the data. Therefore in the package we have implemented the
+/// possibility to change the density of displayed channels. Only channels
+/// coinciding with given nodes are displayed. In the next figure we introduce the
+/// example of the above presented spectrum with number of nodes set to 64x64.
+///
+/// Default values:
+///
+///   - ` nodesx = Xmax-Xmin+1`
+///   - ` nodesy = Ymax-Ymin+1`
+///
+/// \image html spectrumpainter023.jpg
+///
+/// Simple modes group, display mode = grid, 256 x 256 channels.
+/// Number of nodes is 64x64.
+///
+/// #### Function: void TSpectrum2Painter::SetAngles (Int_t alpha,Int_t beta, Int_t view)
+///
+/// One can change the angles of the position of 3-d space and to rotate the
+/// space. Alpha parameter defines the angle between bottom horizontal screen line
+/// and the displayed space on the right side of the picture and beta on the left
+/// side, respectively. One can rotate the 3-d space around vertical axis going
+/// through the center of it employing the view parameter.
+/// Allowed values are 0, 90, 180 and 270 degrees respectively.
+///
+/// Default values:
+///
+///   - ` alpha = 20`
+///   - ` beta = 60`
+///   - ` view = 0`
+///
+/// \image html spectrumpainter024.jpg
+///
+/// Light modes group, display mode = surface, 256 x 256 channels. Angles are
+/// set as follows: alpha=40, beta=30, view=0.
+/// \image html spectrumpainter025.jpg
+///
+/// Light modes group, display mode = surface, 256 x 256 channels. Angles are
+/// set as follows: alpha=30, beta=30, view=90.
+///
+/// #### Function: TSpectrum2Painter::SetZScale(Int_t scale)
+///
+/// One can change the scale of z-axis. Possible values are:
+///
+///   - ` kZScaleLinear`
+///   - ` kZScaleLog`
+///   - ` kZScaleSqrt`
+///
+/// Default value is:
+///
+///   - ` scale = kZScaleLinear`
+///
+/// \image html spectrumpainter026.jpg
+///
+/// Height modes group, display mode = surface, 64 x 64 channels, log scale.
+///
+/// #### Function: TSpectrum2Painter::SetColorIncrements(Double_t r,Double_t g,Double_t b);
+///
+/// For sophisticated shading (in kModeGroupLight, kModeGroupHeight
+/// and kModeGroupLightHeight display modes groups) the color palette starts
+/// from the basic pen color (see SetPenAttr function). There is a predefined number
+/// of color levels (256). Color in every level is calculated by adding the
+/// increments of the r, g, b components to the previous level. Using this function
+/// one can change the color increments between two neighbouring color levels. The
+/// function does not apply for kModeGroupSimple display modes group.
+/// Default values: r=1, g=1, b=1;
+/// \image html spectrumpainter027.jpg
+///
+/// Light modes group, display mode = surface, 64 x 64 channels, color increments
+/// r=1, g=2, b=3.
+/// \image html spectrumpainter028.jpg
+///
+/// Light modes group, display mode = surface, 64 x 64 channels, color
+/// increments r=4, g=2, b=1.
+///
+/// #### Function: TSpectrum2Painter::SetColorAlgorithm(Int_t colorAlgorithm)
+///
+/// To define the colors one can employ one of the following color algorithms
+/// (rgb, cmy, cie, yiq, hvs models [1], [2]). When the level of a component
+/// achieves the limit value one can choose either smooth transition (by decreasing
+/// the limit value) or sharp - modulo transition (continuing with 0 value). This
+/// makes possible to realize various visual effects. One can choose from the
+/// following set of the algorithms:
+///
+///   - ` kColorAlgRgbSmooth `
+///   - ` kColorAlgRgbModulo `
+///   - ` kColorAlgCmySmooth `
+///   - ` kColorAlgCmyModulo `
+///   - ` kColorAlgCieSmooth `
+///   - ` kColorAlgCieModulo `
+///   - ` kColorAlgYiqSmooth `
+///   - ` kColorAlgYiqModulo `
+///   - ` kColorAlgHvsSmooth `
+///   - ` kColorAlgHvsModulo `
+///
+/// The function does not apply for kModeGroupSimple display modes group.
+/// Default value is:
+///
+///   - ` colorAlgorithm = kColorAlgRgbSmooth`
+///
+/// \image html spectrumpainter029.jpg
+///
+/// Light modes group, display mode = surface, 64 x 64 channels, color algorithm
+/// is cmy smooth.
+/// \image html spectrumpainter030.jpg
+///
+/// Light modes group, display mode = surface, 64 x 64 channels, color algorithm
+/// is hvs smooth.
+/// \image html spectrumpainter031.jpg
+///
+/// Light modes group, display mode = surface, 64 x 64 channels, color algorithm
+/// is yiq smooth.
+/// \image html spectrumpainter032.jpg
+///
+/// Light modes group, display mode = surface, 64 x 64 channels, color algorithm
+/// is rgb modulo.
+/// \image html spectrumpainter033.jpg
+///
+/// Height modes group, display mode = surface, 256 x 256 channels, color
+/// algorithm is rgb modulo, increments r=5, g=5, b=5, angles alpha=0, beta=90,
+/// view=0.
+///
+/// #### Function: TSpectrum2Painter::SetLightPosition(Int_t x, Int_t y, Int_t z)
+///
+/// In kModeGroupLight and kModeGroupLightHeight display modes
+/// groups the color palette is calculated according to the fictive light source
+/// position in 3-d space. Using this function one can change the position of the
+/// source and thus to achieve various graphical effects. The function does not
+/// apply for kModeGroupSimple and kModeGroupHeight display modes
+/// groups. Default values are: x=1000, y=1000, z=1000.
+/// \image html spectrumpainter034.jpg
+///
+/// Light modes group, display mode = surface, 64 x 64 channels. Position of the
+/// light source was set to x=0, y=1000, z=1000.
+///
+/// #### Function: TSpectrum2Painter::SetShading(Int_t shading,Int_t shadow)
+///
+/// Surface of the picture is composed of triangles. If desired the edges of the
+/// neighbouring triangles can be smoothed (shaded). If desired the display of the
+/// shadow can be painted as well. The function does not apply for
+/// kModeGroupSimple display modes group.
+///
+/// Possible values for shading are:
+///
+///   - ` kNotShaded`
+///   - ` kShaded.`
+///
+/// Possible values for shadow are:
+///
+///   - ` kShadowsNotPainted`
+///   - ` kShadowsPainted`
+///
+/// Default values:
+///
+///   - ` shading = kShaded`
+///   - ` shadow = kShadowsNotPainted`
+///
+/// \image html spectrumpainter035.jpg
+///
+/// Light modes group, display mode = surface, 64 x 64 channels, not shaded.
+/// \image html spectrumpainter036.jpg
+///
+/// Light modes group, display mode = surface, 64 x 64 channels, shaded, with
+/// shadow.
+///
+/// #### Function: TSpectrum2Painter::SetBezier(Int_t bezier)
+///
+/// For kModeGroupSimple display modes group and for kDisplayModeGrid,
+/// kDisplayModeLinesX >and kDisplayModeLinesY display modes one
+/// can smooth data using Bezier smoothing algorithm. The function does not apply
+/// for other display modes groups and display modes. Possible values are:
+///
+///   - ` kNoBezierInterpol`
+///   - ` kBezierInterpol`
+///
+/// Default value is:
+///
+///   - ` bezier = kNoBezierInterpol.`
+///
+/// \image html spectrumpainter005.jpg
+///
+/// Simple modes group, display mode = linesX, 64 x 64 channels with Bezier
+/// smoothing.
+///
+/// #### Function: TSpectrum2Painter::SetContourWidth(Int_t width)
+///
+/// This function applies only for kDisplayModeContours display mode.
+/// One can change the width between horizontal slices and thus their density.
+/// Default value: width=50.
+/// \image html spectrumpainter037.jpg
+///
+/// Simple modes group, display mode = contours, 64 x 64 channels. Width between
+/// slices was set to 30.
+///
+/// #### Function: TSpectrum2Painter::SetLightHeightWeight(Double_t weight)
+///
+/// For kModeGroupLightHeight display modes group one can change the
+/// weight between both shading algorithm. The function does not apply for other
+/// display modes groups. Default value is: weight=0.5.
+/// \image html spectrumpainter038.jpg
+///
+/// Light - height modes group, display mode = surface, 64 x 64 channels.
+/// The weight between both shading algorithms is set to 0.7.
+///
+/// #### Function: TSpectrum2Painter::SetChanMarks(Int_t enable,Int_t color,Int_t width,Int_t height,Int_t style)
+/// In addition to the surface drawn using any above given algorithm one can display
+/// channel marks. One can control the color as well as the width, height
+/// (in pixels) and the style of the marks. The parameter enable can be set to:
+///
+///   - `kChannelMarksNotDrawn`
+///   - `kChannelMarksDrawn.`
+///
+/// The possible styles can be chosen from the set:
+///
+///   - ` kChannelMarksStyleDot`
+///   - ` kChannelMarksStyleCross`
+///   - ` kChannelMarksStyleStar`
+///   - ` kChannelMarksStyleRectangle`
+///   - ` kChannelMarksStyleX`
+///   - ` kChannelMarksStyleDiamond`
+///   - ` kChannelMarksStyleTriangle.`
+///
+/// \image html spectrumpainter039.jpg
+///
+/// Light modes group, display mode = surface, 64 x 64 channels,
+/// with marks (red circles).</p>
+///
+/// #### Function: TSpectrum2Painter::SetChanGrid(Int_t enable,Int_t color)
+///
+/// In addition to the surface drawn using any above given algorithm one can
+/// display grid using the color parameter. The parameter enable can be set to:
+///
+///   - ` kChannelGridNotDrawn`
+///   - ` kChannelGridDrawn.`
+///
+/// \image html spectrumpainter040.jpg
+///
+/// Height modes group, display mode = surface, 64 x 64 channels, with blue grid.
+/// \image html spectrumpainter041.jpg
+///
+/// Height modes group, display mode = surface, 64 x 64 channels, with marks
+/// (red circles) and blue grid.
+/// #### References:
+///
+///  [1] Morhac M., Kliman J., Matouoek V., Turzo I.,
+/// Sophisticated visualization algorithms for analysis of multidimensional
+/// experimental nuclear data, Acta Physica Slovaca 54 (2004) 385.
+///
+///  [2] D. Hearn, M. P. Baker: Computer Graphics, Prentice Hall International,
+/// Inc.  1994.
+/// #### Script:
+///
+/// Example to draw source spectrum (class TSpectrum2Painter).
+/// To execute this example, do:
+/// ~~~
+/// root > .x VisA.C
+/// ~~~
+/// ~~~ {.cpp}
+/// #include "TSpectrum2Painter.h"
+///
+/// void VisA() {
+///    TFile *f = new TFile("TSpectrum2.root");
+///    TH2F *graph=(TH2F*) f->Get("graph2;1");
+///    TCanvas *Graph2 = new TCanvas("Graph2","Illustration of 2D graphics",10,10,1000,700);
+///    graph->Draw("SPEC");
+/// }
+/// ~~~
 
 void TSpectrum2Painter::Paint(Option_t * /*option*/)
 {
-/* -->
-<h1>Visualization</h1>
-<h2><i>Goal: to present 2-dimensional spectra in suitable visual form</i></h2>
-This package has several display mode groups and display modes, which can be
-employed for the presentation of 2-dimensional histograms
-<h2><i>Display modes groups:</i></h2>
-<ul>
-<p><li><b>kModeGroupSimple</b>      - it covers simple display modes using one
-                                      color only
-<p><li><b>kModeGroupLight</b>       - in this group the shading is carried out
-                                      according to the position of the fictive
-                                      light source
-<p><li><b>kModeGroupHeight</b>      - in this group the shading is carried out
-                                      according to the channel contents
-<p><li><b>kModeGroupLightHeight</b> - combination of two previous shading
-                                      algorithms. One can control the weight
-                                      between both algorithms.
-</ul>
-<h2><i>Display modes:</i></h2>
-<ul>
-<p><li><b>kDisplayModePoints, </b>
-<p><li><b>kDisplayModeGrid, </b>
-<p><li><b>kDisplayModeContours,</b>
-<p><li><b>kDisplayModeBars,</b>
-<p><li><b>kDisplayModeLinesX,</b>
-<p><li><b>kDisplayModeLinesY,</b>
-<p><li><b>kDisplayModeBarsX,</b>
-<p><li><b>kDisplayModeBarsY,</b>
-<p><li><b>kDisplayModeNeedles,</b>
-<p><li><b>kDisplayModeSurface,</b>
-<p><li><b>kDisplayModeTriangles.</b>
-</ul>
-one can combine the above given modes groups and display modes. The meaningful
-combinations (denoted by x) are given in the next table.
-<p>
-<center>
-<table border=1 cellspacing=0 cellpadding=0>
-<tr><th></th><th>Simple</th><th>Light</th><th>Height</th><th>Light-Height</th>
-</tr>
-<tr><th>Points   </th><th>X</th><th>X</th><th>X</th><th>X</th></tr>
-<tr><th>Grid     </th><th>X</th><th>X</th><th>X</th><th>X</th></tr>
-<tr><th>Contours </th><th>X</th><th>-</th><th>X</th><th>-</th></tr>
-<tr><th>Bars     </th><th>X</th><th>-</th><th>X</th><th>-</th></tr>
-<tr><th>LinesX   </th><th>X</th><th>X</th><th>X</th><th>X</th></tr>
-<tr><th>LinesY   </th><th>X</th><th>X</th><th>X</th><th>X</th></tr>
-<tr><th>BarsX    </th><th>X</th><th>-</th><th>X</th><th>-</th></tr>
-<tr><th>BarsY    </th><th>X</th><th>-</th><th>X</th><th>-</th></tr>
-<tr><th>Needles  </th><th>X</th><th>-</th><th>-</th><th>-</th></tr>
-<tr><th>Surface  </th><th>-</th><th>X</th><th>X</th><th>X</th></tr>
-<tr><th>Triangles</th><th>X</th><th>X</th><th>X</th><th>X</th></tr>
-</table></center>
-<h2><i>Function:</i></h2>
-<h2>void TSpectrum2Painter::SetDisplayMode (Int_t modeGroup, Int_t displayMode)</h2>
-<p>
-This function controls the display mode group and display mode of the
-histogram drawing. To illustrate the possible effects of the various display
-modes we introduce a set of examples. Default values:
-<ul>
-<p><li> <b>modeGroup = kModeGroupLightHeight </b>
-<p><li> <b>displayMode = kDisplayModeSurface </b>
-</ul>
-<p><center><img src="gif/spectrumpainter001.jpg"></center>
-<p>Simple modes group, display mode = points, 256 x 256 channels.
-<p><center><img src="gif/spectrumpainter002.jpg"></center>
-<p>Simple modes group, display mode = grid, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter003.jpg"></center>
-<p>Simple modes group, display mode = contours, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter004.jpg"></center>
-<p>Simple modes group, display mode = bars, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter005.jpg"></center>
-<p>Simple modes group, display mode = linesX, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter006.jpg"></center>
-<p>Simple modes group, display mode = linesY, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter007.jpg"></center>
-<p>Simple modes group, display mode = barsX, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter008.jpg"></center>
-<p>Simple modes group, display mode = barsY, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter009.jpg"></center>
-<p>Simple modes group, display mode = needles, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter010.jpg"></center>
-<p>Simple modes group, display mode = triangles, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter011.jpg"></center>
-<p>Light modes group, display mode = points, 256 x 256 channels.
-<p><center><img src="gif/spectrumpainter012.jpg"></center>
-<p>Light modes group, display mode = grid, 256 x 256 channels.
-<p><center><img src="gif/spectrumpainter013.jpg"></center>
-<p>Light modes group, display mode = surface, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter014.jpg"></center>
-<p>Light modes group, display mode = triangles, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter015.jpg"></center>
-<p>Height modes group, display mode = points, 256 x 256 channels.
-<p><center><img src="gif/spectrumpainter016.jpg"></center>
-<p>Height modes group, display mode = grid, 256 x 256 channels.
-<p><center><img src="gif/spectrumpainter017.jpg"></center>
-<p>Height modes group, display mode = contours, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter018.jpg"></center>
-<p>Height modes group, display mode = bars, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter019.jpg"></center>
-<p>Height modes group, display mode = surface, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter020.jpg"></center>
-<p>Height modes group, display mode = triangles, 64 x 64 channels.
-<p><center><img src="gif/spectrumpainter021.jpg"></center>
-<p>
-Light - height modes group, display mode = surface, 64 x 64 channels. The weight
-between both shading algorithms is set to 0.5. One can observe the influence of
-both shadings.
-<h2><i>Function:</i></h2>
-<h2>TSpectrum2Painter::SetPenAttr(Int_t color,Int_t style,Int_t width)</h2>
-<p>
-Using this function one can change pen color, pen style and pen width.
-Possible pen styles are:
-<ul>
-<p><li><b> kPenStyleSolid,</b>
-<p><li><b> kPenStyleDash,</b>
-<p><li><b> kPenStyleDot,</b>
-<p><li><b> kPenStyleDashDot.</b>
-</ul>
-<p>Default values:
-<ul>
-<p><li><b> color = kBlack</b>
-<p><li><b> style = kPenStyleSolid</b>
-<p><li><b> width = 1</b>
-</ul>
-<p><center><img src="gif/spectrumpainter022.jpg"></center>
-<p>Simple modes group, display mode = linesX, 64 x 64 channels. Pen width = 3.
-<h2><i>Function:</i></h2>
-<h2>TSpectrum2Painter::SetNodes(Int_t nodesx,Int_t nodesy)</h2>
-<p>Sometimes the displayed region is rather large. When displaying all channels
-pictures become very dense and complicated. It is very difficult to understand
-overall shape of the data. Therefore in the package we have implemented the
-possibility to change the density of displayed channels. Only channels
-coinciding with given nodes are displayed. In the next figure we introduce the
-example of the above presented spectrum with number of nodes set to 64x64.
-<p>Default values:
-<ul>
-<p><li><b> nodesx = Xmax-Xmin+1</b>
-<p><li><b> nodesy = Ymax-Ymin+1</b>
-</ul>
-<p><center><img src="gif/spectrumpainter023.jpg"></center>
-<p>Simple modes group, display mode = grid, 256 x 256 channels.
-Number of nodes is 64x64.
-<h2><i>Function:</i></h2>
-<h2>void TSpectrum2Painter::SetAngles (Int_t alpha,Int_t beta, Int_t view)</h2>
-<p>One can change the angles of the position of 3-d space and to rotate the
-space. Alpha parameter defines the angle between bottom horizontal screen line
-and the displayed space on the right side of the picture and beta on the left
-side, respectively. One can rotate the 3-d space around vertical axis going
-through the center of it employing the view parameter.
-Allowed values are 0, 90, 180 and 270 degrees respectively.
-<p>Default values:
-<ul>
-<p><li><b> alpha = 20</b>
-<p><li><b> beta = 60</b>
-<p><li><b> view = 0</b>
-</ul>
-<p><center><img src="gif/spectrumpainter024.jpg"></center>
-<p>Light modes group, display mode = surface, 256 x 256 channels. Angles are
-set as follows: alpha=40, beta=30, view=0.
-<p><center><img src="gif/spectrumpainter025.jpg"></center>
-<p>Light modes group, display mode = surface, 256 x 256 channels. Angles are
-set as follows: alpha=30, beta=30, view=90.
-<h2><i>Function:</i></h2>
-<h2>TSpectrum2Painter::SetZScale(Int_t scale)</h2>
-<p>One can change the scale of z-axis. Possible values are:
-<ul>
-<p><li><b> kZScaleLinear</b>
-<p><li><b> kZScaleLog</b>
-<p><li><b> kZScaleSqrt</b>
-</ul>
-<p>Default value is:
-<ul>
-<p><li><b> scale = kZScaleLinear</b>
-</ul>
-<p><center><img src="gif/spectrumpainter026.jpg"></center>
-<p>Height modes group, display mode = surface, 64 x 64 channels, log scale.
-<h2><i>Function:</i></h2>
-<h2>TSpectrum2Painter::SetColorIncrements(Double_t r,Double_t g,Double_t b);</h2>
-<p> For sophisticated shading (in <b>kModeGroupLight, kModeGroupHeight</b>
-and <b>kModeGroupLightHeight</b> display modes groups) the color palette starts
-from the basic pen color (see SetPenAttr function). There is a predefined number
-of color levels (256). Color in every level is calculated by adding the
-increments of the r, g, b components to the previous level. Using this function
-one can change the color increments between two neighboring color levels. The
-function does not apply for <b>kModeGroupSimple</b> display modes group.
-Default values: <b>r=1, g=1, b=1;</b>
-<p><center><img src="gif/spectrumpainter027.jpg"></center>
-<p>Light modes group, display mode = surface, 64 x 64 channels, color increments
-r=1, g=2, b=3.
-<p><center><img src="gif/spectrumpainter028.jpg"></center>
-<p>Light modes group, display mode = surface, 64 x 64 channels, color
-increments r=4, g=2, b=1.
-<h2><i>Function:</i></h2>
-<h2>TSpectrum2Painter::SetColorAlgorithm(Int_t colorAlgorithm)</h2>
-<p>To define the colors one can employ one of the following color algorithms
-(rgb, cmy, cie, yiq, hvs models [1], [2]). When the level of a component
-achieves the limit value one can choose either smooth transition (by decreasing
-the limit value) or sharp - modulo transition (continuing with 0 value). This
-makes possible to realize various visual effects. One can choose from the
-following set of the algorithms:
-<ul>
-<p><li><b> kColorAlgRgbSmooth </b>
-<p><li><b> kColorAlgRgbModulo </b>
-<p><li><b> kColorAlgCmySmooth </b>
-<p><li><b> kColorAlgCmyModulo </b>
-<p><li><b> kColorAlgCieSmooth </b>
-<p><li><b> kColorAlgCieModulo </b>
-<p><li><b> kColorAlgYiqSmooth </b>
-<p><li><b> kColorAlgYiqModulo </b>
-<p><li><b> kColorAlgHvsSmooth </b>
-<p><li><b> kColorAlgHvsModulo </b>
-</ul>
-<p>The function does not apply for <b>kModeGroupSimple</b> display modes group.
-Default value is:
-<ul>
-<p><li><b> colorAlgorithm = kColorAlgRgbSmooth</b>
-</ul>
-<p><center><img src="gif/spectrumpainter029.jpg"></center>
-<p>Light modes group, display mode = surface, 64 x 64 channels, color algorithm
-is cmy smooth.
-<p><center><img src="gif/spectrumpainter030.jpg"></center>
-<p>Light modes group, display mode = surface, 64 x 64 channels, color algorithm
-is hvs smooth.
-<p><center><img src="gif/spectrumpainter031.jpg"></center>
-<p>Light modes group, display mode = surface, 64 x 64 channels, color algorithm
-is yiq smooth.
-<p><center><img src="gif/spectrumpainter032.jpg"></center>
-<p>Light modes group, display mode = surface, 64 x 64 channels, color algorithm
-is rgb modulo.
-<p><center><img src="gif/spectrumpainter033.jpg"></center>
-<p>Height modes group, display mode = surface, 256 x 256 channels, color
-algorithm is rgb modulo, increments r=5, g=5, b=5, angles alpha=0, beta=90,
-view=0.
-<h2><i>Function:</i></h2>
-<h2>TSpectrum2Painter::SetLightPosition(Int_t x, Int_t y, Int_t z)</h2>
-<p>In <b>kModeGroupLight</b> and <b>kModeGroupLightHeight</b> display modes
-groups the color palette is calculated according to the fictive light source
-position in 3-d space. Using this function one can change the position of the
-source and thus to achieve various graphical effects. The function does not
-apply for <b>kModeGroupSimple</b> and<b> kModeGroupHeight </b>display modes
-groups. Default values are: <b>x=1000, y=1000, z=1000.</b>
-<p><center><img src="gif/spectrumpainter034.jpg"></center>
-<p>Light modes group, display mode = surface, 64 x 64 channels. Position of the
-light source was set to x=0, y=1000, z=1000.
-<h2><i>Function:</i></h2>
-<h2>TSpectrum2Painter::SetShading(Int_t shading,Int_t shadow)</h2>
-<p>Surface of the picture is composed of triangles. If desired the edges of the
-neighboring triangles can be smoothed (shaded). If desired the display of the
-shadow can be painted as well. The function does not apply for
-<b>kModeGroupSimple</b> display modes group.
-<p>Possible values for shading are:
-<ul>
-<p><li><b> kNotShaded</b>
-<p><li><b> kShaded.</b>
-</ul>
-<p>Possible values for shadow are:
-<ul>
-<p><li><b> kShadowsNotPainted</b>
-<p><li><b> kShadowsPainted</b>
-</ul>
-<p>Default values:
-<ul>
-<p><li><b> shading = kShaded</b>
-<p><li><b> shadow = kShadowsNotPainted</b>
-</ul>
-<p><center><img src="gif/spectrumpainter035.jpg"></center>
-<p>Light modes group, display mode = surface, 64 x 64 channels, not shaded.
-<p><center><img src="gif/spectrumpainter036.jpg"></center>
-<p>Light modes group, display mode = surface, 64 x 64 channels, shaded, with
-shadow.
-<h2><i>Function:</i></h2>
-<h2>TSpectrum2Painter::SetBezier(Int_t bezier)</h2>
-<p>For kModeGroupSimple display modes group and for <b>kDisplayModeGrid,
-kDisplayModeLinesX</b> >and <b>kDisplayModeLinesY</b> display modes one
-can smooth data using Bezier smoothing algorithm. The function does not apply
-for other display modes groups and display modes. Possible values are:
-<ul>
-<p><li><b> kNoBezierInterpol</b>
-<p><li><b> kBezierInterpol</b>
-</ul>
-<p>Default value is:
-<ul>
-<p><li><b> bezier = kNoBezierInterpol.</b>
-</ul>
-<p><center><img src="gif/spectrumpainter005.jpg"></center>
-<p>Simple modes group, display mode = linesX, 64 x 64 channels with Bezier
-smoothing.
-<h2><i>Function:</i></h2>
-<h2>TSpectrum2Painter::SetContourWidth(Int_t width)</h2>
-<p>This function applies only for <b>kDisplayModeContours</b> display mode.
-One can change the width between horizontal slices and thus their density.
-Default value: <b>width=50.</b>
-<p><center><img src="gif/spectrumpainter037.jpg"></center>
-<p>Simple modes group, display mode = contours, 64 x 64 channels. Width between
-slices was set to 30.
-<h2><i>Function:</i></h2>
-<h2>TSpectrum2Painter::SetLightHeightWeight(Double_t weight)</h2>
-<p>For <b>kModeGroupLightHeight</b> display modes group one can change the
-weight between both shading algorithm. The function does not apply for other
-display modes groups. Default value is: <b>weight=0.5.</b>
-<p><center><img src="gif/spectrumpainter038.jpg"></center>
-<p>Light - height modes group, display mode = surface, 64 x 64 channels.
-The weight between both shading algorithms is set to 0.7.
-<h2><i>Function:</i></h2>
-<h2>TSpectrum2Painter::SetChanMarks(Int_t enable,Int_t color,Int_t width,Int_t height,Int_t style)</h2>
-In addition to the surface drawn using any above given algorithm one can display
-channel marks. One can control the color as well as the width, height
-(in pixels) and the style of the marks. The parameter enable can be set to:
-<ul>
-<p><li> <b>kChannelMarksNotDrawn</b>
-<p><li> <b>kChannelMarksDrawn.</b>
-</ul>
-The possible styles can be chosen from the set:
-<ul>
-<p><li><b> kChannelMarksStyleDot</b>
-<p><li><b> kChannelMarksStyleCross</b>
-<p><li><b> kChannelMarksStyleStar</b>
-<p><li><b> kChannelMarksStyleRectangle</b>
-<p><li><b> kChannelMarksStyleX</b>
-<p><li><b> kChannelMarksStyleDiamond</b>
-<p><li><b> kChannelMarksStyleTriangle.</b>
-</ul>
-<p><center><img src="gif/spectrumpainter039.jpg"></center>
-<p><b>Light modes group, display mode = surface, 64 x 64 channels,
-with marks (red circles).</b></p>
-<h2><i>Function:</i></h2>
-<h2>TSpectrum2Painter::SetChanGrid(Int_t enable,Int_t color)</h2>
-<p>In addition to the surface drawn using any above given algorithm one can
-display grid using the color parameter. The parameter enable can be set to:
-<ul>
-<p><li><b> kChannelGridNotDrawn</b>
-<p><li><b> kChannelGridDrawn.</b>
-</ul>
-<p><center><img src="gif/spectrumpainter040.jpg"></center>
-<p>Height modes group, display mode = surface, 64 x 64 channels, with blue grid.
-<p><center><img src="gif/spectrumpainter041.jpg"></center>
-<p>Height modes group, display mode = surface, 64 x 64 channels, with marks
-(red circles) and blue grid.
-<h2><i>References:</i></h2>
-<p> [1] Morhá&#269; M., Kliman J., Matoušek V., Turzo I.,
-Sophisticated visualization algorithms for analysis of multidimensional
-experimental nuclear data, Acta Physica Slovaca 54 (2004) 385.
-<p> [2] D. Hearn, M. P. Baker: Computer Graphics, Prentice Hall International,
-Inc.  1994.
-<h2>Script:</h2>
-<pre>
-// Example to draw source spectrum (class TSpectrum2Painter).
-// To execute this example, do
-// root &gt; .x VisA.C
-#include &quot;TSpectrum2Painter.h&quot;
 
-void VisA() {
-   TFile *f = new TFile(&quot;TSpectrum2.root&quot;);
-   TH2F *graph=(TH2F*) f-&gt;Get(&quot;graph2;1&quot;);
-   TCanvas *Graph2 = new TCanvas(&quot;Graph2&quot;,&quot;Illustration of 2D graphics&quot;,10,10,1000,700);
-   graph-&gt;Draw(&quot;SPEC&quot;);
-}
-</pre>
-<!-- */
-// --> End_Html
 
    Int_t turni,turnj,w1,w2,x,y;
    Int_t q1=0,q2=0,qv=0,smer=0,flag=0,i=0,j=0,x1=0,y1=0,x2=0,y2=0,x3=0,y3=0,x4=0,y4=0,uhl=0,xp1=0,yp1=0,xp2=0,yp2=0;
@@ -7007,8 +7064,8 @@ lc2:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets display group mode and display mode:
-///    -modeGroup - the following group modes can be set: simple modes-kPicture2ModeGroupSimple, modes with shading according to light-kPicture2ModeGroupLight, modes with shading according to channels counts-kPicture2ModeGroupHeight, modes of combination of shading according to light and to channels counts-kPicture2ModeGroupLightHeight
-///    -displayMode - posible display modes are: points, grid, contours, bars, x_lines, y_lines, bars_x, bars_y, needles, surface, triangles
+///    - modeGroup - the following group modes can be set: simple modes-kPicture2ModeGroupSimple, modes with shading according to light-kPicture2ModeGroupLight, modes with shading according to channels counts-kPicture2ModeGroupHeight, modes of combination of shading according to light and to channels counts-kPicture2ModeGroupLightHeight
+///    - displayMode - posible display modes are: points, grid, contours, bars, x_lines, y_lines, bars_x, bars_y, needles, surface, triangles
 
 void TSpectrum2Painter::SetDisplayMode(Int_t modeGroup,Int_t displayMode)
 {
@@ -7023,9 +7080,9 @@ void TSpectrum2Painter::SetDisplayMode(Int_t modeGroup,Int_t displayMode)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets pen attributes:
-///    -color - color of spectrum
-///    -style - style of pen (solid, dash, dot, dash-dot)
-///    -width - width of pen in pixels
+///    - color - color of spectrum
+///    - style - style of pen (solid, dash, dot, dash-dot)
+///    - width - width of pen in pixels
 
 void TSpectrum2Painter::SetPenAttr(Int_t color,Int_t style,Int_t width)
 {
@@ -7039,7 +7096,7 @@ void TSpectrum2Painter::SetPenAttr(Int_t color,Int_t style,Int_t width)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets nodes in both directions:
-///    -nodesx, nodesy, only the bins at the nodes points are displayed
+///    - nodesx, nodesy, only the bins at the nodes points are displayed
 
 void TSpectrum2Painter::SetNodes(Int_t nodesx,Int_t nodesy)
 {
@@ -7052,9 +7109,9 @@ void TSpectrum2Painter::SetNodes(Int_t nodesx,Int_t nodesy)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets angles of the view:
-///    -alpha - angles of display,alpha+beta must be less or equal to 90, alpha- angle between base line of Canvas and right lower edge of picture base plane
-///    -beta - angle between base line of Canvas and left lower edge of picture base plane
-///    -view - rotation angle of the view, it can be 0, 90, 180, 270 degrees
+///    - alpha - angles of display,alpha+beta must be less or equal to 90, alpha- angle between base line of Canvas and right lower edge of picture base plane
+///    - beta - angle between base line of Canvas and left lower edge of picture base plane
+///    - view - rotation angle of the view, it can be 0, 90, 180, 270 degrees
 
 void TSpectrum2Painter::SetAngles(Int_t alpha,Int_t beta,Int_t view)
 {
@@ -7069,7 +7126,7 @@ void TSpectrum2Painter::SetAngles(Int_t alpha,Int_t beta,Int_t view)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets z-axis scale:
-///    -scale - linear, sqrt or log
+///    - scale - linear, sqrt or log
 
 void TSpectrum2Painter::SetZScale(Int_t scale)
 {
@@ -7081,13 +7138,13 @@ void TSpectrum2Painter::SetZScale(Int_t scale)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets shading color algorithm:
-///    -colorAlgorithm - applies only for rainbowed display modes
-///    (rgb smooth alorithm, rgb modulo color component, cmy smooth alorithm,
-///    cmy modulo color component, cie smooth alorithm,
-///    cie modulo color component, yiq smooth alorithm,
-///    yiq modulo color component, hsv smooth alorithm,
-///    hsv modulo color component, it does not apply for simple display modes
-///    algorithm group
+///    - olorAlgorithm - applies only for rainbowed display modes
+///    (rgb smooth algorithm, rgb modulo color component, cmy smooth algorithm,
+///    - cmy modulo color component, cie smooth algorithm,
+///    - cie modulo color component, yiq smooth algorithm,
+///    - yiq modulo color component, hsv smooth algorithm,
+///    - hsv modulo color component, it does not apply for simple display modes
+///      algorithm group
 
 void TSpectrum2Painter::SetColorAlgorithm(Int_t colorAlgorithm)
 {
@@ -7099,7 +7156,7 @@ void TSpectrum2Painter::SetColorAlgorithm(Int_t colorAlgorithm)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets color increments between two color levels for r, g, b components:
-///    -r, g, b - color increments between two color levels
+///    - r, g, b - color increments between two color levels
 
 void TSpectrum2Painter::SetColorIncrements(Double_t r,Double_t g,Double_t b)
 {
@@ -7113,7 +7170,7 @@ void TSpectrum2Painter::SetColorIncrements(Double_t r,Double_t g,Double_t b)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets position of fictive light source in 3D space:
-///    -x, y, z
+///    - x, y, z
 
 void TSpectrum2Painter::SetLightPosition(Int_t x,Int_t y,Int_t z)
 {
@@ -7127,8 +7184,8 @@ void TSpectrum2Painter::SetLightPosition(Int_t x,Int_t y,Int_t z)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets on/off shading and shadow switches:
-///    -shading - determines whether the picture will shaded, smoothed (no shading, shading), for rainbowed display modes only
-///    -shadow - determines whether shadow will be drawn, for rainbowed display modes with shading according to light
+///   - shading - determines whether the picture will shaded, smoothed (no shading, shading), for rainbowed display modes only
+///   - shadow - determines whether shadow will be drawn, for rainbowed display modes with shading according to light
 
 void TSpectrum2Painter::SetShading(Int_t shading,Int_t shadow)
 {
@@ -7141,8 +7198,8 @@ void TSpectrum2Painter::SetShading(Int_t shading,Int_t shadow)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets on/off Bezier smoothing:
-///    -bezier - determines Bezier interpolation (applies only for simple
-///    display modes group for grid, x_lines, y_lines display modes)
+///   - bezier - determines Bezier interpolation (applies only for simple
+///     display modes group for grid, x_lines, y_lines display modes)
 
 void TSpectrum2Painter::SetBezier(Int_t bezier)
 {
@@ -7155,7 +7212,7 @@ void TSpectrum2Painter::SetBezier(Int_t bezier)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets width between horizontal slices:
-///    -width - width between contours, applies only for contours display mode
+///   - width - width between contours, applies only for contours display mode
 
 void TSpectrum2Painter::SetContourWidth(Int_t width)
 {
@@ -7165,7 +7222,7 @@ void TSpectrum2Painter::SetContourWidth(Int_t width)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets weight between shading according to fictive light source and according to channels counts:
-///    -weight - weight between shading according to fictive light source and according to channels counts, applies only for kPicture2ModeGroupLightHeight modes group
+///   - weight - weight between shading according to fictive light source and according to channels counts, applies only for kPicture2ModeGroupLightHeight modes group
 
 void TSpectrum2Painter::SetLightHeightWeight(Double_t weight)
 {
@@ -7177,11 +7234,11 @@ void TSpectrum2Painter::SetLightHeightWeight(Double_t weight)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets enables/disables drawing of channel marks and sets their attributes:
-///    -enable - decides whether the channel marks are shown or not
-///    -color - color of channel marks
-///    -width - width of channel marks in pixels
-///    -height - height of channel marks in pixels
-///    -style - style of channel marks (dot, cross, star, rectangle, X, diamond, triangle)
+///   - enable - decides whether the channel marks are shown or not
+///   - color - color of channel marks
+///   - width - width of channel marks in pixels
+///   - height - height of channel marks in pixels
+///   - style - style of channel marks (dot, cross, star, rectangle, X, diamond, triangle)
 
 void TSpectrum2Painter::SetChanMarks(Int_t enable,Int_t color,Int_t width,Int_t height,Int_t style)
 {
@@ -7249,7 +7306,7 @@ void TSpectrum2Painter::GetPenAttr(Int_t &color, Int_t &style, Int_t &width)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets nodes in both directions:
-///    -nodesx, nodesy, only the bins at the nodes points are displayed
+///    - nodesx, nodesy, only the bins at the nodes points are displayed
 
 void TSpectrum2Painter::GetNodes(Int_t &nodesx,Int_t &nodesy)
 {
@@ -7260,9 +7317,9 @@ void TSpectrum2Painter::GetNodes(Int_t &nodesx,Int_t &nodesy)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets angles of the view:
-///    -alpha - angle between base line of Canvas and right lower edge of picture base plane
-///    -beta - angle between base line of Canvas and left lower edge of picture base plane
-///    -view - rotation angle of the view, it can be 0, 90, 180, 270 degrees
+///    - alpha - angle between base line of Canvas and right lower edge of picture base plane
+///    - beta - angle between base line of Canvas and left lower edge of picture base plane
+///    - view - rotation angle of the view, it can be 0, 90, 180, 270 degrees
 
 void TSpectrum2Painter::GetAngles(Int_t &alpha,Int_t &beta,Int_t &view)
 {
@@ -7274,7 +7331,7 @@ void TSpectrum2Painter::GetAngles(Int_t &alpha,Int_t &beta,Int_t &view)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets z-axis scale:
-///    -scale - it can be linear, sqrt or log
+///    - scale - it can be linear, sqrt or log
 
 void TSpectrum2Painter::GetZScale(Int_t &scale)
 {
@@ -7284,7 +7341,7 @@ void TSpectrum2Painter::GetZScale(Int_t &scale)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets shading color algorithm:
-///    -colorAlgorithm - rgb smooth alorithm, rgb modulo color component, cmy smooth alorithm, cmy modulo color component, cie smooth alorithm, cie modulo color component, yiq smooth alorithm, yiq modulo color component, hsv smooth alorithm, hsv modulo algorithm
+///    - colorAlgorithm - rgb smooth algorithm, rgb modulo color component, cmy smooth algorithm, cmy modulo color component, cie smooth algorithm, cie modulo color component, yiq smooth algorithm, yiq modulo color component, hsv smooth algorithm, hsv modulo algorithm
 
 void TSpectrum2Painter::GetColorAlgorithm(Int_t &colorAlgorithm)
 {
@@ -7294,7 +7351,7 @@ void TSpectrum2Painter::GetColorAlgorithm(Int_t &colorAlgorithm)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets color increments between two color levels for r, g, b components:
-///    -r, g, b - color increments between two color levels
+///    - r, g, b - color increments between two color levels
 
 void TSpectrum2Painter::GetColorIncrements(Double_t &r,Double_t &g,Double_t &b)
 {
@@ -7306,7 +7363,7 @@ void TSpectrum2Painter::GetColorIncrements(Double_t &r,Double_t &g,Double_t &b)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets position of fictive light source in 3D space:
-///    -x, y, z
+///    - x, y, z
 
 void TSpectrum2Painter::GetLightPosition(Int_t &x,Int_t &y,Int_t &z)
 {
@@ -7318,8 +7375,8 @@ void TSpectrum2Painter::GetLightPosition(Int_t &x,Int_t &y,Int_t &z)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets shading and shadow switches:
-///    -shading - determines whether the picture will shaded, smoothed (no shading, shading), for rainbowed display modes only
-///    -shadow - determines whether shadow will be drawn, for rainbowed display modes with shading according to light
+///    - shading - determines whether the picture will shaded, smoothed (no shading, shading), for rainbowed display modes only
+///    - shadow - determines whether shadow will be drawn, for rainbowed display modes with shading according to light
 
 void TSpectrum2Painter::GetShading(Int_t &shading,Int_t &shadow)
 {
@@ -7330,7 +7387,7 @@ void TSpectrum2Painter::GetShading(Int_t &shading,Int_t &shadow)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets Bezier smoothing switch:
-///    -bezier - determines Bezier interpolation (applies only for simple display modes group for grid, x_lines, y_lines display modes)
+///    - bezier - determines Bezier interpolation (applies only for simple display modes group for grid, x_lines, y_lines display modes)
 
 void TSpectrum2Painter::GetBezier(Int_t &bezier)
 {
@@ -7340,7 +7397,7 @@ void TSpectrum2Painter::GetBezier(Int_t &bezier)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets width between horizontal slices:
-///    -width - width between contours, applies only for contours display mode
+///    - width - width between contours, applies only for contours display mode
 
 void TSpectrum2Painter::GetContourWidth(Int_t &width)
 {
@@ -7350,7 +7407,7 @@ void TSpectrum2Painter::GetContourWidth(Int_t &width)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets weight between shading according to fictive light source and according to channels counts:
-///    -weight - weight between shading according to fictive light source and according to channels counts, applies only for kPicture2ModeGroupLightHeight modes group
+///    - weight - weight between shading according to fictive light source and according to channels counts, applies only for kPicture2ModeGroupLightHeight modes group
 
 void TSpectrum2Painter::GetLightHeightWeight(Double_t &weight)
 {
@@ -7360,11 +7417,11 @@ void TSpectrum2Painter::GetLightHeightWeight(Double_t &weight)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets drawing attributes for channel marks:
-///    -enable - decides whether the channel marks are shown or not
-///    -color - color of channel marks
-///    -width - width of channel marks in pixels
-///    -height - height of channel marks in pixels
-///    -style - style of channel marks (dot, cross, star, rectangle, X, diamond, triangle)
+///    - enable - decides whether the channel marks are shown or not
+///    - color - color of channel marks
+///    - width - width of channel marks in pixels
+///    - height - height of channel marks in pixels
+///    - style - style of channel marks (dot, cross, star, rectangle, X, diamond, triangle)
 
 void TSpectrum2Painter::GetChanMarks(Int_t &enable,Int_t &color,Int_t &width,Int_t &height,Int_t &style)
 {
@@ -7375,8 +7432,8 @@ void TSpectrum2Painter::GetChanMarks(Int_t &enable,Int_t &color,Int_t &width,Int
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function gets attributes for drawing channel:
-///    -enable - decides whether the channel grid is shown or not
-///    -color - color of channel grid
+///    - enable - decides whether the channel grid is shown or not
+///    - color - color of channel grid
 
 void TSpectrum2Painter::GetChanGrid(Int_t &enable,Int_t &color)
 {
@@ -7393,106 +7450,86 @@ void TSpectrum2Painter::GetChanGrid(Int_t &enable,Int_t &color)
 /// "option" parameter each of them can be set to specific values via
 /// "operators" in the option itself. for instance on can do:
 ///
-///  h2->Draw("SPEC a(30,30,0)");
+///     h2->Draw("SPEC a(30,30,0)");
 ///
 /// to draw h2 with TSpectrum2Painter using all the default attributes except
-/// the viewing angles. The operators' names are case unsensitive (one can use
-/// "a" or "A"). Operators parameters are seperated by ",". The operators can
-/// be put is any order in the option. Operators must be serparated by " ".
+/// the viewing angles. The operators' names are case insensitive (one can use
+/// "a" or "A"). Operators parameters are separated by ",". The operators can
+/// be put is any order in the option. Operators must be separated by " ".
 /// No " " characters should be put in an operator. This help page describes
 /// all the available operators.
 ///
-///                               * * *
-///
-/// The way "h2" will be painted is controled with 2 parameters the "Display
+/// The way "h2" will be painted is controlled with 2 parameters the "Display
 /// modes groups" and the "Display Modes".
 ///
 ///   "Display modes groups" can take the following values:
 ///
-///   0 = Simple      - it covers simple display modes using one color only
-///   1 = Light       - in this group the shading is carried out according to
-///                     the position of the fictive light source
-///   2 = Height      - in this group the shading is carried out according to
-///                     the channel contents
-///   3 = LightHeight - combination of two previous shading algorithms. One
-///                     can control the weight between both algorithms.
+///  - 0 = Simple      - it covers simple display modes using one color only
+///  - 1 = Light       - in this group the shading is carried out according to
+///                      the position of the fictive light source
+///  - 2 = Height      - in this group the shading is carried out according to
+///                      the channel contents
+///  - 3 = LightHeight - combination of two previous shading algorithms. One
+///                      can control the weight between both algorithms.
 ///
-///   "Display modes" can take the following values:
+/// "Display modes" can take the following values:
 ///
-///    1 = Points.
-///    2 = Grid.
-///    3 = Contours.
-///    4 = Bars.
-///    5 = LinesX.
-///    6 = LinesY.
-///    7 = BarsX.
-///    8 = BarsY.
-///    9 = Needles.
-///   10 = Surface.
-///   11 = Triangles.
+///  -  1 = Points.
+///  -  2 = Grid.
+///  -  3 = Contours.
+///  -  4 = Bars.
+///  -  5 = LinesX.
+///  -  6 = LinesY.
+///  -  7 = BarsX.
+///  -  8 = BarsY.
+///  -  9 = Needles.
+///  - 10 = Surface.
+///  - 11 = Triangles.
 ///
 /// Using this function these parameters can be set using the "dm" operator
 /// in the option. Example:
 ///
-///   h2->Draw("SPEC dm(1,2)");
+///     h2->Draw("SPEC dm(1,2)");
 ///
 /// will paint the 2D histogram h2 using the "Light Display mode group" and
-/// the "Grid Display mode". The following table summarizes all the possible
+/// the "Grid Display mode". The following table summarises all the possible
 /// combinations of the "Display modes groups" and the "Display modes".
 ///
-///                  +--------+-------+--------+--------------+
-///                  | Simple | Light | Height | Light-Height |
-///      +-----------+--------+-------+--------+--------------+
-///      | Points    |   X    |   X   |   X    |      X       |
-///      +-----------+--------+-------+--------+--------------+
-///      | Grid      |   X    |   X   |   X    |      X       |
-///      +-----------+--------+-------+--------+--------------+
-///      | Contours  |   X    |   -   |   X    |      -       |
-///      +-----------+--------+-------+--------+--------------+
-///      | Bars      |   X    |   -   |   X    |      -       |
-///      +-----------+--------+-------+--------+--------------+
-///      | LinesX    |   X    |   X   |   X    |      X       |
-///      +-----------+--------+-------+--------+--------------+
-///      | LinesY    |   X    |   X   |   X    |      X       |
-///      +-----------+--------+-------+--------+--------------+
-///      | BarsX     |   X    |   -   |   X    |      -       |
-///      +-----------+--------+-------+--------+--------------+
-///      | BarsY     |   X    |   -   |   X    |      -       |
-///      +-----------+--------+-------+--------+--------------+
-///      | Needles   |   X    |   -   |   -    |      -       |
-///      +-----------+--------+-------+--------+--------------+
-///      | Surface   |   -    |   X   |   X    |      X       |
-///      +-----------+--------+-------+--------+--------------+
-///      | Triangles |   X    |   X   |   X    |      X       |
-///      +-----------+--------+-------+--------+--------------+
-///
-///                               * * *
+/// |           | Simple | Light | Height | Light-Height |
+/// |-----------|--------|-------|--------|--------------|
+/// | Points    |   X    |   X   |   X    |      X       |
+/// | Grid      |   X    |   X   |   X    |      X       |
+/// | Contours  |   X    |   -   |   X    |      -       |
+/// | Bars      |   X    |   -   |   X    |      -       |
+/// | LinesX    |   X    |   X   |   X    |      X       |
+/// | LinesY    |   X    |   X   |   X    |      X       |
+/// | BarsX     |   X    |   -   |   X    |      -       |
+/// | BarsY     |   X    |   -   |   X    |      -       |
+/// | Needles   |   X    |   -   |   -    |      -       |
+/// | Surface   |   -    |   X   |   X    |      X       |
+/// | Triangles |   X    |   X   |   X    |      X       |
 ///
 /// The Pen Attributes can be changed using pa(color, style, width). Example:
 ///
-///   h2->Draw("SPEC dm(1,2) pa(2,1,2)");
+///     h2->Draw("SPEC dm(1,2) pa(2,1,2)");
 ///
 /// sets the line color to 2, line type to 1 and line width to2. Note that if
 /// pa() is not specified, the histogram "h2" line attributes are used. Note
-/// also that operators for SPEC option can be cummulated and specified in
+/// also that operators for SPEC option can be cumulated and specified in
 /// any order.
-///
-///                               * * *
 ///
 /// The buffer size can be change with bf(size). Example:
 ///
-///   h2->Draw("SPEC bf(8000)");
+///     h2->Draw("SPEC bf(8000)");
 ///
 /// The spectrum painter needs a buffer to paint the spectrum. By default the
 /// buffer size is set to 1600. In most cases this buffer size is enough. But
 /// if the canvas size is very big, for instance 8000x5000 this buffer size is
 /// too small. An error message is issued telling to use the option bf().
 ///
-///                               * * *
-///
 /// The number of nodes can be change with n(nodesx, nodesy). Example:
 ///
-///   h2->Draw("SPEC n(40,40)");
+///     h2->Draw("SPEC n(40,40)");
 ///
 /// Sometimes the displayed region is rather large. When displaying all
 /// channels pictures become very dense and complicated. It is very difficult
@@ -7500,12 +7537,10 @@ void TSpectrum2Painter::GetChanGrid(Int_t &enable,Int_t &color)
 /// density of displayed channels. Only the channels coinciding with given
 /// nodes are displayed.
 ///
-///                               * * *
-///
 /// The visualization angles can be changed with a(alpha, beta, view).
 /// Example:
 ///
-///   h2->Draw("SPEC n(40,40) dm(0,1) a(30,30,0)");
+///     h2->Draw("SPEC n(40,40) dm(0,1) a(30,30,0)");
 ///
 /// Alpha defines the angle between bottom horizontal screen line and the
 /// displayed space on the right side of the picture and beta on the left
@@ -7513,19 +7548,15 @@ void TSpectrum2Painter::GetChanGrid(Int_t &enable,Int_t &color)
 /// going through the center of it employing the view parameter. Allowed
 /// values are 0, 90, 180 and 270 degrees.
 ///
-///                               * * *
-///
 /// zs(scale) changes the scale of the Z-axis Possible values are:
 ///
-///   0 = Linear (default)
-///   1 = Log
-///   2 = Sqrt
+///  - 0 = Linear (default)
+///  - 1 = Log
+///  - 2 = Sqrt
 ///
 /// If gPad->SetLogz() has been set, log scale on Z-axis is set automatically.
 /// No need to use the zs() operator. Note that the X and Y axis are always
 /// linear.
-///
-///                               * * *
 ///
 /// ci(r,g,b), were r,g and b are floats defines the colors increments.
 /// For sophisticated shading (Light, Height and LightHeight Display Modes
@@ -7533,11 +7564,9 @@ void TSpectrum2Painter::GetChanGrid(Int_t &enable,Int_t &color)
 /// function). There is a predefined number of color levels (256). Color in
 /// every level is calculated by adding the increments of the r, g, b
 /// components to the previous level. Using this function one can change the
-/// color increments between two neighboring color levels. The function does
+/// color increments between two neighbouring color levels. The function does
 /// not apply dor the Simple Display Modes Group. The default values are:
 /// (1,1,1).
-///
-///                               * * *
 ///
 /// ca(color_algorithm) allows to choose the Color Algorithm.
 /// To define the colors one can employ one of the following color algorithms
@@ -7547,25 +7576,23 @@ void TSpectrum2Painter::GetChanGrid(Int_t &enable,Int_t &color)
 /// This makes possible to realize various visual effects. One can choose from
 /// the following set of the algorithms:
 ///
-///   0 = RGB Smooth
-///   1 = RGB Modulo
-///   2 = CMY Smooth
-///   3 = CMY Modulo
-///   4 = CIE Smooth
-///   5 = CIE Modulo
-///   6 = YIQ Smooth
-///   7 = YIQ Modulo
-///   8 = HVS Smooth
-///   9 = HVS Modulo
+///  - 0 = RGB Smooth
+///  - 1 = RGB Modulo
+///  - 2 = CMY Smooth
+///  - 3 = CMY Modulo
+///  - 4 = CIE Smooth
+///  - 5 = CIE Modulo
+///  - 6 = YIQ Smooth
+///  - 7 = YIQ Modulo
+///  - 8 = HVS Smooth
+///  - 9 = HVS Modulo
 ///
 /// This function does not apply on Simple display modes group. Default
 /// value is 0. Example:
 ///
-///   h2->Draw("SPEC c1(4) dm(0,1) a(30,30,0)");
+///     h2->Draw("SPEC c1(4) dm(0,1) a(30,30,0)");
 ///
 /// choose CMY Modulo to paint the "h2" histogram.
-///
-///                               * * *
 ///
 /// lp(x,y,z) set the light position.
 /// In Light and LightHeight display modes groups the color palette is
@@ -7575,25 +7602,21 @@ void TSpectrum2Painter::GetChanGrid(Int_t &enable,Int_t &color)
 /// Simple and Height display modes groups. Default is:
 /// lp(1000,1000,100).
 ///
-///                               * * *
-///
 /// s(shading,shadow) allows to set the shading.
 /// The picture's surface is composed of triangles. If desired the edges of
-/// the neighboring triangles can be smoothed (shaded). If desired the
+/// the neighbouring triangles can be smoothed (shaded). If desired the
 /// display of the shadow can be painted as well. The function does not apply
 /// for Simple display modes group. The possible values for shading are:
 ///
-///   0 = Not Shaded
-///   1 = Shaded
+///  - 0 = Not Shaded
+///  - 1 = Shaded
 ///
 /// The possible values for shadow are:
 ///
-///   0 = Shadows are not painted
-///   1 = Shadows are painted
+///  - 0 = Shadows are not painted
+///  - 1 = Shadows are painted
 ///
 /// Default values: s(1,0)
-///
-///                               * * *
 ///
 /// b(bezier) set the Bezier smoothing.
 /// For Simple display modes group and for Grid, LinesX and LinesY display
@@ -7601,26 +7624,20 @@ void TSpectrum2Painter::GetChanGrid(Int_t &enable,Int_t &color)
 /// does not apply for other display modes groups and display modes. Possible
 /// values are:
 ///
-///   0 = No bezier smoothing
-///   1 = Bezier smoothing
+///  - 0 = No bezier smoothing
+///  - 1 = Bezier smoothing
 ///
 /// Default value is: b(0)
-///
-///                               * * *
 ///
 /// cw(width) set the contour width.
 /// This function applies only for the Contours display mode. One can change
 /// the width between horizontal slices and thus their density.
 /// Default value: cw(50)
 ///
-///                               * * *
-///
 /// lhw(weight) set the light height weight.
 /// For LightHeight display modes group one can change the weight between
 /// both shading algorithms. The function does not apply for other display
 /// modes groups. Default value is lhw(0.5).
-///
-///                               * * *
 ///
 /// cm(enable,color,width,height,style) allows to draw a marker on each node.
 /// In addition to the surface drawn using any above given algorithm one can
@@ -7628,41 +7645,33 @@ void TSpectrum2Painter::GetChanGrid(Int_t &enable,Int_t &color)
 /// height (in pixels) and the style of the marks. The parameter enable can
 /// be set to
 ///
-///   0 =  Channel marks are not drawn
-///   1 =  Channel marks drawn
+///  - 0 =  Channel marks are not drawn
+///  - 1 =  Channel marks drawn
 ///
 /// The possible styles can be chosen from the set:
 ///
-///   1 = Dot
-///   2 = Cross
-///   3 = Star
-///   4 = Rectangle
-///   5 = X
-///   6 = Diamond
-///   7 = Triangle.
-///
-///                               * * *
+///  - 1 = Dot
+///  - 2 = Cross
+///  - 3 = Star
+///  - 4 = Rectangle
+///  - 5 = X
+///  - 6 = Diamond
+///  - 7 = Triangle.
 ///
 /// cg(enable,color) channel grid.
 /// In addition to the surface drawn using any above given algorithm one can
 /// display grid using the color parameter. The parameter enable can be set
 /// to:
 ///
-///   0 = Grid not drawn
-///   1 = Grid drawn
+///  - 0 = Grid not drawn
+///  - 1 = Grid drawn
 ///
-///                               * * *
+/// See example spectrumpainter.C
 ///
-/// See example in $ROOTSYS/tutorials/spectrum/spectrumpainter.C
-///Begin_Html
+/// \image html spectrumpainter.gif
 
 void TSpectrum2Painter::PaintSpectrum(TH2* h2, Option_t *option, Int_t bs)
 {
-   /*
-   <img src="gif/spectrumpainter.gif">
-   */
-   //End_Html
-
    TString opt = option;
 
    TSpectrum2Painter sp(h2, bs);
