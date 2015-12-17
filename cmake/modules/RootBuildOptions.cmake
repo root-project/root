@@ -142,7 +142,6 @@ ROOT_BUILD_OPTION(soversion OFF "Set version number in sonames (recommended)")
 ROOT_BUILD_OPTION(sqlite ON "SQLite support, requires libsqlite3")
 ROOT_BUILD_OPTION(srp ON "SRP support, requires SRP source tree")
 ROOT_BUILD_OPTION(ssl ON "SSL encryption support, requires openssl")
-ROOT_BUILD_OPTION(tbb OFF "TBB multi-threading support, requires TBB")
 ROOT_BUILD_OPTION(table OFF "Build libTable contrib library")
 ROOT_BUILD_OPTION(tcmalloc OFF "Using the tcmalloc allocator")
 ROOT_BUILD_OPTION(thread ON "Using thread library (cannot be disabled)")
@@ -193,6 +192,11 @@ endif()
 if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "ppc64le")
    message(STATUS "A system not supported by Vc, ${CMAKE_SYSTEM_PROCESSOR}, was detected. Disabling Vc by default.")
    set(vc_defvalue OFF)
+endif()
+
+#---Options depending of CMake Generator-------------------------------------------------------
+if( CMAKE_GENERATOR STREQUAL Ninja)
+   set(fortran_defvalue OFF) 
 endif()
 
 #---Apply minimal or gminimal------------------------------------------------------------------
