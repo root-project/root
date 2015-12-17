@@ -367,6 +367,11 @@ MONALISALIBDIR := @monalisalibdir@
 MONALISACLILIB := @monalisalib@
 MONALISAINCDIR := $(filter-out /usr/include, @monalisaincdir@)
 
+BUILDTBB       := @buildtbb@
+TBBLIBDIR      := @tbblibdir@
+TBBLIB         := @tbblib@
+TBBINCDIR      := $(filter-out /usr/include, @tbbincdir@)
+
 SSLLIB         := @ssllib@
 SSLLIBDIR      := @ssllibdir@
 SSLINCDIR      := $(filter-out /usr/include, @sslincdir@)
