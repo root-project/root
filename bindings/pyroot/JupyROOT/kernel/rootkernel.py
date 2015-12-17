@@ -105,7 +105,7 @@ class ROOTKernel(MetaKernel):
 
 
         except KeyboardInterrupt:
-            self.interpreter.gROOT.SetInterrupt()
+            ROOT.gROOT.SetInterrupt()
             status = 'interrupted'
             self.ioHandler.EndCapture()
         if not silent:
