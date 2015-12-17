@@ -7,8 +7,6 @@
 #
 #  The full license is in the file COPYING.rst, distributed with this software.
 #-----------------------------------------------------------------------------
-from __future__ import print_function
-
 from ctypes import CDLL, c_char_p
 from threading import Thread
 from time import sleep as timeSleep
@@ -22,6 +20,18 @@ def _GetStream(getter):
    return ""
 
 class IOHandler(object):
+    '''Class used to capture output from C/C++ libraries.
+
+    >>> h = IOHandler()
+    >>> h.InitCapture()
+    >>> h.GetStdout()
+    ''
+    >>> h.GetStderr()
+    ''
+    >>> h.Poll()
+    >>> del h
+    '''
+
     def __init__(self):
         _lib.JupyROOTExecutorHandler_Ctor()
 
