@@ -9,11 +9,10 @@
 #
 #  The full license is in the file COPYING.rst, distributed with this software.
 #-----------------------------------------------------------------------------
-import sys
 import os
 from glob import glob
 
-from JupyROOT.kernel.handler import LoadHandlers
+from JupyROOT.kernel.handler import IOHandler, JupyROOTDeclarer, JupyROOTExecutor
 
 try:
     from JupyROOT.utils import isPlatformApple
@@ -31,23 +30,19 @@ _Declarer  = None
 def GetIOHandler():
     global _ioHandler
     if not _ioHandler:
-        LoadHandlers()
-        from ROOT import JupyROOTExecutorHandler
-        _ioHandler = JupyROOTExecutorHandler()
+        _ioHandler = IOHandler()
     return _ioHandler
 
 def GetExecutor():
     global _Executor
     if not _Executor:
-        from ROOT import JupyROOTExecutor
-        _Executor = JupyROOTExecutor
+        _Executor = JupyROOTExecutor()
     return _Executor
 
 def GetDeclarer():
     global _Declarer
     if not _Declarer:
-        from ROOT import JupyROOTDeclarer
-        _Declarer = JupyROOTDeclarer
+        _Declarer = JupyROOTDeclarer()
     return _Declarer
 
 class MagicLoader(object):

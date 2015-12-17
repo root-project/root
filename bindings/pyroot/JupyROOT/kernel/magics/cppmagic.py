@@ -13,7 +13,7 @@ from metakernel import Magic, option
 
 import sys
 
-#NOTE:actually JupyROOT is not capturing the error on %%cpp -d if the function is wrong 
+#NOTE:actually JupyROOT is not capturing the error on %%cpp -d if the function is wrong
 class CppMagics(Magic):
     def __init__(self, kernel):
         super(CppMagics, self).__init__(kernel)
@@ -28,25 +28,25 @@ class CppMagics(Magic):
         if self.code.strip():
              self.kernel.ioHandler.clear()
              self.kernel.ioHandler.InitCapture()
-             
+
              if args=='-a':
                  self.kernel.ACLiC(self.code)
              elif args=='-d':
-                 self.kernel.Declarer(str(self.code))
+                 self.kernel.Declarer.Run(str(self.code))
              else:
-                 self.kernel.Executor(str(self.code))
+                 self.kernel.Executor.Run(str(self.code))
              self.kernel.ioHandler.EndCapture()
-             std_out = self.kernel.ioHandler.getStdout()
-             std_err = self.kernel.ioHandler.getStderr()
+             std_out = self.kernel.ioHandler.GetStdout()
+             std_err = self.kernel.ioHandler.GetStderr()
              if std_out != "":
                 stream_content_stdout = {'name': 'stdout', 'text': std_out}
                 self.kernel.send_response(self.kernel.iopub_socket, 'stream', stream_content_stdout)
              if std_err != "":
                 stream_content_stderr = {'name': 'stderr', 'text': std_err}
                 self.kernel.send_response(self.kernel.iopub_socket, 'stream', stream_content_stderr)
-            
+
         self.evaluate = False
-        
+
 def register_magics(kernel):
     kernel.register_magics(CppMagics)
-    
+

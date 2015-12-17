@@ -4,7 +4,7 @@
 
 class JupyROOTExecutorHandler {
 private:
-   bool fCapturing;
+   bool fCapturing=false;
    std::string fStdoutpipe;
    std::string fStderrpipe;
    int fStdout_pipe[2];
@@ -38,10 +38,7 @@ bool JupyROOTDeclarerImpl(const char *code);
 
 constexpr long MAX_PIPE_SIZE = 1048575;
 
-JupyROOTExecutorHandler::JupyROOTExecutorHandler()
-{
-   fCapturing = false;
-}
+JupyROOTExecutorHandler::JupyROOTExecutorHandler(){}
 
 static void PollImpl(FILE* stdStream, int* pipeHandle, std::string& pipeContent)
 {
@@ -62,9 +59,9 @@ void JupyROOTExecutorHandler::Poll()
    PollImpl(stderr, fStderr_pipe, fStderrpipe);
 }
 
-static void InitCaptureImpl(int& savedStdStream, int* pipeHandle)
+static void InitCaptureImpl(int& savedStdStream, int* pipeHandle, int FILENO)
 {
-   savedStdStream = dup(STDOUT_FILENO);
+   savedStdStream = dup(FILENO);
    if (pipe(pipeHandle) != 0) {
       return;
    }
@@ -72,15 +69,16 @@ static void InitCaptureImpl(int& savedStdStream, int* pipeHandle)
    flags_stdout |= O_NONBLOCK;
    fcntl(pipeHandle[0], F_SETFL, flags_stdout);
    fcntl(pipeHandle[0], F_SETPIPE_SZ, MAX_PIPE_SIZE);
-   dup2(pipeHandle[1], STDOUT_FILENO);
+   dup2(pipeHandle[1], FILENO);
    close(pipeHandle[1]);
 }
 
 void JupyROOTExecutorHandler::InitCapture()
 {
    if (!fCapturing)  {
-      InitCaptureImpl(fSaved_stdout, fStdout_pipe);
-      InitCaptureImpl(fSaved_stderr, fStderr_pipe);
+      InitCaptureImpl(fSaved_stdout, fStdout_pipe, STDOUT_FILENO);
+      InitCaptureImpl(fSaved_stderr, fStderr_pipe, STDERR_FILENO);
+      fCapturing = true;
    }
 }
 

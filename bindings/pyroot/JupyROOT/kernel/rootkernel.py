@@ -99,13 +99,13 @@ class ROOTKernel(MetaKernel):
         std_out=""
         std_err=""
         try:
-            self.ioHandler.clear()
+            self.ioHandler.Clear()
             self.ioHandler.InitCapture()
-            root_status = self.Executor(str(code))
+            root_status = self.Executor.Run(str(code))
             self.ioHandler.EndCapture()
 
-            std_out = self.ioHandler.getStdout()
-            std_err = self.ioHandler.getStderr()
+            std_out = self.ioHandler.GetStdout()
+            std_err = self.ioHandler.GetStderr()
 
             canvaslist = ROOT.gROOT.GetListOfCanvases()
             if canvaslist:
@@ -123,8 +123,8 @@ class ROOTKernel(MetaKernel):
             self.interpreter.gROOT.SetInterrupt()
             status = 'interrupted'
             self.ioHandler.EndCapture()
-            std_out = self.ioHandler.getStdout()
-            std_err = self.ioHandler.getStderr()
+            std_out = self.ioHandler.GetStdout()
+            std_err = self.ioHandler.GetStderr()
         if not silent:
             ## Send output on stdout
             stream_content_stdout = {'name': 'stdout', 'text': std_out}
