@@ -125,10 +125,12 @@ Custom streamers need to #include TBuffer.h explicitly (see
 
 ### Notebook integration
 
-  * Refactoring of the Jupyter integration layer into the new package JupyROOT
+  * Refactoring of the Jupyter integration layer into the new package JupyROOT.
   * Added ROOT [Jupyter Kernel for ROOT](https://root.cern.ch/root-has-its-jupyter-kernel)
-    * Magics are now invoked with standard syntax "%%", for example "%%cpp"
-    * The methods "toCpp" and "toPython" have been removed
+    * Magics are now invoked with standard syntax "%%", for example "%%cpp".
+    * The methods "toCpp" and "toPython" have been removed.
+  * Factorise output capturing and execution in an accelerator library and use ctypes to invoke functions.
+  * When the ROOT kernel is used, the output is consumed progressively
 
 ## JavaScript ROOT
 
