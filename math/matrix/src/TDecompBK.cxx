@@ -15,44 +15,48 @@
 
 ClassImp(TDecompBK)
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// The Bunch-Kaufman diagonal pivoting method decomposes a real          //
-// symmetric matrix A using                                              //
-//                                                                       //
-//     A = U*D*U^T                                                       //
-//                                                                       //
-//  where U is a product of permutation and unit upper triangular        //
-//  matrices, U^T is the transpose of U, and D is symmetric and block    //
-//  diagonal with 1-by-1 and 2-by-2 diagonal blocks.                     //
-//                                                                       //
-//     U = P(n-1)*U(n-1)* ... *P(k)U(k)* ...,                            //
-//  i.e., U is a product of terms P(k)*U(k), where k decreases from n-1  //
-//  to 0 in steps of 1 or 2, and D is a block diagonal matrix with 1-by-1//
-//  and 2-by-2 diagonal blocks D(k).  P(k) is a permutation matrix as    //
-//  defined by IPIV(k), and U(k) is a unit upper triangular matrix, such //
-//  that if the diagonal block D(k) is of order s (s = 1 or 2), then     //
-//                                                                       //
-//             (   I    v    0   )   k-s                                 //
-//     U(k) =  (   0    I    0   )   s                                   //
-//             (   0    0    I   )   n-k                                 //
-//                k-s   s   n-k                                          //
-//                                                                       //
-//  If s = 1, D(k) overwrites A(k,k), and v overwrites A(0:k-1,k).       //
-//  If s = 2, the upper triangle of D(k) overwrites A(k-1,k-1), A(k-1,k),//
-//  and A(k,k), and v overwrites A(0:k-2,k-1:k).                         //
-//                                                                       //
-// fU contains on entry the symmetric matrix A of which only the upper   //
-// triangular part is referenced . On exit fU contains the block diagonal//
-// matrix D and the multipliers used to obtain the factor U, see above . //
-//                                                                       //
-// fIpiv if dimension n contains details of the interchanges and the     //
-// the block structure of D . If (fIPiv(k) > 0, then rows and columns k  //
-// and fIPiv(k) were interchanged and D(k,k) is a 1-by-1 diagonal block. //
-// If IPiv(k) = fIPiv(k-1) < 0, rows and columns k-1 and -IPiv(k) were   //
-// interchanged and D(k-1:k,k-1:k) is a 2-by-2 diagonal block.           //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
+/** \class TDecompBK
+    \ingroup Matrix
+
+ The Bunch-Kaufman diagonal pivoting method decomposes a real
+ symmetric matrix A using
+
+~~~
+     A = U*D*U^T
+~~~
+
+  where U is a product of permutation and unit upper triangular
+  matrices, U^T is the transpose of U, and D is symmetric and block
+  diagonal with 1-by-1 and 2-by-2 diagonal blocks.
+
+     U = P(n-1)*U(n-1)* ... *P(k)U(k)* ...,
+  i.e., U is a product of terms P(k)*U(k), where k decreases from n-1
+  to 0 in steps of 1 or 2, and D is a block diagonal matrix with 1-by-1
+  and 2-by-2 diagonal blocks D(k).  P(k) is a permutation matrix as
+  defined by IPIV(k), and U(k) is a unit upper triangular matrix, such
+  that if the diagonal block D(k) is of order s (s = 1 or 2), then
+
+~~~
+             (   I    v    0   )   k-s
+     U(k) =  (   0    I    0   )   s
+             (   0    0    I   )   n-k
+                k-s   s   n-k
+~~~
+
+  If s = 1, D(k) overwrites A(k,k), and v overwrites A(0:k-1,k).
+  If s = 2, the upper triangle of D(k) overwrites A(k-1,k-1), A(k-1,k),
+  and A(k,k), and v overwrites A(0:k-2,k-1:k).
+
+ fU contains on entry the symmetric matrix A of which only the upper
+ triangular part is referenced . On exit fU contains the block diagonal
+ matrix D and the multipliers used to obtain the factor U, see above .
+
+ fIpiv if dimension n contains details of the interchanges and the
+ the block structure of D . If (fIPiv(k) > 0, then rows and columns k
+ and fIPiv(k) were interchanged and D(k,k) is a 1-by-1 diagonal block.
+ If IPiv(k) = fIPiv(k-1) < 0, rows and columns k-1 and -IPiv(k) were
+ interchanged and D(k-1:k,k-1:k) is a 2-by-2 diagonal block.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -651,7 +655,7 @@ void TDecompBK::Print(Option_t *opt) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assigment operator
+/// Assignment operator
 
 TDecompBK &TDecompBK::operator=(const TDecompBK &source)
 {
