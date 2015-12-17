@@ -13,7 +13,7 @@
 
 from __future__ import print_function
 
-import sys, os, select, tempfile
+import sys
 
 try:
     from metakernel import MetaKernel, Parser
