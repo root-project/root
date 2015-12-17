@@ -1,14 +1,17 @@
-# -*- coding:utf-8 -*-
+   # -*- coding:utf-8 -*-
 #-----------------------------------------------------------------------------
 #  Copyright (c) 2015, ROOT Team.
-#  Authors: Omar Zapata <Omar.Zapata@cern.ch> http://oproject.org
-#  website: http://oproject.org/ROOT+Jupyter+Kernel (information only for ROOT kernel)
+#  Authors: Danilo Piparo
+#           Omar Zapata <Omar.Zapata@cern.ch> http://oproject.org
 #  Distributed under the terms of the Modified LGPLv3 License.
 #
 #  The full license is in the file COPYING.rst, distributed with this software.
 #-----------------------------------------------------------------------------
+from __future__ import print_function
+
 from ctypes import CDLL, c_char_p
 from threading import Thread
+from time import sleep as timeSleep
 
 _lib = CDLL("libJupyROOT.so")
 
@@ -43,27 +46,40 @@ class IOHandler(object):
     def GetStderr(self):
        return _GetStream(_lib.JupyROOTExecutorHandler_GetStderr)
 
+    def GetStreamsDicts(self):
+       out = self.GetStdout()
+       err = self.GetStderr()
+       outDict = {'name': 'stdout', 'text': out} if out != "" else None
+       errDict = {'name': 'stderr', 'text': err} if err != "" else None
+       return outDict,errDict
+
 class Runner(object):
     def __init__(self, function):
         self.function = function
+        self.thread = None
 
     def Run(self, argument):
         return self.function(argument)
 
     def AsyncRun(self, argument):
-        self.thread = threading.Thread(target=self.Run, args =(argument,))
+        self.thread = Thread(target=self.Run, args =(argument,))
         self.thread.start()
 
+    def Wait(self):
+        if not self.thread: return
+        self.thread.join()
+
     def HasFinished(self):
-        finished = False
-        if self.thread:
-           finished = not self.thread.is_alive()
+        if not self.thread: return True
 
-        if finished:
-           self.thread.join()
-           self.thread = None
+        finished = not self.thread.is_alive()
+        if not finished: return False
 
-        return finished
+        self.thread.join()
+        self.thread = None
+
+        return True
+
 
 class JupyROOTDeclarer(Runner):
     def __init__(self):
@@ -73,3 +89,16 @@ class JupyROOTExecutor(Runner):
     def __init__(self):
        super(JupyROOTExecutor, self).__init__(_lib.JupyROOTExecutor)
 
+def RunAsyncAndPrint(executor, code, ioHandler, printFunction, silent = False, timeout = 0.1):
+   ioHandler.Clear()
+   ioHandler.InitCapture()
+   executor.AsyncRun(code)
+   while not executor.HasFinished():
+         ioHandler.Clear()
+         ioHandler.Poll()
+         if not silent:
+            printFunction(ioHandler)
+         if executor.HasFinished(): break
+         timeSleep(.1)
+   executor.Wait()
+   ioHandler.EndCapture()
