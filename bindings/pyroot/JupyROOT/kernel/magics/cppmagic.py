@@ -26,24 +26,21 @@ class CppMagics(Magic):
     def cell_cpp(self, args):
         '''Executes the content of the cell as C++ code.'''
         if self.code.strip():
-             self.kernel.ioHandler.clear()
-             self.kernel.ioHandler.InitCapture()
+             execFunc = None
+             if args == '-a':
+                 execFunc = self.kernel.ACLiC
+             elif args == '-d':
+                 execFunc = self.kernel.Declarer.Run
+             else: # normal flow
+                self.kernel.do_execute_direct(str(self.code))
+                self.evaluate = False
+                return
 
-             if args=='-a':
-                 self.kernel.ACLiC(self.code)
-             elif args=='-d':
-                 self.kernel.Declarer.Run(str(self.code))
-             else:
-                 self.kernel.Executor.Run(str(self.code))
+             self.kernel.ioHandler.Clear()
+             self.kernel.ioHandler.InitCapture()
+             execFunc(str(self.code))
              self.kernel.ioHandler.EndCapture()
-             std_out = self.kernel.ioHandler.GetStdout()
-             std_err = self.kernel.ioHandler.GetStderr()
-             if std_out != "":
-                stream_content_stdout = {'name': 'stdout', 'text': std_out}
-                self.kernel.send_response(self.kernel.iopub_socket, 'stream', stream_content_stdout)
-             if std_err != "":
-                stream_content_stderr = {'name': 'stderr', 'text': std_err}
-                self.kernel.send_response(self.kernel.iopub_socket, 'stream', stream_content_stderr)
+             self.kernel.print_output(self.kernel.ioHandler)
 
         self.evaluate = False
 
