@@ -15,18 +15,6 @@ from __future__ import print_function
 
 import sys, os, select, tempfile
 
-
-#trying to find ROOT lib path to PYTHONPATH
-#NOTE: required for JupyterHub
-try:
-    ROOT_PYTHON_PATH = os.popen("root-config --libdir")
-    os.environ['PYTHONPATH'] = os.environ['PYTHONPATH']+":"+ROOT_PYTHON_PATH.read()
-    ROOT_PYTHON_PATH.close()
-except Exception as e:
-    pass
-#setting up PYTHONPATH
-os.environ['PYTHONPATH'] = os.environ['PYTHONPATH']+":"+os.path.dirname(__file__)
-
 try:
     from metakernel import MetaKernel, Parser
     from metakernel.display import HTML
@@ -41,6 +29,7 @@ except ImportError:
 
 try:
     from JupyROOT.utils import setStyle, invokeAclic
+    from JupyROOT.handlers import RunAsyncAndPrint
     from JupyROOT.cppcompleter import CppCompleter
     from JupyROOT.kernel.draw import LoadDrawer, CanvasDrawer
     from JupyROOT.kernel.utils import GetIOHandler, GetExecutor, GetDeclarer, MagicLoader
@@ -52,11 +41,8 @@ import IPython
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
 
-_debug = True
-
 def Debug(msg):
-     print('out: %r' % msg, file=sys.__stderr__)
-
+     print('Kernel main: %r' % msg, file=sys.__stderr__)
 
 class ROOTKernel(MetaKernel):
     implementation = 'ROOT'
@@ -84,10 +70,13 @@ class ROOTKernel(MetaKernel):
         self.completer = CppCompleter()
         self.completer.activate()
 
-
     def get_completions(self, info):
-        if _debug :Debug(info)
         return self.completer._completeImpl(info['code'])
+
+    def print_output(self, handler):
+        streamDicts = handler.GetStreamsDicts()
+        for streamDict in filter(lambda d: None != d, streamDicts):
+            self.send_response(self.iopub_socket, 'stream', streamDict)
 
     def do_execute_direct(self, code, silent=False):
 
@@ -95,17 +84,13 @@ class ROOTKernel(MetaKernel):
             return
 
         status = 'ok'
-        traceback = None
-        std_out=""
-        std_err=""
         try:
-            self.ioHandler.Clear()
-            self.ioHandler.InitCapture()
-            root_status = self.Executor.Run(str(code))
-            self.ioHandler.EndCapture()
-
-            std_out = self.ioHandler.GetStdout()
-            std_err = self.ioHandler.GetStderr()
+            RunAsyncAndPrint(self.Executor,
+                             str(code),
+                             self.ioHandler,
+                             self.print_output,
+                             silent,
+                             .1)
 
             canvaslist = ROOT.gROOT.GetListOfCanvases()
             if canvaslist:
@@ -123,16 +108,10 @@ class ROOTKernel(MetaKernel):
             self.interpreter.gROOT.SetInterrupt()
             status = 'interrupted'
             self.ioHandler.EndCapture()
-            std_out = self.ioHandler.GetStdout()
-            std_err = self.ioHandler.GetStderr()
         if not silent:
-            ## Send output on stdout
-            stream_content_stdout = {'name': 'stdout', 'text': std_out}
-            self.send_response(self.iopub_socket, 'stream', stream_content_stdout)
-            if std_err != "":
-                stream_content_stderr = {'name': 'stderr', 'text': std_err}
-                self.send_response(self.iopub_socket, 'stream', stream_content_stderr)
+            self.print_output(self.ioHandler)
 
+        traceback = None
         reply = {'status': status,
                 'execution_count': self.execution_count,
                 'payload': [],
@@ -153,7 +132,7 @@ class ROOTKernel(MetaKernel):
             pass
         else:
             raise ValueError("Invalid status: %r" % status)
-        #return reply
+
 
 def main():
     """launch a root kernel"""
