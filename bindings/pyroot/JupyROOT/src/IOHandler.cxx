@@ -1,34 +1,33 @@
 // Author: Danilo Piparo, Omar Zapata   16/12/2015
 
+#include <unistd.h>
+#include <fcntl.h>
 #include <string>
-
-class JupyROOTExecutorHandler {
-private:
-   bool fCapturing=false;
-   std::string fStdoutpipe;
-   std::string fStderrpipe;
-   int fStdout_pipe[2];
-   int fStderr_pipe[2];
-   int fSaved_stderr;
-   int fSaved_stdout;
-public:
-   JupyROOTExecutorHandler();
-   void Poll();
-   void InitCapture();
-   void EndCapture();
-   void Clear();
-   std::string& GetStdout();
-   std::string& GetStderr();
-};
+#include "TInterpreter.h"
 
 bool JupyROOTExecutorImpl(const char *code);
 bool JupyROOTDeclarerImpl(const char *code);
 
+class JupyROOTExecutorHandler {
+   private:
+      bool fCapturing=false;
+      std::string fStdoutpipe;
+      std::string fStderrpipe;
+      int fStdout_pipe[2];
+      int fStderr_pipe[2];
+      int fSaved_stderr;
+      int fSaved_stdout;
+   public:
+      JupyROOTExecutorHandler();
+      void Poll();
+      void InitCapture();
+      void EndCapture();
+      void Clear();
+      std::string& GetStdout();
+      std::string& GetStderr();
+   };
 
-//------------------------------------------------------------------------------
 
-#include <unistd.h>
-#include <fcntl.h>
 #ifndef F_LINUX_SPECIFIC_BASE
 #define F_LINUX_SPECIFIC_BASE       1024
 #endif
@@ -38,14 +37,15 @@ bool JupyROOTDeclarerImpl(const char *code);
 
 constexpr long MAX_PIPE_SIZE = 1048575;
 
-JupyROOTExecutorHandler::JupyROOTExecutorHandler(){}
+JupyROOTExecutorHandler::JupyROOTExecutorHandler() {}
 
-static void PollImpl(FILE* stdStream, int* pipeHandle, std::string& pipeContent)
+
+static void PollImpl(FILE *stdStream, int *pipeHandle, std::string &pipeContent)
 {
    int buf_read;
    char ch;
    fflush(stdStream);
-   while (true)          {
+   while (true) {
       buf_read = read(pipeHandle[0], &ch, 1);
       if (buf_read == 1) {
          pipeContent += ch;
@@ -59,7 +59,7 @@ void JupyROOTExecutorHandler::Poll()
    PollImpl(stderr, fStderr_pipe, fStderrpipe);
 }
 
-static void InitCaptureImpl(int& savedStdStream, int* pipeHandle, int FILENO)
+static void InitCaptureImpl(int &savedStdStream, int *pipeHandle, int FILENO)
 {
    savedStdStream = dup(FILENO);
    if (pipe(pipeHandle) != 0) {
@@ -88,8 +88,14 @@ void JupyROOTExecutorHandler::EndCapture()
       Poll();
       dup2(fSaved_stdout, STDOUT_FILENO);
       dup2(fSaved_stderr, STDERR_FILENO);
+      fCapturing = false;
    }
-   fCapturing = false;
+}
+
+void JupyROOTExecutorHandler::Clear()
+{
+   fStdoutpipe = "";
+   fStderrpipe = "";
 }
 
 std::string &JupyROOTExecutorHandler::GetStdout()
@@ -102,14 +108,8 @@ std::string &JupyROOTExecutorHandler::GetStderr()
    return fStderrpipe;
 }
 
-void JupyROOTExecutorHandler::Clear()
-{
-   fStdoutpipe = "";
-   fStderrpipe = "";
-}
 
-#include "TInterpreter.h"
-
+////////////////////////////////////////////////////////////////////////////////
 bool JupyROOTExecutorImpl(const char *code)
 {
    auto status = false;
