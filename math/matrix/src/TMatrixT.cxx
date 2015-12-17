@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMatrixT                                                             //
-//                                                                      //
-// Template class of a general matrix in the linear algebra package     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMatrixT
+    \ingroup Matrix
+
+ TMatrixT
+
+ Template class of a general matrix in the linear algebra package
+*/
 
 #include <iostream>
 #include <typeinfo>
