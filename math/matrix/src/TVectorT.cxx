@@ -9,30 +9,31 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVectorT                                                             //
-//                                                                      //
-// Template class of Vectors in the linear algebra package              //
-//                                                                      //
-// Unless otherwise specified, vector indices always start with 0,      //
-// spanning up to the specified limit-1.                                //
-//                                                                      //
-// For (n) vectors where n <= kSizeMax (5 currently) storage space is   //
-// available on the stack, thus avoiding expensive allocation/          //
-// deallocation of heap space . However, this introduces of course      //
-// kSizeMax overhead for each vector object . If this is an issue       //
-// recompile with a new appropriate value (>=0) for kSizeMax            //
-//                                                                      //
-// Another way to assign and store vector data is through Use           //
-// see for instance stressLinear.cxx file .                             //
-//                                                                      //
-// Note that Constructors/assignments exists for all different matrix   //
-// views                                                                //
-//                                                                      //
-// For usage examples see $ROOTSYS/test/stressLinear.cxx                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TVectorT
+    \ingroup Matrix
+
+ TVectorT
+
+ Template class of Vectors in the linear algebra package
+
+ Unless otherwise specified, vector indices always start with 0,
+ spanning up to the specified limit-1.
+
+ For (n) vectors where n <= kSizeMax (5 currently) storage space is
+ available on the stack, thus avoiding expensive allocation/
+ deallocation of heap space . However, this introduces of course
+ kSizeMax overhead for each vector object . If this is an issue
+ recompile with a new appropriate value (>=0) for kSizeMax
+
+ Another way to assign and store vector data is through Use
+ see for instance stressLinear.cxx file .
+
+ Note that Constructors/assignments exists for all different matrix
+ views
+
+ For usage examples see $ROOTSYS/test/stressLinear.cxx
+
+*/
 
 #include "TVectorT.h"
 #include "TClass.h"
