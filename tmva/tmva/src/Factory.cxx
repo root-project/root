@@ -1335,7 +1335,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 		  for (Int_t i=0; i<nmeth_used[k]; i++) {
 		      if (k == 1) mname[k][i].ReplaceAll( "Variable_", "" );
 		      
-		      MethodBase* theMethod = dynamic_cast<MethodBase*>((*methods)[i]);
+		      MethodBase* theMethod = dynamic_cast<MethodBase*>(GetMethod(itrMap->first,mname[k][i]));
 		      if(theMethod==0) continue;
 		      TMVA::Results *results=theMethod->Data()->GetResults(mname[k][i],Types::kTesting,Types::kClassification);
                       std::vector<Float_t> *mvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
@@ -1347,7 +1347,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 			  // cannot compute separation/significance -> no MVA (usually for Cuts)
 			  
 			  Log() << kINFO << Form("%-20s %-15s: %#1.3f(%02i)  %#1.3f(%02i)  %#1.3f(%02i)    %#1.3f       %#1.3f | --       --",
-						  theMethod->fDataSetInfo.GetName(), 
+						  itrMap->first.Data(), 
 						  (const char*)mname[k][i], 
 						  eff01[k][i], Int_t(1000*eff01err[k][i]), 
 						  eff10[k][i], Int_t(1000*eff10err[k][i]), 
@@ -1356,7 +1356,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 			}
 			else {
 			  Log() << kINFO << Form("%-20s %-15s: %#1.3f(%02i)  %#1.3f(%02i)  %#1.3f(%02i)    %#1.3f       %#1.3f | %#1.3f    %#1.3f",
-						  theMethod->fDataSetInfo.GetName(), 
+						  itrMap->first.Data(), 
 						  (const char*)mname[k][i], 
 						  eff01[k][i], Int_t(1000*eff01err[k][i]), 
 						  eff10[k][i], Int_t(1000*eff10err[k][i]), 
