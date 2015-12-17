@@ -12,7 +12,7 @@
 import os
 from glob import glob
 
-from JupyROOT.kernel.handler import IOHandler, JupyROOTDeclarer, JupyROOTExecutor
+from JupyROOT.handlers import IOHandler, JupyROOTDeclarer, JupyROOTExecutor
 
 try:
     from JupyROOT.utils import isPlatformApple
