@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "TH1.h"
-#include "ROOT/v7/TH1.h"
+#include "ROOT/THist.h"
 
 // Tests the number of bins
 TEST(AxisTest, NumBins) {
