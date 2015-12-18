@@ -8,7 +8,8 @@
 import sys, os, unittest
 sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 
-from ROOT import *
+import ROOT
+from ROOT import gROOT
 from common import *
 
 __all__ = [
@@ -18,6 +19,16 @@ __all__ = [
 ]
 
 gROOT.LoadMacro( "Operators.C+" )
+Number = ROOT.Number
+OperatorCharStar = ROOT.OperatorCharStar
+OperatorShort = ROOT.OperatorShort
+OperatorConstCharStar = ROOT.OperatorConstCharStar
+OperatorUnsignedInt = ROOT.OperatorUnsignedInt
+OperatorInt = ROOT.OperatorInt
+OperatorUnsignedLong = ROOT.OperatorUnsignedLong
+OperatorLong = ROOT.OperatorLong
+OperatorFloat = ROOT.OperatorFloat
+OperatorDouble = ROOT.OperatorDouble
 
 
 ### C++ operators overloading test cases =====================================

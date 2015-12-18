@@ -8,7 +8,8 @@
 import sys, os, unittest
 sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 
-from ROOT import *
+import ROOT
+from ROOT import gROOT, Long, Double, std
 from common import *
 
 __all__ = [
@@ -30,6 +31,17 @@ __all__ = [
 
 gROOT.LoadMacro( "AdvancedCpp.C+" )
 
+
+PR_B = ROOT.PR_B
+PR_C = ROOT.PR_C
+PR_D = ROOT.PR_D
+GetA = ROOT.GetA
+GetB = ROOT.GetB
+GetC = ROOT.GetC
+GetD = ROOT.GetD
+T1 = ROOT.T1
+T2 = ROOT.T2
+      
 
 ### C++ virtual inheritence test cases =======================================
 class Cpp01Inheritence( MyTestCase ):
@@ -164,6 +176,8 @@ class Cpp02TemplateLookup( MyTestCase ):
       """Test template instantiation with a std::vector< float >"""
 
       gROOT.LoadMacro( "Template.C+" )
+      MyTemplatedClass = ROOT.MyTemplatedClass
+
 
     # the following will simply fail if there is a naming problem (e.g. std::,
     # allocator<int>, etc., etc.); note the parsing required ...
@@ -177,6 +191,7 @@ class Cpp02TemplateLookup( MyTestCase ):
       """Test template member functions lookup and calls"""
 
     # gROOT.LoadMacro( "Template.C+" )  # already loaded ...
+      MyTemplatedMethodClass = ROOT.MyTemplatedMethodClass
 
       m = MyTemplatedMethodClass()
 
@@ -201,18 +216,21 @@ class Cpp02TemplateLookup( MyTestCase ):
       """Test template member functions lookup and calls (set 2)"""
 
     # gROOT.LoadMacro( "Template.C+" )  # already loaded ...
+      MyTemplatedMethodClass = ROOT.MyTemplatedMethodClass
 
       m = MyTemplatedMethodClass()
 
     # note that the function and template arguments are reverted
       self.assertRaises( TypeError, m.GetSize2( 'char', 'long' ), 'a', 1 )
       self.assertEqual( m.GetSize2( 'char', 'long' )( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
-      self.assertEqual( m.GetSize2( 256L, 1. ), m.GetFloatSize() - m.GetLongSize() )
+      self.assertEqual( m.GetSize2( long(256), 1. ), m.GetFloatSize() - m.GetLongSize() )
 
    def test6OverloadedTemplateMemberFunctions( self ):
       """Test overloaded template member functions lookup and calls"""
 
     # gROOT.LoadMacro( "Template.C+" )  # already loaded ...
+      MyTemplatedMethodClass = ROOT.MyTemplatedMethodClass
+      MyDoubleVector_t = ROOT.MyDoubleVector_t
 
       m = MyTemplatedMethodClass()
 
@@ -262,6 +280,7 @@ class Cpp02TemplateLookup( MyTestCase ):
       """Test template global function lookup and calls"""
 
     # gROOT.LoadMacro( "Template.C+" )  # already loaded ...
+      MyTemplatedFunction = ROOT.MyTemplatedFunction
 
       f = MyTemplatedFunction
 
@@ -273,7 +292,7 @@ class Cpp02TemplateLookup( MyTestCase ):
    def test8TemplatedArgument( self ):
       """Use of template argument"""
 
-      obj = MyTemplateTypedef()
+      obj = ROOT.MyTemplateTypedef()
       obj.set( 'hi' )   # used to fail with TypeError
 
 
@@ -282,7 +301,7 @@ class Cpp03PassByNonConstRef( MyTestCase ):
    def test1TestPlaceHolders( self ):
       """Test usage of Long/Double place holders"""
 
-      l = Long( pylong(42) )
+      l = ROOT.Long( pylong(42) )
       self.assertEqual( l, pylong(42) )
       self.assertEqual( l/7, pylong(6) )
       self.assertEqual( l*pylong(1), l )
@@ -295,6 +314,10 @@ class Cpp03PassByNonConstRef( MyTestCase ):
    def test2PassBuiltinsByNonConstRef( self ):
       """Test parameter passing of builtins through non-const reference"""
 
+      SetLongThroughRef = ROOT.SetLongThroughRef
+      SetDoubleThroughRef = ROOT.SetDoubleThroughRef
+      SetIntThroughRef = ROOT.SetIntThroughRef
+      
       l = Long( pylong(42) )
       SetLongThroughRef( l, 41 )
       self.assertEqual( l, 41 )
@@ -309,10 +332,10 @@ class Cpp03PassByNonConstRef( MyTestCase ):
 
    def test3PassBuiltinsByNonConstRef( self ):
       """Test parameter passing of builtins through const reference"""
-
-      self.assertEqual( PassLongThroughConstRef( 42 ), 42 )
-      self.assertEqual( PassDoubleThroughConstRef( 3.1415 ), 3.1415 )
-      self.assertEqual( PassIntThroughConstRef( 42 ), 42 )
+      
+      self.assertEqual( ROOT.PassLongThroughConstRef( 42 ), 42 )
+      self.assertEqual( ROOT.PassDoubleThroughConstRef( 3.1415 ), 3.1415 )
+      self.assertEqual( ROOT.PassIntThroughConstRef( 42 ), 42 )
 
 
 ### C++ abstract classes should behave normally, but be non-instatiatable ====
@@ -320,22 +343,24 @@ class Cpp04HandlingAbstractClasses( MyTestCase ):
    def test1ClassHierarchy( self ):
       """Test abstract class in a hierarchy"""
 
-      self.assert_( issubclass( MyConcreteClass, MyAbstractClass ) )
+      self.assert_( issubclass( ROOT.MyConcreteClass, ROOT.MyAbstractClass ) )
 
-      c = MyConcreteClass()
-      self.assert_( isinstance( c, MyConcreteClass ) )
-      self.assert_( isinstance( c, MyAbstractClass ) )
+      c = ROOT.MyConcreteClass()
+      self.assert_( isinstance( c, ROOT.MyConcreteClass ) )
+      self.assert_( isinstance( c, ROOT.MyAbstractClass ) )
 
    def test2Instantiation( self ):
       """Test non-instatiatability of abstract classes"""
 
-      self.assertRaises( TypeError, MyAbstractClass )
+      self.assertRaises( TypeError, ROOT.MyAbstractClass )
 
 
 ### Return by reference should call assignment operator ======================
 class Cpp05AssignToRefArbitraryClass( MyTestCase ):
    def test1AssignToReturnByRef( self ):
       """Test assignment to an instance returned by reference"""
+      
+      RefTester = ROOT.RefTester
 
       a = std.vector( RefTester )()
       a.push_back( RefTester( 42 ) )
@@ -349,6 +374,8 @@ class Cpp05AssignToRefArbitraryClass( MyTestCase ):
 
    def test2NiceErrorMessageReturnByRef( self ):
       """Want nice error message of failing assign by reference"""
+      
+      RefTesterNoAssign = ROOT.RefTesterNoAssign
 
       a = RefTesterNoAssign()
       self.assertEqual( type(a), type(a[0]) )
@@ -356,7 +383,7 @@ class Cpp05AssignToRefArbitraryClass( MyTestCase ):
       self.assertRaises( TypeError, a.__setitem__, 0, RefTesterNoAssign() )
       try:
          a[0] = RefTesterNoAssign()
-      except TypeError, e:
+      except TypeError as e:
          self.assert_( 'can not assign' in str(e) )
 
 
@@ -365,7 +392,7 @@ class Cpp06MathConverters( MyTestCase ):
    def test1MathConverters( self ):
       """Test operator int/long/double incl. typedef"""
 
-      a = Convertible()
+      a = ROOT.Convertible()
       a.m_i = 1234
       a.m_d = 4321.
 
@@ -382,7 +409,7 @@ class Cpp07GloballyOverloadedComparator( MyTestCase ):
    def test1Comparator( self ):
       """Check that the global operator!=/== is picked up"""
 
-      a, b = Comparable(), Comparable()
+      a, b = ROOT.Comparable(), ROOT.Comparable()
 
       self.assertEqual( a, b )
       self.assertEqual( b, a )
@@ -398,7 +425,7 @@ class Cpp07GloballyOverloadedComparator( MyTestCase ):
    def test2Comparator( self ):
       """Check that the namespaced global operator!=/== is picked up"""
 
-      a, b = ComparableSpace.NSComparable(), ComparableSpace.NSComparable()
+      a, b = ROOT.ComparableSpace.NSComparable(), ROOT.ComparableSpace.NSComparable()
 
       self.assertEqual( a, b )
       self.assertEqual( b, a )
@@ -414,6 +441,8 @@ class Cpp07GloballyOverloadedComparator( MyTestCase ):
    def test3DirectUseComparator( self ):
       """Check that a namespaced global operator!=/== can be used directly"""
 
+      ComparableSpace = ROOT.ComparableSpace
+      
       eq = getattr(ComparableSpace, 'operator==')
       ComparableSpace.NSComparable.__eq__ = eq
 
@@ -428,13 +457,13 @@ class Cpp08GlobalVariables( MyTestCase ):
    def test1DoubleArray( self ):
       """Verify access to array of doubles"""
 
-      self.assertEqual( myGlobalDouble, 12. )
-      self.assertRaises( IndexError, myGlobalArray.__getitem__, 500 )
+      self.assertEqual( ROOT.myGlobalDouble, 12. )
+      self.assertRaises( IndexError, ROOT.myGlobalArray.__getitem__, 500 )
 
    def test2WriteGlobalInstances( self ):
       """Verify writability of global instances"""
 
-      import ROOT
+      NS_PR_Lumi = ROOT.NS_PR_Lumi
 
       def verify( func, name, val ):
          self.assertEqual( func(),                    val )
@@ -465,6 +494,8 @@ class Cpp08GlobalVariables( MyTestCase ):
 class Cpp09LongExpressions( MyTestCase ):
    def test1LongExpressionWithTemporary( self ):
       """Test life time of temporary in long expression"""
+      
+      SomeClassWithData = ROOT.SomeClassWithData
 
       self.assertEqual( SomeClassWithData.SomeData.s_numData, 0 )
       r = SomeClassWithData()
@@ -492,6 +523,7 @@ class Cpp10StandardExceptions( MyTestCase ):
 class Cpp11PointerContainers( MyTestCase ):
    def test1MapAssignment( self ):
       """Assignment operator on pointers"""
+      fillVect = ROOT.fillVect
 
       def fill( self ):
          v = std.vector( 'PR_ValClass*' )()

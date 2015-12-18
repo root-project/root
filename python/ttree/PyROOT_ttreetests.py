@@ -8,7 +8,8 @@
 import sys, os, unittest
 sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 
-from ROOT import *
+import ROOT
+from ROOT import gROOT, gDirectory, TArrayI, TFile, TTree, TObject, std, AddressOf, MakeNullPointer, TObjArray, TNamed
 from common import *
 
 __all__ = [
@@ -18,6 +19,10 @@ __all__ = [
 ]
 
 gROOT.LoadMacro( "TTreeTypes.C+" )
+SomeDataObject = ROOT.SomeDataObject
+SomeDataStruct = ROOT.SomeDataStruct
+CreateArrayTree = ROOT.CreateArrayTree
+
 
 
 ### Write/Read an std::vector to/from file ===================================
@@ -212,7 +217,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
       self.assertEqual( len(t.t0), 28 )
 
-      for i in xrange(len(vals)):
+      for i in range(len(vals)):
          self.assertEqual( vals[i], t.t0[i] )
 
       f.Close()
@@ -243,7 +248,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
       t.GetEntry( 0 )
       self.assertEqual( len(t.mydata), len(self.testnames) )
-      for i in xrange(len(t.mydata)):
+      for i in range(len(t.mydata)):
          self.assertEqual( t.mydata[i].GetName(), self.testnames[i] )
 
       f.Close()

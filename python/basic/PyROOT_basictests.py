@@ -8,7 +8,9 @@
 import sys, os, unittest
 sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 
-from ROOT import *
+import ROOT
+from ROOT import gROOT, gApplication, gSystem, gInterpreter, gDirectory, TLorentzVector,\
+                 TCanvas, TString, TList, TH1D, TObjArray, TVectorF, TObjString 
 from common import *
 
 __all__ = [
@@ -73,14 +75,13 @@ class Basic2SetupTestCase( MyTestCase ):
 
    def test5MacroLoading( self ):
       """Test accessibility to macro classes"""
-
       gROOT.LoadMacro( 'SimpleClass.C' )
 
-      self.assert_( issubclass( SimpleClass, TheBase ) )
-      self.assertEqual( SimpleClass, SimpleClass_t )
+      self.assert_( issubclass( ROOT.SimpleClass, ROOT.TheBase ) )
+      self.assertEqual( ROOT.SimpleClass, ROOT.SimpleClass_t )
 
-      c = SimpleClass()
-      self.failUnless( isinstance( c, SimpleClass ) )
+      c = ROOT.SimpleClass()
+      self.failUnless( isinstance( c, ROOT.SimpleClass ) )
       self.assertEqual( c.fData, c.GetData() )
 
       c.SetData( 13 )
@@ -138,7 +139,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       gROOT.LoadMacro( 'ArgumentPassingInterpreted.C' )
 
-      f = InterpretedTest.StringValueArguments
+      f = ROOT.InterpretedTest.StringValueArguments
 
       self.assertEqual( f( 'aap' ), 'aap' )
       self.assertEqual( f( TString( 'noot' ) ), 'noot' )
@@ -151,7 +152,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       # script ArgumentPassingInterpreted.C already loaded in by value test
 
-      f = InterpretedTest.StringRefArguments
+      f = ROOT.InterpretedTest.StringRefArguments
 
       self.assertEqual( f( 'aap' ), 'aap' )
       self.assertEqual( f( TString( 'noot' ) ), 'noot' )
@@ -164,7 +165,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       # script ArgumentPassingInterpreted.C already loaded in by value test
 
-      f = InterpretedTest.LorentzVectorValueArguments
+      f = ROOT.InterpretedTest.LorentzVectorValueArguments
 
       self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
       self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
@@ -174,7 +175,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       # script ArgumentPassingInterpreted.C already loaded in by value test
 
-      f = InterpretedTest.LorentzVectorRefArguments
+      f = ROOT.InterpretedTest.LorentzVectorRefArguments
 
       self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
       self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
@@ -184,7 +185,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       gROOT.LoadMacro( 'ArgumentPassingCompiled.C+' )
 
-      f = CompiledTest.StringValueArguments
+      f = ROOT.CompiledTest.StringValueArguments
 
       self.assertEqual( f( 'aap' ), 'aap' )
       self.assertEqual( f( TString( 'noot' ) ), 'noot' )
@@ -197,7 +198,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       # script ArgumentPassingCompiled.C already loaded in by value test
 
-      f = CompiledTest.StringRefArguments
+      f = ROOT.CompiledTest.StringRefArguments
 
       self.assertEqual( f( 'aap' ), 'aap' )
       self.assertEqual( f( TString( 'noot' ) ), 'noot' )
@@ -210,7 +211,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       # script ArgumentPassingCompiled.C already loaded in by value test
 
-      f = CompiledTest.LorentzVectorValueArguments
+      f = ROOT.CompiledTest.LorentzVectorValueArguments
 
       self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
       self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
@@ -220,7 +221,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       # script ArgumentPassingCompiled.C already loaded in by value test
 
-      f = CompiledTest.LorentzVectorRefArguments
+      f = ROOT.CompiledTest.LorentzVectorRefArguments
 
       self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
       self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
@@ -232,7 +233,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       if 'linux' in sys.platform:
          a = array.array('I',[0])
-         val = CompiledTest.UnsignedIntByRef( a )
+         val = ROOT.CompiledTest.UnsignedIntByRef( a )
          self.assertEqual( a[0], val )
 
 

@@ -8,7 +8,9 @@
 import os, sys, unittest
 sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 
-from ROOT import *
+import ROOT
+from ROOT import gROOT, TH1F, SetMemoryPolicy
+
 
 __all__ = [
    'Memory1TestCase'
@@ -36,6 +38,9 @@ class Memory1TestCase( MyTestCase ):
       """Test object creation and destruction"""
 
       gROOT.LoadMacro( 'MemTester.C+' )
+      MemTester = ROOT.MemTester
+      kMemoryStrict = ROOT.kMemoryStrict
+      
       self.assertEqual( MemTester.counter, 0 )
 
     # test creation
@@ -73,6 +78,10 @@ class Memory1TestCase( MyTestCase ):
 
    def test3ObjectCallHeuristics( self ):
       """Test memory mgmt heuristics for object calls"""
+      
+      MemTester = ROOT.MemTester
+      kMemoryStrict = ROOT.kMemoryStrict
+      kMemoryHeuristics = ROOT.kMemoryHeuristics
 
     # reference calls should not give up ownership
       a = MemTester()
@@ -164,6 +173,8 @@ class Memory1TestCase( MyTestCase ):
    def test4DestructionOfDerivedClass( self ):
       """Derived classes should call base dtor automatically"""
 
+      MemTester = ROOT.MemTester
+      
       class D1( MemTester ):
          def __init__( self ):
             MemTester.__init__( self )

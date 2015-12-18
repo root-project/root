@@ -12,7 +12,8 @@ try:
    import commands
 except ImportError:
    import subprocess as commands
-from ROOT import *
+import ROOT
+from ROOT import gROOT, TClass, TObject, TH1I, TVector3, TGraph, PyROOT, Long, TFile, TMatrixD
 from common import *
 
 __all__ = [
@@ -80,6 +81,7 @@ class Regression03OldCrashers( MyTestCase ):
       """Handling of a temporary for user defined operator new"""
 
       gROOT.LoadMacro( "MuonTileID.C+" )
+      getID = ROOT.getID
 
       getID()
       getID()                 # used to crash
@@ -93,12 +95,16 @@ class Regression03OldCrashers( MyTestCase ):
       """Classes with iterators in a namespace"""
 
       gROOT.LoadMacro( "Marco.C" )
+      ns = ROOT.ns
+      
       self.assert_( ns.MyClass )
 
    def test4VerifyNoLoop( self ):
       """Smart class that returns itself on dereference should not loop"""
 
       gROOT.LoadMacro( "Scott3.C+" )
+      MyTooSmartClass = ROOT.MyTooSmartClass
+      
       a = MyTooSmartClass()
       self.assertRaises( AttributeError, getattr, a, 'DoesNotExist' )
 
@@ -202,6 +208,7 @@ class Regression05LoKiNamespace( MyTestCase ):
       rcp = 'const LHCb::Particle*'
 
       gROOT.LoadMacro( 'LoKiNamespace.C+' )
+      LoKi = ROOT.LoKi
 
       self.assertEqual( LoKi.Constant( rcp ).__name__, 'LoKi::Constant<%s>' % rcp )
       self.assertEqual(
@@ -216,6 +223,7 @@ class Regression06Int64Conversion( MyTestCase ):
       """Test conversion of Int(64) limit values to unsigned long"""
 
       gROOT.LoadMacro( 'ULongLong.C+' )
+      ULongFunc = ROOT.ULongFunc
 
       self.assertEqual( self.limit1,  ULongFunc( self.limit1 ) )
       self.assertEqual( self.limit1L, ULongFunc( self.limit1 ) )
@@ -224,6 +232,7 @@ class Regression06Int64Conversion( MyTestCase ):
 
    def test2IntToULongLongTestCase( self ):
       """Test conversion of Int(64) limit values to unsigned long long"""
+      ULong64Func = ROOT.ULong64Func
 
       self.assertEqual( self.limit1,  ULong64Func( self.limit1 ) )
       self.assertEqual( self.limit1L, ULong64Func( self.limit1 ) )
@@ -237,6 +246,8 @@ class Regression07MatchConstWithProperReturn( MyTestCase ):
       """Test return type against proper overload w/ const and covariance"""
 
       gROOT.LoadMacro( "Scott2.C+" )
+      MyOverloadOneWay = ROOT.MyOverloadOneWay
+      MyOverloadTheOtherWay = ROOT.MyOverloadTheOtherWay
 
       self.assertEqual( MyOverloadOneWay().gime(), 1 )
       self.assertEqual( MyOverloadTheOtherWay().gime(), "aap" )
@@ -248,12 +259,13 @@ class Regression08CheckEnumExactMatch( MyTestCase ):
       """Be able to pass enums as function arguments"""
 
       gROOT.LoadMacro( "Till.C+" )
-      a = Monkey()
-      self.assertEqual( fish, a.testEnum1( fish ) )
-      self.assertEqual( cow,  a.testEnum2( cow ) )
-      self.assertEqual( bird, a.testEnum3( bird ) )
-      self.assertEqual( marsupilami, a.testEnum4( marsupilami ) )
-      self.assertEqual( marsupilami, a.testEnum4( Long(marsupilami) ) )
+     
+      a = ROOT.Monkey()
+      self.assertEqual( ROOT.fish, a.testEnum1( ROOT.fish ) )
+      self.assertEqual( ROOT.cow,  a.testEnum2( ROOT.cow ) )
+      self.assertEqual( ROOT.bird, a.testEnum3( ROOT.bird ) )
+      self.assertEqual( ROOT.marsupilami, a.testEnum4( ROOT.marsupilami ) )
+      self.assertEqual( ROOT.marsupilami, a.testEnum4( Long(ROOT.marsupilami) ) )
 
 
 ### test pythonization of TVector3 ===========================================
@@ -276,6 +288,7 @@ class Regression10CoralAttributeListIterators( MyTestCase ):
       """Verify that the correct base class iterators is picked up"""
 
       gROOT.LoadMacro( "CoralAttributeList.C+" )
+      coral_pyroot_regression = ROOT.coral_pyroot_regression
 
       a = coral_pyroot_regression.AttributeList()
 
@@ -352,8 +365,8 @@ class Regression15ConsRef( MyTestCase ):
       for i in range(len(tnames)):
          gInterpreter.LoadText(
             "bool PyROOT_Regression_TakesRef%d(const %s& arg) { return arg; }" % (i, tnames[i]) )
-         self.assert_( not eval( "PyROOT_Regression_TakesRef%d(0)" % (i,) ) )
-         self.assert_( eval( "PyROOT_Regression_TakesRef%d(1)" % (i,) ) )
+         self.assert_( not eval( "ROOT.PyROOT_Regression_TakesRef%d(0)" % (i,) ) )
+         self.assert_( eval( "ROOT.PyROOT_Regression_TakesRef%d(1)" % (i,) ) )
       self.assertEqual( len(tnames)-1, i )
 
 
@@ -363,7 +376,7 @@ class Regression16NestedNamespace( MyTestCase ):
       """Test nested namespace lookup"""
 
       gROOT.ProcessLine('#include "NestedNamespace.h"')
-      self.assert_( ABCDEFG.ABCD.Nested )
+      self.assert_( ROOT.ABCDEFG.ABCD.Nested )
 
 
 ### matrix access has to go through non-const lookup =========================
@@ -401,7 +414,7 @@ Base* g() { return new Derived(); }
 }"""
       gInterpreter.LoadText( code )
 
-      self.assertEqual( type(RG18.g()), RG18.Derived )
+      self.assertEqual( type(ROOT.RG18.g()), ROOT.RG18.Derived )
 
 
 ## actual test run

@@ -8,7 +8,8 @@
 import sys, os, unittest
 sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 
-from ROOT import *
+import ROOT
+from ROOT import TGraphErrors, gROOT
 from common import *
 
 __all__ = [
@@ -18,6 +19,8 @@ __all__ = [
 
 gROOT.LoadMacro( "Cpp11Features.C+" )
 
+MyCounterClass = ROOT.MyCounterClass
+CreateMyCounterClass = ROOT.CreateMyCounterClass
 
 ### C++11 standard library classes ===========================================
 class Cpp1Cpp11StandardClassesTestCase( MyTestCase ):
@@ -53,6 +56,8 @@ class Cpp2Cpp11LanguageConstructsTestCase( MyTestCase ):
 
    def test02NULLPtrPassing( self ):
       """Allow the programmer to pass NULL in certain cases"""
+      
+      nullptr = ROOT.nullptr
 
       self.assertNotEqual( nullptr, 0 )
       self.assertRaises( TypeError, TGraphErrors, 0, 0, 0 )

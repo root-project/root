@@ -8,7 +8,8 @@
 import sys, os, unittest
 sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 
-from ROOT import *
+import ROOT
+from ROOT import TObject, TLorentzVector, kRed, kGreen, kBlue, TVectorF, TROOT, TCanvas, gInterpreter, gROOT, TMatrixD, TString, std
 from common import *
 
 __all__ = [
@@ -111,6 +112,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       """Test access to namespaces and inner classes"""
 
       gROOT.LoadMacro( "Namespace.C+" )
+      PR_NS_A = ROOT.PR_NS_A
 
       self.assertEqual( PR_NS_A.sa,                            1 )
       self.assertEqual( PR_NS_A.PR_ST_B.sb,                    2 )
@@ -147,6 +149,10 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       """Test passing of variants of void pointer arguments"""
 
       gROOT.LoadMacro( "PointerPassing.C+" )
+      AddressOf = ROOT.AddressOf
+      MakeNullPointer = ROOT.MakeNullPointer
+      
+      Z = ROOT.Z
 
       o = TObject()
       self.assertEqual( AddressOf( o )[0], Z.GimeAddressPtr( o ) )
@@ -175,8 +181,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
    def test09Macro( self ):
       """Test access to cpp macro's"""
-
-      self.assertEqual( NULL, 0 );
+      self.assertEqual( ROOT.NULL, 0 );
 
       gROOT.ProcessLine( '#define aap "aap"' )
       gROOT.ProcessLine( '#define noot 1' )
@@ -184,7 +189,6 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
       # looking up macro's is slow, so needs to be explicit (note that NULL,
       # see above, is a special case)
-      import ROOT
       ROOT.PyConfig.ExposeCppMacros = True
 
       self.assertEqual( ROOT.aap, "aap" )
@@ -212,6 +216,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
    def test11ObjectAndPointerComparisons( self ):
       """Verify object and pointer comparisons"""
+      MakeNullPointer = ROOT.MakeNullPointer
 
       c1 = MakeNullPointer( TCanvas )
       self.assertEqual( c1, None )
@@ -250,14 +255,16 @@ class Cpp2ClassNamingTestCase( MyTestCase ):
    def test01Underscore( self ):
       """Test recognition of '_' as part of a valid class name"""
 
-      z = Z_()
+      z = ROOT.Z_()
 
       self.assert_( hasattr( z, 'myint' ) )
       self.assert_( z.GimeZ_( z ) )
 
    def test02DefaultCtorInNamespace( self ):
       """Check that constructor with default argument is found in namespace"""
-
+      PR_NS_A = ROOT.PR_NS_A
+      CtorWithDefaultInGBL = ROOT.CtorWithDefaultInGBL
+      
       a = CtorWithDefaultInGBL()
       self.assertEqual( a.data, -1 )
 
@@ -273,6 +280,8 @@ class Cpp2ClassNamingTestCase( MyTestCase ):
    def test03NamespaceInTemplates( self ):
       """Templated data members need to retain namespaces of arguments"""
 
+      PR_NS_A = ROOT.PR_NS_A
+
       p = std.pair( std.vector( PR_NS_A.PR_ST_B ), std.vector( PR_NS_A.PR_NS_D.PR_ST_E ) )()
       self.assert_( "vector<PR_NS_A::PR_ST_B>" in type(p.first).__name__ )
       self.assert_( "vector<PR_NS_A::PR_NS_D::PR_ST_E>" in type(p.second).__name__ )
@@ -282,6 +291,8 @@ class Cpp2ClassNamingTestCase( MyTestCase ):
 
       gInterpreter.Declare( 'namespace PR_HepMC { class GenParticle {}; }' )
       gInterpreter.Declare( 'namespace PR_LoKi { template< typename T, typename S > class Functor {}; }' )
+
+      PR_LoKi = ROOT.PR_LoKi
 
       f1 = PR_LoKi.Functor(      "vector<const PR_HepMC::GenParticle*>",      "vector<double>" )
       f2 = PR_LoKi.Functor( "std::vector<const PR_HepMC::GenParticle*>", "std::vector<double>" )

@@ -9,7 +9,8 @@ import sys, os, unittest
 sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 
 from math import exp
-from ROOT import *
+import ROOT
+from ROOT import TF1, TH1F, TMinuit, gROOT, Long, Double
 from common import *
 
 __all__ = [
@@ -130,12 +131,16 @@ class Func3GlobalCppFunctionTestCase( MyTestCase ):
       """Test calling of an interpreted C++ global function"""
 
       gROOT.LoadMacro( "GlobalFunction.C" )
+      InterpDivideByTwo = ROOT.InterpDivideByTwo
+      
 
       self.assertEqual( round( InterpDivideByTwo( 4. ) - 4./2., 8), 0 )
       self.assertEqual( round( InterpDivideByTwo( 7. ) - 7./2., 8), 0 )
 
    def test2CallNameSpacedGlobalFunction( self ):
       """Test calling of an interpreted C++ namespaced global function"""
+
+      InterpMyNameSpace = ROOT.InterpMyNameSpace
 
       self.assertEqual( round( InterpMyNameSpace.InterpNSDivideByTwo( 4. ) - 4./2., 8), 0 )
       self.assertEqual( round( InterpMyNameSpace.InterpNSDivideByTwo( 7. ) - 7./2., 8), 0 )
@@ -144,6 +149,7 @@ class Func3GlobalCppFunctionTestCase( MyTestCase ):
       """Test calling of a compiled C++ global function"""
 
       gROOT.LoadMacro( "GlobalFunction2.C+" )
+      DivideByTwo = ROOT.DivideByTwo
 
       self.assertEqual( round( DivideByTwo( 4. ) - 4./2., 8), 0 )
       self.assertEqual( round( DivideByTwo( 7. ) - 7./2., 8), 0 )
@@ -152,6 +158,7 @@ class Func3GlobalCppFunctionTestCase( MyTestCase ):
       """Test calling of a compiled C++ namespaced global function"""
 
     # functions come in from GlobalFunction2.C, loaded in previous test3
+      MyNameSpace = ROOT.MyNameSpace
 
       self.assertEqual( round( MyNameSpace.NSDivideByTwo( 4. ) - 4./2., 8), 0 )
       self.assertEqual( round( MyNameSpace.NSDivideByTwo( 7. ) - 7./2., 8), 0 )
@@ -160,6 +167,7 @@ class Func3GlobalCppFunctionTestCase( MyTestCase ):
       """Test namespace update after adding a global function"""
 
       gROOT.LoadMacro( "GlobalFunction3.C+" )
+      MyNameSpace = ROOT.MyNameSpace
 
       self.assertEqual( round( MyNameSpace.NSDivideByTwo_v2( 4. ) - 4./2., 8), 0 )
       self.assertEqual( round( MyNameSpace.NSDivideByTwo_v2( 7. ) - 7./2., 8), 0 )
@@ -169,6 +177,9 @@ class Func3GlobalCppFunctionTestCase( MyTestCase ):
 class Func4GlobalCppFunctionAsMethodTestCase( MyTestCase ):
    def test1InstallAndCallGlobalCppFunctionAsPythonMethod( self ):
       """Test installing and calling global C++ function as python method"""
+      
+      InstallableFunc = ROOT.InstallableFunc
+      FuncLess = ROOT.FuncLess
 
       FuncLess.InstallableFunc = InstallableFunc
 
@@ -177,6 +188,9 @@ class Func4GlobalCppFunctionAsMethodTestCase( MyTestCase ):
 
    def test2InstallAndCallGlobalCppFunctionAsPythonMethod( self ):
       """Test installing and calling namespaced C++ function as python method"""
+      
+      FuncLess = ROOT.FuncLess
+      FunctionNS = ROOT.FunctionNS
 
       FuncLess.InstallableFunc2 = FunctionNS.InstallableFunc
 
@@ -192,7 +206,7 @@ class Func5MinuitTestCase( MyTestCase ):
     # setup minuit and callback
       gMinuit = TMinuit(5)
       gMinuit.SetPrintLevel( -1 )            # quiet
-      gMinuit.SetGraphicsMode( kFALSE )
+      gMinuit.SetGraphicsMode( ROOT.kFALSE )
       gMinuit.SetFCN( fcn )
 
       arglist = array( 'd', 10*[0.] )

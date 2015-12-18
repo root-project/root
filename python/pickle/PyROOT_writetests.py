@@ -10,7 +10,8 @@ try:
    import pickle, cPickle
 except ImportError:
    import pickle as cPickle
-from ROOT import *
+import ROOT
+from ROOT import TH1F, gROOT, std
 from common import *
 
 __all__ = [
@@ -18,6 +19,7 @@ __all__ = [
 ]
 
 gROOT.LoadMacro( "PickleTypes.C+" )
+SomeDataObject = ROOT.SomeDataObject
 
 
 ### Write various objects with the two pickle modules ========================
