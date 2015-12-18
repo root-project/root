@@ -13,26 +13,11 @@ from time import sleep as timeSleep
 
 _lib = CDLL("libJupyROOT.so")
 
-def _GetStream(getter):
-   out_raw = getter()
-   if 0 != out_raw:
-      return c_char_p(out_raw).value
-   return ""
-
 class IOHandler(object):
-    '''Class used to capture output from C/C++ libraries.
-
-    >>> h = IOHandler()
-    >>> h.InitCapture()
-    >>> h.GetStdout()
-    ''
-    >>> h.GetStderr()
-    ''
-    >>> h.Poll()
-    >>> del h
-    '''
-
     def __init__(self):
+        for cfunc in [_lib.JupyROOTExecutorHandler_GetStdout,
+                      _lib.JupyROOTExecutorHandler_GetStderr]:
+           cfunc.restype = c_char_p
         _lib.JupyROOTExecutorHandler_Ctor()
 
     def __del__(self):
@@ -51,10 +36,10 @@ class IOHandler(object):
         _lib.JupyROOTExecutorHandler_EndCapture()
 
     def GetStdout(self):
-       return _GetStream(_lib.JupyROOTExecutorHandler_GetStdout)
+       return _lib.JupyROOTExecutorHandler_GetStdout()
 
     def GetStderr(self):
-       return _GetStream(_lib.JupyROOTExecutorHandler_GetStderr)
+       return _lib.JupyROOTExecutorHandler_GetStderr()
 
     def GetStreamsDicts(self):
        out = self.GetStdout()
