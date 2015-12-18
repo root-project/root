@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env @python@
 
 # ROOT command line tools: rootcp
 # Author: Julien Ripoche

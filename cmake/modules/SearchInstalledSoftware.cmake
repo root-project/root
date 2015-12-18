@@ -352,10 +352,14 @@ endif()
 
 
 #---Check for Python installation-------------------------------------------------------
-if(python)
+if(python OR python3)
   message(STATUS "Looking for Python")
   #---First look for the python interpreter and fix the version of it for the libraries--
-  find_package(PythonInterp)
+  if(python3)
+    find_package(PythonInterp 3.5)
+  else()
+    find_package(PythonInterp)
+  endif()
   if(PYTHONINTERP_FOUND)
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.version[:3])"
                     OUTPUT_VARIABLE PYTHON_VERSION)
