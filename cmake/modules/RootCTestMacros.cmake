@@ -353,8 +353,7 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
     )
 
   add_executable(unittests ${unittests_SRC})
-  target_include_directories(unittests PRIVATE ${GTEST_INCLUDE_DIR})
-  add_dependencies(unittests googletest)
+  target_include_directories(unittests PRIVATE ${ROOTTEST_DIR}/googletest/include)
   target_link_libraries(unittests gtest_main ${ARGV})
   add_test(${fulltestname} unittests)
 
