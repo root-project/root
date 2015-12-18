@@ -6455,14 +6455,15 @@ check_explicit "$enable_shadowpw" "$enable_shadowpw_explicit" \
 #
 useimt="undef"
 if test ! "x$enable_tbb" = "xno" ; then
-    check_header "tbb.h" "$tbbincdir" \
-        $TBB ${TBB:+$TBB/include/tbb} \
-        /usr/local/include/tbb \
-        /usr/include/tbb
+    check_header "tbb/tbb.h" "$tbbincdir" \
+        $TBB ${TBB:+$TBB/include} \
+        /usr/local/include \
+        /usr/include
     tbbincdir=$found_dir
 
     check_library "libtbb" "$enable_shared" "$tbblibdir" \
         $TBB ${TBB:+$TBB/lib} ${TBB:+$TBB/lib64} \
+        ${TBB:+$TBB/lib/intel64} ${TBB:+$TBB/lib/intel64/gcc4.4} \
         /usr/lib /usr/local
     tbblib=$found_lib
     tbblibdir=$found_dir

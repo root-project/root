@@ -86,9 +86,11 @@ INCLUDEFILES += $(THREADDEP)
 include/%.h:    $(THREADDIRI)/%.h
 		cp $< $@
 
-$(THREADLIB):   $(THREADO) $(THREADDO) $(ORDER_) $(MAINLIBS) $(THREADLIBDEP)
+$(THREADLIB):   $(THREADO) $(THREADDO) $(THREADIMTO) \
+		   $(ORDER_) $(MAINLIBS) $(THREADLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libThread.$(SOEXT) $@ "$(THREADO) $(THREADDO) $(THREADIMTO)" \
+		   "$(SOFLAGS)" libThread.$(SOEXT) $@ \
+		   "$(THREADO) $(THREADDO) $(THREADIMTO)" \
 		   "$(THREADLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB) $(TBBLIBDIR) $(TBBLIB)"
 
 $(call pcmrule,THREAD)
@@ -118,5 +120,5 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 ifeq ($(BUILDTBB),yes)
-$(THREADO): CXXFLAGS += $(TBBINCDIR:%=-I%)
+$(THREADO) $(THREADIMTO): CXXFLAGS += $(TBBINCDIR:%=-I%)
 endif
