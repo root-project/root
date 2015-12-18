@@ -8,7 +8,8 @@ set(NBDIFFUTIL ${CMAKE_CURRENT_SOURCE_DIR}/nbdiff.py )
 # documentation and as tutorials. In order to spot problems with downloads
 # one should not use GLOB but rather list explicitely all the files
 set(NOTEBOOKS ${CMAKE_CURRENT_SOURCE_DIR}/importROOT.ipynb
-              ${CMAKE_CURRENT_SOURCE_DIR}/simpleCppMagic.ipynb)
+              ${CMAKE_CURRENT_SOURCE_DIR}/simpleCppMagic.ipynb
+              ${CMAKE_CURRENT_SOURCE_DIR}/ROOT_kernel.ipynb)
 
 find_python_module(IPython)
 
