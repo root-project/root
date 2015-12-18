@@ -498,9 +498,9 @@ void TMVA::MethodBDT::ProcessOptions()
    if (fBoostType=="Grad") {
       fPruneMethod = DecisionTree::kNoPruning;
       if (fNegWeightTreatment=="InverseBoostNegWeights"){
-         Log() << kWARNING << "the option *InverseBoostNegWeights* does not exist for BoostType=Grad --> change to *IgnoreNegWeightsInTraining*" << Endl;
-         fNegWeightTreatment="IgnoreNegWeightsInTraining";
-         fNoNegWeightsInTraining=kTRUE;
+         Log() << kINFO << "the option *InverseBoostNegWeights* does not exist for BoostType=Grad --> change to new default for GradBoost *Pray*, i.e. simply keep them as if which should work fine for Grad Boost" << Endl;
+         fNegWeightTreatment="Pray";
+         fNoNegWeightsInTraining=kFALSE;
       }
    } else if (fBoostType=="RealAdaBoost"){
       fBoostType    = "AdaBoost";
