@@ -180,14 +180,12 @@ extern "C" {
    const char *JupyROOTExecutorHandler_GetStdout()
    {
       auto out = JupyROOTExecutorHandler_ptr->GetStdout();
-      if (out.empty()) return 0;
       return out.c_str();
    }
 
    const char *JupyROOTExecutorHandler_GetStderr()
    {
       auto out = JupyROOTExecutorHandler_ptr->GetStderr();
-      if (out.empty()) return 0;
       return out.c_str();
    }
 
