@@ -14,6 +14,17 @@ from time import sleep as timeSleep
 _lib = CDLL("libJupyROOT.so")
 
 class IOHandler(object):
+    r'''Class used to capture output from C/C++ libraries.
+    >>> import sys
+    >>> h = IOHandler()
+    >>> h.GetStdout()
+    ''
+    >>> h.GetStderr()
+    ''
+    >>> h.GetStreamsDicts()
+    (None, None)
+    >>> del h
+    '''
     def __init__(self):
         for cfunc in [_lib.JupyROOTExecutorHandler_GetStdout,
                       _lib.JupyROOTExecutorHandler_GetStderr]:
@@ -49,6 +60,29 @@ class IOHandler(object):
        return outDict,errDict
 
 class Runner(object):
+    ''' Asynchrously run functions
+    >>> import time
+    >>> def f(code):
+    ...    print code
+    >>> r= Runner(f)
+    >>> r.Run("ss")
+    ss
+    >>> r.AsyncRun("ss");time.sleep(1)
+    ss
+    >>> def g(msg):
+    ...    time.sleep(.5)
+    ...    print msg
+    >>> r= Runner(g)
+    >>> r.AsyncRun("Asynchronous");print "Synchronous";time.sleep(1)
+    Synchronous
+    Asynchronous
+    >>> r.AsyncRun("Asynchronous"); print r.HasFinished()
+    False
+    >>> time.sleep(1)
+    Asynchronous
+    >>> print r.HasFinished()
+    True
+    '''
     def __init__(self, function):
         self.function = function
         self.thread = None
@@ -77,10 +111,24 @@ class Runner(object):
 
 
 class JupyROOTDeclarer(Runner):
+    ''' Asynchrously execute declarations
+    >>> import ROOT
+    >>> d = JupyROOTDeclarer()
+    >>> d.Run("int f(){return 3;}")
+    1
+    >>> ROOT.f()
+    3
+    '''
     def __init__(self):
        super(JupyROOTDeclarer, self).__init__(_lib.JupyROOTDeclarer)
 
 class JupyROOTExecutor(Runner):
+    r''' Asynchrously execute process lines
+    >>> import ROOT
+    >>> d = JupyROOTExecutor()
+    >>> d.Run('cout << "Here am I" << endl;')
+    1
+    '''
     def __init__(self):
        super(JupyROOTExecutor, self).__init__(_lib.JupyROOTExecutor)
 
