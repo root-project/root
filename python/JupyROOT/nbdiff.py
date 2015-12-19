@@ -4,6 +4,7 @@ import shutil
 import os
 
 nbExtension=".ipynb"
+getEtcCmd = "root-config --etcdir"
 convCmdTmpl = "ipython nbconvert  --to notebook --ExecutePreprocessor.enabled=True --ExecutePreprocessor.timeout=3600 %s --output %s"
 
 # Replace the criterion according to which a line shall be skipped
@@ -48,10 +49,17 @@ class tmpDirCreator:
            shutil.rmtree(self.dirname)
            print "[tmpDirCreator] Deleting tmp directory %s" %self.dirname
 
+def addEtcToEnvironment():
+    """Add the etc directory of root to the environment under the name of
+    JUPYTER_PATH in order to pick up the kernel specs.
+    """
+    os.environ["JUPYTER_PATH"] = subprocess.check_output(getEtcCmd.split()).strip() + "/notebook"
+
 def canReproduceNotebook(inNBName):
+    addEtcToEnvironment()
     outNBName = inNBName.replace(nbExtension,"_out"+nbExtension)
     convCmd = convCmdTmpl %(inNBName,outNBName)
-    with tmpDirCreator(inNBName) as creator:    
+    with tmpDirCreator(inNBName) as creator:
         subprocess.check_output(convCmd.split(), env = dict(os.environ, IPYTHONDIR=creator.dirname))
     return compareNotebooks(inNBName,outNBName)
 
