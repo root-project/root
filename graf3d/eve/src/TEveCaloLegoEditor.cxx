@@ -20,6 +20,7 @@
 #include "TG3DLine.h"
 
 /** \class TEveCaloLegoEditor
+\ingroup TEve
 GUI editor for TEveCaloLego.
 */
 

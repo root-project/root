@@ -27,45 +27,41 @@
 #include "TClass.h"
 #include "TError.h"
 
-/******************************************************************************/
-// TGLPhysicalShape
-/******************************************************************************/
+/** \class TGLPhysicalShape
+\ingroup opengl
+Concrete physical shape - a GL drawable. Physical shapes are the
+objects the user can actually see, select, move in the viewer. It is
+a placement of the associated local frame TGLLogicaShape into the
+world frame. The draw process is:
 
-//______________________________________________________________________________
-//
-// Concrete physical shape - a GL drawable. Physical shapes are the
-// objects the user can actually see, select, move in the viewer. It is
-// a placement of the associated local frame TGLLogicaShape into the
-// world frame. The draw process is:
-//
-// Load attributes - material colors etc
-// Load translation matrix - placement
-// Load gl name (for selection)
-// Call our associated logical shape Draw() to draw placed shape
-//
-// The physical shape supports translation, scaling and rotation,
-// selection, color changes, and permitted modification flags etc.
-// A physical shape cannot modify or be bound to another (or no)
-// logical shape - hence const & handle. It can perform mutable
-// reference counting on the logical to enable purging.
-//
-// Physical shape also maintains a list of references to it and
-// provides notifications of change and destruction.
-// See class TGLPShapeRef which needs to be sub-classes for real use.
-//
-// See base/src/TVirtualViewer3D for description of common external 3D
-// viewer architecture and how external viewer clients use it.
-//
+Load attributes - material colors etc
+Load translation matrix - placement
+Load gl name (for selection)
+Call our associated logical shape Draw() to draw placed shape
+
+The physical shape supports translation, scaling and rotation,
+selection, color changes, and permitted modification flags etc.
+A physical shape cannot modify or be bound to another (or no)
+logical shape - hence const & handle. It can perform mutable
+reference counting on the logical to enable purging.
+
+Physical shape also maintains a list of references to it and
+provides notifications of change and destruction.
+See class TGLPShapeRef which needs to be sub-classes for real use.
+
+See base/src/TVirtualViewer3D for description of common external 3D
+viewer architecture and how external viewer clients use it.
+*/
 
 ClassImp(TGLPhysicalShape)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a physical shape using arguments:
-///    ID             - unique drawable id.
-///    logicalShape   - bound logical shape
-///    transform      - transform for placement of logical drawing
-///    invertedWind   - use inverted face polygon winding?
-///    rgba           - basic four component (RGBA) diffuse color
+///  - ID             - unique drawable id.
+///  - logicalShape   - bound logical shape
+///  - transform      - transform for placement of logical drawing
+///  - invertedWind   - use inverted face polygon winding?
+///  - rgba           - basic four component (RGBA) diffuse color
 
 TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalShape,
                                    const TGLMatrix & transform, Bool_t invertedWind,
@@ -90,11 +86,11 @@ TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalSha
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a physical shape using arguments:
-///    id             - unique drawable id.
-///    logicalShape   - bound logical shape
-///    transform      - 16 Double_t component transform for placement of logical drawing
-///    invertedWind   - use inverted face polygon winding?
-///    rgba           - basic four component (RGBA) diffuse color
+///  - id             - unique drawable id.
+///  - logicalShape   - bound logical shape
+///  - transform      - 16 Double_t component transform for placement of logical drawing
+///  - invertedWind   - use inverted face polygon winding?
+///  - rgba           - basic four component (RGBA) diffuse color
 
 TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalShape,
                                    const Double_t * transform, Bool_t invertedWind,
@@ -112,7 +108,7 @@ TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalSha
 {
    fLogicalShape->AddRef(this);
 
-   // Temporary hack - invert the 3x3 part of martix as TGeo sends this
+   // Temporary hack - invert the 3x3 part of matrix as TGeo sends this
    // in opp layout to shear/translation parts. Speak to Andrei about best place
    // to fix - probably when filling TBuffer3D - should always be OGL convention?
    fTransform.Transpose3x3();
@@ -310,7 +306,7 @@ void TGLPhysicalShape::SetupGLColors(TGLRnrCtx & rnrCtx, const Float_t* color) c
          // Both need material colors
 
          // Set back diffuse only for clipping where inner (back) faces
-         // are shown. Don't set shinneness or specular as we want
+         // are shown. Don't set shininess or specular as we want
          // back face to appear as 'flat' as possible as crude visual
          // approximation to proper capped clipped solid
          glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, color);
@@ -420,7 +416,7 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate shape-lod, suitible for use under
+/// Calculate shape-lod, suitable for use under
 /// projection defined by 'rnrCtx', taking account of which local
 /// axes of the shape support LOD adjustment, and the global
 /// 'sceneFlags' passed.

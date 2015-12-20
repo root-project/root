@@ -65,14 +65,26 @@ class TGlobalMappedFunction;
 R__EXTERN TVirtualMutex *gROOTMutex;
 
 namespace ROOT {
+namespace Internal {
    class TROOTAllocator;
+
    TROOT *GetROOT2();
+} } // End ROOT::Internal
+
+namespace ROOT {
+   // Enable support for multi-threading within the ROOT code,
+   // in particular, enables the global mutex to make ROOT thread safe/aware.
+   void EnableThreadSafety();
+   // Manage implicit multi-threading within ROOT
+   void EnableImplicitMT(UInt_t numthreads = 0);
+   void DisableImplicitMT();
+   Bool_t IsImplicitMTEnabled();
 }
 
 class TROOT : public TDirectory {
 
 friend class TCling;
-friend TROOT *ROOT::GetROOT2();
+friend TROOT *ROOT::Internal::GetROOT2();
 
 private:
    Int_t           fLineIsProcessing;     //To synchronize multi-threads
@@ -155,7 +167,7 @@ protected:
    void          *operator new(size_t l) { return TObject::operator new(l); }
    void          *operator new(size_t l, void *ptr) { return TObject::operator new(l,ptr); }
 
-   friend class ::ROOT::TROOTAllocator;
+   friend class ::ROOT::Internal::TROOTAllocator;
 
    TListOfFunctions*GetGlobalFunctions();
 
@@ -185,7 +197,7 @@ public:
    TApplication     *GetApplication() const { return fApplication; }
    TInterpreter     *GetInterpreter() const { return fInterpreter; }
    TClass           *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE) const;
-   TClass           *GetClass(const type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE) const;
+   TClass           *GetClass(const std::type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE) const;
    TColor           *GetColor(Int_t color) const;
    const char       *GetConfigOptions() const { return fConfigOptions; }
    const char       *GetConfigFeatures() const { return fConfigFeatures; }
@@ -325,7 +337,9 @@ public:
 
 namespace ROOT {
    TROOT *GetROOT();
-   R__EXTERN TROOT *gROOTLocal;
+   namespace Internal {
+      R__EXTERN TROOT *gROOTLocal;
+   }
 }
 #define gROOT (ROOT::GetROOT())
 

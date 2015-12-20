@@ -23,7 +23,9 @@
 ClassImp(TLine)
 
 /** \class TLine
-A Graphical line
+\ingroup BasicGraphics
+
+A simple line.
 */
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -10,8 +10,10 @@
  *************************************************************************/
 
 /** \class TASPaletteEditor
-//  This is a GUI window to edit a color palette.
-//  It is called by a pull down menu item of TASImage.
+\ingroup asimage
+
+This is a GUI window to edit a color palette.
+It is called by a pull down menu item of TASImage.
 */
 
 #include "TASImage.h"

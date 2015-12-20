@@ -27,7 +27,7 @@ class RooListProxy : public RooArgList, public RooAbsProxy  {
 public:
 
   // Constructors, assignment etc.
-  RooListProxy() : _defValueServer(kTRUE), _defShapeServer(kFALSE) { _iter = createIterator() ; _owner=0 ; } ;
+  RooListProxy() : _defValueServer(kTRUE), _defShapeServer(kFALSE) { _owner=0 ; } ;
   RooListProxy(const char* name, const char* desc, RooAbsArg* owner, 
 	      Bool_t defValueServer=kTRUE, Bool_t defShapeServer=kFALSE) ;
   RooListProxy(const char* name, RooAbsArg* owner, const RooListProxy& other) ;
@@ -54,7 +54,6 @@ protected:
   RooAbsArg* _owner ;       // Pointer to owner
   Bool_t _defValueServer ;  // Propagate value dirty flags?
   Bool_t _defShapeServer ;  // Propagate shape dirty flags?
-  TIterator* _iter ; //! do not persist
 
   virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE, Bool_t factoryInitMode=kFALSE) ;
 

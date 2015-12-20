@@ -298,7 +298,7 @@ bool DictSelectionReader::SecondPass(const clang::RecordDecl &recordDecl)
 {
    using namespace ROOT::TMetaUtils;
 
-   // No interest if we are in the selction namespace
+   // No interest if we are in the selection namespace
    if (InSelectionNamespace(recordDecl)) return true;
 
    std::string className;

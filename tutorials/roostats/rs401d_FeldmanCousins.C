@@ -1,17 +1,17 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'Neutrino Oscillation Example from Feldman & Cousins'
-// author: Kyle Cranmer
-// date March 2009
-//
-// This tutorial shows a more complex example using the FeldmanCousins utility
-// to create a confidence interval for a toy neutrino oscillation experiment.
-// The example attempts to faithfully reproduce the toy example described in Feldman & Cousins'
-// original paper, Phys.Rev.D57:3873-3889,1998.
-//
-// to run it:
-// .x tutorials/roostats/rs401d_FeldmanCousins.C+
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roostats
+/// 'Neutrino Oscillation Example from Feldman & Cousins'
+///
+/// This tutorial shows a more complex example using the FeldmanCousins utility
+/// to create a confidence interval for a toy neutrino oscillation experiment.
+/// The example attempts to faithfully reproduce the toy example described in Feldman & Cousins'
+/// original paper, Phys.Rev.D57:3873-3889,1998.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer
 
 #include "RooGlobalFunc.h"
 #include "RooStats/ConfInterval.h"

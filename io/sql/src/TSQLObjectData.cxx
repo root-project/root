@@ -9,16 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//________________________________________________________________________
-//
-// TSQLObjectData is used in TBufferSQL2 class in reading procedure.
-// It contains data, request from database table for one specifc
-// object for one specific class. For instance, when data for
-// class TH1 required, requests will be done to
-// TH1_ver4 and TH1_raw4 tables and result of these requests
-// will be kept in single TSQLObjectData instance.
-//
-//________________________________________________________________________
+/**
+\class TSQLObjectData
+\ingroup IO
+
+TSQLObjectData is used in TBufferSQL2 class in reading procedure.
+It contains data, request from database table for one specifc
+object for one specific class. For instance, when data for
+class TH1 required, requests will be done to
+TH1_ver4 and TH1_raw4 tables and result of these requests
+will be kept in single TSQLObjectData instance.
+*/
 
 #include "TSQLObjectData.h"
 
@@ -30,6 +31,12 @@
 #include "TSQLClassInfo.h"
 #include "TSQLStructure.h"
 #include "TSQLStatement.h"
+
+/**
+\class TSQLObjectInfo
+\ingroup IO
+Info (classname, version) about object in database
+*/
 
 ClassImp(TSQLObjectInfo)
 
@@ -59,7 +66,11 @@ TSQLObjectInfo::~TSQLObjectInfo()
 {
 }
 
-
+/**
+\class TSQLObjectData
+\ingroup IO
+Keeps the data requested from the SQL server for an object.
+*/
 
 ClassImp(TSQLObjectData)
 

@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofQueryResult                                                    //
-//                                                                      //
-// TQueryResult version adapted to PROOF neeeds.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofQueryResult
+\ingroup proofkernel
+
+TQueryResult version adapted to PROOF neeeds
+
+*/
 
 #include "TDSet.h"
 #include "TError.h"

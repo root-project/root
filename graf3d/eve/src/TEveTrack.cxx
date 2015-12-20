@@ -31,6 +31,7 @@
 #include <functional>
 
 /** \class TEveTrack
+\ingroup TEve
 Visual representation of a track.
 
 If member fDpDs is set, the momentum is reduced on all path-marks that do
@@ -550,6 +551,7 @@ void TEveTrack::SecSelected(TEveTrack* track)
 }
 
 /** \class TEveTrackList
+\ingroup TEve
 A list of tracks supporting change of common attributes and
 selection based on track parameters.
 */

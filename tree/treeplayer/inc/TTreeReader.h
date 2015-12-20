@@ -40,7 +40,9 @@ class TDirectory;
 class TFileCollection;
 
 namespace ROOT {
+namespace Internal {
    class TBranchProxyDirector;
+}
 }
 
 class TTreeReader: public TObject {
@@ -131,12 +133,14 @@ public:
       kEntryChainSetupError, // problem in accessing a chain element, e.g. file without the tree
       kEntryChainFileError, // problem in opening a chain's file
       kEntryDictionaryError, // problem reading dictionary info from tree
+      kEntryLast, // last entry was reached
    };
 
    TTreeReader():
       fDirectory(0),
       fEntryStatus(kEntryNoTree),
-      fDirector(0)
+      fDirector(0),
+      fLastEntry(-1)
    {}
 
    TTreeReader(TTree* tree);
@@ -154,6 +158,8 @@ public:
    Bool_t Next() { return SetEntry(GetCurrentEntry() + 1) == kEntryValid; }
    EEntryStatus SetEntry(Long64_t entry) { return SetEntryBase(entry, kFALSE); }
    EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
+   void SetLastEntry(Long64_t entry) { fLastEntry = entry; }
+   EEntryStatus SetEntriesRange(Long64_t first, Long64_t last);
 
    EEntryStatus GetEntryStatus() const { return fEntryStatus; }
 
@@ -169,12 +175,12 @@ public:
 
 protected:
    void Initialize();
-   ROOT::TNamedBranchProxy* FindProxy(const char* branchname) const {
-      return (ROOT::TNamedBranchProxy*) fProxies.FindObject(branchname); }
+   ROOT::Internal::TNamedBranchProxy* FindProxy(const char* branchname) const {
+      return (ROOT::Internal::TNamedBranchProxy*) fProxies.FindObject(branchname); }
    TCollection* GetProxies() { return &fProxies; }
 
-   void RegisterValueReader(ROOT::TTreeReaderValueBase* reader);
-   void DeregisterValueReader(ROOT::TTreeReaderValueBase* reader);
+   void RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
+   void DeregisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
 
    EEntryStatus SetEntryBase(Long64_t entry, Bool_t local);
 
@@ -187,12 +193,14 @@ private:
    TTree* fTree; // tree that's read
    TDirectory* fDirectory; // directory (or current file for chains)
    EEntryStatus fEntryStatus; // status of most recent read request
-   ROOT::TBranchProxyDirector* fDirector; // proxying director, owned
-   std::deque<ROOT::TTreeReaderValueBase*> fValues; // readers that use our director
+   ROOT::Internal::TBranchProxyDirector* fDirector; // proxying director, owned
+   std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; // readers that use our director
    THashTable   fProxies; //attached ROOT::TNamedBranchProxies; owned
+   Long64_t fLastEntry; //< The last entry to be processed. When set (i.e. >= 0), it provides a way to stop looping over the TTree when we reach a certain entry: Next() returns kEntryLast when GetCurrentEntry() reaches fLastEntry
+   Bool_t fProxiesSet; //< True if the proxies have been set, false otherwise
 
-   friend class ROOT::TTreeReaderValueBase;
-   friend class ROOT::TTreeReaderArrayBase;
+   friend class ROOT::Internal::TTreeReaderValueBase;
+   friend class ROOT::Internal::TTreeReaderArrayBase;
 
    ClassDef(TTreeReader, 0); // A simple interface to read trees
 };

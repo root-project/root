@@ -30,7 +30,6 @@ THttpCallArg::THttpCallArg() :
    fQuery(),
    fPostData(0),
    fPostDataLength(0),
-   fCond(),
    fContentType(),
    fRequestHeader(),
    fHeader(),

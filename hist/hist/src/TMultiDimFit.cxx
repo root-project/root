@@ -13,7 +13,7 @@
  An example in high energy physics is the evaluation of the momentum of
  a charged particle from the observation of its trajectory in a magnetic
  field.  The problem is to relate the momentum of the particle to the
- observations, which may consists of of positional measurements at
+ observations, which may consists of positional measurements at
  intervals along the particle trajectory.
 
  The exact functional relationship between the measured quantities
@@ -36,7 +36,7 @@
  class can take advantage of MINUIT [4] to improve the errors
  of the fitting, thanks to the class TMinuit.
 
- In [5] and[6] H. Wind demonstrates the utility
+ In [5] and [6] H. Wind demonstrates the utility
  of this procedure in the context of tracking, magnetic field
  parameterisation, and so on. The outline of the method used in this
  class is based on Winds discussion, and I refer these two excellents
@@ -48,15 +48,15 @@
  Let \f$ D \f$ by the dependent quantity of interest, which depends smoothly
  on the observable quantities \f$ x_1, \ldots, x_N \f$ which we'll denote by
  \f$\mathbf{x}\f$. Given a training sample of \f$ M\f$ tuples of the form, (TMultiDimFit::AddRow)
- 
+
  \f[
      \left(\mathbf{x}_j, D_j, E_j\right)\quad,
  \f]
  where \f$\mathbf{x}_j = (x_{1,j},\ldots,x_{N,j})\f$ are \f$ N\f$ independent
- variables, \f$ D_j\f$ is the known, quantity dependent at \f$\mathbf{x}_j\f$ and \f$ E_j\f$ is 
+ variables, \f$ D_j\f$ is the known, quantity dependent at \f$\mathbf{x}_j\f$ and \f$ E_j\f$ is
  the square error in \f$ D_j\f$, the class will try to find the parameterization
  \f[
-     D_p(\mathbf{x}) = \sum_{l=1}^{L} c_l \prod_{i=1}^{N} p_{li}\left(x_i\right) 
+     D_p(\mathbf{x}) = \sum_{l=1}^{L} c_l \prod_{i=1}^{N} p_{li}\left(x_i\right)
      = \sum_{l=1}^{L} c_l F_l(\mathbf{x})
  \f]
  such that
@@ -73,7 +73,7 @@
 
  Of course it's more than a little unlikely that \f$ S\f$ will ever become
  exact zero as a result of the procedure outlined below. Therefore, the
- user is asked to provide a minimum relative error \f$ \epsilon\f$ (TMultiDimFit::SetMinRelativeError), 
+ user is asked to provide a minimum relative error \f$ \epsilon\f$ (TMultiDimFit::SetMinRelativeError),
  and \f$ S\f$ will be considered minimized when
 
  \f[
@@ -84,7 +84,7 @@
  In that case, only the coefficients \f$ c_l\f$ is calculated by the class.
 
  ## Limiting the Number of Terms
- As always when dealing with fits, there's a real chance of *over fitting*. As is well-known, it's 
+ As always when dealing with fits, there's a real chance of *over fitting*. As is well-known, it's
  always possible to fit an \f$ N-1\f$ polynomial in \f$ x\f$ to \f$ N\f$ points \f$ (x,y)\f$ with
  \f$\chi^2 = 0\f$, but the polynomial is not likely to fit new data at all [1].
  Therefore, the user is asked to provide an upper limit, \f$ L_{max}\f$ to the number of terms in
@@ -98,7 +98,7 @@
  to perform a regular fit to the dependent quantity \f$ D\f$, using a
  polynomial only in \f$ x_i\f$. The maximum power is \f$ P_{max,i}\f$ is then the
  power that does not significantly improve the one-dimensional
- least-square fit over \f$ x_i\f$ to \f$ D\f$ [5]. 
+ least-square fit over \f$ x_i\f$ to \f$ D\f$ [5].
 
  There are still a huge amount of possible choices for \f$ F_l\f$; in fact
  there are \f$\prod_{i=1}^{N} (P_{max,i} + 1)\f$ possible
@@ -155,7 +155,7 @@
  \f]
  where \f$\mathbf{D} = \left(D_1,\ldots,D_M\right)\f$ is a vector of the
  dependent quantity in the sample. Differentiation with respect to
- \f$ a_j\f$ gives, using [6],
+ \f$ a_j\f$ gives, using [6], <a name="eq:dS2"></a>
  \f[
    \mathbf{D}\bullet\mathbf{w}_l - a_l\mathbf{w}_l^2 = 0
  \f]
@@ -171,13 +171,13 @@
    + \sum^l_{k=1} a_k^2\mathbf{w}_k^2
  \f]
  Using [9], we see that
- \f[
+ \f{eqnarray*}{
    S_l &=& \mathbf{D}^2 - 2 \sum^l_{k=1} a_k^2\mathbf{w}_k^2 +
    \sum^j_{k=1} a_k^2\mathbf{w}_k^2\nonumber\\
    &=& \mathbf{D}^2 - \sum^l_{k=1} a_k^2\mathbf{w}_k^2\nonumber\\
    &=& \mathbf{D}^2 - \sum^l_{k=1} \frac{\left(\mathbf D\bullet \mathbf
    w_k\right)}{\mathbf w_k^2}
- \f]
+ \f}
  So for each new function \f$ F_l\f$ included in the model, we get a
  reduction of the sum of squares of residuals of \f$a_l^2\mathbf{w}_l^2\f$,
  where \f$\mathbf{w}_l\f$ is given by [4] and \f$ a_l\f$ by [9]. Thus, using
@@ -253,7 +253,7 @@
  Having found a parameterization, that is the \f$ F_l\f$'s and \f$ L\f$, that
  minimizes \f$ S\f$, we still need to determine the coefficients
  \f$ c_l\f$. However, it's a feature of how we choose the significant
- functions, that the evaluation of the \f$ c_l\f$'s becomes trivial [5]. To derive 
+ functions, that the evaluation of the \f$ c_l\f$'s becomes trivial [5]. To derive
  \f$\mathbf{c}\f$, we first note that
  equation (4) can be written as
  \f[
@@ -273,7 +273,7 @@
  \f]
  The model \f$\mathsf{W}\mathbf{a}\f$ can therefore be written as
  \f$(\mathsf{F}\mathsf{B}^{-1})\mathbf{a} = \mathsf{F}(\mathsf{B}^{-1}\mathbf{a})\,.\f$
- 
+
  The original model \f$\mathsf{F}\mathbf{c}\f$ is therefore identical with
  this if
  \f[
@@ -290,7 +290,7 @@
  It's important to realize that the training sample should be
  representive of the problem at hand, in particular along the borders
  of the region of interest. This is because the algorithm presented
- here, is a *interpolation*, rahter then a *extrapolation* [5].
+ here, is a *interpolation*, rather then a *extrapolation* [5].
 
  Also, the independent variables \f$ x_{i}\f$ need to be linear
  independent, since the procedure will perform poorly if they are not
@@ -318,7 +318,7 @@
  5. Perform a Principal Component Analysis (using TPrincipal), and use
  to get a linear transformation \f$\mathbf{x} \rightarrow \mathbf{x}^\prime\f$, so that
  \f$\mathbf{x}^\prime\f$ are constrained and linear independent.
- 6. Perform a Principal Component Analysis on 
+ 6. Perform a Principal Component Analysis on
  \f$Q_i = P_i / P^\prime_i\, i = 1, \ldots, 5\f$, to get linear
  indenpendent (among themselves, but not independent of \f$\mathbf{x}\f$) quantities
  \f$\mathbf{Q}^\prime\f$
@@ -339,7 +339,7 @@
  ## Testing the parameterization
  The class also provides functionality for testing the, over the
  training sample, found parameterization (TMultiDimFit::Fit). This is done by passing
- the class a test sample of \f$ M_\f$ tuples of the form 
+ the class a test sample of \f$ M_t\f$ tuples of the form
  \f$(\mathbf{x}_{t,j},D_{t,j}, E_{t,j})\f$, where \f$\mathbf{x}_{t,j}\f$ are the independent
  variables, \f$ D_{t,j}\f$ the known, dependent quantity, and \f$ E_{t,j}\f$ is
  the square error in \f$ D_{t,j}\f$ (TMultiDimFit::AddTestRow).
@@ -366,23 +366,23 @@
  Christian Holm
 
  ## Bibliography
- - Philip R. Bevington and D. Keith Robinson. *Data Reduction and Error Analysis for 
+ - <a name="bevington"></a> Philip R. Bevington and D. Keith Robinson. *Data Reduction and Error Analysis for
    the Physical Sciences*. McGraw-Hill, 2 edition, 1992.
- - R. Brun et al. *Long writeup DD/75-23*, CERN, 1980.
+ - <a name="mudifi"></a> R. Brun et al. *Long writeup DD/75-23*, CERN, 1980.
  - Gene H. Golub and Charles F. van Loan. *Matrix Computations*.
    John Hopkins Univeristy Press, Baltimore, 3 edition, 1996.
- - F. James. *Minuit*. Long writeup D506, CERN, 1998.
- - H. Wind. *Function parameterization*. Proceedings of the 1972 CERN Computing and Data Processing
+ - <a name="minuit"></a>F. James. *Minuit*. Long writeup D506, CERN, 1998.
+ - <a name="wind72"></a>H. Wind. *Function parameterization*. Proceedings of the 1972 CERN Computing and Data Processing
    School, volume 72-21 of Yellow report. CERN, 1972.
- - H. Wind. 1. principal component analysis, 2. pattern recognition for track
+ - <a name="wind81"></a>H. Wind. 1. principal component analysis, 2. pattern recognition for track
    finding, 3. interpolation and functional representation. Yellow report EP/81-12, CERN, 1981.
 
-[1]: TMultiFimFit.html#bevington
-[2]: TMultiFimFit.html#mudifi
-[4]: TMultiFimFit.html#minuit
-[5]: TMultiFimFit.html#wind72
-[6]: TMultiFimFit.html#wind81
-[9]: TMultiFimFit.html#eq:dS2
+[1]: classTMultiDimFit.html#bevington
+[2]: classTMultiDimFit.html#mudifi
+[4]: classTMultiDimFit.html#minuit
+[5]: classTMultiDimFit.html#wind72
+[6]: classTMultiDimFit.html#wind81
+[9]: classTMultiDimFit.html#eq:dS2
 */
 
 

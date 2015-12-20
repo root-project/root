@@ -16,6 +16,8 @@
 #ifndef ROO_POLYNOMIAL
 #define ROO_POLYNOMIAL
 
+#include <vector>
+
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
@@ -43,7 +45,8 @@ protected:
   RooRealProxy _x;
   RooListProxy _coefList ;
   Int_t _lowestOrder ;
-  TIterator* _coefIter ;  //! do not persist
+
+  mutable std::vector<Double_t> _wksp; //! do not persist
 
   Double_t evaluate() const;
 

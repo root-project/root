@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TGraphPolar
+\ingroup BasicGraphics
+
 To draw a polar graph.
 
 TGraphPolar creates a polar graph (including error bars). A TGraphPolar is

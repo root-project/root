@@ -1,15 +1,15 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #305
-// 
-// Multi-dimensional p.d.f.s with conditional p.d.fs in product
-// 
-// pdf = gauss(x,f(y),sx | y ) * gauss(y,ms,sx)    with f(y) = a0 + a1*y
-// 
-//
-// 07/2008 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #305
+///
+///  Multi-dimensional p.d.f.s with conditional p.d.fs in product
+///
+///  pdf = gauss(x,f(y),sx | y ) * gauss(y,ms,sx)    with f(y) = a0 + a1*y
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

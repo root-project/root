@@ -1,5 +1,11 @@
-#   Set visibility attributes for the NA49 geometry
-#        Set Shape attributes
+## \file
+## \ingroup tutorial_pyroot
+## Set visibility attributes for the NA49 geometry
+## Set Shape attributes
+##
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 import ROOT
 

@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TProfile.h"
+#include "TBuffer.h"
 #include "TMath.h"
 #include "TF1.h"
 #include "THLimitsFinder.h"

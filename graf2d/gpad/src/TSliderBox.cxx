@@ -20,6 +20,8 @@ ClassImp(TSliderBox)
 
 
 /** \class TSliderBox
+\ingroup gpad
+
 The moving box in a TSlider
 */
 

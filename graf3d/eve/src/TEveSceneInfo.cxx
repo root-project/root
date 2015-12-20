@@ -16,6 +16,7 @@
 #include "TGLSceneInfo.h"
 
 /** \class TEveSceneInfo
+\ingroup TEve
 TEveUtil representation of TGLSceneInfo.
 */
 

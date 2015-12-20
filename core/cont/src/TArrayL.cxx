@@ -9,13 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TArrayL                                                              //
-//                                                                      //
-// Array of longs (32 or 64 bits per element).                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TArrayL
+\ingroup Containers
+Array of longs (32 or 64 bits per element).
+*/
 
 #include "TArrayL.h"
 #include "TBuffer.h"

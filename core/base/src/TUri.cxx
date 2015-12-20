@@ -9,17 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TUri                                                                 //
-//                                                                      //
-// This class represents a RFC 3986 compatible URI.                     //
-// See http://rfc.net/rfc3986.html.                                     //
-// It provides member functions to set and return the different         //
-// the different parts of an URI. The functionality is that of          //
-// a validating parser.                                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TUri
+
+This class represents a RFC 3986 compatible URI.
+See http://rfc.net/rfc3986.html.
+It provides member functions to set and return the different
+the different parts of an URI. The functionality is that of
+a validating parser.
+*/
 
 #include <ctype.h>    // for tolower()
 #include "TUri.h"
@@ -131,12 +128,13 @@ Bool_t operator== (const TUri &u1, const TUri &u2)
 /// Returns the whole URI -
 /// an implementation of chapter 5.3 component recomposition.
 /// The result URI is composed out of the five basic parts.
-///
+/// ~~~ {.cpp}
 /// URI         = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
 /// hier-part   = "//" authority path-abempty
 ///             / path-absolute
 ///             / path-rootless
 ///             / path-empty
+/// ~~~
 
 const TString TUri::GetUri() const
 {
@@ -242,7 +240,9 @@ Bool_t TUri::IsReference() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set scheme component of URI:
+/// ~~~ {.cpp}
 /// scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+/// ~~~
 
 Bool_t TUri::SetScheme(const TString &scheme)
 {
@@ -262,7 +262,9 @@ Bool_t TUri::SetScheme(const TString &scheme)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE if string qualifies as URI scheme:
+/// ~~~ {.cpp}
 /// scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+/// ~~~
 
 Bool_t TUri::IsScheme(const TString &string)
 {
@@ -273,7 +275,9 @@ Bool_t TUri::IsScheme(const TString &string)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the authority part of the instance:
+/// ~~~ {.cpp}
 /// authority   = [ userinfo "@" ] host [ ":" port ]
+/// ~~~
 
 const TString TUri::GetAuthority() const
 {
@@ -286,7 +290,9 @@ const TString TUri::GetAuthority() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set query component of URI:
+/// ~~~ {.cpp}
 /// query       = *( pchar / "/" / "?" )
+/// ~~~
 
 Bool_t TUri::SetQuery(const TString &query)
 {
@@ -306,7 +312,9 @@ Bool_t TUri::SetQuery(const TString &query)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE if string qualifies as URI query:
+/// ~~~ {.cpp}
 /// query       = *( pchar / "/" / "?" )
+/// ~~~
 
 Bool_t TUri::IsQuery(const TString &string)
 {
@@ -317,7 +325,9 @@ Bool_t TUri::IsQuery(const TString &string)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set authority part of URI:
+/// ~~~ {.cpp}
 /// authority   = [ userinfo "@" ] host [ ":" port ]
+/// ~~~
 ///
 /// Split into components {userinfo@, host, :port},
 /// remember that according to the RFC, it is necessary to
@@ -365,7 +375,9 @@ Bool_t TUri::SetAuthority(const TString &authority)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE if string qualifies as valid URI authority:
+/// ~~~ {.cpp}
 /// authority   = [ userinfo "@" ] host [ ":" port ]
+/// ~~~
 
 Bool_t TUri::IsAuthority(const TString &string)
 {
@@ -385,7 +397,9 @@ Bool_t TUri::IsAuthority(const TString &string)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set userinfo component of URI:
+/// ~~~ {.cpp}
 /// userinfo    = *( unreserved / pct-encoded / sub-delims / ":" )
+/// ~~~
 
 Bool_t TUri::SetUserInfo(const TString &userinfo)
 {
@@ -405,7 +419,9 @@ Bool_t TUri::SetUserInfo(const TString &userinfo)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return kTRUE is string qualifies as valid URI userinfo:
+/// ~~~ {.cpp}
 /// userinfo    = *( unreserved / pct-encoded / sub-delims / ":" )
+/// ~~~
 /// this equals to pchar without the '@' character
 
 Bool_t TUri::IsUserInfo(const TString &string)
@@ -417,8 +433,10 @@ Bool_t TUri::IsUserInfo(const TString &string)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set host component of URI:
+/// ~~~ {.cpp}
 /// RFC 3986:    host = IP-literal / IPv4address / reg-name
 /// implemented: host =  IPv4address / reg-name
+/// ~~~
 
 Bool_t TUri::SetHost(const TString &host)
 {
@@ -434,7 +452,9 @@ Bool_t TUri::SetHost(const TString &host)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set port component of URI:
+/// ~~~ {.cpp}
 /// port        = *DIGIT
+/// ~~~
 
 Bool_t TUri::SetPort(const TString &port)
 {
@@ -449,11 +469,13 @@ Bool_t TUri::SetPort(const TString &port)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set path component of URI:
+/// ~~~ {.cpp}
 /// path          = path-abempty    ; begins with "/" or is empty
 ///               / path-absolute   ; begins with "/" but not "//"
 ///               / path-noscheme   ; begins with a non-colon segment
 ///               / path-rootless   ; begins with a segment
 ///               / path-empty      ; zero characters
+/// ~~~
 
 Bool_t TUri::SetPath(const TString &path)
 {
@@ -468,7 +490,9 @@ Bool_t TUri::SetPath(const TString &path)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set fragment component of URI:
+/// ~~~ {.cpp}
 /// fragment    = *( pchar / "/" / "?" )
+/// ~~~
 
 Bool_t TUri::SetFragment(const TString &fragment)
 {
@@ -482,13 +506,14 @@ Bool_t TUri::SetFragment(const TString &fragment)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if string qualifies as valid fragment component
+/// ~~~ {.cpp}
+/// fragment    = *( pchar / "/" / "?" )
+/// ~~~
 
 Bool_t TUri::IsFragment(const TString &string)
 {
-   // Returns kTRUE if string qualifies as valid fragment component
-   // fragment    = *( pchar / "/" / "?" )
-
    return (TPRegexp(
               "^(" + TString(kURI_pchar) + "|[/?])*$"
            ).Match(string) > 0);
@@ -496,8 +521,8 @@ Bool_t TUri::IsFragment(const TString &string)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Display function,
-/// option "d" .. debug output
-/// anything else .. simply print URI.
+///  - option "d" .. debug output
+///  - anything else .. simply print URI.
 
 void TUri::Print(Option_t *option) const
 {
@@ -564,12 +589,13 @@ void TUri::Reset()
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse URI and set the member variables accordingly,
 /// returns kTRUE if URI validates, and kFALSE otherwise:
+/// ~~~ {.cpp}
 /// URI         = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
 /// hier-part   = "//" authority path-abempty
 ///             / path-absolute
 ///             / path-rootless
 ///             / path-empty
-///
+/// ~~~
 
 Bool_t TUri::SetUri(const TString &uri)
 {
@@ -623,10 +649,12 @@ Bool_t TUri::SetUri(const TString &uri)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// ~~~ {.cpp}
 /// hier-part   = "//" authority path-abempty
 ///             / path-absolute
 ///             / path-rootless
 ///             / path-empty
+/// ~~~
 
 const TString TUri::GetHierPart() const
 {
@@ -638,9 +666,11 @@ const TString TUri::GetHierPart() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// relative-part = "//" authority path-abempty
+/// ~~~ {.cpp}
 ///               / path-absolute
 ///               / path-noscheme
 ///               / path-empty
+/// ~~~
 
 const TString TUri::GetRelativePart() const
 {
@@ -652,11 +682,12 @@ const TString TUri::GetRelativePart() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns hier-part component of URI
+/// ~~~ {.cpp}
 /// hier-part   = "//" authority path-abempty
 ///             / path-absolute
 ///             / path-rootless
 ///             / path-empty
-///
+/// ~~~
 
 Bool_t TUri::SetHierPart(const TString &hier)
 {
@@ -701,11 +732,12 @@ Bool_t TUri::SetHierPart(const TString &hier)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE if string qualifies as hier-part:
-///
+/// ~~~ {.cpp}
 /// hier-part   = "//" authority path-abempty
 ///             / path-absolute
 ///             / path-rootless
 ///             / path-empty
+/// ~~~
 
 Bool_t TUri::IsHierPart(const TString &string)
 {
@@ -717,10 +749,12 @@ Bool_t TUri::IsHierPart(const TString &string)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE is string qualifies as relative-part:
+/// ~~~ {.cpp}
 /// relative-part = "//" authority path-abempty
 ///               / path-absolute
 ///               / path-noscheme
 ///               / path-empty
+/// ~~~
 
 Bool_t TUri::IsRelativePart(const TString &string)
 {
@@ -732,10 +766,12 @@ Bool_t TUri::IsRelativePart(const TString &string)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE is string qualifies as relative-part:
+/// ~~~ {.cpp}
 /// relative-part = "//" authority path-abempty
 ///               / path-absolute
 ///               / path-noscheme
 ///               / path-empty
+/// ~~~
 
 Bool_t TUri::SetRelativePart(const TString &relative)
 {
@@ -805,12 +841,14 @@ Bool_t TUri::IsHost(const TString &string)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retruns kTRUE if string qualifies as valid path component:
+/// Returns kTRUE if string qualifies as valid path component:
+/// ~~~ {.cpp}
 /// path          = path-abempty    ; begins with "/" or is empty
 ///               / path-absolute   ; begins with "/" but not "//"
 ///               / path-noscheme   ; begins with a non-colon segment
 ///               / path-rootless   ; begins with a segment
 ///               / path-empty      ; zero characters
+/// ~~~
 
 Bool_t TUri::IsPath(const TString &string)
 {
@@ -823,8 +861,10 @@ Bool_t TUri::IsPath(const TString &string)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE if string qualifies as valid path-abempty component:
+/// ~~~ {.cpp}
 ///    path-abempty  = *( "/" segment )
 ///    segment       = *pchar
+/// ~~~
 
 Bool_t TUri::IsPathAbempty(const TString &string)
 {
@@ -835,9 +875,11 @@ Bool_t TUri::IsPathAbempty(const TString &string)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE if string qualifies as valid path-absolute component
+/// ~~~ {.cpp}
 ///    path-absolute = "/" [ segment-nz *( "/" segment ) ]
 ///    segment-nz    = 1*pchar
 ///    segment       = *pchar
+/// ~~~
 
 Bool_t TUri::IsPathAbsolute(const TString &string)
 {
@@ -848,9 +890,11 @@ Bool_t TUri::IsPathAbsolute(const TString &string)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE if string qualifies as valid path-noscheme component:
+/// ~~~ {.cpp}
 /// path-noscheme = segment-nz-nc *( "/" segment )
 /// segment-nz-nc = 1*( unreserved / pct-encoded / sub-delims / "@" )
 /// segment       = *pchar
+/// ~~~
 
 Bool_t TUri::IsPathNoscheme(const TString &string)
 {
@@ -861,7 +905,9 @@ Bool_t TUri::IsPathNoscheme(const TString &string)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE if string qualifies as valid path-rootless component:
+/// ~~~ {.cpp}
 /// path-rootless = segment-nz *( "/" segment )
+/// ~~~
 
 Bool_t TUri::IsPathRootless(const TString &string)
 {
@@ -872,7 +918,9 @@ Bool_t TUri::IsPathRootless(const TString &string)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE if string qualifies as valid path-empty component:
+/// ~~~ {.cpp}
 /// path-empty    = 0<pchar>
+/// ~~~
 
 Bool_t TUri::IsPathEmpty(const TString &string)
 {
@@ -881,7 +929,9 @@ Bool_t TUri::IsPathEmpty(const TString &string)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE if string qualifies as valid port component:
+/// ~~~ {.cpp}
 /// RFC 3986: port        = *DIGIT
+/// ~~~
 
 Bool_t TUri::IsPort(const TString &string)
 {
@@ -890,11 +940,11 @@ Bool_t TUri::IsPort(const TString &string)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE if string qualifies as valid reg-name:
-///
+/// ~~~ {.cpp}
 ///  reg-name    = *( unreserved / pct-encoded / sub-delims )
 ///  sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
 ///                  / "*" / "+" / "," / ";" / "="
-///
+/// ~~~
 
 Bool_t TUri::IsRegName(const TString &string)
 {
@@ -905,9 +955,8 @@ Bool_t TUri::IsRegName(const TString &string)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE, if string holds a valid IPv4 address
 /// currently only decimal variant supported.
-/// Existence of leadig 0s or numeric range remains unchecked
+/// Existence of leading 0s or numeric range remains unchecked
 /// IPv4address = dec-octet "." dec-octet "." dec-octet "." dec-octet.
-///
 
 Bool_t TUri::IsIpv4(const TString &string)
 {
@@ -918,7 +967,9 @@ Bool_t TUri::IsIpv4(const TString &string)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE, if the given string does not contain
 /// RFC 3986 reserved characters
+/// ~~~ {.cpp}
 /// unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
+/// ~~~
 
 Bool_t TUri::IsUnreserved(const TString &string)
 {

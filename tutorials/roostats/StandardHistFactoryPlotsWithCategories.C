@@ -1,34 +1,39 @@
-/*
- StandardHistFactoryPlotsWithCategories
-
- Author: Kyle Cranmer
- date: Spring. 2011
-
- This is a standard demo that can be used with any ROOT file
- prepared in the standard way.  You specify:
- - name for input ROOT file
- - name of workspace inside ROOT file that holds model and data
- - name of ModelConfig that specifies details for calculator tools
- - name of dataset
-
- With default parameters the macro will attempt to run the
- standard hist2workspace example and read the ROOT file
- that it produces.
-
- The macro will scan through all the categories in a simPdf find the corresponding
- observable.  For each cateogry, it will loop through each of the nuisance parameters
- and plot
- - the data
- - the nominal model (blue)
- - the +Nsigma (red)
- - the -Nsigma (green)
-
- You can specify how many sigma to vary by changing nSigmaToVary.
- You can also change the signal rate by changing muVal.
-
- The script produces a lot plots, you can merge them by doing:
- gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=merged.pdf `ls *pdf`
- */
+/// \file
+/// \ingroup tutorial_roostats
+///  StandardHistFactoryPlotsWithCategories
+///
+///  This is a standard demo that can be used with any ROOT file
+///  prepared in the standard way.  You specify:
+///  - name for input ROOT file
+///  - name of workspace inside ROOT file that holds model and data
+///  - name of ModelConfig that specifies details for calculator tools
+///  - name of dataset
+///
+///  With default parameters the macro will attempt to run the
+///  standard hist2workspace example and read the ROOT file
+///  that it produces.
+///
+///  The macro will scan through all the categories in a simPdf find the corresponding
+///  observable.  For each category, it will loop through each of the nuisance parameters
+///  and plot
+///  - the data
+///  - the nominal model (blue)
+///  - the +Nsigma (red)
+///  - the -Nsigma (green)
+///
+///  You can specify how many sigma to vary by changing nSigmaToVary.
+///  You can also change the signal rate by changing muVal.
+///
+///  The script produces a lot plots, you can merge them by doing:
+/// ~~~ {.cpp}
+///  gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=merged.pdf `ls *pdf`
+/// ~~~
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer
 
 #include "TFile.h"
 #include "TROOT.h"

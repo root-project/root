@@ -20,12 +20,12 @@
 #include "TMath.h"
 #include "THLimitsFinder.h"
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class TGLAxis
+\ingroup opengl
+GL Axis.
 
-/* Begin_Html
-<center><h2>GL Axis</h2></center>
 To draw a 3D axis in a GL window. The labels are drawn using FTGL.
-End_Html */
+*/
 
 ClassImp(TGLAxis)
 
@@ -36,7 +36,6 @@ TGLAxis::TGLAxis(): TAttLine(1,1,1), TAttText(20,0.,1,42,0.04)
 {
    Init();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default initialization.
@@ -61,7 +60,6 @@ void TGLAxis::Init()
    fGridLength      = 0.;   // 0 means no grid
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -73,20 +71,19 @@ TGLAxis::~TGLAxis()
    if (fText)   delete fText;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint GL Axis.
 ///
-/// p1, p2     : Axis position in the 3D space.
-/// wmin, wmax : Minimum and maximum values along the axis. wmin < wmax.
-/// ndiv       : Number of axis divisions. It is an integer in the form
-///              "ttsspp" where "tt" is the number of tertiary divisions,
-///              "ss" is the number of secondary divisions and "pp" the
-///              number of primary divisions.
-/// opt        : Options.
-///              "N" - By default the number of divisions is optimized to
-///                    get a nice labeling. When option "N" is given, the
-///                    number of divisions is not optimized.
+///  - p1, p2     : Axis position in the 3D space.
+///  - wmin, wmax : Minimum and maximum values along the axis. wmin < wmax.
+///  - ndiv       : Number of axis divisions. It is an integer in the form
+///                 "ttsspp" where "tt" is the number of tertiary divisions,
+///                 "ss" is the number of secondary divisions and "pp" the
+///                 number of primary divisions.
+///  - opt        : Options.
+///                 "N" - By default the number of divisions is optimized to
+///                 get a nice labeling. When option "N" is given, the
+///                 number of divisions is not optimized.
 
 void TGLAxis::PaintGLAxis(const Double_t p1[3], const Double_t p2[3],
                           Double_t wmin,  Double_t wmax, Int_t ndiv,
@@ -165,7 +162,6 @@ void TGLAxis::PaintGLAxis(const Double_t p1[3], const Double_t p2[3],
    glPopMatrix();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint horizontal axis body at position (0,0,0)
 
@@ -182,7 +178,6 @@ void TGLAxis::PaintGLAxisBody()
    glVertex3d(fAxisLength, 0., 0.);
    glEnd();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint axis tick marks.
@@ -254,7 +249,6 @@ void TGLAxis::PaintGLAxisTickMarks()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint axis labels on the main tick marks.
 
@@ -298,7 +292,6 @@ void TGLAxis::PaintGLAxisLabels()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute ticks positions.
 
@@ -332,7 +325,6 @@ void TGLAxis::TicksPositions(Option_t *opt)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute ticks positions. Linear and not optimized.
 
@@ -364,7 +356,6 @@ void TGLAxis::TicksPositionsNoOpt()
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute ticks positions. Linear and optimized.
@@ -433,7 +424,6 @@ void TGLAxis::TicksPositionsOpt()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Do labels.
 
@@ -449,7 +439,6 @@ void TGLAxis::DoLabels()
       fLabels[i] = Form("%g",fWmin+i*dw);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set labels' angles.

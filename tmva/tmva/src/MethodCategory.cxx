@@ -38,6 +38,8 @@
 // is due to different locations/angles.                                  //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "TMVA/MethodCategory.h"
+
 #include <algorithm>
 #include <iomanip>
 #include <vector>
@@ -53,16 +55,21 @@
 #include "TDirectory.h"
 #include "TTreeFormula.h"
 
-#include "TMVA/MethodCategory.h"
-#include "TMVA/Tools.h"
 #include "TMVA/ClassifierFactory.h"
-#include "TMVA/Timer.h"
-#include "TMVA/Types.h"
-#include "TMVA/PDF.h"
 #include "TMVA/Config.h"
-#include "TMVA/Ranking.h"
-#include "TMVA/VariableInfo.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
 #include "TMVA/DataSetManager.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MethodCompositeBase.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/PDF.h"
+#include "TMVA/Ranking.h"
+#include "TMVA/Timer.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableInfo.h"
 #include "TMVA/VariableRearrangeTransform.h"
 
 REGISTER_METHOD(Category)

@@ -47,72 +47,72 @@ class TFile : public TDirectoryFile {
   friend class TFilePrefetch;
 
 public:
-   // Asynchronous open request status
+   /// Asynchronous open request status
    enum EAsyncOpenStatus { kAOSNotAsync = -1,  kAOSFailure = 0,
                            kAOSInProgress = 1, kAOSSuccess = 2 };
-   // Open timeout constants
+   /// Open timeout constants
    enum EOpenTimeOut { kInstantTimeout = 0, kEternalTimeout = 999999999 };
 
-   // TTreeCache flushing semantics
+   /// TTreeCache flushing semantics
    enum ECacheAction { kDisconnect = 0, kDoNotDisconnect = 1 };
 
 protected:
-   Double_t         fSumBuffer;      //Sum of buffer sizes of objects written so far
-   Double_t         fSum2Buffer;     //Sum of squares of buffer sizes of objects written so far
-   Long64_t         fBytesWrite;     //Number of bytes written to this file
-   Long64_t         fBytesRead;      //Number of bytes read from this file
-   Long64_t         fBytesReadExtra; //Number of extra bytes (overhead) read by the readahead buffer
-   Long64_t         fBEGIN;          //First used byte in file
-   Long64_t         fEND;            //Last used byte in file
-   Long64_t         fSeekFree;       //Location on disk of free segments structure
-   Long64_t         fSeekInfo;       //Location on disk of StreamerInfo record
-   Int_t            fD;              //File descriptor
-   Int_t            fVersion;        //File format version
-   Int_t            fCompress;       //Compression level and algorithm
-   Int_t            fNbytesFree;     //Number of bytes for free segments structure
-   Int_t            fNbytesInfo;     //Number of bytes for StreamerInfo record
-   Int_t            fWritten;        //Number of objects written so far
-   Int_t            fNProcessIDs;    //Number of TProcessID written to this file
-   Int_t            fReadCalls;      //Number of read calls ( not counting the cache calls )
-   TString          fRealName;       //Effective real file name (not original url)
-   TString          fOption;         //File options
-   Char_t           fUnits;          //Number of bytes for file pointers
-   TList           *fFree;           //Free segments linked list table
-   TArrayC         *fClassIndex;     //!Index of TStreamerInfo classes written to this file
-   TObjArray       *fProcessIDs;     //!Array of pointers to TProcessIDs
-   Long64_t         fOffset;         //!Seek offset cache
-   TArchiveFile    *fArchive;        //!Archive file from which we read this file
-   TFileCacheRead  *fCacheRead;      //!Pointer to the read cache (if any)
-   TMap            *fCacheReadMap;   //!Pointer to the read cache (if any)
-   TFileCacheWrite *fCacheWrite;     //!Pointer to the write cache (if any)
-   Long64_t         fArchiveOffset;  //!Offset at which file starts in archive
-   Bool_t           fIsArchive : 1;  //!True if this is a pure archive file
-   Bool_t           fNoAnchorInName : 1; //!True if we don't want to force the anchor to be appended to the file name
-   Bool_t           fIsRootFile : 1; //!True is this is a ROOT file, raw file otherwise
-   Bool_t           fInitDone : 1;   //!True if the file has been initialized
-   Bool_t           fMustFlush : 1;  //!True if the file buffers must be flushed
-   Bool_t           fIsPcmFile : 1;  //!True if the file is a ROOT pcm file.
-   TFileOpenHandle *fAsyncHandle;    //!For proper automatic cleanup
-   EAsyncOpenStatus fAsyncOpenStatus; //!Status of an asynchronous open request
-   TUrl             fUrl;            //!URL of file
+   Double_t         fSumBuffer;      ///<Sum of buffer sizes of objects written so far
+   Double_t         fSum2Buffer;     ///<Sum of squares of buffer sizes of objects written so far
+   Long64_t         fBytesWrite;     ///<Number of bytes written to this file
+   Long64_t         fBytesRead;      ///<Number of bytes read from this file
+   Long64_t         fBytesReadExtra; ///<Number of extra bytes (overhead) read by the readahead buffer
+   Long64_t         fBEGIN;          ///<First used byte in file
+   Long64_t         fEND;            ///<Last used byte in file
+   Long64_t         fSeekFree;       ///<Location on disk of free segments structure
+   Long64_t         fSeekInfo;       ///<Location on disk of StreamerInfo record
+   Int_t            fD;              ///<File descriptor
+   Int_t            fVersion;        ///<File format version
+   Int_t            fCompress;       ///<Compression level and algorithm
+   Int_t            fNbytesFree;     ///<Number of bytes for free segments structure
+   Int_t            fNbytesInfo;     ///<Number of bytes for StreamerInfo record
+   Int_t            fWritten;        ///<Number of objects written so far
+   Int_t            fNProcessIDs;    ///<Number of TProcessID written to this file
+   Int_t            fReadCalls;      ///<Number of read calls ( not counting the cache calls )
+   TString          fRealName;       ///<Effective real file name (not original url)
+   TString          fOption;         ///<File options
+   Char_t           fUnits;          ///<Number of bytes for file pointers
+   TList           *fFree;           ///<Free segments linked list table
+   TArrayC         *fClassIndex;     ///<!Index of TStreamerInfo classes written to this file
+   TObjArray       *fProcessIDs;     ///<!Array of pointers to TProcessIDs
+   Long64_t         fOffset;         ///<!Seek offset cache
+   TArchiveFile    *fArchive;        ///<!Archive file from which we read this file
+   TFileCacheRead  *fCacheRead;      ///<!Pointer to the read cache (if any)
+   TMap            *fCacheReadMap;   ///<!Pointer to the read cache (if any)
+   TFileCacheWrite *fCacheWrite;     ///<!Pointer to the write cache (if any)
+   Long64_t         fArchiveOffset;  ///<!Offset at which file starts in archive
+   Bool_t           fIsArchive : 1;  ///<!True if this is a pure archive file
+   Bool_t           fNoAnchorInName : 1; ///<!True if we don't want to force the anchor to be appended to the file name
+   Bool_t           fIsRootFile : 1; ///<!True is this is a ROOT file, raw file otherwise
+   Bool_t           fInitDone : 1;   ///<!True if the file has been initialized
+   Bool_t           fMustFlush : 1;  ///<!True if the file buffers must be flushed
+   Bool_t           fIsPcmFile : 1;  ///<!True if the file is a ROOT pcm file.
+   TFileOpenHandle *fAsyncHandle;    ///<!For proper automatic cleanup
+   EAsyncOpenStatus fAsyncOpenStatus; ///<!Status of an asynchronous open request
+   TUrl             fUrl;            ///<!URL of file
 
-   TList           *fInfoCache;      //!Cached list of the streamer infos in this file
-   TList           *fOpenPhases;     //!Time info about open phases
+   TList           *fInfoCache;      ///<!Cached list of the streamer infos in this file
+   TList           *fOpenPhases;     ///<!Time info about open phases
 
    static TList    *fgAsyncOpenRequests; //List of handles for pending open requests
 
-   static TString   fgCacheFileDir;          //Directory where to locally stage files
-   static Bool_t    fgCacheFileDisconnected; //Indicates, we trust in the files in the cache dir without stat on the cached file
-   static Bool_t    fgCacheFileForce;        //Indicates, to force all READ to CACHEREAD
-   static UInt_t    fgOpenTimeout;           //Timeout for open operations in ms  - 0 corresponds to blocking i/o
-   static Bool_t    fgOnlyStaged ;           //Before the file is opened, it is checked, that the file is staged, if not, the open fails
+   static TString   fgCacheFileDir;          ///<Directory where to locally stage files
+   static Bool_t    fgCacheFileDisconnected; ///<Indicates, we trust in the files in the cache dir without stat on the cached file
+   static Bool_t    fgCacheFileForce;        ///<Indicates, to force all READ to CACHEREAD
+   static UInt_t    fgOpenTimeout;           ///<Timeout for open operations in ms  - 0 corresponds to blocking i/o
+   static Bool_t    fgOnlyStaged ;           ///<Before the file is opened, it is checked, that the file is staged, if not, the open fails
 
-   static std::atomic<Long64_t>  fgBytesWrite;            //Number of bytes written by all TFile objects
-   static std::atomic<Long64_t>  fgBytesRead;             //Number of bytes read by all TFile objects
-   static std::atomic<Long64_t>  fgFileCounter;           //Counter for all opened files
-   static std::atomic<Int_t>     fgReadCalls;             //Number of bytes read from all TFile objects
-   static Int_t     fgReadaheadSize;         //Readahead buffer size
-   static Bool_t    fgReadInfo;              //if true (default) ReadStreamerInfo is called when opening a file
+   static std::atomic<Long64_t>  fgBytesWrite;            ///<Number of bytes written by all TFile objects
+   static std::atomic<Long64_t>  fgBytesRead;             ///<Number of bytes read by all TFile objects
+   static std::atomic<Long64_t>  fgFileCounter;           ///<Counter for all opened files
+   static std::atomic<Int_t>     fgReadCalls;             ///<Number of bytes read from all TFile objects
+   static Int_t     fgReadaheadSize;         ///<Readahead buffer size
+   static Bool_t    fgReadInfo;              ///<if true (default) ReadStreamerInfo is called when opening a file
    virtual EAsyncOpenStatus GetAsyncOpenStatus() { return fAsyncOpenStatus; }
    virtual void  Init(Bool_t create);
    Bool_t        FlushWriteCache();
@@ -148,18 +148,18 @@ private:
                                Int_t netopt = 0);
 
 public:
-   // TFile status bits
+   /// TFile status bits. BIT(13) is taken up by TObject
    enum EStatusBits {
       kRecovered     = BIT(10),
       kHasReferences = BIT(11),
       kDevNull       = BIT(12),
-      kWriteError    = BIT(14), // BIT(13) is taken up by TObject
+      kWriteError    = BIT(14),
       kBinaryFile    = BIT(15),
       kRedirected    = BIT(16)
    };
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
    enum { kStartBigFile  = 2000000000 };
-   // File type
+   /// File type
    enum EFileType { kDefault = 0, kLocal = 1, kNet = 2, kWeb = 3, kFile = 4, kMerge = 5};
 
    TFile();
@@ -311,19 +311,21 @@ public:
 R__EXTERN TFile   *gFile;
 #endif
 
-//
-// Class holding info about the file being opened
-//
+/** 
+\class TFileOpenHandle
+\ingroup IO
+Class holding info about the file being opened
+*/
 class TFileOpenHandle : public TNamed {
 
 friend class TFile;
 friend class TAlienFile;
 
 private:
-   TString  fOpt;        // Options
-   Int_t    fCompress;   // Compression level and algorithm
-   Int_t    fNetOpt;     // Network options
-   TFile   *fFile;       // TFile instance of the file being opened
+   TString  fOpt;        ///< Options
+   Int_t    fCompress;   ///< Compression level and algorithm
+   Int_t    fNetOpt;     ///< Network options
+   TFile   *fFile;       ///< TFile instance of the file being opened
 
    TFileOpenHandle(TFile *f) : TNamed("",""), fOpt(""), fCompress(1),
                                fNetOpt(0), fFile(f) { }

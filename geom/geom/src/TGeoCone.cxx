@@ -898,7 +898,10 @@ Double_t TGeoCone::SafetyS(const Double_t *point, Bool_t in, Double_t dz, Double
          saf[1] = TGeoShape::SafetySeg(r,point[2], rmax2, dz, rmin2, dz, !in);
    }
    // Safety to inner part
-   saf[2] = TGeoShape::SafetySeg(r,point[2], rmin1, -dz, rmin2, dz, in);
+   if (rmin1>0 || rmin2>0)
+      saf[2] = TGeoShape::SafetySeg(r,point[2], rmin2, dz, rmin1, -dz, !in);
+   else 
+      saf[2] = TGeoShape::Big();   
    saf[3] = TGeoShape::SafetySeg(r,point[2], rmax1, -dz, rmax2, dz, !in);
    return saf[TMath::LocMin(4,saf)];
 }

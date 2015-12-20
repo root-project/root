@@ -42,18 +42,12 @@
 #if defined(MAC_OS_X_VERSION_10_5)
 #   define HAVE_UTMPX_H
 #   define UTMP_NO_ADDR
-#   ifndef ut_user
-#      define ut_user ut_name
-#   endif
 #endif
 
 #if defined(R__FBSD)
 #   include <sys/param.h>
 #   if __FreeBSD_version >= 900007
 #      define HAVE_UTMPX_H
-#      ifndef ut_user
-#        define ut_user ut_name
-#      endif
 #   endif
 #endif
 
@@ -98,6 +92,8 @@
 #else
 #define ROOTBINARY "root.exe"
 #endif
+
+#define ROOTNBBINARY "rootnb.exe"
 
 extern void PopupLogo(bool);
 extern void WaitLogo();
@@ -186,13 +182,37 @@ static int ReadUtmp()
    return 0;
 }
 
+namespace {
+   // Depending on the platform the struct utmp (or utmpx) has either ut_name or ut_user
+   // which are semantically equivalent. Instead of using preprocessor magic,
+   // which is bothersome for cxx modules use SFINAE.
+
+   template<typename T>
+   struct ut_name {
+      template<typename U = T, typename std::enable_if<std::is_member_pointer<decltype(&U::ut_name)>::value, int>::type = 0>
+      static char getValue(U* ue, int) {
+         return ue->ut_name[0];
+      }
+
+      template<typename U = T, typename std::enable_if<std::is_member_pointer<decltype(&U::ut_user)>::value, int>::type = 0>
+      static char getValue(U* ue, long) {
+         return ue->ut_user[0];
+      }
+   };
+
+   static char get_ut_name(STRUCT_UTMP *ue) {
+      // 0 is an integer literal forcing an overload pickup in case both ut_name and ut_user are present.
+      return ut_name<STRUCT_UTMP>::getValue(ue, 0);
+   }
+}
+
 static STRUCT_UTMP *SearchEntry(int n, const char *tty)
 {
    STRUCT_UTMP *ue = gUtmpContents;
 
    while (n--) {
-      if (ue->ut_name[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
-         return ue;
+      if (get_ut_name(ue) && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
+        return ue;
       ue++;
    }
    return 0;
@@ -423,6 +443,7 @@ static void PrintUsage(char *pname)
    fprintf(stderr, "  -l : do not show splash screen\n");
    fprintf(stderr, "  -x : exit on exception\n");
    fprintf(stderr, " dir : if dir is a valid directory cd to it before executing\n");
+   fprintf(stderr, " --notebook : execute ROOT notebook\n");
    fprintf(stderr, "\n");
    fprintf(stderr, "  -?       : print usage\n");
    fprintf(stderr, "  -h       : print usage\n");
@@ -451,6 +472,7 @@ int main(int argc, char **argv)
    // In batch mode don't show splash screen, idem for no logo mode,
    // in about mode show always splash screen
    bool batch = false, about = false;
+   bool notebook = false;
    int i;
    for (i = 1; i < argc; i++) {
       if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
@@ -458,12 +480,38 @@ int main(int argc, char **argv)
          PrintUsage(argv[0]);
          return 1;
       }
-      if (!strcmp(argv[i], "-b"))      batch   = true;
-      if (!strcmp(argv[i], "-l"))      gNoLogo = true;
-      if (!strcmp(argv[i], "-ll"))     gNoLogo = true;
-      if (!strcmp(argv[i], "-a"))      about   = true;
-      if (!strcmp(argv[i], "-config")) gNoLogo = true;
+      if (!strcmp(argv[i], "-b"))         batch    = true;
+      if (!strcmp(argv[i], "-l"))         gNoLogo  = true;
+      if (!strcmp(argv[i], "-ll"))        gNoLogo  = true;
+      if (!strcmp(argv[i], "-a"))         about    = true;
+      if (!strcmp(argv[i], "-config"))    gNoLogo  = true;
+      if (!strcmp(argv[i], "--notebook")) notebook = true;
    }
+
+   if (notebook) {
+      // Build command
+#ifdef ROOTBINDIR
+      snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTNBBINARY);
+#else
+      snprintf(arg0, sizeof(arg0), "%s/bin/%s", getenv("ROOTSYS"), ROOTNBBINARY);
+#endif
+
+      // Execute ROOT notebook binary
+      execl(arg0, arg0, NULL);
+  
+      // Exec failed
+#ifndef ROOTBINDIR
+      fprintf(stderr,
+              "%s: can't start ROOT notebook -- this option is only available when building with CMake, please check that %s/bin/%s exists\n",
+              argv[0], getenv("ROOTSYS"), ROOTNBBINARY);
+#else
+      fprintf(stderr, "%s: can't start ROOT notebook -- this option is only available when building with CMake, please check that %s/%s exists\n",
+              argv[0], ROOTBINDIR, ROOTNBBINARY);
+#endif
+
+      return 1;
+   }
+
    if (batch)
       gNoLogo = true;
    if (about) {

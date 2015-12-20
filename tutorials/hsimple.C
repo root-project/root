@@ -1,3 +1,23 @@
+/// \file
+/// \ingroup Tutorials
+///  This program creates :
+///    - a one dimensional histogram
+///    - a two dimensional histogram
+///    - a profile histogram
+///    - a memory-resident ntuple
+///
+///  These objects are filled with some random numbers and saved on a file.
+///  If get=1 the macro returns a pointer to the TFile of "hsimple.root"
+///          if this file exists, otherwise it is created.
+///  The file "hsimple.root" is created in $ROOTSYS/tutorials if the caller has
+///  write access to this directory, otherwise the file is created in $PWD
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include <TFile.h>
 #include <TNtuple.h>
 #include <TH2.h>
@@ -12,18 +32,6 @@
 
 TFile *hsimple(Int_t get=0)
 {
-//  This program creates :
-//    - a one dimensional histogram
-//    - a two dimensional histogram
-//    - a profile histogram
-//    - a memory-resident ntuple
-//
-//  These objects are filled with some random numbers and saved on a file.
-//  If get=1 the macro returns a pointer to the TFile of "hsimple.root"
-//          if this file exists, otherwise it is created.
-//  The file "hsimple.root" is created in $ROOTSYS/tutorials if the caller has
-//  write access to this directory, otherwise the file is created in $PWD
-
    TString filename = "hsimple.root";
    TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("hsimple.C","");

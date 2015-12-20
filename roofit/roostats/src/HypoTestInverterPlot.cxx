@@ -12,15 +12,14 @@
    HypoTestInverterPlot class
 **/
 
-#include <cmath>
+// include header file of this class
+#include "RooStats/HypoTestInverterPlot.h"
 
 // include other header files
 #include "RooStats/HybridResult.h"
-
-// include header file of this class 
-#include "RooStats/HypoTestInverterPlot.h"
 #include "RooStats/HypoTestInverterResult.h"
 #include "RooStats/HypoTestPlot.h"
+#include "RooStats/SamplingDistribution.h"
 
 #include "TGraphErrors.h"
 #include "TGraphAsymmErrors.h"
@@ -32,6 +31,8 @@
 #include "TH1.h"
 #include "TPad.h"
 #include "Math/DistFuncMathCore.h"
+
+#include <cmath>
 
 using namespace std;
 

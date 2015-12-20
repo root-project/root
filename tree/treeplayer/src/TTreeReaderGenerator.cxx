@@ -32,6 +32,7 @@
 #include "TVirtualStreamerInfo.h"
 
 namespace ROOT {
+namespace Internal {
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Constructor. Analyzes the tree and writes selector.
@@ -1016,4 +1017,6 @@ void )CODE" << fClassname << R"CODE(::Terminate()
 })CODE";
       ofsc.close();
    }
-}
+
+} // namespace Internal
+} // namespace ROOT

@@ -55,6 +55,12 @@
 #include "TMVA/Configurable.h"
 #endif
 
+#include "TMVA/Types.h"
+#include "TMVA/Results.h"
+#include "TMVA/VariableInfo.h"
+
+#include "TRandom3.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 

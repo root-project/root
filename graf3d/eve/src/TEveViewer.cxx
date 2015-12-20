@@ -28,7 +28,8 @@
 #include "TSystem.h"
 
 /** \class TEveViewer
- Eve representation of TGLViewer.
+\ingroup TEve
+Eve representation of TGLViewer.
 
 The gl-viewer is owned by this class and is deleted in destructor.
 
@@ -320,6 +321,7 @@ Bool_t TEveViewer::HandleElementPaste(TEveElement* el)
 }
 
 /** \class TEveViewerList
+\ingroup TEve
 List of Viewers providing common operations on TEveViewer collections.
 */
 

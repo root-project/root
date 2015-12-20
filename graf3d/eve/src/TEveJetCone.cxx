@@ -16,6 +16,7 @@
 #include "TMath.h"
 
 /** \class TEveJetCone
+\ingroup TEve
 Draws a jet cone with leading particle is specified in (eta,phi) and
 cone radius is given.
 
@@ -184,6 +185,7 @@ Bool_t TEveJetCone::IsInTransitionRegion() const
 }
 
 /** \class TEveJetConeProjected
+\ingroup TEve
 Projection of TEveJetCone.
 */
 

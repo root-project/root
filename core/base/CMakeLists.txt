@@ -3,7 +3,11 @@
 ############################################################################
 
 ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h)
-ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src src/*.cxx)
+
+if(root7)
+    set(root7src v7/src/*.cxx)
+endif()
+ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src src/*.cxx ${root7src})
 
 include_directories(${CMAKE_SOURCE_DIR}/graf3d/g3d/inc)
 include_directories(${CMAKE_SOURCE_DIR}/gui/gui/inc)
@@ -30,7 +34,7 @@ list(REMOVE_ITEM sources TROOT.cxx roota.cxx)
 ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${sources})
 
 if(builtin_pcre)
-  add_dependencies(Base PCRE)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(Base PCRE)
 endif()
 
 ROOT_INSTALL_HEADERS()

@@ -13,6 +13,7 @@
 #include "TEveTrans.h"
 
 /** \class TEvePlot3D
+\ingroup TEve
 Description of TEvePlot3D
 */
 

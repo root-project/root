@@ -61,8 +61,9 @@ void DrawPolyMarkerAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T 
 ClassImp(TPadPainter)
 
 /** \class TPadPainter
-Implement TVirtualPadPainter which is an attempt to abstract painting operations
-furthermore.
+\ingroup gpad
+
+Implement TVirtualPadPainter which abstracts painting operations.
 */
 
 ////////////////////////////////////////////////////////////////////////////////

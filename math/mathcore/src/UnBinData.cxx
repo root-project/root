@@ -11,6 +11,7 @@
 // Implementation file for class UnBinData
 
 #include "Fit/UnBinData.h"
+#include "Fit/DataVector.h"
 #include "Math/Error.h"
 
 #include <cassert>

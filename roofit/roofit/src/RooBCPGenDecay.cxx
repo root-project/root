@@ -17,18 +17,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Implement standard CP physics model with S and C (no mention of lambda)
-// Suitably stolen and modified from RooBCPEffDecay
-// END_HTML
-//
+/**
+\file RooBCPGenDecay.cxx
+\class RooBCPGenDecay
+\ingroup Roofit
 
-#include "RooFit.h"
+Implement standard CP physics model with S and C (no mention of lambda)
+Suitably stolen and modified from RooBCPEffDecay
+**/
 
-#include "Riostream.h"
-#include "Riostream.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooBCPGenDecay.h"
@@ -54,7 +51,7 @@ RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
 			       const RooResolutionModel& model, DecayType type) :
   RooAbsAnaConvPdf(name,title,model,t), 
   _avgC("C","Coefficient of cos term",this,a),
-  _avgS("S","Coefficient of cos term",this,b),
+  _avgS("S","Coefficient of sin term",this,b),
   _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
   _delMistag("delMistag","Delta mistag rate",this,delMistag),  
   _mu("mu","Tagg efficiency difference",this,mu),  

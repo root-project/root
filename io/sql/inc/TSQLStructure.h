@@ -12,15 +12,6 @@
 #ifndef ROOT_TSQLStructure
 #define ROOT_TSQLStructure
 
-
-/////////////////////////////////////////////////////////////////////////
-//                                                                     //
-// TSQLStructure is special class, used in TSQLBuffer for data convers //
-//                                                                     //
-/////////////////////////////////////////////////////////////////////////
-
-
-
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
@@ -57,10 +48,10 @@ class TBufferSQL2;
 class TSQLColumnData : public TObject {
 
 protected:
-   TString     fName;             //!  name of the table column
-   TString     fType;             //!  type of the table column
-   TString     fValue;            //!  value of the table column
-   Bool_t      fNumeric;          //!  for numeric quotes (double quotes) are not required
+   TString     fName;             ///<!  name of the table column
+   TString     fType;             ///<!  type of the table column
+   TString     fValue;            ///<!  value of the table column
+   Bool_t      fNumeric;          ///<!  for numeric quotes (double quotes) are not required
 public:
    TSQLColumnData();
    TSQLColumnData(const char* name,
@@ -84,10 +75,10 @@ public:
 class TSQLTableData : public TObject {
 
 protected:
-   TSQLFile*      fFile;           //!
-   TSQLClassInfo* fInfo;           //!
-   TObjArray      fColumns;        //! collection of columns
-   TObjArray*     fColInfos;       //! array with TSQLClassColumnInfo, used later for TSQLClassInfo
+   TSQLFile*      fFile;           ///<!
+   TSQLClassInfo* fInfo;           ///<!
+   TObjArray      fColumns;        ///<! collection of columns
+   TObjArray*     fColInfos;       ///<! array with TSQLClassColumnInfo, used later for TSQLClassInfo
 
    TString DefineSQLName(const char* fullname);
    Bool_t HasSQLName(const char* sqlname);
@@ -241,7 +232,7 @@ public:
    };
 
 
-   ClassDef(TSQLStructure, 1); // Table/structure description used internally by YBufferSQL.
+   ClassDef(TSQLStructure, 1); // Table/structure description used internally by TBufferSQL.
 };
 
 // text constants, used in SQL I/O

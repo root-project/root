@@ -1037,7 +1037,7 @@ int test18() {
   iret |= compare(ifail,0,"sym7x7 inversion");
   SMatrix<double,7> Id = S*Sinv;
   for (int i = 0; i < 7; ++i)
-    iret |= compare(Id(i,i),1.,"inv result");
+     iret |= compare(Id(i,i),1.,"inv result",10);
 
   double sum = 0;
   for (int i = 0; i < 7; ++i)
@@ -1061,7 +1061,7 @@ int test18() {
   iret |= compare(ifail,0,"7x7 inversion");
   Id = M*Minv;
   for (int i = 0; i < 7; ++i)
-    iret |= compare(Id(i,i),1.,"inv result");
+     iret |= compare(Id(i,i),1.,"inv result",10);
 
   sum = 0;
   for (int i = 0; i < 7; ++i)
@@ -1095,14 +1095,14 @@ int test19() {
   //std::cout << S << "\n" << Sinv << "\n" << Id << "\n";
 
   for (int i = 0; i < 7; ++i)
-    iret |= compare(Id(i,i),float(1.),"inv sym result");
+     iret |= compare(Id(i,i),float(1.),"inv sym result",50);
 
   double sum = 0;
   for (int i = 0; i < 7; ++i)
     for (int j = 0; j <i; ++j)
       sum+= std::fabs(Id(i,j) );  // sum of off diagonal elements
 
-  iret |= compare(sum < 1.E-5, true,"inv sym off diag");
+  iret |= compare(sum < 1.E-4, true,"inv sym off diag");
 
   // now test inversion of general
   SMatrix<float,7> M;
@@ -1122,14 +1122,14 @@ int test19() {
   //std::cout << M << "\n" << Minv << "\n" << Id << "\n";
 
   for (int i = 0; i < 7; ++i)
-    iret |= compare(Id(i,i),float(1.),"inv result");
+     iret |= compare(Id(i,i),float(1.),"inv result",50);
 
   sum = 0;
   for (int i = 0; i < 7; ++i)
     for (int j = 0; j <i; ++j)
       sum+= std::fabs(Id(i,j) );  // sum of off diagonal elements
 
-  iret |= compare(sum < 1.E-5, true,"inv off diag");
+  iret |= compare(sum < 1.E-4, true,"inv off diag");
 
 
   return iret;

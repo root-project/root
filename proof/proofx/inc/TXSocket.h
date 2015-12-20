@@ -22,9 +22,6 @@
 
 #define DFLT_CONNECTMAXTRY           10
 
-#ifndef ROOT_TMutex
-#include "TMutex.h"
-#endif
 #ifndef ROOT_TSemaphore
 #include "TSemaphore.h"
 #endif
@@ -51,6 +48,7 @@
 #endif
 
 #include <list>
+#include <mutex>
 
 class TObjString;
 class TXSockBuf;
@@ -98,7 +96,7 @@ private:
 
    // Asynchronous messages
    TSemaphore          fASem;          // Control access to conn async msg queue
-   TMutex             *fAMtx;          // To protect async msg queue
+   std::recursive_mutex fAMtx;         // To protect async msg queue
    Bool_t              fAWait;         // kTRUE if waiting at the async msg queue
    std::list<TXSockBuf *> fAQue;          // list of asynchronous messages
    Int_t               fByteLeft;      // bytes left in the first buffer
@@ -108,7 +106,7 @@ private:
    TSemaphore          fAsynProc;      // Control actions while processing async messages
 
    // Interrupts
-   TMutex             *fIMtx;          // To protect interrupt queue
+   std::recursive_mutex fIMtx;         // To protect interrupt queue
    kXR_int32           fILev;          // Highest received interrupt
    Bool_t              fIForward;      // Whether the interrupt should be propagated
 
@@ -128,7 +126,7 @@ private:
    static Bool_t       fgInitDone;     // Avoid initializing more than once
 
    // List of spare buffers
-   static TMutex       fgSMtx;          // To protect spare list
+   static std::mutex   fgSMtx;          // To protect spare list
    static std::list<TXSockBuf *> fgSQue; // list of spare buffers
 
    // Manage asynchronous message
@@ -138,6 +136,9 @@ private:
 
    // Post a message into the queue for asynchronous processing
    void                PostMsg(Int_t type, const char *msg = 0);
+
+   // Wake up all threads waiting for at the semaphore (used by TXSlave)
+   void                PostSemAll();
 
    // Auxilliary
    Int_t               GetLowSocket() const { return (fConn ? fConn->GetLowSocket() : -1); }
@@ -152,10 +153,6 @@ public:
 
    TXSocket(const char *url, Char_t mode = 'M', Int_t psid = -1, Char_t ver = -1,
             const char *logbuf = 0, Int_t loglevel = -1, TXHandler *handler = 0);
-#if 0
-   TXSocket(const TXSocket &xs);
-   TXSocket& operator=(const TXSocket& xs);
-#endif
    virtual ~TXSocket();
 
    virtual void        Close(Option_t *opt = "");
@@ -215,15 +212,19 @@ public:
    void                SendUrgent(Int_t type, Int_t int1, Int_t int2);
 
    // Interrupt the low level socket
-   inline void         SetInterrupt(Bool_t i = kTRUE) { R__LOCKGUARD(fAMtx);
+   inline void         SetInterrupt(Bool_t i = kTRUE) {
+                                        std::lock_guard<std::recursive_mutex> lock(fAMtx);
                                         fRDInterrupt = i;
                                         if (i && fConn) fConn->SetInterrupt();
                                         if (i && fAWait) fASem.Post(); }
-   inline Bool_t       IsInterrupt()  { R__LOCKGUARD(fAMtx); return fRDInterrupt; }
+   inline Bool_t       IsInterrupt()  { std::lock_guard<std::recursive_mutex> lock(fAMtx);
+                                        return fRDInterrupt; }
    // Set / Check async msg queue waiting status
-   inline void         SetAWait(Bool_t w = kTRUE) { R__LOCKGUARD(fAMtx); fAWait = w; }
-   inline Bool_t       IsAWait()  { R__LOCKGUARD(fAMtx); return fAWait; }
-
+   inline void         SetAWait(Bool_t w = kTRUE) {
+                                        std::lock_guard<std::recursive_mutex> lock(fAMtx);
+                                        fAWait = w; }
+   inline Bool_t       IsAWait()  { std::lock_guard<std::recursive_mutex> lock(fAMtx);
+                                        return fAWait; }
    // Flush the asynchronous queue
    Int_t               Flush();
 
@@ -297,10 +298,10 @@ public:
    void         SetLoc(const char *loc = "") { fLoc = loc; }
 
 private:
-   TMutex       fMutex;     // Protect access to the sockets-ready list
-   Int_t        fPipe[2];   // Pipe for input monitoring
-   TString      fLoc;       // Location string
-   TList        fReadySock;    // List of sockets ready to be read
+   std::recursive_mutex fMutex;  // Protect access to the sockets-ready list
+   Int_t        fPipe[2];        // Pipe for input monitoring
+   TString      fLoc;            // Location string
+   TList        fReadySock;      // List of sockets ready to be read
 };
 
 //

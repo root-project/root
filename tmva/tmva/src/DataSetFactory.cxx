@@ -78,6 +78,9 @@
 #include "TMVA/Event.h"
 #endif
 
+#include "TMVA/Types.h"
+#include "TMVA/VariableInfo.h"
+
 using namespace std;
 
 TMVA::DataSetFactory* TMVA::DataSetFactory::fgInstance = 0;

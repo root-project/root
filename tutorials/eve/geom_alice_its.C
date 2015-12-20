@@ -1,7 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Shows geometry of ALICE ITS.
+/// \file
+/// \ingroup tutorial_eve
+/// Shows geometry of ALICE ITS.
+///
+/// \image html eve_geom_alice_its.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 #include "TEveManager.h"
 #include "TEveGeoNode.h"

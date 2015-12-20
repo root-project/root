@@ -23,12 +23,19 @@
 
 namespace RooStats {
 
+
+   /*
+     Utility class to plot conditional MLE of nuisance parameters vs. Parameters of Interest
+
+     \ingroup Roostats
+   */
+
   class ProfileInspector {
 
    public:
     ProfileInspector();
 
-    // Destructor of SamplingDistribution
+    // Destructor 
     virtual ~ProfileInspector();
 
     TList * GetListOfProfilePlots( RooAbsData& data, RooStats::ModelConfig * config);

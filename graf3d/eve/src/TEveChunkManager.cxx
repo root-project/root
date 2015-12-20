@@ -12,6 +12,7 @@
 #include "TEveChunkManager.h"
 
 /** \class TEveChunkManager
+\ingroup TEve
 Vector-like container with chunked memory allocation.
 
 Allocation chunk can accommodate fN atoms of byte-size fS each.

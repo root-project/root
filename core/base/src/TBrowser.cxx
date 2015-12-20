@@ -9,18 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Using a TBrowser one can browse all ROOT objects. It shows in a list //
-// on the left side of the window all browsable ROOT classes. Selecting //
-// one of the classes displays, in the iconbox on the right side, all   //
-// objects in the class. Selecting one of the objects in the iconbox,   //
-// will place all browsable objects in a new list and draws the         //
-// contents of the selected class in the iconbox. And so on....         //
-//                                                                      //
-//Begin_Html <img src="gif/browser.gif"> End_Html                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBrowser
+Using a TBrowser one can browse all ROOT objects. It shows in a list
+on the left side of the window all browsable ROOT classes. Selecting
+one of the classes displays, in the icon-box on the right side, all
+objects in the class. Selecting one of the objects in the icon-box,
+will place all browsable objects in a new list and draws the
+contents of the selected class in the icon-box. And so on....
+
+\image html base_browser.png
+*/
 
 #include "TBrowser.h"
 #include "TGuiFactory.h"
@@ -34,11 +32,8 @@
 #include "TClass.h"
 #include "TApplication.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBrowserTimer                                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBrowserTimer
+*/
 
 class TBrowserTimer : public TTimer {
 
@@ -52,16 +47,13 @@ public:
    Bool_t Notify();
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBrowserObject                                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBrowserObject
+This class is designed to wrap a Foreign object in order to
+inject it into the Browse sub-system.
+*/
 
 class TBrowserObject : public TNamed
 {
-   // This class is designed to wrap a Foreign object in order to
-   // inject it into the Browse sub-system.
 
 public:
 
@@ -276,7 +268,9 @@ void TBrowser::Add(TObject *obj, const char *name, Int_t check)
 /// Add foreign object with name to browser.
 /// 'cl' is the type use to store the value of obj.
 /// So literally the following pseudo code should be correct:
+///~~~ {.cpp}
 ///    `cl->GetName()` * ptr = (`cl->GetName()`*) obj;
+///~~~
 /// and the value of obj is not necessarily the start of the object.
 /// If check < 0 (default) no check box is drawn, if 0 then
 /// unchecked checkbox is added, if 1 checked checkbox is added.
@@ -356,7 +350,7 @@ void TBrowser::Create(TObject *obj)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute default action for selected object (action is specified
-/// in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file).
+/// in the `$HOME/.root.mimes` or `$ROOTSYS/etc/root.mimes file`).
 
 void TBrowser::ExecuteDefaultAction(TObject *obj)
 {
@@ -393,14 +387,9 @@ void TBrowser::SetSelected(TObject *clickedObject)
    fLastSelectedObject = clickedObject;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TBrowserTimer                                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-/// Called whenever timer times out.
+/** \class  TBrowserTimer
+Called whenever timer times out.
+*/
 
 Bool_t TBrowserTimer::Notify()
 {
@@ -418,14 +407,10 @@ Bool_t TBrowserTimer::Notify()
    return kFALSE;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TBrowserObject                                                      //
-//                                                                      //
-//  This is a wrapper class to emulate the TObject interface            //
-//  around an object of a non-TObject class                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBrowserObject
+This is a wrapper class to emulate the TObject interface
+around an object of a non-TObject class
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

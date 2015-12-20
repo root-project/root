@@ -8,17 +8,32 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+/**
+  \defgroup proof PROOF
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProof                                                               //
-//                                                                      //
-// This class controls a Parallel ROOT Facility, PROOF, cluster.        //
-// It fires the worker servers, it keeps track of how many workers are  //
-// running, it keeps track of the workers running status, it broadcasts //
-// messages to all workers, it collects results, etc.                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+  Classes defining the Parallel ROOT Facility, PROOF, a framework for parallel analysis of ROOT TTrees. 
+
+*/
+
+/**
+  \defgroup proofkernel PROOF kernel Libraries
+  \ingroup proof
+
+  The PROOF kernel libraries (libProof, libProofPlayer, libProofDraw) contain the classes defining
+  the kernel of the PROOF facility, i.e. the protocol and the utilities to steer data processing
+  and handling of results. 
+
+*/
+
+/** \class TProof
+\ingroup proofkernel
+
+This class controls a Parallel ROOT Facility, PROOF, cluster.
+It fires the worker servers, it keeps track of how many workers are
+running, it keeps track of the workers running status, it broadcasts
+messages to all workers, it collects results, etc.
+
+*/
 
 #include <stdlib.h>
 #include <fcntl.h>
@@ -57,7 +72,6 @@
 #include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TMonitor.h"
-#include "TMutex.h"
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TParameter.h"
@@ -72,12 +86,10 @@
 #include "TRandom.h"
 #include "TRegexp.h"
 #include "TROOT.h"
-#include "TSemaphore.h"
 #include "TSlave.h"
 #include "TSocket.h"
 #include "TSortedList.h"
 #include "TSystem.h"
-#include "TThread.h"
 #include "TTree.h"
 #include "TUrl.h"
 #include "TFileCollection.h"
@@ -87,8 +99,9 @@
 #include "TSelector.h"
 #include "TPRegexp.h"
 
+#include <mutex>
+
 TProof *gProof = 0;
-TVirtualMutex *gProofMutex = 0;
 
 // Rotating indicator
 char TProofMergePrg::fgCr[4] = {'-', '\\', '|', '/'};
@@ -261,8 +274,6 @@ void TSlaveInfo::SetSysInfo(SysInfo_t si)
 }
 
 ClassImp(TProof)
-
-TSemaphore    *TProof::fgSemaphore = 0;
 
 //------------------------------------------------------------------------------
 
@@ -589,8 +600,6 @@ void TProof::InitMembers()
    fQueryMode = kSync;
    fDynamicStartup = kFALSE;
 
-   fCloseMutex = 0;
-
    fMergersSet = kFALSE;
    fMergersByHost = kFALSE;
    fMergers = 0;
@@ -692,7 +701,6 @@ TProof::~TProof()
    SafeDelete(fRecvMessages);
    SafeDelete(fInputData);
    SafeDelete(fRunningDSets);
-   SafeDelete(fCloseMutex);
    if (fWrksOutputReady) {
       fWrksOutputReady->SetOwner(kFALSE);
       delete fWrksOutputReady;
@@ -967,16 +975,12 @@ Int_t TProof::Init(const char *, const char *conffile,
             return 0;
          // Client: Is Master in dynamic startup mode?
          if (!IsMaster()) {
-            Int_t dyn;
+            Int_t dyn = 0;
             GetRC("Proof.DynamicStartup", dyn);
             if (dyn != 0) fDynamicStartup = kTRUE;
          }
       }
    }
-
-   if (fgSemaphore)
-      SafeDelete(fgSemaphore);
-
    // we are now properly initialized
    fValid = kTRUE;
 
@@ -1800,8 +1804,8 @@ Bool_t TProof::StartSlaves(Bool_t attach)
 
 void TProof::Close(Option_t *opt)
 {
-   {  R__LOCKGUARD2(fCloseMutex);
-
+   {  std::lock_guard<std::recursive_mutex> lock(fCloseMutex);
+   
       fValid = kFALSE;
       if (fSlaves) {
          if (fIntHandler)
@@ -1822,8 +1826,7 @@ void TProof::Close(Option_t *opt)
       }
    }
 
-   {
-      R__LOCKGUARD2(gROOTMutex);
+   {  R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(this);
 
       if (fChains) {
@@ -4518,8 +4521,7 @@ Bool_t TProof::CreateMerger(TSlave *sl, Int_t port)
 
 void TProof::MarkBad(TSlave *wrk, const char *reason)
 {
-   R__LOCKGUARD2(fCloseMutex);
-
+   std::lock_guard<std::recursive_mutex> lock(fCloseMutex);
 
    // We may have been invalidated in the meanwhile: nothing to do in such a case
    if (!IsValid()) return;
@@ -4680,7 +4682,7 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
 
 void TProof::MarkBad(TSocket *s, const char *reason)
 {
-   R__LOCKGUARD2(fCloseMutex);
+   std::lock_guard<std::recursive_mutex> lock(fCloseMutex);
 
    // We may have been invalidated in the meanwhile: nothing to do in such a case
    if (!IsValid()) return;
@@ -12639,7 +12641,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
       // into parts
       TString dsns( dsname.Data() ), enl;
       Ssiz_t eli = dsns.Index("?enl=");
-      TFileCollection *fc;
+      TFileCollection *fc = nullptr;
       if (eli != kNPOS) {
          enl = dsns(eli+5, dsns.Length());
          dsns.Remove(eli, dsns.Length()-eli);

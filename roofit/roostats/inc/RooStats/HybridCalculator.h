@@ -23,7 +23,11 @@
 #include "RooStats/ToyMCSampler.h"
 #endif
 
-/**
+
+
+namespace RooStats {
+
+   /**
 
 This class implements the Hypothesis test calculation using an hybrid (frequentist/bayesian) procedure. 
 A frequentist sampling of the test statistic distribution is obtained but with mariginalization of the nuisance parameters.
@@ -35,8 +39,6 @@ The use of the of ToyMCSampler as the TestStatSampler is assumed.
 
 */
 
-
-namespace RooStats {
 
    class HybridCalculator : public HypoTestCalculatorGeneric {
 
@@ -65,7 +67,7 @@ namespace RooStats {
       }
 
 
-      // Override the distribution used for marginalizing nuisance parameters that is inferred from ModelConfig
+      /// Override the distribution used for marginalizing nuisance parameters that is inferred from ModelConfig
       virtual void ForcePriorNuisanceNull(RooAbsPdf& priorNuisance) { 
          if(fPriorNuisanceNullExternal == false) delete fPriorNuisanceNull;
          fPriorNuisanceNull = &priorNuisance; fPriorNuisanceNullExternal = true; 
@@ -91,20 +93,20 @@ namespace RooStats {
          }
       }
 
-      // set number of toys
+      /// set number of toys
       void SetToys(int toysNull, int toysAlt) { fNToysNull = toysNull; fNToysAlt = toysAlt; }
 
-      // set least number of toys in tails
+      /// set least number of toys in tails
       void SetNToysInTails(int toysNull, int toysAlt) { fNToysNullTail = toysNull; fNToysAltTail = toysAlt; }
 
    protected:
-      // check whether all input is consistent
+      /// check whether all input is consistent
       int CheckHook(void) const;
 
-      // configure TestStatSampler for the Null run
+      /// configure TestStatSampler for the Null run
       int PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const;
 
-      // configure TestStatSampler for the Alt run
+      /// configure TestStatSampler for the Alt run
       int PreAltHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const;
 
    protected:

@@ -54,6 +54,16 @@ THREADO      := $(call stripsrc,$(THREADS:.cxx=.o))
 
 THREADDEP    := $(THREADO:.o=.d) $(THREADDO:.o=.d)
 
+ifeq ($(BUILDTBB),yes)
+THREADIMTS   := $(MODDIRS)/TImplicitMT.cxx
+THREADIMTO   := $(call stripsrc,$(THREADIMTS:.cxx=.o))
+THREADIMTDEP := $(THREADIMTO:.o=.d)
+else
+THREADIMTS   :=
+THREADIMTO   :=
+THREADIMTDEP :=
+endif
+
 THREADLIB    := $(LPATH)/libThread.$(SOEXT)
 THREADMAP    := $(THREADLIB:.$(SOEXT)=.rootmap)
 
@@ -76,10 +86,12 @@ INCLUDEFILES += $(THREADDEP)
 include/%.h:    $(THREADDIRI)/%.h
 		cp $< $@
 
-$(THREADLIB):   $(THREADO) $(THREADDO) $(ORDER_) $(MAINLIBS) $(THREADLIBDEP)
+$(THREADLIB):   $(THREADO) $(THREADDO) $(THREADIMTO) \
+		   $(ORDER_) $(MAINLIBS) $(THREADLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libThread.$(SOEXT) $@ "$(THREADO) $(THREADDO)" \
-		   "$(THREADLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB)"
+		   "$(SOFLAGS)" libThread.$(SOEXT) $@ \
+		   "$(THREADO) $(THREADDO) $(THREADIMTO)" \
+		   "$(THREADLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB) $(TBBLIBDIR) $(TBBLIB)"
 
 $(call pcmrule,THREAD)
 	$(noop)
@@ -106,3 +118,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
+##### extra rules ######
+ifeq ($(BUILDTBB),yes)
+$(THREADO) $(THREADIMTO): CXXFLAGS += $(TBBINCDIR:%=-I%)
+endif

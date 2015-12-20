@@ -75,6 +75,7 @@
 #include "TMVA/Event.h"
 #include "TMVA/Tools.h"
 #include "TMVA/PDEFoam.h"
+#include "TMVA/PDEFoamKernelBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
 

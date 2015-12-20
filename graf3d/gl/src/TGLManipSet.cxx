@@ -24,13 +24,15 @@
 #include <KeySymbols.h>
 #include <TVirtualX.h>
 
-//______________________________________________________________________
-//
-// Combine all available manipulators in a collection.
-//
-// At first I wanted to merge them back into TGLManip (to have a
-// single class) but then it seemed somehow messy.
-// Maybe next time.
+/** \class TGLManipSet
+\ingroup opengl
+
+Combine all available manipulators in a collection.
+
+At first I wanted to merge them back into TGLManip (to have a
+single class) but then it seemed somehow messy.
+Maybe next time.
+*/
 
 ClassImp(TGLManipSet);
 
@@ -66,11 +68,8 @@ void TGLManipSet::SetPShape(TGLPhysicalShape* shape)
       fManip[i]->Attach(shape);
 }
 
-/**************************************************************************/
-/**************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Mouse has enetered this element.
+/// Mouse has entered this element.
 /// Always accept.
 
 Bool_t TGLManipSet::MouseEnter(TGLOvlSelectRecord& /*selRec*/)

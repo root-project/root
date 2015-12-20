@@ -24,6 +24,8 @@ const Double_t kPI = 3.14159265358979323846;
 ClassImp(TEllipse)
 
 /** \class TEllipse
+\ingroup BasicGraphics
+
 Draw Ellipses.
 
 The ellipse can be truncated and rotated. It is defined by its center `(x1,y1)`

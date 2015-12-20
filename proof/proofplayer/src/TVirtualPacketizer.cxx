@@ -9,27 +9,25 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualPacketizer                                                   //
-//                                                                      //
-// The packetizer is a load balancing object created for each query.    //
-// It generates packets to be processed on PROOF worker servers.        //
-// A packet is an event range (begin entry and number of entries) or    //
-// object range (first object and number of objects) in a TTree         //
-// (entries) or a directory (objects) in a file.                        //
-// Packets are generated taking into account the performance of the     //
-// remote machine, the time it took to process a previous packet on     //
-// the remote machine, the locality of the database files, etc.         //
-//                                                                      //
-// TVirtualPacketizer includes common parts of PROOF packetizers.       //
-// Look in subclasses for details.                                      //
-// The default packetizer is TPacketizerAdaptive.                       //
-// To use an alternative one, for instance - the TPacketizer, call:     //
-// proof->SetParameter("PROOF_Packetizer", "TPacketizer");              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TVirtualPacketizer
+\ingroup proofkernel
 
+The packetizer is a load balancing object created for each query.
+It generates packets to be processed on PROOF worker servers.
+A packet is an event range (begin entry and number of entries) or
+object range (first object and number of objects) in a TTree
+(entries) or a directory (objects) in a file.
+Packets are generated taking into account the performance of the
+remote machine, the time it took to process a previous packet on
+the remote machine, the locality of the database files, etc.
+
+TVirtualPacketizer includes common parts of PROOF packetizers.
+Look in subclasses for details.
+The default packetizer is TPacketizerAdaptive (TPacketizer for Proof-Lite).
+To use an alternative one, for instance - the TPacketizer, call:
+proof->SetParameter("PROOF_Packetizer", "TPacketizer");
+
+*/
 
 #include "TVirtualPacketizer.h"
 #include "TEnv.h"

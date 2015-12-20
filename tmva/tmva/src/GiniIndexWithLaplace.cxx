@@ -40,6 +40,8 @@
 
 #include "TMVA/GiniIndexWithLaplace.h"
 
+#include "Rtypes.h"
+
 ClassImp(TMVA::GiniIndexWithLaplace)
 
 ////////////////////////////////////////////////////////////////////////////////

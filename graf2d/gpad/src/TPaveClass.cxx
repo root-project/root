@@ -17,7 +17,9 @@ ClassImp(TPaveClass)
 
 
 /** \class TPaveClass
-A TPaveClass is a TPaveLabel specialized to process classes inside a TClassTree.
+\ingroup gpad
+
+A TPaveLabel specialized to process classes inside a TClassTree.
 A TPaveClass object is used by the TClassTree to represent a class.
 A TPaveClass has the same graphical representation as a TPaveLabel.
 

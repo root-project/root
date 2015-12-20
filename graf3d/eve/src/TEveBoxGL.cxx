@@ -18,6 +18,7 @@
 #include "TMath.h"
 
 /** \class TEveBoxGL
+\ingroup TEve
 OpenGL renderer class for TEveBox.
 */
 
@@ -224,6 +225,7 @@ void TEveBoxGL::DirectDraw(TGLRnrCtx&) const
 
 
 /** \class TEveBoxProjectedGL
+\ingroup TEve
 OpenGL renderer class for TEveBoxProjected.
 */
 

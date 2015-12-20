@@ -9,16 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
 
-/*
-SamplingDistPlot :
-
-This class provides simple and straightforward utilities to plot SamplingDistribution
-objects.
-*/
 
 #include "RooStats/SamplingDistPlot.h"
+
+#include "RooStats/SamplingDistribution.h"
 
 #include "RooRealVar.h"
 #include "TStyle.h"

@@ -1,21 +1,41 @@
-// example of using multiroot finder
-// based on GSL algorithm
-// Find the root of Rosenbrock system of equations
-// f1(x,y) = a(1-x)
-// f2(x,y) = b(y-x^2)
-//  with 1 = 1, b=10
-//
-// The MultiRootFinder is based on GSL and it requires the MathMore library
-// installed
-//
-// Usage:
-//  >.x exampleMultiRoot.C()
-// or
-// >.x exampleMultiRoot(algoname,printlevel)
-//
-// where algoname is for an algorithm not using the derivatives:
-//  hybridS (default) , hybrid, dnewton, broyden
-//
+/// \file
+/// \ingroup tutorial_math
+/// Example of using multiroot finder based on GSL algorithm.
+/// Find the root of Rosenbrock system of equations:
+/// \f[
+/// f1(x,y) = a(1-x)
+/// \f]
+/// \f[
+/// f2(x,y) = b(y-x^2)
+/// \f]
+/// with:
+/// \f[
+/// a = 1, b=10
+/// \f]
+///
+/// The MultiRootFinder is based on GSL and it requires the MathMore library
+/// installed
+///
+/// Usage:
+///
+/// ~~~ {.cpp}
+///  >.x exampleMultiRoot.C()
+/// ~~~
+///
+/// or
+///
+/// ~~~ {.cpp}
+/// >.x exampleMultiRoot(algoname,printlevel)
+/// ~~~
+///
+/// where algoname is for an algorithm not using the derivatives:
+///  hybridS (default) , hybrid, dnewton, broyden
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Lorenzo Moneta
+
 #include "RConfigure.h"
 
 #ifdef R__HAS_MATHMORE
@@ -36,7 +56,6 @@ void exampleMultiRoot(const char * algo = 0, int printlevel = 1) {
    Error("exampleMultiRoot","libMathMore is not available - cannot run this tutorial");
 #else
 
-
    ROOT::Math::MultiRootFinder r(algo);
     //defining the function
    // use Rosenbrock functions
@@ -55,6 +74,5 @@ void exampleMultiRoot(const char * algo = 0, int printlevel = 1) {
    double x0[2]={-1,-1};
    r.Solve(x0);
 #endif
-
 }
 

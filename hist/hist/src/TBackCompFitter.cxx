@@ -59,6 +59,7 @@ class before issuing a new fit to avoid deleting this information.
 #include "HFitInterface.h"
 #include "Math/Minimizer.h"
 #include "Fit/BinData.h"
+#include "Fit/FitConfig.h"
 #include "Fit/UnBinData.h"
 #include "Fit/PoissonLikelihoodFCN.h"
 #include "Fit/LogLikelihoodFCN.h"

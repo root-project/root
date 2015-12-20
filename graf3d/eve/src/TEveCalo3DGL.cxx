@@ -24,6 +24,7 @@
 #include "TEveUtil.h"
 
 /** \class TEveCalo3DGL
+\ingroup TEve
 OpenGL renderer class for TEveCalo3D.
 */
 

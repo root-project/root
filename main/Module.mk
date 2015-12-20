@@ -25,6 +25,16 @@ ifneq ($(PLATFORM),win32)
 ROOTNEXE     := bin/rootn.exe
 endif
 
+##### rootnb.exe #####
+ROOTNBEXES   := $(MODDIRS)/nbmain.cxx
+ROOTNBEXEO   := $(call stripsrc,$(ROOTNBEXES:.cxx=.o))
+ROOTNBEXEDEP := $(ROOTNBEXEO:.o=.d)
+ifneq (,$(filter $(ARCH),win32gcc win64gcc))
+ROOTNBEXE    := bin/rootnb_exe.exe
+else
+ROOTNBEXE    := bin/rootnb.exe
+endif
+
 ##### proofserv #####
 PROOFSERVS   := $(MODDIRS)/pmain.cxx
 PROOFSERVO   := $(call stripsrc,$(PROOFSERVS:.cxx=.o))
@@ -119,15 +129,16 @@ SSH2RPD         :=
 endif
 
 # used in the main Makefile
-ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) $(XPROOFDSH) \
-                $(XPDTESTEXE) $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
+ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
+                $(XPROOFDSH) $(XPDTESTEXE) $(HADD) $(SSH2RPD) $(ROOTSEXE) \
+                $(ROOTSSH) $(ROOTNBEXE)
 ifneq ($(F77),)
 ALLEXECS     += $(H2ROOT) $(G2ROOT)
 endif
 
 # include all dependency files
 INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(XPDTESTDEP) $(HADDDEP) \
-                $(H2ROOTDEP) $(SSH2RPDDEP) $(ROOTSEXEDEP)
+                $(H2ROOTDEP) $(SSH2RPDDEP) $(ROOTSEXEDEP) $(ROOTNBEXEDEP)
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
@@ -141,6 +152,10 @@ $(ROOTNEXE):    $(ROOTEXEO) $(NEWLIB) $(BOOTLIBSDEP) $(RINTLIB)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) \
 		   $(RPATH) $(NEWLIBS) $(BOOTLIBS) $(RINTLIBS) $(SYSLIBS)
 endif
+
+$(ROOTNBEXE):   $(ROOTNBEXEO) $(BOOTLIBSDEP)
+		$(LD) $(LDFLAGS) -o $@ $(ROOTNBEXEO) \
+		   $(RPATH) $(BOOTLIBS) $(SYSLIBS)
 
 $(PROOFSERVEXE): $(PROOFSERVO) $(BOOTLIBSDEP)
 		$(LD) $(LDFLAGS) -o $@ $(PROOFSERVO) \
@@ -190,21 +205,23 @@ $(G2ROOT):      $(G2ROOTO) $(ORDER_) $(MINICERNLIB)
 ifneq ($(F77),)
 all-$(MODNAME): $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
                 $(XPDTESTEXE) $(HADD) $(SSH2RPD) $(H2ROOT) $(G2ROOT) \
-                $(ROOTSEXE) $(ROOTSSH)
+                $(ROOTSEXE) $(ROOTSSH) $(ROOTNBEXE)
 else
 all-$(MODNAME): $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
-                $(XPDTESTEXE) $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
+                $(XPDTESTEXE) $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH) \
+                $(ROOTNBEXE)
 endif
 
 clean-$(MODNAME):
 		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(XPDTESTO) $(HADDO) \
-		   $(H2ROOTO) $(G2ROOTO) $(SSH2RPDO) $(ROOTSEXEO)
+		   $(H2ROOTO) $(G2ROOTO) $(SSH2RPDO) $(ROOTSEXEO) $(ROOTNBEXEO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
-		   $(PROOFSERVEXE) $(PROOFSERVSH) $(XPROOFDSH) $(XPDTESTDEP) $(XPDTESTEXE) \
+		   $(PROOFSERVEXE) $(PROOFSERVSH) $(XPROOFDSH) $(XPDTESTDEP) \
+		   $(XPDTESTEXE) $(ROOTNBEXEDEP) $(ROOTNBEXE) \
 		   $(HADDDEP) $(HADD) $(H2ROOTDEP) $(H2ROOT) $(G2ROOT) \
 		   $(SSH2RPDDEP) $(SSH2RPD) $(ROOTSEXEDEP) $(ROOTSEXE) \
 		   $(ROOTSSH)

@@ -274,10 +274,6 @@ private:
    ROOT::Minuit::EMinimizerType fType;
    TMinuit * fMinuit;
 
-   // need to have a static copy of the function
-   //NOTE: This is NOT thread safe.
-   static ROOT::Math::IMultiGenFunction * fgFunc;
-
    static TMinuit * fgMinuit;
 
    static bool fgUsed;  // flag to control if static instance has done minimization

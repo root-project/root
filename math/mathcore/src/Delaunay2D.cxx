@@ -11,18 +11,19 @@
 
 // Implementation file for class Delaunay2D
 
-
+#include "Math/Delaunay2D.h"
+#include "Rtypes.h"
 
 //#include <thread>
 
-// in case we do not use CGAL 
+// in case we do not use CGAL
 #ifndef HAS_CGAL
 // use the triangle library
 #include "triangle.h"
 #endif
 
-
-#include "Math/Delaunay2D.h"
+#include <algorithm>
+#include <stdlib.h>
 
 namespace ROOT {
    

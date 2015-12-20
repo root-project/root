@@ -48,6 +48,7 @@
 #include "TMVA/PDF.h"
 #include "TMVA/TSpline1.h"
 #include "TMVA/TSpline2.h"
+#include "TMVA/Types.h"
 
 using namespace std;
 

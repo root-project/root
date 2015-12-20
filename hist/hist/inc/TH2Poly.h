@@ -24,8 +24,6 @@
 #include "TH2.h"
 #endif
 
-#include "TList.h"
-
 class TH2PolyBin: public TObject{
 
 public:
@@ -144,7 +142,7 @@ protected:
    void   AddBinToPartition(TH2PolyBin *bin);  // Adds the input bin into the partition matrix
    void   Initialize(Double_t xlow, Double_t xup, Double_t ylow, Double_t yup, Int_t n, Int_t m);
    Bool_t IsIntersecting(TH2PolyBin *bin, Double_t xclipl, Double_t xclipr, Double_t yclipb, Double_t yclipt);
-   Bool_t IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y, Double_t xclipl, Double_t xclipr, Double_t yclipb, Double_t yclipt);  
+   Bool_t IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y, Double_t xclipl, Double_t xclipr, Double_t yclipb, Double_t yclipt);
    // needed by TH1 - no need to have a separate implementation
    virtual Double_t RetrieveBinContent(Int_t bin) const { return GetBinContent(bin); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { return SetBinContent(bin,content); }

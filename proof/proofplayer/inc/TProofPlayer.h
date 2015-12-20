@@ -58,13 +58,14 @@
 #include "TError.h"
 #endif
 
+#include <mutex>
+
 class TSelector;
 class TSocket;
 class TVirtualPacketizer;
 class TSlave;
 class TEventIter;
 class TProofStats;
-class TMutex;
 class TStatus;
 class TTimer;
 class THashList;
@@ -104,7 +105,7 @@ protected:
    Int_t         fMaxDrawQueries;  //Max number of Draw queries kept
 
    TTimer       *fStopTimer;       //Timer associated with a stop request
-   TMutex       *fStopTimerMtx;    //To protect the stop timer
+   std::mutex    fStopTimerMtx;    //To protect the stop timer
 
    TTimer       *fDispatchTimer;    //Dispatch pending events while processing
 

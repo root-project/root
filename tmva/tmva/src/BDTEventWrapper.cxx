@@ -24,6 +24,8 @@
 #include "TMVA/BDTEventWrapper.h"
 #endif
 
+#include "RtypesCore.h"
+
 using namespace TMVA;
 
 BDTEventWrapper::BDTEventWrapper(const Event* e) : fEvent(e) {

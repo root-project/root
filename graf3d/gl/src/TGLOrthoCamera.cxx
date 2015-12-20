@@ -16,20 +16,17 @@
 #include "TGLUtil.h"
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLOrthoCamera                                                       //
-//                                                                      //
-// Orthographic projection camera. Currently limited to three types     //
-// defined at construction time - kXOY, kXOZ, kZOY - where this refers  //
-// to the viewport plane axis - e.g. kXOY has X axis horizontal, Y      //
-// vertical - i.e. looking down Z axis with Y vertical.                 //
-//
-// The plane types restriction could easily be removed to supported     //
-// arbitary ortho projections along any axis/orientation with free      //
-// rotations about them.                                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLOrthoCamera
+\ingroup opengl
+Orthographic projection camera. Currently limited to three types
+defined at construction time - kXOY, kXOZ, kZOY - where this refers
+to the viewport plane axis - e.g. kXOY has X axis horizontal, Y
+vertical - i.e. looking down Z axis with Y vertical.
+
+The plane types restriction could easily be removed to supported
+arbitrary ortho projections along any axis/orientation with free
+rotations about them.
+*/
 
 ClassImp(TGLOrthoCamera)
 
@@ -71,7 +68,7 @@ TGLOrthoCamera::~TGLOrthoCamera()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Setup camera limits suitible to view the world volume defined by 'box'
+/// Setup camera limits suitable to view the world volume defined by 'box'
 /// and call Reset() to initialise camera.
 
 void TGLOrthoCamera::Setup(const TGLBoundingBox & box, Bool_t reset)
@@ -152,8 +149,8 @@ Bool_t TGLOrthoCamera::Dolly(Int_t delta, Bool_t mod1, Bool_t mod2)
 /// Zoom the camera - 'adjust lens focal length, retaining camera position'.
 /// Arguments are:
 ///
-/// 'delta' - mouse viewport delta (pixels) - +ive zoom in, -ive zoom out
-/// 'mod1' / 'mod2' - sensitivity modifiers - see TGLCamera::AdjustAndClampVal()
+///  - 'delta' - mouse viewport delta (pixels) - +ive zoom in, -ive zoom out
+///  - 'mod1' / 'mod2' - sensitivity modifiers - see TGLCamera::AdjustAndClampVal()
 ///
 /// For an orthographic camera dollying and zooming are identical and both equate
 /// logically to a rescaling of the viewport limits - without center shift.
@@ -229,15 +226,15 @@ Bool_t TGLOrthoCamera::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mo
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Apply the camera to the current GL context, setting the viewport, projection
-/// and modelview matricies. After this verticies etc can be directly entered
+/// and modelview matrices. After this vertices etc can be directly entered
 /// in the world frame. This also updates the cached frustum values, enabling
 /// all the projection, overlap tests etc defined in TGLCamera to be used.
 ///
 /// Arguments are:
-/// 'box' - view volume box - ignored for ortho camera. Assumed to be same
-/// as one passed to Setup().
-/// 'pickRect' - optional picking rect. If non-null, restrict drawing to this
-/// viewport rect.
+///  - 'box' - view volume box - ignored for ortho camera. Assumed to be same
+///     as one passed to Setup().
+///  - 'pickRect' - optional picking rect. If non-null, restrict drawing to this
+///     viewport rect.
 
 void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/,
                            const TGLRect        * pickRect) const
@@ -303,11 +300,11 @@ void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Configure the camera state.
-///   zoom    - set directly (default = 0.78);
-///   dolly   - additional move along the camera forward direction;
-///   center  - new camera center (can be 0 for no change);
-///   hRotate - additional "up/down" rotation in radians;
-///   vRotate - additional "left/right" rotation in radians.
+///  - zoom    - set directly (default = 0.78);
+///  - dolly   - additional move along the camera forward direction;
+///  - center  - new camera center (can be 0 for no change);
+///  - hRotate - additional "up/down" rotation in radians;
+///  - vRotate - additional "left/right" rotation in radians.
 
 void TGLOrthoCamera::Configure(Double_t zoom, Double_t dolly, Double_t center[3],
                                Double_t hRotate, Double_t vRotate)

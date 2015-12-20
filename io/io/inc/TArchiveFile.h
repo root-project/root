@@ -12,16 +12,6 @@
 #ifndef ROOT_TArchiveFile
 #define ROOT_TArchiveFile
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TArchiveFile                                                         //
-//                                                                      //
-// This is an abstract class that describes an archive file containing  //
-// multiple sub-files, like a ZIP or TAR archive.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
@@ -40,16 +30,16 @@ class TObjArray;
 class TArchiveFile : public TObject {
 
 private:
-   TArchiveFile(const TArchiveFile&);            // Not implemented because TArchiveFile can not be copied.
-   TArchiveFile& operator=(const TArchiveFile&); // Not implemented because TArchiveFile can not be copied.
+   TArchiveFile(const TArchiveFile&);            ///< Not implemented because TArchiveFile can not be copied.
+   TArchiveFile& operator=(const TArchiveFile&); ///< Not implemented because TArchiveFile can not be copied.
 
 protected:
-   TString         fArchiveName;  // Archive file name
-   TString         fMemberName;   // Sub-file name
-   Int_t           fMemberIndex;  // Index of sub-file in archive
-   TFile          *fFile;         // File stream used to access the archive
-   TObjArray      *fMembers;      // Members in this archive
-   TArchiveMember *fCurMember;    // Current archive member
+   TString         fArchiveName;  ///< Archive file name
+   TString         fMemberName;   ///< Sub-file name
+   Int_t           fMemberIndex;  ///< Index of sub-file in archive
+   TFile          *fFile;         ///< File stream used to access the archive
+   TObjArray      *fMembers;      ///< Members in this archive
+   TArchiveMember *fCurMember;    ///< Current archive member
 
    static Bool_t ParseUrl(const char *url, TString &archive, TString &member, TString &type);
 
@@ -83,14 +73,14 @@ class TArchiveMember : public TObject {
 friend class TArchiveFile;
 
 protected:
-   TString    fName;          // Name of member
-   TString    fComment;       // Comment field
-   TDatime    fModTime;       // Modification time
-   Long64_t   fPosition;      // Byte position in archive
-   Long64_t   fFilePosition;  // Byte position in archive where member data starts
-   Long64_t   fCsize;         // Compressed size
-   Long64_t   fDsize;         // Decompressed size
-   Bool_t     fDirectory;     // Flag indicating this is a directory
+   TString    fName;          ///< Name of member
+   TString    fComment;       ///< Comment field
+   TDatime    fModTime;       ///< Modification time
+   Long64_t   fPosition;      ///< Byte position in archive
+   Long64_t   fFilePosition;  ///< Byte position in archive where member data starts
+   Long64_t   fCsize;         ///< Compressed size
+   Long64_t   fDsize;         ///< Decompressed size
+   Bool_t     fDirectory;     ///< Flag indicating this is a directory
 
 public:
    TArchiveMember();

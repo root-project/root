@@ -22,6 +22,8 @@
 ClassImp(TPieSlice)
 
 /** \class TPieSlice
+\ingroup BasicGraphics
+
 A slice of a piechart, see the TPie class.
 
 This class describe the property of single

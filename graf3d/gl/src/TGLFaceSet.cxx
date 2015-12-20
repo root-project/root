@@ -43,10 +43,10 @@ extern "C"
 #endif
 }
 
-//______________________________________________________________________________
-//
-// Implementss a native ROOT-GL representation of an arbitrary set of
-// polygons.
+/** \class TGLFaceSet
+\ingroup opengl
+Implements a native ROOT-GL representation of an arbitrary set of polygons.
+*/
 
 ClassImp(TGLFaceSet);
 

@@ -27,6 +27,7 @@
 
 
 /** \class TEveTextEditor
+\ingroup TEve
 GUI editor for TEveText.
 */
 

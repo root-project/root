@@ -9,16 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSlave                                                               //
-//                                                                      //
-// This class describes a PROOF slave server.                           //
-// It contains information like the slaves host name, ordinal number,   //
-// performance index, socket, etc. Objects of this class can only be    //
-// created via TProof member functions.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSlave
+\ingroup proofkernel
+
+Class describing a PROOF worker server. It contains information like the
+workers host name, ordinal number, performance index, socket, etc.
+Objects of this class can only be created via TProof member functions. 
+
+*/
 
 #include <stdlib.h>
 
@@ -34,7 +32,6 @@
 #include "TMessage.h"
 #include "TError.h"
 #include "TVirtualMutex.h"
-#include "TThread.h"
 #include "TSocket.h"
 #include "TObjString.h"
 
@@ -136,8 +133,6 @@ void TSlave::Init(const char *host, Int_t port, Int_t stype)
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(fSocket);
    }
-
-   R__LOCKGUARD2(gProofMutex);
 
    // Fill some useful info
    fUser              = fSocket->GetSecContext()->GetUser();

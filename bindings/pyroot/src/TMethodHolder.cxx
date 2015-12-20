@@ -15,6 +15,7 @@
 #include "TClass.h"           // for exception types (to move to Cppyy.cxx)
 #include "TException.h"       // for TRY ... CATCH
 #include "TVirtualMutex.h"    // for R__LOCKGUARD2
+#include "TClassEdit.h"       // demangler
 
 // Standard
 #include <assert.h>
@@ -23,7 +24,7 @@
 #include <sstream>
 #include <string>
 #include <typeinfo>
-
+#include <memory>
 
 //- data and local helpers ---------------------------------------------------
 namespace PyROOT {
@@ -66,13 +67,20 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, 
    try {       // C++ try block
       result = fExecutor->Execute( fMethod, (Cppyy::TCppObject_t)((Long_t)self + offset), ctxt );
    } catch ( TPyException& ) {
-      result = (PyObject*)TPyExceptionMagic;
+      result = nullptr;           // error already set
    } catch ( std::exception& e ) {
    // map user exceptions .. this needs to move to Cppyy.cxx
       TClass* cl = TClass::GetClass( typeid(e) );
 
       PyObject* pyUserExcepts = PyObject_GetAttrString( gRootModule, "UserExceptions" );
-      std::string exception_type = cl->GetName();
+      std::string exception_type;
+      if (cl) exception_type = cl->GetName();
+      else {
+	int errorCode;
+        std::unique_ptr<char[]> demangled(TClassEdit::DemangleTypeIdName(typeid(e),errorCode));
+        if (errorCode) exception_type = typeid(e).name();
+        else exception_type = demangled.get();
+      }
       PyObject* pyexc = PyDict_GetItemString( pyUserExcepts, exception_type.c_str() );
       if ( !pyexc ) {
          PyErr_Clear();
@@ -87,12 +95,12 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, 
       if ( pyexc ) {
          PyErr_Format( pyexc, "%s", e.what() );
       } else {
-         PyErr_Format( PyExc_Exception, "%s (C++ exception of type %s)", e.what(), cl->GetName() );
+         PyErr_Format( PyExc_Exception, "%s (C++ exception of type %s)", e.what(), exception_type.c_str() );
       }
-      result = (PyObject*)TPyCPPExceptionMagic;
+      result = nullptr;
    } catch ( ... ) {
       PyErr_SetString( PyExc_Exception, "unhandled, unknown C++ exception" );
-      result = (PyObject*)TPyCPPExceptionMagic;
+      result = nullptr;
    }
    return result;
 }
@@ -516,10 +524,7 @@ PyObject* PyROOT::TMethodHolder::Execute( void* self, ptrdiff_t offset, TCallCon
       result = CallSafe( self, offset, ctxt );
    }
 
-   if ( result &&
-        result != (PyObject*)TPyExceptionMagic &&
-        result != (PyObject*)TPyCPPExceptionMagic &&
-        Utility::PyErr_Occurred_WithGIL() ) {
+   if ( result && Utility::PyErr_Occurred_WithGIL() ) {
    // can happen in the case of a CINT error: trigger exception processing
       Py_DECREF( result );
       result = 0;
@@ -574,10 +579,6 @@ PyObject* PyROOT::TMethodHolder::Call(
 
 // actual call; recycle self instead of returning new object for same address objects
    ObjectProxy* pyobj = (ObjectProxy*)Execute( object, offset, ctxt );
-
-   if ( pyobj == (ObjectProxy*)TPyExceptionMagic ||
-        pyobj == (ObjectProxy*)TPyCPPExceptionMagic )
-      return (PyObject*)pyobj;
 
    if ( ObjectProxy_Check( pyobj ) &&
         derived && pyobj->ObjectIsA() == derived &&

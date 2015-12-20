@@ -35,6 +35,8 @@ lt_symlist_t lt_preloaded_symbols[] = {
 ClassImp(TGraphStruct)
 
 /** \class TGraphStruct
+\ingroup gviz
+
 The Graph Structure is an interface to the graphviz package.
 
 The graphviz package is a graph visualization system. This interface consists in

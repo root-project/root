@@ -1,6 +1,13 @@
-#
-# To see the output of this macro, click begin_html <a href="gif/fit1.gif">here</a>. end_html
-#
+## \file
+## \ingroup tutorial_pyroot
+## Fit example.
+##
+## \macro_image
+## \macro_output
+## \macro_code
+##
+## \author Wim Lavrijsen
+
 from os import path
 from ROOT import TCanvas, TFile, TPaveText
 from ROOT import gROOT, gBenchmark
@@ -15,7 +22,6 @@ c1.GetFrame().SetBorderSize( 5 )
 gBenchmark.Start( 'fit1' )
 #
 # We connect the ROOT file generated in a previous tutorial
-# (see begin_html <a href="fillrandom.C.html">Filling histograms with random numbers from a function</a>) end_html
 #
 fill = TFile( 'py-fillrandom.root' )
 

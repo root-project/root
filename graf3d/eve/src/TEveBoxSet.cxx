@@ -15,6 +15,7 @@
 #include "TRandom.h"
 
 /** \class TEveBoxSet
+\ingroup TEve
 Collection of 3D primitives (fixed-size boxes, boxes of different
 sizes, or arbitrary sexto-epipeds, cones). Each primitive can be assigned
 a signal value and a TRef.

@@ -9,15 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TListOfFunctions                                                     //
-//                                                                      //
-// A collection of TFunction objects designed for fast access given a   //
-// DeclId_t and for keep track of TFunction that were described         //
-// unloaded function.                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TListOfFunctions
+A collection of TFunction objects designed for fast access given a
+DeclId_t and for keep track of TFunction that were described
+unloaded function.
+*/
 
 #include "TListOfFunctions.h"
 #include "TClass.h"
@@ -267,17 +263,16 @@ TFunction *TListOfFunctions::Get(DeclId_t id)
 {
    if (!id) return 0;
 
+   R__LOCKGUARD(gInterpreterMutex);
+   //need the Find and possible Add to be one atomic operation
    TFunction *f = Find(id);
    if (f) return f;
 
-   R__LOCKGUARD(gInterpreterMutex);
    if (fClass) {
       if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
    } else {
       if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
    }
-
-   R__LOCKGUARD(gInterpreterMutex);
 
    MethodInfo_t *m = gInterpreter->MethodInfo_Factory(id);
 
@@ -373,7 +368,7 @@ TObject* TListOfFunctions::Remove(TObjLink *lnk)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Load all the functions known to the intepreter for the scope 'fClass'
+/// Load all the functions known to the interpreter for the scope 'fClass'
 /// into this collection.
 
 void TListOfFunctions::Load()
@@ -549,13 +544,9 @@ Int_t TListOfFunctions::GetSize() const
    return THashList::GetSize();
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TListOfFunctionsIter                                                 //
-//                                                                      //
-// Iterator for TListOfFunctions.                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TListOfFunctionsIter
+Iterator for TListOfFunctions.
+*/
 
 ClassImp(TListOfFunctionsIter)
 

@@ -18,6 +18,8 @@
 #include <assert.h>
 
 /** \class TViewer3DPad
+\ingroup gpad
+
 Provides 3D viewer interface (TVirtualViewer3D) support on a pad.
 Will be merged with TView / TView3D eventually.
 */

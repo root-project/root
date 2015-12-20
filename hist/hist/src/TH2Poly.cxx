@@ -1,6 +1,6 @@
 // @(#)root/hist:$Id$
 // TH2Poly v2.1
-// Author: Olivier Couet, Deniz Gunceler
+// Author: Olivier Couet, Deniz Gunceler, Danilo Piparo
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -10,77 +10,68 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
-#include "TClass.h"
 #include "TH2Poly.h"
-#include "TCutG.h"
-#include "TList.h"
-#include "TMath.h"
 #include "TMultiGraph.h"
 #include "TGraph.h"
-#include "TStyle.h"
-#include "TCanvas.h"
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-#include "Riostream.h"
+#include "TClass.h"
+#include "TList.h"
+#include "TMath.h"
 
 ClassImp(TH2Poly)
 
-/** \class TH2Poly 
+/** \class TH2Poly
     \ingroup Hist
 2D Histogram with Polygonal Bins
 
-<h3>Overview</h3>
-<tt>TH2Poly</tt> is a 2D Histogram class (TH2) allowing to define polygonal
+## Overview
+`TH2Poly` is a 2D Histogram class (TH2) allowing to define polygonal
 bins of arbitrary shape.
-<p>
-Each bin in the <tt>TH2Poly</tt> histogram is a <tt>TH2PolyBin</tt> object.
-<tt>TH2PolyBin</tt> is a very simple class containing the vertices (stored
-as <tt>TGraph</tt>s or <tt>TMultiGraph</tt>s ) and contents of the polygonal
+
+Each bin in the `TH2Poly` histogram is a `TH2PolyBin` object.
+`TH2PolyBin` is a very simple class containing the vertices (stored
+as `TGraph`s or `TMultiGraph`s ) and contents of the polygonal
 bin as well as several related functions.
-<p>
-Essentially, a <tt>TH2Poly</tt> is a TList of <tt>TH2PolyBin</tt> objects
+
+Essentially, a `TH2Poly` is a TList of `TH2PolyBin` objects
 with methods to manipulate them.
-<p>
-Bins are defined using one of the <tt>AddBin()</tt> methods. The bin definition
+
+Bins are defined using one of the `AddBin()` methods. The bin definition
 should be done before filling.
-<p>
-The histogram can be filled with <tt>Fill(Double_t x, Double_t y, Double_t w)
-</tt>. <tt>w</tt> is the weight.
+
+The histogram can be filled with `Fill(Double_t x, Double_t y, Double_t w)
+`. `w` is the weight.
 If no weight is specified, it is assumed to be 1.
-<p>
+
 Not all histogram's area need to be binned. Filling an area without bins,
 will falls into the overflows. Adding a bin is not retroactive; it doesn't
-affect previous fillings. A <tt>Fill()</tt> call, that
+affect previous fillings. A `Fill()` call, that
 was previously ignored due to the lack of a bin at the specified location, is
 not reconsidered when that location is binned later.
-<p>
+
 If there are two overlapping bins, the first one in the list will be incremented
-by <tt>Fill()</tt>.
-<p>
+by `Fill()`.
+
 The histogram may automatically extends its limits if a bin outside the
 histogram limits is added. This is done when the default constructor (with no
 arguments) is used. It generates a histogram with no limits along the X and Y
 axis. Adding bins to it will extend it up to a proper size.
-<p>
-<tt>TH2Poly</tt> implements a partitioning algorithm to speed up bins' filling.
+
+`TH2Poly` implements a partitioning algorithm to speed up bins' filling.
 The partitioning algorithm divides the histogram into regions called cells.
-The bins that each cell intersects are recorded in an array of <tt>TList</tt>s.
+The bins that each cell intersects are recorded in an array of `TList`s.
 When a coordinate in the histogram is to be filled; the method (quickly) finds
 which cell the coordinate belongs.  It then only loops over the bins
 intersecting that cell to find the bin the input coordinate corresponds to.
 The partitioning of the histogram is updated continuously as each bin is added.
 The default number of cells on each axis is 25. This number could be set to
 another value in the constructor or adjusted later by calling the
-<tt>ChangePartition(Int_t, Int_t)</tt> method. The partitioning algorithm is
+`ChangePartition(Int_t, Int_t)` method. The partitioning algorithm is
 considerably faster than the brute force algorithm (i.e. checking if each bin
 contains the input coordinates), especially if the histogram is to be filled
 many times.
-<p>
-The following very simple macro shows how to build and fill a <tt>TH2Poly</tt>:
-<pre>
+
+The following very simple macro shows how to build and fill a `TH2Poly`:
+~~~ {.cpp]
 {
     TH2Poly *h2p = new TH2Poly();
 
@@ -100,51 +91,49 @@ The following very simple macro shows how to build and fill a <tt>TH2Poly</tt>:
     h2p->Fill(-0.7, -0.5, 1);
     h2p->Fill(1, 3, 1.5);
 }
-</pre>
-<p>
-More examples can bin found in <tt>$ROOTSYS/tutorials/hist/th2poly*.C</tt>
+~~~
 
-<h3>Partitioning Algorithm</h3>
-The partitioning algorithm forms an essential part of the <tt>TH2Poly</tt>
+More examples can bin found in `$ROOTSYS/tutorials/hist/th2poly*.C`
+
+## Partitioning Algorithm
+The partitioning algorithm forms an essential part of the `TH2Poly`
 class. It is implemented to speed up the filling of bins.
-<p>
+
 With the brute force approach, the filling is done in the following way:  An
-iterator loops over all bins in the <tt>TH2Poly</tt> and invokes the
-method <tt>IsInside()</tt> for each of them.
+iterator loops over all bins in the `TH2Poly` and invokes the
+method `IsInside()` for each of them.
 This method checks if the input location is in that bin. If the filling
 coordinate is inside, the bin is filled. Looping over all the bin is
 very slow.
-<p>
+
 The alternative is to divide the histogram into virtual rectangular regions
 called "cells". Each cell stores the pointers of the bins intersecting it.
 When a coordinate is to be filled, the method finds which cell the coordinate
 falls into. Since the cells are rectangular, this can be done very quickly.
 It then only loops over the bins associated with that cell.
-<p>
+
 The addition of bins to the appropriate cells is done when the bin is added
-to the histogram. To do this, <tt>AddBin()</tt> calls the
-<tt>AddBinToPartition()</tt> method.
+to the histogram. To do this, `AddBin()` calls the
+`AddBinToPartition()` method.
 This method adds the input bin to the partitioning matrix.
-<p>
+
 The number of partition cells per axis can be specified in the constructor.
 If it is not specified, the default value of 25 along each axis will be
 assigned. This value was chosen because it is small enough to avoid slowing
 down AddBin(), while being large enough to enhance Fill() by a considerable
 amount. Regardless of how it is initialized at construction time, it can be
-changed later with the <tt>ChangePartition()</tt> method.
-<tt>ChangePartition()</tt> deletes the
+changed later with the `ChangePartition()` method.
+`ChangePartition()` deletes the
 old partition matrix and generates a new one with the specified number of cells
 on each axis.
-<p>
+
 The optimum number of partition cells per axis changes with the number of
-times <tt>Fill()</tt> will be called.  Although partitioning greatly speeds up
-filling, it also adds a constant time delay into the code. When <tt>Fill()</tt>
+times `Fill()` will be called.  Although partitioning greatly speeds up
+filling, it also adds a constant time delay into the code. When `Fill()`
 is to be called many times, it is more efficient to divide the histogram into
 a large number cells. However, if the histogram is to be filled only a few
 times, it is better to divide into a small number of cells.
 */
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Constructor. No boundaries specified.
@@ -156,7 +145,6 @@ TH2Poly::TH2Poly()
    SetTitle("NoTitle");
    SetFloat();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with specified name and boundaries,
@@ -171,7 +159,6 @@ TH2Poly::TH2Poly(const char *name,const char *title, Double_t xlow,Double_t xup
    SetFloat(kFALSE);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with specified name and boundaries and partition cell number.
 
@@ -185,7 +172,6 @@ TH2Poly::TH2Poly(const char *name,const char *title,
    SetFloat(kFALSE);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -197,7 +183,6 @@ TH2Poly::~TH2Poly()
    // delete at the end the bin List since it owns the objects
    delete fBins;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Adds a new bin to the histogram. It can be any object having the method
@@ -251,7 +236,6 @@ Int_t TH2Poly::AddBin(TObject *poly)
    return fNcells;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Adds a new bin to the histogram. The number of vertices and their (x,y)
 /// coordinates are required as input. It returns the bin number in the
@@ -263,7 +247,6 @@ Int_t TH2Poly::AddBin(Int_t n, const Double_t *x, const Double_t *y)
    Int_t bin = AddBin(g);
    return bin;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a new bin to the histogram. The bin shape is a rectangle.
@@ -278,7 +261,6 @@ Int_t TH2Poly::AddBin(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    return bin;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Performs the operation: this = this + c1*h1.
 
@@ -290,21 +272,21 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
 
    // Check if number of bins is the same.
    if (h1p->GetNumberOfBins() != fNcells) {
-      Error("Add","Attempt to add histograms with different number of bins");
+      Error("Add", "Attempt to add histograms with different number of bins");
       return kFALSE;
    }
 
    // Check if the bins are the same.
    TList *h1pBins = h1p->GetBins();
    TH2PolyBin *thisBin, *h1pBin;
-   for (bin=1;bin<=fNcells;bin++) {
-      thisBin = (TH2PolyBin*)fBins->At(bin-1);
-      h1pBin  = (TH2PolyBin*)h1pBins->At(bin-1);
-      if(thisBin->GetXMin() != h1pBin->GetXMin() ||
-         thisBin->GetXMax() != h1pBin->GetXMax() ||
-         thisBin->GetYMin() != h1pBin->GetYMin() ||
-         thisBin->GetYMax() != h1pBin->GetYMax()) {
-         Error("Add","Attempt to add histograms with different bin limits");
+   for (bin = 1; bin <= fNcells; bin++) {
+      thisBin = (TH2PolyBin *)fBins->At(bin - 1);
+      h1pBin  = (TH2PolyBin *)h1pBins->At(bin - 1);
+      if (thisBin->GetXMin() != h1pBin->GetXMin() ||
+            thisBin->GetXMax() != h1pBin->GetXMax() ||
+            thisBin->GetYMin() != h1pBin->GetYMin() ||
+            thisBin->GetYMax() != h1pBin->GetYMax()) {
+         Error("Add", "Attempt to add histograms with different bin limits");
          return kFALSE;
       }
    }
@@ -312,22 +294,46 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
    // Create Sumw2 if h1p has Sumw2 set
    if (fSumw2.fN == 0 && h1p->GetSumw2N() != 0) Sumw2();
 
+   // statistics can be preserbed only in case of positive coefficients
+   // otherwise with negative c1 (histogram subtraction) one risks to get negative variances
+   Bool_t resetStats = (c1 < 0);
+   Double_t s1[kNstat] = {0};
+   Double_t s2[kNstat] = {0};
+   if (!resetStats) {
+      // need to initialize to zero s1 and s2 since
+      // GetStats fills only used elements depending on dimension and type
+      GetStats(s1);
+      h1->GetStats(s2);
+   }
+
    // Perform the Add.
-   Double_t factor =1;
+   Double_t factor = 1;
    if (h1p->GetNormFactor() != 0)
-      factor = h1p->GetNormFactor()/h1p->GetSumOfWeights();
-   for (bin=1;bin<=fNcells;bin++) {
-      thisBin = (TH2PolyBin*)fBins->At(bin-1);
-      h1pBin  = (TH2PolyBin*)h1pBins->At(bin-1);
-      thisBin->SetContent(thisBin->GetContent()+c1*h1pBin->GetContent());
+      factor = h1p->GetNormFactor() / h1p->GetSumOfWeights();
+   for (bin = 1; bin <= fNcells; bin++) {
+      thisBin = (TH2PolyBin *)fBins->At(bin - 1);
+      h1pBin  = (TH2PolyBin *)h1pBins->At(bin - 1);
+      thisBin->SetContent(thisBin->GetContent() + c1 * h1pBin->GetContent());
       if (fSumw2.fN) {
-         Double_t e1 = factor*h1p->GetBinError(bin);
-         fSumw2.fArray[bin] += c1*c1*e1*e1;
+         Double_t e1 = factor * h1p->GetBinError(bin);
+         fSumw2.fArray[bin] += c1 * c1 * e1 * e1;
       }
+   }
+
+   // update statistics (do here to avoid changes by SetBinContent)
+   if (resetStats)  {
+      // statistics need to be reset in case coefficient are negative
+      ResetStats();
+   } else {
+      for (Int_t i = 0; i < kNstat; i++) {
+         if (i == 1) s1[i] += c1 * c1 * s2[i];
+         else        s1[i] += c1 * s2[i];
+      }
+      PutStats(s1);
+      SetEntries(std::abs(GetEntries() + c1 * h1->GetEntries()));
    }
    return kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Performs the operation: this = this + c1*f1.
@@ -338,7 +344,6 @@ Bool_t TH2Poly::Add(TF1 *, Double_t, Option_t *)
    return kFALSE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace contents of this histogram by the addition of h1 and h2.
 
@@ -347,7 +352,6 @@ Bool_t TH2Poly::Add(const TH1 *, const TH1 *, Double_t, Double_t)
    Warning("Add","Not implement for TH2Poly");
    return kFALSE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Adds the input bin into the partition cell matrix. This method is called
@@ -365,7 +369,7 @@ void TH2Poly::AddBinToPartition(TH2PolyBin *bin)
    binYmax = bin->GetYMax();
    binYmin = bin->GetYMin();
    nl = (Int_t)(floor((binXmin - fXaxis.GetXmin())/fStepX));
-   nr = (Int_t)(floor((binXmax - fXaxis.GetXmin())/fStepX)); 
+   nr = (Int_t)(floor((binXmax - fXaxis.GetXmin())/fStepX));
    mb = (Int_t)(floor((binYmin - fYaxis.GetXmin())/fStepY));
    mt = (Int_t)(floor((binYmax - fYaxis.GetXmin())/fStepY));
 
@@ -376,7 +380,7 @@ void TH2Poly::AddBinToPartition(TH2PolyBin *bin)
    if (mb<0)       mb = 0;
 
    // number of cells in the grid
-   //N.B. not to be confused with fNcells (the number of bins) ! 
+   //N.B. not to be confused with fNcells (the number of bins) !
    fNCells = fCellX*fCellY;
 
    // Loop over all cells
@@ -421,7 +425,6 @@ void TH2Poly::AddBinToPartition(TH2PolyBin *bin)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Changes the number of partition cells in the histogram.
 /// Deletes the old partition and constructs a new one.
@@ -434,7 +437,7 @@ void TH2Poly::ChangePartition(Int_t n, Int_t m)
    delete [] fCells;                    // Deletes the old partition
 
    // number of cells in the grid
-   //N.B. not to be confused with fNcells (the number of bins) ! 
+   //N.B. not to be confused with fNcells (the number of bins) !
    fNCells = fCellX*fCellY;
    fCells  = new TList [fNCells];  // Sets an empty partition
 
@@ -498,7 +501,6 @@ void TH2Poly::ClearBinContents()
    fEntries = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset this histogram: contents, errors, etc.
 
@@ -523,13 +525,13 @@ void TH2Poly::Reset(Option_t *opt)
 /// the histogram (also called "the sea"). The third parameter can be left
 /// blank.
 /// The overflow/underflow bins are:
-///
+///~~~ {.cpp}
 /// -1 | -2 | -3
 /// -------------
 /// -4 | -5 | -6
 /// -------------
 /// -7 | -8 | -9
-///
+///~~~
 /// where -5 means is the "sea" bin (i.e. unbinned areas)
 
 Int_t TH2Poly::FindBin(Double_t x, Double_t y, Double_t)
@@ -571,7 +573,6 @@ Int_t TH2Poly::FindBin(Double_t x, Double_t y, Double_t)
    return -5;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment the bin containing (x,y) by 1.
 /// Uses the partitioning algorithm.
@@ -580,7 +581,6 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y)
 {
    return Fill(x, y, 1.0);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment the bin containing (x,y) by w.
@@ -646,7 +646,6 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
    return -5;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment the bin named "name" by w.
 
@@ -671,16 +670,15 @@ Int_t TH2Poly::Fill(const char* name, Double_t w)
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fills a 2-D histogram with an array of values and weights.
 ///
-/// ntimes:  number of entries in arrays x and w
-///          (array size must be ntimes*stride)
-/// x:       array of x values to be histogrammed
-/// y:       array of y values to be histogrammed
-/// w:       array of weights
-/// stride:  step size through arrays x, y and w
+/// \param [in] ntimes:  number of entries in arrays x and w
+///                      (array size must be ntimes*stride)
+/// \param [in] x:       array of x values to be histogrammed
+/// \param [in] y:       array of y values to be histogrammed
+/// \param [in] w:       array of weights
+/// \param [in] stride:  step size through arrays x, y and w
 
 void TH2Poly::FillN(Int_t ntimes, const Double_t* x, const Double_t* y,
                                const Double_t* w, Int_t stride)
@@ -689,7 +687,6 @@ void TH2Poly::FillN(Int_t ntimes, const Double_t* x, const Double_t* y,
       Fill(x[i], y[i], w[i]);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the integral of bin contents.
@@ -721,22 +718,21 @@ Double_t TH2Poly::Integral(Option_t* option) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the content of the input bin
 /// For the overflow/underflow/sea bins:
-///
+///~~~ {.cpp}
 /// -1 | -2 | -3
 /// ---+----+----
 /// -4 | -5 | -6
 /// ---+----+----
 /// -7 | -8 | -9
-///
+///~~~
 /// where -5 is the "sea" bin (i.e. unbinned areas)
 
 Double_t TH2Poly::GetBinContent(Int_t bin) const
 {
-   if (bin > fNcells || bin == 0 || bin < -9) return 0; 
+   if (bin > fNcells || bin == 0 || bin < -9) return 0;
    if (bin<0) return fOverflow[-bin - 1];
    return ((TH2PolyBin*) fBins->At(bin-1))->GetContent();
 }
@@ -760,7 +756,6 @@ Double_t TH2Poly::GetBinError(Int_t bin) const
    return TMath::Sqrt(error2);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the bin name.
 
@@ -771,7 +766,6 @@ const char *TH2Poly::GetBinName(Int_t bin) const
    return ((TH2PolyBin*) fBins->At(bin-1))->GetPolygon()->GetName();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the bin title.
 
@@ -781,7 +775,6 @@ const char *TH2Poly::GetBinTitle(Int_t bin) const
    if (bin < 0)          return "";
    return ((TH2PolyBin*) fBins->At(bin-1))->GetPolygon()->GetTitle();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the maximum value of the histogram.
@@ -807,7 +800,6 @@ Double_t TH2Poly::GetMaximum() const
    return max;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the maximum value of the histogram that is less than maxval.
 
@@ -831,7 +823,6 @@ Double_t TH2Poly::GetMaximum(Double_t maxval) const
    }
    return max;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the minimum value of the histogram.
@@ -857,7 +848,6 @@ Double_t TH2Poly::GetMinimum() const
    return min;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the minimum value of the histogram that is greater than minval.
 
@@ -881,7 +871,6 @@ Double_t TH2Poly::GetMinimum(Double_t minval) const
    }
    return min;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Bins the histogram using a honeycomb structure
@@ -931,7 +920,6 @@ void TH2Poly::Honeycomb(Double_t xstart, Double_t ystart, Double_t a,
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Initializes the TH2Poly object.  This method is called by the constructor.
 
@@ -939,7 +927,7 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
                       Double_t ylow, Double_t yup, Int_t n, Int_t m)
 {
    Int_t i;
-   fDimension = 2;  //The dimesion of the histogram
+   fDimension = 2;  //The dimension of the histogram
 
    fBins   = 0;
    fNcells = 0;
@@ -962,7 +950,7 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
    fCellY = m; // Set the number of cells to default
 
    // number of cells in the grid
-   //N.B. not to be confused with fNcells (the number of bins) ! 
+   //N.B. not to be confused with fNcells (the number of bins) !
    fNCells = fCellX*fCellY;
    fCells  = new TList [fNCells];  // Sets an empty partition
    fStepX  = (fXaxis.GetXmax() - fXaxis.GetXmin())/fCellX; // Cell width
@@ -980,7 +968,6 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
    SetNewBinAdded(kFALSE);
    SetBinContentChanged(kFALSE);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE if the input bin is intersecting with the
@@ -1137,15 +1124,20 @@ Bool_t TH2Poly::IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y,
    return kFALSE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-
-Long64_t TH2Poly::Merge(TCollection *)
+/// Merge TH2Polys
+/// Given the special nature of the TH2Poly, the merge is implemented in
+/// terms of subsequent TH2Poly::Add calls.
+Long64_t TH2Poly::Merge(TCollection *coll)
 {
-   Error("Merge","Cannot merge TH2Poly");
-   return 0;
+   for (auto h2pAsObj : *coll) {
+      if (!Add((TH1*)h2pAsObj, 1.)) {
+         Warning("Merge", "An issue was encountered during the merge operation.");
+         return 0L;
+      }
+   }
+   return GetEntries();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
@@ -1207,7 +1199,6 @@ void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
    TH1::SavePrimitiveHelp(out, hname, option);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Multiply this histogram by a constant c1.
 
@@ -1218,15 +1209,14 @@ void TH2Poly::Scale(Double_t c1, Option_t*)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the contents of the input bin to the input content
-/// Negative values between -1 and -9 are for the overflows and the sea 
+/// Negative values between -1 and -9 are for the overflows and the sea
 
 void TH2Poly::SetBinContent(Int_t bin, Double_t content)
 {
    if (bin > (fNcells) || bin == 0 || bin < -9 ) return;
-   if (bin > 0) 
+   if (bin > 0)
       ((TH2PolyBin*) fBins->At(bin-1))->SetContent(content);
    else
       fOverflow[-bin - 1] += content;
@@ -1244,9 +1234,9 @@ void TH2Poly::SetFloat(Bool_t flag)
 
 
 /** \class TH2PolyBin
+    \ingroup Hist
 Helper class to represent a bin in the TH2Poly histogram
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -1264,7 +1254,6 @@ TH2PolyBin::TH2PolyBin()
    SetChanged(kTRUE);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor.
 
@@ -1281,7 +1270,6 @@ TH2PolyBin::TH2PolyBin(TObject *poly, Int_t bin_number)
    SetChanged(kTRUE);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -1289,7 +1277,6 @@ TH2PolyBin::~TH2PolyBin()
 {
    if (fPoly) delete fPoly;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the area of the bin.
@@ -1320,7 +1307,6 @@ Double_t TH2PolyBin::GetArea()
 
    return fArea;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the maximum value for the x coordinates of the bin.
@@ -1358,7 +1344,6 @@ Double_t TH2PolyBin::GetXMax()
    return fXmax;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the minimum value for the x coordinates of the bin.
 
@@ -1394,7 +1379,6 @@ Double_t TH2PolyBin::GetXMin()
 
    return fXmin;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the maximum value for the y coordinates of the bin.
@@ -1432,7 +1416,6 @@ Double_t TH2PolyBin::GetYMax()
    return fYmax;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the minimum value for the y coordinates of the bin.
 
@@ -1468,7 +1451,6 @@ Double_t TH2PolyBin::GetYMin()
 
    return fYmin;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return "true" if the point (x,y) is inside the bin.

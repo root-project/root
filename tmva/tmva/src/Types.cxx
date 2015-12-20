@@ -24,15 +24,18 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
+#include "TMVA/Types.h"
+
+#include "TMVA/MsgLogger.h"
+
+#include "RtypesCore.h"
+#include "TString.h"
 
 #include <map>
 #include <iostream>
 #if __cplusplus > 199711L
 #include <mutex>
 #endif
-
-#include "TMVA/Types.h"
-#include "TMVA/MsgLogger.h"
 
 #if __cplusplus > 199711L
 std::atomic<TMVA::Types*> TMVA::Types::fgTypesPtr{0};

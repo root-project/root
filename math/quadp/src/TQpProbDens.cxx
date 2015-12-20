@@ -42,6 +42,7 @@
 
 #include "TQpProbDens.h"
 #include "TMatrixD.h"
+#include "TQpLinSolverDens.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

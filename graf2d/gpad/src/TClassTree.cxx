@@ -49,7 +49,10 @@ static Int_t *gNtsons, *gNsons;
 ClassImp(TClassTree)
 
 /** \class TClassTree
-Draw inheritance tree and their relations for a list of classes
+\ingroup gpad
+
+Draw inheritance tree and their relations for a list of classes.
+
 The following options are supported
   - Direct inheritance (default)
   - Multiple inheritance
@@ -153,7 +156,7 @@ the class structure of an application to a colleague who does not have
 your classes.
 
 Example:
- ~~~ {.cpp}
+~~~ {.cpp}
    TFile f("myClasses.root","recreate")
    TClassTree *ct = new TClassTree("ct","ATLF*")
    ct->Write();

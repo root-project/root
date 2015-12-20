@@ -49,6 +49,7 @@ Drawback:  a relative large internal state of 624 integers
 /////////////////////////////////////////////////////////////////////
 
 #include "TRandom3.h"
+#include "TBuffer.h"
 #include "TRandom2.h"
 #include "TClass.h"
 #include "TUUID.h"

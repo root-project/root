@@ -1,13 +1,13 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #105
-// 
-//  Demonstration of binding ROOT Math functions as RooFit functions
-//  and pdfs
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'BASIC FUNCTIONALITY' RooFit tutorial macro #105
+///
+///   Demonstration of binding ROOT Math functions as RooFit functions
+///   and pdfs
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

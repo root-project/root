@@ -16,13 +16,10 @@
 #include "TMath.h"
 #include "TError.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLPerspectiveCamera                                                 //
-//                                                                      //
-// Perspective projection camera - with characteristic foreshortening.  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLPerspectiveCamera
+\ingroup opengl
+Perspective projection camera - with characteristic foreshortening.
+*/
 
 ClassImp(TGLPerspectiveCamera)
 
@@ -61,7 +58,7 @@ TGLPerspectiveCamera::~TGLPerspectiveCamera()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Setup camera limits suitible to view the world volume defined by 'box'
+/// Setup camera limits suitable to view the world volume defined by 'box'
 /// and call Reset() to initialise camera.
 
 void TGLPerspectiveCamera::Setup(const TGLBoundingBox & box, Bool_t reset)
@@ -113,8 +110,8 @@ void TGLPerspectiveCamera::Reset()
 /// Zoom the camera - 'adjust lens focal length, retaining camera position'.
 /// Arguments are:
 ///
-/// 'delta' - mouse viewport delta (pixels) - +ive zoom in, -ive zoom out
-/// 'mod1' / 'mod2' - sensitivity modifiers - see TGLCamera::AdjustAndClampVal()
+///  - 'delta' - mouse viewport delta (pixels) - +ive zoom in, -ive zoom out
+///  - 'mod1' / 'mod2' - sensitivity modifiers - see TGLCamera::AdjustAndClampVal()
 ///
 /// Returns kTRUE is redraw required (camera change), kFALSE otherwise.
 
@@ -149,13 +146,13 @@ Bool_t TGLPerspectiveCamera::Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Apply the camera to the current GL context, setting the viewport, projection
-/// and modelview matricies. After this verticies etc can be directly entered
+/// and modelview matrices. After this vertices etc can be directly entered
 /// in the world frame. This also updates the cached frustum values, enabling
 /// all the projection, overlap tests etc defined in TGLCamera to be used.
 ///
 /// Arguments are:
-/// 'box' - view volume box - used to adjust near/far clipping
-/// 'pickRect' - optional picking rect. If non-null, restrict drawing to this
+///  - 'box' - view volume box - used to adjust near/far clipping
+///  - 'pickRect' - optional picking rect. If non-null, restrict drawing to this
 /// viewport rect.
 
 void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox,
@@ -163,10 +160,10 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox,
 {
    // TODO: If we retained the box from Setup first argument could be dropped?
 
-   // MT This whole thing is convoluted. We can calculate camera postion
+   // MT This whole thing is convoluted. We can calculate camera position
    // and look-at direction without calling unproject and seeking clipping
    // plane intersection.
-   // Besides, this would give as a proper control over camera transforamtion
+   // Besides, this would give as a proper control over camera transformation
    // matrix.
    //
    // Much better since Oct 2007, the clipping planes stuff still
@@ -188,7 +185,7 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox,
 
    // To find decent near/far clip plane distances we construct the
    // frustum thus:
-   // i) first setup perspective with arbitary near/far planes
+   // i) first setup perspective with arbitrary near/far planes
    gluPerspective(fFOV, fViewport.Aspect(), 1.0, 1000.0);
    //   printf("FIRST STEP FOV %f, aspect %f, nearClip %f, farClip %f \n", fFOV, fViewport.Aspect(), 1., 1000.);
 
@@ -266,11 +263,11 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Configure the camera state.
-///   fov     - set directly field-of-view in degrees (default = 30);
-///   dolly   - additional move along the camera forward direction;
-///   center  - new camera center (can be 0 for no change);
-///   hRotate - additional "up/down" rotation in radians;
-///   vRotate - additional "left/right" rotation in radians.
+///  - fov     - set directly field-of-view in degrees (default = 30);
+///  - dolly   - additional move along the camera forward direction;
+///  - center  - new camera center (can be 0 for no change);
+///  - hRotate - additional "up/down" rotation in radians;
+///  - vRotate - additional "left/right" rotation in radians.
 
 void TGLPerspectiveCamera::Configure(Double_t fov, Double_t dolly, Double_t center[3],
                                      Double_t hRotate, Double_t vRotate)

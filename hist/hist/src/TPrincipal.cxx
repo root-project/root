@@ -182,7 +182,7 @@ the \f$N\f$ largest eigenvalues, and their associated eigenvectors, the
 error \f$E_N\f$ is minimized.
 
 The transformation matrix to go from the pattern space to the feature
-space consists of the ordered eigenvectors \f$\mathbf{e}_1,\ldots,\mathbf{e}_P\f$ 
+space consists of the ordered eigenvectors \f$\mathbf{e}_1,\ldots,\mathbf{e}_P\f$
 \f$\mathbf{e}_0,\ldots,\mathbf{e}_{P-1}\f$ for its columns
 \f[
   \mathsf{T} = \left[
@@ -207,10 +207,6 @@ in the transformed space.
 Christian Holm August 2000, CERN
 */
 
-// $Id$
-// $Date: 2006/05/24 14:55:26 $
-// $Author: brun $
-
 #include "TPrincipal.h"
 
 #include "TVectorD.h"
@@ -228,7 +224,7 @@ Christian Holm August 2000, CERN
 ClassImp(TPrincipal);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Empty CTOR, Do not use.
+/// Empty constructor. Do not use.
 
 TPrincipal::TPrincipal()
   : fMeanValues(0),
@@ -247,10 +243,10 @@ TPrincipal::TPrincipal()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Ctor. Argument is number of variables in the sample of data
+/// Constructor. Argument is number of variables in the sample of data
 /// Options are:
-///   N       Normalize the covariance matrix (default)
-///   D       Store input data (default)
+///  - N       Normalize the covariance matrix (default)
+///  - D       Store input data (default)
 ///
 /// The created object is  named "principal" by default.
 
@@ -311,7 +307,7 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
+/// Copy constructor.
 
 TPrincipal::TPrincipal(const TPrincipal& pr) :
   TNamed(pr),
@@ -332,7 +328,7 @@ TPrincipal::TPrincipal(const TPrincipal& pr) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignement operator
+/// Assignment operator.
 
 TPrincipal& TPrincipal::operator=(const TPrincipal& pr)
 {
@@ -356,7 +352,7 @@ TPrincipal& TPrincipal::operator=(const TPrincipal& pr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// destructor
+/// Destructor.
 
 TPrincipal::~TPrincipal()
 {
@@ -367,136 +363,52 @@ TPrincipal::~TPrincipal()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Begin_Html
+/// Add a data point and update the covariance matrix. The input
+/// array must be <TT>fNumberOfVariables</TT> long.
+///
+///
+/// The Covariance matrix and mean values of the input data is calculated
+/// on the fly by the following equations:
+///
+/// \f[
+/// \left<x_i\right>^{(0)}  = x_{i0}
+/// \f]
+///
+///
+/// \f[
+/// \left<x_i\right>^{(n)} = \left<x_i\right>^{(n-1)}
+/// + \frac1n \left(x_{in} - \left<x_i\right>^{(n-1)}\right)
+/// \f]
+///
+/// \f[
+/// C_{ij}^{(0)} = 0
+/// \f]
+///
+///
+///
+/// \f[
+/// C_{ij}^{(n)} = C_{ij}^{(n-1)}
+/// + \frac1{n-1}\left[\left(x_{in} - \left<x_i\right>^{(n)}\right)
+///   \left(x_{jn} - \left<x_j\right>^{(n)}\right)\right]
+/// - \frac1n C_{ij}^{(n-1)}
+/// \f]
+///
+/// since this is a really fast method, with no rounding errors (please
+/// refer to CERN 72-21 pp. 54-106).
+///
+///
+/// The data is stored internally in a <TT>TVectorD</TT>, in the following
+/// way:
+///
+/// \f[
+/// \mathbf{x} = \left[\left(x_{0_0},\ldots,x_{{P-1}_0}\right),\ldots,
+///     \left(x_{0_i},\ldots,x_{{P-1}_i}\right), \ldots\right]
+/// \f]
+///
+/// With \f$P\f$ as defined in the class description.
 
 void TPrincipal::AddRow(const Double_t *p)
 {
-  /*
-     </PRE>
-Add a data point and update the covariance matrix. The input
-array must be <TT>fNumberOfVariables</TT> long.
-
-<P>
-The Covariance matrix and mean values of the input data is caculated
-on the fly by the following equations:
-<BR><P></P>
-<DIV ALIGN="CENTER">
-
-<!-- MATH
- \begin{displaymath}
-\left<x_i\right>^{(0)}  = x_{i0}
-\end{displaymath}
- -->
-
-
-<IMG
- WIDTH="90" HEIGHT="31" BORDER="0"
- SRC="gif/principal_img36.gif"
- ALT="\begin{displaymath}
-\left&lt;x_i\right&gt;^{(0)} = x_{i0}
-\end{displaymath}">
-</DIV>
-<BR CLEAR="ALL">
-<P></P>
-<BR><P></P>
-<DIV ALIGN="CENTER">
-
-<!-- MATH
- \begin{displaymath}
-\left<x_i\right>^{(n)} = \left<x_i\right>^{(n-1)}
-+ \frac1n \left(x_{in} - \left<x_i\right>^{(n-1)}\right)
-\end{displaymath}
- -->
-
-
-<IMG
- WIDTH="302" HEIGHT="42" BORDER="0"
- SRC="gif/principal_img37.gif"
- ALT="\begin{displaymath}
-\left&lt;x_i\right&gt;^{(n)} = \left&lt;x_i\right&gt;^{(n-1)}
-+ \frac1n \left(x_{in} - \left&lt;x_i\right&gt;^{(n-1)}\right)
-\end{displaymath}">
-</DIV>
-<BR CLEAR="ALL">
-<P></P>
-<BR><P></P>
-<DIV ALIGN="CENTER">
-
-<!-- MATH
- \begin{displaymath}
-C_{ij}^{(0)} = 0
-\end{displaymath}
- -->
-
-
-<IMG
- WIDTH="62" HEIGHT="34" BORDER="0"
- SRC="gif/principal_img38.gif"
- ALT="\begin{displaymath}
-C_{ij}^{(0)} = 0
-\end{displaymath}">
-</DIV>
-<BR CLEAR="ALL">
-<P></P>
-<BR><P></P>
-<DIV ALIGN="CENTER">
-
-<!-- MATH
- \begin{displaymath}
-C_{ij}^{(n)} = C_{ij}^{(n-1)}
-+ \frac1{n-1}\left[\left(x_{in} - \left<x_i\right>^{(n)}\right)
-  \left(x_{jn} - \left<x_j\right>^{(n)}\right)\right]
-- \frac1n C_{ij}^{(n-1)}
-\end{displaymath}
- -->
-
-
-<IMG
- WIDTH="504" HEIGHT="43" BORDER="0"
- SRC="gif/principal_img39.gif"
- ALT="\begin{displaymath}
-C_{ij}^{(n)} = C_{ij}^{(n-1)}
-+ \frac1{n-1}\left[\left(x_{i...
-...\left&lt;x_j\right&gt;^{(n)}\right)\right]
-- \frac1n C_{ij}^{(n-1)}
-\end{displaymath}">
-</DIV>
-<BR CLEAR="ALL">
-<P></P>
-since this is a really fast method, with no rounding errors (please
-refer to CERN 72-21 pp. 54-106).
-
-<P>
-The data is stored internally in a <TT>TVectorD</TT>, in the following
-way:
-<BR><P></P>
-<DIV ALIGN="CENTER">
-
-<!-- MATH
- \begin{displaymath}
-\mathbf{x} = \left[\left(x_{0_0},\ldots,x_{{P-1}_0}\right),\ldots,
-    \left(x_{0_i},\ldots,x_{{P-1}_i}\right), \ldots\right]
-\end{displaymath}
- -->
-
-
-<IMG
- WIDTH="319" HEIGHT="31" BORDER="0"
- SRC="gif/principal_img40.gif"
- ALT="\begin{displaymath}
-\mathbf{x} = \left[\left(x_{0_0},\ldots,x_{{P-1}_0}\right),\ldots,
-\left(x_{0_i},\ldots,x_{{P-1}_i}\right), \ldots\right]
-\end{displaymath}">
-</DIV>
-<BR CLEAR="ALL">
-<P></P>
-With <IMG
- WIDTH="18" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
- SRC="gif/principal_img6.gif"
- ALT="$P$"> as defined in the class description.
-     <PRE>
-  */
-  // End_Html
    if (!p)
       return;
 
@@ -606,25 +518,25 @@ const Double_t *TPrincipal::GetRow(Int_t row)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generates the file <filename>, with .C appended if it does
+/// Generates the file `<filename>`, with `.C` appended if it does
 /// argument doesn't end in .cxx or .C.
 ///
 /// The file contains the implementation of two functions
-///
+/// ~~~ {.cpp}
 ///    void X2P(Double_t *x, Double *p)
 ///    void P2X(Double_t *p, Double *x, Int_t nTest)
-///
-/// which does the same as  TPrincipal::X2P and TPrincipal::P2X
+/// ~~~
+/// which does the same as  `TPrincipal::X2P` and `TPrincipal::P2X`
 /// respectively. Please refer to these methods.
 ///
 /// Further, the static variables:
-///
+/// ~~~ {.cpp}
 ///    Int_t    gNVariables
 ///    Double_t gEigenValues[]
 ///    Double_t gEigenVectors[]
 ///    Double_t gMeanValues[]
 ///    Double_t gSigmaValues[]
-///
+/// ~~~
 /// are initialized. The only ROOT header file needed is Rtypes.h
 ///
 /// See TPrincipal::MakeRealCode for a list of options
@@ -641,17 +553,17 @@ void TPrincipal::MakeCode(const char *filename, Option_t *opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Make histograms of the result of the analysis.
 /// The option string say which histograms to create
-///      X         Histogram original data
-///      P         Histogram principal components corresponding to
-///                original data
-///      D         Histogram the difference between the original data
-///                and the projection of principal unto a lower
-///                dimensional subspace (2D histograms)
-///      E         Histogram the eigenvalues
-///      S         Histogram the square of the residues
-///                (see TPrincipal::SumOfSquareResidues)
-/// The histograms will be named <name>_<type><number>, where <name>
-/// is the first argument, <type> is one of X,P,D,E,S, and <number>
+///     - X         Histogram original data
+///     - P         Histogram principal components corresponding to
+///                 original data
+///     - D         Histogram the difference between the original data
+///                 and the projection of principal unto a lower
+///                 dimensional subspace (2D histograms)
+///     - E         Histogram the eigenvalues
+///     - S         Histogram the square of the residues
+///                 (see `TPrincipal::SumOfSquareResiduals`)
+/// The histograms will be named `<name>_<type><number>`, where `<name>`
+/// is the first argument, `<type>` is one of X,P,D,E,S, and `<number>`
 /// is the variable.
 
 void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
@@ -870,7 +782,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// PRIVATE METHOD: Normalize the covariance matrix
+/// Normalize the covariance matrix
 
 void TPrincipal::MakeNormalised()
 {
@@ -896,21 +808,21 @@ void TPrincipal::MakeNormalised()
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate the file <classname>PCA.cxx which contains the
 /// implementation of two methods:
-///
+/// ~~~ {.cpp}
 ///    void <classname>::X2P(Double_t *x, Double *p)
 ///    void <classname>::P2X(Double_t *p, Double *x, Int_t nTest)
-///
+/// ~~~
 /// which does the same as  TPrincipal::X2P and TPrincipal::P2X
-/// respectivly. Please refer to these methods.
+/// respectively. Please refer to these methods.
 ///
 /// Further, the public static members:
-///
+/// ~~~ {.cpp}
 ///    Int_t    <classname>::fgNVariables
 ///    Double_t <classname>::fgEigenValues[]
 ///    Double_t <classname>::fgEigenVectors[]
 ///    Double_t <classname>::fgMeanValues[]
 ///    Double_t <classname>::fgSigmaValues[]
-///
+/// ~~~
 /// are initialized, and assumed to exist. The class declaration is
 /// assumed to be in <classname>.h and assumed to be provided by the
 /// user.
@@ -918,7 +830,7 @@ void TPrincipal::MakeNormalised()
 /// See TPrincipal::MakeRealCode for a list of options
 ///
 /// The minimal class definition is:
-///
+/// ~~~ {.cpp}
 ///   class <classname> {
 ///   public:
 ///     static Int_t    fgNVariables;
@@ -930,7 +842,7 @@ void TPrincipal::MakeNormalised()
 ///     void X2P(Double_t *x, Double_t *p);
 ///     void P2X(Double_t *p, Double_t *x, Int_t nTest);
 ///   };
-///
+/// ~~~
 /// Whether the methods <classname>::X2P and <classname>::P2X should
 /// be static or not, is up to the user.
 
@@ -944,8 +856,8 @@ void TPrincipal::MakeMethods(const char *classname, Option_t *opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Perform the principal components analysis.
 /// This is done in several stages in the TMatrix::EigenVectors method:
-/// * Transform the covariance matrix into a tridiagonal matrix.
-/// * Find the eigenvalues and vectors of the tridiagonal matrix.
+///  - Transform the covariance matrix into a tridiagonal matrix.
+///  - Find the eigenvalues and vectors of the tridiagonal matrix.
 
 void TPrincipal::MakePrincipals()
 {
@@ -963,7 +875,6 @@ void TPrincipal::MakePrincipals()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// PRIVATE METHOD:
 /// This is the method that actually generates the code for the
 /// transformations to and from feature space and pattern space
 /// It's called by TPrincipal::MakeCode and TPrincipal::MakeMethods.
@@ -1153,10 +1064,10 @@ void TPrincipal::P2X(const Double_t *p, Double_t *x, Int_t nTest)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the statistics
 /// Options are
-///      M            Print mean values of original data
-///      S            Print sigma values of original data
-///      E            Print eigenvalues of covariance matrix
-///      V            Print eigenvectors of covariance matrix
+///  - M            Print mean values of original data
+///  - S            Print sigma values of original data
+///  - E            Print eigenvalues of covariance matrix
+///  - V            Print eigenvectors of covariance matrix
 /// Default is MSE
 
 void TPrincipal::Print(Option_t *opt) const
@@ -1237,60 +1148,20 @@ void TPrincipal::Print(Option_t *opt) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// PRIVATE METHOD:
-/// Begin_html
+/// Calculates the sum of the square residuals, that is
+///
+/// \f[
+/// E_N = \sum_{i=0}^{P-1} \left(x_i - x^\prime_i\right)^2
+/// \f]
+///
+/// where \f$x^\prime_i = \sum_{j=i}^N p_i e_{n_j}\f$
+/// is the \f$i^{\mbox{th}}\f$ component of the principal vector, corresponding to
+/// \f$x_i\f$, the original data; I.e., the square distance to the space
+/// spanned by \f$N\f$ eigenvectors.
 
 void TPrincipal::SumOfSquareResiduals(const Double_t *x, Double_t *s)
 {
-   /*
-    </PRE>
-    Calculates the sum of the square residuals, that is
-    <BR><P></P>
-    <DIV ALIGN="CENTER">
 
-    <!-- MATH
-    \begin{displaymath}
-    E_N = \sum_{i=0}^{P-1} \left(x_i - x^\prime_i\right)^2
-    \end{displaymath}
-    -->
-
-
-    <IMG
-    WIDTH="147" HEIGHT="58" BORDER="0"
-    SRC="gif/principal_img52.gif"
-    ALT="\begin{displaymath}
-    E_N = \sum_{i=0}^{P-1} \left(x_i - x^\prime_i\right)^2
-    \end{displaymath}">
-    </DIV>
-    <BR CLEAR="ALL">
-    <P></P>
-    where
-    <!-- MATH
-    $x^\prime_i = \sum_{j=i}^N p_i e_{n_j}$
-    -->
-    <IMG
-    WIDTH="122" HEIGHT="40" ALIGN="MIDDLE" BORDER="0"
-    SRC="gif/principal_img53.gif"
-    ALT="$x^\prime_i = \sum_{j=i}^N p_i e_{n_j}$">, <IMG
-    WIDTH="19" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
-    SRC="gif/principal_img54.gif"
-    ALT="$p_i$"> is the
-    <IMG
-    WIDTH="28" HEIGHT="23" ALIGN="BOTTOM" BORDER="0"
-    SRC="gif/principal_img55.gif"
-    ALT="$i^{\mbox{th}}$"> component of the principal vector, corresponding to
-    <IMG
-    WIDTH="20" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
-    SRC="gif/principal_img56.gif"
-    ALT="$x_i$">, the original data; I.e., the square distance to the space
-    spanned by <IMG
-    WIDTH="20" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
-    SRC="gif/principal_img12.gif"
-    ALT="$N$"> eigenvectors.
-    <BR>
-    <PRE>
-   */
-   // End_Html
    if (!x)
       return;
 
@@ -1330,6 +1201,7 @@ void TPrincipal::Test(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the principal components from the original data vector
 /// x, and return it in p.
+///
 /// It's the users responsibility to make sure that both x and p are
 /// of the right size (i.e., memory must be allocated for p).
 

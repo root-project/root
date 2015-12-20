@@ -68,6 +68,7 @@ endif
 # Linker:
 LD            = icpc
 LDFLAGS       = $(OPT) -mmacosx-version-min=$(MACOSXVERS)
+LDFLAGS      += $(EXTRA_LDFLAGS)
 
 FORCELINK     = no
 
@@ -86,21 +87,16 @@ SOFLAGS       = -dynamiclib -single_module \
 endif
 endif
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
-ifeq ($(findstring $(ICC_MAJOR),10 9),)
 SOEXT         = so
-# not yet supported by icc 10.x xilibtool
-else
-SOEXT         = dylib
-endif
 else
 SOEXT         = dylib
 endif
 
 # System libraries:
-SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(OSTHREADLIBDIR) \
+SYSLIBS       = -lm $(OSTHREADLIBDIR) \
                 $(OSTHREADLIB) -ldl $(ALLOCLIBDIR) $(ALLOCLIB)
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
-CILIBS        = -lm $(EXTRA_LDFLAGS) -ldl
+CILIBS        = -lm -ldl
 
 # Fortran:
 F77ORG        = ifort

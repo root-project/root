@@ -31,9 +31,10 @@
 
 #include "Buttons.h"
 
-//______________________________________________________________________________
-//
-// GUI editor for TGLPShapeObj.
+/** \class TGLPShapeObjEditor
+\ingroup opengl
+GUI editor for TGLPShapeObj.
+*/
 
 ClassImp(TGLPShapeObjEditor);
 
@@ -578,7 +579,7 @@ void TGLPShapeObjEditor::DrawSphere()const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create widgets to chhos colors componnet and its RGBA values on fGedEditor
+/// Create widgets to chose colors component and its RGBA values on fGedEditor
 /// model or family it belongs to.
 
 void TGLPShapeObjEditor::CreateColorControls()

@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTime                                                                //
-//                                                                      //
-// Basic time type with millisecond precision.                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTime
+Basic time type with millisecond precision.
+*/
 
 #include "TTime.h"
 #include "TString.h"

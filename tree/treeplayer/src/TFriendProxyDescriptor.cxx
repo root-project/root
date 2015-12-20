@@ -20,9 +20,10 @@ fragment in the result of MakeProxy.
 #include "TBranchProxyDescriptor.h"
 #include "TList.h"
 
-ClassImp(ROOT::TFriendProxyDescriptor);
+ClassImp(ROOT::Internal::TFriendProxyDescriptor);
 
 namespace ROOT {
+namespace Internal {
 
    TFriendProxyDescriptor::TFriendProxyDescriptor(const char *treename,
                                                   const char *aliasname,
@@ -89,4 +90,5 @@ namespace ROOT {
               offset," ",maxVarname,typeName.Data(),GetTitle());
    }
 
-}
+} // namespace Internal
+} // namespace ROOT

@@ -21,6 +21,8 @@ ClassImp(TButton)
 
 
 /** \class TButton
+\ingroup gpad
+
 A TButton object is a user interface object.
 
 A TButton has a name and an associated action.
@@ -45,10 +47,10 @@ TButtons are in general placed in a TDialogCanvas.
 A TButton being a TPad, one can draw graphics primitives in it
 when the TCanvas/TDialogCanvas is editable.
 
-Example of a macro creating a dialogcanvas with buttons:
+Example of a macro creating a dialog canvas with buttons:
 ~~~ {.cpp}
 void but() {
-//   example of a dialogcanvas with a few buttons
+//   example of a dialog canvas with a few buttons
 
    TDialogCanvas *dialog = new TDialogCanvas("dialog","",200,300);
 
@@ -83,8 +85,7 @@ void but() {
    dialog->cd();
 }
 ~~~
-Executing the macro above produces the following dialogcanvas
-//Begin_Html
+Executing the macro above produces the following dialog canvas:
 
 \image html gpad_dialogbuttons.png
 */

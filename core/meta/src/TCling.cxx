@@ -9,16 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCling                                                               //
-//                                                                      //
-// This class defines an interface to the cling C++ interpreter.        //
-//                                                                      //
-// Cling is a full ANSI compliant C++-11 interpreter based on           //
-// clang/LLVM technology.                                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TCling
+
+This class defines an interface to the cling C++ interpreter.
+
+Cling is a full ANSI compliant C++-11 interpreter based on
+clang/LLVM technology.
+*/
 
 #include "TCling.h"
 
@@ -101,6 +98,7 @@
 #include "cling/Interpreter/Transaction.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
+#include "cling/Interpreter/Exception.h"
 
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/Module.h"
@@ -136,7 +134,7 @@
 #include <mach-o/dyld.h>
 #endif // __APPLE__
 
-#ifdef R__LINUX
+#ifdef R__UNIX
 #include <dlfcn.h>
 #endif
 
@@ -178,6 +176,23 @@ extern "C" {
 #endif
 
 //______________________________________________________________________________
+// Infrastructure to detect and react to libCling being teared down.
+//
+namespace {
+   class TCling_UnloadMarker {
+   public:
+      ~TCling_UnloadMarker() {
+         if (ROOT::Internal::gROOTLocal) {
+            ROOT::Internal::gROOTLocal->~TROOT();
+         }
+      }
+   };
+   static TCling_UnloadMarker gTClingUnloadMarker;
+}
+
+
+
+//______________________________________________________________________________
 // These functions are helpers for debugging issues with non-LLVMDEV builds.
 //
 clang::DeclContext* TCling__DEBUG__getDeclContext(clang::Decl* D) {
@@ -194,6 +209,12 @@ void TCling__DEBUG__dump(clang::DeclContext* DC) {
 }
 void TCling__DEBUG__dump(clang::Decl* D) {
    return D->dump();
+}
+void TCling__DEBUG__dump(clang::FunctionDecl* FD) {
+   return FD->dump();
+}
+void TCling__DEBUG__decl_dump(void* D) {
+   return ((clang::Decl*)D)->dump();
 }
 void TCling__DEBUG__printName(clang::Decl* D) {
    if (clang::NamedDecl* ND = llvm::dyn_cast<clang::NamedDecl>(D)) {
@@ -278,7 +299,6 @@ public: \
 )ICF";
 }
 R__EXTERN int optind;
-
 
 // The functions are used to bridge cling/clang/llvm compiled with no-rtti and
 // ROOT (which uses rtti)
@@ -501,7 +521,7 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       if (gROOT->GetListOfGlobals()->FindObject(ND->getNameAsString().c_str()))
          return;
 
-      // Put the global constants and global enums in the coresponding lists.
+      // Put the global constants and global enums in the corresponding lists.
       gROOT->GetListOfGlobals()->Add(new TGlobal((DataMemberInfo_t *)
                                                 new TClingDataMemberInfo(fInterpreter,
                                                                         cast<ValueDecl>(ND), 0)));
@@ -526,6 +546,10 @@ void TCling__UpdateListsOnUnloaded(const cling::Transaction &T) {
 
    ((TCling*)gCling)->UpdateListsOnUnloaded(T);
 }
+void TCling__TransactionRollback(const cling::Transaction &T) {
+
+   ((TCling*)gCling)->TransactionRollback(T);
+}
 extern "C" void TCling__LibraryLoadedRTTI(const void* dyLibHandle,
                                           const char* canonicalName) {
 
@@ -541,33 +565,7 @@ extern "C" void TCling__LibraryUnloadedRTTI(const void* dyLibHandle,
 
 extern "C"
 TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx) {
-   // The call to FindSpecialObject might induces any kind of use
-   // of the interpreter ... (library loading, function calling, etc.)
-   // ... and we _know_ we are in the middle of parsing, so let's make
-   // sure to save the state and then restore it.
-
-   cling::Interpreter *interpreter = ((TCling*)gCling)->GetInterpreter();
-
-   // Save state of the PP
-   Sema &SemaR = interpreter->getSema();
-   ASTContext& C = SemaR.getASTContext();
-   Preprocessor &PP = SemaR.getPreprocessor();
-   Parser& P = const_cast<Parser&>(interpreter->getParser());
-   Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
-   Parser::ParserCurTokRestoreRAII savedCurToken(P);
-   // After we have saved the token reset the current one to something which
-   // is safe (semi colon usually means empty decl)
-   Token& Tok = const_cast<Token&>(P.getCurToken());
-   Tok.setKind(tok::semi);
-
-   // We can't PushDeclContext, because we go up and the routine that pops
-   // the DeclContext assumes that we drill down always.
-   // We have to be on the global context. At that point we are in a
-   // wrapper function so the parent context must be the global.
-   Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
-                                          SemaR.TUScope);
-
-   return gROOT->FindSpecialObject(Name, LookupCtx);
+   return ((TCling*)gCling)->GetObjectAddress(Name, LookupCtx);
 }
 
 extern "C" const Decl* TCling__GetObjectDecl(TObject *obj) {
@@ -890,6 +888,13 @@ namespace{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Allow calling autoparsing from TMetaUtils
+bool TClingLookupHelper__AutoParse(const char *cname)
+{
+   return gCling->AutoParse(cname);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Try hard to avoid looking up in the Cling database as this could enduce
 /// an unwanted autoparsing.
 
@@ -1141,7 +1146,7 @@ TCling::TCling(const char *name, const char *title)
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
-   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck);
+   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck, TClingLookupHelper__AutoParse);
    TClassEdit::Init(fLookupHelper);
 
    // Initialize the cling interpreter interface.
@@ -1153,6 +1158,8 @@ TCling::TCling(const char *name, const char *title)
    fLockProcessLine = kTRUE;
 
    fAllowLibLoad = !fromRootCling;
+   // Disallow auto-parsing in rootcling
+   fIsAutoParsingSuspended = fromRootCling;
    // Disable the autoloader until it is explicitly enabled.
    SetClassAutoloading(false);
 
@@ -1165,6 +1172,7 @@ TCling::TCling(const char *name, const char *title)
    std::unique_ptr<TClingCallbacks>
       clingCallbacks(new TClingCallbacks(fInterpreter));
    fClingCallbacks = clingCallbacks.get();
+   fClingCallbacks->SetAutoParsingSuspended(fIsAutoParsingSuspended);
    fInterpreter->setCallbacks(std::move(clingCallbacks));
 
    if (!fromRootCling) {
@@ -1523,7 +1531,7 @@ void TCling::RegisterModule(const char* modulename,
    TString code = gNonInterpreterClassDef;
    code += payloadCode;
 
-   // We need to open the dictionary shared library, to resolve sylbols
+   // We need to open the dictionary shared library, to resolve symbols
    // requested by the JIT from it: as the library is currently being dlopen'ed,
    // its symbols are not yet reachable from the process.
    // Recursive dlopen seems to work just fine.
@@ -1820,6 +1828,28 @@ void TCling::UnRegisterTClassUpdate(const TClass *oldcl)
 /// (float and double return values will be truncated).
 ///
 
+// Method for handling the interpreter exceptions.
+// the MetaProcessor is passing in as argument to teh function, because
+// cling::Interpreter::CompilationResult is a nested class and it cannot be
+// forward declared, thus this method cannot be a static member function
+// of TCling.
+
+static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
+                                 const char* input_line,
+                                 cling::Interpreter::CompilationResult& compRes,
+                                 cling::Value* result)
+{
+   try {
+      return metaProcessor->process(input_line, compRes, result);
+   }
+   catch (cling::InvalidDerefException& ex)
+   {
+      Info("Handle", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
+      ex.diagnose();
+   }
+   return 0;
+}
+
 Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
 {
    // Copy the passed line, it comes from a static buffer in TApplication
@@ -1919,7 +1949,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
                const char *function = gSystem->BaseName(fname);
                mod_line = function + arguments + io;
                cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-               indent = fMetaProcessor->process(mod_line, compRes, &result);
+               indent = HandleInterpreterException(fMetaProcessor, mod_line, compRes, &result);
             }
          }
       } else {
@@ -1949,7 +1979,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          } else {
             // No DynLookup for .x, .L of named macros.
             fInterpreter->enableDynamicLookup(false);
-            indent = fMetaProcessor->process(mod_line, compRes, &result);
+            indent = HandleInterpreterException(fMetaProcessor, mod_line, compRes, &result);
          }
          fCurExecutingMacros.pop_back();
       }
@@ -1964,9 +1994,9 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          bool isInclusionDirective = sLine.Contains("\n#include");
          if (isInclusionDirective) {
             SuspendAutoParsing autoParseRaii(this);
-            indent = fMetaProcessor->process(sLine, compRes, &result);
+            indent = HandleInterpreterException(fMetaProcessor, sLine, compRes, &result);
          } else {
-            indent = fMetaProcessor->process(sLine, compRes, &result);
+            indent = HandleInterpreterException(fMetaProcessor, sLine, compRes, &result);
          }
       }
    }
@@ -2005,11 +2035,16 @@ void TCling::PrintIntro()
 ////////////////////////////////////////////////////////////////////////////////
 /// Add the given path to the list of directories in which the interpreter
 /// looks for include files. Only one path item can be specified at a
-/// time, i.e. "path1:path2" is not supported.
+/// time, i.e. "path1:path2" is NOT supported.
 
 void TCling::AddIncludePath(const char *path)
 {
    R__LOCKGUARD(gInterpreterMutex);
+   // Favorite source of annoyance: gSystem->AddIncludePath() needs "-I",
+   // gCling->AddIncludePath() does not! Work around that inconsistency:
+   if (path[0] == '-' && path[1] == 'I')
+      path += 2;
+
    fInterpreter->AddIncludePath(path);
 }
 
@@ -2041,7 +2076,7 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
 
    // Treat the case of std::complex in a special manner. We want to enforce
    // the layout of a stl implementation independent class, which is the
-   // complex as implmented in ROOT5.
+   // complex as implemented in ROOT5.
 
    // A simple lambda to simplify the code
    auto inspInspect =  [&] (ptrdiff_t offset){
@@ -2080,7 +2115,7 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
    static clang::PrintingPolicy
       printPol(fInterpreter->getCI()->getLangOpts());
    if (printPol.Indentation) {
-      // not yet inialized
+      // not yet initialized
       printPol.Indentation = 0;
       printPol.SuppressInitializers = true;
    }
@@ -2113,7 +2148,16 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       return;
    }
 
-   cling::Interpreter::PushTransactionRAII deserRAII(fInterpreter);
+   {
+      // Force possible deserializations first. We need to have no pending
+      // Transaction when passing control flow to the inspector below (ROOT-7779).
+      cling::Interpreter::PushTransactionRAII deserRAII(fInterpreter);
+
+      astContext.getASTRecordLayout(recordDecl);
+
+      for (clang::RecordDecl::field_iterator iField = recordDecl->field_begin(),
+              eField = recordDecl->field_end(); iField != eField; ++iField) {}
+   }
 
    const clang::ASTRecordLayout& recLayout
       = astContext.getASTRecordLayout(recordDecl);
@@ -2722,7 +2766,7 @@ Int_t TCling::Load(const char* filename, Bool_t system)
          // FIXME: Here we lose the information about kLoadLibAlreadyLoaded case.
          cling::Interpreter::CompilationResult compRes;
          cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-         fMetaProcessor->process(Form(".L %s", canonLib.c_str()), compRes, /*cling::Value*/0);
+         HandleInterpreterException(fMetaProcessor, Form(".L %s", canonLib.c_str()), compRes, /*cling::Value*/0);
          if (compRes == cling::Interpreter::kSuccess)
             res = cling::DynamicLibraryManager::kLoadLibSuccess;
       }
@@ -2912,7 +2956,6 @@ void TCling::ResetAll()
 /// call to TCling::SaveGlobalsContext().
 ///
 /// Note: Right now, all we do is run the global destructors.
-///
 
 void TCling::ResetGlobals()
 {
@@ -2920,6 +2963,8 @@ void TCling::ResetGlobals()
    // TODO:
    // Here we should iterate over the transactions (N-3) and revert.
    // N-3 because the first three internal to cling.
+
+   fInterpreter->runAndRemoveStaticDestructors();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3104,7 +3149,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
       delete info;
       return;
    }
-   cl->fClassInfo = (ClassInfo_t*)info; // Note: We are transfering ownership here.
+   cl->fClassInfo = (ClassInfo_t*)info; // Note: We are transferring ownership here.
    // In case a class contains an external enum, the enum will be seen as a
    // class. We must detect this special case and make the class a Zombie.
    // Here we assume that a class has at least one method.
@@ -3163,8 +3208,9 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 /// If the flag isClassOrNamespaceOnly is true, classes, structs and
 /// namespaces only are considered. I.e. if the name is an enum or a union,
 /// the returned value is false.
+///
 /// In the case where the class is not loaded and belongs to a namespace
-/// or is nested, looking for the full class name is outputing a lots of
+/// or is nested, looking for the full class name is outputting a lots of
 /// (expected) error messages.  Currently the only way to avoid this is to
 /// specifically check that each level of nesting is already loaded.
 /// In case of templates the idea is that everything between the outer
@@ -3612,7 +3658,7 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
          // 0 means success.
          cl = TClass::LoadClass(classnam.c_str(), silent);
          if (cl == 0) {
-            Error("GenerateTClass","Even though the dictionary generation for %s seemed successfull we can't find the TClass bootstrap!",classname.c_str());
+            Error("GenerateTClass","Even though the dictionary generation for %s seemed successful we can't find the TClass bootstrap!",classname.c_str());
          }
       }
 #endif
@@ -3635,13 +3681,17 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate the dictionary for the C++ classes listed in the first
-/// argmument (in a semi-colon separated list).
+/// argument (in a semi-colon separated list).
 /// 'includes' contains a semi-colon separated list of file to
 /// #include in the dictionary.
 /// For example:
+/// ~~~ {.cpp}
 ///    gInterpreter->GenerateDictionary("vector<vector<float> >;list<vector<float> >","list;vector");
+/// ~~~
 /// or
+/// ~~~ {.cpp}
 ///    gInterpreter->GenerateDictionary("myclass","myclass.h;myhelper.h");
+/// ~~~
 
 Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = 0 */, const char* /* options  = 0 */)
 {
@@ -4054,7 +4104,7 @@ TInterpreter::DeclId_t TCling::GetFunctionTemplate(ClassInfo_t *opaque_cl, const
 /// The 'name' is known to the interpreter, this function returns
 /// the internal version of this name (usually just resolving typedefs)
 /// This is used in particular to synchronize between the name used
-/// by rootcling and by the run-time enviroment (TClass)
+/// by rootcling and by the run-time environment (TClass)
 /// Return 0 if the name is not known.
 
 void TCling::GetInterpreterTypeName(const char* name, std::string &output, Bool_t full)
@@ -4089,7 +4139,6 @@ void TCling::GetInterpreterTypeName(const char* name, std::string &output, Bool_
 ///        this does not really translate well to cling/clang.  We
 ///        should enhance these interfaces so that we can report
 ///        compilation and runtime errors properly.
-///
 
 void TCling::Execute(const char* function, const char* params, int* error)
 {
@@ -4114,7 +4163,6 @@ void TCling::Execute(const char* function, const char* params, int* error)
 ///        this does not really translate well to cling/clang.  We
 ///        should enhance these interfaces so that we can report
 ///        compilation and runtime errors properly.
-///
 
 void TCling::Execute(TObject* obj, TClass* cl, const char* method,
                      const char* params, Bool_t objectIsConst, int* error)
@@ -4141,6 +4189,7 @@ void TCling::Execute(TObject* obj, TClass* cl, const char* method,
 {
    Execute(obj,cl,method,params,false,error);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute a method from class cl with the arguments in array params
 /// (params[0] ... params[n] = array of TObjString parameters).
@@ -4284,49 +4333,45 @@ const char* TCling::GetTopLevelMacroName() const
 /// Return the file name of the currently interpreted file,
 /// included or not. Example to illustrate the difference between
 /// GetCurrentMacroName() and GetTopLevelMacroName():
-/// BEGIN_HTML <!--
+/// ~~~ {.cpp}
+///   void inclfile() {
+///   std::cout << "In inclfile.C" << std::endl;
+///   std::cout << "  TCling::GetCurrentMacroName() returns  " <<
+///      TCling::GetCurrentMacroName() << std::endl;
+///   std::cout << "  TCling::GetTopLevelMacroName() returns " <<
+///      TCling::GetTopLevelMacroName() << std::endl;
+///   }
+/// ~~~
+/// ~~~ {.cpp}
+///   void mymacro() {
+///   std::cout << "In mymacro.C" << std::endl;
+///   std::cout << "  TCling::GetCurrentMacroName() returns  " <<
+///      TCling::GetCurrentMacroName() << std::endl;
+///   std::cout << "  TCling::GetTopLevelMacroName() returns " <<
+///      TCling::GetTopLevelMacroName() << std::endl;
+///   std::cout << "  Now calling inclfile..." << std::endl;
+///   gInterpreter->ProcessLine(".x inclfile.C");;
+///   }
+/// ~~~
+/// Running mymacro.C will print:
+///
+/// ~~~ {.cpp}
+/// root [0] .x mymacro.C
+/// ~~~
+/// In mymacro.C
+/// ~~~ {.cpp}
+///   TCling::GetCurrentMacroName() returns  ./mymacro.C
+///   TCling::GetTopLevelMacroName() returns ./mymacro.C
+/// ~~~
+///   Now calling inclfile...
+/// In inclfile.h
+/// ~~~ {.cpp}
+///   TCling::GetCurrentMacroName() returns  inclfile.C
+///   TCling::GetTopLevelMacroName() returns ./mymacro.C
+/// ~~~
 
 const char* TCling::GetCurrentMacroName() const
 {
-   /* -->
-      <span style="color:#ffffff;background-color:#7777ff;padding-left:0.3em;padding-right:0.3em">inclfile.C</span>
-      <!--div style="border:solid 1px #ffff77;background-color: #ffffdd;float:left;padding:0.5em;margin-bottom:0.7em;"-->
-      <div class="code">
-      <pre style="margin:0pt">#include &lt;iostream&gt;
-   void inclfile() {
-   std::cout &lt;&lt; "In inclfile.C" &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  TCling::GetCurrentMacroName() returns  " &lt;&lt;
-      TCling::GetCurrentMacroName() &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  TCling::GetTopLevelMacroName() returns " &lt;&lt;
-      TCling::GetTopLevelMacroName() &lt;&lt; std::endl;
-   }</pre></div>
-      <div style="clear:both"></div>
-      <span style="color:#ffffff;background-color:#7777ff;padding-left:0.3em;padding-right:0.3em">mymacro.C</span>
-      <div style="border:solid 1px #ffff77;background-color: #ffffdd;float:left;padding:0.5em;margin-bottom:0.7em;">
-      <pre style="margin:0pt">#include &lt;iostream&gt;
-   void mymacro() {
-   std::cout &lt;&lt; "In mymacro.C" &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  TCling::GetCurrentMacroName() returns  " &lt;&lt;
-      TCling::GetCurrentMacroName() &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  TCling::GetTopLevelMacroName() returns " &lt;&lt;
-      TCling::GetTopLevelMacroName() &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  Now calling inclfile..." &lt;&lt; std::endl;
-   gInterpreter->ProcessLine(".x inclfile.C");;
-   }</pre></div>
-   <div style="clear:both"></div>
-   <!-- */
-   // --> END_HTML
-   // Running mymacro.C will print:
-   //
-   // root [0] .x mymacro.C
-   // In mymacro.C
-   //   TCling::GetCurrentMacroName() returns  ./mymacro.C
-   //   TCling::GetTopLevelMacroName() returns ./mymacro.C
-   //   Now calling inclfile...
-   // In inclfile.h
-   //   TCling::GetCurrentMacroName() returns  inclfile.C
-   //   TCling::GetTopLevelMacroName() returns ./mymacro.C
-
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,0)
    Warning("GetCurrentMacroName", "Must change return type!");
@@ -4484,7 +4529,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
 /// Create a resource table and read the (possibly) three resource files, i.e
 /// $ROOTSYS/etc/system<name> (or ROOTETCDIR/system<name>), $HOME/<name> and
 /// ./<name>. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
-/// read additional user defined resource files by creating addtional TEnv
+/// read additional user defined resource files by creating additional TEnv
 /// objects. By setting the shell variable ROOTENV_NO_HOME=1 the reading of
 /// the $HOME/<name> resource file will be skipped. This might be useful in
 /// case the home directory resides on an automounted remote file system
@@ -4661,7 +4706,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
       }
    }
    if (rootmapfile && *rootmapfile) {
-      Int_t res = ReadRootmapFile(gSystem->BaseName(rootmapfile),&uniqueString);
+      Int_t res = ReadRootmapFile(rootmapfile, &uniqueString);
       if (res == 0) {
          //TString p = gSystem->ConcatFileName(gSystem->pwd(), rootmapfile);
          //fRootmapFiles->Add(new TNamed(gSystem->BaseName(rootmapfile), p.Data()));
@@ -4708,7 +4753,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
          // Fill in the namespace candidate list
 //          Ssiz_t last = cls.Last(':');
 //          if (last != kNPOS) {
-//             // Please note that the funny op overlaod does substring.
+//             // Please note that the funny op overload does substring.
 //             TString namespaceCand = cls(0, last - 1);
 //             // This is a reference to a substring that lives in fMapfile
 //             if (!fMapNamespaces->FindObject(namespaceCand.Data()))
@@ -4997,7 +5042,7 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
    R__LOCKGUARD(gInterpreterMutex);
 
    if (!knowDictNotLoaded && gClassTable->GetDictNorm(cls)) {
-      // The library is alreday loaded as the class's dictionary is known.
+      // The library is already loaded as the class's dictionary is known.
       // Return success.
       // Note: the name (cls) is expected to be normalized as it comes either
       // from a callbacks (that can/should calculate the normalized name from the
@@ -5138,36 +5183,17 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Parse the headers relative to the class
-/// Returns 1 in case of success, 0 in case of failure
+/// Helper routine for TCling::AutoParse implementing the actual call to the
+/// parser and looping over template parameters (if
+/// any) and when they don't have a registered header to autoparse,
+/// recurse over their template parameters.
+///
+/// Returns the number of header parsed.
 
-Int_t TCling::AutoParse(const char *cls)
+UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
 {
-   R__LOCKGUARD(gInterpreterMutex);
-
-   if (!fHeaderParsingOnDemand || fIsAutoParsingSuspended) {
-      if (fClingCallbacks->IsAutoloadingEnabled()) {
-         return AutoLoad(cls);
-      } else {
-         return 0;
-      }
-   }
-
-   if (gDebug > 1) {
-      Info("TCling::AutoParse",
-           "Trying to autoparse for %s", cls);
-   }
-
-   // The catalogue of headers is in the dictionary
-   if (fClingCallbacks->IsAutoloadingEnabled()) {
-      AutoLoad(cls);
-   }
-
-   // Prevent the recursion when the library dictionary are loaded.
-   Int_t oldAutoloadValue = SetClassAutoloading(false);
-
-   // No recursive header parsing on demand; we require headers to be standalone.
-   SuspendAutoParsing autoParseRAII(this);
+   // We assume the lock has already been taken.
+   //    R__LOCKGUARD(gInterpreterMutex);
 
    Int_t nHheadersParsed = 0;
 
@@ -5188,7 +5214,7 @@ Int_t TCling::AutoParse(const char *cls)
          for (auto const & scopeObj : *tokens){
             auto scopeName = ((TObjString*) scopeObj)->String().Data();
             previousScopeAsNamedDecl = cling::utils::Lookup::Named(&fInterpreter->getSema(), scopeName, previousScopeAsContext);
-            // Check if we have multipple nodes in the AST with this name
+            // Check if we have multiple nodes in the AST with this name
             if ((clang::NamedDecl*)-1 == previousScopeAsNamedDecl) break;
             previousScopeAsContext = llvm::dyn_cast_or_null<clang::DeclContext>(previousScopeAsNamedDecl);
             if (!previousScopeAsContext) break; // this is not a context
@@ -5203,7 +5229,7 @@ Int_t TCling::AutoParse(const char *cls)
 
       }
    }
-   autoparseKeys.emplace_back(cls);
+   if (topLevel) autoparseKeys.emplace_back(cls);
 
    for (const auto & apKeyStr : autoparseKeys) {
       if (skipFirstEntry) {
@@ -5221,7 +5247,9 @@ Int_t TCling::AutoParse(const char *cls)
       if (fLookedUpClasses.insert(normNameHash).second) {
          auto const &iter = fClassesHeadersMap.find(normNameHash);
          if (iter != fClassesHeadersMap.end()) {
-            auto const &hNamesPtrs = fClassesHeadersMap[normNameHash];
+            const cling::Transaction *T = fInterpreter->getCurrentTransaction();
+            fTransactionHeadersMap.insert({T,normNameHash});
+            auto const &hNamesPtrs = iter->second;
             if (gDebug > 1) {
                Info("TCling::AutoParse",
                     "We can proceed for %s. We have %s headers.", apKey, std::to_string(hNamesPtrs.size()).c_str());
@@ -5270,8 +5298,55 @@ Int_t TCling::AutoParse(const char *cls)
                }
             }
          }
+         else {
+            // There is no header registered for this class, if this a
+            // template, it will be instantiated if/when it is requested
+            // and if we do no load/parse its components we might end up
+            // not using an eventual specialization.
+            if (strchr(apKey, '<')) {
+               nHheadersParsed += AutoParseImplRecurse(apKey, false);
+            }
+         }
       }
    }
+
+   return nHheadersParsed;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Parse the headers relative to the class
+/// Returns 1 in case of success, 0 in case of failure
+
+Int_t TCling::AutoParse(const char *cls)
+{
+   R__LOCKGUARD(gInterpreterMutex);
+
+   if (!fHeaderParsingOnDemand || fIsAutoParsingSuspended) {
+      if (fClingCallbacks->IsAutoloadingEnabled()) {
+         return AutoLoad(cls);
+      } else {
+         return 0;
+      }
+   }
+
+   if (gDebug > 1) {
+      Info("TCling::AutoParse",
+           "Trying to autoparse for %s", cls);
+   }
+
+   // The catalogue of headers is in the dictionary
+   if (fClingCallbacks->IsAutoloadingEnabled()) {
+      AutoLoad(cls);
+   }
+
+   // Prevent the recursion when the library dictionary are loaded.
+   Int_t oldAutoloadValue = SetClassAutoloading(false);
+
+   // No recursive header parsing on demand; we require headers to be standalone.
+   SuspendAutoParsing autoParseRAII(this);
+
+   Int_t nHheadersParsed = AutoParseImplRecurse(cls,/*topLevel=*/ true);
 
    if (nHheadersParsed != 0) {
       while (!fClassesToUpdate.empty()) {
@@ -5390,12 +5465,12 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///    if (fMapNamespaces){
-///       return fMapNamespaces->FindObject(name);
-///    }
 
 Bool_t TCling::IsAutoLoadNamespaceCandidate(const char* name)
 {
+//    if (fMapNamespaces){
+//       return fMapNamespaces->FindObject(name);
+//    }
    return false;
 }
 
@@ -5603,9 +5678,9 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Helper function to go through the members of a class or namespace and unload them.
 
 void TCling::UnloadClassMembers(TClass* cl, const clang::DeclContext* DC) {
-   // Helper function to go through the members of a class or namespace and unload them.
 
    TDataMember* var = 0;
    TFunction* function = 0;
@@ -5768,9 +5843,34 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///UpdateListOfLoadedSharedLibraries();
+// If an autoparse was done during a transaction and that it is rolled back,
+// we need to make sure the next request for the same autoparse will be
+// honored.
+void TCling::TransactionRollback(const cling::Transaction &T) {
+   auto const &triter = fTransactionHeadersMap.find(&T);
+   if (triter != fTransactionHeadersMap.end()) {
+      std::size_t normNameHash = triter->second;
+
+      fLookedUpClasses.erase(normNameHash);
+
+      auto const &iter = fClassesHeadersMap.find(normNameHash);
+      if (iter != fClassesHeadersMap.end()) {
+         auto const &hNamesPtrs = iter->second;
+         for (auto &hName : hNamesPtrs) {
+            if (gDebug > 0) {
+               Info("TransactionRollback",
+                    "Restoring ability to autoaparse: %s", hName);
+            }
+            fParsedPayloadsAddresses.erase(hName);
+         }
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void TCling::LibraryLoaded(const void* dyLibHandle, const char* canonicalName) {
+// UpdateListOfLoadedSharedLibraries();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6046,7 +6146,7 @@ int TCling::LoadFile(const char* path) const
 {
    cling::Interpreter::CompilationResult compRes;
    cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-   fMetaProcessor->process(TString::Format(".L %s", path), compRes, /*cling::Value*/0);
+   HandleInterpreterException(fMetaProcessor, TString::Format(".L %s", path), compRes, /*cling::Value*/0);
    return compRes == cling::Interpreter::kFailure;
 }
 
@@ -6119,6 +6219,17 @@ int TCling::SetClassAutoparsing(int autoparse)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Suspend the Autoparsing of headers.
+/// Returns the old value, i.e whether it was suspended or not.
+
+Bool_t TCling::SetSuspendAutoParsing(Bool_t value) {
+   Bool_t old = fIsAutoParsingSuspended;
+   fIsAutoParsingSuspended = value;
+   if (fClingCallbacks) fClingCallbacks->SetAutoParsingSuspended(value);
+   return old;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set a callback to receive error messages.
 
 void TCling::SetErrmsgcallback(void* p) const
@@ -6175,7 +6286,7 @@ int TCling::UnloadFile(const char* path) const
    // Unload a shared library or a source file.
    cling::Interpreter::CompilationResult compRes;
    cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-   fMetaProcessor->process(Form(".U %s", canonical.c_str()), compRes, /*cling::Value*/0);
+   HandleInterpreterException(fMetaProcessor, Form(".U %s", canonical.c_str()), compRes, /*cling::Value*/0);
    return compRes == cling::Interpreter::kFailure;
 }
 
@@ -6210,6 +6321,61 @@ void TCling::RegisterTemporary(const cling::Value& value)
       R__LOCKGUARD(gInterpreterMutex);
       fTemporaries->push_back(value);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// If the interpreter encounters Name, check whether that is an object ROOT
+/// could retrieve. To not re-read objects from disk, cache the name/object
+/// pair for a given LookupCtx.
+
+TObject* TCling::GetObjectAddress(const char *Name, void *&LookupCtx)
+{
+   cling::Interpreter *interpreter = ((TCling*)gCling)->GetInterpreter();
+
+   // The call to FindSpecialObject might induces any kind of use
+   // of the interpreter ... (library loading, function calling, etc.)
+   // ... and we _know_ we are in the middle of parsing, so let's make
+   // sure to save the state and then restore it.
+
+   if (gDirectory) {
+      auto iSpecObjMap = fSpecialObjectMaps.find(gDirectory);
+      if (iSpecObjMap != fSpecialObjectMaps.end()) {
+         auto iSpecObj = iSpecObjMap->second.find(Name);
+         if (iSpecObj != iSpecObjMap->second.end()) {
+            LookupCtx = gDirectory;
+            return iSpecObj->second;
+         }
+      }
+   }
+
+   // Save state of the PP
+   Sema &SemaR = interpreter->getSema();
+   ASTContext& C = SemaR.getASTContext();
+   Preprocessor &PP = SemaR.getPreprocessor();
+   Parser& P = const_cast<Parser&>(interpreter->getParser());
+   Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+   Parser::ParserCurTokRestoreRAII savedCurToken(P);
+   // After we have saved the token reset the current one to something which
+   // is safe (semi colon usually means empty decl)
+   Token& Tok = const_cast<Token&>(P.getCurToken());
+   Tok.setKind(tok::semi);
+
+   // We can't PushDeclContext, because we go up and the routine that pops
+   // the DeclContext assumes that we drill down always.
+   // We have to be on the global context. At that point we are in a
+   // wrapper function so the parent context must be the global.
+   Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
+                                          SemaR.TUScope);
+
+   TObject* specObj = gROOT->FindSpecialObject(Name, LookupCtx);
+   if (specObj) {
+      if (!LookupCtx) {
+         Error("GetObjectAddress", "Got a special object without LookupCtx!");
+      } else {
+         fSpecialObjectMaps[LookupCtx][Name] = specObj;
+      }
+   }
+   return specObj;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7325,7 +7491,7 @@ void TCling::FuncTempInfo_Title(FuncTempInfo_t *ft_info, TString &output) const
    if (!ft_info) return;
    const clang::FunctionTemplateDecl *ft = (const clang::FunctionTemplateDecl*)ft_info;
 
-   // Iterate over the redeclarations, we can have muliple definitions in the
+   // Iterate over the redeclarations, we can have multiple definitions in the
    // redecl chain (came from merging of pcms).
    if (const RedeclarableTemplateDecl *AnnotFD
        = ROOT::TMetaUtils::GetAnnotatedRedeclarable((const RedeclarableTemplateDecl*)ft)) {

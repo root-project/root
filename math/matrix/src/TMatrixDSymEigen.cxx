@@ -9,19 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMatrixDSymEigen                                                     //
-//                                                                      //
-// Eigenvalues and eigenvectors of a real symmetric matrix.             //
-//                                                                      //
-// If A is symmetric, then A = V*D*V' where the eigenvalue matrix D is  //
-// diagonal and the eigenvector matrix V is orthogonal. That is, the    //
-// diagonal values of D are the eigenvalues, and V*V' = I, where I is   //
-// the identity matrix.  The columns of V represent the eigenvectors in //
-// the sense that A*V = V*D.                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMatrixDSymEigen
+    \ingroup Matrix
+
+ TMatrixDSymEigen
+
+ Eigenvalues and eigenvectors of a real symmetric matrix.
+
+ If A is symmetric, then A = V*D*V' where the eigenvalue matrix D is
+ diagonal and the eigenvector matrix V is orthogonal. That is, the
+ diagonal values of D are the eigenvalues, and V*V' = I, where I is
+ the identity matrix.  The columns of V represent the eigenvectors in
+ the sense that A*V = V*D.
+*/
 
 #include "TMatrixDSymEigen.h"
 #include "TMath.h"

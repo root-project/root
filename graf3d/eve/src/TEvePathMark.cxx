@@ -12,6 +12,7 @@
 #include "TEvePathMark.h"
 
 /** \class TEvePathMarkT
+\ingroup TEve
 Special-point on track:
 
   - kDaughter  : daughter creation; fP is momentum of the daughter, it is subtracted from

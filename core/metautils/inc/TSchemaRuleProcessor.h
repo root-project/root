@@ -19,8 +19,8 @@
 #include "TSchemaType.h"
 #endif
 
-namespace ROOT
-{
+namespace ROOT {
+namespace Internal {
    class TSchemaRuleProcessor
    {
       public:
@@ -56,7 +56,7 @@ namespace ROOT
          }
 
          static void SplitDeclaration( const std::string& source,
-                                       std::list<std::pair<ROOT::TSchemaType,std::string> >& result)
+                                       std::list<std::pair<ROOT::Internal::TSchemaType,std::string> >& result)
          {
             // Split a declaration string producing a list of substrings
             // Typically we have:
@@ -116,7 +116,7 @@ namespace ROOT
                         break;
                      }
                   }
-                  result.push_back( make_pair(ROOT::TSchemaType(type,dims),elem) );
+                  result.push_back( make_pair(ROOT::Internal::TSchemaType(type,dims),elem) );
                }
                last = curr+1;
             }
@@ -250,7 +250,8 @@ namespace ROOT
             return true;
          }
    };
-}
+} // namespace Internal
+} // namespace ROOT
 #endif // defined(__CINT__)
 
 #endif // ROOT_TSchemaRuleProcessor

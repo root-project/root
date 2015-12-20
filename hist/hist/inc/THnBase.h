@@ -45,7 +45,9 @@ class TF1;
 class THnIter;
 
 namespace ROOT {
+namespace Internal {
    class THnBaseBinIter;
+}
 }
 
 class THnBase: public TNamed {
@@ -88,7 +90,6 @@ private:
       }
    }
 
-   virtual void FillBin(Long64_t bin, Double_t w) = 0;
    void FillBinBase(Double_t w) {
       // Increment the statistics due to filled weight "w",
       fEntries += 1;
@@ -136,7 +137,7 @@ private:
    TFitResultPtr Fit(TF1 *f1 ,Option_t *option = "", Option_t *goption = "");
    TList* GetListOfFunctions() { return 0; }
 
-   virtual ROOT::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const = 0;
+   virtual ROOT::Internal::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const = 0;
 
    virtual Long64_t GetNbins() const = 0;
    Double_t GetEntries() const { return fEntries; }
@@ -160,6 +161,9 @@ private:
       FillBin(bin, w);
       return bin;
    }
+
+   virtual void FillBin(Long64_t bin, Double_t w) = 0;
+
    void SetBinEdges(Int_t idim, const Double_t* bins);
    Bool_t IsInRange(Int_t *coord) const;
    Double_t GetBinError(const Int_t *idx) const { return GetBinError(GetBin(idx)); }
@@ -272,6 +276,7 @@ private:
 };
 
 namespace ROOT {
+namespace Internal {
    // Helper class for browing THnBase objects
    class THnBaseBrowsable: public TNamed {
    public:
@@ -304,6 +309,7 @@ namespace ROOT {
       Bool_t fHaveSkippedBin;
    };
 }
+}
 
 class THnIter: public TObject {
 public:
@@ -324,7 +330,7 @@ public:
    Bool_t RespectsAxisRange() const { return fIter->RespectsAxisRange(); }
 
 private:
-   ROOT::THnBaseBinIter* fIter;
+   ROOT::Internal::THnBaseBinIter* fIter;
    ClassDef(THnIter, 0); //Iterator over bins of a THnBase.
 };
 

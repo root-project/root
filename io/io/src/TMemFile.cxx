@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMemFile                                                             //
-//                                                                      //
-// A TMemFile is like a normal TFile except that it reads and writes    //
-// only from memory.                                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TMemFile TMemFile.cxx
+\ingroup IO
+
+A TMemFile is like a normal TFile except that it reads and writes
+only from memory.
+*/
 
 #include "TMemFile.h"
 #include "TError.h"
@@ -44,7 +43,7 @@ ClassImp(TMemFile)
 Long64_t TMemFile::fgDefaultBlockSize = 2*1024*1024;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
+/// Default constructor.
 
 TMemFile::TMemBlock::TMemBlock() : fPrevious(0), fNext(0), fBuffer(0), fSize(0)
 {
@@ -210,7 +209,7 @@ TMemFile::TMemFile(const TMemFile &orig) :
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Close and clean-up HDFS file.
+/// Close and clean-up file.
 
 TMemFile::~TMemFile()
 {
@@ -556,7 +555,7 @@ Int_t TMemFile::SysClose(Int_t /* fd */)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write a buffer into the file;
+/// Write a buffer into the file.
 
 Int_t TMemFile::SysWrite(Int_t /* fd */, const void *buf, Int_t len)
 {
@@ -624,7 +623,7 @@ Int_t TMemFile::SysStat(Int_t, Long_t* /* id */, Long64_t* /* size */, Long_t* /
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sync remaining data to disk;
+/// Sync remaining data to disk.
 /// Nothing to do here.
 
 Int_t TMemFile::SysSync(Int_t)
@@ -633,7 +632,7 @@ Int_t TMemFile::SysSync(Int_t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// ResetErrno; simply calls TSystem::ResetErrno().
+/// Simply calls TSystem::ResetErrno().
 
 void TMemFile::ResetErrno() const
 {

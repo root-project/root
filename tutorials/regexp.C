@@ -1,35 +1,39 @@
+/// \file
+/// \ingroup Tutorials
+/// A regular expression, often called a pattern, is an expression that describes a set of
+/// strings. They are usually used to give a concise description of a set, without having to
+/// list all elements.
+/// The Unix utilities like sed and grep make extensive use of regular expressions. Scripting
+/// languages like Perl have regular expression engines built directly into their syntax .
+///
+/// Extensive documentation about Regular expressions in Perl can be
+/// found at: http://perldoc.perl.org/perlre.html
+///
+/// ROOT has this capability through the use of the P(erl) C(ompatible) R(egular) E(xpression)
+///  - library, PCRE, see http://www.pcre.org
+///
+/// Its functionality can be accessed through the TPRegexp and TString class .
+/// Note that in patterns taken from Perl all backslash character have to be replaced in the
+/// C/C++ strings by two backslashes .
+///
+/// This macro shows several ways how to use the Match/Substitute capabilities of the
+/// the TPRegexp class . It can be run as follows :
+/// ~~~
+///     .x regexp.C
+/// ~~~
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Eddy Offermann
+
 #include "Riostream.h"
 #include "TString.h"
 #include "TPRegexp.h"
 #include "TClonesArray.h"
 #include "TObjString.h"
 
-//-------------------------------------------------------------------------------------------
-//
-// A regular expression, often called a pattern, is an expression that describes a set of
-// strings. They are usually used to give a concise description of a set, without having to
-// list all elements.
-// The Unix utilities like sed and grep make extensive use of regular expressions. Scripting
-// languages like Perl have regular expression engines built directly into their syntax .
-//
-// Extensive documentation about Regular expressions in Perl can be
-// found at :
-//              http://perldoc.perl.org/perlre.html
-//
-// ROOT has this capability through the use of the P(erl) C(ompatible) R(egular) E(xpression)
-//  - library, PCRE, see http://www.pcre.org
-//
-// Its functionality can be accessed through the TPRegexp and TString class .
-// Note that in patterns taken from Perl all backslash character have to be replaced in the
-// C/C++ strings by two backslashes .
-//
-// This macro shows several ways how to use the Match/Substitute capabilities of the
-// the TPRegexp class . It can be run as follows :
-//     .x regexp.C
-//
-// Author: Eddy Offermann
-//
-//-------------------------------------------------------------------------------------------
+
 
 void regexp()
 {
@@ -86,7 +90,7 @@ void regexp()
    }
 
    // Match Example :
-   // This example returns kTRUE if the email address is valid . For that it has to fulfill the following
+   // This example returns kTRUE if the email address is valid . For that it has to fulfil the following
    // criteria:
    // 1) It should be of the form string1@string2 . The "^" and "$" ensure that we compare the complete
    //    email string
@@ -97,7 +101,7 @@ void regexp()
    //    a. ((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([\\w-]+\\.)+))  :
    //       This regular expression ensures that EITHER the string starts with "[" followed by three groups
    //       of numbers, separated by "." , where each group has 1 to 3 numbers, OR alphanumeric strings,
-   //       possibly containing "-" characters, seperated by "." .
+   //       possibly containing "-" characters, separated by "." .
    //    b. ([a-zA-Z]{2,4}|[0-9]{1,3})  :
    //       This part contains EITHER 2 to 4 alpha characters OR 1 to 3 numbers
    //    c. (\\]?)  :

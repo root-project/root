@@ -23,9 +23,10 @@
 
 #include "TVirtualPad.h"
 
-//______________________________________________________________________________
-// Description of TGLPlot3D
-//
+/** \class TGLPlot3D
+\ingroup opengl
+Description of TGLPlot3D
+*/
 
 ClassImp(TGLPlot3D);
 
@@ -53,8 +54,6 @@ void TGLPlot3D::SetPainter(TGLPlotPainter* p)
    delete fPlotPainter;
    fPlotPainter = p;
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Instantiate the correct plot-painter for given object.

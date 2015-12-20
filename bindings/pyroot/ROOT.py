@@ -556,18 +556,19 @@ class ModuleFacade( types.ModuleType ):
     # set the display hook
       sys.displayhook = _displayhook
 
+    # manually load libMathCore, for example to obtain gRandom
+    # This can be removed once autoloading on selected variables is available
+      _root.gSystem.Load( "libMathCore" )
 
 sys.modules[ __name__ ] = ModuleFacade( sys.modules[ __name__ ] )
 del ModuleFacade
 
-### Add some infrastructure if we are in a Jupiter Notebook ---------------------
-# We check if the ZMQ shell is in use, which is a sign of usage in the notebook.
+### Add some infrastructure if we are being imported via a Jupyter Kernel ------
 if '__IPYTHON__' in __builtins__ and __IPYTHON__:
    from IPython import get_ipython
-   pre_execute_callbacks = get_ipython().events.callbacks['pre_execute']
-   zmqIshellName = 'ZMQInteractiveShell'
-   if any(zmqIshellName == callBack.im_class.__name__ for callBack in pre_execute_callbacks if hasattr(callBack, 'im_class')):
-      import ROOTaaS.iPyROOT
+   ip = get_ipython()
+   if hasattr(ip,"kernel"):
+      import JupyROOT
 
 ### b/c of circular references, the facade needs explicit cleanup ---------------
 import atexit

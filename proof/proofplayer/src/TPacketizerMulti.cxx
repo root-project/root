@@ -9,19 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPacketizerMulti                                                     //
-//                                                                      //
-// This class allows to do multiple runs in the same query; each run    //
-// can be a, for example, different dataset or the same dataset with    //
-// entry list.                                                          //
-// The multiple packetizer conatins a list of packetizers which are     //
-// processed in turn.                                                   //
-// The bit TSelector::kNewRun is set in the TSelector object when a new //
-// packetizer is used.                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TPacketizerMulti
+\ingroup proofkernel
+
+This class allows to do multiple runs in the same query; each run
+can be a, for example, different dataset or the same dataset with
+entry list.
+The multiple packetizer contains a list of packetizers which are
+processed in turn.
+The bit TSelector::kNewRun is set in the TSelector object when a new
+packetizer is used.
+
+*/
 
 
 #include "TPacketizerMulti.h"

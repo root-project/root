@@ -16,13 +16,9 @@ TBenchmark *gBenchmark = 0;
 
 ClassImp(TBenchmark)
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBenchmark                                                           //
-//                                                                      //
-// This class is a ROOT utility to help benchmarking applications       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBenchmark
+This class is a ROOT utility to help benchmarking applications
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Benchmark default constructor
@@ -196,7 +192,7 @@ void TBenchmark::Start(const char *name)
       fTimer[bench].Continue();
    }
    else
-      Warning("Start","too many benchemarks");
+      Warning("Start","too many benchmarks");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

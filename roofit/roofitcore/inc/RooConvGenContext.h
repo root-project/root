@@ -45,11 +45,10 @@ public:
 
   virtual void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
-
-protected:
-
   virtual void initGenerator(const RooArgSet &theEvent);
   virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
+
+protected:
 
   RooConvGenContext(const RooConvGenContext& other) ;
 

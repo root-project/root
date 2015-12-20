@@ -9,13 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TArrayL64                                                            //
-//                                                                      //
-// Array of long64s (64 bits per element).                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TArrayL64
+\ingroup Containers
+Array of long64s (64 bits per element).
+*/
 
 #include "TArrayL64.h"
 #include "TBuffer.h"

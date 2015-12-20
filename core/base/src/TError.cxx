@@ -9,17 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Error handling routines.                                             //
-//                                                                      //
-// This file defines a number of global error handling routines:        //
-// Warning(), Error(), SysError() and Fatal(). They all take a          //
-// location string (where the error happened) and a printf style format //
-// string plus vararg's. In the end these functions call an             //
-// errorhandler function. By default DefaultErrorHandler() is used.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+Error handling routines.
+
+This file defines a number of global error handling routines:
+Warning(), Error(), SysError() and Fatal(). They all take a
+location string (where the error happened) and a printf style format
+string plus vararg's. In the end these functions call an
+errorhandler function. By default DefaultErrorHandler() is used.
+*/
 
 #ifdef WIN32
 #include <windows.h>
@@ -94,7 +92,7 @@ again:
    // Serialize the actual printing.
    R__LOCKGUARD2(gErrorMutex);
 
-   const char *toprint = buf; // Work around for older plaform where we use TThreadTLSWrapper
+   const char *toprint = buf; // Work around for older platform where we use TThreadTLSWrapper
    fprintf(stderr, "%s", toprint);
 
 #ifdef WIN32
@@ -203,16 +201,20 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
 
 void ErrorHandler(Int_t level, const char *location, const char *fmt, va_list ap)
 {
-   TTHREAD_TLS(Int_t) buf_size(2048);
-   TTHREAD_TLS(char*) buf(0);
+   TTHREAD_TLS(Int_t) buf_size(256);
+   TTHREAD_TLS(char*) buf_storage(0);
+
+   char small_buf[256];
+   char *buf = buf_storage ? buf_storage : small_buf;
 
    int vc = 0;
    va_list sap;
    R__VA_COPY(sap, ap);
 
 again:
-   if (!buf)
-      buf = new char[buf_size];
+   if (!buf) {
+      buf_storage = buf = new char[buf_size];
+   }
 
    if (!fmt)
       fmt = "no error message provided";
@@ -225,7 +227,7 @@ again:
          buf_size *= 2;
       else
          buf_size = n+1;
-      delete [] buf;
+      if (buf != &(small_buf[0])) delete [] buf;
       buf = 0;
       va_end(ap);
       R__VA_COPY(ap, sap);
@@ -238,7 +240,7 @@ again:
 
    char *bp;
    if (level >= kSysError && level < kFatal) {
-      const char *toprint = buf; // Work around for older plaform where we use TThreadTLSWrapper
+      const char *toprint = buf; // Work around for older platform where we use TThreadTLSWrapper
       bp = Form("%s (%s)", toprint, gSystem->GetError());
    } else
       bp = buf;
@@ -281,7 +283,7 @@ void Obsolete(const char *function, const char *asOfVers, const char *removedFro
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Use this function in case an error occured.
+/// Use this function in case an error occurred.
 
 void Error(const char *location, const char *va_(fmt), ...)
 {
@@ -292,7 +294,7 @@ void Error(const char *location, const char *va_(fmt), ...)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Use this function in case a system (OS or GUI) related error occured.
+/// Use this function in case a system (OS or GUI) related error occurred.
 
 void SysError(const char *location, const char *va_(fmt), ...)
 {
@@ -303,7 +305,7 @@ void SysError(const char *location, const char *va_(fmt), ...)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Use this function in case an error occured.
+/// Use this function in case an error occurred.
 
 void Break(const char *location, const char *va_(fmt), ...)
 {

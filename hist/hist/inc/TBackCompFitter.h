@@ -14,6 +14,9 @@
 #include "TVirtualFitter.h"
 #endif
 
+#include "Fit/BasicFCN.h"
+#include "Fit/FitResult.h"
+
 #ifndef ROOT_Fit_Fitter
 #include "Fit/Fitter.h"
 #endif

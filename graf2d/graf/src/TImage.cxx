@@ -18,15 +18,15 @@
 ClassImp(TImage)
 
 /** \class TImage
+\ingroup BasicGraphics
 
-TImage is an abstract interface to image processing library.
+An abstract interface to image processing library.
 
 It allows for the reading and writing of images in different formats, several
 image manipulations (scaling, tiling, merging, etc.) and displaying in pads.
 
 The concrete implementation of this class is done by the TASImage class. The
 methods are documented in that class.
-End_Html
 */
 
 ////////////////////////////////////////////////////////////////////////////////

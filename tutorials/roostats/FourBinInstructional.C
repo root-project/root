@@ -1,119 +1,143 @@
-//  This example is a generalization of the on/off problem.
-
-/*
-FourBin Instructional Tutorial:
- authors:
- Kyle Cranmer <cranmer@cern.ch>
- Tanja Rommerskirchen <tanja.rommerskirchen@cern.ch>
-
- date: June 1, 2010
-
- This example is a generalization of the on/off problem.
-It's a common setup for SUSY searches.  Imagine that one has two
-variables "x" and "y" (eg. missing ET and SumET), see figure.
-The signal region has high values of both of these variables (top right).
-One can see low values of "x" or "y" acting as side-bands.  If we
-just used "y" as a sideband, we would have the on/off problem.
- - In the signal region we observe non events and expect s+b events.
- - In the region with low values of "y" (bottom right)
-   we observe noff events and expect tau*b events.
-Note the significance of tau.  In the background only case:
-   tau ~ <expectation off> / <expectation on>
-If tau is known, this model is sufficient, but often tau is not known exactly.
-So one can use low values of "x" as an additional constraint for tau.
-Note that this technique critically depends on the notion that the
-joint distribution for "x" and "y" can be factorized.
-Generally, these regions have many events, so it the ratio can be
-measured very precisely there.  So we extend the model to describe the
-left two boxes... denoted with "bar".
-  - In the upper left we observe nonbar events and expect bbar events
-  - In the bottom left we observe noffbar events and expect tau bbar events
-Note again we have:
-   tau ~ <expecation off bar> / <expectation on bar>
-One can further expand the model to account for the systematic associated
-to assuming the distribution of "x" and "y" factorizes (eg. that
-tau is the same for off/on and offbar/onbar). This can be done in several
-ways, but here we introduce an additional parameter rho, which so that
-one set of models will use tau and the other tau*rho. The choice is arbitary,
-but it has consequences on the numerical stability of the algorithms.
-The "bar" measurements typically have more events (& smaller relative errors).
-If we choose <expectation noffbar> = tau * rho * <expectation noonbar>, the
-product tau*rho will be known very precisely (~1/sqrt(bbar)) and the contour
-in those parameters will be narrow and have a non-trivial tau~1/rho shape.
-However, if we choose to put rho on the non/noff measurements (where the
-product will have an error ~1/sqrt(b)), the contours will be more ameanable
-to numerical techniques.  Thus, here we choose to define
-   tau := <expecation off bar> / (<expectation on bar>)
-   rho := <expecation off> / (<expectation on> * tau)
-
-^ y
-|
-|---------------------------+
-|               |           |
-|     nonbar    |    non    |
-|      bbar     |    s+b    |
-|               |           |
-|---------------+-----------|
-|               |           |
-|    noffbar    |    noff   |
-|    tau bbar   | tau b rho |
-|               |           |
-+-----------------------------> x
-
-
-Left in this way, the problem is under-constrained.  However, one may
-have some auxiliary measurement (usually based on Monte Carlo) to
-constrain rho.  Let us call this auxiliary measurement that gives
-the nominal value of rho "rhonom".  Thus, there is a 'constraint' term in
-the full model: P(rhonom | rho).  In this case, we consider a Gaussian
-constraint with standard deviation sigma.
-
-In the example, the initial values of the parameters are
-  - s    = 40
-  - b    = 100
-  - tau  = 5
-  - bbar = 1000
-  - rho  = 1
-  (sigma for rho = 20%)
-and in the toy dataset:
-   - non = 139
-   - noff = 528
-   - nonbar = 993
-   - noffbar = 4906
-   - rhonom = 1.27824
-
-Note, the covariance matrix of the parameters has large off-diagonal terms.
-Clearly s,b are anti-correlated.  Similary, since noffbar >> nonbar, one would
-expect bbar,tau to be anti-correlated.
-
-This can be seen below.
-            GLOBAL      b    bbar   rho      s     tau
-        b  0.96820   1.000  0.191 -0.942 -0.762 -0.209
-     bbar  0.91191   0.191  1.000  0.000 -0.146 -0.912
-      rho  0.96348  -0.942  0.000  1.000  0.718 -0.000
-        s  0.76250  -0.762 -0.146  0.718  1.000  0.160
-      tau  0.92084  -0.209 -0.912 -0.000  0.160  1.000
-
-Similarly, since tau*rho appears as a product, we expect rho,tau
-to be anti-correlated. When the error on rho is significantly
-larger than 1/sqrt(bbar), tau is essentially known and the
-correlation is minimal (tau mainly cares about bbar, and rho about b,s).
-In the alternate parametrizaton (bbar* tau * rho) the correlation coefficient
-for rho,tau is large (and negative).
-
-
-The code below uses best-practices for RooFit & RooStats as of
-June 2010.  It proceeds as follows:
- - create a workspace to hold the model
- - use workspace factory to quickly create the terms of the model
- - use workspace factory to define total model (a prod pdf)
- - create a RooStats ModelConfig to specify observables, parameters of interest
- - add to the ModelConfig a prior on the parameters for Bayesian techniques
-   - note, the pdf it is factorized for parameters of interest & nuisance params
- - visualize the model
- - write the workspace to a file
- - use several of RooStats IntervalCalculators & compare results
-*/
+/// \file
+/// \ingroup tutorial_roostats
+///  This example is a generalization of the on/off problem.
+///
+///  This example is a generalization of the on/off problem.
+/// It's a common setup for SUSY searches.  Imagine that one has two
+/// variables "x" and "y" (eg. missing ET and SumET), see figure.
+/// The signal region has high values of both of these variables (top right).
+/// One can see low values of "x" or "y" acting as side-bands.  If we
+/// just used "y" as a sideband, we would have the on/off problem.
+///  - In the signal region we observe non events and expect s+b events.
+///  - In the region with low values of "y" (bottom right)
+///    we observe noff events and expect tau*b events.
+/// Note the significance of tau.  In the background only case:
+///
+/// ~~~ {.cpp}
+///    tau ~ <expectation off> / <expectation on>
+/// ~~~
+///
+/// If tau is known, this model is sufficient, but often tau is not known exactly.
+/// So one can use low values of "x" as an additional constraint for tau.
+/// Note that this technique critically depends on the notion that the
+/// joint distribution for "x" and "y" can be factorized.
+/// Generally, these regions have many events, so it the ratio can be
+/// measured very precisely there.  So we extend the model to describe the
+/// left two boxes... denoted with "bar".
+///   - In the upper left we observe nonbar events and expect bbar events
+///   - In the bottom left we observe noffbar events and expect tau bbar events
+/// Note again we have:
+///
+/// ~~~ {.cpp}
+///    tau ~ <expecation off bar> / <expectation on bar>
+/// ~~~
+///
+/// One can further expand the model to account for the systematic associated
+/// to assuming the distribution of "x" and "y" factorizes (eg. that
+/// tau is the same for off/on and offbar/onbar). This can be done in several
+/// ways, but here we introduce an additional parameter rho, which so that
+/// one set of models will use tau and the other tau*rho. The choice is arbitrary,
+/// but it has consequences on the numerical stability of the algorithms.
+/// The "bar" measurements typically have more events (& smaller relative errors).
+/// If we choose
+///
+/// ~~~ {.cpp}
+/// <expectation noffbar> = tau * rho * <expectation noonbar>
+/// ~~~
+///
+/// the product tau*rho will be known very precisely (~1/sqrt(bbar)) and the contour
+/// in those parameters will be narrow and have a non-trivial tau~1/rho shape.
+/// However, if we choose to put rho on the non/noff measurements (where the
+/// product will have an error `~1/sqrt(b))`, the contours will be more ameanable
+/// to numerical techniques.  Thus, here we choose to define:
+///
+/// ~~~ {.cpp}
+///    tau := <expecation off bar> / (<expectation on bar>)
+///    rho := <expecation off> / (<expectation on> * tau)
+///
+/// ^ y
+/// |
+/// |---------------------------+
+/// |               |           |
+/// |     nonbar    |    non    |
+/// |      bbar     |    s+b    |
+/// |               |           |
+/// |---------------+-----------|
+/// |               |           |
+/// |    noffbar    |    noff   |
+/// |    tau bbar   | tau b rho |
+/// |               |           |
+/// +-----------------------------> x
+/// ~~~
+///
+/// Left in this way, the problem is under-constrained.  However, one may
+/// have some auxiliary measurement (usually based on Monte Carlo) to
+/// constrain rho.  Let us call this auxiliary measurement that gives
+/// the nominal value of rho "rhonom".  Thus, there is a 'constraint' term in
+/// the full model: P(rhonom | rho).  In this case, we consider a Gaussian
+/// constraint with standard deviation sigma.
+///
+/// In the example, the initial values of the parameters are:
+///
+/// ~~~ {.cpp}
+///   - s    = 40
+///   - b    = 100
+///   - tau  = 5
+///   - bbar = 1000
+///   - rho  = 1
+///   (sigma for rho = 20%)
+/// ~~~
+///
+/// and in the toy dataset:
+///
+/// ~~~ {.cpp}
+///    - non = 139
+///    - noff = 528
+///    - nonbar = 993
+///    - noffbar = 4906
+///    - rhonom = 1.27824
+/// ~~~
+///
+/// Note, the covariance matrix of the parameters has large off-diagonal terms.
+/// Clearly s,b are anti-correlated.  Similarly, since noffbar >> nonbar, one would
+/// expect bbar,tau to be anti-correlated.
+///
+/// This can be seen below.
+///
+/// ~~~ {.cpp}
+///             GLOBAL      b    bbar   rho      s     tau
+///         b  0.96820   1.000  0.191 -0.942 -0.762 -0.209
+///      bbar  0.91191   0.191  1.000  0.000 -0.146 -0.912
+///       rho  0.96348  -0.942  0.000  1.000  0.718 -0.000
+///         s  0.76250  -0.762 -0.146  0.718  1.000  0.160
+///       tau  0.92084  -0.209 -0.912 -0.000  0.160  1.000
+/// ~~~
+///
+/// Similarly, since tau*rho appears as a product, we expect rho,tau
+/// to be anti-correlated. When the error on rho is significantly
+/// larger than 1/sqrt(bbar), tau is essentially known and the
+/// correlation is minimal (tau mainly cares about bbar, and rho about b,s).
+/// In the alternate parametrization (bbar* tau * rho) the correlation coefficient
+/// for rho,tau is large (and negative).
+///
+/// The code below uses best-practices for RooFit & RooStats as of June 2010.
+///
+/// It proceeds as follows:
+///  - create a workspace to hold the model
+///  - use workspace factory to quickly create the terms of the model
+///  - use workspace factory to define total model (a prod pdf)
+///  - create a RooStats ModelConfig to specify observables, parameters of interest
+///  - add to the ModelConfig a prior on the parameters for Bayesian techniques
+///    note, the pdf it is factorized for parameters of interest & nuisance params
+///  - visualize the model
+///  - write the workspace to a file
+///  - use several of RooStats IntervalCalculators & compare results
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \authors  authors: Kyle Cranmer, Tanja Rommerskirchen
 
 #include "TStopwatch.h"
 #include "TCanvas.h"
@@ -326,6 +350,4 @@ void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bo
   }
 
   t.Print();
-
-
 }

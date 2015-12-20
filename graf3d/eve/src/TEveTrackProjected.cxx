@@ -15,6 +15,7 @@
 #include "TEveTrans.h"
 
 /** \class TEveTrackProjected
+\ingroup TEve
 Projected copy of a TEveTrack.
 */
 
@@ -246,6 +247,7 @@ void TEveTrackProjected::SecSelected(TEveTrack* /*track*/)
 
 
 /** \class TEveTrackListProjected
+\ingroup TEve
 Specialization of TEveTrackList for holding TEveTrackProjected objects.
 */
 

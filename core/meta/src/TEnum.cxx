@@ -9,11 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// The TEnum class implements the enum type.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TEnum
+The TEnum class implements the enum type.
+*/
 
 #include <iostream>
 
@@ -31,11 +29,11 @@
 ClassImp(TEnum)
 
 ////////////////////////////////////////////////////////////////////////////////
-///Constructor for TEnum class.
-///It take the name of the TEnum type, specification if it is global
-///and interpreter info.
-///Constant List is owner if enum not on global scope (thus constants not
-///in TROOT::GetListOfGlobals).
+/// Constructor for TEnum class.
+/// It take the name of the TEnum type, specification if it is global
+/// and interpreter info.
+/// Constant List is owner if enum not on global scope (thus constants not
+/// in TROOT::GetListOfGlobals).
 
 TEnum::TEnum(const char *name, void *info, TClass *cls)
    : fInfo(info), fClass(cls)
@@ -58,14 +56,14 @@ TEnum::TEnum(const char *name, void *info, TClass *cls)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Destructor
+/// Destructor
 
 TEnum::~TEnum()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Add a EnumConstant to the list of constants of the Enum Type.
+/// Add a EnumConstant to the list of constants of the Enum Type.
 
 void TEnum::AddConstant(TEnumConstant *constant)
 {

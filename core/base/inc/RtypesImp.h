@@ -20,26 +20,28 @@
 #include "TError.h"
 
 namespace ROOT {
+namespace Internal {
    inline void GenericShowMembers(const char *topClassName,
                                   void *obj, TMemberInspector &R__insp,
                                   bool transientMember)
    {
-      Warning("ROOT::GenericShowMembers", "Please regenerate your dictionaries!");
+      Warning("ROOT::Internal::GenericShowMembers", "Please regenerate your dictionaries!");
       R__insp.GenericShowMembers(topClassName, obj, transientMember);
    }
 
   class TOperatorNewHelper { };
 }
+}
 
 // This is to provide a placement operator new on all platforms
-inline void *operator new(size_t /*size*/, ROOT::TOperatorNewHelper *p)
+inline void *operator new(size_t /*size*/, ROOT::Internal::TOperatorNewHelper *p)
 {
    return((void*)p);
 }
 
 #ifdef R__PLACEMENTDELETE
 // this should never be used but help quiet down some compiler!
-inline void operator delete(void*, ROOT::TOperatorNewHelper*) { }
+inline void operator delete(void*, ROOT::Internal::TOperatorNewHelper*) { }
 #endif
 
 // The STL GenerateInitInstance are not unique and hence are declared static

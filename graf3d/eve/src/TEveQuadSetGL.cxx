@@ -17,6 +17,7 @@
 #include "TGLIncludes.h"
 
 /** \class TEveQuadSetGL
+\ingroup TEve
 GL-renderer for TEveQuadSet class.
 */
 

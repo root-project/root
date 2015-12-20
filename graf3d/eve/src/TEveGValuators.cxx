@@ -17,6 +17,7 @@
 #include "TGDoubleSlider.h"
 
 /** \class TEveGValuatorBase
+\ingroup TEve
 Base class for composite GUI elements for setting of numeric values.
 */
 
@@ -42,6 +43,7 @@ TEveGValuatorBase::TEveGValuatorBase(const TGWindow *p, const char* name,
 }
 
 /** \class TEveGValuator
+\ingroup TEve
 Composite GUI element for single value selection (supports label,
 number-entry and slider).
 */
@@ -236,6 +238,7 @@ void TEveGValuator::SetEnabled(Bool_t state)
 }
 
 /** \class TEveGDoubleValuator
+\ingroup TEve
 Composite GUI element for selection of range (label, two
 number-entries and double-slider).
 */
@@ -406,6 +409,7 @@ void TEveGDoubleValuator::ValueSet()
 }
 
 /** \class TEveGTriVecValuator
+\ingroup TEve
 Composite GUI element for setting three numerical values (label,
 three number-entries). All three values have the same number-format
 and value-range.

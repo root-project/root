@@ -1,7 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstrates usage of "Default" geometry alias.
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates usage of "Default" geometry alias.
+///
+/// \image html eve_geom_default.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 void geom_default()
 {

@@ -40,6 +40,7 @@ private:
    bool fFirstRun;
    bool fIsAutoloading;
    bool fIsAutoloadingRecursively;
+   bool fIsAutoParsingSuspended;
    bool fPPOldFlag;
    bool fPPChanged;
 public:
@@ -51,6 +52,9 @@ public:
 
    void SetAutoloadingEnabled(bool val = true) { fIsAutoloading = val; }
    bool IsAutoloadingEnabled() { return fIsAutoloading; }
+
+   void SetAutoParsingSuspended(bool val = true) { fIsAutoParsingSuspended = val; }
+   bool IsAutoParsingSuspended() { return fIsAutoParsingSuspended; }
 
    virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/,
                                    const clang::Token &/*IncludeTok*/,
@@ -80,6 +84,10 @@ public:
    // The callback is used to update the list of globals in ROOT.
    //
    virtual void TransactionUnloaded(const cling::Transaction &T);
+
+   // The callback is used to clear the autoparsing caches.
+   //
+   virtual void TransactionRollback(const cling::Transaction &T);
 
    // Used to inform client about a new decl read by the ASTReader.
    //

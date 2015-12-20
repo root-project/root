@@ -23,6 +23,8 @@
 #include "TArrayD.h"
 #endif
 
+#include "TObject.h"
+
 class TBrowser;
 class TH1;
 class THnSparse;

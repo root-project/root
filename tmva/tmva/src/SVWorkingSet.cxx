@@ -25,19 +25,20 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+#include "TMVA/SVWorkingSet.h"
+
+#include "TMVA/MsgLogger.h"
+#include "TMVA/SVEvent.h"
+#include "TMVA/SVKernelFunction.h"
+#include "TMVA/SVKernelMatrix.h"
+#include "TMVA/Types.h"
+
+
 #include "TMath.h"
 #include "TRandom3.h"
 
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
-#include "TMVA/SVWorkingSet.h"
-#include "TMVA/SVKernelFunction.h"
-#include "TMVA/SVEvent.h"
-#include "TMVA/SVKernelMatrix.h"
-
-#include <vector>
 #include <iostream>
+#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

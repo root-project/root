@@ -15,6 +15,8 @@ set(MATHCORE_HEADERS TRandom.h
   Math/BrentMethods.h Math/BrentMinimizer1D.h Math/BrentRootFinder.h Math/DistSampler.h
   Math/DistSamplerOptions.h Math/GoFTest.h Math/SpecFuncMathCore.h Math/DistFuncMathCore.h
   Math/ChebyshevPol.h Math/KDTree.h Math/TDataPoint.h Math/TDataPointN.h Math/Delaunay2D.h
+  Math/Random.h Math/TRandomEngine.h Math/RandomFunctions.h Math/StdRandomEngines.h
+  Math/MersenneTwisterEngine.h Math/MixMaxEngine.h 
 )
 
 

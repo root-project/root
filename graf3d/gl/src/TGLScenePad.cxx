@@ -38,15 +38,13 @@
 #include "TGLPlot3D.h"
 
 
-//______________________________________________________________________________
-// TGLScenePad
-//
-// Implements VirtualViewer3D interface and fills the base-class
-// visualization structures from pad contents.
-//
+/** \class TGLScenePad
+\ingroup opengl
+Implements VirtualViewer3D interface and fills the base-class
+visualization structures from pad contents.
+*/
 
 ClassImp(TGLScenePad)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -95,7 +93,7 @@ void TGLScenePad::AddHistoPhysical(TGLLogicalShape* log, const Float_t *histoCol
 
    // XXXX plots no longer centered at 0. Or they never were?
    // Impossible to translate and scale them as they should be, it
-   // seems. This requers further investigation, eventually.
+   // seems. This requires further investigation, eventually.
    //
    // bb.Dump();
    // printf("lm=%f, size=%f, scale=%f, tx=%f, ty=%f\n",
@@ -159,7 +157,7 @@ Bool_t HasPolymarkerAndFrame(const TList *lst)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Iterate over pad-primitves and import them.
+/// Iterate over pad-primitives and import them.
 
 void TGLScenePad::SubPadPaint(TVirtualPad* pad)
 {
@@ -346,7 +344,7 @@ Int_t TGLScenePad::AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t*
    // TODO: Break this up and make easier to understand. This is
    // pretty convoluted due to the large number of cases it has to
    // deal with:
-   // i)   exisiting physical and/or logical;
+   // i)   existing physical and/or logical;
    // ii)  external provider may or may not supply bounding box;
    // iii) local/global reference frame;
    // iv)  deferred filling of some sections of the buffer;
@@ -410,7 +408,7 @@ Int_t TGLScenePad::AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t*
       {
          // If we have physical we should have logical cached, too.
          if (!logical) {
-            Error("TGLScenePad::AddObject", "cached physical with no assocaited cached logical");
+            Error("TGLScenePad::AddObject", "cached physical with no associated cached logical");
          }
 
          // Since we already have logical no need for further checks.

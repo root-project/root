@@ -19,6 +19,7 @@
 
 
 /** \class TEveTriangleSet
+\ingroup TEve
 Made from a list of vertices and a list of triangles (triplets of
 vertex indices).
 

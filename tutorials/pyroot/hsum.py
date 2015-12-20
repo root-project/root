@@ -1,13 +1,14 @@
-#
-# To see the output of this macro, click begin_html <a href="gif/hsum.gif" >here</a> end_html
-#    Simple example illustrating how to use the C++ interpreter	
-#    to fill histograms in a loop and show the graphics results
-#
+## \file
+## \ingroup tutorial_pyroot
+## Simple example illustrating how to use the C++ interpreter
+##
+## \macro_image
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TH1F, TSlider
 from ROOT import gROOT, gBenchmark, gRandom
-
-
 
 # Create a new canvas, and customize it.
 c1 = TCanvas( 'c1', 'The HSUM example', 200, 10, 600, 400 )

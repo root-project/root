@@ -56,6 +56,7 @@
 #include "TMVA/Factory.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Ranking.h"
 #include "TMVA/DataSet.h"
@@ -66,16 +67,21 @@
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/MethodBoost.h"
 #include "TMVA/MethodCategory.h"
+#include "TMVA/MsgLogger.h"
 
 #include "TMVA/VariableIdentityTransform.h"
 #include "TMVA/VariableDecorrTransform.h"
+#include "TMVA/VariableInfo.h"
 #include "TMVA/VariablePCATransform.h"
 #include "TMVA/VariableGaussTransform.h"
 #include "TMVA/VariableNormalizeTransform.h"
 
+#include "TMVA/Results.h"
 #include "TMVA/ResultsClassification.h"
 #include "TMVA/ResultsRegression.h"
 #include "TMVA/ResultsMulticlass.h"
+
+#include "TMVA/Types.h"
 
 const Int_t  MinNoTrainingEvents = 10;
 //const Int_t  MinNoTestEvents     = 1;

@@ -15,6 +15,7 @@
 #include "TBasket.h"
 #include "TBranchBrowsable.h"
 #include "TBrowser.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TBufferFile.h"
 #include "TClonesArray.h"
@@ -112,6 +113,7 @@ TBranch::TBranch()
 , fDirectory(0)
 , fFileName("")
 , fEntryBuffer(0)
+, fTransientBuffer(0)
 , fBrowsables(0)
 , fSkipZip(kFALSE)
 , fReadLeaves(&TBranch::ReadLeavesImpl)
@@ -214,6 +216,7 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
 , fDirectory(fTree->GetDirectory())
 , fFileName("")
 , fEntryBuffer(0)
+, fTransientBuffer(0)
 , fBrowsables(0)
 , fSkipZip(kFALSE)
 , fReadLeaves(&TBranch::ReadLeavesImpl)
@@ -263,6 +266,7 @@ TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* l
 , fDirectory(fTree ? fTree->GetDirectory() : 0)
 , fFileName("")
 , fEntryBuffer(0)
+, fTransientBuffer(0)
 , fBrowsables(0)
 , fSkipZip(kFALSE)
 , fReadLeaves(&TBranch::ReadLeavesImpl)
@@ -468,6 +472,26 @@ TBranch::~TBranch()
 
    fTree = 0;
    fDirectory = 0;
+
+   if (fTransientBuffer) {
+      delete fTransientBuffer;
+      fTransientBuffer = 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the transient buffer currently used by this TBranch for reading/writing baskets.
+
+TBuffer* TBranch::GetTransientBuffer(Int_t size)
+{
+   if (fTransientBuffer) {
+      if (fTransientBuffer->BufferSize() < size) {
+         fTransientBuffer->Expand(size);
+      }
+      return fTransientBuffer;
+   }
+   fTransientBuffer = new TBufferFile(TBuffer::kRead, size);
+   return fTransientBuffer;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1105,10 +1129,13 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
    }
    //add branch to cache (if any)
-   TFileCacheRead *pf = file->GetCacheRead(fTree);
-   if (pf){
-      if (pf->IsLearning()) pf->AddBranch(this);
-      if (fSkipZip) pf->SetSkipZip();
+   {
+      R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
+      TFileCacheRead *pf = file->GetCacheRead(fTree);
+      if (pf){
+         if (pf->IsLearning()) pf->AddBranch(this);
+         if (fSkipZip) pf->SetSkipZip();
+      }
    }
 
    //now read basket

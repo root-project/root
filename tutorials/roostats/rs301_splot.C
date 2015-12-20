@@ -1,23 +1,26 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// SPlot tutorial
-// author: Kyle Cranmer
-// date Dec. 2008
-//
-// This tutorial shows an example of using SPlot to unfold two distributions.
-// The physics context for the example is that we want to know
-// the isolation distribution for real electrons from Z events
-// and fake electrons from QCD.  Isolation is our 'control' variable
-// To unfold them, we need a model for an uncorrelated variable that
-// discriminates between Z and QCD.  To do this, we use the invariant
-// mass of two electrons.  We model the Z with a Gaussian and the QCD
-// with a falling exponential.
-//
-// Note, since we don't have real data in this tutorial, we need to generate
-// toy data.  To do that we need a model for the isolation variable for
-// both Z and QCD.  This is only used to generate the toy data, and would
-// not be needed if we had real data.
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roostats
+/// SPlot tutorial
+///
+/// This tutorial shows an example of using SPlot to unfold two distributions.
+/// The physics context for the example is that we want to know
+/// the isolation distribution for real electrons from Z events
+/// and fake electrons from QCD.  Isolation is our 'control' variable
+/// To unfold them, we need a model for an uncorrelated variable that
+/// discriminates between Z and QCD.  To do this, we use the invariant
+/// mass of two electrons.  We model the Z with a Gaussian and the QCD
+/// with a falling exponential.
+///
+/// Note, since we don't have real data in this tutorial, we need to generate
+/// toy data.  To do that we need a model for the isolation variable for
+/// both Z and QCD.  This is only used to generate the toy data, and would
+/// not be needed if we had real data.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"
@@ -58,7 +61,7 @@ void rs301_splot()
   RooWorkspace* wspace = new RooWorkspace("myWS");
 
   // add the signal and background models to the workspace.
-  // Inside this function you will find a discription our model.
+  // Inside this function you will find a description our model.
   AddModel(wspace);
 
   // add some toy data to the workspace
@@ -85,7 +88,7 @@ void rs301_splot()
 void AddModel(RooWorkspace* ws){
 
   // Make models for signal (Higgs) and background (Z+jets and QCD)
-  // In real life, this part requires an intellegent modeling
+  // In real life, this part requires an intelligent modeling
   // of signal and background -- this is only an example.
 
   // set range of observable
@@ -282,7 +285,7 @@ void MakePlots(RooWorkspace* ws){
   // do this to set parameters back to their fitted values.
   model->fitTo(*data, Extended() );
 
-  //plot invMass for data with full model and individual componenets overlayed
+  //plot invMass for data with full model and individual components overlaid
   //  TCanvas* cdata = new TCanvas();
   cdata->cd(1);
   RooPlot* frame = invMass->frame() ;
@@ -296,7 +299,7 @@ void MakePlots(RooWorkspace* ws){
 
 
   // Now use the sWeights to show isolation distribution for Z and QCD.
-  // The SPlot class can make this easier, but here we demonstrait in more
+  // The SPlot class can make this easier, but here we demonstrate in more
   // detail how the sWeights are used.  The SPlot class should make this
   // very easy and needs some more development.
 
@@ -306,7 +309,7 @@ void MakePlots(RooWorkspace* ws){
   // yield + "_sw".
   cdata->cd(2);
 
-  // create weightfed data set
+  // create weighted data set
   RooDataSet * dataw_z = new RooDataSet(data->GetName(),data->GetTitle(),data,*data->get(),0,"zYield_sw") ;
 
   RooPlot* frame2 = isolation->frame() ;

@@ -12,48 +12,48 @@
 #pragma optimize("",off)
 #endif
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMapFile                                                             //
-//                                                                      //
-// This class implements a shared memory region mapped to a file.       //
-// Objects can be placed into this shared memory area using the Add()   //
-// member function. To actually place a copy of the object is shared    //
-// memory call Update() also whenever the mapped object(s) change(s)    //
-// call Update() to put a fresh copy in the shared memory. This extra   //
-// step is necessary since it is not possible to share objects with     //
-// virtual pointers between processes (the vtbl ptr points to the       //
-// originators unique address space and can not be used by the          //
-// consumer process(es)). Consumer processes can map the memory region  //
-// from this file and access the objects stored in it via the Get()     //
-// method (which returns a copy of the object stored in the shared      //
-// memory with correct vtbl ptr set). Only objects of classes with a    //
-// Streamer() member function defined can be shared.                    //
-//                                                                      //
-// I know the current implementation is not ideal (you need to copy to  //
-// and from the shared memory file) but the main problem is with the    //
-// class' virtual_table pointer. This pointer points to a table unique  //
-// for every process. Therefore, different options are:                 //
-//   1) One could allocate an object directly in shared memory in the   //
-//      producer, but the consumer still has to copy the object from    //
-//      shared memory into a local object which has the correct vtbl    //
-//      pointer for that process (copy ctor's can be used for creating  //
-//      the local copy).                                                //
-//   2) Another possibility is to only allow objects without virtual    //
-//      functions in shared memory (like simple C structs), or to       //
-//      forbid (how?) the consumer from calling any virtual functions   //
-//      of the objects in shared memory.                                //
-//   3) A last option is to copy the object internals to shared memory  //
-//      and copy them again from there. This is what is done in the     //
-//      TMapFile (using the object Streamer() to make a deep copy).     //
-// Option 1) saves one copy, but requires solid copy ctor's (along the  //
-// full inheritance chain) to rebuild the object in the consumer. Most  //
-// classes don't provide these copy ctor's, especially not when objects //
-// contain collections, etc. 2) is too limiting or dangerous (calling   //
-// accidentally a virtual function will segv). So since we have a       //
-// robust Streamer mechanism I opted for 3).                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TMapFile
+\ingroup IO 
+
+This class implements a shared memory region mapped to a file.     
+Objects can be placed into this shared memory area using the Add() 
+member function. To actually place a copy of the object is shared  
+memory call Update() also whenever the mapped object(s) change(s)  
+call Update() to put a fresh copy in the shared memory. This extra 
+step is necessary since it is not possible to share objects with   
+virtual pointers between processes (the vtbl ptr points to the     
+originators unique address space and can not be used by the        
+consumer process(es)). Consumer processes can map the memory region
+from this file and access the objects stored in it via the Get()   
+method (which returns a copy of the object stored in the shared    
+memory with correct vtbl ptr set). Only objects of classes with a  
+Streamer() member function defined can be shared.                  
+                                                                   
+I know the current implementation is not ideal (you need to copy to
+and from the shared memory file) but the main problem is with the  
+class' virtual_table pointer. This pointer points to a table unique
+for every process. Therefore, different options are:               
+  -# One could allocate an object directly in shared memory in the 
+     producer, but the consumer still has to copy the object from  
+     shared memory into a local object which has the correct vtbl  
+     pointer for that process (copy ctor's can be used for creating
+     the local copy).                                              
+  -# Another possibility is to only allow objects without virtual  
+     functions in shared memory (like simple C structs), or to     
+     forbid (how?) the consumer from calling any virtual functions 
+     of the objects in shared memory.                              
+  -# A last option is to copy the object internals to shared memory
+     and copy them again from there. This is what is done in the   
+     TMapFile (using the object Streamer() to make a deep copy).
+
+Option 1) saves one copy, but requires solid copy ctor's (along the
+full inheritance chain) to rebuild the object in the consumer. Most
+classes don't provide these copy ctor's, especially not when objects
+contain collections, etc. 2) is too limiting or dangerous (calling 
+accidentally a virtual function will segv). So since we have a     
+robust Streamer mechanism I opted for 3).                          
+**/
 
 
 #ifdef WIN32
@@ -149,9 +149,10 @@ TMapRec::~TMapRec()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method returns a pointer to the original object. NOTE: this pointer
-/// is only valid in the process that produces the shared memory file. In a
-/// consumer process this pointer is illegal! Be careful.
+/// This method returns a pointer to the original object. 
+
+/// NOTE: this pointer is only valid in the process that produces the shared 
+/// memory file. In a consumer process this pointer is illegal! Be careful.
 
 TObject *TMapRec::GetObject() const
 {
@@ -191,7 +192,9 @@ TMapFile::TMapFile()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a memory mapped file. This opens a file (to which the
+/// Create a memory mapped file. 
+///
+/// This opens a file (to which the
 /// memory will be mapped) and attaches a memory region to it.
 /// Option can be either: "NEW", "CREATE", "RECREATE", "UPDATE" or
 /// "READ" (see TFile). The default open mode is "READ". The size
@@ -475,7 +478,9 @@ zombie:
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Private copy ctor. Used by the the ctor to create a new version
+/// Private copy ctor.
+///
+/// Used by the the ctor to create a new version
 /// of TMapFile in the memory mapped heap. It's main purpose is to
 /// correctly create the string data members.
 
@@ -628,8 +633,9 @@ void TMapFile::Update(TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove object from shared memory. Returns pointer to removed
-/// object if successful, 0 otherwise.
+/// Remove object from shared memory.
+///
+/// Returns pointer to removed object if successful, 0 otherwise.
 
 TObject *TMapFile::Remove(TObject *obj, Bool_t lock)
 {
@@ -666,8 +672,9 @@ TObject *TMapFile::Remove(TObject *obj, Bool_t lock)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove object by name from shared memory. Returns pointer to removed
-/// object if successful, 0 otherwise.
+/// Remove object by name from shared memory.
+///
+/// Returns pointer to removed object if successful, 0 otherwise.
 
 TObject *TMapFile::Remove(const char *name, Bool_t lock)
 {
@@ -724,7 +731,9 @@ void TMapFile::RemoveAll()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to object retrieved from shared memory. The object must
+/// Return pointer to object retrieved from shared memory.
+///
+/// The object must
 /// be deleted after use. If delObj is a pointer to a previously allocated
 /// object it will be deleted. Returns 0 in case object with the given
 /// name does not exist.
@@ -900,7 +909,9 @@ Int_t TMapFile::ReleaseSemaphore()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Close a mapped file. First detach mapped memory then close file.
+/// Close a mapped file.
+/// 
+/// First detach mapped memory then close file.
 /// No member functions of a TMapFile that was opened in write mode
 /// may be called after Close() (this includes, of course, "delete" which
 /// would call the dtors). The option="dtor" is only used when called
@@ -1018,7 +1029,7 @@ void TMapFile::Browse(TBrowser *b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Cd to associated directory,
+/// Cd to associated directory.
 
 Bool_t TMapFile::cd(const char *path)
 {
@@ -1079,7 +1090,9 @@ Int_t TMapFile::GetBestBuffer()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a memory mapped file. This opens a file (to which the
+/// Create a memory mapped file.
+///
+/// This opens a file (to which the
 /// memory will be mapped) and attaches a memory region to it.
 /// Option can be either: "NEW", "CREATE", "RECREATE", "UPDATE"
 /// or "READ" (see TFile). The default open mode is "READ". The size
@@ -1098,25 +1111,26 @@ TMapFile *TMapFile::Create(const char *name, Option_t *option, Int_t size,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set preferred map address. Find out preferred map address as follows:
-/// 1) Run consumer program to find the preferred map address:
-///       $ root
-///       root [0] m = TMapFile::Create("dummy.map", "recreate", 10000000);
-///       root [1] m.Print()
-///       Memory mapped file:   dummy.map
-///       Title:
-///       Option:               CREATE
-///       Mapped Memory region: 0x40b4c000 - 0x40d95f00 (2.29 MB)
-///       Current breakval:     0x40b53000
-///       root [2] .q
-///       $ rm dummy.map
-///    Remember begin of mapped region, i.e. 0x40b4c000
+/// Set preferred map address. 
 ///
-/// 2) Add to producer program, just before creating the TMapFile:
-///       TMapFile::SetMapAddress(0x40b4c000);
+/// Find out preferred map address as follows:
+///   -# Run consumer program to find the preferred map address. Remember begin of mapped region, i.e. 0x40b4c000
+/// ~~~{.cpp}
+/// $ root
+/// root [0] m = TMapFile::Create("dummy.map", "recreate", 10000000);
+/// root [1] m.Print()
+/// Memory mapped file:   dummy.map
+/// Title:
+/// Option:               CREATE
+/// Mapped Memory region: 0x40b4c000 - 0x40d95f00 (2.29 MB)
+/// Current breakval:     0x40b53000
+/// root [2] .q
+/// $ rm dummy.map
+/// ~~~
+///   -# Add to producer program, just before creating the TMapFile:
+///    TMapFile::SetMapAddress(0x40b4c000);
 ///
 /// Repeat this if more than one map file is being used.
-///
 /// The above procedure allow programs using, e.g., different number of
 /// shared libraries (that cause the default mapping address to be
 /// different) to create shared memory regions in the same location
@@ -1136,16 +1150,13 @@ void TMapFile::SetMapAddress(Long_t addr)
 /// For now, we let the system decide (start address 0). There are
 /// a lot of issues to deal with here to make this work reasonably,
 /// including:
-///
-/// - Avoid memory collisions with existing mapped address spaces
-///
-/// - Reclaim address spaces when their mmalloc heaps are unmapped
-///
-/// - When mmalloc heaps are shared between processes they have to be
+///   - Avoid memory collisions with existing mapped address spaces
+///   - Reclaim address spaces when their mmalloc heaps are unmapped
+///   - When mmalloc heaps are shared between processes they have to be
 ///   mapped at the same addresses in each
 ///
 /// Once created, a mmalloc heap that is to be mapped back in must be
-/// mapped at the original address.  I.E. each TMapFile will expect
+/// mapped at the original address.  I.e. each TMapFile will expect
 /// to be remapped at it's original address. This becomes a problem if
 /// the desired address is already in use.
 

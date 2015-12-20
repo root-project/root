@@ -12,20 +12,6 @@
 #ifndef ROOT_TDOMParser
 #define ROOT_TDOMParser
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TDOMParser                                                           //
-//                                                                      //
-// DOM stands for the Document Object Model; this is an API for         //
-// accessing XML or HTML structured documents.                          //
-// The Document Object Model is a platform and language-neutral         //
-// interface that will allow programs and scripts to dynamically        //
-// access and update the content, structure and style of documents.     //
-//                                                                      //
-// The parser returns a tree built during the document analysis.        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TXMLParser
 #include "TXMLParser.h"
 #endif
@@ -38,7 +24,7 @@
 class TDOMParser : public TXMLParser {
 
 private:
-   TXMLDocument *fTXMLDoc;      // xmlDoc
+   TXMLDocument *fTXMLDoc;      ///< xmlDoc
 
    TDOMParser(const TDOMParser&);            // Not implemented
    TDOMParser& operator=(const TDOMParser&); // Not implemented

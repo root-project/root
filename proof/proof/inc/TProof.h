@@ -48,9 +48,6 @@
 #ifndef ROOT_TSysEvtHandler
 #include "TSysEvtHandler.h"
 #endif
-#ifndef ROOT_TThread
-#include "TThread.h"
-#endif
 #ifndef ROOT_TUrl
 #include "TUrl.h"
 #endif
@@ -60,8 +57,12 @@
 #ifndef ROOT_TStopwatch
 #include "TStopwatch.h"
 #endif
+#ifndef ROOT_TVirtualMutex
+#include "TVirtualMutex.h"
+#endif
 
 #include <map>
+#include <mutex>
 
 #ifdef R__GLOBALSTL
 namespace std { using ::map; }
@@ -93,10 +94,8 @@ class TProofServ;
 class TQueryResult;
 class TSignalHandler;
 class TSlave;
-class TSemaphore;
 class TSocket;
 class TTree;
-class TVirtualMutex;
 class TFileCollection;
 class TMap;
 class TDataSetManager;
@@ -181,8 +180,6 @@ const char* const kUNTAR2 = "...";
 const char* const kUNTAR3 = "...";
 const char* const kGUNZIP = "gunzip";
 #endif
-
-R__EXTERN TVirtualMutex *gProofMutex;
 
 typedef void (*PrintProgress_t)(Long64_t tot, Long64_t proc, Float_t proctime, Long64_t bytes);
 
@@ -576,7 +573,7 @@ private:
 
    PrintProgress_t fPrintProgress;   //Function function to display progress info in batch mode
 
-   TVirtualMutex  *fCloseMutex;      // Avoid crashes in MarkBad or alike while closing
+   std::recursive_mutex fCloseMutex;      // Avoid crashes in MarkBad or alike while closing
 
    TList          *fLoadedMacros;    // List of loaded macros (just file names)
    static TList   *fgProofEnvList;   // List of TNameds defining environment
@@ -629,8 +626,6 @@ protected:
 
    TStopwatch      fQuerySTW;       // Stopwatch to measure query times
    Float_t         fPrepTime;       // Preparation time
-
-   static TSemaphore *fgSemaphore;   //semaphore to control no of parallel startup threads
 
 private:
    TProof(const TProof &);           // not implemented

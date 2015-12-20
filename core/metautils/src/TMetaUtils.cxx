@@ -16,7 +16,6 @@
 // used by TCling and rootcling.                                        //
 //                                                                      //
 //______________________________________________________________________________
-
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -470,9 +469,11 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 TClingLookupHelper::TClingLookupHelper(cling::Interpreter &interpreter,
                                        TNormalizedCtxt &normCtxt,
                                        ExistingTypeCheck_t existingTypeCheck,
+                                       AutoParse_t autoParse,
                                        const int* pgDebug /*= 0*/):
    fInterpreter(&interpreter),fNormalizedCtxt(&normCtxt),
-   fExistingTypeCheck(existingTypeCheck), fPDebug(pgDebug)
+   fExistingTypeCheck(existingTypeCheck),
+   fAutoParse(autoParse), fPDebug(pgDebug)
 {
 }
 
@@ -549,9 +550,14 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
 
    // Try hard to avoid looking up in the Cling database as this could enduce
    // an unwanted autoparsing.
+   // Note: this is always done by the callers and thus is redundant.
+   // Maybe replace with
+   assert(! (fExistingTypeCheck && fExistingTypeCheck(tname,result)) );
    if (fExistingTypeCheck && fExistingTypeCheck(tname,result)) {
       return ! result.empty();
    }
+
+   if (fAutoParse) fAutoParse(tname.c_str());
 
    // Since we already check via other means (TClassTable which is populated by
    // the dictonary loading, and the gROOT list of classes and enums, which are
@@ -964,12 +970,12 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
-                                        const RConstructorType &ioctortype)
+ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
+                                                                     const RConstructorType &ioctortype)
 {
    const char *arg = ioctortype.GetName();
    if ( (arg == 0 || arg[0] == '\0') && !cl->hasUserDeclaredConstructor() ) {
-      return true;
+      return EIOCtorCategory::kDefault;
    }
 
    if (ioctortype.GetType() ==0 && (arg == 0 || arg[0] == '\0')) {
@@ -984,10 +990,10 @@ bool ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
          // We can reach this constructor.
 
          if (iter->getNumParams() == 0) {
-            return true;
+            return EIOCtorCategory::kDefault;
          }
          if ( (*iter->param_begin())->hasDefaultArg()) {
-            return true;
+            return EIOCtorCategory::kDefault;
          }
       } // For each constructor.
    }
@@ -1003,21 +1009,28 @@ bool ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
          if (iter->getNumParams() == 1) {
             clang::QualType argType( (*iter->param_begin())->getType() );
             argType = argType.getDesugaredType(cl->getASTContext());
+            // Deal with pointers and references: ROOT-7723
+            auto ioCtorCategory = EIOCtorCategory::kAbsent;
             if (argType->isPointerType()) {
+               ioCtorCategory = EIOCtorCategory::kIOPtrType;
                argType = argType->getPointeeType();
+            } else if (argType->isReferenceType()){
+               ioCtorCategory = EIOCtorCategory::kIORefType;
+               argType = argType.getNonReferenceType();
+            }
+            if (ioCtorCategory !=  EIOCtorCategory::kAbsent) {
                argType = argType.getDesugaredType(cl->getASTContext());
-
                const clang::CXXRecordDecl *argDecl = argType->getAsCXXRecordDecl();
                if (argDecl && ioctortype.GetType()) {
                   if (argDecl->getCanonicalDecl() == ioctortype.GetType()->getCanonicalDecl()) {
-                     return true;
+                     return ioCtorCategory;
                   }
                } else {
                   std::string realArg = argType.getAsString();
                   std::string clarg("class ");
                   clarg += arg;
                   if (realArg == clarg) {
-                     return true;
+                     return ioCtorCategory;
 
                   }
                }
@@ -1026,7 +1039,7 @@ bool ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
       } // for each constructor
    }
 
-   return false;
+   return EIOCtorCategory::kAbsent;
 }
 
 
@@ -1079,24 +1092,27 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
 
    for (RConstructorTypes::const_iterator ctorTypeIt = ctorTypes.begin();
         ctorTypeIt!=ctorTypes.end(); ++ctorTypeIt) {
-      std::string proto( ctorTypeIt->GetName() );
-      bool defaultCtor = proto.empty();
-      if (!defaultCtor) {
-         // I/O constructors take pointers to ctorTypes
-         proto += " *";
-      }
 
-      if (!ROOT::TMetaUtils::CheckConstructor(cl, *ctorTypeIt))
+      auto ioCtorCat = ROOT::TMetaUtils::CheckConstructor(cl, *ctorTypeIt);
+
+      if (EIOCtorCategory::kAbsent == ioCtorCat)
          continue;
 
+      std::string proto( ctorTypeIt->GetName() );
+      bool defaultCtor = proto.empty();
       if (defaultCtor) {
          arg.clear();
       } else {
-         arg = "( (";
-         arg += proto;
-         arg += ")0 )";
+         // I/O constructors can take pointers or references to ctorTypes
+        proto += " *";
+        if (EIOCtorCategory::kIOPtrType == ioCtorCat){
+           arg = "( ("; //(MyType*)nullptr
+        } else if (EIOCtorCategory::kIORefType == ioCtorCat) {
+           arg = "( *("; //*(MyType*)nullptr
+        }
+        arg += proto;
+        arg += ")nullptr )";
       }
-
       // Check for private operator new
       const clang::CXXMethodDecl *method
          = GetMethodWithProto(cl, "operator new", "size_t", interp,
@@ -1392,7 +1408,7 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
       }
 
       GetFullyQualifiedTypeName(typenameStr, fieldType, astContext);
-      nameType[field_iter->getName().str()] = ROOT::TSchemaType(typenameStr.c_str(),dims.str().c_str());
+      nameType[field_iter->getName().str()] = ROOT::Internal::TSchemaType(typenameStr.c_str(),dims.str().c_str());
    }
 
    // And now the base classes
@@ -1401,7 +1417,7 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
        iter != end;
        ++iter){
       std::string basename( iter->getType()->getAsCXXRecordDecl()->getNameAsString() ); // Intentionally using only the unqualified name.
-      nameType[basename] = ROOT::TSchemaType(basename.c_str(),"");
+      nameType[basename] = ROOT::Internal::TSchemaType(basename.c_str(),"");
    }
 }
 
@@ -1837,7 +1853,9 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          if (filename[i]=='\\') filename[i]='/';
       }
    }
-   finalString << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl) << "," << "\n" << "                  typeid(" << csymbol << "), DefineBehavior(ptr, ptr)," << "\n" << "                  ";
+   finalString << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl)
+      << "," << "\n" << "                  typeid(" << csymbol
+      << "), ::ROOT::Internal::DefineBehavior(ptr, ptr)," << "\n" << "                  ";
 
    if (ClassInfo__HasMethod(decl,"Dictionary",interp) && !IsTemplate(*decl)) {
       finalString << "&" << csymbol << "::Dictionary, ";
@@ -1880,7 +1898,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       finalString << "      instance.SetResetAfterMerge(&reset_" << mappedname.c_str() << ");" << "\n";
    }
    if (bset) {
-      finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << "Pushback" << "<TStdBitsetHelper< " << classname.c_str() << " > >()));" << "\n";
+      finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << "Pushback" << "<Internal::TStdBitsetHelper< " << classname.c_str() << " > >()));" << "\n";
 
       needCollectionProxy = true;
    } else if (stl != 0 &&
@@ -1930,17 +1948,17 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    /////////////////////////////////////////////////////////////////////////////
 
    if( (rulesIt1 != ROOT::gReadRules.end() && rulesIt1->second.size()>0) || (rulesIt2 != ROOT::gReadRawRules.end()  && rulesIt2->second.size()>0) ) {
-      finalString << "\n" << "      ROOT::TSchemaHelper* rule;" << "\n";
+      finalString << "\n" << "      ROOT::Internal::TSchemaHelper* rule;" << "\n";
    }
 
    if( rulesIt1 != ROOT::gReadRules.end() ) {
-      finalString << "\n" << "      // the io read rules" << "\n" << "      std::vector<ROOT::TSchemaHelper> readrules(" << rulesIt1->second.size() << ");" << "\n";
+      finalString << "\n" << "      // the io read rules" << "\n" << "      std::vector<ROOT::Internal::TSchemaHelper> readrules(" << rulesIt1->second.size() << ");" << "\n";
       ROOT::WriteSchemaList( rulesIt1->second, "readrules", finalString );
       finalString << "      instance.SetReadRules( readrules );" << "\n";
    }
 
    if( rulesIt2 != ROOT::gReadRawRules.end() ) {
-      finalString << "\n" << "      // the io read raw rules" << "\n" << "      std::vector<ROOT::TSchemaHelper> readrawrules(" << rulesIt2->second.size() << ");" << "\n";
+      finalString << "\n" << "      // the io read raw rules" << "\n" << "      std::vector<ROOT::Internal::TSchemaHelper> readrawrules(" << rulesIt2->second.size() << ");" << "\n";
       ROOT::WriteSchemaList( rulesIt2->second, "readrawrules", finalString );
       finalString << "      instance.SetReadRawRules( readrawrules );" << "\n";
    }
@@ -2315,7 +2333,7 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
          finalString << args;
          finalString << " : ";
       } else {
-         finalString << "::new((::ROOT::TOperatorNewHelper*)p) ";
+         finalString << "::new((::ROOT::Internal::TOperatorNewHelper*)p) ";
          finalString << classname.c_str();
          finalString << args;
          finalString << " : ";
@@ -2335,7 +2353,7 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
             finalString << classname.c_str();
             finalString << "[nElements] : ";
          } else {
-            finalString << "::new((::ROOT::TOperatorNewHelper*)p) ";
+            finalString << "::new((::ROOT::Internal::TOperatorNewHelper*)p) ";
             finalString << classname.c_str();
             finalString << "[nElements] : ";
          }
@@ -2401,7 +2419,7 @@ void ROOT::TMetaUtils::WritePointersSTL(const AnnotatedRecordDecl &cl,
    {
       int k = ROOT::TMetaUtils::IsSTLContainer(*iter);
       if (k!=0) {
-         RStl::Instance().GenerateTClassFor( iter->getType(), interp, normCtxt);
+         Internal::RStl::Instance().GenerateTClassFor( iter->getType(), interp, normCtxt);
       }
    }
 
@@ -2428,7 +2446,7 @@ void ROOT::TMetaUtils::WritePointersSTL(const AnnotatedRecordDecl &cl,
          //          fprintf(stderr,"Add %s which is also",m.Type()->Name());
          //          fprintf(stderr," %s\n",R__TrueName(**field_iter) );
          clang::QualType utype(ROOT::TMetaUtils::GetUnderlyingType(field_iter->getType()),0);
-         RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
+         Internal::RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
       }
    }
 }
@@ -2672,8 +2690,8 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
    std::string fullname;
    ROOT::TMetaUtils::GetQualifiedName(fullname,cl);
    if (TClassEdit::IsSTLCont(fullname.c_str()) ) {
-     RStl::Instance().GenerateTClassFor(cl.GetNormalizedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()), interp, normCtxt);
-     return;
+      Internal::RStl::Instance().GenerateTClassFor(cl.GetNormalizedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()), interp, normCtxt);
+      return;
    }
 
    if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"Streamer",interp)) {

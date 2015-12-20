@@ -9,15 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TInetAddress                                                         //
-//                                                                      //
-// This class represents an Internet Protocol (IP) address.             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TInetAddress
+This class represents an Internet Protocol (IP) address.
+*/
 
 #include "TInetAddress.h"
+#include "TBuffer.h"
 #include "TClass.h"
 
 ClassImp(TInetAddress)

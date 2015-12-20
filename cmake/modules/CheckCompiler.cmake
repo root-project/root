@@ -3,7 +3,7 @@
 #---------------------------------------------------------------------------------------------------
 
 #---Enable FORTRAN (unfortunatelly is not not possible in all cases)-------------------------------
-if(fortran AND NOT WIN32 AND NOT CMAKE_GENERATOR STREQUAL Xcode AND NOT CMAKE_GENERATOR STREQUAL Ninja)
+if(fortran)
   #--Work-around for CMake issue 0009220
   if(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
     set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
@@ -19,7 +19,6 @@ if("$ENV{PATH}" MATCHES ${_compiler_path})
 else()
   set(CXX ${CMAKE_CXX_COMPILER})
 endif()
-string(TOUPPER "${CMAKE_BUILD_TYPE}" uppercase_CMAKE_BUILD_TYPE)
 
 #----Test if clang setup works----------------------------------------------------------------------
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -57,9 +56,18 @@ else()
 endif()
 
 #---Set a default build type for single-configuration CMake generators if no build type is set------
-set(CMAKE_CONFIGURATION_TYPES Release MinSizeRel Debug RelWithDebInfo Optimized)
+if(WIN32)
+  set(CMAKE_CONFIGURATION_TYPES Release MinSizeRel Debug RelWithDebInfo)
+else()
+  set(CMAKE_CONFIGURATION_TYPES Release MinSizeRel Debug RelWithDebInfo Optimized)
+endif()
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build, options are: Release, MinSizeRel, Debug, RelWithDebInfo, Optimized." FORCE)
+endif()
+string(TOUPPER "${CMAKE_BUILD_TYPE}" uppercase_CMAKE_BUILD_TYPE)
+string(TOUPPER "${CMAKE_CONFIGURATION_TYPES}" uppercase_CMAKE_CONFIGURATION_TYPES)
+if(NOT "${uppercase_CMAKE_CONFIGURATION_TYPES}" MATCHES "${uppercase_CMAKE_BUILD_TYPE}")
+  message(FATAL_ERROR "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} needs to be one of known build types: ${CMAKE_CONFIGURATION_TYPES}")
 endif()
 
 include(CheckCXXCompilerFlag)
@@ -84,6 +92,12 @@ if(cxx14)
     set(cxx14 OFF CACHE BOOL "" FORCE)
   endif()
 endif()
+if(root7)
+  if(NOT cxx14)
+    message(STATUS "ROOT7 interfaces require cxx14 which is disabled. Switching OFF root7 option")
+    set(root7 OFF CACHE BOOL "" FORCE)
+  endif()
+endif()
 
 #---Check for libcxx option------------------------------------------------------------
 if(libcxx)
@@ -94,6 +108,32 @@ if(libcxx)
   endif()
 endif()
 
+
+#---Check for cxxmodules option------------------------------------------------------------
+if(cxxmodules)
+  # Copy-pasted from HandleLLVMOptions.cmake, please keep up to date.
+  set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -fmodules -fcxx-modules")
+  # Check that we can build code with modules enabled, and that repeatedly
+  # including <cassert> still manages to respect NDEBUG properly.
+  CHECK_CXX_SOURCE_COMPILES("#undef NDEBUG
+                             #include <cassert>
+                             #define NDEBUG
+                             #include <cassert>
+                             int main() { assert(this code is not compiled); }"
+                             CXX_SUPPORTS_MODULES)
+  set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
+  if (CXX_SUPPORTS_MODULES)
+    file(COPY ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap DESTINATION ${ROOT_INCLUDE_DIR})
+
+    # This var is useful when we want to compile things without cxxmodules.
+    set(ROOT_CXXMODULES_FLAGS " -fmodules -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_FLAGS}")
+  else()
+    message(FATAL_ERROR "cxxmodules is not supported by this compiler")
+  endif()
+endif(cxxmodules)
 
 #---Need to locate thead libraries and options to set properly some compilation flags----------------
 find_package(Threads)
@@ -151,4 +191,4 @@ endif()
 message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")
 message(STATUS "ROOT Architecture: ${ROOT_ARCHITECTURE}")
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${ALL_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}")
+message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}")

@@ -41,6 +41,7 @@
 #include <iomanip>
 #include <limits>
 
+#include "TMVA/Types.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/DecisionTreeNode.h"
 #include "TMVA/Tools.h"

@@ -55,9 +55,8 @@ private:
    Float_t        fLight;         //Light
    Float_t        fSaturation;    //Saturation
    Float_t        fAlpha;         //Alpha (transparency)
-   static Bool_t  fgGrayscaleMode;//if set, GetColor will return grayscale
-   static Bool_t  fgInitDone;     //kTRUE once ROOT colors have been initialized
-   static TArrayI fgPalette;      //Color palette
+   // static Bool_t  fgGrayscaleMode;//if set, GetColor will return grayscale
+   // static TArrayI fgPalette;      //Color palette
 
    void           Allocate();
    static Float_t HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei);

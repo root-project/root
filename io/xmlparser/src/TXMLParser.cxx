@@ -9,21 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXMLParser                                                           //
-//                                                                      //
-// TXMLParser is an abstract class which interfaces with Libxml2.       //
-// Libxml2 is the XML C parser and toolkit developed for the Gnome      //
-// project.                                                             //
-//                                                                      //
-// The libxml library provides two interfaces to the parser, a DOM      //
-// style tree interface and a SAX style event based interface.          //
-//                                                                      //
-// TXMLParser is parent class of TSAXParser and TDOMParser, which are   //
-// a SAX interface and DOM interface of libxml.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TXMLParser
+\ingroup IO
+
+TXMLParser is an abstract class which interfaces with Libxml2.
+Libxml2 is the XML C parser and toolkit developed for the Gnome
+project.
+The libxml library provides two interfaces to the parser, a DOM   
+style tree interface and a SAX style event based interface.
+TXMLParser is parent class of TSAXParser and TDOMParser, which are
+a SAX interface and DOM interface of libxml.
+*/
 
 /*************************************************************************
   This source is based on libxml++, a C++ wrapper for the libxml XML
@@ -175,12 +172,12 @@ void TXMLParser::StopParser()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the parse code:
-///  0: Parse successful
-/// -1: Attempt to parse a second file while a parse is in progress
-/// -2: Parse context is not created
-/// -3: An error occured while parsing file
-/// -4: A fatal error occured while parsing file
-/// -5: Document is not well-formed
+///   - \b 0: Parse successful
+///   - \b -1: Attempt to parse a second file while a parse is in progress
+///   - \b -2: Parse context is not created
+///   - \b -3: An error occured while parsing file
+///   - \b -4: A fatal error occured while parsing file
+///   - \b -5: Document is not well-formed
 
 void TXMLParser::SetParseCode(Int_t errorcode)
 {
@@ -189,8 +186,8 @@ void TXMLParser::SetParseCode(Int_t errorcode)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set parser stops in case of error:
-/// stop = true, stops on error
-/// stop = false, continue parsing on error...
+///   - \b stop = true, stops on error
+///   - \b stop = false, continue parsing on error...
 
 void TXMLParser::SetStopOnError(Bool_t stop)
 {

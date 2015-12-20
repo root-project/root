@@ -1,15 +1,15 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #201
-// 
-// Composite p.d.f with signal and background component
-//
-// pdf = f_bkg * bkg(x,a0,a1) + (1-fbkg) * (f_sig1 * sig1(x,m,s1 + (1-f_sig1) * sig2(x,m,s2)))
-//
-//
-// 07/2008 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #201
+///
+///  Composite p.d.f with signal and background component
+///
+///  pdf = f_bkg * bkg(x,a0,a1) + (1-fbkg) * (f_sig1 * sig1(x,m,s1 + (1-f_sig1) * sig2(x,m,s2)))
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

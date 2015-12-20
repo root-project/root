@@ -192,8 +192,8 @@ namespace cling {
     std::vector<WTPtr_t> WrapperTransformers;
     WrapperTransformers.emplace_back(new ValuePrinterSynthesizer(TheSema, 0));
     WrapperTransformers.emplace_back(new DeclExtractor(TheSema));
-    WrapperTransformers.emplace_back(new ValueExtractionSynthesizer(TheSema));
     WrapperTransformers.emplace_back(new NullDerefProtectionTransformer(TheSema));
+    WrapperTransformers.emplace_back(new ValueExtractionSynthesizer(TheSema));
     WrapperTransformers.emplace_back(new CheckEmptyTransactionTransformer(TheSema));
 
     m_Consumer->SetTransformers(std::move(ASTTransformers),
@@ -598,6 +598,9 @@ namespace cling {
            "Transaction already rolled back.");
     if (m_Interpreter->getOptions().ErrorOut)
       return;
+
+    if (InterpreterCallbacks* callbacks = m_Interpreter->getCallbacks())
+      callbacks->TransactionRollback(*T);
 
     TransactionUnloader U(&getCI()->getSema(), m_CodeGen.get());
 

@@ -9,18 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TViewPubFunctions                                                    //
-//                                                                      //
-// View implementing the TList interface and giving access all the      //
-// TFunction describing public methods in a class and all its base      //
-// classes without caching any of the TFunction pointers.               //
-//                                                                      //
-// Adding to this collection directly is prohibited.                    //
-// Iteration can only be done via the TIterator interfaces.             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TViewPubFunctions
+View implementing the TList interface and giving access all the
+TFunction describing public methods in a class and all its base
+classes without caching any of the TFunction pointers.
+
+Adding to this collection directly is prohibited.
+Iteration can only be done via the TIterator interfaces.
+*/
 
 #include "TViewPubFunctions.h"
 
@@ -296,7 +292,7 @@ Int_t TViewPubFunctions::GetSize() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Load all the functions known to the intepreter for the scope 'fClass'
+/// Load all the functions known to the interpreter for the scope 'fClass'
 /// and all its bases classes.
 
 void TViewPubFunctions::Load()
@@ -356,13 +352,9 @@ TObject   *TViewPubFunctions::Remove(TObjLink * /* lnk */)
    return 0;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TViewPubFunctionsIter                                                //
-//                                                                      //
-// Iterator of over the view's content                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TViewPubFunctionsIter
+Iterator of over the view's content
+*/
 
 // ClassImp(TViewPubFunctionsIter)
 
@@ -454,7 +446,7 @@ TObject *TViewPubFunctionsIter::Next()
       }
 
    }
-   // Not reacheable.
+   // Not reachable.
    return 0;
 }
 

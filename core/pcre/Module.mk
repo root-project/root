@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 28/11/2005
 
 MODNAME      := pcre
-PCREVERS     := pcre-7.8
+PCREVERS     := pcre-8.37
 
 ifneq ($(BUILTINPCRE), yes)
 
@@ -32,7 +32,7 @@ PCREDIRI     := $(PCREDIRS)/$(PCREVERS)
 ##### libpcre #####
 PCRELIBS     := $(MODDIRS)/$(PCREVERS).tar.gz
 ifeq ($(PLATFORM),win32)
-PCRELIBA     := $(call stripsrc,$(MODDIRS)/win32/libpcre-7.8.lib)
+PCRELIBA     := $(call stripsrc,$(MODDIRS)/win32/libpcre-8.37.lib)
 PCRELIB      := $(LPATH)/libpcre.lib
 ifeq (yes,$(WINRTDEBUG))
 PCREBLD      := "libpcre - Win32 Debug"

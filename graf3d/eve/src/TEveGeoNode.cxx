@@ -36,6 +36,7 @@
 #include "TVirtualGeoPainter.h"
 
 /** \class TEveGeoNode
+\ingroup TEve
 Wrapper for TGeoNode that allows it to be shown in GUI and controlled as a TEveElement.
 */
 
@@ -448,6 +449,7 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode*         geon,
 
 
 /** \class TEveGeoTopNode
+\ingroup TEve
 A wrapper over a TGeoNode, possibly displaced with a global
 trasformation stored in TEveElement.
 

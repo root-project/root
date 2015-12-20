@@ -185,6 +185,17 @@ public:
    ClassDef(TVectorT,4)  // Template of Vector class
 };
 
+#ifndef __CINT__
+// When building with -fmodules, it instantiates all pending instantiations,
+// instead of delaying them until the end of the translation unit.
+// We 'got away with' probably because the use and the definition of the
+// explicit specialization do not occur in the same TU.
+//
+// In case we are building with -fmodules, we need to forward declare the
+// specialization in order to compile the dictionary G__Matrix.cxx.
+template <> TClass *TVectorT<double>::Class();
+#endif // __CINT__
+
 template<class Element> inline       TVectorT<Element> &TVectorT<Element>::Use     (Int_t n,Element *data) { return Use(0,n-1,data); }
 template<class Element> inline const TVectorT<Element> &TVectorT<Element>::Use     (Int_t n,const Element *data) const { return Use(0,n-1,data); }
 template<class Element> inline       TVectorT<Element> &TVectorT<Element>::Use     (TVectorT &v)
@@ -212,7 +223,7 @@ template<class Element> inline const Element &TVectorT<Element>::operator()(Int_
    const Int_t aind = ind-fRowLwb;
    if (aind >= fNrows || aind < 0) {
       Error("operator()","Request index(%d) outside vector range of %d - %d",ind,fRowLwb,fRowLwb+fNrows);
-      return fElements[0];
+      return TMatrixTBase<Element>::NaNValue();
    }
 
    return fElements[aind];
@@ -225,7 +236,7 @@ template<class Element> inline Element &TVectorT<Element>::operator()(Int_t ind)
    const Int_t aind = ind-fRowLwb;
    if (aind >= fNrows || aind < 0) {
       Error("operator()","Request index(%d) outside vector range of %d - %d",ind,fRowLwb,fRowLwb+fNrows);
-      return fElements[0];
+      return TMatrixTBase<Element>::NaNValue();
    }
 
    return fElements[aind];
@@ -239,6 +250,9 @@ template<class Element> TVectorT<Element>   operator*   (const TMatrixT      <El
 template<class Element> TVectorT<Element>   operator*   (const TMatrixTSym   <Element>  &a,      const TVectorT <Element>  &source);
 template<class Element> TVectorT<Element>   operator*   (const TMatrixTSparse<Element>  &a,      const TVectorT <Element>  &source);
 template<class Element> TVectorT<Element>   operator*   (      Element                   val,    const TVectorT <Element>  &source);
+template<class Element>
+inline
+TVectorT<Element> operator*   (const TVectorT <Element>  &source, Element val) { return val * source; }
 
 template<class Element> Element             Dot         (const TVectorT      <Element>  &source1,const TVectorT <Element>  &source2);
 template <class Element1,class Element2>

@@ -16,6 +16,7 @@
 #include "TMath.h"
 
 /** \class TEveRGBAPalette
+\ingroup TEve
 A generic, speed-optimised mapping from value to RGBA color
 supporting different wrapping and range truncation modes.
 

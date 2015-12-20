@@ -12,25 +12,6 @@
 #ifndef ROOT_TSAXParser
 #define ROOT_TSAXParser
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSAXParser                                                           //
-//                                                                      //
-// TSAXParser is a subclass of TXMLParser, it is a wraper class to      //
-// libxml library.                                                      //
-//                                                                      //
-// SAX (Simple API for XML) is an event based interface, which doesn't  //
-// maintain the DOM tree in memory, in other words, it's much more      //
-// efficient for large document.                                        //
-//                                                                      //
-// TSAXParserCallback contains a number of callback routines to the     //
-// parser in a xmlSAXHandler structure. The parser will then parse the  //
-// document and call the appropriate callback when certain conditions   //
-// occur.                                                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
 #ifndef ROOT_TXMLParser
 #include "TXMLParser.h"
 #endif
@@ -46,7 +27,7 @@ class TSAXParser : public TXMLParser {
 friend class TSAXParserCallback;
 
 private:
-   _xmlSAXHandler         *fSAXHandler;  // libxml2 SAX handler
+   _xmlSAXHandler         *fSAXHandler;  ///< libxml2 SAX handler
 
    virtual Int_t           Parse();
 

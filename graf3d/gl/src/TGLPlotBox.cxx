@@ -16,10 +16,10 @@
 #include "TGLIncludes.h"
 #include "TGLPlotBox.h"
 
-//______________________________________________________________________________
-//
-// Implementation of a box around a histogram/function for
-// plot-painters.
+/** \class TGLPlotBox
+\ingroup opengl
+Implementation of a box around a histogram/function for plot-painters.
+*/
 
 ClassImp(TGLPlotBox)
 

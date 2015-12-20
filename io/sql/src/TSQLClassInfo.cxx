@@ -9,15 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//________________________________________________________________________
-//
-// TSQLClassInfo class containes info about tables specific to one class and
-// version. It provides names of table for that class. For each version of
-// class not more than two tables can exists. Normal table has typically
-// name like TH1_ver4 and additional table has name like TH1_raw4
-// List of this objects are kept by TSQLFile class
-//
-//________________________________________________________________________
+/**
+\class TSQLClassInfo
+\ingroup IO
+
+Contains information about tables specific to one class and
+version. It provides names of table for that class. For each version of
+class not more than two tables can exists. Normal table has typically
+name like TH1_ver4 and additional table has name like TH1_raw4.
+List of this objects are kept by TSQLFile class.
+*/
 
 #include "TSQLClassInfo.h"
 
@@ -129,6 +130,7 @@ void TSQLClassInfo::SetTableStatus(TObjArray* columns, Bool_t israwtable)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Search for column of that name
+///
 /// Can search either for full column name (sqlname = kFALSE, default)
 /// or for name, used as column name (sqlname = kTRUE)
 /// Return index of column in list (-1 if not found)

@@ -12,20 +12,6 @@
 #ifndef ROOT_TXMLNode
 #define ROOT_TXMLNode
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXMLNode                                                             //
-//                                                                      //
-// TXMLNode contains a pointer to xmlNode, which is a node under the    //
-// DOM tree. A node can be an Element, an Attribute, a Text Node        //
-// or a Comment Node.                                                   //
-// One can navigate the DOM tree by accessing the siblings and          //
-// parent or child nodes. Also retriving the Attribute or the Text in   //
-// an Element node.                                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
@@ -43,16 +29,16 @@ private:
    TXMLNode(const TXMLNode&);            // Not implemented
    TXMLNode& operator=(const TXMLNode&); // Not implemented
 
-   _xmlNode *fXMLNode;        // libxml node
+   _xmlNode *fXMLNode;        ///< libxml node
 
-   TXMLNode *fParent;         // Parent node
-   TXMLNode *fChildren;       // Children node
-   TXMLNode *fNextNode;       // Next sibling node
-   TXMLNode *fPreviousNode;   // Previous sibling node
-   TList    *fAttrList;       // List of Attributes
+   TXMLNode *fParent;         ///< Parent node
+   TXMLNode *fChildren;       ///< Children node
+   TXMLNode *fNextNode;       ///< Next sibling node
+   TXMLNode *fPreviousNode;   ///< Previous sibling node
+   TList    *fAttrList;       ///< List of Attributes
 
 public:
-   // This enum is based on libxml tree Enum xmlElementType
+   /// This enum is based on libxml tree Enum xmlElementType
    enum EXMLElementType {
       kXMLElementNode = 1,
       kXMLAttributeNode = 2,

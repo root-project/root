@@ -123,6 +123,8 @@ public:
 
    virtual void   MergeSceneBBoxes(TGLBoundingBox& bbox);
 
+   const TGLBoundingBox& RefOverallBoundingBox() const { return fOverallBoundingBox; }
+
    // ================================================================
 
    // Low-level methods

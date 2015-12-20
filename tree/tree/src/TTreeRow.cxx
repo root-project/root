@@ -17,6 +17,7 @@ Related classes are TTreeResult.
 */
 
 #include "TTreeRow.h"
+#include "TBuffer.h"
 #include "TObjArray.h"
 
 ClassImp(TTreeRow)

@@ -25,9 +25,11 @@
 ClassImp(TPaveStats)
 
 /** \class TPaveStats
+\ingroup BasicGraphics
+
 The histogram statistics painter class.
 
-A PaveStats is a PaveText to draw histogram statistics and fit parameters.
+To draw histogram statistics and fit parameters.
 
 - [Statistics Display](#PS01)
 - [Fit Statistics](#PS02)

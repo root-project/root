@@ -9,34 +9,36 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// Single Value Decomposition class                                      //
-//                                                                       //
-// For an (m x n) matrix A with m >= n, the singular value decomposition //
-// is                                                                    //
-// an (m x m) orthogonal matrix fU, an (m x n) diagonal matrix fS, and   //
-// an (n x n) orthogonal matrix fV so that A = U*S*V'.                   //
-//                                                                       //
-// If the row/column index of A starts at (rowLwb,colLwb) then the       //
-// decomposed matrices/vectors start at :                                //
-//  fU   : (rowLwb,colLwb)                                               //
-//  fV   : (colLwb,colLwb)                                               //
-//  fSig : (colLwb)                                                      //
-//                                                                       //
-// The diagonal matrix fS is stored in the singular values vector fSig . //
-// The singular values, fSig[k] = S[k][k], are ordered so that           //
-// fSig[0] >= fSig[1] >= ... >= fSig[n-1].                               //
-//                                                                       //
-// The singular value decompostion always exists, so the decomposition   //
-// will (as long as m >=n) never fail. If m < n, the user should add     //
-// sufficient zero rows to A , so that m == n                            //
-//                                                                       //
-// Here fTol is used to set the threshold on the minimum allowed value   //
-// of the singular values:                                               //
-//  min_singular = fTol*max(fSig[i])                                     //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
+/** \class TDecompSVD
+    \ingroup Matrix
+
+ Single Value Decomposition class
+
+ For an (m x n) matrix A with m >= n, the singular value decomposition
+ is
+ an (m x m) orthogonal matrix fU, an (m x n) diagonal matrix fS, and
+ an (n x n) orthogonal matrix fV so that A = U*S*V'.
+
+ If the row/column index of A starts at (rowLwb,colLwb) then the
+ decomposed matrices/vectors start at :
+~~~
+  fU   : (rowLwb,colLwb)
+  fV   : (colLwb,colLwb)
+  fSig : (colLwb)
+~~~
+
+ The diagonal matrix fS is stored in the singular values vector fSig .
+ The singular values, fSig[k] = S[k][k], are ordered so that
+ fSig[0] >= fSig[1] >= ... >= fSig[n-1].
+
+ The singular value decomposition always exists, so the decomposition
+ will (as long as m >=n) never fail. If m < n, the user should add
+ sufficient zero rows to A , so that m == n
+
+ Here fTol is used to set the threshold on the minimum allowed value
+ of the singular values:
+  min_singular = fTol*max(fSig[i])
+*/
 
 #include "TDecompSVD.h"
 #include "TMath.h"
@@ -166,6 +168,7 @@ Bool_t TDecompSVD::Decompose()
 ///   oDiag - off-diagonal elements of matrix C
 ///
 ///  Test code for the output:
+/// ~~~
 ///    const Int_t nRow = v.GetNrows();
 ///    const Int_t nCol = v.GetNcols();
 ///    TMatrixD H(v); H.ResizeTo(nCol,nCol);
@@ -184,6 +187,7 @@ Bool_t TDecompSVD::Decompose()
 ///      C(i,i+1) = oDiag(i+1);
 ///    TMatrixD A = Q*C*Ht;
 ///    ok &= VerifyMatrixIdentity(A,a,kTRUE,1.0e-13);
+/// ~~~
 
 Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag)
 {
@@ -278,14 +282,15 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
 /// matrices .
 ///
 /// Output:
-///   v     - (n x n) - matrix H . V' in the (n x n) part of v
-///   u     - (m x m) - matrix U'^T . Q^T
-///   sDiag - diagonal of the (m x n) S'
+///  - v     - (n x n) - matrix H . V' in the (n x n) part of v
+///  - u     - (m x m) - matrix U'^T . Q^T
+///  - sDiag - diagonal of the (m x n) S'
 ///
 ///   return convergence flag:  0 -> no convergence
 ///                             1 -> convergence
 ///
 ///  Test code for the output:
+/// ~~~
 ///    const Int_t nRow = v.GetNrows();
 ///    const Int_t nCol = v.GetNcols();
 ///    TMatrixD tmp = v; tmp.ResizeTo(nCol,nCol);
@@ -297,6 +302,7 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
 ///    TMatrixDDiag(Sprime) = sDiag;
 ///    ok &= VerifyMatrixIdentity(Uprimet * C * Vprime,Sprime,kTRUE,1.0e-13);
 ///    ok &= VerifyMatrixIdentity(Q*Uprime * Sprime * Vprimet * Ht,a,kTRUE,1.0e-13);
+/// ~~~
 
 Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag)
 {
@@ -484,9 +490,9 @@ void TDecompSVD::Diag_3(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag,
 /// do not increase.
 ///
 /// Output:
-///   v     - (n x n) - matrix H . V' . V'' in the (n x n) part of v
-///   u     - (m x m) - matrix U''^T . U'^T . Q^T
-///   sDiag - diagonal of the (m x n) S''
+///  - v     - (n x n) - matrix H . V' . V'' in the (n x n) part of v
+///  - u     - (m x m) - matrix U''^T . U'^T . Q^T
+///  - sDiag - diagonal of the (m x n) S''
 
 void TDecompSVD::SortSingular(TMatrixD &v,TMatrixD &u,TVectorD &sDiag)
 {

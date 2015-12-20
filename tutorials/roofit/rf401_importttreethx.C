@@ -1,14 +1,14 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'DATA AND CATEGORIES' RooFit tutorial macro #401
-// 
-// Overview of advanced option for importing data from ROOT TTree and THx histograms
-// Basic import options are demonstrated in rf102_dataimport.C
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'DATA AND CATEGORIES' RooFit tutorial macro #401
+///
+///  Overview of advanced option for importing data from ROOT TTree and THx histograms
+///  Basic import options are demonstrated in rf102_dataimport.C
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

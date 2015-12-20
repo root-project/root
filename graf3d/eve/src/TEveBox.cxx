@@ -13,6 +13,7 @@
 #include "TEveProjectionManager.h"
 
 /** \class TEveBox
+\ingroup TEve
 3D box with arbitrary vertices (cuboid).
 Vertices 0-3 specify the "bottom" rectangle in clockwise direction and
 vertices 4-7 the "top" rectangle so that 4 is above 0, 5 above 1 and so on.
@@ -97,6 +98,7 @@ TClass* TEveBox::ProjectedClass(const TEveProjection*) const
 
 
 /** \class TEveBoxProjected
+\ingroup TEve
 Projection of TEveBox.
 */
 

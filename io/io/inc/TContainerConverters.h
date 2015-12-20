@@ -11,13 +11,6 @@
 #ifndef ROOT_TContainerConverters
 #define ROOT_TContainerConverters
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  Small helper to read a TBuffer containing a TClonesArray into any   //
-//  valid collection.                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TMemberStreamer
 #include "TMemberStreamer.h"
 #endif

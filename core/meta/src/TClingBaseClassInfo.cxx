@@ -9,19 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TClingBaseClassInfo                                                  //
-//                                                                      //
-// Emulation of the CINT BaseClassInfo class.                           //
-//                                                                      //
-// The CINT C++ interpreter provides an interface to metadata about     //
-// the base classes of a class through the BaseClassInfo class.  This   //
-// class provides the same functionality, using an interface as close   //
-// as possible to BaseClassInfo but the base class metadata comes from  //
-// the Clang C++ compiler, not CINT.                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TClingBaseClassInfo
+
+Emulation of the CINT BaseClassInfo class.
+
+The CINT C++ interpreter provides an interface to metadata about
+the base classes of a class through the BaseClassInfo class.  This
+class provides the same functionality, using an interface as close
+as possible to BaseClassInfo but the base class metadata comes from
+the Clang C++ compiler, not CINT.
+*/
 
 #include "TClingBaseClassInfo.h"
 
@@ -463,7 +460,7 @@ ptrdiff_t TClingBaseClassInfo::Offset(void * address, bool isDerivedObject) cons
       fClassInfo->AddBaseOffsetValue(fBaseInfo->GetDecl(), clang_val);
       return clang_val;
    }
-   // Verify the address of the instatiated object
+   // Verify the address of the instantiated object
    if (!address) {
       Error("TClingBaseClassInfo::Offset", "The address of the object for virtual base offset calculation is not valid.");
       return -1;
@@ -504,7 +501,7 @@ long TClingBaseClassInfo::Property() const
    clang::CXXBasePaths Paths(/*FindAmbiguities=*/false, /*RecordPaths=*/true,
                              /*DetectVirtual=*/true);
    if (!CRD->isDerivedFrom(BaseCRD, Paths)) {
-      // Error really unexpected here, because contruction / iteration guarantees
+      // Error really unexpected here, because construction / iteration guarantees
       //inheritance;
       Error("TClingBaseClassInfo", "Class not derived from given base.");
    }

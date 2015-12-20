@@ -1,26 +1,29 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'Bernstein Correction' RooStats tutorial macro
-// author: Kyle Cranmer
-// date March. 2009
-//
-// This tutorial shows usage of a the BernsteinCorrection utility in RooStats.
-// The idea is that one has a distribution coming either from data or Monte Carlo
-// (called "reality" in the macro) and a nominal model that is not sufficiently
-// flexible to take into account the real distribution.  One wants to take into
-// account the systematic associated with this imperfect modeling by augmenting
-// the nominal model with some correction term (in this case a polynomial).
-// The BernsteinCorrection utility will import into your workspace a corrected model
-// given by nominal(x) * poly_N(x), where poly_N is an n-th order polynomial in
-// the Bernstein basis.  The degree N of the polynomial is chosen by specifying the tolerance
-// one has in adding an extra term to the polynomial.
-// The Bernstein basis is nice because it only has positive-definite terms
-// and works well with PDFs.
-// Finally, the macro makes a plot of:
-//  - the data (drawn from 'reality'),
-//  - the best fit of the nominal model (blue)
-//  - and the best fit corrected model.
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roostats
+/// 'Bernstein Correction' RooStats tutorial macro
+///
+/// This tutorial shows usage of a the BernsteinCorrection utility in RooStats.
+/// The idea is that one has a distribution coming either from data or Monte Carlo
+/// (called "reality" in the macro) and a nominal model that is not sufficiently
+/// flexible to take into account the real distribution.  One wants to take into
+/// account the systematic associated with this imperfect modeling by augmenting
+/// the nominal model with some correction term (in this case a polynomial).
+/// The BernsteinCorrection utility will import into your workspace a corrected model
+/// given by nominal(x) * poly_N(x), where poly_N is an n-th order polynomial in
+/// the Bernstein basis.  The degree N of the polynomial is chosen by specifying the tolerance
+/// one has in adding an extra term to the polynomial.
+/// The Bernstein basis is nice because it only has positive-definite terms
+/// and works well with PDFs.
+/// Finally, the macro makes a plot of:
+///  - the data (drawn from 'reality'),
+///  - the best fit of the nominal model (blue)
+///  - and the best fit corrected model.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"
@@ -81,7 +84,7 @@ void rs_bernsteinCorrection(){
   wks->import(nominal);
 
   // use Minuit2
-  ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2"); 
+  ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
 
   // The tolerance sets the probability to add an unnecessary term.
   // lower tolerance will add fewer terms, while higher tolerance
@@ -96,7 +99,7 @@ void rs_bernsteinCorrection(){
   }
 
   cout << " Correction based on Bernstein Poly of degree " << degree << endl;
-  
+
 
   RooPlot* frame = x.frame();
   data->plotOn(frame);
@@ -116,7 +119,7 @@ void rs_bernsteinCorrection(){
   // plot the correction term (* norm constant) in dashed green
   // should make norm constant just be 1, not depend on binning of data
   RooAbsPdf* poly = wks->pdf("poly");
-  if (poly) 
+  if (poly)
   poly->plotOn(frame,LineColor(kGreen), LineStyle(kDashed));
 
   // this is a switch to check the sampling distribution
@@ -127,7 +130,7 @@ void rs_bernsteinCorrection(){
   // critereon above, eg. n = "degree" in the code.
   // Setting this to true is takes about 10 min.
   bool checkSamplingDist = true;
-  int numToyMC = 20;  // increse this value for sensible results 
+  int numToyMC = 20;  // increse this value for sensible results
 
   TCanvas* c1 = new TCanvas();
   if(checkSamplingDist) {
@@ -135,11 +138,11 @@ void rs_bernsteinCorrection(){
     c1->cd(1);
   }
   frame->Draw();
-  gPad->Update(); 
+  gPad->Update();
 
   if(checkSamplingDist) {
     // check sampling dist
-    ROOT::Math::MinimizerOptions::SetDefaultPrintLevel(-1); 
+    ROOT::Math::MinimizerOptions::SetDefaultPrintLevel(-1);
     TH1F* samplingDist = new TH1F("samplingDist","",20,0,10);
     TH1F* samplingDistExtra = new TH1F("samplingDistExtra","",20,0,10);
     bernsteinCorrection.CreateQSamplingDist(wks,"nominal","x","data",samplingDist, samplingDistExtra, degree,numToyMC);

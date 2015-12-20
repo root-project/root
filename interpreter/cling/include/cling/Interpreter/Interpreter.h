@@ -17,9 +17,7 @@
 #include <cstdlib>
 #include <memory>
 #include <string>
-
-// FIXME: workaround until JIT supports exceptions
-#include <setjmp.h>
+#include <unordered_map>
 
 namespace llvm {
   class raw_ostream;
@@ -43,6 +41,7 @@ namespace clang {
   class NamedDecl;
   class Parser;
   class QualType;
+  class RecordDecl;
   class Sema;
   class SourceLocation;
   class SourceManager;
@@ -150,6 +149,9 @@ namespace cling {
     ///
     std::unique_ptr<LookupHelper> m_LookupHelper;
 
+    ///\brief Cache of compiled destructors wrappers.
+    std::unordered_map<const clang::RecordDecl*, void*> m_DtorWrappers;
+
     ///\brief Counter used when we need unique names.
     ///
     unsigned long long m_UniqueCounter;
@@ -181,9 +183,6 @@ namespace cling {
     ///\brief Information about the last stored states through .storeState
     ///
     mutable std::vector<ClangInternalState*> m_StoredStates;
-
-    ///\brief: FIXME: workaround until JIT supports exceptions
-    static jmp_buf* m_JumpBuf;
 
     ///\brief Processes the invocation options.
     ///
@@ -219,13 +218,12 @@ namespace cling {
                                        Value* V = 0,
                                        Transaction** T = 0);
 
-    ///\brief Decides whether the input line should be wrapped or not by using
-    /// simple lexing to determine whether it is known that it should be on the
-    /// global scope or not.
+    ///\brief Decides whether the input line should be wrapped into a function
+    /// declaration that can later be executed.
     ///
     ///\param[in] input - The input being scanned.
     ///
-    ///\returns true if the input should be wrapped.
+    ///\returns true if the input should be wrapped into a function declaration.
     ///
     bool ShouldWrapInput(const std::string& input);
 
@@ -239,7 +237,7 @@ namespace cling {
     ///
     void WrapInput(std::string& input, std::string& fname);
 
-    ///\brief Runs given wrapper function void(*)(Value*).
+    ///\brief Runs given wrapper function.
     ///
     ///\param [in] fname - The function name.
     ///\param [in,out] res - The return result of the run function. Must be
@@ -490,8 +488,8 @@ namespace cling {
     ///\brief Compiles input line and runs.
     ///
     /// The interface is the fastest way to compile and run a statement or
-    /// expression. It just wraps the input and runs the wrapper, without any
-    /// other "magic"
+    /// expression. It just wraps the input into a function definition and runs
+    /// that function, without any other "magic".
     ///
     /// @param[in] input - The input containing only expressions.
     ///
@@ -535,6 +533,8 @@ namespace cling {
     ///                                  starting from the last.
     ///
     void unload(unsigned numberOfTransactions);
+    void runAndRemoveStaticDestructors();
+    void runAndRemoveStaticDestructors(unsigned numberOfTransactions);
 
     bool isPrintingDebug() const { return m_PrintDebug; }
     void enablePrintDebug(bool print = true) { m_PrintDebug = print; }
@@ -597,6 +597,10 @@ namespace cling {
     void* compileFunction(llvm::StringRef name, llvm::StringRef code,
                           bool ifUniq = true, bool withAccessControl = true);
 
+    ///\brief Compile (and cache) destructor calls for a record decl. Used by ~Value.
+    /// They are of type extern "C" void()(void* pObj).
+    void* compileDtorCallFor(const clang::RecordDecl* RD);
+
     ///\brief Gets the address of an existing global and whether it was JITted.
     ///
     /// JIT symbols might not be immediately convertible to e.g. a function
@@ -637,8 +641,6 @@ namespace cling {
                         llvm::raw_ostream* logs = 0) const;
 
     friend class runtime::internal::LifetimeHandler;
-    // FIXME: workaround until JIT supports exceptions
-    static jmp_buf*& getNullDerefJump() { return m_JumpBuf; }
   };
 
   namespace internal {

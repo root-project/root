@@ -16,6 +16,7 @@
 #include "TGLIncludes.h"
 
 /** \class TEveLineGL
+\ingroup TEve
 GL-renderer for TEveLine class.
 */
 

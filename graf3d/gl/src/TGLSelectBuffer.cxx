@@ -15,11 +15,12 @@
 
 #include <algorithm>
 
-//______________________________________________________________________________
-//
-// Encapsulates OpenGL select buffer.
-// Provides sorting of the results based on z-coordinate of the
-// selection hit and can fill the TGLSelectRecordBase records.
+/** \class TGLSelectBuffer
+\ingroup opengl
+Encapsulates OpenGL select buffer.
+Provides sorting of the results based on z-coordinate of the
+selection hit and can fill the TGLSelectRecordBase records.
+*/
 
 Int_t TGLSelectBuffer::fgMaxBufSize = 1 << 20; // 1MByte
 

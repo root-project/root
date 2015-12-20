@@ -29,6 +29,7 @@
 
 #include "TMVA/DataInputHandler.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
 #include "TEventList.h"
 #include "TCut.h"
 #include "TFile.h"

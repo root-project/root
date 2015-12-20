@@ -10,6 +10,8 @@
 
 #include "RooStats/RatioOfProfiledLikelihoodsTestStat.h"
 
+#include "RooStats/ProfileLikelihoodTestStat.h"
+
 #include "RooArgSet.h"
 #include "RooAbsData.h"
 #include "TMath.h"

@@ -9,33 +9,28 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//
-//  TDataMember.
-//
-// All ROOT classes may have RTTI (run time type identification) support
-// added. The data is stored in so called DICTIONARY (look at TDictionary).
-// Information about a class is stored in TClass.
-// This information may be obtained via the cling api - see class TCling.
-// TClass has a list of TDataMember objects providing information about all
-// data members of described class.
-//Begin_Html
-/*
-<img align=center src="gif/classinfo.gif">
-*/
-//End_Html
-// TDataMember provides information about name of data member, its type,
-// and comment field string. It also tries to find the TMethodCall objects
-// responsible for getting/setting a value of it, and gives you pointers
-// to these methods. This gives you a unique possibility to access
-// protected and private (!) data members if only methods for doing that
-// are defined.
-// These methods could either be specified in a comment field, or found
-// out automatically by ROOT: here's an example:
-// suppose you have a class definition:
-//Begin_Html <pre>
-/*
+/** \class TDataMember
 
+All ROOT classes may have RTTI (run time type identification) support
+added. The data is stored in so called DICTIONARY (look at TDictionary).
+Information about a class is stored in TClass.
+This information may be obtained via the cling api - see class TCling.
+TClass has a list of TDataMember objects providing information about all
+data members of described class.
+
+\image html base_classinfo.png
+
+TDataMember provides information about name of data member, its type,
+and comment field string. It also tries to find the TMethodCall objects
+responsible for getting/setting a value of it, and gives you pointers
+to these methods. This gives you a unique possibility to access
+protected and private (!) data members if only methods for doing that
+are defined.
+
+These methods could either be specified in a comment field, or found
+out automatically by ROOT: here's an example:
+suppose you have a class definition:
+~~~ {.cpp}
         class MyClass{
             private:
                 Float_t fX1;
@@ -45,121 +40,100 @@
                 Float_t GetX1()          {return fX1;};
                     ...
         }
+~~~
+Look at the data member name and method names: a data member name has
+a prefix letter (f) and has a base name X1 . The methods for getting and
+setting this value have names which consist of string Get/Set and the
+same base name. This convention of naming data fields and methods which
+access them allows TDataMember find this methods by itself completely
+automatically. To make this description complete, one should know,
+that names that are automatically recognized may be also:
+for data fields: either fXXX or fIsXXX; and for getter function
+GetXXX() or IsXXX() [where XXX is base name].
 
-*/
-//</pre>
-//End_Html
-// Look at the data member name and method names: a data member name has
-// a prefix letter (f) and has a base name X1 . The methods for getting and
-// setting this value have names which consist of string Get/Set and the
-// same base name. This convention of naming data fields and methods which
-// access them allows TDataMember find this methods by itself completely
-// automatically. To make this description complete, one should know,
-// that names that are automatically recognized may be also:
-// for data fields: either fXXX or fIsXXX; and for getter function
-// GetXXX() or IsXXX() [where XXX is base name].
-//
-// As an example of using it let's analyse a few lines which get and set
-// a fEditable field in TCanvas:
-//Begin_Html <pre>
-/*
-
+As an example of using it let's analyse a few lines which get and set
+a fEditable field in TCanvas:
+~~~ {.cpp}
     TCanvas     *c  = new TCanvas("c");   // create a canvas
-    TClass      *cl = c-&gt;IsA();            // get its class description object.
+    TClass      *cl = c->IsA();            // get its class description object.
 
-    TDataMember *dm = cl-&gt;GetDataMember("fEditable"); //This is our data member
+    TDataMember *dm = cl->GetDataMember("fEditable"); //This is our data member
 
-    TMethodCall *getter = dm-&gt;GetterMethod(c); //find a method that gets value!
+    TMethodCall *getter = dm->GetterMethod(c); //find a method that gets value!
     Long_t l;   // declare a storage for this value;
 
-    getter-&gt;Execute(c,"",l);  // Get this Value !!!! It will appear in l !!!
+    getter->Execute(c,"",l);  // Get this Value !!!! It will appear in l !!!
 
 
-    TMethodCall *setter = dm-&gt;SetterMethod(c);
-    setter-&gt;Execute(c,"0",);   // Set Value 0 !!!
+    TMethodCall *setter = dm->SetterMethod(c);
+    setter->Execute(c,"0",);   // Set Value 0 !!!
+~~~
 
-*/
-//</pre>
-//End_Html
-//
-// This trick is widely used in ROOT TContextMenu and dialogs for obtaining
-// current values and put them as initial values in dialog fields.
-//
-// If you don't want to follow the convention of naming used by ROOT
-// you still could benefit from Getter/Setter method support: the solution
-// is to instruct ROOT what the names of these routines are.
-// The way to do it is putting this information in a comment string to a data
-// field in your class declaration:
-//
-//Begin_Html <pre>
-/*
+This trick is widely used in ROOT TContextMenu and dialogs for obtaining
+current values and put them as initial values in dialog fields.
 
+If you don't want to follow the convention of naming used by ROOT
+you still could benefit from Getter/Setter method support: the solution
+is to instruct ROOT what the names of these routines are.
+The way to do it is putting this information in a comment string to a data
+field in your class declaration:
+
+~~~ {.cpp}
     class MyClass{
-        Int_t mydata;  // <em> *OPTIONS={GetMethod="Get";SetMethod="Set"} </em>
+        Int_t mydata;  //  *OPTIONS={GetMethod="Get";SetMethod="Set"}
          ...
         Int_t Get() const { return mydata;};
         void  Set(Int_t i) {mydata=i;};
         }
+~~~
+
+However, this getting/setting functions are not the only feature of
+this class. The next point is providing lists of possible settings
+for the concerned data member. The idea is to have a list of possible
+options for this data member, with strings identifying them. This
+is used in dialogs with parameters to set - for details see
+TMethodArg, TRootContextMenu, TContextMenu. This list not only specifies
+the allowed value, but also provides strings naming the options.
+Options are managed via TList of TOptionListItem objects. This list
+is also  created automatically: if a data type is an enum type,
+the list will have items describing every enum value, and named
+according to enum name. If type is Bool_t, two options "On" and "Off"
+with values 0 and 1 are created. For other types you need to instruct
+ROOT about possible options. The way to do it is the same as in case of
+specifying getter/setter method: a comment string to a data field in
+Your header file with class definition.
+The most general format of this string is:
+~~~ {.cpp}
+*OPTIONS={GetMethod="getter";SetMethod="setter";Items=(it1="title1",it2="title2", ... ) }
+~~~
+
+While parsing this string ROOT firstly looks for command-tokens:
+GetMethod, SetMethod, Items; They must be preceded by string
+*OPTIONS= , enclosed by {} and separated by semicolons ";".
+All command token should have a form TOKEN=VALUE.
+All tokens are optional.
+The names of getter and setter method must be enclosed by double-quote
+marks (") .
+Specifications of Items is slightly more complicated: you need to
+put token ITEMS= and then enclose all options in curly brackets "()".
+You separate options by comas ",".
+Each option item may have one of the following forms:
+~~~ {.cpp}
+         IntegerValue  = "Text Label"
+
+         EnumValue     = "Text Label"
+
+        "TextValue" = Text Label"
+
+~~~
+
+One can specify values as Integers or Enums - when data field is an
+Integer, Float or Enum type; as texts - for char (more precisely:
+Option_t).
+
+As mentioned above - this information are mainly used by contextmenu,
+but also in Dump() and Inspect() methods and by the THtml class.
 */
-//</pre>
-//End_Html
-//
-// However, this getting/setting functions are not the only feature of
-// this class. The next point is providing lists of possible settings
-// for the concerned data member. The idea is to have a list of possible
-// options for this data member, with strings identifying them. This
-// is used in dialogs with parameters to set - for details see
-// TMethodArg, TRootContextMenu, TContextMenu. This list not only specifies
-// the allowed value, but also provides strings naming the options.
-// Options are managed via TList of TOptionListItem objects. This list
-// is also  created automatically: if a data type is an enum tynpe,
-// the list will have items describing every enum value, and named
-// according to enum name. If type is Bool_t, two options "On" and "Off"
-// with values 0 and 1 are created. For other types you need to instruct
-// ROOT about possible options. The way to do it is the same as in case of
-// specifying getter/setter method: a comment string to a data field in
-// Your header file with class definition.
-// The most general format of this string is:
-//Begin_Html <pre>
-/*
-
-<em>*OPTIONS={GetMethod="</em>getter<em>";SetMethod="</em>setter<em>";Items=(</em>it1<em>="</em>title1<em>",</em>it2<em>="</em>title2<em>", ... ) } </em>
-
-*/
-//</pre>
-//End_Html
-//
-// While parsing this string ROOT firstly looks for command-tokens:
-// GetMethod, SetMethod, Items; They must be preceded by string
-// *OPTIONS= , enclosed by {} and separated by semicolons ";".
-// All command token should have a form TOKEN=VALUE.
-// All tokens are optional.
-// The names of getter and setter method must be enclosed by double-quote
-// marks (") .
-// Specifications of Items is slightly more complicated: you need to
-// put token ITEMS= and then enclose all options in curly brackets "()".
-// You separate options by comas ",".
-// Each option item may have one of the following forms:
-//Begin_Html <pre>
-/*
-         IntegerValue<em>  = "</em>Text Label<em>"</em>
-
-         EnumValue   <em>  = "</em>Text Label<em>"</em>
-
-        <em>"</em>TextValue<em>" = </em>Text Label<em>"</em>
-
-*/
-//</pre>
-//End_Html
-//
-// One can sepcify values as Integers or Enums - when data field is an
-// Integer, Float or Enum type; as texts - for char (more precisely:
-// Option_t).
-//
-// As mentioned above - this information are mainly used by contextmenu,
-// but also in Dump() and Inspect() methods and by the THtml class.
-//
-//////////////////////////////////////////////////////////////////////////
 
 #include "TDataMember.h"
 
@@ -388,7 +362,7 @@ void TDataMember::Init(bool afterReading)
             strlcpy(opts,ptr1,2048);
 
             //now parse it...
-            //fistly we just store strings like: xxx="Label Name"
+            //firstly we just store strings like: xxx="Label Name"
             //We'll store it in TOptionListItem objects, because they're derived
             //from TObject and thus can be stored in TList.
             //It's not elegant but works.
@@ -449,7 +423,7 @@ void TDataMember::Init(bool afterReading)
 
       }
 
-      // Garbage colletion
+      // Garbage collection
 
       // dispose of temporary option list...
       delete optionlist;
@@ -484,7 +458,7 @@ void TDataMember::Init(bool afterReading)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
+/// copy constructor
 
 TDataMember::TDataMember(const TDataMember& dm) :
   TDictionary(dm),
@@ -509,7 +483,7 @@ TDataMember::TDataMember(const TDataMember& dm) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignement operator
+/// assignment operator
 
 TDataMember& TDataMember::operator=(const TDataMember& dm)
 {
@@ -974,7 +948,7 @@ void TDataMember::Streamer(TBuffer& b) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constuctor.
+/// Constructor.
 
 TOptionListItem::TOptionListItem(TDataMember *d, Long_t val, Long_t valmask,
                  Long_t tglmask,const char *name, const char *label)

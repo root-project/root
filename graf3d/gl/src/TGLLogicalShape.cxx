@@ -15,53 +15,50 @@
 #include "TContextMenu.h"
 
 
-//==============================================================================
-// TGLLogicalShape
-//==============================================================================
+/** \class TGLLogicalShape
+\ingroup opengl
+Abstract logical shape - a GL 'drawable' - base for all shapes -
+faceset sphere etc. Logical shapes are a unique piece of geometry,
+described in it's local frame - e.g if we have three spheres in :
 
-//______________________________________________________________________________
-//
-// Abstract logical shape - a GL 'drawable' - base for all shapes -
-// faceset sphere etc. Logical shapes are a unique piece of geometry,
-// described in it's local frame - e.g if we have three spheres in :
-// Sphere A - Radius r1, center v1
-// Sphere B - Radius r2, center v2
-// Sphere C - Radius r1, center v3
-//
-// Spheres A and C can share a common logical sphere of radius r1 - and
-// place them with two physicals with translations of v1 & v2.  Sphere B
-// requires a different logical (radius r2), placed with physical with
-// translation v2.
-//
-// Physical shapes know about and can share logicals. Logicals do not
-// about (aside from reference counting) physicals or share them.
-//
-// This sharing of logical shapes greatly reduces memory consumption and
-// scene (re)build times in typical detector geometries which have many
-// repeated objects placements.
-//
-// TGLLogicalShapes have reference counting, performed by the client
-// physical shapes which are using it.
-//
-// Display list information is also stored here, possibly per LOD
-// level. Most classes do not support LOD (only sphere and tube) and
-// therefore reasonable defaults are encoded in the following virtual
-// functions:
-//
-// * ELODAxes SupportedLODAxes()  { return kLODAxesNone; }
-// * Int_t    DLCacheSize()       { return 1; }
-// * UInt_t   DLOffset(lod);      // Transform lod into DL offset.
-// * Short_t  QuantizeShapeLOD(); // Quantize lod.
-//
-// Classes that have per-LOD display-lists than override these functions.
-// 'UShort_t fDLValid' is used as a bit-field determining validity of
-// each quantized LOD-level; hopefully one will not have more than 16
-// LOD levels per class.
-// See also: TGLPhysicalShape::CalculateShapeLOD() where LOD is calculated.
-//
-// See base/src/TVirtualViewer3D for description of common external 3D
-// viewer architecture and how external viewer clients use it.
-//
+  - Sphere A - Radius r1, center v1
+  - Sphere B - Radius r2, center v2
+  - Sphere C - Radius r1, center v3
+
+Spheres A and C can share a common logical sphere of radius r1 - and
+place them with two physicals with translations of v1 & v2.  Sphere B
+requires a different logical (radius r2), placed with physical with
+translation v2.
+
+Physical shapes know about and can share logicals. Logicals do not
+about (aside from reference counting) physicals or share them.
+
+This sharing of logical shapes greatly reduces memory consumption and
+scene (re)build times in typical detector geometries which have many
+repeated objects placements.
+
+TGLLogicalShapes have reference counting, performed by the client
+physical shapes which are using it.
+
+Display list information is also stored here, possibly per LOD
+level. Most classes do not support LOD (only sphere and tube) and
+therefore reasonable defaults are encoded in the following virtual
+functions:
+~~~ {.cpp}
+ * ELODAxes SupportedLODAxes()  { return kLODAxesNone; }
+ * Int_t    DLCacheSize()       { return 1; }
+ * UInt_t   DLOffset(lod);      // Transform lod into DL offset.
+ * Short_t  QuantizeShapeLOD(); // Quantize lod.
+~~~
+Classes that have per-LOD display-lists than override these functions.
+'UShort_t fDLValid' is used as a bit-field determining validity of
+each quantized LOD-level; hopefully one will not have more than 16
+LOD levels per class.
+See also: TGLPhysicalShape::CalculateShapeLOD() where LOD is calculated.
+
+See base/src/TVirtualViewer3D for description of common external 3D
+viewer architecture and how external viewer clients use it.
+*/
 
 ClassImp(TGLLogicalShape);
 
@@ -218,7 +215,7 @@ void TGLLogicalShape::DestroyPhysicals()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Unreference first physical in the list, returning its id and
+/// Unreferenced first physical in the list, returning its id and
 /// making it fit for destruction somewhere else.
 /// Returns 0 if there are no replicas attached.
 

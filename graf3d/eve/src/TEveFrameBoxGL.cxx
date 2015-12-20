@@ -18,6 +18,7 @@
 #include "TMath.h"
 
 /** \class TEveFrameBoxGL
+\ingroup TEve
 A class encapsulating GL rendering of TEveFrameBox via a static member function.
 */
 

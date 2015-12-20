@@ -16,6 +16,7 @@
 #include <cassert>
 
 /** \class TEveProjectable
+\ingroup TEve
 Abstract base-class for non-linear projectable objects.
 
 Via ProjectedClass(const TEveProjection* p) method it returns a
@@ -144,6 +145,7 @@ void TEveProjectable::PropagateMainTransparency(Char_t t, Char_t old_t)
 }
 
 /** \class TEveProjected
+\ingroup TEve
 Abstract base class for classes that hold results of a non-linear
 projection transformation.
 

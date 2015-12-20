@@ -9,17 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFPBlock                                                             //
-//                                                                      //
-// This class represents the encapsulation of a block request.          //
-// It contains the chunks to be prefetched and also serves as a         //
-// container for the information read.                                  //
-// These blocks are prefetch in a special reader thread by the          //
-// TFilePrefetch class.                                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TFPBlock TFPBlock.cxx 
+\ingroup IO                                           
+                                                            
+This class represents the encapsulation of a block request.
+It contains the chunks to be prefetched and also serves as a
+container for the information read.
+These blocks are prefetch in a special reader thread by the
+TFilePrefetch class.
+*/
 
 #include "TFPBlock.h"
 #include "TStorage.h"

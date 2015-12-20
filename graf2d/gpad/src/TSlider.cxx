@@ -19,9 +19,10 @@
 ClassImp(TSlider)
 
 /** \class TSlider
+\ingroup gpad
 
- A TSlider object is a specialized TPad including a TSliderBox object
- The TSliderBox can be moved in the pad.
+A specialized TPad including a TSliderBox object.
+The TSliderBox can be moved in the pad.
 
 Slider drawing options include the possibility to change the slider
 starting and ending positions or only one of them.

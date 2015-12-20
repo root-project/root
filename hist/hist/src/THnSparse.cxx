@@ -12,6 +12,7 @@
 #include "THnSparse.h"
 
 #include "TAxis.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TDataMember.h"
 #include "TDataType.h"
@@ -22,10 +23,10 @@ namespace {
 // THnSparseBinIter iterates over all filled bins of a THnSparse.
 //______________________________________________________________________________
 
-   class THnSparseBinIter: public ROOT::THnBaseBinIter {
+   class THnSparseBinIter: public ROOT::Internal::THnBaseBinIter {
    public:
       THnSparseBinIter(Bool_t respectAxisRange, const THnSparse* hist):
-         ROOT::THnBaseBinIter(respectAxisRange), fHist(hist),
+         ROOT::Internal::THnBaseBinIter(respectAxisRange), fHist(hist),
          fNbins(hist->GetNbins()), fIndex(-1) {
          // Construct a THnSparseBinIter
          fCoord = new Int_t[hist->GetNdimensions()];
@@ -894,7 +895,7 @@ Double_t THnSparse::GetSparseFractionMem() const {
 /// Create an iterator over all filled bins of a THnSparse.
 /// Use THnIter instead.
 
-ROOT::THnBaseBinIter* THnSparse::CreateIter(Bool_t respectAxisRange) const
+ROOT::Internal::THnBaseBinIter* THnSparse::CreateIter(Bool_t respectAxisRange) const
 {
    return new THnSparseBinIter(respectAxisRange, this);
 }

@@ -1,15 +1,15 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'NUMERIC ALGORITHM TUNING' RooFit tutorial macro #902
-// 
-// Configuration and customization of how MC sampling algorithms
-// on specific p.d.f.s are executed
-//
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'NUMERIC ALGORITHM TUNING' RooFit tutorial macro #902
+///
+///  Configuration and customization of how MC sampling algorithms
+///  on specific p.d.f.s are executed
+///
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

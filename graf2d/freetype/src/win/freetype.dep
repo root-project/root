@@ -309,7 +309,6 @@
 	"..\..\..\src\sfnt\ttpost.h"\
 	"..\..\..\src\sfnt\ttsbit.c"\
 	"..\..\..\src\sfnt\ttsbit.h"\
-	"..\..\..\src\sfnt\ttsbit0.c"\
 	
 
 ..\..\..\src\smooth\smooth.c : \

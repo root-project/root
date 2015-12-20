@@ -73,9 +73,14 @@
 #include "TMath.h"
 
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MethodCFMlpANN.h"
 #include "TMVA/MethodCFMlpANN_def.h"
+#include "TMVA/MsgLogger.h"
 #include "TMVA/Tools.h"
+#include "TMVA/Types.h"
 
 REGISTER_METHOD(CFMlpANN)
 

@@ -16,6 +16,7 @@
 #include "TEveGValuators.h"
 
 /** \class TEveArrowEditor
+\ingroup TEve
 GUI editor for TEveArrow.
 */
 

@@ -26,12 +26,18 @@
 #include "TMVA/CCTreeWrapper.h"
 #include "TMVA/DataSet.h"
 
+#include "Rtypes.h"
+
 #include <iostream>
 #include <fstream>
 #include <limits>
 #include <math.h>
 
- using namespace TMVA;
+namespace TMVA {
+   class DecisionTree;
+}
+
+using namespace TMVA;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

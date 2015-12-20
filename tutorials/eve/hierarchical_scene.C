@@ -1,3 +1,11 @@
+/// \file
+/// \ingroup tutorial_eve
+///
+/// \image html eve_hierarchical_scene.png
+/// \macro_code
+///
+/// \author Matevz Tadel
+
 const Int_t Ns = 7;
 
 void add_blobs(TEveElement* p, Float_t rad, Float_t height, Float_t size,

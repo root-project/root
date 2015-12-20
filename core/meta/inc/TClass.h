@@ -68,10 +68,12 @@ class TProtoClass;
 
 namespace ROOT {
    class TGenericClassInfo;
-   class TCollectionProxyInfo;
-   class TSchemaRuleSet;
    class TMapTypeToTClass;
    class TMapDeclIdToTClass;
+   namespace Detail {
+      class TSchemaRuleSet;
+      class TCollectionProxyInfo;
+   }
 }
 typedef ROOT::TMapTypeToTClass IdMap_t;
 typedef ROOT::TMapDeclIdToTClass DeclIdMap_t;
@@ -194,12 +196,12 @@ private:
    Short_t            fImplFileLine;    //line of class implementation
    UInt_t             fInstanceCount;   //number of instances of this class
    UInt_t             fOnHeap;          //number of instances on heap
-   mutable UInt_t     fCheckSum;        //checksum of data members and base classes
+   mutable std::atomic<UInt_t>  fCheckSum;        //checksum of data members and base classes
    TVirtualCollectionProxy *fCollectionProxy; //Collection interface
    Version_t          fClassVersion;    //Class version Identifier
    ClassInfo_t       *fClassInfo;       //pointer to CINT class info class
    TString            fContextMenuTitle;//context menu title
-   const type_info   *fTypeInfo;        //pointer to the C++ type information.
+   const std::type_info *fTypeInfo;        //pointer to the C++ type information.
    ShowMembersFunc_t  fShowMembers;     //pointer to the class's ShowMembers function
    TClassStreamer    *fStreamer;        //pointer to streamer function
    TString            fSharedLibs;      //shared libraries containing class code
@@ -236,7 +238,7 @@ private:
    mutable std::atomic<TVirtualStreamerInfo*>  fCurrentInfo;     //!cached current streamer info.
    mutable std::atomic<TVirtualStreamerInfo*>  fLastReadInfo;    //!cached streamer info used in the last read.
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
-   ROOT::TSchemaRuleSet *fSchemaRules;  //! Schema evolution rules
+   ROOT::Detail::TSchemaRuleSet *fSchemaRules;  //! Schema evolution rules
 
    typedef void (*StreamerImpl_t)(const TClass* pThis, void *obj, TBuffer &b, const TClass *onfile_class);
 #ifdef R__NO_ATOMIC_FUNCTION_POINTER
@@ -249,7 +251,7 @@ private:
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *FindClassOrBaseMethodWithId(DeclId_t faddr);
    Int_t              GetBaseClassOffsetRecurse(const TClass *toBase);
-   void Init(const char *name, Version_t cversion, const type_info *info,
+   void Init(const char *name, Version_t cversion, const std::type_info *info,
              TVirtualIsAProxy *isa,
              const char *dfil, const char *ifil,
              Int_t dl, Int_t il,
@@ -335,7 +337,7 @@ public:
           const char *dfil, const char *ifil = 0,
           Int_t dl = 0, Int_t il = 0, Bool_t silent = kFALSE);
    TClass(const char *name, Version_t cversion,
-          const type_info &info, TVirtualIsAProxy *isa,
+          const std::type_info &info, TVirtualIsAProxy *isa,
           const char *dfil, const char *ifil,
           Int_t dl, Int_t il, Bool_t silent = kFALSE);
    virtual           ~TClass();
@@ -345,7 +347,7 @@ public:
    static Bool_t      AddRule(const char *rule);
    static Int_t       ReadRules(const char *filename);
    static Int_t       ReadRules();
-   void               AdoptSchemaRules( ROOT::TSchemaRuleSet *rules );
+   void               AdoptSchemaRules( ROOT::Detail::TSchemaRuleSet *rules );
    virtual void       Browse(TBrowser *b);
    void               BuildRealData(void *pointer=0, Bool_t isTransient = kFALSE);
    void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl);
@@ -433,8 +435,8 @@ public:
 #endif
    TRealData         *GetRealData(const char *name) const;
    TVirtualRefProxy  *GetReferenceProxy()  const   {  return fRefProxy; }
-   const ROOT::TSchemaRuleSet *GetSchemaRules() const;
-   ROOT::TSchemaRuleSet *GetSchemaRules(Bool_t create = kFALSE);
+   const ROOT::Detail::TSchemaRuleSet *GetSchemaRules() const;
+   ROOT::Detail::TSchemaRuleSet *GetSchemaRules(Bool_t create = kFALSE);
    const char        *GetSharedLibs();
    ShowMembersFunc_t  GetShowMembersWrapper() const { return fShowMembers; }
    EState             GetState() const { return fState; }
@@ -445,7 +447,7 @@ public:
    TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0) const;
    TVirtualStreamerInfo     *GetStreamerInfoAbstractEmulated(Int_t version=0) const;
    TVirtualStreamerInfo     *FindStreamerInfoAbstractEmulated(UInt_t checksum) const;
-   const type_info   *GetTypeInfo() const { return fTypeInfo; };
+   const std::type_info     *GetTypeInfo() const { return fTypeInfo; };
    Bool_t             HasDictionary();
    static Bool_t      HasDictionarySelection(const char* clname);
    void               GetMissingDictionaries(THashTable& result, bool recurse = false);
@@ -482,7 +484,7 @@ public:
    void               ResetMenuList();
    Int_t              Size() const;
    void               SetCanSplit(Int_t splitmode);
-   void               SetCollectionProxy(const ROOT::TCollectionProxyInfo&);
+   void               SetCollectionProxy(const ROOT::Detail::TCollectionProxyInfo&);
    void               SetContextMenuTitle(const char *title);
    void               SetCurrentStreamerInfo(TVirtualStreamerInfo *info);
    void               SetGlobalIsA(IsAGlobalFunc_t);
@@ -513,11 +515,11 @@ public:
    static void           RemoveClass(TClass *cl);
    static void           RemoveClassDeclId(TDictionary::DeclId_t id);
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE);
-   static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE);
+   static TClass        *GetClass(const std::type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static TClass        *GetClass(ClassInfo_t *info, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static Bool_t         GetClass(DeclId_t id, std::vector<TClass*> &classes);
    static DictFuncPtr_t  GetDict (const char *cname);
-   static DictFuncPtr_t  GetDict (const type_info &info);
+   static DictFuncPtr_t  GetDict (const std::type_info &info);
 
    static Int_t       AutoBrowse(TObject *obj, TBrowser *browser);
    static ENewType    IsCallingNew();
@@ -549,15 +551,6 @@ public:
 };
 
 namespace ROOT {
-
-#ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
-   template <typename T> struct IsPointer { enum { kVal = 0 }; };
-   template <typename T> struct IsPointer<T*> { enum { kVal = 1 }; };
-#else
-   template <typename T> Bool_t IsPointer(const T* /* dummy */) { return false; };
-   template <typename T> Bool_t IsPointer(const T** /* dummy */) { return true; };
-#endif
-
    template <typename T> TClass* GetClass(      T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
    template <typename T> TClass* GetClass(const T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
 

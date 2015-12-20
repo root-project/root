@@ -12,14 +12,6 @@
 #ifndef R__SELECTIONRULES_H
 #define R__SELECTIONRULES_H
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// SelectionRules                                                       //
-//                                                                      //
-// the class representing all selection rules                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include <list>
 #include "BaseSelectionRule.h"
 #include "ClassSelectionRule.h"
@@ -37,11 +29,67 @@ namespace ROOT{
       class TNormalizedCtxt;
    }
 }
+#include <iostream>
+namespace SelectionRulesUtils {
+
+   template<class ASSOCIATIVECONTAINER>
+   inline bool areEqualAttributes(const ASSOCIATIVECONTAINER& c1, const ASSOCIATIVECONTAINER& c2, bool moduloNameOrPattern){
+      if (c1.size() != c2.size()) return false;
+      if (moduloNameOrPattern) {
+         for (auto&& keyValPairC1 : c1){
+            auto keyC1 = keyValPairC1.first;
+            if ("pattern" == keyC1 || "name" == keyC1) continue;
+            auto valC1 = keyValPairC1.second;
+            auto C2It = c2.find(keyC1);
+            if (C2It == c2.end() || valC1 != C2It->second) return false;
+         }
+      }
+      else {
+         return !(c1 != c2);
+      }
+      return true;
+   }
+
+   template<class RULE>
+   inline bool areEqual(const RULE* r1, const RULE* r2, bool moduloNameOrPattern = false){
+      return areEqualAttributes(r1->GetAttributes(), r2->GetAttributes(), moduloNameOrPattern);
+   }
+
+   template<class RULESCOLLECTION>
+   inline bool areEqualColl(const RULESCOLLECTION& r1,
+                            const RULESCOLLECTION& r2,
+                            bool moduloNameOrPattern = false){
+      if (r1.size() != r2.size()) return false;
+      auto rIt1 = r1.begin();
+      auto rIt2 = r2.begin();
+      for (;rIt1!=r1.cend();++rIt1,++rIt2){
+         if (!areEqual(&(*rIt1),&(*rIt2), moduloNameOrPattern)) return false;
+      }
+      return true;
+   }
+   template<>
+   inline bool areEqual<ClassSelectionRule>(const ClassSelectionRule* r1,
+                                            const ClassSelectionRule* r2,
+                                            bool moduloNameOrPattern){
+      if (!areEqualAttributes(r1->GetAttributes(), r2->GetAttributes(),moduloNameOrPattern)) return false;
+      // Now check fields
+      if (!areEqualColl(r1->GetFieldSelectionRules(),
+                        r2->GetFieldSelectionRules(),
+                        true)) return false;
+      // On the same footing, now check methods
+      if (!areEqualColl(r1->GetMethodSelectionRules(),
+                        r2->GetMethodSelectionRules(),
+                        true)) return false;
+      return true;
+   }
+}
+
 
 class SelectionRules {
 
 public:
-   enum ESelectionFileTypes { // type of selection file
+   /// Type of selection file
+   enum ESelectionFileTypes {
       kSelectionXMLFile,
       kLinkdefFile,
       kNumSelectionFileTypes
@@ -100,6 +148,9 @@ public:
 
    void SetHasFileNameRule(bool file_rule) { fHasFileNameRule = file_rule; }
    bool GetHasFileNameRule() const { return fHasFileNameRule; }
+
+   int CheckDuplicates();
+   void Optimize();
 
    void SetDeep(bool deep);
    bool GetDeep() const { return fIsDeep; }
@@ -179,15 +230,15 @@ public:
    void FillCache(); // Fill the cache of all selection rules
 
 private:
-   std::list<ClassSelectionRule>    fClassSelectionRules;    // list of the class selection rules
-   std::list<FunctionSelectionRule> fFunctionSelectionRules; // list of the global functions selection rules
-   std::list<VariableSelectionRule> fVariableSelectionRules; // list of the global variables selection rules
-   std::list<EnumSelectionRule>     fEnumSelectionRules;     // list of the enums selection rules
+   std::list<ClassSelectionRule>    fClassSelectionRules;    ///< List of the class selection rules
+   std::list<FunctionSelectionRule> fFunctionSelectionRules; ///< List of the global functions selection rules
+   std::list<VariableSelectionRule> fVariableSelectionRules; ///< List of the global variables selection rules
+   std::list<EnumSelectionRule>     fEnumSelectionRules;     ///< List of the enums selection rules
 
    ESelectionFileTypes fSelectionFileType;
 
-   bool fIsDeep; // if --deep option passed from command line, this should be set to true
-   bool fHasFileNameRule; // if we have a file name rule, this should be set to true
+   bool fIsDeep; ///< if --deep option passed from command line, this should be set to true
+   bool fHasFileNameRule; ///< if we have a file name rule, this should be set to true
    long int fRulesCounter;
 
    ROOT::TMetaUtils::TNormalizedCtxt& fNormCtxt;

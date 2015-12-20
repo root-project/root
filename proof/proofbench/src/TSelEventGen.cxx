@@ -9,16 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSelEventGen                                                         //
-//                                                                      //
-// PROOF selector for event file generation.                            //
-// List of files to be generated for each node is provided by client.   //
-// And list of files generated is sent back.                            //
-// Existing files are reused if not forced to be regenerated.           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSelEventGen
+\ingroup proofbench
+
+Selector for event file generation.
+List of files to be generated for each node is provided by client.
+And list of files generated is sent back.
+Existing files are reused if not forced to be regenerated.
+
+*/
 
 #define TSelEventGen_cxx
 

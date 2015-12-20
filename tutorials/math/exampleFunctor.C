@@ -1,10 +1,18 @@
-// Tutorial illustrating how creating a TF1 class using functor or class member functions
-//
-//  can be run with:
-//  root > .x exampleFunctor.C
-//  root > .x exampleFunctor.C+ with ACLIC
-//
-//Author: Lorenzo Moneta
+/// \file
+/// \ingroup tutorial_math
+/// Tutorial illustrating how creating a TF1 class using functor or class member functions
+///
+/// can be run with:
+///
+/// ~~~{.cpp}
+///  root > .x exampleFunctor.C
+///  root > .x exampleFunctor.C+ with ACLIC
+/// ~~~
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 #include "TF1.h"
 #include "TMath.h"
@@ -49,7 +57,7 @@ void exampleFunctor() {
    // example to create TF1 using a functor
 
    // in order to work with interpreter the function object must be created and lived all time for all time
-   // of the TF1. In compiled mode, the function object can be passed by value (reccomended) and there
+   // of the TF1. In compiled mode, the function object can be passed by value (recommended) and there
    // is also no need to specify the type of the function class. Example is as follow:
    // TF1 * f2 = new TF1("f2",MyDerivFunc(f1), xmin, xmax,0); // only for C++ compiled mode
 
@@ -79,6 +87,4 @@ void exampleFunctor() {
    l->AddEntry(f2, "Deriv.");
    l->AddEntry(f3, "Integral");
    l->Draw();
-
-
 }

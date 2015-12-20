@@ -19,24 +19,27 @@
 
 ClassImp(TTUBS)
 
+/** \class TTUBS
+\ingroup g3d
+A segment of a tube.
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/tubs.gif"> </P> End_Html
-// TUBS is a segment of a tube. It has 8 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - rmin       inside radius
-//     - rmax       outside radius
-//     - dz         half length in z
-//     - phi1       starting angle of the segment
-//     - phi2       ending angle of the segment
-//
-//
-// NOTE: phi1 should be smaller than phi2. If this is not the case,
-//       the system adds 360 degrees to phi2.
+\image html g3d_tubs.png
 
+It has 8 parameters:
+
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - rmin:       inside radius
+  - rmax:       outside radius
+  - dz:         half length in z
+  - phi1:       starting angle of the segment
+  - phi2:       ending angle of the segment
+
+
+NOTE: phi1 should be smaller than phi2. If this is not the case,
+the system adds 360 degrees to phi2.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TUBS shape default constructor
@@ -46,7 +49,6 @@ TTUBS::TTUBS()
    fPhi1 = 0.;
    fPhi2 = 0.;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TUBS shape normal constructor
@@ -60,7 +62,6 @@ TTUBS::TTUBS(const char *name, const char *title, const char *material, Float_t 
    MakeTableOfCoSin();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TUBS shape "simplified" constructor
 
@@ -72,7 +73,6 @@ TTUBS::TTUBS(const char *name, const char *title, const char *material, Float_t 
    fPhi2 = phi2;
    MakeTableOfCoSin();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make table of sine and cosine.
@@ -110,14 +110,12 @@ void TTUBS::MakeTableOfCoSin() const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TUBS shape default destructor
 
 TTUBS::~TTUBS()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a TUBE
@@ -131,7 +129,6 @@ Int_t TTUBS::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t numPoints = n*4;
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create TUBS points
@@ -167,7 +164,6 @@ void TTUBS::SetPoints(Double_t *points) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return total X3D needed by TNode::ls (when called with option "x")
 
@@ -179,7 +175,6 @@ void TTUBS::Sizeof3D() const
    gSize3D.numSegs   += n*8;
    gSize3D.numPolys  += n*4-2;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get buffer 3d.

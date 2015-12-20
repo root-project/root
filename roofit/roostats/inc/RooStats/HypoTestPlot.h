@@ -25,6 +25,15 @@
 
 namespace RooStats {
 
+   /**
+
+      This class provides the plots for the result of a study performed with any of the
+      HypoTestCalculatorGeneric (e.g. HybridCalculator or FrequentistCalculator)  class.
+
+      \ingroup Roostats
+   */
+
+
 class HypoTestPlot: public SamplingDistPlot {
    public:
       /// Constructor
@@ -33,9 +42,9 @@ class HypoTestPlot: public SamplingDistPlot {
       HypoTestPlot(HypoTestResult& result, Int_t bins, Double_t min, Double_t max, Option_t* opt = "NORMALIZE HIST");
       ~HypoTestPlot(void) {}
 
-      // Applies a HypoTestResult.
+      /// Applies a HypoTestResult.
       void ApplyResult(HypoTestResult& result, Option_t* opt = "NORMALIZE HIST");
-      // Set default style options (also called in the constructor that takes a HypoTestResult).
+      /// Set default style options (also called in the constructor that takes a HypoTestResult).
       void ApplyDefaultStyle(void);
 
    private:

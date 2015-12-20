@@ -10,23 +10,21 @@
  *************************************************************************/
 
 #include "TBaseClass.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TInterpreter.h"
 #include <limits.h>
 
 #include "TVirtualMutex.h" // For R__LOCKGUARD
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  Each class (see TClass) has a linked list of its base class(es).    //
-//  This class describes one single base class.                         //
-//  The base class info is obtained via the CINT api.                   //
-//     see class TCling.                                                 //
-//                                                                      //
-//  The base class information is used a.o. in to find all inherited    //
-//  methods.                                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBaseClass
+Each class (see TClass) has a linked list of its base class(es).
+This class describes one single base class.
+The base class info is obtained via the CINT api.
+   see class TCling.
+
+The base class information is used a.o. in to find all inherited methods.
+*/
 
 
 ClassImp(TBaseClass)
@@ -102,7 +100,7 @@ const char *TBaseClass::GetTitle() const
 
 ROOT::ESTLType TBaseClass::IsSTLContainer()
 {
-   // fSTLType is -1 if not yet evaulated.
+   // fSTLType is -1 if not yet evaluated.
    // fSTLType is -2 if no fInfo was available.
 
    if (fSTLType < 0) {

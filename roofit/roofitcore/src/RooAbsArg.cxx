@@ -15,25 +15,28 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooAbsArg is the common abstract base class for objects that
-// represent a value (of arbitrary type) and "shape" that in general
-// depends on (is a client of) other RooAbsArg subclasses. The only
-// state information about a value that is maintained in this base
-// class consists of named attributes and flags that track when either
-// the value or the shape of this object changes. The meaning of shape
-// depends on the client implementation but could be, for example, the
-// allowed range of a value. The base class is also responsible for
-// managing client/server links and propagating value/shape changes
-// through an expression tree. RooAbsArg implements public interfaces
-// for inspecting client/server relationships and
-// setting/clearing/testing named attributes.
-// END_HTML
-//
+/**  \class RooAbsArg
+     \ingroup Roofitcore
+
+RooAbsArg is the common abstract base class for objects that
+represent a value (of arbitrary type) and "shape" that in general
+depends on (is a client of) other RooAbsArg subclasses. The only
+state information about a value that is maintained in this base
+class consists of named attributes and flags that track when either
+the value or the shape of this object changes. The meaning of shape
+depends on the client implementation but could be, for example, the
+allowed range of a value. The base class is also responsible for
+managing client/server links and propagating value/shape changes
+through an expression tree. RooAbsArg implements public interfaces
+for inspecting client/server relationships and
+setting/clearing/testing named attributes.
+
+*/
+
 #include "RooFit.h"
 #include "Riostream.h"
 
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TObjString.h"
 #include "TVirtualStreamerInfo.h"
@@ -189,14 +192,13 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
 RooAbsArg::~RooAbsArg()
 {
   // Notify all servers that they no longer need to serve us
-  RooFIter serverIter = _serverList.fwdIterator() ;
-  RooAbsArg* server ;
-  while ((server=serverIter.next())) {
-    removeServer(*server,kTRUE) ;
+  while (_serverList.GetSize() > 0) {
+    removeServer(*static_cast<RooAbsArg*>(_serverList.First()), kTRUE) ;
   }
 
-  //Notify all client that they are in limbo
-  RooFIter clientIter = _clientList.fwdIterator() ;
+  // Notify all client that they are in limbo
+  RooRefCountList tmpclientList(_clientList); // have to copy, as we invalidate iterators
+  RooFIter clientIter = tmpclientList.fwdIterator() ;
   RooAbsArg* client = 0;
   Bool_t first(kTRUE) ;
   while ((client=clientIter.next())) {
@@ -443,10 +445,10 @@ void RooAbsArg::removeServer(RooAbsArg& server, Bool_t force)
 
 void RooAbsArg::replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, Bool_t propValue, Bool_t propShape)
 {
-  Int_t count = _serverList.refCount(&oldServer) ;
-  removeServer(oldServer,kTRUE) ;
-  while(count--) {
-    addServer(newServer,propValue,propShape) ;
+  Int_t count = _serverList.refCount(&oldServer);
+  removeServer(oldServer, kTRUE);
+  while (count--) {
+    addServer(newServer, propValue, propShape);
   }
 }
 
@@ -475,10 +477,10 @@ void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapePr
   server._clientListValue.RemoveAll(this) ;
   server._clientListShape.RemoveAll(this) ;
   if (valueProp) {
-    while (vcount--) server._clientListValue.Add(this) ;
+    server._clientListValue.Add(this, vcount) ;
   }
   if (shapeProp) {
-    while(scount--) server._clientListShape.Add(this) ;
+    server._clientListShape.Add(this, scount) ;
   }
 }
 

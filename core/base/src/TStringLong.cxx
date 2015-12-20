@@ -9,19 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TStringLong                                                          //
-//                                                                      //
-// ATTENTION: this class is obsolete. It's functionality has been taken //
-// over by TString.                                                     //
-//                                                                      //
-// The long string class (unlimited number of chars in I/O).            //
-//                                                                      //
-// This class redefines only the I/O member functions of TString.       //
-// It uses 4 bytes to store the string length (1 byte only for TString).//
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TStringLong
+ATTENTION: this class is obsolete. It's functionality has been taken
+over by TString.
+
+The long string class (unlimited number of chars in I/O).
+
+This class redefines only the I/O member functions of TString.
+It uses 4 bytes to store the string length (1 byte only for TString).
+*/
 
 #include "TStringLong.h"
 #include "TBuffer.h"

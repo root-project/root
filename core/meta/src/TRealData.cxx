@@ -16,19 +16,18 @@
 
 ClassImp(TRealData)
 
-//______________________________________________________________________________
-//
-//  The TRealData class manages the effective list of all data members
-//  for a given class. For example for an object of class TLine that inherits
-//  from TObject and TAttLine, the TRealData object for a line contains the
-//  complete list of all data members of the 3 classes.
-//
-//  The list of TRealData members in TClass is built when functions like
-//  object.Inspect or object.DrawClass are called.
+/** \class TRealData
+The TRealData class manages the effective list of all data members
+for a given class. For example for an object of class TLine that inherits
+from TObject and TAttLine, the TRealData object for a line contains the
+complete list of all data members of the 3 classes.
+
+The list of TRealData members in TClass is built when functions like
+object.Inspect or object.DrawClass are called.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*RealData default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  ============================
+/// RealData default constructor.
 
 TRealData::TRealData() : TObject(), fDataMember(0), fThisOffset(-1),
    fStreamer(0), fIsObject(kFALSE)
@@ -37,10 +36,8 @@ TRealData::TRealData() : TObject(), fDataMember(0), fThisOffset(-1),
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*Constructor to define one persistent data member*-*-*-*-*
-///*-*                ================================================
-///*-* datamember is the pointer to the data member descriptor.
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Constructor to define one persistent data member.
+/// datamember is the pointer to the data member descriptor.
 
 TRealData::TRealData(const char *name, Long_t offset, TDataMember *datamember)
    : TObject(), fDataMember(datamember), fThisOffset(offset), fName(name),
@@ -49,8 +46,7 @@ TRealData::TRealData(const char *name, Long_t offset, TDataMember *datamember)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*RealData default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  =============================
+/// RealData default destructor.
 
 TRealData::~TRealData()
 {
@@ -58,22 +54,19 @@ TRealData::~TRealData()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*Write one persistent data member on output buffer*-*-*-*-*-*-*-*
-///*-*      =================================================
-///*-* pointer points to the current persistent data member
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*
+/// Write one persistent data member on output buffer.
+/// pointer points to the current persistent data member
 
 void TRealData::WriteRealData(void *, char *&)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///fDataMember->SetStreamer(str);
-///delete fStreamer;
 
 void TRealData::AdoptStreamer(TMemberStreamer *str)
 {
+// fDataMember->SetStreamer(str);
+// delete fStreamer;
    fStreamer = str;
 }
 

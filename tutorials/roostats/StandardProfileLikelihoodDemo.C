@@ -1,27 +1,30 @@
-// Standard demo of the Profile Likelihood calculcator
-/*
-StandardProfileLikelihoodDemo
-
-Author: Kyle Cranmer
-date: Dec. 2010
-
-This is a standard demo that can be used with any ROOT file
-prepared in the standard way.  You specify:
- - name for input ROOT file
- - name of workspace inside ROOT file that holds model and data
- - name of ModelConfig that specifies details for calculator tools
- - name of dataset
-
-With default parameters the macro will attempt to run the
-standard hist2workspace example and read the ROOT file
-that it produces.
-
-The actual heart of the demo is only about 10 lines long.
-
-The ProfileLikelihoodCalculator is based on Wilks's theorem
-and the asymptotic properties of the profile likeihood ratio
-(eg. that it is chi-square distributed for the true value).
-*/
+/// \file
+/// \ingroup tutorial_roostats
+/// Standard demo of the Profile Likelihood calculator
+/// StandardProfileLikelihoodDemo
+///
+/// This is a standard demo that can be used with any ROOT file
+/// prepared in the standard way.  You specify:
+///  - name for input ROOT file
+///  - name of workspace inside ROOT file that holds model and data
+///  - name of ModelConfig that specifies details for calculator tools
+///  - name of dataset
+///
+/// With default parameters the macro will attempt to run the
+/// standard hist2workspace example and read the ROOT file
+/// that it produces.
+///
+/// The actual heart of the demo is only about 10 lines long.
+///
+/// The ProfileLikelihoodCalculator is based on Wilks's theorem
+/// and the asymptotic properties of the profile likeihood ratio
+/// (eg. that it is chi-square distributed for the true value).
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer
 
 #include "TFile.h"
 #include "TROOT.h"

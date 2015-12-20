@@ -18,9 +18,24 @@
 #endif
 
 
-/**
 
-\class HypoTestCalculator 
+//
+
+// class RooAbsPdf;
+class RooAbsData;
+// class RooArgSet; 
+class RooWorkspace; 
+
+
+namespace RooStats {
+
+   class HypoTestResult;
+
+   class ModelConfig;
+
+
+   /**
+
 
 HypoTestCalculator is an interface class for a tools which produce RooStats HypoTestResults. The interface currently assumes that any hypothesis test calculator can be configured by specifying:
 
@@ -43,19 +58,6 @@ The motivation for this interface is that we hope to be able to specify the prob
 
 */
 
-//
-
-// class RooAbsPdf;
-class RooAbsData;
-// class RooArgSet; 
-class RooWorkspace; 
-
-
-namespace RooStats {
-
-   class HypoTestResult;
-
-   class ModelConfig;
 
    class HypoTestCalculator {
 

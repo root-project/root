@@ -18,6 +18,7 @@
 #include "TGLabel.h"
 
 /** \class TEveProjectionManagerEditor
+\ingroup TEve
 GUI editor for TEveProjectionManager class.
 */
 

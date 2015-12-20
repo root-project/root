@@ -9,24 +9,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSAXParser                                                           //
-//                                                                      //
-// TSAXParser is a subclass of TXMLParser, it is a wraper class to      //
-// libxml library.                                                      //
-//                                                                      //
-// SAX (Simple API for XML) is an event based interface, which doesn't  //
-// maintain the DOM tree in memory, in other words, it's much more      //
-// efficient for large document.                                        //
-//                                                                      //
-// TSAXParserCallback contains a number of callback routines to the     //
-// parser in a xmlSAXHandler structure. The parser will then parse the  //
-// document and call the appropriate callback when certain conditions   //
-// occur.                                                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TSAXParser
+\ingroup IO
 
+TSAXParser is a subclass of TXMLParser, it is a wraper class to
+libxml library.
+SAX (Simple API for XML) is an event based interface, which doesn't
+maintain the DOM tree in memory, in other words, it's much more
+efficient for large document.
+TSAXParserCallback contains a number of callback routines to the
+parser in a xmlSAXHandler structure. The parser will then parse the
+document and call the appropriate callback when certain conditions
+occur.
+*/
 
 /*************************************************************************
   This source is based on libxml++, a C++ wrapper for the libxml XML
@@ -137,7 +133,7 @@ void TSAXParser::OnStartElement(const char *name, const TList *attributes)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Emit a signal for OnEndElement, where name is the Element's name.
+/// Emit a signal for OnEndElement, where name is the Element's name.
 
 void TSAXParser::OnEndElement(const char *name)
 {
@@ -437,8 +433,8 @@ void TSAXParserCallback::CdataBlock(void *fParser, const xmlChar *value,
 /// with the user-define SAX Handler, whose functions has to be exactly the
 /// same as in TSAXParser.
 ///
-/// handlerName is the user-defined SAX Handler class name
-/// handler is the pointer to the user-defined SAX Handler
+/// \param[in] handler Name User-defined SAX Handler class name
+/// \param[in] handler Pointer to the user-defined SAX Handler
 ///
 /// See SAXHandler.C tutorial.
 

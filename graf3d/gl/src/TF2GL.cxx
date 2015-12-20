@@ -24,10 +24,11 @@
 
 #include "TGLIncludes.h"
 
-//______________________________________________________________________
-//
-// GL renderer for TF2.
-// TGLPlotPainter is used internally.
+/** \class TF2GL
+\ingroup opengl
+GL renderer for TF2.
+TGLPlotPainter is used internally.
+*/
 
 ClassImp(TF2GL);
 
@@ -45,8 +46,6 @@ TF2GL::~TF2GL()
 {
    delete fH;
 }
-
-/**************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.

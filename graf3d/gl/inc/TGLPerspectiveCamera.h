@@ -39,6 +39,7 @@ public:
    virtual Bool_t IsPerspective() const { return kTRUE; }
 
    Double_t GetFOV() const { return fFOV; }
+   void     SetFOV(Double_t fov) { fFOV = fov; }
 
    virtual void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE);
    virtual void   Reset();

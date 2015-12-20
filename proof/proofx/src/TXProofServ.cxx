@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXProofServ                                                          //
-//                                                                      //
-// TXProofServ is the XRD version of the PROOF server. It differs from  //
-// TXProofServ only for the underlying connection technology            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TXProofServ
+\ingroup proofx
+
+This class implements the XProofD version of TProofServ, with respect to which it differs only
+for the underlying connection technology.
+
+*/
 
 #include "RConfigure.h"
 #include "RConfig.h"

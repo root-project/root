@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooProdGenContext is an efficient implementation of the generator context
-// specific for RooProdPdf PDFs. The sim-context owns a list of
-// component generator contexts that are used to generate the dependents
-// for each component PDF sequentially. 
-// END_HTML
-//
+/**
+\file RooProdGenContext.cxx
+\class RooProdGenContext
+\ingroup Roofitcore
+
+RooProdGenContext is an efficient implementation of the generator context
+specific for RooProdPdf PDFs. The sim-context owns a list of
+component generator contexts that are used to generate the dependents
+for each component PDF sequentially. 
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -169,7 +170,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	
 	// Composite term
 	if (termDeps->getSize()>0) {
-	  const char* name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet(),0) ;      
+	  const std::string name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet(),0) ;      
 	  
 	  // Construct auxiliary PDF expressing product of composite terms, 
 	  // following Conditional component specification of input model
@@ -192,7 +193,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	    }
 	    
 	  }
-	  RooProdPdf* multiPdf = new RooProdPdf(name,name,fullPdfSet,cmdList) ;
+	  RooProdPdf* multiPdf = new RooProdPdf(name.c_str(),name.c_str(),fullPdfSet,cmdList) ;
 	  cmdList.Delete() ;
 	  pdfSetList.Delete() ;
 
@@ -244,7 +245,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       trailerTermDeps.add(*termDeps) ;
     }
 
-    const char* name = model.makeRGPPName("PRODGEN_",trailerTerm,RooArgSet(),RooArgSet(),0) ;      
+    const std::string name = model.makeRGPPName("PRODGEN_",trailerTerm,RooArgSet(),RooArgSet(),0) ;      
       
     // Construct auxiliary PDF expressing product of composite terms, 
     // following Partial/Full component specification of input model
@@ -268,7 +269,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       
     }
 //     cmdList.Print("v") ;
-    RooProdPdf* multiPdf = new RooProdPdf(name,name,fullPdfSet,cmdList) ;
+    RooProdPdf* multiPdf = new RooProdPdf(name.c_str(),name.c_str(),fullPdfSet,cmdList) ;
     cmdList.Delete() ;
     pdfSetList.Delete() ;
    

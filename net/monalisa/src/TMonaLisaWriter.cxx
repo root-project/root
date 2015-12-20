@@ -44,6 +44,7 @@
 // - Added support also for performance monitoring when writing         //
 //////////////////////////////////////////////////////////////////////////
 
+#include <cmath>
 #include "TMonaLisaWriter.h"
 #include "TSystem.h"
 #include "TGrid.h"
@@ -53,7 +54,7 @@
 #include "Riostream.h"
 #include "TParameter.h"
 #include "THashList.h"
-#include "TMath.h"
+
 
 ClassImp(TMonaLisaWriter)
 
@@ -97,10 +98,10 @@ public:
    void        GetThroughputs(Long64_t &readthr, Long64_t &writethr, Double_t timenow, Double_t prectime) {
       readthr = -1;
       writethr = -1;
-      Double_t t = TMath::Min(prectime, fLastResetTime);
+      Double_t t = std::min(prectime, fLastResetTime);
 
-      Int_t mselapsed = TMath::FloorNint((timenow - t) * 1000);
-      mselapsed = TMath::Max(mselapsed, 1);
+      Int_t mselapsed = std::round(std::floor(((timenow - t) * 1000)));
+      mselapsed = std::max(mselapsed, 1);
 
       readthr = fTempReadBytes / mselapsed * 1000;
       writethr = fTempWrittenBytes / mselapsed * 1000;
@@ -821,7 +822,7 @@ Bool_t TMonaLisaWriter::SendFileCloseEvent(TFile *file) {
 
    int thput;
    if (timelapsed > 0.001) {
-      Int_t selapsed = TMath::FloorNint(timelapsed * 1000);
+      Int_t selapsed = std::round(std::floor(timelapsed * 1000));
 
       thput = file->GetBytesRead() / selapsed * 1000;
       valname = pfx;

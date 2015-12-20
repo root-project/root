@@ -9,16 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofMgr                                                            //
-//                                                                      //
-// The PROOF manager interacts with the PROOF server coordinator to     //
-// create or destroy a PROOF session, attach to or detach from          //
-// existing one, and to monitor any client activity on the cluster.     //
-// At most one manager instance per server is allowed.                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofMgr
+\ingroup proofkernel
+
+The PROOF manager interacts with the PROOF server coordinator to
+create or destroy a PROOF session, attach to or detach from
+existing one, and to monitor any client activity on the cluster.
+At most one manager instance per server is allowed.
+
+*/
 
 #include "Bytes.h"
 #include "TError.h"

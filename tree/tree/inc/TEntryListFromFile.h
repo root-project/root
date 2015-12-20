@@ -48,15 +48,14 @@ protected:
                               //fCurrent points to the currently open list
    TObjArray *fFileNames;     //! points to the fFiles data member of the corresponding chain
 
+   // Obsolete use TTree::kMaxEntries
+   static constexpr auto kBigNumber = std::numeric_limits<Long64_t>::max();
+
 private:
    TEntryListFromFile(const TEntryListFromFile&);            // Not implemented.
    TEntryListFromFile &operator=(const TEntryListFromFile&); // Not implemented.
 
 public:
-
-   enum {
-      kBigNumber = 1234567890
-   };
 
    TEntryListFromFile();
    TEntryListFromFile(const char *filename, const char *listname, Int_t nfiles);

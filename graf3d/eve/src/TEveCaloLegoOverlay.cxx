@@ -34,7 +34,8 @@
 
 
 /** \class TEveCaloLegoOverlay
- GL-overlay control GUI for TEveCaloLego.
+\ingroup TEve
+GL-overlay control GUI for TEveCaloLego.
 */
 
 ClassImp(TEveCaloLegoOverlay);

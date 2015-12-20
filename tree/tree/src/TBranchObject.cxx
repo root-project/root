@@ -18,6 +18,7 @@ A Branch for the case of an object.
 #include "TBasket.h"
 #include "TBranchClones.h"
 #include "TBrowser.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TClonesArray.h"
 #include "TDataMember.h"

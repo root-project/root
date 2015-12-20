@@ -1,14 +1,14 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #202
-// 
-// Setting up an extended maximum likelihood fit
-//
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #202
+///
+///  Setting up an extended maximum likelihood fit
+///
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

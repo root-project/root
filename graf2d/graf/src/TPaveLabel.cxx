@@ -19,7 +19,9 @@
 ClassImp(TPaveLabel)
 
 /** \class TPaveLabel
-A PaveLabel is a Pave (see TPave) with a text centered in the Pave.
+\ingroup BasicGraphics
+
+A Pave (see TPave) with a text centered in the Pave.
 
 \image html graf_pavelabel.png
 */

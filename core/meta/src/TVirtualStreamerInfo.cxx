@@ -8,13 +8,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualStreamerInfo   Abstract Interface class                      //
-//                                                                      //
-// Abstract Interface describing Streamer information for one class.    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TVirtualStreamerInfo
+Abstract Interface class describing Streamer information for one class.
+*/
 
 #include "TROOT.h"
 #include "TSystem.h"
@@ -94,7 +90,9 @@ Bool_t TVirtualStreamerInfo::CanOptimize()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Given a comment/title declaring an array counter, for example:
+/// ~~~ {.cpp}
 ///    //[fArraySize] array of size fArraySize
+/// ~~~
 /// return the start of the array dimension declaration start in the string
 /// (so the location of the 'f'.
 
@@ -132,7 +130,7 @@ TStreamerBasicType *TVirtualStreamerInfo::GetElementCounter(const char *countNam
       //   b) if is build, we should not build it (or we could end up in an
       //      infinite loop, if the element and its counter are in the same
       //      class!
-      // Checking IsCompiled is sufficint here even-though it is set only at
+      // Checking IsCompiled is sufficient here even-though it is set only at
       // the end of the call to Build as this function has an
       // internal recursion prevention (setting and testing kBuildRunning).
       info = cl->GetStreamerInfo();
@@ -147,8 +145,8 @@ TStreamerBasicType *TVirtualStreamerInfo::GetElementCounter(const char *countNam
 ////////////////////////////////////////////////////////////////////////////////
 /// Return whether the TStreamerInfos will save the collections in
 /// "member-wise" order whenever possible.    The default is to store member-wise.
-/// kTRUE indicates member-wise storing
-/// kFALSE inddicates object-wise storing
+///  - kTRUE indicates member-wise storing
+///  - kFALSE inddicates object-wise storing
 ///
 /// A collection can be saved member wise when it contain is guaranteed to be
 /// homogeneous.  For example std::vector<THit> can be stored member wise,
@@ -234,8 +232,8 @@ void TVirtualStreamerInfo::SetFactory(TVirtualStreamerInfo *factory)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set whether the TStreamerInfos will save the collections in
 /// "member-wise" order whenever possible.  The default is to store member-wise.
-/// kTRUE indicates member-wise storing
-/// kFALSE inddicates object-wise storing
+///  - kTRUE indicates member-wise storing
+///  - kFALSE indicates object-wise storing
 /// This function returns the previous value of fgStreamMemberWise.
 
 Bool_t TVirtualStreamerInfo::SetStreamMemberWise(Bool_t enable)

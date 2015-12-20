@@ -18,6 +18,7 @@
 #include "TGLUtil.h"
 
 /** \class TEveRGBAPaletteOverlay
+\ingroup TEve
 Description of TEveRGBAPaletteOverlay
 */
 

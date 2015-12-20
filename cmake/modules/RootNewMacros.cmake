@@ -8,6 +8,9 @@ if(CMAKE_VERSION VERSION_GREATER 2.8.12)
   cmake_policy(SET CMP0022 OLD) # See "cmake --help-policy CMP0022" for more details
 endif()
 
+
+set(THISDIR ${CMAKE_CURRENT_LIST_DIR})
+
 set(lib lib)
 set(bin bin)
 if(WIN32)
@@ -44,18 +47,6 @@ else()
       SUFFIX ${libsuffix}
       PREFIX ${libprefix}
       IMPORT_PREFIX ${libprefix} )
-endif()
-
-if(APPLE)
-  if(gnuinstall)
-    set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
-         INSTALL_NAME_DIR "${CMAKE_INSTALL_FULL_LIBDIR}"
-         BUILD_WITH_INSTALL_RPATH ON)
-  else()
-    set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
-         INSTALL_NAME_DIR "@rpath"
-         BUILD_WITH_INSTALL_RPATH ON)
-  endif()
 endif()
 
 #---Modify the behaviour for local and non-local builds--------------------------------------------
@@ -116,7 +107,10 @@ function(ROOT_GET_SOURCES variable cwd )
     if( IS_ABSOLUTE ${fp})
       file(GLOB files ${fp})
     else()
-      file(GLOB files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${cwd}/${fp})
+      if(root7)
+        set(root7glob v7/src/${fp})
+      endif()
+      file(GLOB files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${cwd}/${fp} ${root7glob})
     endif()
     if(files)
       foreach(s ${files})
@@ -491,9 +485,11 @@ function(ROOT_OBJECT_LIBRARY library)
       set(obj ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}.build/${CMAKE_CFG_INTDIR}/${library}.build/Objects-normal/x86_64/${name}${CMAKE_CXX_OUTPUT_EXTENSION})
     else()
       if(IS_ABSOLUTE ${s})
-        if(${s} MATCHES ${CMAKE_CURRENT_SOURCE_DIR})
+        string(REGEX REPLACE "([][.?*+|()$^-])" "\\\\\\1" escaped_source_dir "${CMAKE_CURRENT_SOURCE_DIR}")
+        string(REGEX REPLACE "([][.?*+|()$^-])" "\\\\\\1" escaped_binary_dir "${CMAKE_CURRENT_BINARY_DIR}")
+        if(${s} MATCHES "^${escaped_source_dir}")
           string(REPLACE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${library}.dir src ${s})
-        elseif(${s} MATCHES ${CMAKE_CURRENT_BINARY_DIR})
+        elseif(${s} MATCHES "^${escaped_binary_dir}")
           string(REPLACE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${library}.dir src ${s})
         else()
           #message(WARNING "Unknown location of source ${s} for object library ${library}")
@@ -582,6 +578,11 @@ function(ROOT_INSTALL_HEADERS)
     set(dirs ${ARG_UNPARSED_ARGUMENTS})
   else()
     set(dirs inc/)
+    if(root7)
+      if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/)
+        set(dirs inc/ v7/inc/)
+      endif()
+    endif()
   endif()
   foreach(d ${dirs})
     install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
@@ -774,6 +775,7 @@ function(ROOT_ADD_TEST test)
 
   if(ARG_OUTCNVCMD)
     string(REPLACE ";" "^" _outcnvcmd "${ARG_OUTCNVCMD}")
+    string(REPLACE "=" "@" _outcnvcmd "${_outcnvcmd}")
     set(_command ${_command} -DCNVCMD=${_outcnvcmd})
   endif()
 
@@ -811,7 +813,7 @@ function(ROOT_ADD_TEST test)
   endif()
 
   #- Locate the test driver
-  find_file(ROOT_TEST_DRIVER RootTestDriver.cmake PATHS ${CMAKE_MODULE_PATH})
+  find_file(ROOT_TEST_DRIVER RootTestDriver.cmake PATHS ${THISDIR} ${CMAKE_MODULE_PATH})
   if(NOT ROOT_TEST_DRIVER)
     message(FATAL_ERROR "ROOT_ADD_TEST: RootTestDriver.cmake not found!")
   endif()

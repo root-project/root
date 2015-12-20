@@ -9,14 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TStopwatch                                                           //
-//                                                                      //
-// Stopwatch class. This class returns the real and cpu time between    //
-// the start and stop events.                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TStopwatch
+Stopwatch class. This class returns the real and cpu time between
+the start and stop events.
+*/
 
 #include "TStopwatch.h"
 #include "TTimeStamp.h"

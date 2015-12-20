@@ -1,23 +1,23 @@
-// Example showing confidence intervals with four techniques.
-/*
-IntervalExamples
-
-Author Kyle Cranmer
-date   Sep. 2010
-
-An example that shows confidence intervals with four techniques.
-The model is a Normal Gaussian G(x|mu,sigma) with 100 samples of x.
-The answer is known analytically, so this is a good example to validate
-the RooStats tools.
-
-expected interval is [-0.162917, 0.229075]
-plc  interval is     [-0.162917, 0.229075]
-fc   interval is     [-0.17    , 0.23]        // stepsize is 0.01
-bc   interval is     [-0.162918, 0.229076]
-mcmc interval is     [-0.166999, 0.230224]
-
-
-*/
+/// \file
+/// \ingroup tutorial_roostats
+/// Example showing confidence intervals with four techniques.
+///
+/// An example that shows confidence intervals with four techniques.
+/// The model is a Normal Gaussian G(x|mu,sigma) with 100 samples of x.
+/// The answer is known analytically, so this is a good example to validate
+/// the RooStats tools.
+///
+///  - expected interval is [-0.162917, 0.229075]
+///  - plc  interval is     [-0.162917, 0.229075]
+///  - fc   interval is     [-0.17    , 0.23]        // stepsize is 0.01
+///  - bc   interval is     [-0.162918, 0.229076]
+///  - mcmc interval is     [-0.166999, 0.230224]
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer
 
 #include "RooStats/ConfInterval.h"
 #include "RooStats/PointSetInterval.h"

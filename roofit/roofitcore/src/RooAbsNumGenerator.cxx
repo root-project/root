@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// Class RooAbsNumGenerator is the abstract base class for MC event generator
-// implementations like RooAcceptReject and RooFoam
-// END_HTML
-//
+/**
+\file RooAbsNumGenerator.cxx
+\class RooAbsNumGenerator
+\ingroup Roofitcore
+
+Class RooAbsNumGenerator is the abstract base class for MC event generator
+implementations like RooAcceptReject and RooFoam
+**/
 
 
 #include "RooFit.h"

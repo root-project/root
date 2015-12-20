@@ -11,9 +11,10 @@
 
 #include "TGLAdapter.h"
 
-//______________________________________________________________________________
-//
-// Allow plot-painters to be used for gl-inpad and gl-viewer.
+/** \class TGLAdapter
+\ingroup opengl
+Allow plot-painters to be used for gl-inpad and gl-viewer.
+*/
 
 ClassImp(TGLAdapter)
 
@@ -26,7 +27,7 @@ TGLAdapter::TGLAdapter(Int_t glDevice)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set as current GL contet.
+/// Set as current GL context.
 
 Bool_t TGLAdapter::MakeCurrent()
 {

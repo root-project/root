@@ -33,8 +33,10 @@ class TBranchElement;
 class TClass;
 class TStreamerElement;
 class TTree;
+class TVirtualStreamerInfo;
 
 namespace ROOT {
+namespace Internal {
    class TTreeGeneratorBase {
       public:
          TList    fListOfHeaders;     // List of included headers
@@ -50,7 +52,6 @@ namespace ROOT {
          TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TClass *cl);
    };
 }
-
-using ROOT::TTreeGeneratorBase;
+}
 
 #endif

@@ -10,34 +10,20 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
-   HypoTestInverterOriginal class for performing an hypothesis test inversion by scanning the hypothesis test results of the 
-  HybridCalculator  for various values of the parameter of interest. By looking at the confidence level curve of 
- the result  an upper limit, where it intersects the desired confidence level, can be derived.
- The class implements the RooStats::IntervalCalculator interface and returns an  RooStats::HypoTestInverterResult class.
- The result is a SimpleInterval, which via the method UpperLimit returns to the user the upper limit value.
 
-The  HypoTestInverterOriginal implements various option for performing the scan. HypoTestInverterOriginal::RunFixedScan will scan using a fixed grid the parameter of interest. HypoTestInverterOriginal::RunAutoScan will perform an automatic scan to find optimally the curve and it will stop until the desired precision is obtained.
-The confidence level value at a given point can be done via  HypoTestInverterOriginal::RunOnePoint.
-The class can scan the CLs+b values or alternativly CLs (if the method HypoTestInverterOriginal::UseCLs has been called).
+// include header file of this class
+#include "RooStats/HypoTestInverterOriginal.h"
 
-
-   New contributions to this class have been written by Matthias Wolf (advanced AutoRun algorithm)
-**/
+#include "RooStats/HybridCalculatorOriginal.h"
+#include "RooStats/HybridResult.h"
+#include "RooStats/HypoTestCalculator.h"
+#include "RooStats/HypoTestInverterResult.h"
 
 // include other header files
-
 #include "RooAbsPdf.h"
 #include "RooAbsData.h"
 #include "RooRealVar.h"
 #include "TMath.h"
-
-#include "RooStats/HybridCalculatorOriginal.h"
-#include "RooStats/HybridResult.h"
-
-// include header file of this class 
-#include "RooStats/HypoTestInverterOriginal.h"
-
 
 ClassImp(RooStats::HypoTestInverterOriginal)
 

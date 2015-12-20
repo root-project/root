@@ -9,19 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TClingDataMemberInfo                                                 //
-//                                                                      //
-// Emulation of the CINT DataMemberInfo class.                          //
-//                                                                      //
-// The CINT C++ interpreter provides an interface to metadata about     //
-// the data members of a class through the DataMemberInfo class.  This  //
-// class provides the same functionality, using an interface as close   //
-// as possible to DataMemberInfo but the data member metadata comes     //
-// from the Clang C++ compiler, not CINT.                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TClingDataMemberInfo
+
+Emulation of the CINT DataMemberInfo class.
+
+The CINT C++ interpreter provides an interface to metadata about
+the data members of a class through the DataMemberInfo class.  This
+class provides the same functionality, using an interface as close
+as possible to DataMemberInfo but the data member metadata comes
+from the Clang C++ compiler, not CINT.
+*/
 
 #include "TClingDataMemberInfo.h"
 
@@ -142,7 +139,7 @@ int TClingDataMemberInfo::ArrayDim() const
       return 0;
    }
    // To get this information we must count the number
-   // of arry type nodes in the canonical type chain.
+   // of array type nodes in the canonical type chain.
    const clang::ValueDecl *VD = llvm::dyn_cast<clang::ValueDecl>(GetDecl());
    clang::QualType QT = VD->getType().getCanonicalType();
    int cnt = 0;
@@ -189,7 +186,7 @@ int TClingDataMemberInfo::MaxIndex(int dim) const
       return 0;
    }
    // To get this information we must count the number
-   // of arry type nodes in the canonical type chain.
+   // of array type nodes in the canonical type chain.
    const clang::ValueDecl *VD = llvm::dyn_cast<clang::ValueDecl>(GetDecl());
    clang::QualType QT = VD->getType().getCanonicalType();
    int paran = ArrayDim();
@@ -319,6 +316,11 @@ long TClingDataMemberInfo::Offset()
       return static_cast<long>(offset);
    }
    else if (const VarDecl *VD = dyn_cast<VarDecl>(D)) {
+      // Could trigger deserialization of decls, in particular in case
+      // of constexpr, like:
+      //   static constexpr Long64_t something = std::numeric_limits<Long64_t>::max();
+      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+
       if (VD->hasInit() && VD->checkInitIsICE()) {
          // FIXME: We might want in future to printout the reason why the eval
          // failed.
@@ -358,8 +360,8 @@ long TClingDataMemberInfo::Offset()
    // FIXME: We have to explicitly check for not enum constant because the
    // implementation of getAddressOfGlobal relies on mangling the name and in
    // clang there is misbehaviour in MangleContext::shouldMangleDeclName.
-   // enum constants are esentially numbers and don't get addresses. However
-   // ROOT expects the address to the enum constant initalizer to be returned.
+   // enum constants are essentially numbers and don't get addresses. However
+   // ROOT expects the address to the enum constant initializer to be returned.
    else if (const EnumConstantDecl *ECD = dyn_cast<EnumConstantDecl>(D))
       // The raw data is stored as a long long, so we need to find the 'long'
       // part.
@@ -409,13 +411,13 @@ long TClingDataMemberInfo::Property() const
       if (vard->getStorageClass() == clang::SC_Static) {
          property |= kIsStatic;
       } else if (declaccess->getDeclContext()->isNamespace()) {
-         // Data membrers of a namespace are global variable which were
+         // Data members of a namespace are global variable which were
          // considered to be 'static' in the CINT (and thus ROOT) scheme.
          property |= kIsStatic;
       }
    }
    if (llvm::isa<clang::EnumConstantDecl>(GetDecl())) {
-      // Enumaration constant are considered to be 'static' data member in
+      // Enumeration constant are considered to be 'static' data member in
       // the CINT (and thus ROOT) scheme.
       property |= kIsStatic;
    }
@@ -634,7 +636,7 @@ const char *TClingDataMemberInfo::Title()
    return fTitle.c_str();
 }
 
-// ValidArrayIndex return a static string (so use it or copy it immediatly, do not
+// ValidArrayIndex return a static string (so use it or copy it immediately, do not
 // call GrabIndex twice in the same expression) containing the size of the
 // array data member.
 llvm::StringRef TClingDataMemberInfo::ValidArrayIndex() const

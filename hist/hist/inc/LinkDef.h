@@ -309,7 +309,7 @@
 #pragma link C++ function R__H(Int_t);
 #pragma link C++ function R__H(const char*);
 
-#pragma link C++ class ROOT::THnBaseBrowsable;
+#pragma link C++ class ROOT::Internal::THnBaseBrowsable;
 #pragma link C++ class ROOT::Math::WrappedTF1;
 #pragma link C++ class ROOT::Math::WrappedMultiTF1;
 

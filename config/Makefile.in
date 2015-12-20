@@ -108,6 +108,7 @@ IOSSDK         := @iossdk@
 
 CXX11          := @c++11@
 CXX14          := @c++14@
+CXXMODULES     := @cxxmodules@
 LIBCXX         := @libc++@
 
 EXPLICITLINK   := @explicitlink@
@@ -241,7 +242,6 @@ BUILDBONJOUR   := @buildbonjour@
 DNSSDLIBDIR    := @dnssdlibdir@
 DNSSDLIB       := @dnssdlib@
 DNSSDINCDIR    := $(filter-out /usr/include, @dnssdincdir@)
-BONJOURCPPFLAGS := @bonjourcppflags@
 
 BUILDCHIRP     := @buildchirp@
 CHIRPLIBDIR    := @chirplibdir@
@@ -366,6 +366,11 @@ BUILDMONALISA  := @buildmonalisa@
 MONALISALIBDIR := @monalisalibdir@
 MONALISACLILIB := @monalisalib@
 MONALISAINCDIR := $(filter-out /usr/include, @monalisaincdir@)
+
+BUILDTBB       := @buildtbb@
+TBBLIBDIR      := @tbblibdir@
+TBBLIB         := @tbblib@
+TBBINCDIR      := $(filter-out /usr/include, @tbbincdir@)
 
 SSLLIB         := @ssllib@
 SSLLIBDIR      := @ssllibdir@

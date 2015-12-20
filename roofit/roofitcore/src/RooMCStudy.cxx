@@ -14,30 +14,28 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooMCStudy is a help class to facilitate Monte Carlo studies
-// such as 'goodness-of-fit' studies, that involve fitting a PDF 
-// to multiple toy Monte Carlo sets generated from the same PDF 
-// or another PDF.
-// <p>
-// Given a fit PDF and a generator PDF, RooMCStudy can produce
-// large numbers of toyMC samples and/or fit these samples
-// and acculumate the final parameters of each fit in a dataset.
-// <p>
-// Additional plotting routines simplify the task of plotting
-// the distribution of the minimized likelihood, each parameters fitted value, 
-// fitted error and pull distribution.
-// <p>
-// Class RooMCStudy provides the option to insert add-in modules
-// that modify the generate and fit cycle and allow to perform
-// extra steps in the cycle. Output of these modules can be stored
-// alongside the fit results in the aggregate results dataset.
-// These study modules should derive from classs RooAbsMCStudyModel
-//
-// END_HTML
-//
+/**
+\file RooMCStudy.cxx
+\class RooMCStudy
+\ingroup Roofitcore
+
+RooMCStudy is a help class to facilitate Monte Carlo studies
+such as 'goodness-of-fit' studies, that involve fitting a PDF 
+to multiple toy Monte Carlo sets generated from the same PDF 
+or another PDF.
+Given a fit PDF and a generator PDF, RooMCStudy can produce
+large numbers of toyMC samples and/or fit these samples
+and acculumate the final parameters of each fit in a dataset.
+Additional plotting routines simplify the task of plotting
+the distribution of the minimized likelihood, each parameters fitted value, 
+fitted error and pull distribution.
+Class RooMCStudy provides the option to insert add-in modules
+that modify the generate and fit cycle and allow to perform
+extra steps in the cycle. Output of these modules can be stored
+alongside the fit results in the aggregate results dataset.
+These study modules should derive from classs RooAbsMCStudyModel
+
+**/
 
 
 
@@ -417,7 +415,6 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
 RooMCStudy::~RooMCStudy() 
 {  
   _genDataList.Delete() ;
-  _fitResList.Delete() ;
   _fitOptList.Delete() ;
   delete _ngenVar ;
   delete _fitParData ;
@@ -656,7 +653,7 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
 Bool_t RooMCStudy::generateAndFit(Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData, const char* asciiFilePat) 
 {
   // Clear any previous data in memory
-  _fitResList.Delete() ;
+  _fitResList.Delete() ; // even though the fit results are owned by gROOT, we still want to scratch them here.
   _genDataList.Delete() ;
   _fitParData->reset() ;
   
@@ -695,7 +692,7 @@ Bool_t RooMCStudy::generate(Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenD
 Bool_t RooMCStudy::fit(Int_t nSamples, const char* asciiFilePat) 
 {
   // Clear any previous data in memory
-  _fitResList.Delete() ;
+  _fitResList.Delete() ; // even though the fit results are owned by gROOT, we still want to scratch them here.
   _fitParData->reset() ;
   
   return run(kFALSE,kTRUE,nSamples,0,kFALSE,asciiFilePat) ;
@@ -710,7 +707,7 @@ Bool_t RooMCStudy::fit(Int_t nSamples, const char* asciiFilePat)
 Bool_t RooMCStudy::fit(Int_t nSamples, TList& dataSetList) 
 {
   // Clear any previous data in memory
-  _fitResList.Delete() ;
+  _fitResList.Delete() ; // even though the fit results are owned by gROOT, we still want to scratch them here.
   _genDataList.Delete() ;
   _fitParData->reset() ;
   

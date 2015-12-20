@@ -9,13 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//________________________________________________________________________
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// ABC describing GUI independent main window (with menubar, scrollbars //
-// and a drawing area).                                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TCanvasImp
+ABC describing GUI independent main window (with menubar, scrollbars
+and a drawing area).
+*/
 
 #include "TCanvasImp.h"
 

@@ -1,37 +1,39 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'Number Counting Utils' RooStats tutorial
-// author: Kyle Cranmer
-// date June. 2009
-//
-// This tutorial shows an example of the RooStats standalone
-// utilities that calculate the p-value or Z value (eg. significance in
-// 1-sided Gaussian standard deviations) for a number counting experiment.
-// This is a hypothesis test between background only and signal-plus-background.
-// The background estimate has uncertainty derived from an auxiliary or sideband
-// measurement.
-//
-// Documentation for these utilities can be found here:
-// http://root.cern.ch/root/html/RooStats__NumberCountingUtils.html
-//
-//
-// This problem is often called a proto-type problem for high energy physics.
-// In some references it is referred to as the on/off problem.
-//
-// The problem is treated in a fully frequentist fashion by
-// interpreting the relative background uncertainty as
-// being due to an auxiliary or sideband observation
-// that is also Poisson distributed with only background.
-// Finally, one considers the test as a ratio of Poisson means
-// where an interval is well known based on the conditioning on the total
-// number of events and the binomial distribution.
-// For more on this, see
-//  http://arxiv.org/abs/0905.3831
-//  http://arxiv.org/abs/physics/physics/0702156
-//  http://arxiv.org/abs/physics/0511028
-//
-/////////////////////////////////////////////////////////////////////////
-
+/// \file
+/// \ingroup tutorial_roostats
+/// 'Number Counting Utils' RooStats tutorial
+///
+/// This tutorial shows an example of the RooStats standalone
+/// utilities that calculate the p-value or Z value (eg. significance in
+/// 1-sided Gaussian standard deviations) for a number counting experiment.
+/// This is a hypothesis test between background only and signal-plus-background.
+/// The background estimate has uncertainty derived from an auxiliary or sideband
+/// measurement.
+///
+/// Documentation for these utilities can be found here:
+/// http://root.cern.ch/root/html/RooStats__NumberCountingUtils.html
+///
+///
+/// This problem is often called a proto-type problem for high energy physics.
+/// In some references it is referred to as the on/off problem.
+///
+/// The problem is treated in a fully frequentist fashion by
+/// interpreting the relative background uncertainty as
+/// being due to an auxiliary or sideband observation
+/// that is also Poisson distributed with only background.
+/// Finally, one considers the test as a ratio of Poisson means
+/// where an interval is well known based on the conditioning on the total
+/// number of events and the binomial distribution.
+/// For more on this, see
+///  - http://arxiv.org/abs/0905.3831
+///  - http://arxiv.org/abs/physics/physics/0702156
+///  - http://arxiv.org/abs/physics/0511028
+///
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer
 
 #ifndef __CINT__
 // you need to include this for compiled macro.

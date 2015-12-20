@@ -42,12 +42,12 @@
 
 #include "TMVA/SeparationBase.h"
 
-ClassImp(TMVA::SeparationBase)
-
-#include <limits>
-#include <iostream>
 #include "TMath.h"
 
+#include <iostream>
+#include <limits>
+
+ClassImp(TMVA::SeparationBase)
 
 TMVA::SeparationBase::SeparationBase() :
    fName(""),

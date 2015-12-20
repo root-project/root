@@ -9,18 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TClingClassInfo                                                      //
-//                                                                      //
-// Emulation of the CINT ClassInfo class.                               //
-//                                                                      //
-// The CINT C++ interpreter provides an interface to metadata about     //
-// a class through the ClassInfo class.  This class provides the same   //
-// functionality, using an interface as close as possible to ClassInfo  //
-// but the class metadata comes from the Clang C++ compiler, not CINT.  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TClingClassInfo
+
+Emulation of the CINT ClassInfo class.
+
+The CINT C++ interpreter provides an interface to metadata about
+a class through the ClassInfo class.  This class provides the same
+functionality, using an interface as close as possible to ClassInfo
+but the class metadata comes from the Clang C++ compiler, not CINT.
+*/
 
 #include "TClingClassInfo.h"
 
@@ -1315,7 +1312,7 @@ const char *TClingClassInfo::Title()
    // NOTE: We cannot cache the result, since we are really an iterator.
    // Try to get the comment either from the annotation or the header
    // file, if present.
-   // Iterate over the redeclarations, we can have muliple definitions in the
+   // Iterate over the redeclarations, we can have multiple definitions in the
    // redecl chain (came from merging of pcms).
 
    R__LOCKGUARD(gInterpreterMutex);

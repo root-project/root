@@ -9,19 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TEmulatedCollectionProxy
-//
-// Streamer around an arbitrary container, which implements basic
-// functionality and iteration.
-//
-// In particular this is used to implement splitting and abstract
-// element access of any container. Access to compiled code is necessary
-// to implement the abstract iteration sequence and functionality like
-// size(), clear(), resize(). resize() may be a void operation.
-//
-//////////////////////////////////////////////////////////////////////////
+/**
+ \class TEmulatedCollectionProxy
+ \ingroup IO
+
+Streamer around an arbitrary STL like container, which implements basic
+container functionality.
+
+### Note:
+Although this class contains all the setup necessary to deal
+with maps, the map-like functionality is NOT supported.
+For optimization reasons this functionality is put into
+the class TEmulatedMapProxy.
+*/
 
 #include "TEmulatedCollectionProxy.h"
 #include "TStreamerElement.h"

@@ -113,3 +113,11 @@ $(MODNAME)-echo-h2:
 # Optimize dictionary with stl containers.
 $(EVEDO1): NOOPT = $(OPT)
 $(EVEDO2): NOOPT = $(OPT)
+
+#FIXME: Disable modules build for graf3d until the glew.h issue gets fixed.
+ifeq ($(CXXMODULES),yes)
+ifeq ($(PLATFORM),macosx)
+$(EVEO): CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
+         CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
+endif
+endif

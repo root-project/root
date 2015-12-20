@@ -9,13 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSelHist                                                             //
-// PROOF selector for CPU-intensive benchmark test.                     //
-// Events are generated and 1-D, 2-D, and/or 3-D histograms are filled. //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TSelHist
+\ingroup proofbench
+
+PROOF selector for CPU-intensive benchmark test.
+Events are generated and 1-D, 2-D, and/or 3-D histograms are filled.
+
+*/
 
 #define TSelHist_cxx
 

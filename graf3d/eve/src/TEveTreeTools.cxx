@@ -19,6 +19,7 @@
 #include "TTreeFormula.h"
 
 /** \class TEveSelectorToEventList
+\ingroup TEve
 TSelector that stores entry numbers of matching TTree entries into
 an event-list.
 */
@@ -47,11 +48,13 @@ Bool_t TEveSelectorToEventList::Process(Long64_t entry)
 }
 
 /** \class TEvePointSelector
+\ingroup TEve
 TEvePointSelector is a sub-class of TSelectorDraw for direct
 extraction of point-like data from a Tree.
 */
 
 /** \class TEvePointSelectorConsumer
+\ingroup TEve
 TEvePointSelectorConsumer is a virtual base for classes that can be
 filled from TTree data via the TEvePointSelector class.
 */

@@ -33,6 +33,8 @@
  **************************************************************************/
 
 /** \class TASImage
+\ingroup asimage
+
 Image class.
 
 TASImage is the concrete interface to the image processing library
@@ -52,8 +54,8 @@ palette can be modified with a GUI, just select StartPaletteEditor() from the
 context menu.
 
 Several examples showing how to use this class are available in the
-ROOT tutorials: <tt>$ROOTSYS/tutorials/image/</tt>
-End_Html */
+ROOT tutorials: `$ROOTSYS/tutorials/image/`
+*/
 
 #  include <ft2build.h>
 #  include FT_FREETYPE_H
@@ -1580,10 +1582,10 @@ void TASImage::Paint(Option_t *option)
          }
          return;
       } else if (gVirtualPS->InheritsFrom("TPDF")) {
-         Warning("Paint", "PDF not implemeted yet");
+         Warning("Paint", "PDF not implemented yet");
          return;
       } else if (gVirtualPS->InheritsFrom("TSVG")) {
-         Warning("Paint", "SVG not implemeted yet");
+         Warning("Paint", "SVG not implemented yet");
          return;
       }
 

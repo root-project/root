@@ -12,14 +12,6 @@
 #ifndef ROOT_TSQLFile
 #define ROOT_TSQLFile
 
-
-/////////////////////////////////////////////////////////////////////////
-//                                                                     //
-// TSQLFile provides TFile interface to SQL data base                  //
-//                                                                     //
-/////////////////////////////////////////////////////////////////////////
-
-
 #ifndef ROOT_TFile
 #include "TFile.h"
 #endif
@@ -154,29 +146,29 @@ protected:
    const char*       SQLValueQuote() const         { return fOtherTypes[11]; }
    const char*       SQLDefaultTableType() const   { return fOtherTypes[12]; }
 
-   TSQLServer*       fSQL;             //! interface to SQL database
+   TSQLServer*       fSQL;             ///<! interface to SQL database
 
-   TList*            fSQLClassInfos;   //! list of SQL class infos
+   TList*            fSQLClassInfos;   ///<! list of SQL class infos
 
-   Bool_t            fUseSuffixes;     //! use suffixes in column names like fValue:Int_t or fObject:pointer
-   Int_t             fSQLIOversion;    //! version of SQL I/O which is stored in configurations
-   Int_t             fArrayLimit;      //! limit for array size. when array bigger, its content converted to raw format
-   Bool_t            fCanChangeConfig; //! variable indicates can be basic configuration changed or not
-   TString           fTablesType;      //! type, used in CREATE TABLE statements
-   Int_t             fUseTransactions; //! use transaction statements for writing data into the tables
-   Int_t             fUseIndexes;      //! use indexes for tables: 0 - off, 1 - only for basic tables, 2  + normal class tables, 3 - all tables
-   Int_t             fModifyCounter;   //! indicates how many changes was done with database tables
-   Int_t             fQuerisCounter;   //! how many query was applied
+   Bool_t            fUseSuffixes;     ///<! use suffixes in column names like fValue:Int_t or fObject:pointer
+   Int_t             fSQLIOversion;    ///<! version of SQL I/O which is stored in configurations
+   Int_t             fArrayLimit;      ///<! limit for array size. when array bigger, its content converted to raw format
+   Bool_t            fCanChangeConfig; ///<! variable indicates can be basic configuration changed or not
+   TString           fTablesType;      ///<! type, used in CREATE TABLE statements
+   Int_t             fUseTransactions; ///<! use transaction statements for writing data into the tables
+   Int_t             fUseIndexes;      ///<! use indexes for tables: 0 - off, 1 - only for basic tables, 2  + normal class tables, 3 - all tables
+   Int_t             fModifyCounter;   ///<! indicates how many changes was done with database tables
+   Int_t             fQuerisCounter;   ///<! how many query was applied
 
-   const char**      fBasicTypes;      //! pointer on list of basic types specific for currently connected SQL server
-   const char**      fOtherTypes;      //! pointer on list of other SQL types like TEXT or blob
+   const char**      fBasicTypes;      ///<! pointer on list of basic types specific for currently connected SQL server
+   const char**      fOtherTypes;      ///<! pointer on list of other SQL types like TEXT or blob
 
-   TString           fUserName;       //! user name, used to access objects from database
+   TString           fUserName;        ///<! user name, used to access objects from database
 
-   std::ofstream*    fLogFile;        //! log file with SQL statements
+   std::ofstream*    fLogFile;         ///<! log file with SQL statements
 
-   Bool_t            fIdsTableExists; //! indicate if IdsTable exists
-   Int_t             fStmtCounter;    //! count numbers of active statements
+   Bool_t            fIdsTableExists;  ///<! indicate if IdsTable exists
+   Int_t             fStmtCounter;     ///<! count numbers of active statements
 
 private:
    //let the compiler do the job. gcc complains when the following line is activated

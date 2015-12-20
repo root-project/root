@@ -32,6 +32,8 @@
 ClassImp(TSVG)
 
 /** \class TSVG
+\ingroup PS
+
 Interface to SVG
 
 [SVG](http://www.w3.org/Graphics/SVG/Overview.htm8)

@@ -9,16 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TClassGenerator                                                      //
-//                                                                      //
-// Objects following this interface can be passed onto the TROOT object //
-// to implement a user customized way to create the TClass objects.     //
-//                                                                      //
-// Use TROOT::AddClassGenerator to register a concrete instance.        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TClassGenerator
+Objects following this interface can be passed onto the TROOT object
+to implement a user customized way to create the TClass objects.
+
+Use TROOT::AddClassGenerator to register a concrete instance.
+*/
 
 
 #include "TClassGenerator.h"
@@ -33,7 +29,7 @@ TClass *TClassGenerator::GetClass(const char* classname, Bool_t load, Bool_t /* 
 }
 
 //////////////////////////////////////////////////////////////////////////
-TClass *TClassGenerator::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silent */)
+TClass *TClassGenerator::GetClass(const std::type_info& typeinfo, Bool_t load, Bool_t /* silent */)
 {
    // Default implementation for backward compatibility ignoring the value of 'silent'
    return GetClass(typeinfo,load);

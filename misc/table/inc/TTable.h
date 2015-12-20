@@ -381,6 +381,5 @@ inline void TTable::Draw(Option_t *opt)
     //________________________________________________________________________________________________________________
     inline UInt_t TTable::piterator::Column() const { return fCurrentColIndex;}
 #endif
-#include "TTableDescriptor.h"
 
 #endif

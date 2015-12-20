@@ -1,3 +1,49 @@
+#
+# Try to capture the initial set of cmake command line args passed by
+# the user for configuration.
+# Original Recipe taken from http://stackoverflow.com/questions/10205986/how-to-capture-cmake-command-line-arguments
+#
+# Note: The entries will live on CMakeCache.txt, so re-configuring with
+# a command line that doesn't include an option won't remove it. You need
+# to remove the CMakeCache.txt file, or override the value via the command line.
+#
+#
+GET_CMAKE_PROPERTY(CACHE_VARS CACHE_VARIABLES)
+FOREACH(CACHE_VAR ${CACHE_VARS})
+    GET_PROPERTY(CACHE_VAR_HELPSTRING CACHE ${CACHE_VAR} PROPERTY HELPSTRING)
+    IF(CACHE_VAR_HELPSTRING STREQUAL "No help, variable specified on the command line.")
+        GET_PROPERTY(CACHE_VAR_TYPE CACHE ${CACHE_VAR} PROPERTY TYPE)
+        IF(CACHE_VAR_TYPE STREQUAL "UNINITIALIZED")
+            SET(CACHE_VAR_TYPE)
+        ELSE(CACHE_VAR_TYPE STREQUAL "UNINITIALIZED")
+            SET(CACHE_VAR_TYPE :${CACHE_VAR_TYPE})
+        ENDIF()
+        SET(CMAKE_INVOKE_ARGS "${CMAKE_INVOKE_ARGS} -D${CACHE_VAR}${CACHE_VAR_TYPE}=\"${${CACHE_VAR}}\"")
+    ENDIF()
+ENDFOREACH(CACHE_VAR ${CACHE_VARS})
+# Record the full command line invocation.
+SET(CMAKE_INVOKE "${CMAKE_COMMAND} ${CMAKE_INVOKE_ARGS} ${CMAKE_CURRENT_SOURCE_DIR}" CACHE STRING "Command used to invoke cmake" FORCE)
+# Create a simple shell script that allows us to reinvoke cmake with the captured command line.
+IF (NOT WIN32)
+    if (NOT ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles")
+        set(RECMAKE_GENERATOR "-G ${CMAKE_GENERATOR}")
+    endif()
+    SET(RECMAKE_REPLAY_FILE ${CMAKE_BINARY_DIR}/recmake_replay.sh)
+    SET(RECMAKE_INITIAL_FILE ${CMAKE_BINARY_DIR}/recmake_initial.sh)
+    if (NOT EXISTS ${RECMAKE_INITIAL_FILE})
+        FILE(WRITE ${RECMAKE_INITIAL_FILE} "#!/bin/sh\n"
+                "rm -f CMakeCache.txt\n"
+                "${CMAKE_INVOKE} ${RECMAKE_GENERATOR}\n")
+    endif()
+    if (EXISTS ${RECMAKE_REPLAY_FILE})
+        FILE(APPEND ${RECMAKE_REPLAY_FILE} "${CMAKE_INVOKE}\n")
+    else()
+        FILE(WRITE ${RECMAKE_REPLAY_FILE} "#!/bin/sh\n"
+            "rm -f CMakeCache.txt\n"
+            "${CMAKE_INVOKE} ${RECMAKE_GENERATOR}\n")
+    endif()
+ENDIF (NOT WIN32)
+
 #---Check if cmake has the required version-----------------------------------------------------
 cmake_minimum_required(VERSION 2.8.8 FATAL_ERROR)
 cmake_policy(SET CMP0005 NEW)
@@ -147,6 +193,11 @@ get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
 
 
 string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS})
+if(cxxmodules)
+  # rootcling doesn't know what to do with these flags.
+  # FIXME: Disable until until somebody teaches it.
+  string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
+endif(cxxmodules)
 add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                           etc/dictpch/allHeaders.h
                           etc/dictpch/allCppflags.txt
@@ -165,6 +216,14 @@ set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
 add_dependencies(onepcm ${__allTargets})
 install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+
+#---CXX MODULES-----------------------------------------------------------------------------------
+if(cxxmodules)
+  add_custom_target(copymodulemap ALL DEPENDS build/unix/module.modulemap)
+  add_custom_command(TARGET copymodulemap PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
+  )
+endif(cxxmodules)
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall

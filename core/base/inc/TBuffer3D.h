@@ -12,14 +12,6 @@
 #ifndef ROOT_TBuffer3D
 #define ROOT_TBuffer3D
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBuffer3D                                                            //
-//                                                                      //
-// Generic 3D primitive description class - see TBuffer3DTypes for      //
-// producer classes                                                     //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
@@ -47,7 +39,7 @@ private:
 
    //CS specific
    static UInt_t fgCSLevel;
-   ///////////////////////////////
+
 public:
    //CS specific
    enum EBoolOpCode {kCSUnion, kCSIntersection, kCSDifference, kCSNoOp};
@@ -55,7 +47,6 @@ public:
    static UInt_t GetCSLevel();
    static void IncCSLevel();
    static UInt_t DecCSLevel();
-   ///////////////////////////////
 
    enum ESection { kNone            = BIT(0),
                    kCore            = BIT(1),
@@ -99,14 +90,14 @@ public:
    Int_t       fColor;           // Color index
    Short_t     fTransparency;    // Percentage transparency [0,100]
    Bool_t      fLocalFrame;      // True = Local, False = Master reference frame
-   Bool_t      fReflection;      // Matrix is reflection - TODO: REMOVE when OGL viewer rewokred to local frame
+   Bool_t      fReflection;      // Matrix is reflection
    Double_t    fLocalMaster[16]; // Local->Master Matrix - identity if master frame
 
    // SECTION: kBoundingBox
    //
    // Local frame (fLocalFrame true) axis aligned
    // Master frame (fLocalFrame false) orientated
-   // Could be more compact (2 and 3 verticies respectively) and rest
+   // Could be more compact (2 and 3 vertices respectively) and rest
    // calculated as needed - but not worth it
    //   7-------6
    //  /|      /|
@@ -115,7 +106,7 @@ public:
    // |/      |/
    // 0-------1
    //
-   Double_t    fBBVertex[8][3];  // 8 verticies defining bounding box.
+   Double_t    fBBVertex[8][3];  // 8 vertices defining bounding box.
 
    // SECTION: kShapeSpecific - none for base class
 
@@ -132,13 +123,9 @@ public:
    ClassDef(TBuffer3D,0)     // 3D primitives description
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBuffer3DSphere                                                      //
-//                                                                      //
-// Sphere description class - see TBuffer3DTypes for producer classes   //
-// Supports hollow and cut spheres.                                     //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBuffer3DSphere
+Sphere description class - see TBuffer3DTypes for producer classes
+Supports hollow and cut spheres.*/
 
 class TBuffer3DSphere : public TBuffer3D
 {
@@ -163,13 +150,9 @@ public:
    Double_t fPhiMax;       // Higher phi limit (orientation?)
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBuffer3DTube                                                        //
-//                                                                      //
-// Complete tube description class - see TBuffer3DTypes for producer    //
-// classes                                                              //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBuffer3DTube
+Complete tube description class - see TBuffer3DTypes for producer classes
+*/
 
 class TBuffer3DTube : public TBuffer3D
 {
@@ -195,13 +178,9 @@ public:
    Double_t fHalfLength;   // Half length (dz)
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBuffer3DTubeSeg                                                     //
-//                                                                      //
-// Tube segment description class - see TBuffer3DTypes for producer     //
-// classes                                                              //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBuffer3DTubeSeg
+Tube segment description class - see TBuffer3DTypes for producer classes
+*/
 
 class TBuffer3DTubeSeg : public TBuffer3DTube
 {
@@ -226,13 +205,9 @@ public:
    Double_t fPhiMax;       // Higher phi limit
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBuffer3DCutTube                                                     //
-//                                                                      //
-// Cut tube segment description class - see TBuffer3DTypes for producer //
-// classes                                                              //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBuffer3DCutTube
+Cut tube segment description class - see TBuffer3DTypes for producer classes
+*/
 
 class TBuffer3DCutTube : public TBuffer3DTubeSeg
 {
@@ -248,7 +223,7 @@ public:
 
    // SECTION: kShapeSpecific
    Double_t fLowPlaneNorm[3];  // Normal to lower cut plane
-   Double_t fHighPlaneNorm[3]; // Normal to highet cut plane
+   Double_t fHighPlaneNorm[3]; // Normal to highest cut plane
 };
 
 #endif

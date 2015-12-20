@@ -36,6 +36,8 @@
 #include "TMVA/MsgLogger.h"
 #endif
 
+#include "TMVA/Types.h"
+
 #include "ThreadLocalStorage.h"
 
 static const Int_t fgUNINITIALIZED = -1;

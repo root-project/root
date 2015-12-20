@@ -24,6 +24,7 @@
 #include "TRandom.h"
 
 /** \class TEveQuadSet
+\ingroup TEve
 Supports various internal formats that result in rendering of a
 set of planar (lines, rectangles, hexagons with shared normal) objects.
 

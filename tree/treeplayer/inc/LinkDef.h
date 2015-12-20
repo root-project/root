@@ -29,77 +29,77 @@
 
 #pragma link C++ namespace ROOT;
 
-#pragma link C++ class ROOT::TBranchProxyDirector+;
-#pragma link C++ class ROOT::TBranchProxy+;
-#pragma link C++ class ROOT::TFriendProxy+;
+#pragma link C++ class ROOT::Internal::TBranchProxyDirector+;
+#pragma link C++ class ROOT::Detail::TBranchProxy+;
+#pragma link C++ class ROOT::Internal::TFriendProxy+;
 
-#pragma link C++ class ROOT::TFriendProxyDescriptor;
-#pragma link C++ class ROOT::TBranchProxyDescriptor;
-#pragma link C++ class ROOT::TBranchProxyClassDescriptor;
+#pragma link C++ class ROOT::Internal::TFriendProxyDescriptor;
+#pragma link C++ class ROOT::Internal::TBranchProxyDescriptor;
+#pragma link C++ class ROOT::Internal::TBranchProxyClassDescriptor;
 
-#pragma link C++ class ROOT::TImpProxy<double>+;
-#pragma link C++ class ROOT::TImpProxy<float>+;
-#pragma link C++ class ROOT::TImpProxy<UInt_t>+;
-#pragma link C++ class ROOT::TImpProxy<ULong_t>+;
-#pragma link C++ class ROOT::TImpProxy<UShort_t>+;
-#pragma link C++ class ROOT::TImpProxy<UChar_t>+;
-#pragma link C++ class ROOT::TImpProxy<Int_t>+;
-#pragma link C++ class ROOT::TImpProxy<Long_t>+;
-#pragma link C++ class ROOT::TImpProxy<Short_t>+;
-#pragma link C++ class ROOT::TImpProxy<Char_t>+;
-#pragma link C++ class ROOT::TImpProxy<Bool_t>+;
+#pragma link C++ class ROOT::Internal::TImpProxy<double>+;
+#pragma link C++ class ROOT::Internal::TImpProxy<float>+;
+#pragma link C++ class ROOT::Internal::TImpProxy<UInt_t>+;
+#pragma link C++ class ROOT::Internal::TImpProxy<ULong_t>+;
+#pragma link C++ class ROOT::Internal::TImpProxy<UShort_t>+;
+#pragma link C++ class ROOT::Internal::TImpProxy<UChar_t>+;
+#pragma link C++ class ROOT::Internal::TImpProxy<Int_t>+;
+#pragma link C++ class ROOT::Internal::TImpProxy<Long_t>+;
+#pragma link C++ class ROOT::Internal::TImpProxy<Short_t>+;
+#pragma link C++ class ROOT::Internal::TImpProxy<Char_t>+;
+#pragma link C++ class ROOT::Internal::TImpProxy<Bool_t>+;
 
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<double> >+;
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<float> >+;
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<UInt_t> >+;
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<ULong_t> >+;
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<UShort_t> >+;
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<UChar_t> >+;
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<Int_t> >+;
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<Long_t> >+;
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<Short_t> >+;
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<Char_t> >+;
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<Bool_t> >+;
-   //specialized ! typedef TArrayProxy<ROOT::TArrayType<Char_t> >+;
+#pragma link C++ class ROOT::Internal::TArrayProxy<ROOT::Internal::TArrayType<double> >+;
+#pragma link C++ class ROOT::Internal::TArrayProxy<ROOT::Internal::TArrayType<float> >+;
+#pragma link C++ class ROOT::Internal::TArrayProxy<ROOT::Internal::TArrayType<UInt_t> >+;
+#pragma link C++ class ROOT::Internal::TArrayProxy<ROOT::Internal::TArrayType<ULong_t> >+;
+#pragma link C++ class ROOT::Internal::TArrayProxy<ROOT::Internal::TArrayType<UShort_t> >+;
+#pragma link C++ class ROOT::Internal::TArrayProxy<ROOT::Internal::TArrayType<UChar_t> >+;
+#pragma link C++ class ROOT::Internal::TArrayProxy<ROOT::Internal::TArrayType<Int_t> >+;
+#pragma link C++ class ROOT::Internal::TArrayProxy<ROOT::Internal::TArrayType<Long_t> >+;
+#pragma link C++ class ROOT::Internal::TArrayProxy<ROOT::Internal::TArrayType<Short_t> >+;
+#pragma link C++ class ROOT::Internal::TArrayProxy<ROOT::Internal::TArrayType<Char_t> >+;
+#pragma link C++ class ROOT::Internal::TArrayProxy<ROOT::Internal::TArrayType<Bool_t> >+;
+   //specialized ! typedef TArrayProxy<ROOT::Internal::TArrayType<Char_t> >+;
 
-#pragma link C++ class ROOT::TClaImpProxy<double>+;
-#pragma link C++ class ROOT::TClaImpProxy<float>+;
-#pragma link C++ class ROOT::TClaImpProxy<UInt_t>+;
-#pragma link C++ class ROOT::TClaImpProxy<ULong_t>+;
-#pragma link C++ class ROOT::TClaImpProxy<UShort_t>+;
-#pragma link C++ class ROOT::TClaImpProxy<UChar_t>+;
-#pragma link C++ class ROOT::TClaImpProxy<Int_t>+;
-#pragma link C++ class ROOT::TClaImpProxy<Long_t>+;
-#pragma link C++ class ROOT::TClaImpProxy<Short_t>+;
-#pragma link C++ class ROOT::TClaImpProxy<Char_t>+;
-#pragma link C++ class ROOT::TClaImpProxy<Bool_t>+;
+#pragma link C++ class ROOT::Internal::TClaImpProxy<double>+;
+#pragma link C++ class ROOT::Internal::TClaImpProxy<float>+;
+#pragma link C++ class ROOT::Internal::TClaImpProxy<UInt_t>+;
+#pragma link C++ class ROOT::Internal::TClaImpProxy<ULong_t>+;
+#pragma link C++ class ROOT::Internal::TClaImpProxy<UShort_t>+;
+#pragma link C++ class ROOT::Internal::TClaImpProxy<UChar_t>+;
+#pragma link C++ class ROOT::Internal::TClaImpProxy<Int_t>+;
+#pragma link C++ class ROOT::Internal::TClaImpProxy<Long_t>+;
+#pragma link C++ class ROOT::Internal::TClaImpProxy<Short_t>+;
+#pragma link C++ class ROOT::Internal::TClaImpProxy<Char_t>+;
+#pragma link C++ class ROOT::Internal::TClaImpProxy<Bool_t>+;
 
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<double> >+;
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<float> >+;
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<UInt_t> >+;
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<ULong_t> >+;
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<UShort_t> >+;
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<UChar_t> >+;
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<Int_t> >+;
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<Long_t> >+;
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<Short_t> >+;
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<Char_t> >+;
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<Bool_t> >+;
+#pragma link C++ class ROOT::Internal::TClaArrayProxy<ROOT::Internal::TArrayType<double> >+;
+#pragma link C++ class ROOT::Internal::TClaArrayProxy<ROOT::Internal::TArrayType<float> >+;
+#pragma link C++ class ROOT::Internal::TClaArrayProxy<ROOT::Internal::TArrayType<UInt_t> >+;
+#pragma link C++ class ROOT::Internal::TClaArrayProxy<ROOT::Internal::TArrayType<ULong_t> >+;
+#pragma link C++ class ROOT::Internal::TClaArrayProxy<ROOT::Internal::TArrayType<UShort_t> >+;
+#pragma link C++ class ROOT::Internal::TClaArrayProxy<ROOT::Internal::TArrayType<UChar_t> >+;
+#pragma link C++ class ROOT::Internal::TClaArrayProxy<ROOT::Internal::TArrayType<Int_t> >+;
+#pragma link C++ class ROOT::Internal::TClaArrayProxy<ROOT::Internal::TArrayType<Long_t> >+;
+#pragma link C++ class ROOT::Internal::TClaArrayProxy<ROOT::Internal::TArrayType<Short_t> >+;
+#pragma link C++ class ROOT::Internal::TClaArrayProxy<ROOT::Internal::TArrayType<Char_t> >+;
+#pragma link C++ class ROOT::Internal::TClaArrayProxy<ROOT::Internal::TArrayType<Bool_t> >+;
 
 #if !defined(_MSC_VER) || (_MSC_VER>1300)
-#pragma link C++ class ROOT::TImpProxy<Long64_t>+;
-#pragma link C++ class ROOT::TImpProxy<ULong64_t>+;
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<Long64_t> >+;
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<ULong64_t> >+;
-#pragma link C++ class ROOT::TClaImpProxy<Long64_t>+;
-#pragma link C++ class ROOT::TClaImpProxy<ULong64_t>+;
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<ULong64_t> >+;
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<Long64_t> >+;
+#pragma link C++ class ROOT::Internal::TImpProxy<Long64_t>+;
+#pragma link C++ class ROOT::Internal::TImpProxy<ULong64_t>+;
+#pragma link C++ class ROOT::Internal::TArrayProxy<ROOT::Internal::TArrayType<Long64_t> >+;
+#pragma link C++ class ROOT::Internal::TArrayProxy<ROOT::Internal::TArrayType<ULong64_t> >+;
+#pragma link C++ class ROOT::Internal::TClaImpProxy<Long64_t>+;
+#pragma link C++ class ROOT::Internal::TClaImpProxy<ULong64_t>+;
+#pragma link C++ class ROOT::Internal::TClaArrayProxy<ROOT::Internal::TArrayType<ULong64_t> >+;
+#pragma link C++ class ROOT::Internal::TClaArrayProxy<ROOT::Internal::TArrayType<Long64_t> >+;
 #endif
 
-#pragma link C++ class ROOT::TTreeReaderValueBase+;
-#pragma link C++ class ROOT::TTreeReaderArrayBase+;
-#pragma link C++ class ROOT::TNamedBranchProxy+;
+#pragma link C++ class ROOT::Internal::TTreeReaderValueBase+;
+#pragma link C++ class ROOT::Internal::TTreeReaderArrayBase+;
+#pragma link C++ class ROOT::Internal::TNamedBranchProxy+;
 
 #endif
 

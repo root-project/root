@@ -17,6 +17,7 @@
 #include "TGLIncludes.h"
 
 /** \class TEvePlot3DGL
+\ingroup TEve
 OpenGL renderer class for TEvePlot3D.
 */
 

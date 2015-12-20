@@ -44,7 +44,7 @@ friend class TQObject;
 
 public:
    TQClass(const char *name, Version_t cversion,
-           const type_info &info, TVirtualIsAProxy *isa,
+           const std::type_info &info, TVirtualIsAProxy *isa,
            const char *dfil = 0, const char *ifil = 0,
            Int_t dl = 0, Int_t il = 0) :
            TQObject(),
@@ -62,11 +62,12 @@ public:
 // TQObject. They make it possible to have a single connection from all
 // objects of the same class.
 namespace ROOT {
+namespace Internal {
    class TDefaultInitBehavior;
    class TQObjectInitBehavior : public TDefaultInitBehavior {
    public:
       virtual TClass *CreateClass(const char *cname, Version_t id,
-                                  const type_info &info, TVirtualIsAProxy *isa,
+                                  const std::type_info &info, TVirtualIsAProxy *isa,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const
       {
@@ -80,6 +81,8 @@ namespace ROOT {
       return behave;
    }
 }
+}
+
 
 #endif
 

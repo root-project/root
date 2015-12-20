@@ -18,6 +18,7 @@
 #include <limits>
 
 /** \class TEveProjection
+\ingroup TEve
 Base-class for non-linear projections.
 
 Enables to define an external center of distortion and a scale to
@@ -538,6 +539,7 @@ Float_t TEveProjection::GetScreenVal(Int_t i, Float_t x)
 }
 
 /** \class TEveRhoZProjection
+\ingroup TEve
 Transformation from 3D to 2D. X axis represent Z coordinate. Y axis have value of
 radius with a sign of Y coordinate.
 */
@@ -691,6 +693,7 @@ Bool_t TEveRhoZProjection::IsOnSubSpaceBoundrary(const TEveVector& v) const
 }
 
 /** \class TEveRPhiProjection
+\ingroup TEve
 XY projection with distortion around given center.
 */
 
@@ -763,6 +766,7 @@ void TEveRPhiProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
 }
 
 /** \class TEve3DProjection
+\ingroup TEve
 3D scaling projection. One has to use pre-scaling to make any ise of this.
 */
 

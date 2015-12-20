@@ -190,6 +190,8 @@ bool analyze(TFile* file) {
 
 ClassImp(TTreeReader)
 
+using namespace ROOT::Internal;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Access data from tree.
 
@@ -197,7 +199,9 @@ TTreeReader::TTreeReader(TTree* tree):
    fTree(tree),
    fDirectory(0),
    fEntryStatus(kEntryNotLoaded),
-   fDirector(0)
+   fDirector(0),
+   fLastEntry(-1),
+   fProxiesSet(kFALSE)
 {
    Initialize();
 }
@@ -211,7 +215,9 @@ TTreeReader::TTreeReader(const char* keyname, TDirectory* dir /*= NULL*/):
    fTree(0),
    fDirectory(dir),
    fEntryStatus(kEntryNotLoaded),
-   fDirector(0)
+   fDirector(0),
+   fLastEntry(-1),
+   fProxiesSet(kFALSE)
 {
    if (!fDirectory) fDirectory = gDirectory;
    fDirectory->GetObject(keyname, fTree);
@@ -223,7 +229,7 @@ TTreeReader::TTreeReader(const char* keyname, TDirectory* dir /*= NULL*/):
 
 TTreeReader::~TTreeReader()
 {
-   for (std::deque<ROOT::TTreeReaderValueBase*>::const_iterator
+   for (std::deque<ROOT::Internal::TTreeReaderValueBase*>::const_iterator
            i = fValues.begin(), e = fValues.end(); i != e; ++i) {
       (*i)->MarkTreeReaderUnavailable();
    }
@@ -240,8 +246,24 @@ void TTreeReader::Initialize()
       MakeZombie();
       fEntryStatus = kEntryNoTree;
    } else {
-      fDirector = new ROOT::TBranchProxyDirector(fTree, -1);
+      fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the range of entries to be processed.
+/// If last > first, this call is equivalent to
+/// `SetEntry(first); SetLastEntry(last);`. Otherwise `last` is ignored and
+/// only `first` is set.
+/// \return the EEntryStatus that would be returned by SetEntry(first)
+
+TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t first, Long64_t last)
+{
+   if(last > first)
+      fLastEntry = last;
+   else
+      fLastEntry = -1;
+   return SetLocalEntry(first);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -269,7 +291,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
 
    TTree* prevTree = fDirector->GetTree();
 
-   int loadResult;
+   Long64_t loadResult;
    if (!local){
       Int_t treeNumInChain = fTree->GetTreeNumber();
 
@@ -288,9 +310,9 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
    else {
       loadResult = entry;
    }
-   if (!prevTree || fDirector->GetReadEntry() == -1) {
+   if (!prevTree || fDirector->GetReadEntry() == -1 || !fProxiesSet) {
       // Tell readers we now have a tree
-      for (std::deque<ROOT::TTreeReaderValueBase*>::const_iterator
+      for (std::deque<ROOT::Internal::TTreeReaderValueBase*>::const_iterator
               i = fValues.begin(); i != fValues.end(); ++i) { // Iterator end changes when parameterized arrays are read
          (*i)->CreateProxy();
 
@@ -299,6 +321,12 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
             return fEntryStatus;
          }
       }
+      // If at least one proxy was there and no error occurred, we assume the proxies to be set.
+      fProxiesSet = !fValues.empty();
+   }
+   if (fLastEntry >= 0 && loadResult >= fLastEntry) {
+      fEntryStatus = kEntryLast;
+      return fEntryStatus;
    }
    fDirector->SetReadEntry(loadResult);
    fEntryStatus = kEntryValid;
@@ -331,7 +359,7 @@ void TTreeReader::SetTree(TTree* tree)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a value reader for this tree.
 
-void TTreeReader::RegisterValueReader(ROOT::TTreeReaderValueBase* reader)
+void TTreeReader::RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader)
 {
    fValues.push_back(reader);
 }
@@ -339,9 +367,9 @@ void TTreeReader::RegisterValueReader(ROOT::TTreeReaderValueBase* reader)
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a value reader for this tree.
 
-void TTreeReader::DeregisterValueReader(ROOT::TTreeReaderValueBase* reader)
+void TTreeReader::DeregisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader)
 {
-   std::deque<ROOT::TTreeReaderValueBase*>::iterator iReader
+   std::deque<ROOT::Internal::TTreeReaderValueBase*>::iterator iReader
       = std::find(fValues.begin(), fValues.end(), reader);
    if (iReader == fValues.end()) {
       Error("DeregisterValueReader", "Cannot find reader of type %s for branch %s", reader->GetDerivedTypeName(), reader->fBranchName.Data());

@@ -50,9 +50,17 @@
 //
 //_____________________________________________________________________
 
-#ifndef ROOT_TMVA_PDEFoamMultiTarget
 #include "TMVA/PDEFoamMultiTarget.h"
-#endif
+
+#include "TMVA/PDEFoam.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+
+#include "Rtypes.h"
+
+#include <map>
+
+class TString;
 
 ClassImp(TMVA::PDEFoamMultiTarget)
 

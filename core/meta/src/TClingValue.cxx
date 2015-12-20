@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.                   *
  ******************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// TClingValue                                                                //
-//                                                                            //
-// Bridge between cling::Value and ROOT.                                      //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+/** \class TClingValue
+Bridge between cling::Value and ROOT.
+*/
 
 #include "TClingValue.h"
 

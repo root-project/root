@@ -26,6 +26,8 @@ ClassImp(TMarker)
 
 
 /** \class TMarker
+\ingroup BasicGraphics
+
 Manages Markers. Marker attributes are managed by TAttMarker.
 */
 

@@ -9,10 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-//
-// TVirtualPS is an abstract interface to a Postscript, PDF and SVG drivers
-//
+/** \class TVirtualPS
+TVirtualPS is an abstract interface to Postscript, PDF, SVG. TeX etc... drivers
+*/
 
 #include "Riostream.h"
 #include "TVirtualPS.h"

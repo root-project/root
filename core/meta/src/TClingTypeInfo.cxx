@@ -9,18 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TClingTypeInfo                                                       //
-//                                                                      //
-// Emulation of the CINT TypeInfo class.                                //
-//                                                                      //
-// The CINT C++ interpreter provides an interface to metadata about     //
-// a type through the TypeInfo class.  This class provides the same     //
-// functionality, using an interface as close as possible to TypeInfo   //
-// but the type metadata comes from the Clang C++ compiler, not CINT.   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TClingTypeInfo
+Emulation of the CINT TypeInfo class.
+
+The CINT C++ interpreter provides an interface to metadata about
+a type through the TypeInfo class.  This class provides the same
+functionality, using an interface as close as possible to TypeInfo
+but the type metadata comes from the Clang C++ compiler, not CINT.
+*/
 
 #include "TClingTypeInfo.h"
 

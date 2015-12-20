@@ -35,56 +35,74 @@ namespace RooStats {
 
    class ConfInterval; 
 
+/**
+
+   \ingroup Roostats
+
+The FeldmanCousins class (like the Feldman-Cousins technique) is essentially a specific configuration
+ of the more general NeymanConstruction.  It is a concrete implementation of the IntervalCalculator interface that, which uses the NeymanConstruction in a particular way.  As the name suggests, it returns a ConfidenceInterval.  In particular, it produces a RooStats::PointSetInterval, which is a concrete implementation of the ConfInterval interface.  
+
+The Neyman Construction is not a uniquely defined statistical technique, it requires that one specify an ordering rule 
+or ordering principle, which is usually incoded by choosing a specific test statistic and limits of integration 
+(corresponding to upper/lower/central limits).  As a result, this class must be configured with the corresponding
+information before it can produce an interval.  
+
+In the case of the Feldman-Cousins approach, the ordering principle is the likelihood ratio -- motivated
+by the Neyman-Pearson lemma.  When nuisance parameters are involved, the profile likelihood ratio is the natural generalization.  One may either choose to perform the construction over the full space of the nuisance parameters, or restrict the nusiance parameters to their conditional MLE (eg. profiled values). 
+
+*/
+
+   
    class FeldmanCousins : public IntervalCalculator {
 
    public:
 
      //     FeldmanCousins();
 
-     // Common constructor
+     /// Common constructor
      FeldmanCousins(RooAbsData& data, ModelConfig& model);
 
      virtual ~FeldmanCousins();
     
-      // Main interface to get a ConfInterval (will be a PointSetInterval)
+      /// Main interface to get a ConfInterval (will be a PointSetInterval)
       virtual PointSetInterval* GetInterval() const;
 
-      // Get the size of the test (eg. rate of Type I error)
+      /// Get the size of the test (eg. rate of Type I error)
       virtual Double_t Size() const {return fSize;}
-      // Get the Confidence level for the test
+      /// Get the Confidence level for the test
       virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}  
-      // Set the DataSet
+      /// Set the DataSet
       virtual void SetData(RooAbsData& /*data*/) {  
 	std::cout << "DEPRECATED, set data in constructor" << std::endl;
       }    
-      // Set the Pdf
+      /// Set the Pdf
       virtual void SetPdf(RooAbsPdf& /*pdf*/) { 
 	std::cout << "DEPRECATED, use ModelConfig" << std::endl;
       }	
 
-      // specify the parameters of interest in the interval
+      /// specify the parameters of interest in the interval
       virtual void SetParameters(const RooArgSet& /*set*/) { 
 	std::cout << "DEPRECATED, use ModelConfig" << std::endl;
       }
 
-      // specify the nuisance parameters (eg. the rest of the parameters)
+      /// specify the nuisance parameters (eg. the rest of the parameters)
       virtual void SetNuisanceParameters(const RooArgSet& /*set*/) {
 	std::cout << "DEPRECATED, use ModelConfig" << std::endl;
       }
 
-      // User-defined set of points to test
+      /// User-defined set of points to test
       void SetParameterPointsToTest(RooAbsData& pointsToTest) {
 	fPointsToTest = &pointsToTest;
       }
 
-      // User-defined set of points to test
+      /// User-defined set of points to test
       void SetPOIPointsToTest(RooAbsData& poiToTest) {
 	fPOIToTest = &poiToTest;
       }
 
-      // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
+      /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize(Double_t size) {fSize = size;}
-      // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
+      /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
       virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
 
       virtual void SetModel(const ModelConfig &); 
@@ -110,17 +128,17 @@ namespace RooStats {
       }
       void CreateConfBelt(bool flag=true){fCreateBelt = flag;}
 
-      // Returns instance of TestStatSampler. Use to change properties of
-      // TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
+      /// Returns instance of TestStatSampler. Use to change properties of
+      /// TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
       TestStatSampler* GetTestStatSampler() const;
 
       
    private:
 
-      // initializes fPointsToTest data member (mutable)
+      /// initializes fPointsToTest data member (mutable)
       void CreateParameterPoints() const;
 
-      // initializes fTestStatSampler data member (mutable)
+      /// initializes fTestStatSampler data member (mutable)
       void CreateTestStatSampler() const;
 
       Double_t fSize; // size of the test (eg. specified rate of Type I error)

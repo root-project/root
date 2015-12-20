@@ -22,6 +22,7 @@
 #include "TGDoubleSlider.h"
 
 /** \class TEveStraightLineSetEditor
+\ingroup TEve
 Editor for TEveStraightLineSet class.
 */
 

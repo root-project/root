@@ -1,5 +1,8 @@
 #ifndef ROOT_TMVA_ROCCalc
 #define ROOT_TMVA_ROCCalc
+
+#include "RtypesCore.h"
+
 #include <vector>
 #include <sstream>
 #include <iostream>
@@ -9,6 +12,7 @@ class TList;
 class TTree;
 class TString;
 class TH1;
+class TH1D;
 class TH2;
 class TH2F;
 class TSpline;

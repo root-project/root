@@ -16,6 +16,7 @@
 #include "TROOT.h"
 
 /** \class TEveMacro
+\ingroup TEve
 Sub-class of TMacro, overriding Exec to unload the previous version
 and cleanup after the execution.
 */

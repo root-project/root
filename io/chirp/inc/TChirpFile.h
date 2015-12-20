@@ -12,40 +12,6 @@
 #ifndef ROOT_TChirpFile
 #define ROOT_TChirpFile
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TChirpFile                                                           //
-//                                                                      //
-// A TChirpFile is like a normal TFile except that it may read and      //
-// write its data via a Chirp server. The primary API for accessing     //
-// Chirp is through the chirp_reli interface, which corresponds closely //
-// to Unix.  Most operations return an integer where >=0 indicates      //
-// success and <0 indicates failure, setting the global errno.          //
-// This allows most TFile methods to be implemented with a single       //
-// line or two of Chirp (for more on the Chirp filesystem.              //
-//
-// Note that this class overrides ReadBuffers so as to take advantage   //
-// of the Chirp "bulk I/O" feature which does multiple remote ops       //
-// in a single call.                                                    //
-//                                                                      //
-// Most users of Chirp will access a named remote server url:           //
-//     chirp://host.somewhere.edu/path                                  //
-//                                                                      //
-// The special host CONDOR is used to indicate a connection to the      //
-// Chirp I/O proxy service when running inside of Condor:               //
-//     chirp://CONDOR/path                                              //
-//                                                                      //
-// This module recognizes the following environment variables:          //
-//    CHIRP_DEBUG_FILE  - Send debugging output to this file.           //
-//    CHIRP_DEBUG_FLAGS - Turn on select debugging flags (e.g. 'all')   //
-//    CHIRP_AUTH        - Select a specific auth type (e.g. 'globus')   //
-//    CHIRP_TIMEOUT     - Specify how long to attempt each op, in secs  //
-//                                                                      //
-// For more information about the Chirp fileystem and protocol:         //
-//    http://www.cse.nd.edu/~ccl/software/chirp                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TFile
 #include "TFile.h"
 #endif

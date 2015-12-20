@@ -1,16 +1,19 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// Produces an interval on the mean signal in a number counting
-// experiment with known background using the Feldman-Cousins technique.
-// date Jan. 2009
-// updated June 2010
-//
-// Using the RooStats FeldmanCousins tool with 200 bins
-// it takes 1 min and the interval is [0.2625, 10.6125]
-// with a step size of 0.075.
-// The interval in Feldman & Cousins's original paper is [.29, 10.81]
-//  Phys.Rev.D57:3873-3889,1998.
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roostats
+/// Produces an interval on the mean signal in a number counting
+/// experiment with known background using the Feldman-Cousins technique.
+///
+/// Using the RooStats FeldmanCousins tool with 200 bins
+/// it takes 1 min and the interval is [0.2625, 10.6125]
+/// with a step size of 0.075.
+/// The interval in Feldman & Cousins's original paper is [.29, 10.81]
+///  Phys.Rev.D57:3873-3889,1998.
+////
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer
 
 #include "RooGlobalFunc.h"
 #include "RooStats/ConfInterval.h"

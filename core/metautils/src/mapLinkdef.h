@@ -16,3 +16,4 @@ using namespace std;
 #pragma create TClass map<string,float>;
 #pragma create TClass map<string,double>;
 #pragma create TClass map<string,void*>;
+#pragma create TClass map<string,string>;

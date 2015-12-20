@@ -32,6 +32,7 @@
 class TMethodCall;
 class TClass;
 class TStreamerBasicType;
+class TVirtualStreamerInfo;
 
 class TStreamerElement : public TNamed {
 

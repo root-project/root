@@ -25,6 +25,7 @@
 #include <cassert>
 
 /** \class TEveCompositeFrame
+\ingroup TEve
 Abstract base-class for frame-slots that encompass EVE-windows
 (sub-classes of TEveWindow).
 
@@ -348,6 +349,7 @@ void TEveCompositeFrame::TitleBarClicked()
 }
 
 /** \class TEveCompositeFrameInMainFrame
+\ingroup TEve
 An EVE window-slot contained within a TGMainFrame.
 */
 
@@ -493,6 +495,7 @@ void TEveCompositeFrameInMainFrame::MainFrameClosed()
 }
 
 /** \class TEveCompositeFrameInPack
+\ingroup TEve
 An EVE window-slot contained within one frame of a TGPack.
 */
 
@@ -534,6 +537,7 @@ void TEveCompositeFrameInPack::Destroy()
 }
 
 /** \class TEveCompositeFrameInTab
+\ingroup TEve
 An EVE window-slot contained within one tab of a TGTab.
 */
 
@@ -632,6 +636,7 @@ void TEveCompositeFrameInTab::SetCurrent(Bool_t curr)
 }
 
 /** \class TEveWindow
+\ingroup TEve
 Abstract base-class for representing eve-windows.
 Sub-classes define a particular GUI frame that gets showin the window.
 */
@@ -1120,6 +1125,7 @@ void TEveWindow::SetMiniBarBackgroundColor(Pixel_t p)
 }
 
 /** \class TEveWindowSlot
+\ingroup TEve
 Description of TEveWindowSlot
 */
 
@@ -1284,6 +1290,7 @@ TEveWindowFrame* TEveWindowSlot::StopEmbedding(const char* name)
 }
 
 /** \class TEveWindowFrame
+\ingroup TEve
 Encapsulates TGFrame into an eve-window.
 The frame is owned by the eve-window.
 */
@@ -1331,6 +1338,7 @@ TGCompositeFrame* TEveWindowFrame::GetGUICompositeFrame()
 }
 
 /** \class TEveWindowPack
+\ingroup TEve
 Encapsulates TGPack into an eve-window.
 The pack is owned by the eve-window.
 */
@@ -1415,6 +1423,7 @@ void TEveWindowPack::EqualizeFrames()
 }
 
 /** \class TEveWindowTab
+\ingroup TEve
 Encapsulates TGTab into an eve-window.
 The tab is owned by the eve-window.
 */
@@ -1456,6 +1465,7 @@ TEveWindowSlot* TEveWindowTab::NewSlot()
 }
 
 /** \class TEveContextMenu
+\ingroup TEve
 Specialization of TContext menu.
 Provide a window manager hint that ensures proper placement of popup on Cocoa.
 */

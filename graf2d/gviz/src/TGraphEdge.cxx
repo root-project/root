@@ -19,12 +19,11 @@
 
 ClassImp(TGraphEdge)
 
-////////////////////////////////////////////////////////////////////////////////
-
 /** \class TGraphEdge
-TGraphEdge is an edge object connecting two nodes which can be added in a
+\ingroup gviz
+
+An edge object connecting two nodes which can be added in a
 TGraphStruct.
-End_Html
 */
 
 ////////////////////////////////////////////////////////////////////////////////

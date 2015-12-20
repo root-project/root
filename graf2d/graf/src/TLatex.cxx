@@ -23,6 +23,8 @@ const Double_t kPI = TMath::Pi();
 ClassImp(TLatex)
 
 /** \class TLatex
+\ingroup BasicGraphics
+
 To draw Mathematical Formula.
 
 TLatex's purpose is to write mathematical equations. The syntax is very similar
@@ -155,7 +157,7 @@ as `+` and `>` , are produced by typing the corresponding
 keyboard character. Others are obtained with the commands in the following
 table:
 
-Begin_Macro(source)
+Begin_Macro
 mathsymbols.C
 End_Macro
 
@@ -175,7 +177,7 @@ capitalize the first letter of the command name. Some letters have two
 representations. The name of the second one (the "variation") starts with "var".
 The following table gives the complete list:
 
-Begin_Macro(source)
+Begin_Macro
 greekletters.C
 End_Macro
 
@@ -234,9 +236,9 @@ End_Macro
 The `TText` alignment rules apply to the `TLatex` objects with one exception
 concerning the vertical alignment:
 
-- if the vertical alignment = 1 , subscripts are not taken into account </li>
+- if the vertical alignment = 1 , subscripts are not taken into account
 - if the vertical alignment = 0 , the text is aligned to the box surrounding
-                                  the full text with sub and superscripts</li>
+                                  the full text with sub and superscripts
 
 This is illustrated by the following example:
 
@@ -496,10 +498,12 @@ TLatex::TLatexFormSize TLatex::Anal1(TextSpec_t spec, const Char_t* t, Int_t len
 ///  for example : if the operator #frac{arg1}{arg2} is found :
 ///  Analyse(arg1) return the size of arg1 (width, up, down)
 ///  Analyse(arg2) return the size of arg2
-///  now, we know the size of #frac{arg1}{arg2}  :
+///  now, we know the size of #frac{arg1}{arg2}:
+/// ~~~ {.cpp}
 ///  width = max(width_arg1, width_arg2)
 ///  up = up_arg1 + down_arg1
 ///  down = up_arg2 + down_arg2
+/// ~~~
 ///  so, when the user wants to paint a fraction at position (x,y),
 ///  the rect used for the formula is : (x,y-up,x+width,y+down)
 ///

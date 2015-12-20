@@ -9,18 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXMLNode                                                             //
-//                                                                      //
-// TXMLNode contains a pointer to xmlNode, which is a node under the    //
-// DOM tree. A node can be an Element, an Attribute, a Text Node        //
-// or a Comment Node.                                                   //
-// One can navigate the DOM tree by accessing the siblings and          //
-// parent or child nodes. Also retriving the Attribute or the Text in   //
-// an Element node.                                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TXMLNode
+\ingroup IO
+
+TXMLNode contains a pointer to xmlNode, which is a node under the
+DOM tree. A node can be an Element, an Attribute, a Text Node
+or a Comment Node.
+One can navigate the DOM tree by accessing the siblings and
+parent or child nodes. Also retriving the Attribute or the Text in
+an Element node.
+*/
 
 #include "TXMLNode.h"
 #include "TXMLAttr.h"

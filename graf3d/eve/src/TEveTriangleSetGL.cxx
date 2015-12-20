@@ -16,6 +16,7 @@
 #include "TGLIncludes.h"
 
 /** \class TEveTriangleSetGL
+\ingroup TEve
 GL-renderer for TEveTriangleSet class.
 
 See also: TGLObject, TGLLogicalShape.

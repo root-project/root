@@ -26,7 +26,7 @@
 #include "TGTab.h"
 #include "TGComboBox.h"
 #include "TError.h"
- 
+
 #include "TGLViewerEditor.h"
 #include "TGLViewer.h"
 #include "TGLLightSetEditor.h"
@@ -35,9 +35,10 @@
 #include "TGLCameraOverlay.h"
 #include "TGLAutoRotator.h"
 
-//______________________________________________________________________________
-//
-// GUI editor for TGLViewer.
+/** \class TGLViewerEditor
+\ingroup opengl
+GUI editor for TGLViewer.
+*/
 
 namespace {
 
@@ -45,10 +46,7 @@ void SetLabeledNEntryState(TGNumberEntry *entry, Bool_t enabled);
 
 }
 
-
 ClassImp(TGLViewerEditor);
-
-////////////////////////////////////////////////////////////////////////////////
 
 TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, UInt_t options, Pixel_t back) :
    TGedFrame(p,  width, height, options | kVerticalFrame, back),
@@ -145,7 +143,7 @@ void TGLViewerEditor::ConnectSignals2Slots()
 
    fCamMode->Connect("Selected(Int_t)", "TGLViewerEditor", this, "DoCameraOverlay()");
    fCamOverlayOn->Connect("Clicked()", "TGLViewerEditor", this, "DoCameraOverlay()");
-   
+
    //
    fRotateSceneOn->Connect("Clicked()", "TGLViewerEditor", this, "SetRotatorMode()");
 
@@ -601,7 +599,7 @@ void TGLViewerEditor::CreateExtrasTab()
    // ----- Auto rotator -----
 
    p = new TGGroupFrame(tab, "Auto rotator", kVerticalFrame);
-   
+
    //
    fRotateSceneOn = new TGCheckButton(p, "Rotate all objects");
    fRotateSceneOn->SetToolTipText("This covers a very specific use-case and is most likely not what you need.\nProceed at your own risk. Sorry about that.");
@@ -609,7 +607,7 @@ void TGLViewerEditor::CreateExtrasTab()
 
    fSceneRotDt = MakeLabeledNEntry(p, "Delta Phi:", labw, 5, TGNumberFormat::kNESRealThree);
    fSceneRotDt->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.005, 0.06);
-   
+
    fARotDt = MakeLabeledNEntry(p, "Delta T:", labw, 5, TGNumberFormat::kNESRealThree);
    fARotDt->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.001, 1);
 
@@ -785,7 +783,7 @@ void TGLViewerEditor::SetRotatorMode()
          SetLabeledNEntryState(fARotADolly, kTRUE);
          SetLabeledNEntryState(fARotWDolly, kTRUE);
       }
-      
+
       r->SetRotateScene(fRotateSceneOn->IsOn());
    }
 }
@@ -884,7 +882,7 @@ void TGLViewerEditor::UpdateStereo()
    fViewer->SetStereoZeroParallax  (fStereoZeroParallax->GetNumber());
    fViewer->SetStereoEyeOffsetFac  (fStereoEyeOffsetFac->GetNumber());
    fViewer->SetStereoFrustumAsymFac(fStereoFrustumAsymFac->GetNumber());
-   ViewerRedraw(); 
+   ViewerRedraw();
 }
 
 //Aux. functions that do not have to be members.
@@ -913,9 +911,9 @@ TGLabel *FindLabelForNEntry(TGNumberEntry *entry)
       ::Error("FindLabelForNEntry", "parameter 'entry' is null");
       return 0;
    }
-   
+
    TGLabel *label = 0;
-   
+
    if (const TGHorizontalFrame * const grandpa = dynamic_cast<const TGHorizontalFrame *>(entry->GetParent())) {
       if (TList * const parents = grandpa->GetList()) {
          TIter next1(parents);
@@ -929,13 +927,13 @@ TGLabel *FindLabelForNEntry(TGNumberEntry *entry)
                   }
                }
             }
-            
+
             if (label)
                break;
          }
       }
    }
-   
+
    return label;
 }
 

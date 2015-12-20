@@ -36,6 +36,7 @@
 #include <string>
 
 /** \class TEveUtil
+\ingroup TEve
 Standard utility functions for Eve.
 */
 
@@ -401,6 +402,7 @@ Float_t TEveUtil::GetFraction(Float_t minM, Float_t maxM, Float_t minQ, Float_t 
 
 
 /** \class TEveException
+\ingroup TEve
 Exception class thrown by TEve classes and macros.
 */
 
@@ -434,6 +436,7 @@ TEveException operator+(const TEveException &s1,  const char *s2)
 
 
 /** \class TEvePadHolder
+\ingroup TEve
 Exception safe wrapper for setting gPad.
 Optionally calls gPad->Modified()/Update() in destructor.
 */
@@ -466,6 +469,7 @@ TEvePadHolder::~TEvePadHolder()
 }
 
 /** \class TEveGeoManagerHolder
+\ingroup TEve
 Exception safe wrapper for setting gGeoManager.
 Functionality to lock-unlock via setting of a static lock in
 TGeoManager should be added (new feature of TGeoManager).
@@ -519,6 +523,7 @@ TEveGeoManagerHolder::~TEveGeoManagerHolder()
 }
 
 /** \class TEveRefCnt
+\ingroup TEve
 Base-class for reference-counted objects.
 By default the object is destroyed when zero reference-count is reached.
 */
@@ -526,6 +531,7 @@ By default the object is destroyed when zero reference-count is reached.
 ClassImp(TEveRefCnt);
 
 /** \class TEveRefBackPtr
+\ingroup TEve
 Base-class for reference-counted objects with reverse references to
 TEveElement objects.
 */

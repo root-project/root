@@ -9,13 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TArrayF                                                              //
-//                                                                      //
-// Array of floats (32 bits per element).                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TArrayF
+\ingroup Containers
+Array of floats (32 bits per element).
+*/
 
 #include "TArrayF.h"
 #include "TBuffer.h"

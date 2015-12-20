@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TImageDump
+\ingroup PS
+
 Save canvas as an image (GIF, JPEG, PNG, XPM, TIFF etc.).
 
 Example:

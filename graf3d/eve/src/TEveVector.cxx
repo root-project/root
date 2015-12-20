@@ -13,6 +13,7 @@
 #include "TVector3.h"
 
 /** \class TEveVectorT
+\ingroup TEve
 Minimal, templated three-vector.
 No TObject inheritance and virtual functions.
 Also used in VSD.
@@ -94,6 +95,7 @@ template class TEveVectorT<Float_t>;
 template class TEveVectorT<Double_t>;
 
 /** \class TEveVector4T
+\ingroup TEve
 Minimal, templated four-vector.
 No TObject inheritance and virtual functions.
 Also used in VSD.
@@ -114,6 +116,7 @@ template class TEveVector4T<Float_t>;
 template class TEveVector4T<Double_t>;
 
 /** \class TEveVector2T
+\ingroup TEve
 Minimal, templated two-vector.
 No TObject inheritance and virtual functions.
 Also used in VSD.

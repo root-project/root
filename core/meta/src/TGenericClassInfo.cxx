@@ -24,6 +24,7 @@
 #include "TClassTable.h"
 
 namespace ROOT {
+namespace Internal {
 
    const TInitBehavior *DefineBehavior(void * /*parent_type*/,
                                        void * /*actual_type*/)
@@ -35,11 +36,12 @@ namespace ROOT {
       static TDefaultInitBehavior theDefault;
       return &theDefault;
    }
+} // Internal
 
 
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname,
                                         const char *declFileName, Int_t declFileLine,
-                                        const type_info &info, const TInitBehavior  *action,
+                                        const std::type_info &info, const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
@@ -59,7 +61,7 @@ namespace ROOT {
 
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
                                         const char *declFileName, Int_t declFileLine,
-                                        const type_info &info, const TInitBehavior  *action,
+                                        const std::type_info &info, const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
@@ -82,7 +84,7 @@ namespace ROOT {
 
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
                                         const char *declFileName, Int_t declFileLine,
-                                        const TInitBehavior  *action,
+                                        const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary, Int_t pragmabits)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
@@ -171,11 +173,12 @@ namespace ROOT {
       delete fStreamer;
       if (!fClass) delete fIsA; // fIsA is adopted by the class if any.
       fIsA = 0;
-      if (!ROOT::gROOTLocal || !ROOT::gROOTLocal->Initialized() || !gROOT->GetListOfClasses()) return;
+      using ROOT::Internal::gROOTLocal;
+      if (!gROOTLocal || !gROOTLocal->Initialized() || !gROOTLocal->GetListOfClasses()) return;
       if (fAction) GetAction().Unregister(GetClassName());
    }
 
-   const TInitBehavior &TGenericClassInfo::GetAction() const
+   const Internal::TInitBehavior &TGenericClassInfo::GetAction() const
    {
       // Return the creator action.
 
@@ -223,7 +226,7 @@ namespace ROOT {
          fClass->SetMerge(fMerge);
          fClass->SetResetAfterMerge(fResetAfterMerge);
          fClass->AdoptStreamer(fStreamer); fStreamer = 0;
-         // If IsZombie is true, something went wront and we will not be
+         // If IsZombie is true, something went wrong and we will not be
          // able to properly copy the collection proxy
          if (!fClass->IsZombie()) {
             if (fCollectionProxy) fClass->CopyCollectionProxy(*fCollectionProxy);
@@ -246,7 +249,7 @@ namespace ROOT {
    /////////////////////////////////////////////////////////////////////////////
    /// Attach the schema evolution information to TClassObject
 
-   void TGenericClassInfo::CreateRuleSet( std::vector<TSchemaHelper>& vect,
+   void TGenericClassInfo::CreateRuleSet( std::vector<Internal::TSchemaHelper>& vect,
                                           Bool_t ProcessReadRules )
    {
       if ( vect.empty() ) {
@@ -265,7 +268,7 @@ namespace ROOT {
 
       TSchemaRule* rule;
       TString errmsg;
-      std::vector<TSchemaHelper>::iterator it;
+      std::vector<Internal::TSchemaHelper>::iterator it;
       for( it = vect.begin(); it != vect.end(); ++it ) {
          rule = new TSchemaRule();
          rule->SetTarget( it->fTarget );
@@ -303,28 +306,28 @@ namespace ROOT {
    }
 
 
-   TCollectionProxyInfo *TGenericClassInfo::GetCollectionProxyInfo() const
+   Detail::TCollectionProxyInfo *TGenericClassInfo::GetCollectionProxyInfo() const
    {
       // Return the set of info we have for the CollectionProxy, if any
 
       return fCollectionProxyInfo;
    }
 
-   TCollectionProxyInfo *TGenericClassInfo::GetCollectionStreamerInfo() const
+   Detail::TCollectionProxyInfo *TGenericClassInfo::GetCollectionStreamerInfo() const
    {
       // Return the set of info we have for the Collection Streamer, if any
 
       return fCollectionProxyInfo;
    }
 
-   const type_info &TGenericClassInfo::GetInfo() const
+   const std::type_info &TGenericClassInfo::GetInfo() const
    {
-      // Return the typeifno value
+      // Return the typeinfo value
 
       return fInfo;
    }
 
-   const std::vector<TSchemaHelper>& TGenericClassInfo::GetReadRawRules() const
+   const std::vector<Internal::TSchemaHelper>& TGenericClassInfo::GetReadRawRules() const
    {
       // Return the list of rule give raw access to the TBuffer.
 
@@ -332,7 +335,7 @@ namespace ROOT {
    }
 
 
-   const std::vector<TSchemaHelper>& TGenericClassInfo::GetReadRules() const
+   const std::vector<Internal::TSchemaHelper>& TGenericClassInfo::GetReadRules() const
    {
       // Return the list of Data Model Evolution regular read rules.
       return fReadRules;
@@ -420,14 +423,14 @@ namespace ROOT {
       return 0;
    }
 
-   void TGenericClassInfo::SetReadRawRules( const std::vector<TSchemaHelper>& rules )
+   void TGenericClassInfo::SetReadRawRules( const std::vector<Internal::TSchemaHelper>& rules )
    {
       // Set the list of Data Model Evolution read rules giving direct access to the TBuffer.
       fReadRawRules = rules;
    }
 
 
-   void TGenericClassInfo::SetReadRules( const std::vector<TSchemaHelper>& rules )
+   void TGenericClassInfo::SetReadRules( const std::vector<Internal::TSchemaHelper>& rules )
    {
       // Set the list of Data Model Evolution regular read rules.
       fReadRules = rules;
@@ -448,7 +451,7 @@ namespace ROOT {
 
    void TGenericClassInfo::SetStreamerFunc(ClassStreamerFunc_t streamer)
    {
-      // Set a wrapper around the Streamer memger function.
+      // Set a wrapper around the Streamer member function.
 
       fStreamerFunc = streamer;
       if (fClass) fClass->SetStreamerFunc(streamer);
@@ -456,7 +459,7 @@ namespace ROOT {
 
    void TGenericClassInfo::SetConvStreamerFunc(ClassConvStreamerFunc_t streamer)
    {
-      // Set a wrapper around the Streamer memger function.
+      // Set a wrapper around the Streamer member function.
 
       fConvStreamerFunc = streamer;
       if (fClass) fClass->SetConvStreamerFunc(streamer);

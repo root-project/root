@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualProofPlayer                                                  //
-//                                                                      //
-// Abstract interface for the PROOF player.                             //
-// See the concrete implementations under 'proofplayer' for details.    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TVirtualProofPlayer
+\ingroup proofkernel
+
+Abstract interface for the PROOF player.
+See the concrete implementations under 'proofplayer' for details.
+
+*/
 
 #include "TVirtualProofPlayer.h"
 #include "TPluginManager.h"

@@ -9,15 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXSocketHandler                                                      //
-//                                                                      //
-// Input handler for xproofd sockets. These sockets cannot be directly  //
-// monitored on their descriptor, because the reading activity goes via //
-// the reader thread. This class allows to handle this problem.         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TXSocketHandler
+\ingroup proofx
+
+Input handler for XProofD sockets. These sockets cannot be directly
+monitored on their descriptor, because the reading activity goes via
+the internal reader thread. This class allows to handle the related issue.
+
+*/
 
 #include "TMonitor.h"
 #include "TProof.h"

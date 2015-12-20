@@ -18,6 +18,7 @@
 #include "TGLSelectRecord.h"
 
 /** \class TEveTrackGL
+\ingroup TEve
 GL-renderer for TEveTrack class.
 */
 

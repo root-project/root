@@ -19,6 +19,8 @@
 ClassImp(TGraphQQ)
 
 /** \class TGraphQQ
+\ingroup BasicGraphics
+
 This class allows to draw quantile-quantile plots
 
 Plots can be drawn for 2 datasets or for a dataset and a theoretical

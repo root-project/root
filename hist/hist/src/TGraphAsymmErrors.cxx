@@ -395,6 +395,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t 
 /// - n     : normal approximation propagation (see TEfficiency::Normal)
 /// - ac    : Agresti-Coull interval (see TEfficiency::AgrestiCoull)
 /// - fc    : Feldman-Cousins interval (see TEfficiency::FeldmanCousinsInterval)
+/// - midp  : Lancaster mid-P interval (see TEfficiency::MidPInterval)
 /// - b(a,b): bayesian interval using a prior probability ~Beta(a,b); a,b > 0
 ///           (see TEfficiency::Bayesian)
 /// - mode  : use mode of posterior for Bayesian interval (default is mean)
@@ -441,10 +442,11 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    if (TMath::Abs(stats[0] -stats[1]) > 1e-6)
       bEffective = true;
 
-   if (bEffective && (pass->GetSumw2()->fN == 0 || total->GetSumw2()->fN == 0) ) {
-      Warning("Divide","histogram have been computed with weights but the sum of weight squares are not stored in the histogram. Error calculation is performed ignoring the weights");
-      bEffective = false;
-   }
+   // we do not want to ignore the weights
+   // if (bEffective && (pass->GetSumw2()->fN == 0 || total->GetSumw2()->fN == 0) ) {
+   //    Warning("Divide","histogram have been computed with weights but the sum of weight squares are not stored in the histogram. Error calculation is performed ignoring the weights");
+   //    bEffective = false;
+   // }
 
    //parse option
    TString option = opt;
@@ -453,7 +455,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    Bool_t bVerbose = false;
    //pointer to function returning the boundaries of the confidence interval
    //(is only used in the frequentist cases.)
-   Double_t (*pBound)(Int_t,Int_t,Double_t,Bool_t) = &TEfficiency::ClopperPearson; // default method
+   Double_t (*pBound)(Double_t,Double_t,Double_t,Bool_t) = &TEfficiency::ClopperPearson; // default method
    //confidence level
    Double_t conf = 0.682689492137;
    //values for bayesian statistics
@@ -507,7 +509,12 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       option.ReplaceAll("fc","");
       pBound = &TEfficiency::FeldmanCousins;
    }
-
+   // mid-P Lancaster interval
+   if(option.Contains("midp")) {
+      option.ReplaceAll("midp","");
+      pBound = &TEfficiency::MidPInterval;
+   }
+   
    //bayesian with prior
    if(option.Contains("b(")) {
       Double_t a = 0;
@@ -550,8 +557,9 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       option.ReplaceAll("pois","");
    }
 
-   // weights works only in case of Normal approximation or Bayesian
-   if (bEffective && !bIsBayesian && pBound != &TEfficiency::Normal ) {
+   // weights works only in case of Normal approximation or Bayesian for binomial interval
+   // in case of Poisson ratio we can use weights by rescaling the obtained results using the effective entries
+   if ( ( bEffective && !bPoissonRatio) && !bIsBayesian && pBound != &TEfficiency::Normal ) {
       Warning("Divide","Histograms have weights: only Normal or Bayesian error calculation is supported");
       Info("Divide","Using now the Normal approximation for weighted histograms");
    }
@@ -591,8 +599,8 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    //this keeps track of the number of points added to the graph
    int npoint=0;
    //number of total and passed events
-   Int_t t = 0 , p = 0;
-   Double_t tw = 0, tw2 = 0, pw = 0, pw2 = 0; // for the case of weights
+   Double_t t = 0 , p = 0;
+   Double_t tw = 0, tw2 = 0, pw = 0, pw2 = 0, wratio = 1; // for the case of weights
    //loop over all bins and fill the graph
    for (Int_t b=1; b<=nbins; ++b) {
 
@@ -604,17 +612,41 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       // special case in case of weights we have to consider the sum of weights and the sum of weight squares
        if(bEffective) {
           tw =  total->GetBinContent(b);
-          tw2 = total->GetSumw2()->At(b);
+          tw2 = (total->GetSumw2()->fN > 0) ? total->GetSumw2()->At(b) : tw;
           pw =  pass->GetBinContent(b);
-          pw2 = pass->GetSumw2()->At(b);
+          pw2 = (pass->GetSumw2()->fN > 0) ? pass->GetSumw2()->At(b) : pw;
 
           if(bPoissonRatio)
           {
-            tw += pw;
-            tw2 += pw2;
-          }
+             // tw += pw;
+             // tw2 += pw2;
+             // compute effective entries
+             // special case is (pw=0, pw2=0) in this case is like unweighted
+             if (pw == 0 && pw2 == 0)
+                p = pw;
+             else
+                p = (pw*pw)/pw2;
 
-          if (tw <= 0 && !plot0Bins) continue; // skip bins with total <= 0
+             if (tw == 0 && tw2 == 0)
+                t = tw;
+             else
+                t = (tw*tw)/tw2;
+
+             if (p > 0 && tw > 0)
+                wratio = (pw*t)/(p * tw);
+             else if (p == 0 && tw > 0)
+                wratio = t/tw;
+             else if (p > 0)
+                wratio = pw/p;
+             else {
+                // case both pw and tw are zero - we skip these bins
+                if (!plot0Bins) continue; // skip bins with total <= 0
+             }
+
+             t += p;
+          }
+          else
+             if (tw <= 0 && !plot0Bins) continue; // skip bins with total <= 0
 
           // in the case of weights have the formula only for
           // the normal and  bayesian statistics (see below)
@@ -636,14 +668,14 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       if(bIsBayesian) {
          double aa,bb;
 
-         if (bEffective && tw2 <= 0) {
+         if ((bEffective && !bPoissonRatio) && tw2 <= 0) {
             // case of bins with zero errors
             eff = pw/tw;
             low = eff; upper = eff;
          }
          else {
 
-            if (bEffective) {
+            if (bEffective && !bPoissonRatio) {
                // tw/tw2 renormalize the weights
                double norm = tw/tw2;  // case of tw2 = 0 is treated above
                aa =  pw * norm + alpha;
@@ -669,7 +701,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       }
       // case of non-bayesian statistics
       else {
-         if (bEffective) {
+         if (bEffective && !bPoissonRatio) {
 
             if (tw > 0) {
 
@@ -689,9 +721,8 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
                if (upper > 1) upper = 1.;
             }
          }
-
          else {
-            // when not using weights
+            // when not using weights (all cases) or in case of  Poisson ratio with weights
             if(t)
                eff = ((Double_t)p)/t;
 
@@ -700,13 +731,19 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
          }
       }
       // treat as Poisson ratio
-      if(bPoissonRatio && eff != 1)
+      if(bPoissonRatio)
       {
-        Double_t cor = 1./pow(1 - eff,2);
         Double_t ratio = eff/(1 - eff);
-        low = ratio - cor * (eff - low);
-        upper = ratio + cor * (upper - eff);
+        // take the intervals in eff as intervals in the Poisson ratio
+        low = low/(1. - low);
+        upper = upper/(1.-upper);
         eff = ratio;
+        if (bEffective) {
+           //scale result by the ratio of the weight
+           eff *= wratio;
+           low *= wratio;
+           upper *= wratio; 
+        }
       }
       //Set the point center and its errors
       SetPoint(npoint,pass->GetBinCenter(b),eff);
@@ -718,6 +755,9 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    }
 
    Set(npoint);//tell the graph how many points we've really added
+   if (npoint < nbins)
+      Warning("Divide","Number of graph points is different than histogram bins - %d points have been skipped",nbins-npoint);
+   
 
    if (bVerbose) {
       Info("Divide","made a graph with %d points from %d bins",npoint,nbins);

@@ -23,6 +23,7 @@
 #include "TGDoubleSlider.h"
 
 /** \class TEvePointSetArrayEditor
+\ingroup TEve
 Editor for TEvePointSetArray class.
 */
 

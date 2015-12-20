@@ -65,7 +65,9 @@
 #include "TString.h"
 
 #include "TMVA/MethodCFMlpANN_Utils.h"
+#include "TMVA/MsgLogger.h"
 #include "TMVA/Timer.h"
+#include "TMVA/Types.h"
 
 using std::cout;
 using std::endl;

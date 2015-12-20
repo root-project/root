@@ -156,10 +156,10 @@ namespace ROOT {
    template <class RootClass> Short_t SetClassVersion(RootClass *);
 
    extern TClass *CreateClass(const char *cname, Version_t id,
-                              const type_info &info, TVirtualIsAProxy *isa,
+                              const std::type_info &info, TVirtualIsAProxy *isa,
                               const char *dfil, const char *ifil,
                               Int_t dl, Int_t il);
-   extern void AddClass(const char *cname, Version_t id, const type_info &info,
+   extern void AddClass(const char *cname, Version_t id, const std::type_info &info,
                         DictFuncPtr_t dict, Int_t pragmabits);
    extern void RemoveClass(const char *cname);
    extern void ResetClassVersion(TClass*, const char*, Short_t);
@@ -180,6 +180,7 @@ namespace ROOT {
    };
 #endif
 
+   namespace Internal {
    class TInitBehavior {
       // This class defines the interface for the class registration and
       // the TClass creation. To modify the default behavior, one would
@@ -187,26 +188,31 @@ namespace ROOT {
       // See TQObject.h and table/inc/Ttypes.h for examples.
    public:
       virtual ~TInitBehavior() { }
-      virtual void Register(const char *cname, Version_t id, const type_info &info,
+
+      virtual void Register(const char *cname, Version_t id,
+                            const std::type_info &info,
                             DictFuncPtr_t dict, Int_t pragmabits) const = 0;
       virtual void Unregister(const char *classname) const = 0;
       virtual TClass *CreateClass(const char *cname, Version_t id,
-                                  const type_info &info, TVirtualIsAProxy *isa,
+                                  const std::type_info &info, TVirtualIsAProxy *isa,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const = 0;
    };
 
-   class TDefaultInitBehavior : public TInitBehavior {
+   class TDefaultInitBehavior: public TInitBehavior {
    public:
-      virtual void Register(const char *cname, Version_t id, const type_info &info,
+      virtual void Register(const char *cname, Version_t id,
+                            const std::type_info &info,
                             DictFuncPtr_t dict, Int_t pragmabits) const {
          ROOT::AddClass(cname, id, info, dict, pragmabits);
       }
+
       virtual void Unregister(const char *classname) const {
          ROOT::RemoveClass(classname);
       }
+
       virtual TClass *CreateClass(const char *cname, Version_t id,
-                                  const type_info &info, TVirtualIsAProxy *isa,
+                                  const std::type_info &info, TVirtualIsAProxy *isa,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const {
          return ROOT::CreateClass(cname, id, info, isa, dfil, ifil, dl, il);
@@ -215,8 +221,9 @@ namespace ROOT {
 
    const TInitBehavior *DefineBehavior(void * /*parent_type*/,
                                        void * /*actual_type*/);
+   } // namespace Internal
 
-} // End of namespace ROOT
+} // namespace ROOT
 
 // The macros below use TGenericClassInfo, so let's ensure it is included
 #ifndef ROOT_TGenericClassInfo

@@ -1,0 +1,20 @@
+--- davix-embedded-0.3.6/src/davixcontext.cpp   2014-08-12 12:18:14.000000000 +0200
++++ DAVIX/src/davixcontext.cpp  2015-12-01 11:09:22.069145677 +0100
+@@ -30,7 +30,7 @@
+ 
+ 
+ 
+-static const std::string _version = DAVIX_VERSION "-" DAVIX_VERSION_TAG;
++//static const std::string _version = DAVIX_VERSION "-" DAVIX_VERSION_TAG;
+ 
+ 
+ namespace Davix{
+@@ -144,6 +144,7 @@
+ 
+ 
+ const std::string & version(){
++    static const std::string _version = DAVIX_VERSION "-" DAVIX_VERSION_TAG;
+     return _version;
+ }
+ 
+

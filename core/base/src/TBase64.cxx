@@ -9,20 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBase64                                                              //
-//                                                                      //
-// This code implements the Base64 encoding and decoding.               //
-// Base64 encoded messages are typically used in authentication         //
-// protocols and to pack binary data in HTTP messages.                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBase64
+This code implements the Base64 encoding and decoding.
+
+Base64 encoded messages are typically used in authentication
+protocols and to pack binary data in HTTP messages.
+*/
 
 #include "TBase64.h"
 
 ClassImp(TBase64)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base64 encoding of 3 bytes from in.

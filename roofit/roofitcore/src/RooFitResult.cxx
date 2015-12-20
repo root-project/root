@@ -102,6 +102,9 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   if (other._VM) _VM = new TMatrixDSym(*other._VM) ;
   if (other._CM) _CM = new TMatrixDSym(*other._CM) ;
   if (other._GC) _GC = new TVectorD(*other._GC) ;
+
+  if (GetName())
+    appendToDir(this, kTRUE);
 }
 
 

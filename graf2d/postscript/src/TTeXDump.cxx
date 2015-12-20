@@ -32,6 +32,8 @@
 ClassImp(TTeXDump)
 
 /** \class TTeXDump
+\ingroup PS
+
 Interface to TeX.
 
 This class allow to generate <b>PGF/TikZ</b> vector graphics output

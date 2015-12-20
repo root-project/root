@@ -13,6 +13,7 @@
 #include "TEveTrans.h"
 
 /** \class TEveGridStepper
+\ingroup TEve
 Provide discrete position coordinates for placement of objects on
 regular grids.
 */

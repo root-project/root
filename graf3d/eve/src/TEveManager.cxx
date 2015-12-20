@@ -50,6 +50,7 @@
 TEveManager* gEve = 0;
 
 /** \class TEveManager
+\ingroup TEve
 Central application manager for Eve.
 Manages elements, GUI, GL scenes and GL viewers.
 */
@@ -933,6 +934,7 @@ void TEveManager::Terminate()
 }
 
 /** \class TEveManager::TExceptionHandler
+\ingroup TEve
 Exception handler for Eve exceptions.
 */
 
