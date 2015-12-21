@@ -14,11 +14,6 @@ from glob import glob
 
 from JupyROOT.handlers import IOHandler, JupyROOTDeclarer, JupyROOTExecutor
 
-try:
-    from JupyROOT.utils import isPlatformApple
-except ImportError:
-    raise Exception("Error: JupyROOT not found")
-
 import ROOT
 
 import __builtin__
