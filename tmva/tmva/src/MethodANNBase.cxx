@@ -1048,8 +1048,6 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
    fout << "   double ActivationFnc(double x) const;" << std::endl;
    fout << "   double OutputActivationFnc(double x) const;" << std::endl;     //zjh
    fout << std::endl;
-   fout << "   int fLayers;" << std::endl;
-   fout << "   int fLayerSize["<<numLayers<<"];" << std::endl;
    int numNodesFrom = -1;
    for (Int_t lIdx = 0; lIdx < numLayers; lIdx++) {
       int numNodesTo = ((TObjArray*)fNetwork->At(lIdx))->GetEntries();
@@ -1066,11 +1064,9 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
    fout << "inline void " << className << "::Initialize()" << std::endl;
    fout << "{" << std::endl;
    fout << "   // build network structure" << std::endl;
-   fout << "   fLayers = " << numLayers << ";" << std::endl;
    for (Int_t lIdx = 0; lIdx < numLayers; lIdx++) {
       TObjArray* layer = (TObjArray*)fNetwork->At(lIdx);
       int numNodes = layer->GetEntries();
-      fout << "   fLayerSize[" << lIdx << "] = " << numNodes << ";" << std::endl;
    }
 
    for (Int_t i = 0; i < numLayers-1; i++) {
@@ -1093,8 +1089,8 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
    // writing of the GetMvaValue__ method
    fout << "inline double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << std::endl;
    fout << "{" << std::endl;
-   fout << "   if (inputValues.size() != (unsigned int)fLayerSize[0]-1) {" << std::endl;
-   fout << "      std::cout << \"Input vector needs to be of size \" << fLayerSize[0]-1 << std::endl;" << std::endl;
+   fout << "   if (inputValues.size() != (unsigned int)" << ((TObjArray*)fNetwork->At(0))->GetEntries()-1 << " {" << std::endl;
+   fout << "      std::cout << \"Input vector needs to be of size \" << " << ((TObjArray*)fNetwork->At(0))->GetEntries()-1 << " << std::endl;" << std::endl;
    fout << "      return 0;" << std::endl;
    fout << "   }" << std::endl;
    fout << std::endl;
@@ -1107,18 +1103,18 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
       fout << "   fWeights" << lIdx << ".back() = 1.;" << std::endl;
    }
    fout << std::endl;
-   fout << "   for (int i=0; i<fLayerSize[0]-1; i++)" << std::endl;
+   fout << "   for (int i=0; i<" << ((TObjArray*)fNetwork->At(0))->GetEntries()-1 << "; i++)" << std::endl;
    fout << "      fWeights0[i]=inputValues[i];" << std::endl;
    fout << std::endl;
    for (Int_t i = 0; i < numLayers-1; i++) {
       fout << "   // layer " << i << " to " << i+1 << std::endl;
       if (i+1 == numLayers-1) {
-         fout << "   for (int o=0; o<fLayerSize[" << i+1 << "]; o++) {" << std::endl;
+         fout << "   for (int o=0; o<" << ((TObjArray*)fNetwork->At(i+1))->GetEntries() << "; o++) {" << std::endl;
       }
       else {
-         fout << "   for (int o=0; o<fLayerSize[" << i+1 << "]-1; o++) {" << std::endl;
+         fout << "   for (int o=0; o<" << ((TObjArray*)fNetwork->At(i+1))->GetEntries()-1 << "; o++) {" << std::endl;
       }
-      fout << "      for (int i=0; i<fLayerSize[" << i << "]; i++) {" << std::endl;
+      fout << "      for (int i=0; i<" << ((TObjArray*)fNetwork->At(i))->GetEntries() << "; i++) {" << std::endl;
       fout << "         double inputVal = fWeightMatrix" << i << "to" << i + 1 << "[o][i] * fWeights" << i << "[i];"
            << std::endl;
 
