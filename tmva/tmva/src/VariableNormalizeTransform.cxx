@@ -567,7 +567,7 @@ void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const T
    if (part==1) {
       fout << std::endl;
       fout << "   double fMin_"<<trCounter<<"["<<numC<<"]["<<nVar<<"];" << std::endl;
-      fout << "   double fMax_"<<trCounter<<"["<<numC<<"]["<<nVar<<"];" << std::endl;
+      fout << "   double fScal_"<<trCounter<<"["<<numC<<"]["<<nVar<<"];" << std::endl;
    }
 
    if (part==2) {
@@ -575,6 +575,7 @@ void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const T
       fout << "//_______________________________________________________________________" << std::endl;
       fout << "inline void " << fcncName << "::InitTransform_"<<trCounter<<"()" << std::endl;
       fout << "{" << std::endl;
+      fout << "   double fMax_"<<trCounter<<"["<<numC<<"]["<<nVar<<"];" << std::endl;
       fout << "   // Normalization transformation, initialisation" << std::endl;
       for (UInt_t ivar=0; ivar<nVar; ivar++) {
          for (UInt_t icls = 0; icls < numC; icls++) {
@@ -584,6 +585,7 @@ void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const T
                  << min << ";" << std::endl;
             fout << "   fMax_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = " << std::setprecision(12)
                  << max << ";" << std::endl;
+            fout << "   fScal_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = 1.0/(fMax_"<<trCounter<<"[cls][ivar]-fMin_"<<trCounter<<"[cls][ivar]);" << std::endl;
          }
       }
       fout << "}" << std::endl;
@@ -605,7 +607,7 @@ void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const T
 
       fout << "   for (int ivar=0;ivar<"<<nVar<<";ivar++) {" << std::endl;
       fout << "      double offset = fMin_"<<trCounter<<"[cls][ivar];" << std::endl;
-      fout << "      double scale  = 1.0/(fMax_"<<trCounter<<"[cls][ivar]-fMin_"<<trCounter<<"[cls][ivar]);" << std::endl;
+      fout << "      double scale  = fScal_"<<trCounter<<"[cls][ivar];" << std::endl;
       fout << "      iv[indicesPut.at(ivar)] = (dv[ivar]-offset)*scale * 2 - 1;" << std::endl;
       fout << "   }" << std::endl;
       fout << "}" << std::endl;
