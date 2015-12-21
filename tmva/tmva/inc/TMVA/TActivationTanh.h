@@ -32,7 +32,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TFormula.h"
 #include "TString.h"
 
 #include "TMVA/TActivation.h"
@@ -43,8 +42,8 @@ namespace TMVA {
     
    public:
 
-      TActivationTanh();
-      ~TActivationTanh();
+      TActivationTanh() {}
+      ~TActivationTanh() {}
 
       // evaluate the activation function
       Double_t Eval(Double_t arg);
