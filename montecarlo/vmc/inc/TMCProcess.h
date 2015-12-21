@@ -17,7 +17,7 @@
 //
 #include "Rtypes.h"
 
-const Int_t kMaxMCProcess = 49;
+const Int_t kMaxMCProcess = 50;
 
 enum TMCProcess
 {
@@ -78,6 +78,7 @@ enum TMCProcess
   kPLightRefraction = 40,    // Cerenkov photon refraction
   kPSynchrotron = 41,        // synchrotron radiation generation
   kPScintillation = 42,      // scintillation
+  kPTransitionRadiation = 49,// transition radiation
 
   kPTransportation = 43,     // Transportation
   kPUserDefined = 47,        // User defined process
@@ -135,6 +136,7 @@ static const char * const TMCProcessName[kMaxMCProcess] = {
   "Photo nuclear interaction",
   "User defined process",
   "Optical photon wavelength shifting",
+  "Transition radiation"
 };
 
 #endif //ROOT_TMCProcess
