@@ -32,7 +32,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TFormula.h"
 #include "TString.h"
 
 #include "TMVA/TActivation.h"
