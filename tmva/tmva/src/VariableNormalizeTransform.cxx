@@ -610,8 +610,14 @@ void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const T
       fout << "   for (int ivar=0;ivar<"<<nVar<<";ivar++) {" << std::endl;
       fout << "      double offset = fOff_"<<trCounter<<"[cls][ivar];" << std::endl;
       fout << "      double scale  = fScal_"<<trCounter<<"[cls][ivar];" << std::endl;
+      fout << "#ifndef NEXTTEST" << std::endl;
       fout << "      iv[indicesPut.at(ivar)] = scale*dv[ivar]-offset;" << std::endl;
       fout << "   }" << std::endl;
+      fout << "#else" << std::endl;
+      fout << "      dv[ivar] = scale*dv[ivar]-offset;" << std::endl;
+      fout << "   }" << std::endl;
+      fout << "   for (int ivar=0; ivar<nVar; ivar++) iv[indicesPut.at(ivar)] = dv[ivar];" << std::endl;
+      fout << "#endif" << std::endl;
       fout << "}" << std::endl;
    }
 }
