@@ -1064,10 +1064,6 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
    fout << "inline void " << className << "::Initialize()" << std::endl;
    fout << "{" << std::endl;
    fout << "   // build network structure" << std::endl;
-   for (Int_t lIdx = 0; lIdx < numLayers; lIdx++) {
-      TObjArray* layer = (TObjArray*)fNetwork->At(lIdx);
-      int numNodes = layer->GetEntries();
-   }
 
    for (Int_t i = 0; i < numLayers-1; i++) {
       fout << "   // weight matrix from layer " << i  << " to " << i+1 << std::endl;
