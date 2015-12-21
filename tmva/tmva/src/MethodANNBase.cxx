@@ -1099,47 +1099,10 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
       int numNodes = layer->GetEntries();
       fout << "   std::array<double, " << numNodes << "> fWeights" << lIdx << " {{}};" << std::endl;
    }
-   for (Int_t lIdx = 0; lIdx < numLayers - 1; lIdx++) {
+   for (Int_t lIdx = 1; lIdx < numLayers - 1; lIdx++) {
       fout << "   fWeights" << lIdx << ".back() = 1.;" << std::endl;
    }
    fout << std::endl;
-   for (Int_t i = 0; i < 1; ++i) { // dummy loop to ease up copy&paste
-      fout << "   // layer " << i << " to " << i + 1 << std::endl;
-      if (i + 1 == numLayers - 1) {
-         fout << "   for (int o=0; o<" << ((TObjArray *)fNetwork->At(i + 1))->GetEntries() << "; o++) {" << std::endl;
-      } else {
-         fout << "   for (int o=0; o<" << ((TObjArray *)fNetwork->At(i + 1))->GetEntries() - 1 << "; o++) {"
-              << std::endl;
-      }
-      fout << "      std::array<double, " << ((TObjArray *)fNetwork->At(i))->GetEntries() << "> buffer {{}};" << std::endl;
-      fout << "      for (int i = 0; i<" << ((TObjArray *)fNetwork->At(i))->GetEntries() << " - 1; i++) {" << std::endl;
-      fout << "         buffer[i] = fWeightMatrix" << i << "to" << i + 1 << "[o][i] * inputValues[i];"
-           << std::endl;
-      fout << "      } // loop over i" << std::endl;
-      fout << "      buffer.back() = fWeightMatrix" << i << "to" << i + 1 << "[o][" << ((TObjArray *)fNetwork->At(i))->GetEntries() - 1 << "];"
-      fout << "      for (int i=0; i<" << ((TObjArray *)fNetwork->At(i))->GetEntries() << "; i++) {" << std::endl;
-      if (fNeuronInputType == "sum") {
-         fout << "         fWeights" << i + 1 << "[o] += buffer[i];" << std::endl;
-      } else if (fNeuronInputType == "sqsum") {
-         fout << "         fWeights" << i + 1 << "[o] += buffer[i]*buffer[i];" << std::endl;
-      } else { // fNeuronInputType == TNeuronInputChooser::kAbsSum
-         fout << "         fWeights" << i + 1 << "[o] += fabs(buffer[i]);" << std::endl;
-      }
-      fout << "      } // loop over i" << std::endl;
-      fout << "    } // loop over o" << std::endl;
-      if (i + 1 == numLayers - 1) {
-         fout << "   for (int o=0; o<" << ((TObjArray *)fNetwork->At(i + 1))->GetEntries() << "; o++) {" << std::endl;
-      } else {
-         fout << "   for (int o=0; o<" << ((TObjArray *)fNetwork->At(i + 1))->GetEntries() - 1 << "; o++) {"
-              << std::endl;
-      }
-      if (i+1 != numLayers-1) // in the last layer no activation function is applied
-         fout << "      fWeights" << i + 1 << "[o] = ActivationFnc(fWeights" << i + 1 << "[o]);" << std::endl;
-      else
-         fout << "      fWeights" << i + 1 << "[o] = OutputActivationFnc(fWeights" << i + 1 << "[o]);"
-              << std::endl; // zjh
-      fout << "   } // loop over o" << std::endl;
-   }
    for (Int_t i = 1; i < numLayers - 1; i++) {
       fout << "   // layer " << i << " to " << i + 1 << std::endl;
       if (i + 1 == numLayers - 1) {
@@ -1148,11 +1111,20 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
          fout << "   for (int o=0; o<" << ((TObjArray *)fNetwork->At(i + 1))->GetEntries() - 1 << "; o++) {"
               << std::endl;
       }
-      fout << "      double buffer[" << ((TObjArray *)fNetwork->At(i))->GetEntries() << "];" << std::endl;
-      fout << "      for (int i=0; i<" << ((TObjArray *)fNetwork->At(i))->GetEntries() << "; i++) {" << std::endl;
-      fout << "         buffer[i] = fWeightMatrix" << i << "to" << i + 1 << "[o][i] * fWeights" << i << "[i];"
-           << std::endl;
-      fout << "      } // loop over i" << std::endl;
+      if ( 0 == i ) {
+         fout << "      std::array<double, " << ((TObjArray *)fNetwork->At(i))->GetEntries() << "> buffer {{}};" << std::endl;
+         fout << "      for (int i = 0; i<" << ((TObjArray *)fNetwork->At(i))->GetEntries() << " - 1; i++) {" << std::endl;
+         fout << "         buffer[i] = fWeightMatrix" << i << "to" << i + 1 << "[o][i] * inputValues[i];"
+              << std::endl;
+         fout << "      } // loop over i" << std::endl;
+         fout << "      buffer.back() = fWeightMatrix" << i << "to" << i + 1 << "[o][" << ((TObjArray *)fNetwork->At(i))->GetEntries() - 1 << "];"
+      } else {
+         fout << "      std::array<double, " << ((TObjArray *)fNetwork->At(i))->GetEntries() << "> buffer;" << std::endl;
+         fout << "      for (int i=0; i<" << ((TObjArray *)fNetwork->At(i))->GetEntries() << "; i++) {" << std::endl;
+         fout << "         buffer[i] = fWeightMatrix" << i << "to" << i + 1 << "[o][i] * fWeights" << i << "[i];"
+              << std::endl;
+         fout << "      } // loop over i" << std::endl;
+      }
       fout << "      for (int i=0; i<" << ((TObjArray *)fNetwork->At(i))->GetEntries() << "; i++) {" << std::endl;
       if (fNeuronInputType == "sum") {
          fout << "         fWeights" << i + 1 << "[o] += buffer[i];" << std::endl;
