@@ -159,7 +159,9 @@ extern "C" {
 
    void JupyROOTExecutorHandler_Ctor()
    {
-      JupyROOTExecutorHandler_ptr = new JupyROOTExecutorHandler();
+      if (!JupyROOTExecutorHandler_ptr) {
+         JupyROOTExecutorHandler_ptr = new JupyROOTExecutorHandler();
+      }
    }
 
    void JupyROOTExecutorHandler_Poll()
@@ -191,7 +193,9 @@ extern "C" {
 
    void JupyROOTExecutorHandler_Dtor()
    {
+      if (!JupyROOTExecutorHandler_ptr) return;
       delete JupyROOTExecutorHandler_ptr;
+      JupyROOTExecutorHandler_ptr = nullptr;
    }
 
 }
