@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string>
+#include <iostream>
 #include "TInterpreter.h"
 
 bool JupyROOTExecutorImpl(const char *code);
@@ -108,18 +109,26 @@ std::string &JupyROOTExecutorHandler::GetStderr()
    return fStderrpipe;
 }
 
+JupyROOTExecutorHandler *JupyROOTExecutorHandler_ptr = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 bool JupyROOTExecutorImpl(const char *code)
 {
    auto status = false;
    try {
-      if (gInterpreter->ProcessLine(code))    {
+      TInterpreter::EErrorCode err = TInterpreter::kNoError;
+      if (gInterpreter->ProcessLine(code, &err)) {
          status = true;
+      }
+
+      if (err == TInterpreter::kProcessing) {
+         gInterpreter->ProcessLine(".@");
+         gInterpreter->ProcessLine("cerr << \"Unbalanced curly braces. This cell was not processed.\" << endl;");
       }
    } catch (...) {
       status = true;
    }
+
    return status;
 }
 
@@ -135,9 +144,6 @@ bool JupyROOTDeclarerImpl(const char *code)
    }
    return status;
 }
-
-
-JupyROOTExecutorHandler *JupyROOTExecutorHandler_ptr = nullptr;
 
 extern "C" {
 
