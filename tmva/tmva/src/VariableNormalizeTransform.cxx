@@ -585,7 +585,7 @@ void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const T
                  << min << ";" << std::endl;
             fout << "   fMax_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = " << std::setprecision(12)
                  << max << ";" << std::endl;
-            fout << "   fScal_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = 1.0/(fMax_"<<trCounter<<"[cls][ivar]-fMin_"<<trCounter<<"[cls][ivar]);" << std::endl;
+            fout << "   fScal_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = 2.0/(fMax_"<<trCounter<<"[cls][ivar]-fMin_"<<trCounter<<"[cls][ivar]);" << std::endl;
          }
       }
       fout << "}" << std::endl;
@@ -608,7 +608,7 @@ void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const T
       fout << "   for (int ivar=0;ivar<"<<nVar<<";ivar++) {" << std::endl;
       fout << "      double offset = fMin_"<<trCounter<<"[cls][ivar];" << std::endl;
       fout << "      double scale  = fScal_"<<trCounter<<"[cls][ivar];" << std::endl;
-      fout << "      iv[indicesPut.at(ivar)] = (dv[ivar]-offset)*scale * 2 - 1;" << std::endl;
+      fout << "      iv[indicesPut.at(ivar)] = (dv[ivar]-offset)*scale - 1;" << std::endl;
       fout << "   }" << std::endl;
       fout << "}" << std::endl;
    }
