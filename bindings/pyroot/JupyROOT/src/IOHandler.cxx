@@ -9,23 +9,23 @@ bool JupyROOTExecutorImpl(const char *code);
 bool JupyROOTDeclarerImpl(const char *code);
 
 class JupyROOTExecutorHandler {
-   private:
-      bool fCapturing=false;
-      std::string fStdoutpipe;
-      std::string fStderrpipe;
-      int fStdout_pipe[2];
-      int fStderr_pipe[2];
-      int fSaved_stderr;
-      int fSaved_stdout;
-   public:
-      JupyROOTExecutorHandler();
-      void Poll();
-      void InitCapture();
-      void EndCapture();
-      void Clear();
-      std::string& GetStdout();
-      std::string& GetStderr();
-   };
+private:
+   bool fCapturing = false;
+   std::string fStdoutpipe;
+   std::string fStderrpipe;
+   int fStdout_pipe[2];
+   int fStderr_pipe[2];
+   int fSaved_stderr;
+   int fSaved_stdout;
+public:
+   JupyROOTExecutorHandler();
+   void Poll();
+   void InitCapture();
+   void EndCapture();
+   void Clear();
+   std::string &GetStdout();
+   std::string &GetStderr();
+};
 
 
 #ifndef F_LINUX_SPECIFIC_BASE
@@ -117,8 +117,7 @@ bool JupyROOTExecutorImpl(const char *code)
       if (gInterpreter->ProcessLine(code))    {
          status = true;
       }
-   }
-   catch(...) {
+   } catch (...) {
       status = true;
    }
    return status;
@@ -131,8 +130,7 @@ bool JupyROOTDeclarerImpl(const char *code)
       if (gInterpreter->Declare(code)) {
          status = true;
       }
-   }
-   catch(...) {
+   } catch (...) {
       status = true;
    }
    return status;
