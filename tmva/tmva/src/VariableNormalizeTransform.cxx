@@ -587,7 +587,7 @@ void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const T
             fout << "   fMax_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = " << std::setprecision(12)
                  << max << ";" << std::endl;
             fout << "   fScal_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = 2.0/(fMax_"<<trCounter<<"["<<icls<<"]["<<ivar<<"]-fMin_"<<trCounter<<"["<<icls<<"]["<<ivar<<"]);" << std::endl;
-            fout << "   fOff_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = fMin_"<<trCounter<<"["<<icls<<"]["<<ivar<<"]*fScal_"<<trCounter<<"["<<icls<<"]["<<ivar<<"]-1.;" << std::endl;
+            fout << "   fOff_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = fMin_"<<trCounter<<"["<<icls<<"]["<<ivar<<"]*fScal_"<<trCounter<<"["<<icls<<"]["<<ivar<<"]+1.;" << std::endl;
          }
       }
       fout << "}" << std::endl;
