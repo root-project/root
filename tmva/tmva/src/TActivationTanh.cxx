@@ -23,37 +23,19 @@
 
 /*! \class TMVA::TActivationTanh
 \ingroup TMVA
-Tanh activation function for ANN. This really simple implementation
-uses TFormula and should probably be replaced with something more
-efficient later.
+Tanh activation function for ANN.
 */
 
 #include "TMVA/TActivationTanh.h"
 
 #include "TMVA/TActivation.h"
 
-#include "TFormula.h"
 #include "TMath.h"
 #include "TString.h"
 
 #include <iostream>
 
 ClassImp(TMVA::TActivationTanh);
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor for tanh sigmoid (normalized in [-1,1])
-
-TMVA::TActivationTanh::TActivationTanh()
-{
-   fFAST=kTRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// destructor
-
-TMVA::TActivationTanh::~TActivationTanh()
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// a fast tanh approximation
@@ -95,7 +77,7 @@ TString TMVA::TActivationTanh::GetExpression()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// writes the sigmoid activation function source code
+/// writes the Tanh sigmoid activation function source code
 
 void TMVA::TActivationTanh::MakeFunction( std::ostream& fout, const TString& fncName )
 {

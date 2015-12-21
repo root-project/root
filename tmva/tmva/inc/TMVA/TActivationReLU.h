@@ -32,7 +32,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TFormula.h"
 #include "TString.h"
 
 #include "TMVA/TActivation.h"
@@ -43,8 +42,8 @@ namespace TMVA {
     
    public:
 
-      TActivationReLU();
-      ~TActivationReLU();
+      TActivationReLU() {}
+      ~TActivationReLU() {}
 
       // evaluate the activation function
       Double_t Eval(Double_t arg) { return arg>0 ? arg : 0;}
@@ -66,7 +65,7 @@ namespace TMVA {
 
    private:
 
-      ClassDef(TActivationReLU,0); // Tanh sigmoid activation function for TNeuron
+      ClassDef(TActivationReLU,0); // Rectified Linear Unit activation function for TNeuron
    };
 
 } // namespace TMVA
