@@ -227,3 +227,6 @@ tmva/TMVARegressionApplication.log: tmva/TMVARegression.log
 #weights/TMVARegression_BDTG.weights.xml: $(TUTDIR)/tmva/weights/TMVARegression_BDTG.weights.xml
 #	$(CMDECHO) mkdir -p $(dir $@)
 #	$(CMDECHO) cp -f $< $@
+
+multicore/mp102_readNtuplesFillHistosAndFit.log: multicore/mp101_fillNtuples.log
+multicore/mt102_readNtuplesFillHistosAndFit.log: multicore/mt101_fillNtuples.log
