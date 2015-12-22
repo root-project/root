@@ -1433,8 +1433,13 @@ void TMVA::Factory::EvaluateImportance(DataLoader *loader,VIType vitype, Types::
   EvaluateImportanceShort(loader,theMethod,methodTitle,theOption);
   if(vitype==VIType::kAll)
   EvaluateImportanceAll(loader,theMethod,methodTitle,theOption);
-  if(vitype==VIType::kRandom)
-  EvaluateImportanceRandom(loader,pow(2,nbits),theMethod,methodTitle,theOption);
+  if(vitype==VIType::kRandom&&nbits<=10)
+  {
+      EvaluateImportanceRandom(loader,pow(2,nbits),theMethod,methodTitle,theOption);
+  }else
+  {
+      std::cerr<<"Error: Random mode require more that 10 variables in the dataset."<<std::endl;
+  }
 }
 
 void TMVA::Factory::VIDataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src)
