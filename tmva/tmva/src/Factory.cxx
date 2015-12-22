@@ -1547,6 +1547,11 @@ void TMVA::Factory::EvaluateImportanceAll(DataLoader *loader, Types::EMVA theMet
       
     }
   }
+   std::cout<<"--- Variable Importance Results (All)"<<std::endl;
+   for(int k=0;k<nbits;k++)
+   {
+   std::cout<<"--- "<<varNames[k]<<" = "<<importances[k]<<std::endl;     
+   }
   
   PlotImportance(nbits,importances,varNames);
 }
@@ -1570,7 +1575,7 @@ void TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA theM
   std::vector<TString> varNames = loader->DefaultDataSetInfo().GetListOfVariables();
   
   long int range = sum(nbits);
-  std::cout<<range<<std::endl;
+//   std::cout<<range<<std::endl;
   //vector to save importances
   std::vector<Double_t> importances(nbits);
   for (int i = 0; i < nbits; i++)importances[i] = 0;
@@ -1672,6 +1677,12 @@ void TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA theM
       gSystem->Exec(Form("rm -rf %s", ybitset.to_string().c_str()));
     }
   }
+   std::cout<<"--- Variable Importance Results (Short)"<<std::endl;
+   for(int k=0;k<nbits;k++)
+   {
+   std::cout<<"--- "<<varNames[k]<<" = "<<importances[k]<<std::endl;     
+   }
+  
   PlotImportance(nbits,importances,varNames);      
 }
 
@@ -1722,7 +1733,7 @@ void TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds, 
 
       //getting ROC
       SROC = GetROCIntegral(xbitset.to_string(), methodTitle);
-      std::cout << "Seed: n " << n << " x " << x << " xbitset:" << xbitset << "  ROC " << SROC << std::endl;
+//       std::cout << "Seed: n " << n << " x " << x << " xbitset:" << xbitset << "  ROC " << SROC << std::endl;
 
       //cleaning information to process subseeds
       TMVA::MethodBase *smethod=dynamic_cast<TMVA::MethodBase*>(fMethodsMap[xbitset.to_string().c_str()][0][0]);
@@ -1778,7 +1789,7 @@ void TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds, 
             //getting ROC
             SSROC = GetROCIntegral(ybitset.to_string(), methodTitle);
             importances[ny] += SROC - SSROC;
-           std::cout << "SubSeed: " << y << " y:" << ybitset << " x-y " << x - y << " " << std::bitset<32>(x - y) << " ny " << ny << " SROC " << SROC << " SSROC " << SSROC << " Importance = " << importances[ny] << std::endl;
+            //std::cout << "SubSeed: " << y << " y:" << ybitset << " x-y " << x - y << " " << std::bitset<32>(x - y) << " ny " << ny << " SROC " << SROC << " SSROC " << SSROC << " Importance = " << importances[ny] << std::endl;
             //cleaning information
 	    TMVA::MethodBase *ssmethod=dynamic_cast<TMVA::MethodBase*>(fMethodsMap[ybitset.to_string().c_str()][0][0]);
             TMVA::ResultsClassification *ssresults = (TMVA::ResultsClassification*)ssmethod->Data()->GetResults(ssmethod->GetMethodName(), Types::kTesting, Types::kClassification);
@@ -1794,6 +1805,11 @@ void TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds, 
             gSystem->Exec(Form("rm -rf %s", ybitset.to_string().c_str()));            
          }
       }
+   }
+   std::cout<<"--- Variable Importance Results (Random)"<<std::endl;
+   for(int k=0;k<nbits;k++)
+   {
+   std::cout<<"--- "<<varNames[k]<<" = "<<importances[k]<<std::endl;     
    }
      PlotImportance(nbits,importances,varNames);      
 }
