@@ -9,8 +9,10 @@ test: tests ;
 # The previous line contains just ';' in order to disable the implicit
 # rule building an executable 'test' from test.C
 
+MAKEFILE_NAME=$(firstword $(MAKEFILE_LIST))
+
 summary:
-	@CALLDIR= ; $(MAKE) -f $(MAKEFILE_LIST) --no-print-directory  tests || \
+	@CALLDIR= ; $(MAKE) -f $(MAKEFILE_NAME) --no-print-directory  tests || \
 	if [ `ls $(SUMMARY).*.summary 2>/dev/null | wc -l` -gt 0 ] ; then \
           res=`grep --text FAILING $(SUMMARY).*.summary  | wc -l` ; \
 	  echo "At least $$res tests have failed:" ; \
@@ -171,7 +173,7 @@ $(ROOTTEST_LOC)scripts/ptpreload.so: $(ROOTTEST_LOC)scripts/pt_mymalloc.cpp
 	$(CMDECHO)$(CXX) -g $< -shared -fPIC -Wall `root-config --cflags` -o $@
 
 perftrack: $(ROOTTEST_LOC)scripts/pt_collector $(ROOTTEST_LOC)scripts/ptpreload.so
-	$(CMDECHO) LD_LIBRARY_PATH=$(ROOTTEST_LOC)/scripts:$$LD_LIBRARY_PATH $(MAKE) -f $(MAKEFILE_LIST) -C $$PWD $(filter-out perftrack,$(MAKECMDGOALS)) \
+	$(CMDECHO) LD_LIBRARY_PATH=$(ROOTTEST_LOC)/scripts:$$LD_LIBRARY_PATH $(MAKE) -f $(MAKEFILE_NAME) -C $$PWD $(filter-out perftrack,$(MAKECMDGOALS)) \
           CALLROOTEXE="$< "$(ROOTTEST_LOC)" root.exe"
 
 # For now logs.tar.gz is a phony target
@@ -190,7 +192,7 @@ valgrind: $(ROOTTEST_LOC)scripts/analyze_valgrind
 	( \
 	valgrind-listener > $$valgrindlogfile 2>&1 & ) && \
 	valgrindlistenerpid=$$$$ && \
-	$(MAKE) -f $(MAKEFILE_LIST) -C $$PWD $(filter-out valgrind,$(MAKECMDGOALS)) \
+	$(MAKE) -f $(MAKEFILE_NAME) -C $$PWD $(filter-out valgrind,$(MAKECMDGOALS)) \
           CALLROOTEXE="valgrind --suppressions=$(ROOTSYS)/etc/valgrind-root.supp --suppressions=$(ROOTTEST_HOME)/scripts/valgrind-suppression_ROOT_optional.supp --log-socket=127.0.0.1 --error-limit=no --leak-check=full -v root.exe" ; \
 	killall valgrind-listener; \
 	grep '==[[:digit:]]\+==' $$valgrindlogfile | $(ROOTTEST_HOME)/scripts/analyze_valgrind \
@@ -202,7 +204,7 @@ valgrind-summary: $(ROOTTEST_LOC)scripts/analyze_valgrind
 	( \
 	valgrind-listener > $$valgrindlogfile 2>&1 & ) && \
 	valgrindlistenerpid=$$$$ && \
-	$(MAKE) -f $(MAKEFILE_LIST) -C $$PWD $(filter-out valgrind,$(MAKECMDGOALS)) \
+	$(MAKE) -f $(MAKEFILE_NAME) -C $$PWD $(filter-out valgrind,$(MAKECMDGOALS)) \
           CALLROOTEXE="valgrind --suppressions=$(ROOTSYS)/etc/valgrind-root.supp --suppressions=$(ROOTTEST_HOME)/scripts/valgrind-suppression_ROOT_optional.supp --log-socket=127.0.0.1 --error-limit=no --leak-check=summary -v root.exe" ; \
 	killall valgrind-listener; \
 	grep '==[[:digit:]]\+==' $$valgrindlogfile | $(ROOTTEST_HOME)/scripts/analyze_valgrind \
