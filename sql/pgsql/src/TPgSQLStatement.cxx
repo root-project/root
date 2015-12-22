@@ -759,15 +759,17 @@ Bool_t TPgSQLStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t max
 {
    // Set parameter value as binary data.
 
-   size_t sz=size;
-   size_t mxsz=maxsize;
-   char* mptr = (char*)malloc(2*sz+1);
-   mxsz=PQescapeString (mptr,(char*)mem,sz);
+   size_t sz = size, mxsz;
+   unsigned char* escape_ptr = PQescapeBytea((const unsigned char*)mem, sz, &mxsz);
+   unsigned char* binary_ptr = PQunescapeBytea((const unsigned char*)escape_ptr, &mxsz);
+   PQfreemem(escape_ptr);
 
    delete [] fBind[npar];
-   fBind[npar]= new char[mxsz+1];
-   memcpy(fBind[npar],mptr,mxsz);
-   free(mptr);
+   fBind[npar] = new char[mxsz+1];
+   fBind[npar][mxsz] = '\0';
+   memcpy(fBind[npar], binary_ptr, mxsz);
+
+   PQfreemem(binary_ptr);
    return kTRUE;
 }
 
@@ -1108,7 +1110,7 @@ Bool_t TPgSQLStatement::SetSQLParamType(Int_t, int, bool, int)
 }
 
 //______________________________________________________________________________
-Bool_t TPgSQLStatement::SetNull(Int_t)
+Bool_t TPgSQLStatement::SetNull(Int_t npar)
 {
    // Set NULL as parameter value.
    // If NULL should be set for statement parameter during first iteration,
@@ -1118,6 +1120,8 @@ Bool_t TPgSQLStatement::SetNull(Int_t)
    //    stmt->SetDouble(2, 0.);
    //    stmt->SetNull(2);
 
+   if ((npar >= 0) && (npar < fNumBuffers))
+      fBind[npar] = 0;
    return kFALSE;
 }
 
