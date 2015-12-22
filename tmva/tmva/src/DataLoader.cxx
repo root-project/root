@@ -70,7 +70,6 @@ const Int_t  MinNoTrainingEvents = 10;
 
 ClassImp(TMVA::DataLoader)
 
-static std::vector<TString> _fDataSetNames;
 
 //_______________________________________________________________________
 TMVA::DataLoader::DataLoader( TString thedlName)
@@ -89,10 +88,6 @@ TMVA::DataLoader::DataLoader( TString thedlName)
 
    // render silent
 //    if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput(); // make sure is silent if wanted to
-   if(std::find(_fDataSetNames.begin(),_fDataSetNames.end(),thedlName) != _fDataSetNames.end())
-   {
-      Log() << kFATAL << "<DataLoader> Trying to create a DataLoader with a name that already exists: \"" <<thedlName<<"\"" << Endl;
-   }else _fDataSetNames.push_back(thedlName);
 }
 
 
