@@ -1431,9 +1431,9 @@ void TMVA::Factory::EvaluateImportance(DataLoader *loader,VIType vitype, Types::
   const int nbits = loader->DefaultDataSetInfo().GetNVariables();
   if(vitype==VIType::kShort)
   EvaluateImportanceShort(loader,theMethod,methodTitle,theOption);
-  if(vitype==VIType::kAll)
+  else if(vitype==VIType::kAll)
   EvaluateImportanceAll(loader,theMethod,methodTitle,theOption);
-  if(vitype==VIType::kRandom&&nbits<=10)
+  else if(vitype==VIType::kRandom&&nbits<=10)
   {
       EvaluateImportanceRandom(loader,pow(2,nbits),theMethod,methodTitle,theOption);
   }else
