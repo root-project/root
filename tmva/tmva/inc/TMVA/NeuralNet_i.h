@@ -23,7 +23,7 @@ namespace TMVA
 
 
         template <typename Container, typename T>
-            void uniform (Container& container, T maxValue)
+            void uniformDouble (Container& container, T maxValue)
         {
             for (auto it = begin (container), itEnd = end (container); it != itEnd; ++it)
             {
@@ -292,10 +292,8 @@ namespace TMVA
         {
             size_t numWeights = weights.size ();
             std::vector<double> gradients (numWeights, 0.0);
-
-#ifdef USELOCALWEIGHTS
             std::vector<double> localWeights (begin (weights), end (weights));
-#endif
+
             double E = 1e10;
             if (m_prevGradients.size () != numWeights)
             {
@@ -311,11 +309,19 @@ namespace TMVA
                     break;
 
                 gradients.assign (numWeights, 0.0);
-#ifdef USELOCALWEIGHTS
+
+                // --- nesterov momentum ---
+                // apply momentum before computing the new gradient
+                auto itPrevG = begin (m_prevGradients);
+                auto itPrevGEnd = end (m_prevGradients);
+                auto itLocWeight = begin (localWeights);
+                for (; itPrevG != itPrevGEnd; ++itPrevG)
+                {
+                    (*itPrevG) *= m_beta;
+                    (*itLocWeight) += (*itPrevG);
+                }
+
                 E = fitnessFunction (passThrough, localWeights, gradients);
-#else            
-                E = fitnessFunction (passThrough, weights, gradients);
-#endif         
 //            plotGradients (gradients);
 
                 double alpha = gaussDouble (m_alpha, m_alpha/2.0);
@@ -323,7 +329,7 @@ namespace TMVA
 
                 auto itG = begin (gradients);
                 auto itGEnd = end (gradients);
-                auto itPrevG = begin (m_prevGradients);
+                itPrevG = begin (m_prevGradients);
                 double maxGrad = 0.0;
                 for (; itG != itGEnd; ++itG, ++itPrevG)
                 {
@@ -331,9 +337,11 @@ namespace TMVA
                     double prevGrad = (*itPrevG);
                     currGrad *= alpha;
                 
-                    (*itPrevG) = m_beta * (prevGrad + currGrad);
-                    (*itG) = currGrad + prevGrad;
-
+                    //(*itPrevG) = m_beta * (prevGrad + currGrad);
+                    currGrad += prevGrad;
+                    (*itG) = currGrad;
+                    (*itPrevG) = currGrad;
+                    
                     if (std::fabs (currGrad) > maxGrad)
                         maxGrad = currGrad;
                 }
@@ -810,15 +818,21 @@ namespace TMVA
                         output.clear ();
                         std::tuple<Settings&, Batch&, DropContainer&> passThrough (settings, batch, dropContainerTest);
                         double testPatternError = (*this) (passThrough, weights, ModeOutput::FETCH, output);
-                        if (output.size () == 1)
+                        size_t outSize = this->outputSize ();
+                        if (outSize == 1)
                         {
-                            settings.testSample (testPatternError, output.at (0), p.output ().at (0), weight);
+                            for (size_t i = 0, iEnd = batch.size (); i < iEnd; ++i)
+                            {
+                                const Pattern& currPattern = (*(batch.begin () + i));
+                                settings.testSample (output.at (i * outSize), currPattern.output ().at (0), currPattern.weight ());
+                            }
                         }
                         weightSum += fabs (weight);
-                        testError += testPatternError*weight;
+                        testError += testPatternError; //*weight;
                     }
                     settings.endTestCycle ();
-                    testError /= weightSum;
+//                    testError /= weightSum;
+                    testError /= testPattern.size ();
 
                     settings.computeResult (*this, weights);
 
@@ -1245,7 +1259,8 @@ namespace TMVA
                     else if (TMVA::NN::isFlagSet (ModeOutputValues::SIGMOID, eModeOutput) ||
                              TMVA::NN::isFlagSet (ModeOutputValues::SOFTMAX, eModeOutput))
                     {
-                        outputContainer = lastLayerData.probabilities ();
+                        const auto& probs = lastLayerData.probabilities ();
+                        outputContainer.insert (outputContainer.end (), probs.begin (), probs.end ());
                     }
                     else
                         assert (false);
@@ -1278,7 +1293,7 @@ namespace TMVA
                                               _pattern.weight (), settings.factorWeightDecay (),
                                               settings.regularization ());
                 sumWeights += fabs (_pattern.weight ());
-                sumError += error;
+                sumError += error * _pattern.weight ();
             }
             
             if (doTraining) // training

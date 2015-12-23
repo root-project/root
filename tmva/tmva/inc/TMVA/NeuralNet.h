@@ -226,6 +226,8 @@ namespace TMVA
             const_iterator begin () const { return m_itBegin; }
             const_iterator end   () const { return m_itEnd; }
 
+            size_t size () const { return std::distance (begin (), end ()); }
+            
         private:
             const_iterator m_itBegin; ///< iterator denoting the beginning of the batch
             const_iterator m_itEnd;   ///< iterator denoting the end of the batch
@@ -762,7 +764,7 @@ namespace TMVA
 
 
 
-            virtual void testSample (double /*error*/, double /*output*/, double /*target*/, double /*weight*/) {} ///< virtual function to be used for monitoring (callback)
+            virtual void testSample (double /*output*/, double /*target*/, double /*weight*/) {} ///< virtual function to be used for monitoring (callback)
             virtual void startTrainCycle () ///< callback for monitoring and logging
             {
                 m_convergenceCount = 0;
@@ -970,7 +972,7 @@ namespace TMVA
             /*     fMonitoring->ProcessEvents (); */
             /* } */
 
-            void testSample (double error, double output, double target, double weight);
+            void testSample (double output, double target, double weight);
 
             virtual void startTestCycle ();
             virtual void endTestCycle ();
