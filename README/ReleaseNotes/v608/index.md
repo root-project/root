@@ -108,6 +108,7 @@ Custom streamers need to #include TBuffer.h explicitly (see
 
 ## Database Libraries
 
+* Fix `TPgSQLStatement::SetBinary` to actually handle binary data (previous limited to ascii).
 
 ## Networking Libraries
 
