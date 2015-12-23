@@ -1129,7 +1129,7 @@ void TMVA::MethodNN::checkGradients ()
     size_t largeDifferences = 0;
     for (size_t iTest = 0; iTest < 1000; ++iTest)
     {
-        TMVA::NN::uniform (weights, 0.7);
+        TMVA::NN::uniformDouble (weights, 0.7);
         std::vector<double> gradients (numWeights, 0);
         NN::Batch batch (begin (pattern), end (pattern));
         NN::DropContainer dropContainer;
