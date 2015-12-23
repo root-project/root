@@ -759,7 +759,7 @@ Bool_t TPgSQLStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t max
 {
    // Set parameter value as binary data.
 
-   size_t sz = size, mxsz;
+   size_t sz = size, mxsz = maxsize;
    unsigned char* escape_ptr = PQescapeBytea((const unsigned char*)mem, sz, &mxsz);
    unsigned char* binary_ptr = PQunescapeBytea((const unsigned char*)escape_ptr, &mxsz);
    PQfreemem(escape_ptr);
