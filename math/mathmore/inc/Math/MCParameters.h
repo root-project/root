@@ -26,7 +26,7 @@
 #ifndef ROOT_Math_MCParameters
 #define ROOT_Math_MCParameters
 
-#include <cstring>   // for size_t
+#include <stddef.h>   // for size_t
 
 namespace ROOT {
 namespace Math {
