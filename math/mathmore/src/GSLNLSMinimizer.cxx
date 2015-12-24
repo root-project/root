@@ -26,7 +26,6 @@
 #include <iostream>
 #include <iomanip>
 #include <cassert>
-#include <memory>
 
 namespace ROOT {
 

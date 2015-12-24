@@ -39,8 +39,6 @@
 
 #include <cassert>
 
-#include <iostream>
-
 namespace ROOT {
 namespace Math {
 
