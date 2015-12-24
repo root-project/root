@@ -1424,18 +1424,18 @@ void TMVA::Factory::EvaluateAllMethods( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate Variable Importance
 
-void TMVA::Factory::EvaluateImportance(DataLoader *loader,VIType vitype, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
+TH1F* TMVA::Factory::EvaluateImportance(DataLoader *loader,VIType vitype, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
 {
   
   //getting number of variables and variable names from loader
   const int nbits = loader->DefaultDataSetInfo().GetNVariables();
   if(vitype==VIType::kShort)
-  EvaluateImportanceShort(loader,theMethod,methodTitle,theOption);
+  return EvaluateImportanceShort(loader,theMethod,methodTitle,theOption);
   else if(vitype==VIType::kAll)
-  EvaluateImportanceAll(loader,theMethod,methodTitle,theOption);
-  else if(vitype==VIType::kRandom&&nbits<=10)
+  return EvaluateImportanceAll(loader,theMethod,methodTitle,theOption);
+  else if(vitype==VIType::kRandom&&nbits>10)
   {
-      EvaluateImportanceRandom(loader,pow(2,nbits),theMethod,methodTitle,theOption);
+      return EvaluateImportanceRandom(loader,pow(2,nbits),theMethod,methodTitle,theOption);
   }else
   {
       std::cerr<<"Error: Random mode require more that 10 variables in the dataset."<<std::endl;
@@ -1457,7 +1457,7 @@ void TMVA::Factory::VIDataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* sr
 }
 
 
-void TMVA::Factory::EvaluateImportanceAll(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
+TH1F* TMVA::Factory::EvaluateImportanceAll(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
 {
   
   uint64_t x = 0;
@@ -1548,12 +1548,7 @@ void TMVA::Factory::EvaluateImportanceAll(DataLoader *loader, Types::EMVA theMet
     }
   }
    std::cout<<"--- Variable Importance Results (All)"<<std::endl;
-   for(int k=0;k<nbits;k++)
-   {
-   std::cout<<"--- "<<varNames[k]<<" = "<<importances[k]<<std::endl;     
-   }
-  
-  PlotImportance(nbits,importances,varNames);
+   return GetImportance(nbits,importances,varNames);
 }
 
 static long int sum(long int i)
@@ -1564,7 +1559,7 @@ static long int sum(long int i)
 }
 
 
-void TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
+TH1F* TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
 {
   
   uint64_t x = 0;
@@ -1678,15 +1673,10 @@ void TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA theM
     }
   }
    std::cout<<"--- Variable Importance Results (Short)"<<std::endl;
-   for(int k=0;k<nbits;k++)
-   {
-   std::cout<<"--- "<<varNames[k]<<" = "<<importances[k]<<std::endl;     
-   }
-  
-  PlotImportance(nbits,importances,varNames);      
+   return GetImportance(nbits,importances,varNames);
 }
 
-void TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
+TH1F* TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
 {
    TRandom3 *rangen = new TRandom3(0);  //Random Gen.
 
@@ -1807,21 +1797,14 @@ void TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds, 
       }
    }
    std::cout<<"--- Variable Importance Results (Random)"<<std::endl;
-   for(int k=0;k<nbits;k++)
-   {
-   std::cout<<"--- "<<varNames[k]<<" = "<<importances[k]<<std::endl;     
-   }
-     PlotImportance(nbits,importances,varNames);      
+   return GetImportance(nbits,importances,varNames);      
 }
 
 
 
-TCanvas* TMVA::Factory::PlotImportance(const int nbits,std::vector<Double_t> importances,std::vector<TString> varNames)
+TH1F* TMVA::Factory::GetImportance(const int nbits,std::vector<Double_t> importances,std::vector<TString> varNames)
 {
-  TCanvas *canvas = new TCanvas("RelativeScaleImportance", "RelativaScaleImportance", 800, 600);
-  canvas->Divide(1, 1);
   TH1F *vih1  = new TH1F("vih1", "", nbits, 0, nbits);
-  TH1F *vi2h1  = new TH1F("vi2h1", "", nbits, 0, nbits);
   
   gStyle->SetOptStat(000000);
   
@@ -1841,21 +1824,19 @@ TCanvas* TMVA::Factory::PlotImportance(const int nbits,std::vector<Double_t> imp
     x_ie[i - 1] = (i - 1) * 1.;
     roc = 100.0 * importances[i - 1] / normalization;
     y_ie[i - 1] = roc;
+    std::cout<<"--- "<<varNames[i-1]<<" = "<<roc<<" %"<<std::endl;     
     vih1->GetXaxis()->SetBinLabel(i, varNames[i - 1].Data());
     vih1->SetBinContent(i, roc);
   }
   TGraph *g_ie = new TGraph(nbits + 2, x_ie, y_ie);
   g_ie->SetTitle("");
   
-  canvas->cd(1);
   vih1->LabelsOption("v >", "X");
   vih1->SetBarWidth(0.97);
-  vi2h1->SetBarWidth(0.97);
   Int_t ci, ca;
   ca = TColor::GetColor("#006600");
   vih1->SetFillColor(ca);
   ci = TColor::GetColor("#990000");
-  vi2h1->SetFillColor(ci);
   
   vih1->GetYaxis()->SetTitle("Importance (%)");
   vih1->GetYaxis()->SetTitleSize(0.045);
@@ -1865,10 +1846,6 @@ TCanvas* TMVA::Factory::PlotImportance(const int nbits,std::vector<Double_t> imp
   vih1->GetYaxis()->SetRangeUser(-7, 50);
   vih1->SetDirectory(0);
   
-  vih1->Draw("B");
-  vi2h1->Draw("B same");
-  
-  canvas->Update();
-  canvas->Draw();
-  return canvas;
+//   vih1->Draw("B");
+  return vih1;
 }
