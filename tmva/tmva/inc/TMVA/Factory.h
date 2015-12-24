@@ -71,6 +71,7 @@ class TFile;
 class TTree;
 class TDirectory;
 class TCanvas;
+class TH1F;
 namespace TMVA {
 
    class IMethod;
@@ -122,7 +123,7 @@ namespace TMVA {
       void EvaluateAllMethods( void );
       void EvaluateAllVariables(DataLoader *loader, TString options = "" ); 
   
-      void EvaluateImportance( DataLoader *loader,VIType vitype, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
+      TH1F* EvaluateImportance( DataLoader *loader,VIType vitype, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
 
       // delete all methods and reset the method vector
       void DeleteAllMethods( void );
@@ -158,13 +159,13 @@ namespace TMVA {
       void Greetings();
       
       //evaluate the simple case that is removing 1 variable at time
-      void EvaluateImportanceShort( DataLoader *loader,Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
+      TH1F* EvaluateImportanceShort( DataLoader *loader,Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
       //evaluate all variables combinations
-      void EvaluateImportanceAll( DataLoader *loader,Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
+      TH1F* EvaluateImportanceAll( DataLoader *loader,Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
       //evaluate randomly given a number of seeds
-      void EvaluateImportanceRandom( DataLoader *loader,UInt_t nseeds, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
+      TH1F* EvaluateImportanceRandom( DataLoader *loader,UInt_t nseeds, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
       
-      TCanvas* PlotImportance(const int nbits,std::vector<Double_t> importances,std::vector<TString> varNames);
+      TH1F* GetImportance(const int nbits,std::vector<Double_t> importances,std::vector<TString> varNames);
       
       //method to do a copy of TTrees in subseeds in Variable Importance
       void VIDataLoaderCopy(DataLoader *des,DataLoader *src);
