@@ -2255,7 +2255,8 @@ def warn_attribute_wrong_decl_type : Warning<
   "Objective-C instance methods|init methods of interface or class extension declarations|"
   "variables, functions and classes|Objective-C protocols|"
   "functions and global variables|structs, unions, and typedefs|structs and typedefs|"
-  "interface or protocol declarations|kernel functions}1">,
+  "interface or protocol declarations|kernel functions|"
+  "structs, classes, variables, functions, methods and inline namespaces}1">,
   InGroup<IgnoredAttributes>;
 def err_attribute_wrong_decl_type : Error<warn_attribute_wrong_decl_type.Text>;
 def warn_type_attribute_wrong_type : Warning<
@@ -3922,6 +3923,12 @@ def err_definition_of_explicitly_defaulted_member : Error<
 def err_redefinition_extern_inline : Error<
   "redefinition of a 'extern inline' function %0 is not supported in "
   "%select{C99 mode|C++}1">;
+def err_attr_abi_tag_only_on_inline_namespace :
+  Error<"abi_tag attribute only allowed on inline namespaces">;
+def err_abi_tag_on_redeclaration :
+  Error<"cannot add abi_tag attribute in redeclaration">;
+def err_new_abi_tag_on_redeclaration :
+  Error<"abi_tag %0 missing in original declaration">;
 
 def note_deleted_dtor_no_operator_delete : Note<
   "virtual destructor requires an unambiguous, accessible 'operator delete'">;
