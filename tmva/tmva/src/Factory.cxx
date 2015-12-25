@@ -1438,7 +1438,7 @@ TH1F* TMVA::Factory::EvaluateImportance(DataLoader *loader,VIType vitype, Types:
       return EvaluateImportanceRandom(loader,pow(2,nbits),theMethod,methodTitle,theOption);
   }else
   {
-      std::cerr<<"Error: Random mode require more that 10 variables in the dataset."<<std::endl;
+      std::cerr<<"Error in Variable Importance: Random mode require more that 10 variables in the dataset."<<std::endl;
   }
 }
 
