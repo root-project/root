@@ -352,10 +352,14 @@ endif()
 
 
 #---Check for Python installation-------------------------------------------------------
-if(python)
+if(python OR python3)
   message(STATUS "Looking for Python")
   #---First look for the python interpreter and fix the version of it for the libraries--
-  find_package(PythonInterp)
+  if(python3)
+    find_package(PythonInterp 3.5)
+  else()
+    find_package(PythonInterp)
+  endif()
   if(PYTHONINTERP_FOUND)
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.version[:3])"
                     OUTPUT_VARIABLE PYTHON_VERSION)
@@ -1062,7 +1066,15 @@ if (jemalloc)
 endif()
 
 #---Check for TBB---------------------------------------------------------------------
-if(tbb)
+if(imt)
+  if(NOT builtin_tbb)
+    message(STATUS "Looking for TBB")
+    find_package(TBB)
+    if(NOT TBB_FOUND)
+      message(STATUS "TBB not found. Switching on builtin_tbb option")
+      set(builtin_tbb ON CACHE BOOL "" FORCE)
+    endif()
+  endif()
   if(builtin_tbb)
     set(tbb_version 42_20140122)
     ExternalProject_Add(
@@ -1079,14 +1091,6 @@ if(tbb)
     )
     set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
-  else()
-    message(STATUS "Looking for TBB")
-    find_package(TBB)
-    if(NOT TBB_FOUND)
-      message(STATUS "TBB not found. You can enable the option 'builtin_tbb' to build the library internally'")
-      message(STATUS "               For the time being switching off 'tbb' option")
-      set(tbb OFF CACHE BOOL "" FORCE)
-    endif()
   endif()
 endif()
 

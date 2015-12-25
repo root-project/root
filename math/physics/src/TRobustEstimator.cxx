@@ -9,94 +9,89 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-//  TRobustEstimator
-//
-// Minimum Covariance Determinant Estimator - a Fast Algorithm
-// invented by Peter J.Rousseeuw and Katrien Van Dreissen
-// "A Fast Algorithm for the Minimum covariance Determinant Estimator"
-// Technometrics, August 1999, Vol.41, NO.3
-//
-// What are robust estimators?
-// "An important property of an estimator is its robustness. An estimator
-// is called robust if it is insensitive to measurements that deviate
-// from the expected behaviour. There are 2 ways to treat such deviating
-// measurements: one may either try to recongize them and then remove
-// them from the data sample; or one may leave them in the sample, taking
-// care that they do not influence the estimate unduly. In both cases robust
-// estimators are needed...Robust procedures compensate for systematic errors
-// as much as possible, and indicate any situation in which a danger of not being
-// able to operate reliably is detected."
-// R.Fruhwirth, M.Regler, R.K.Bock, H.Grote, D.Notz
-// "Data Analysis Techniques for High-Energy Physics", 2nd edition
-//
-// What does this algorithm do?
-// It computes a highly robust estimator of multivariate location and scatter.
-// Then, it takes those estimates to compute robust distances of all the
-// data vectors. Those with large robust distances are considered outliers.
-// Robust distances can then be plotted for better visualization of the data.
-//
-// How does this algorithm do it?
-// The MCD objective is to find h observations(out of n) whose classical
-// covariance matrix has the lowest determinant. The MCD estimator of location
-// is then the average of those h points and the MCD estimate of scatter
-// is their covariance matrix. The minimum(and default) h = (n+nvariables+1)/2
-// so the algorithm is effective when less than (n+nvar+1)/2 variables are outliers.
-// The algorithm also allows for exact fit situations - that is, when h or more
-// observations lie on a hyperplane. Then the algorithm still yields the MCD location T
-// and scatter matrix S, the latter being singular as it should be. From (T,S) the
-// program then computes the equation of the hyperplane.
-//
-// How can this algorithm be used?
-// In any case, when contamination of data is suspected, that might influence
-// the classical estimates.
-// Also, robust estimation of location and scatter is a tool to robustify
-// other multivariate techniques such as, for example, principal-component analysis
-// and discriminant analysis.
-//
-//
-//
-//
-// Technical details of the algorithm:
-// 0.The default h = (n+nvariables+1)/2, but the user may choose any interger h with
-//   (n+nvariables+1)/2<=h<=n. The program then reports the MCD's breakdown value
-//   (n-h+1)/n. If you are sure that the dataset contains less than 25% contamination
-//   which is usually the case, a good compromise between breakdown value and
-//  efficiency is obtained by putting h=[.75*n].
-// 1.If h=n,the MCD location estimate is the average of the whole dataset, and
-//   the MCD scatter estimate is its covariance matrix. Report this and stop
-// 2.If nvariables=1 (univariate data), compute the MCD estimate by the exact
-//   algorithm of Rousseeuw and Leroy (1987, pp.171-172) in O(nlogn)time and stop
-// 3.From here on, h<n and nvariables>=2.
-//   3a.If n is small:
-//    - repeat (say) 500 times:
-//    -- construct an initial h-subset, starting from a random (nvar+1)-subset
-//    -- carry out 2 C-steps (described in the comments of CStep function)
-//    - for the 10 results with lowest det(S):
-//    -- carry out C-steps until convergence
-//    - report the solution (T, S) with the lowest det(S)
-//   3b.If n is larger (say, n>600), then
-//    - construct up to 5 disjoint random subsets of size nsub (say, nsub=300)
-//    - inside each subset repeat 500/5 times:
-//    -- construct an initial subset of size hsub=[nsub*h/n]
-//    -- carry out 2 C-steps
-//    -- keep the best 10 results (Tsub, Ssub)
-//    - pool the subsets, yielding the merged set (say, of size nmerged=1500)
-//    - in the merged set, repeat for each of the 50 solutions (Tsub, Ssub)
-//    -- carry out 2 C-steps
-//    -- keep the 10 best results
-//    - in the full dataset, repeat for those best results:
-//    -- take several C-steps, using n and h
-//    -- report the best final result (T, S)
-// 4.To obtain consistency when the data comes from a multivariate normal
-//   distribution, covariance matrix is multiplied by a correction factor
-// 5.Robust distances for all elements, using the final (T, S) are calculated
-//   Then the very final mean and covariance estimates are calculated only for
-//   values, whose robust distances are less than a cutoff value (0.975 quantile
-//   of chi2 distribution with nvariables degrees of freedom)
-//
-//////////////////////////////////////////////////////////////////////////////
+/** \class TRobustEstimator
+    \ingroup Physics
+Minimum Covariance Determinant Estimator - a Fast Algorithm
+invented by Peter J.Rousseeuw and Katrien Van Dreissen
+"A Fast Algorithm for the Minimum covariance Determinant Estimator"
+Technometrics, August 1999, Vol.41, NO.3
+
+What are robust estimators?
+"An important property of an estimator is its robustness. An estimator
+is called robust if it is insensitive to measurements that deviate
+from the expected behaviour. There are 2 ways to treat such deviating
+measurements: one may either try to recognise them and then remove
+them from the data sample; or one may leave them in the sample, taking
+care that they do not influence the estimate unduly. In both cases robust
+estimators are needed...Robust procedures compensate for systematic errors
+as much as possible, and indicate any situation in which a danger of not being
+able to operate reliably is detected."
+R.Fruhwirth, M.Regler, R.K.Bock, H.Grote, D.Notz
+"Data Analysis Techniques for High-Energy Physics", 2nd edition
+
+What does this algorithm do?
+It computes a highly robust estimator of multivariate location and scatter.
+Then, it takes those estimates to compute robust distances of all the
+data vectors. Those with large robust distances are considered outliers.
+Robust distances can then be plotted for better visualization of the data.
+
+How does this algorithm do it?
+The MCD objective is to find h observations(out of n) whose classical
+covariance matrix has the lowest determinant. The MCD estimator of location
+is then the average of those h points and the MCD estimate of scatter
+is their covariance matrix. The minimum(and default) h = (n+nvariables+1)/2
+so the algorithm is effective when less than (n+nvar+1)/2 variables are outliers.
+The algorithm also allows for exact fit situations - that is, when h or more
+observations lie on a hyperplane. Then the algorithm still yields the MCD location T
+and scatter matrix S, the latter being singular as it should be. From (T,S) the
+program then computes the equation of the hyperplane.
+
+How can this algorithm be used?
+In any case, when contamination of data is suspected, that might influence
+the classical estimates.
+Also, robust estimation of location and scatter is a tool to robustify
+other multivariate techniques such as, for example, principal-component analysis
+and discriminant analysis.
+
+Technical details of the algorithm:
+
+1. The default h = (n+nvariables+1)/2, but the user may choose any integer h with
+   (n+nvariables+1)/2<=h<=n. The program then reports the MCD's breakdown value
+   (n-h+1)/n. If you are sure that the dataset contains less than 25% contamination
+   which is usually the case, a good compromise between breakdown value and
+   efficiency is obtained by putting h=[.75*n].
+2. If h=n,the MCD location estimate is the average of the whole dataset, and
+   the MCD scatter estimate is its covariance matrix. Report this and stop
+3. If nvariables=1 (univariate data), compute the MCD estimate by the exact
+   algorithm of Rousseeuw and Leroy (1987, pp.171-172) in O(nlogn)time and stop
+4. From here on, h<n and nvariables>=2.
+   1. If n is small:
+      - repeat (say) 500 times:
+        - construct an initial h-subset, starting from a random (nvar+1)-subset
+        - carry out 2 C-steps (described in the comments of CStep function)
+      - for the 10 results with lowest det(S):
+        - carry out C-steps until convergence
+      - report the solution (T, S) with the lowest det(S)
+   2. If n is larger (say, n>600), then
+      - construct up to 5 disjoint random subsets of size nsub (say, nsub=300)
+      - inside each subset repeat 500/5 times:
+         - construct an initial subset of size hsub=[nsub*h/n]
+         - carry out 2 C-steps
+         - keep the best 10 results (Tsub, Ssub)
+      - pool the subsets, yielding the merged set (say, of size nmerged=1500)
+      - in the merged set, repeat for each of the 50 solutions (Tsub, Ssub)
+         - carry out 2 C-steps
+         - keep the 10 best results
+      - in the full dataset, repeat for those best results:
+         - take several C-steps, using n and h
+         - report the best final result (T, S)
+5. To obtain consistency when the data comes from a multivariate normal
+   distribution, covariance matrix is multiplied by a correction factor
+6. Robust distances for all elements, using the final (T, S) are calculated
+   Then the very final mean and covariance estimates are calculated only for
+   values, whose robust distances are less than a cutoff value (0.975 quantile
+   of chi2 distribution with nvariables degrees of freedom)
+*/
 
 #include "TRobustEstimator.h"
 #include "TRandom.h"
@@ -401,7 +396,7 @@ void TRobustEstimator::Evaluate()
          temp+=indsubdat[i];
       Int_t par;
 
-      
+
       for(i=0; i<ntemp; i++) {
          for (j=0; j<fNvar; j++) {
             dattemp(i,j)=fData[subdat[temp+i]][j];
@@ -1036,7 +1031,7 @@ Double_t TRobustEstimator::CStep(Int_t ntotal, Int_t htotal, Int_t *index, TMatr
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///for the exact fit situaions
+///for the exact fit situations
 ///returns number of observations on the hyperplane
 
 Int_t TRobustEstimator::Exact(Double_t *ndist)

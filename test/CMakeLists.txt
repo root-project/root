@@ -282,7 +282,7 @@ ROOT_EXECUTABLE(TFormulaTests TFormulaTests.cxx LIBRARIES Hist RIO)
 ROOT_ADD_TEST(test-TFormulaTests COMMAND TFormulaTests FAILREGEX "FAILED|Error in")
 
 #--TBB basic test----------------------------------------------------------------------------------
-if(ROOT_tbb_FOUND)
+if(ROOT_imt_FOUND)
   include_directories(${TBB_INCLUDE_DIRS})
   ROOT_EXECUTABLE(testTBB testTBB.cxx LIBRARIES ${TBB_LIBRARIES})
   ROOT_ADD_TEST(test-TBB COMMAND testTBB FAILREGEX "FAILED|Error in")

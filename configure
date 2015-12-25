@@ -110,6 +110,7 @@ options="                    \
    enable_srp                \
    enable_ssl                \
    enable_table              \
+   enable_tbb                \
    enable_tmva               \
    enable_unuran             \
    enable_vc                 \
@@ -176,6 +177,7 @@ enable_ruby=no
 enable_shadowpw=
 enable_soversion=no
 enable_table=no
+enable_tbb=no
 enable_thread=yes        # cannot be disabled (not in above options list)
 enable_unuran=no
 enable_vc=no
@@ -259,6 +261,7 @@ XMLDIR           \
 CASROOT          \
 VC               \
 DAVIX            \
+TBB              \
 "
 configenvvars=
 for c in $envvars ; do
@@ -1759,6 +1762,7 @@ enable/disable options, prefix with either --enable- or --disable-
   srp                SRP support, requires SRP source tree
   ssl                SSL encryption support, requires openssl
   table              Build libTable contrib library
+  tbb                Implicit multi-threading support, requires Intel libtbb
   tmva               Build TMVA multi variate analysis library
   unuran             UNURAN - package for generating non-uniform random numbers
   vc                 Vc adds a few new types for portable and intuitive SIMD programming
@@ -1871,6 +1875,8 @@ with options, prefix with --with-, enables corresponding support
   ssl-libdir         OpenSSL support, location of libssl
   ssl-shared         OpenSSL support, controls usage of shared linkage SSL libraries {yes/no}
   sys-iconpath       Extra icon path
+  tbb-incdir         Implicit multi-threading support, location of tbb.h
+  tbb-libdir         Implicit multi-threading support, location of libtbb
   thread-libdir      Thread support, path to libpthread
   xml-incdir         XML support, location of libxml/tree.h
   xml-libdir         XML support, location of libxml2
@@ -2265,6 +2271,8 @@ if test $# -gt 0 ; then
       --with-ssl-libdir=*)     ssllibdir=$optarg     ; enable_ssl="yes"     ;;
       --with-ssl-shared=*)     sslshared=$optarg     ; enable_ssl="yes"     ;;
       --with-sys-iconpath=*)   extraiconpath=$optarg ;;
+      --with-tbb-incdir=*)     tbbincdir=$optarg     ; enable_tbb="yes"     ;;
+      --with-tbb-libdir=*)     tbblibdir=$optarg     ; enable_tbb="yes"     ;;
       --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_thread="yes"  ;;
       --with-xml-incdir=*)     xmlincdir=$optarg     ; enable_xml="yes"     ;;
       --with-xml-libdir=*)     xmllibdir=$optarg     ; enable_xml="yes"     ;;
@@ -4706,7 +4714,6 @@ fi
 check_explicit "$enable_bonjour" "$enable_bonjour_explicit" \
      "Explicitly required Bonjour dependencies not fulfilled"
 
-
 ######################################################################
 #
 ### echo %%% gLite Support - Third party libraries
@@ -6442,6 +6449,43 @@ result $enable_shadowpw
 check_explicit "$enable_shadowpw" "$enable_shadowpw_explicit" \
      "Explicitly required Shadow passwords dependencies not fulfilled"
 
+######################################################################
+#
+### echo %%% TBB Support - Third party libraries
+#
+useimt="undef"
+if test ! "x$enable_tbb" = "xno" ; then
+    check_header "tbb/tbb.h" "$tbbincdir" \
+        $TBB ${TBB:+$TBB/include} \
+        /usr/local/include \
+        /usr/include
+    tbbincdir=$found_dir
+
+    check_library "libtbb" "$enable_shared" "$tbblibdir" \
+        $TBB ${TBB:+$TBB/lib} ${TBB:+$TBB/lib64} \
+        ${TBB:+$TBB/lib/intel64} ${TBB:+$TBB/lib/intel64/gcc4.4} \
+        /usr/lib /usr/local
+    tbblib=$found_lib
+    tbblibdir=$found_dir
+
+    if test "x$tbbincdir" = "x" || test "x$tbblib" = "x"; then
+        enable_tbb="no"
+     else
+        useimt="define"
+        # on OSX libtbb.dylib is build with @rpath/libtbb.dylib so it
+        # should reside in the application's lib/
+        if test "x$platform" = "xmacosx" ; then
+           if test ! -d lib ; then
+              mkdir -p lib
+           fi
+           message "Copying $found_raw_dir/$found_raw_lib to lib"
+           cp -f $found_raw_dir/$found_raw_lib lib
+        fi
+    fi
+fi
+check_explicit "$enable_tbb" "$enable_tbb_explicit" \
+     "Explicitly required TBB dependencies not fulfilled"
+
 ##########################################################################
 #
 ### echo %%% check for Vc Library compile flags
@@ -7590,14 +7634,14 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@chirplibdir@|$chirplibdir|"          \
     -e "s|@cppunit@|$cppunit|"                  \
     -e "s|@datadir@|$datadir|"                  \
-    -e "s|@davixincdir@|$davixincdir|"          \
-    -e "s|@dcapincdir@|$dcapincdir|"            \
     -e "s|@comerrlib@|$comerrlib|"              \
     -e "s|@comerrlibdir@|$comerrlibdir|"        \
     -e "s|@cryptolib@|$cryptolib|"              \
     -e "s|@cryptolibdir@|$cryptolibdir|"        \
+    -e "s|@davixincdir@|$davixincdir|"          \
     -e "s|@davixlib@|$davixlib|"                \
     -e "s|@davixlibdir@|$davixlibdir|"          \
+    -e "s|@dcapincdir@|$dcapincdir|"            \
     -e "s|@dcaplib@|$dcaplib|"                  \
     -e "s|@dcaplibdir@|$dcaplibdir|"            \
     -e "s|@docdir@|$docdir|"                    \
@@ -7766,6 +7810,9 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@sslshared@|$sslshared|"              \
     -e "s|@sslextracflags@|$sslextracflags|"    \
     -e "s|@testdir@|$testdir|"                  \
+    -e "s|@tbbincdir@|$tbbincdir|"              \
+    -e "s|@tbblib@|$tbblib|"                    \
+    -e "s|@tbblibdir@|$tbblibdir|"              \
     -e "s|@threadflag@|$threadflag|"            \
     -e "s|@threadlib@|$threadlib|"              \
     -e "s|@threadlibdir@|$threadlibdir|"        \
@@ -7805,6 +7852,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildcastor@|$enable_castor|"        \
     -e "s|@builddcap@|$enable_dcache|"          \
     -e "s|@builddavix@|$enable_davix|"          \
+    -e "s|@buildtbb@|$enable_tbb|"              \
     -e "s|@buildfftw3@|$enable_fftw3|"          \
     -e "s|@buildgviz@|$enable_gviz|"            \
     -e "s|@buildgfal@|$enable_gfal|"            \
@@ -7899,7 +7947,7 @@ sed \
     -e "s|@hasstdexpstringview@|$hasstdexpstringview|" \
     -e "s|@hasllvm@|$hasllvm|"             \
     -e "s|@llvmdir@|$llvmdir|"             \
-    -e "s|@usemt@|undef|"                  \
+    -e "s|@useimt@|$useimt|"               \
     < RConfigure.tmp > RConfigure-out.tmp
 rm -f RConfigure.tmp
 

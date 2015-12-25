@@ -9,30 +9,34 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// QR Decomposition class                                                //
-//                                                                       //
-// Decompose  a general (m x n) matrix A into A = fQ fR H   where        //
-//                                                                       //
-//  fQ : (m x n) - orthogonal matrix                                     //
-//  fR : (n x n) - upper triangular matrix                               //
-//  H  : HouseHolder matrix which is stored through                      //
-//  fUp: (n) - vector with Householder up's                              //
-//  fW : (n) - vector with Householder beta's                            //
-//                                                                       //
-//  If row/column index of A starts at (rowLwb,colLwb) then              //
-//  the decomposed matrices start from :                                 //
-//  fQ  : (rowLwb,0)                                                     //
-//  fR  : (0,colLwb)                                                     //
-//  and the decomposed vectors start from :                              //
-//  fUp : (0)                                                            //
-//  fW  : (0)                                                            //
-//                                                                       //
-// Errors arise from formation of reflectors i.e. singularity .          //
-// Note it attempts to handle the cases where the nRow <= nCol .         //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
+/** \class TDecompQRH
+    \ingroup Matrix
+
+ QR Decomposition class
+
+ Decompose  a general (m x n) matrix A into A = fQ fR H   where
+
+~~~
+  fQ : (m x n) - orthogonal matrix
+  fR : (n x n) - upper triangular matrix
+  H  : HouseHolder matrix which is stored through
+  fUp: (n) - vector with Householder up's
+  fW : (n) - vector with Householder beta's
+~~~
+
+  If row/column index of A starts at (rowLwb,colLwb) then
+  the decomposed matrices start from :
+~~~
+  fQ  : (rowLwb,0)
+  fR  : (0,colLwb)
+  and the decomposed vectors start from :
+  fUp : (0)
+  fW  : (0)
+~~~
+
+ Errors arise from formation of reflectors i.e. singularity .
+ Note it attempts to handle the cases where the nRow <= nCol .
+*/
 
 #include "TDecompQRH.h"
 

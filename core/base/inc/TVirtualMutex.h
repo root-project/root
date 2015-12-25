@@ -109,4 +109,12 @@ public:
 #define R__LOCKGUARD_UNLOCK(name) { }
 #endif
 
+#ifdef R__USE_IMT
+#define R__LOCKGUARD_IMT(mutex)  R__LOCKGUARD(mutex)
+#define R__LOCKGUARD_IMT2(mutex) R__LOCKGUARD2(mutex)
+#else
+#define R__LOCKGUARD_IMT(mutex)  { }
+#define R__LOCKGUARD_IMT2(mutex) { }
+#endif
+
 #endif

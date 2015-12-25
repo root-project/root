@@ -1,5 +1,5 @@
 \defgroup Hist Histogram Library
-\brief A general description of the  Histogram library is documented in the class TH1. 
+\brief A general description of the  Histogram library is documented in the class TH1.
 
 ROOT supports the following histogram types:
 
@@ -22,3 +22,12 @@ ROOT supports the following histogram types:
     *   TH3F : histograms with one float per channel. Maximum precision 7 digits
     *   TH3D : histograms with one double per channel. Maximum precision 14 digits
 
+ See also:
+
+  - [The Chapter about the Histogram classes in the Users Guide](ftp://root.cern.ch/root/doc/3Histograms.pdf)
+  - [The Chapter about Fitting Histogram in the Users Guide](ftp://root.cern.ch/root/doc/5FittingHistograms.pdf)
+  - [How to use the Histogram classes](http://root.cern.ch/drupal/content/how-use-histograms-classes)
+  - [How to Merge files with histograms and Trees](http://root.cern.ch/drupal/content/how-merge-histograms-files)
+  - [How to Fit Histograms](http://root.cern.ch/drupal/content/how-fit-histograms-or-data-points)
+  - [How to Fit find peaks in histograms](http://root.cern.ch/root/html/tutorials/spectrum/peaks.C.html)
+  - [How to convert Hbook/PAW files to ROOT](http://root.cern.ch/drupal/content/how-convert-hbookpaw-files-root-files)

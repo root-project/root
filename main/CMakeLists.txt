@@ -13,7 +13,7 @@ ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
 ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore Thread)
 ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
 
-if(CMAKE_Fortran_COMPILER)
+if(fortran AND CMAKE_Fortran_COMPILER)
   ROOT_EXECUTABLE(g2root g2root.f LIBRARIES minicern)
   ROOT_EXECUTABLE(h2root h2root.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore Thread minicern)
 endif()
@@ -26,19 +26,20 @@ if(python)
       # We need the .py only on Windows
       string(REPLACE ".py" "" utilName ${utilName})
     endif()
+    get_filename_component(python ${PYTHON_EXECUTABLE} NAME)
+    configure_file(${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
 
-    install(FILES ${rawUtilName} DESTINATION ${CMAKE_INSTALL_BINDIR} 
+    install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName}
+                                 DESTINATION ${CMAKE_INSTALL_BINDIR} 
                                  RENAME ${utilName}
                                  PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                                              GROUP_EXECUTE GROUP_READ
                                              WORLD_EXECUTE WORLD_READ 
                                  COMPONENT applications)
-    execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-                    COMMAND ${CMAKE_COMMAND} -E copy ${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName})
   endforeach()
 
   install(FILES python/cmdLineUtils.py DESTINATION ${runtimedir})
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/cmdLineUtils.py )")
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/cmdLineUtils.py )")
-  file(COPY python/cmdLineUtils.py DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
+  configure_file(python/cmdLineUtils.py ${CMAKE_BINARY_DIR}/${runtimedir}/cmdLineUtils.py @ONLY)
 endif()

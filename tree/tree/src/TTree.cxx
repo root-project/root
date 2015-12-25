@@ -382,12 +382,24 @@ End_Macro
 #include "TSchemaRuleSet.h"
 #include "TFileMergeInfo.h"
 
+#include <chrono>
 #include <cstddef>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <stdio.h>
 #include <limits.h>
+
+#ifdef R__USE_IMT
+#include "tbb/task.h"
+#include "tbb/task_group.h"
+#include <thread>
+#include <string>
+#include <sstream>
+#endif
+
+constexpr Int_t   kNEntriesResort    = 100;
+constexpr Float_t kNEntriesResortInv = 1.f/kNEntriesResort;
 
 Int_t    TTree::fgBranchStyle = 1;  // Use new TBranch style with TBranchElement.
 Long64_t TTree::fgMaxTreeSize = 100000000000LL;
@@ -677,6 +689,8 @@ TTree::TTree()
 , fTransientBuffer(0)
 , fCacheDoAutoInit(kTRUE)
 , fCacheUserSet(kFALSE)
+, fIMTEnabled(ROOT::IsImplicitMTEnabled())
+, fNEntriesSinceSorting(0)
 {
    fMaxEntries = 1000000000;
    fMaxEntries *= 1000;
@@ -753,6 +767,8 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 , fTransientBuffer(0)
 , fCacheDoAutoInit(kTRUE)
 , fCacheUserSet(kFALSE)
+, fIMTEnabled(ROOT::IsImplicitMTEnabled())
+, fNEntriesSinceSorting(0)
 {
    // TAttLine state.
    SetLineColor(gStyle->GetHistLineColor());
@@ -5166,19 +5182,87 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    Int_t i;
    Int_t nbytes = 0;
    fReadEntry = entry;
-   TBranch *branch;
 
    // create cache if wanted
    if (fCacheDoAutoInit) SetCacheSizeAux();
 
    Int_t nbranches = fBranches.GetEntriesFast();
    Int_t nb=0;
-   for (i=0;i<nbranches;i++)  {
-      branch = (TBranch*)fBranches.UncheckedAt(i);
-      nb = branch->GetEntry(entry, getall);
-      if (nb < 0) return nb;
-      nbytes += nb;
+
+   auto seqprocessing = [&]() {
+      TBranch *branch;
+      for (i=0;i<nbranches;i++)  {
+         branch = (TBranch*)fBranches.UncheckedAt(i);
+         nb = branch->GetEntry(entry, getall);
+         if (nb < 0) break;
+         nbytes += nb;
+      }
+   };
+
+#ifdef R__USE_IMT
+   if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
+      if (fSortedBranches.empty()) InitializeSortedBranches();
+
+      Int_t errnb = 0;
+      std::atomic<Int_t> pos(0);
+      std::atomic<Int_t> nbpar(0);
+      tbb::task_group g;
+
+      for (i = 0; i < nbranches; i++) {
+         g.run([&]() {
+            // The branch to process is obtained when the task starts to run.
+            // This way, since branches are sorted, we make sure that branches
+            // leading to big tasks are processed first. If we assigned the
+            // branch at task creation time, the scheduler would not necessarily
+            // respect our sorting.
+            Int_t j = pos.fetch_add(1);
+            
+            Int_t nbtask = 0;
+            auto branch = fSortedBranches[j].second;
+
+            if (gDebug > 0) {
+               std::stringstream ss;
+               ss << std::this_thread::get_id();
+               Info("GetEntry", "[IMT] Thread %lu", std::stoul(ss.str()));
+               Info("GetEntry", "[IMT] Running task for branch #%d: %s", j, branch->GetName());
+            }
+
+            std::chrono::time_point<std::chrono::system_clock> start, end;
+
+            start = std::chrono::system_clock::now();
+            nbtask = branch->GetEntry(entry, getall);
+            end = std::chrono::system_clock::now();
+
+            Long64_t tasktime = (Long64_t)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+            fSortedBranches[j].first += tasktime;
+
+            if (nbtask < 0) errnb = nbtask;
+            else            nbpar += nbtask;
+         });
+      }
+      g.wait();
+      
+      if (errnb < 0) {
+         nb = errnb;
+      }
+      else {
+         // Save the number of bytes read by the tasks
+         nbytes = nbpar;
+
+         // Re-sort branches if necessary
+         if (++fNEntriesSinceSorting == kNEntriesResort) {
+            SortBranchesByTime();
+            fNEntriesSinceSorting = 0;
+         }
+      }
    }
+   else {
+      seqprocessing();
+   }
+#else
+   seqprocessing();
+#endif
+   if (nb < 0) return nb;
 
    // GetEntry in list of friends
    if (!fFriends) return nbytes;
@@ -5200,6 +5284,51 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
       }
    }
    return nbytes;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Initializes the vector of top-level branches and sorts it by branch size.
+
+void TTree::InitializeSortedBranches()
+{
+   Int_t nbranches = fBranches.GetEntriesFast();
+   for (Int_t i = 0; i < nbranches; i++)  {
+      Long64_t bbytes = 0;
+      TBranch* branch = (TBranch*)fBranches.UncheckedAt(i);
+      if (branch) bbytes = branch->GetTotBytes("*");
+      fSortedBranches.emplace_back(bbytes, branch);
+   }
+
+   std::sort(fSortedBranches.begin(),
+             fSortedBranches.end(),
+             [](std::pair<Long64_t,TBranch*> a, std::pair<Long64_t,TBranch*> b) {
+                return a.first > b.first;
+             });
+
+   for (Int_t i = 0; i < nbranches; i++)  {
+      fSortedBranches[i].first = 0LL;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sorts top-level branches by the last average task time recorded per branch.
+
+void TTree::SortBranchesByTime()
+{
+   Int_t nbranches = fBranches.GetEntriesFast();
+   for (Int_t i = 0; i < nbranches; i++)  {
+      fSortedBranches[i].first *= kNEntriesResortInv;
+   }
+
+   std::sort(fSortedBranches.begin(),
+             fSortedBranches.end(),
+             [](std::pair<Long64_t,TBranch*> a, std::pair<Long64_t,TBranch*> b) {
+                return a.first > b.first;
+             });
+
+   for (Int_t i = 0; i < nbranches; i++)  {
+      fSortedBranches[i].first = 0LL;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7161,7 +7290,7 @@ void TTree::Refresh()
    fTotBytes = tree->fTotBytes;
    fZipBytes = tree->fZipBytes;
    fSavedBytes = tree->fSavedBytes;
-   fTotalBuffers = tree->fTotalBuffers;
+   fTotalBuffers = tree->fTotalBuffers.load();
 
    //loop on all branches and update them
    Int_t nleaves = fLeaves.GetEntriesFast();

@@ -13,7 +13,7 @@ from metakernel import Magic, option
 
 import sys
 
-#NOTE:actually JupyROOT is not capturing the error on %%cpp -d if the function is wrong 
+#NOTE:actually JupyROOT is not capturing the error on %%cpp -d if the function is wrong
 class CppMagics(Magic):
     def __init__(self, kernel):
         super(CppMagics, self).__init__(kernel)
@@ -26,27 +26,24 @@ class CppMagics(Magic):
     def cell_cpp(self, args):
         '''Executes the content of the cell as C++ code.'''
         if self.code.strip():
-             self.kernel.ioHandler.clear()
+             execFunc = None
+             if args == '-a':
+                 execFunc = self.kernel.ACLiC
+             elif args == '-d':
+                 execFunc = self.kernel.Declarer.Run
+             else: # normal flow
+                self.kernel.do_execute_direct(str(self.code))
+                self.evaluate = False
+                return
+
+             self.kernel.ioHandler.Clear()
              self.kernel.ioHandler.InitCapture()
-             
-             if args=='-a':
-                 self.kernel.ACLiC(self.code)
-             elif args=='-d':
-                 self.kernel.Declarer(str(self.code))
-             else:
-                 self.kernel.Executor(str(self.code))
+             execFunc(str(self.code))
              self.kernel.ioHandler.EndCapture()
-             std_out = self.kernel.ioHandler.getStdout()
-             std_err = self.kernel.ioHandler.getStderr()
-             if std_out != "":
-                stream_content_stdout = {'name': 'stdout', 'text': std_out}
-                self.kernel.send_response(self.kernel.iopub_socket, 'stream', stream_content_stdout)
-             if std_err != "":
-                stream_content_stderr = {'name': 'stderr', 'text': std_err}
-                self.kernel.send_response(self.kernel.iopub_socket, 'stream', stream_content_stderr)
-            
+             self.kernel.print_output(self.kernel.ioHandler)
+
         self.evaluate = False
-        
+
 def register_magics(kernel):
     kernel.register_magics(CppMagics)
-    
+

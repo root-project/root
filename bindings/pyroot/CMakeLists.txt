@@ -17,6 +17,8 @@ if(WIN32)
                 -include:_G__cpp_setupG__MathCore)
 endif()
 ROOT_LINKER_LIBRARY(PyROOT *.cxx G__PyROOT.cxx LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES})
+ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx LIBRARIES Core)
+
 
 if(MSVC)
   add_custom_command(TARGET PyROOT POST_BUILD

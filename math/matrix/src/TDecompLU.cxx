@@ -14,30 +14,30 @@
 
 ClassImp(TDecompLU)
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// LU Decomposition class                                                //
-//                                                                       //
-// Decompose  a general n x n matrix A into P A = L U                    //
-//                                                                       //
-// where P is a permutation matrix, L is unit lower triangular and U     //
-// is upper triangular.                                                  //
-// L is stored in the strict lower triangular part of the matrix fLU.    //
-// The diagonal elements of L are unity and are not stored.              //
-// U is stored in the diagonal and upper triangular part of the matrix   //
-// fU.                                                                   //
-// P is stored in the index array fIndex : j = fIndex[i] indicates that  //
-// row j and row i should be swapped .                                   //
-//                                                                       //
-// fSign gives the sign of the permutation, (-1)^n, where n is the       //
-// number of interchanges in the permutation.                            //
-//                                                                       //
-// fLU has the same indexing range as matrix A .                         //
-//                                                                       //
-// The decomposition fails if a diagonal element of abs(fLU) is == 0,    //
-// The matrix fUL is made invalid .                                      //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
+/** \class TDecompLU
+    \ingroup Matrix
+
+ LU Decomposition class
+
+ Decompose  a general n x n matrix A into P A = L U
+
+ where P is a permutation matrix, L is unit lower triangular and U
+ is upper triangular.
+ L is stored in the strict lower triangular part of the matrix fLU.
+ The diagonal elements of L are unity and are not stored.
+ U is stored in the diagonal and upper triangular part of the matrix
+ fU.
+ P is stored in the index array fIndex : j = fIndex[i] indicates that
+ row j and row i should be swapped .
+
+ fSign gives the sign of the permutation, (-1)^n, where n is the
+ number of interchanges in the permutation.
+
+ fLU has the same indexing range as matrix A .
+
+ The decomposition fails if a diagonal element of abs(fLU) is == 0,
+ The matrix fUL is made invalid .
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -568,7 +568,7 @@ void TDecompLU::Print(Option_t *opt) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignement operator
+///assignment operator
 
 TDecompLU &TDecompLU::operator=(const TDecompLU &source)
 {
@@ -697,7 +697,7 @@ Bool_t TDecompLU::DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// LU decomposition using Gaussain Elimination with partial pivoting (See Golub &
+/// LU decomposition using Gaussian Elimination with partial pivoting (See Golub &
 /// Van Loan, Matrix Computations, Algorithm 3.4.1) of a square matrix .
 /// The decomposition is stored in fLU: U is explicit in the upper triag and L is in
 /// multiplier form in the subdiagionals . Row permutations are mapped out in fIndex.

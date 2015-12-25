@@ -9,17 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Templates of Lazy Matrix classes.                                    //
-//                                                                      //
-//   TMatrixTLazy                                                       //
-//   TMatrixTSymLazy                                                    //
-//   THaarMatrixT                                                       //
-//   THilbertMatrixT                                                    //
-//   THilbertMatrixTSym                                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMatrixTLazy
+    \ingroup Matrix
+
+ Templates of Lazy Matrix classes.
+~~~
+   TMatrixTLazy
+   TMatrixTSymLazy
+   THaarMatrixT
+   THilbertMatrixT
+   THilbertMatrixTSym
+~~~
+*/
 
 #include "TMatrixT.h"
 #include "TMatrixTSym.h"

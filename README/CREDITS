@@ -771,6 +771,10 @@ N: Sven Ravndal
 E: Sven.Ravndal@dresdner-bank.com
 D: initial event generator interface
 
+N: Benjamin Ragan-Kelley
+E: benjaminrk@gmail.com
+D: cling / Jupyter integration
+
 N: Reiner Rohlfs
 E: Reiner.Rohlfs@obs.unige.ch
 D: various contributions to GUI classes

@@ -10,7 +10,7 @@
 /// \author Rene Brun
 
 void loopdir() {
-   TFile *f1 = TFile::Open("hsimple.root");
+   TFile *f1 = TFile::Open("$ROOTSYS/tutorials/hsimple.root");
    TIter next(f1->GetListOfKeys());
    TKey *key;
    TCanvas c1;
