@@ -1456,6 +1456,7 @@ showbuild:
 	@echo "PYTHONLIBDIR       = $(PYTHONLIBDIR)"
 	@echo "PYTHONLIB          = $(PYTHONLIB)"
 	@echo "PYTHONINCDIR       = $(PYTHONINCDIR)"
+	@echo "PYTHONEXE          = $(PYTHONEXE)"
 	@echo "RUBYLIBDIR         = $(RUBYLIBDIR)"
 	@echo "RUBYLIB            = $(RUBYLIB)"
 	@echo "RUBYINCDIR         = $(RUBYINCDIR)"
