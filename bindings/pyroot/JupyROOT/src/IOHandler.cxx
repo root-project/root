@@ -116,7 +116,7 @@ bool JupyROOTExecutorImpl(const char *code)
 {
    auto status = false;
    try {
-      TInterpreter::EErrorCode err = TInterpreter::kNoError;
+      auto err = TInterpreter::kNoError;
       if (gInterpreter->ProcessLine(code, &err)) {
          status = true;
       }
@@ -134,7 +134,7 @@ bool JupyROOTExecutorImpl(const char *code)
 
 bool JupyROOTDeclarerImpl(const char *code)
 {
-   bool status = false;
+   auto status = false;
    try {
       if (gInterpreter->Declare(code)) {
          status = true;
