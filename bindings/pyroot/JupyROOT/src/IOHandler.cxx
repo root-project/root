@@ -185,14 +185,12 @@ extern "C" {
 
    const char *JupyROOTExecutorHandler_GetStdout()
    {
-      auto out = JupyROOTExecutorHandler_ptr->GetStdout();
-      return out.c_str();
+      return JupyROOTExecutorHandler_ptr->GetStdout().c_str();
    }
 
    const char *JupyROOTExecutorHandler_GetStderr()
    {
-      auto out = JupyROOTExecutorHandler_ptr->GetStderr();
-      return out.c_str();
+      return JupyROOTExecutorHandler_ptr->GetStderr().c_str();
    }
 
    void JupyROOTExecutorHandler_Dtor()
