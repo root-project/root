@@ -28,10 +28,11 @@ ALLEXECS     += $(CMDTOOLSPY)
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 bin/%:          $(CMDTOOLSDIR)/%.py
-		cp $< $@
+		sed "s#@python@#$(PYTHONEXE)#" $< > $@
+		chmod 755 $@
 
 $(LPATH)/%.py:  $(CMDTOOLSDIR)/%.py
-		cp $< $@
+		sed "s#@python@#$(PYTHONEXE)#" $< > $@
 
 #%.pyc: %.py;    python -c 'import py_compile; py_compile.compile( "$<" )'
 #%.pyo: %.py;    python -O -c 'import py_compile; py_compile.compile( "$<" )'

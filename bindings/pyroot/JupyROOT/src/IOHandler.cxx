@@ -116,7 +116,7 @@ bool JupyROOTExecutorImpl(const char *code)
 {
    auto status = false;
    try {
-      TInterpreter::EErrorCode err = TInterpreter::kNoError;
+      auto err = TInterpreter::kNoError;
       if (gInterpreter->ProcessLine(code, &err)) {
          status = true;
       }
@@ -134,7 +134,7 @@ bool JupyROOTExecutorImpl(const char *code)
 
 bool JupyROOTDeclarerImpl(const char *code)
 {
-   bool status = false;
+   auto status = false;
    try {
       if (gInterpreter->Declare(code)) {
          status = true;
@@ -185,14 +185,12 @@ extern "C" {
 
    const char *JupyROOTExecutorHandler_GetStdout()
    {
-      auto out = JupyROOTExecutorHandler_ptr->GetStdout();
-      return out.c_str();
+      return JupyROOTExecutorHandler_ptr->GetStdout().c_str();
    }
 
    const char *JupyROOTExecutorHandler_GetStderr()
    {
-      auto out = JupyROOTExecutorHandler_ptr->GetStderr();
-      return out.c_str();
+      return JupyROOTExecutorHandler_ptr->GetStderr().c_str();
    }
 
    void JupyROOTExecutorHandler_Dtor()
