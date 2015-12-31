@@ -1240,7 +1240,7 @@ install: all
 	   echo "Installing GDML conversion scripts in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDATA) $(ROOT_SRCDIR)/geom/gdml/*.py $(DESTDIR)$(LIBDIR); \
 	   (cd $(DESTDIR)$(TUTDIR); \
-	      !LD_LIBRARY_PATH=$(DESTDIR)$(LIBDIR):$$LD_LIBRARY_PATH $(DESTDIR)$(BINDIR)/root -l -b -q -n -x hsimple.C); \
+	      ! LD_LIBRARY_PATH=$(DESTDIR)$(LIBDIR):$$LD_LIBRARY_PATH $(DESTDIR)$(BINDIR)/root -l -b -q -n -x hsimple.C); \
 	fi
 
 uninstall:
