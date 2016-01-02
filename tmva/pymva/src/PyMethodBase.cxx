@@ -20,6 +20,7 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
+#include <fstream>
 
 using namespace TMVA;
 
@@ -30,6 +31,12 @@ PyObject *PyMethodBase::fEval = NULL;
 PyObject *PyMethodBase::fModulePickle = NULL;
 PyObject *PyMethodBase::fPickleDumps = NULL;
 PyObject *PyMethodBase::fPickleLoads = NULL;
+
+PyObject *PyMethodBase::fMain = NULL;
+PyObject *PyMethodBase::fGlobalNS = NULL;
+PyObject *PyMethodBase::fLocalNS = NULL;
+
+
 
 //_______________________________________________________________________
 PyMethodBase::PyMethodBase(const TString &jobName,
@@ -60,23 +67,14 @@ PyMethodBase::PyMethodBase(Types::EMVA methodType,
 //_______________________________________________________________________
 PyMethodBase::~PyMethodBase()
 {
-   if (PyIsInitialized()) {
-//     PyFinalize();
-   }
 }
 
 //_______________________________________________________________________
 PyObject *PyMethodBase::Eval(TString code)
 {
-   PyObject *main = PyImport_AddModule("__main__");
-   PyObject *global = PyModule_GetDict(main);
-   PyObject *local = PyDict_New();
-
-   PyObject *pycode = Py_BuildValue("(sOO)", code.Data(), global, local);
+   if(!PyIsInitialized()) PyInitialize();
+   PyObject *pycode = Py_BuildValue("(sOO)", code.Data(), fGlobalNS, fLocalNS);
    PyObject *result = PyObject_CallObject(fEval, pycode);
-//     Py_DECREF(main);
-//     Py_DECREF(global);
-//     Py_DECREF(local);
    Py_DECREF(pycode);
    return result;
 }
@@ -90,6 +88,25 @@ void PyMethodBase::PyInitialize()
       _import_array();
       import_array();
    }
+   
+   fMain = PyImport_AddModule("__main__");
+   if (!fMain) {
+      Log << kFATAL << "Can't import __main__" << Endl;
+      Log << Endl;
+   }
+   
+   fGlobalNS = PyModule_GetDict(fMain);
+   if (!fGlobalNS) {
+      Log << kFATAL << "Can't init global namespace" << Endl;
+      Log << Endl;
+   }
+   
+   fLocalNS = PyDict_New();
+   if (!fMain) {
+      Log << kFATAL << "Can't init local namespace" << Endl;
+      Log << Endl;
+   }
+   
    //preparing objects for eval
    PyObject *bName = PyString_FromString("__builtin__");
    // Import the file as a Python module.
@@ -125,11 +142,13 @@ void PyMethodBase::PyInitialize()
 void PyMethodBase::PyFinalize()
 {
    Py_Finalize();
-   if (fEval) delete fEval;
-   if (fModuleBuiltin) delete fModuleBuiltin;
-   if (fPickleDumps) delete fPickleDumps;
-   if (fPickleLoads) delete fPickleLoads;
-
+   if (fEval) Py_DECREF(fEval);
+   if (fModuleBuiltin) Py_DECREF(fModuleBuiltin);
+   if (fPickleDumps) Py_DECREF(fPickleDumps);
+   if (fPickleLoads) Py_DECREF(fPickleLoads);
+   if(fMain) Py_DECREF(fMain);
+   if(fGlobalNS) Py_DECREF(fGlobalNS);
+   if(fLocalNS) Py_DECREF(fLocalNS);
 }
 void PyMethodBase::PySetProgramName(TString name)
 {
@@ -151,4 +170,16 @@ int  PyMethodBase::PyIsInitialized()
    return kTRUE;
 }
 
-
+void PyMethodBase::Serialize(TString path,PyObject *obj)
+{
+ if(!PyIsInitialized()) PyInitialize();
+ 
+ PyObject *model_arg = Py_BuildValue("(O)", obj);
+ PyObject *model_data = PyObject_CallObject(fPickleDumps , model_arg);
+ std::ofstream PyData;
+ PyData.open(path.Data());
+ PyData << PyString_AsString(model_data);
+ PyData.close();
+ Py_DECREF(model_arg);
+ Py_DECREF(model_data);
+}
