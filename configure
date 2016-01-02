@@ -7772,6 +7772,7 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@pythonlibdir@|$pythonlibdir|"        \
     -e "s|@pythonincdir@|$pythonincdir|"        \
     -e "s|@pythonlibflags@|$pythonlibflags|"    \
+    -e "s|@pythonexe@|$pythonexe|"              \
     -e "s|@rubylib@|$rubylib|"                  \
     -e "s|@rubylibdir@|$rubylibdir|"            \
     -e "s|@rubyincdir@|$rubyincdir|"            \

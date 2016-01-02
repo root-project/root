@@ -303,6 +303,7 @@ PYTHONLIBDIR   := @pythonlibdir@
 PYTHONLIB      := @pythonlib@
 PYTHONINCDIR   := $(filter-out /usr/include, @pythonincdir@)
 PYTHONLIBFLAGS := @pythonlibflags@
+PYTHONEXE      := @pythonexe@
 
 BUILDRUBY      := @buildruby@
 RUBYLIBDIR     := @rubylibdir@

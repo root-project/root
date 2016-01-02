@@ -293,8 +293,6 @@ void MethodPyGTB::ProcessOptions()
    }
    Py_DECREF(pomax_leaf_nodes);
 
-//    warm_start(kFALSE)
-
 }
 
 
@@ -306,7 +304,7 @@ void  MethodPyGTB::Init()
 
    //Import sklearn
    // Convert the file name to a Python string.
-   PyObject *pName = PyString_FromString("sklearn.ensemble");
+   PyObject *pName = PyUnicode_FromString("sklearn.ensemble");
    // Import the file as a Python module.
    fModule = PyImport_Import(pName);
    Py_DECREF(pName);
@@ -408,7 +406,7 @@ void MethodPyGTB::Train()
    fClassifier = PyObject_CallMethod(fClassifier, (char *)"fit", (char *)"(OOO)", fTrainData, fTrainDataClasses, fTrainDataWeights);
 //     PyObject_Print(fClassifier, stdout, 0);
 //     std::cout<<std::endl;
-   //     pValue =PyObject_CallObject(fClassifier, PyString_FromString("classes_"));
+   //     pValue =PyObject_CallObject(fClassifier, PyUnicode_FromString("classes_"));
    //     PyObject_Print(pValue, stdout, 0);
 
    TString path = GetWeightFileDir() + "/PyGTBModel.PyData";
@@ -416,14 +414,7 @@ void MethodPyGTB::Train()
    Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;
 
-   PyObject *model_arg = Py_BuildValue("(O)", fClassifier);
-   PyObject *model_data = PyObject_CallObject(fPickleDumps , model_arg);
-   std::ofstream PyData;
-   PyData.open(path.Data());
-   PyData << PyString_AsString(model_data);
-   PyData.close();
-   Py_DECREF(model_arg);
-   Py_DECREF(model_data);
+  Serialize(path,fClassifier);
 }
 
 //_______________________________________________________________________
@@ -444,22 +435,20 @@ Double_t MethodPyGTB::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    Double_t mvaValue;
    const TMVA::Event *e = Data()->GetEvent();
    UInt_t nvars = e->GetNVariables();
-   PyObject *pEvent = PyTuple_New(nvars);
-   for (UInt_t i = 0; i < nvars; i++) {
+   int *dims = new int[2];
+   dims[0] = 1;
+   dims[1] = nvars;
+   PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   float *pValue = (float *)(PyArray_DATA(pEvent));
 
-      PyObject *pValue = PyFloat_FromDouble(e->GetValue(i));
-      if (!pValue) {
-         Py_DECREF(pEvent);
-         Py_DECREF(fTrainData);
-         Log() << kFATAL << "Error Evaluating MVA " << Endl;
-      }
-      PyTuple_SetItem(pEvent, i, pValue);
-   }
-   PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, (char *)"predict_proba", (char *)"(O)", pEvent);
+   for (UInt_t i = 0; i < nvars; i++) pValue[i] = e->GetValue(i);
+   
+   PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
    double *proba = (double *)(PyArray_DATA(result));
-   mvaValue = proba[1]; //getting signal prob
+   mvaValue = proba[0]; //getting signal prob
    Py_DECREF(result);
    Py_DECREF(pEvent);
+   delete dims;
    return mvaValue;
 }
 
@@ -474,23 +463,7 @@ void MethodPyGTB::ReadStateFromFile()
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Loading State File From:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;
-   std::ifstream PyData;
-   std::stringstream PyDataStream;
-   std::string PyDataString;
-
-   PyData.open(path.Data());
-   PyDataStream << PyData.rdbuf();
-   PyDataString = PyDataStream.str();
-   PyData.close();
-
-//   std::cout<<"-----------------------------------\n";
-//   std::cout<<PyDataString.c_str();
-//   std::cout<<"-----------------------------------\n";
-   PyObject *model_arg = Py_BuildValue("(s)", PyDataString.c_str());
-   fClassifier = PyObject_CallObject(fPickleLoads , model_arg);
-
-
-   Py_DECREF(model_arg);
+   UnSerialize(path,&fClassifier);
 }
 
 //_______________________________________________________________________
