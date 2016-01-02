@@ -275,7 +275,7 @@ void MethodPyRandomForest::ProcessOptions()
 void  MethodPyRandomForest::Init()
 {
    ProcessOptions();
-   _import_array();//require to use numpy arrays
+   import_array();//require to use numpy arrays
 
    //Import sklearn
    // Convert the file name to a Python string.
@@ -316,6 +316,23 @@ void  MethodPyRandomForest::Init()
 
       TrainDataWeights[i] = e->GetWeight();
    }
+
+   delete dims;
+   
+//    fTrainData=fTrainData_;
+//    PyObject *pShape = PyTuple_New(2);
+//    PyObject *pShapeMin = PyInt_FromLong(-1);
+//    PyObject *pShapeMax = PyInt_FromLong( 1);
+//    PyTuple_SetItem(pShape, 0, pShapeMin);
+//    PyTuple_SetItem(pShape, 1, pShapeMax);
+//    fTrainData=(PyArrayObject*)PyArray_Reshape(fTrainData_, pShape);
+//    PyObject_Print((PyObject*)fTrainData, stdout, 0);
+//    std::cout<<std::endl;
+//    Py_DECREF(fTrainData_);
+//    Py_DECREF(pShape);
+//    Py_DECREF(pShapeMin);
+//    Py_DECREF(pShapeMax);
+   
 }
 
 //_______________________________________________________________________
@@ -378,6 +395,12 @@ void MethodPyRandomForest::Train()
 
    fClassifier = PyObject_CallMethod(fClassifier, const_cast<char *>("fit"), const_cast<char *>("(OOO)"), fTrainData, fTrainDataClasses, fTrainDataWeights);
 
+   if(!fClassifier)
+   {
+      Log() << kFATAL << "Can't create classifier object from RandomForestClassifier" << Endl;
+      Log() << Endl;  
+   }
+   
    TString path = GetWeightFileDir() + "/PyRFModel.PyData";
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
@@ -403,22 +426,20 @@ Double_t MethodPyRandomForest::GetMvaValue(Double_t *errLower, Double_t *errUppe
    Double_t mvaValue;
    const TMVA::Event *e = Data()->GetEvent();
    UInt_t nvars = e->GetNVariables();
-   PyObject *pEvent = PyTuple_New(nvars);
-   for (UInt_t i = 0; i < nvars; i++) {
+   int *dims = new int[2];
+   dims[0] = 1;
+   dims[1] = nvars;
+   PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   float *pValue = (float *)(PyArray_DATA(pEvent));
 
-      PyObject *pValue = PyFloat_FromDouble(e->GetValue(i));
-      if (!pValue) {
-         Py_DECREF(pEvent);
-         Py_DECREF(fTrainData);
-         Log() << kFATAL << "Error Evaluating MVA " << Endl;
-      }
-      PyTuple_SetItem(pEvent, i, pValue);
-   }
+   for (UInt_t i = 0; i < nvars; i++) pValue[i] = e->GetValue(i);
+   
    PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
    double *proba = (double *)(PyArray_DATA(result));
    mvaValue = proba[0]; //getting signal prob
    Py_DECREF(result);
    Py_DECREF(pEvent);
+   delete dims;
    return mvaValue;
 }
 

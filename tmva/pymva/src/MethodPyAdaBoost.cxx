@@ -278,22 +278,20 @@ Double_t MethodPyAdaBoost::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    Double_t mvaValue;
    const TMVA::Event *e = Data()->GetEvent();
    UInt_t nvars = e->GetNVariables();
-   PyObject *pEvent = PyTuple_New(nvars);
-   for (UInt_t i = 0; i < nvars; i++) {
+   int *dims = new int[2];
+   dims[0] = 1;
+   dims[1] = nvars;
+   PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   float *pValue = (float *)(PyArray_DATA(pEvent));
 
-      PyObject *pValue = PyFloat_FromDouble(e->GetValue(i));
-      if (!pValue) {
-         Py_DECREF(pEvent);
-         Py_DECREF(fTrainData);
-         Log() << kFATAL << "Error Evaluating MVA " << Endl;
-      }
-      PyTuple_SetItem(pEvent, i, pValue);
-   }
-   PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, (char *)"predict_proba", (char *)"(O)", pEvent);
+   for (UInt_t i = 0; i < nvars; i++) pValue[i] = e->GetValue(i);
+   
+   PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
    double *proba = (double *)(PyArray_DATA(result));
-   mvaValue = proba[1]; //getting signal prob
+   mvaValue = proba[0]; //getting signal prob
    Py_DECREF(result);
    Py_DECREF(pEvent);
+   delete dims;
    return mvaValue;
 }
 
