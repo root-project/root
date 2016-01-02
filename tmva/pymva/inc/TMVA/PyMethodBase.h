@@ -89,6 +89,7 @@ namespace TMVA {
 
       static PyObject *Eval(TString code);//required to parse booking options from string to pyobjects
       static void Serialize(TString file,PyObject *classifier);
+      static void UnSerialize(TString file,PyObject** obj);
       
       virtual void     Train() = 0;
       // options treatment
