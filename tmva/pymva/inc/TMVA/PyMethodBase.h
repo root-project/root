@@ -119,7 +119,8 @@ namespace TMVA {
    private:
 
       static PyObject *fModuleBuiltin;
-      static PyObject *fEval;
+      static PyObject *fEval;//eval funtion from python
+      static PyObject *fOpen;//open function for files
    protected:
       static PyObject *fModulePickle;  //Module for model persistence
       static PyObject *fPickleDumps;  //Function to dumps PyObject information into string
