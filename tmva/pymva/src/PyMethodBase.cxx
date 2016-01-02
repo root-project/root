@@ -28,6 +28,8 @@ ClassImp(PyMethodBase)
 
 PyObject *PyMethodBase::fModuleBuiltin = NULL;
 PyObject *PyMethodBase::fEval = NULL;
+PyObject *PyMethodBase::fOpen = NULL;
+
 PyObject *PyMethodBase::fModulePickle = NULL;
 PyObject *PyMethodBase::fPickleDumps = NULL;
 PyObject *PyMethodBase::fPickleLoads = NULL;
@@ -86,7 +88,6 @@ void PyMethodBase::PyInitialize()
    if (!PyIsInitialized()) {
       Py_Initialize();
       _import_array();
-      import_array();
    }
    
    fMain = PyImport_AddModule("__main__");
@@ -107,6 +108,7 @@ void PyMethodBase::PyInitialize()
       Log << Endl;
    }
    
+   #if PY_MAJOR_VERSION < 3 
    //preparing objects for eval
    PyObject *bName =  PyUnicode_FromString("__builtin__");
    // Import the file as a Python module.
@@ -115,9 +117,21 @@ void PyMethodBase::PyInitialize()
       Log << kFATAL << "Can't import __builtin__" << Endl;
       Log << Endl;
    }
+   #else   
+   //preparing objects for eval
+   PyObject *bName =  PyUnicode_FromString("builtins");
+   // Import the file as a Python module.
+   fModuleBuiltin = PyImport_Import(bName);
+   if (!fModuleBuiltin) {
+      Log << kFATAL << "Can't import builtins" << Endl;
+      Log << Endl;
+   }
+   #endif
+   
    PyObject *mDict = PyModule_GetDict(fModuleBuiltin);
    fEval = PyDict_GetItemString(mDict, "eval");
-
+   fOpen = PyDict_GetItemString(mDict, "open");
+   
    Py_DECREF(bName);
    Py_DECREF(mDict);
    //preparing objects for pickle
@@ -129,8 +143,8 @@ void PyMethodBase::PyInitialize()
       Log << Endl;
    }
    PyObject *pDict = PyModule_GetDict(fModulePickle);
-   fPickleDumps = PyDict_GetItemString(pDict, "dumps");
-   fPickleLoads = PyDict_GetItemString(pDict, "loads");
+   fPickleDumps = PyDict_GetItemString(pDict, "dump");
+   fPickleLoads = PyDict_GetItemString(pDict, "load");
 
    Py_DECREF(pName);
    Py_DECREF(pDict);
@@ -146,13 +160,15 @@ void PyMethodBase::PyFinalize()
    if (fModuleBuiltin) Py_DECREF(fModuleBuiltin);
    if (fPickleDumps) Py_DECREF(fPickleDumps);
    if (fPickleLoads) Py_DECREF(fPickleLoads);
-   if(fMain) Py_DECREF(fMain);
-   if(fGlobalNS) Py_DECREF(fGlobalNS);
-   if(fLocalNS) Py_DECREF(fLocalNS);
+   if(fMain) Py_DECREF(fMain);//objects fGlobalNS and fLocalNS will be free here
 }
 void PyMethodBase::PySetProgramName(TString name)
 {
-   Py_SetProgramName(const_cast<char *>(name.Data()));
+   #if PY_MAJOR_VERSION < 3 
+   Py_SetProgramName(const_cast<char*>(name.Data()));
+   #else
+   Py_SetProgramName((wchar_t *)name.Data());
+   #endif
 }
 //_______________________________________________________________________
 TString PyMethodBase::Py_GetProgramName()
@@ -173,32 +189,28 @@ int  PyMethodBase::PyIsInitialized()
 void PyMethodBase::Serialize(TString path,PyObject *obj)
 {
  if(!PyIsInitialized()) PyInitialize();
- 
- PyObject *model_arg = Py_BuildValue("(O)", obj);
+ PyObject *file_arg = Py_BuildValue("(ss)", path.Data(),"wb");
+ PyObject *file = PyObject_CallObject(fOpen,file_arg);
+ PyObject *model_arg = Py_BuildValue("(OO)", obj,file);
  PyObject *model_data = PyObject_CallObject(fPickleDumps , model_arg);
- std::ofstream PyData;
-//  PyData.open(path.Data(),std::ios_base::binary|std::ios_base::trunc);
- PyData.open(path.Data(),std::ios_base::binary|std::ios_base::trunc);
- PyData << PyBytes_AsString(model_data);
- PyData.close();
+
+ Py_DECREF(file_arg);
+ Py_DECREF(file);
  Py_DECREF(model_arg);
  Py_DECREF(model_data);
 }
 
 void PyMethodBase::UnSerialize(TString path,PyObject **obj)
 {
-   std::ifstream PyData;
-   std::stringstream PyDataStream;
-   std::string PyDataString;
+ PyObject *file_arg = Py_BuildValue("(ss)", path.Data(),"rb");
+ PyObject *file = PyObject_CallObject(fOpen,file_arg);
+ 
+ PyObject *model_arg = Py_BuildValue("(O)", file);
+ *obj = PyObject_CallObject(fPickleLoads , model_arg);
 
-   PyData.open(path.Data(),std::ios_base::binary);
-   PyDataStream << PyData.rdbuf();
-   PyDataString = PyDataStream.str();
-   PyData.close();
-
-   PyObject *model_arg = Py_BuildValue("(s)", PyDataString.c_str());
-   *obj = PyObject_CallObject(fPickleLoads , model_arg);
-   Py_DECREF(model_arg);
+ Py_DECREF(file_arg);
+ Py_DECREF(file);
+ Py_DECREF(model_arg);
 }
 
       
