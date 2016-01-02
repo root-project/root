@@ -257,14 +257,7 @@ void MethodPyAdaBoost::Train()
    Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;
 
-   PyObject *model_arg = Py_BuildValue("(O)", fClassifier);
-   PyObject *model_data = PyObject_CallObject(fPickleDumps , model_arg);
-   std::ofstream PyData;
-   PyData.open(path.Data());
-   PyData << PyString_AsString(model_data);
-   PyData.close();
-   Py_DECREF(model_arg);
-   Py_DECREF(model_data);
+  Serialize(path,fClassifier);
 }
 
 //_______________________________________________________________________

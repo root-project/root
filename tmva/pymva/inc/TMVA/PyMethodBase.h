@@ -88,7 +88,8 @@ namespace TMVA {
       static TString Py_GetProgramName();
 
       static PyObject *Eval(TString code);//required to parse booking options from string to pyobjects
-
+      static void Serialize(TString file,PyObject *classifier);
+      
       virtual void     Train() = 0;
       // options treatment
       virtual void     Init()           = 0;
@@ -123,6 +124,11 @@ namespace TMVA {
       static PyObject *fPickleDumps;  //Function to dumps PyObject information into string
       static PyObject *fPickleLoads;  //Function to load PyObject information from string
 
+      static PyObject *fMain;//module __main__ to get namesapace local and global
+      static PyObject *fGlobalNS;//global namesapace
+      static PyObject *fLocalNS;//local namesapace
+
+      
       ClassDef(PyMethodBase, 0) // Virtual base class for all TMVA method
 
    };

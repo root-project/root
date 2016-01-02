@@ -385,15 +385,7 @@ void MethodPyRandomForest::Train()
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;
-
-   PyObject *model_arg = Py_BuildValue("(O)", fClassifier);
-   PyObject *model_data = PyObject_CallObject(fPickleDumps , model_arg);
-   std::ofstream PyData;
-   PyData.open(path.Data());
-   PyData << PyString_AsString(model_data);
-   PyData.close();
-   Py_DECREF(model_arg);
-   Py_DECREF(model_data);
+   Serialize(path,fClassifier);
 }
 
 //_______________________________________________________________________
@@ -427,7 +419,7 @@ Double_t MethodPyRandomForest::GetMvaValue(Double_t *errLower, Double_t *errUppe
    }
    PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
    double *proba = (double *)(PyArray_DATA(result));
-   mvaValue = proba[1]; //getting signal prob
+   mvaValue = proba[0]; //getting signal prob
    Py_DECREF(result);
    Py_DECREF(pEvent);
    return mvaValue;
