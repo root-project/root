@@ -275,7 +275,7 @@ void MethodPyRandomForest::ProcessOptions()
 void  MethodPyRandomForest::Init()
 {
    ProcessOptions();
-   import_array();//require to use numpy arrays
+   _import_array();//require to use numpy arrays
 
    //Import sklearn
    // Convert the file name to a Python string.
@@ -318,41 +318,12 @@ void  MethodPyRandomForest::Init()
    }
 
    delete dims;
-   
-//    fTrainData=fTrainData_;
-//    PyObject *pShape = PyTuple_New(2);
-//    PyObject *pShapeMin = PyInt_FromLong(-1);
-//    PyObject *pShapeMax = PyInt_FromLong( 1);
-//    PyTuple_SetItem(pShape, 0, pShapeMin);
-//    PyTuple_SetItem(pShape, 1, pShapeMax);
-//    fTrainData=(PyArrayObject*)PyArray_Reshape(fTrainData_, pShape);
-//    PyObject_Print((PyObject*)fTrainData, stdout, 0);
-//    std::cout<<std::endl;
-//    Py_DECREF(fTrainData_);
-//    Py_DECREF(pShape);
-//    Py_DECREF(pShapeMin);
-//    Py_DECREF(pShapeMax);
-   
+      
 }
 
 //_______________________________________________________________________
 void MethodPyRandomForest::Train()
 {
-//        n_estimators(10),
-//    criterion("gini"),
-//    max_depth("None"),
-//    min_samples_split(2),
-//    min_samples_leaf(1),
-//    min_weight_fraction_leaf(0.0),
-//    max_features("'auto'"),
-//    max_leaf_nodes("None"),
-//    bootstrap(kTRUE),
-//    oob_score(kFALSE),
-//    n_jobs(1),
-//    random_state("None"),
-//    verbose(0),
-//    warm_start(kFALSE),
-//    class_weight("None")
 
    //NOTE: max_features must have 3 defferents variables int, float and string
    if (max_features == "auto" || max_features == "sqrt" || max_features == "log2")max_features = Form("'%s'", max_features.Data());
@@ -361,11 +332,7 @@ void MethodPyRandomForest::Train()
    PyObject *pomax_leaf_nodes = Eval(max_leaf_nodes);
    PyObject *porandom_state = Eval(random_state);
    PyObject *poclass_weight = Eval(class_weight);
-//     PyObject_Print(pomax_features,stdout,0);
-//     std::cout<<std::endl;
-//
-//     PyObject_Print(pomax_depth,stdout,0);
-//     std::cout<<std::endl;
+
    PyObject *args = Py_BuildValue("(isOiifOOiiiOiiO)", n_estimators, criterion.Data(), pomax_depth, min_samples_split, \
                                   min_samples_leaf, min_weight_fraction_leaf, pomax_features, pomax_leaf_nodes, \
                                   bootstrap, oob_score, n_jobs, porandom_state, verbose, warm_start, poclass_weight);
@@ -455,6 +422,11 @@ void MethodPyRandomForest::ReadStateFromFile()
    Log() << gTools().Color("bold") << "--- Loading State File From:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;
    UnSerialize(path,&fClassifier);
+   if(!fClassifier)
+   {
+     Log() << kFATAL << "Can't load RandomForestClassifier from Serialized data." << Endl;
+     Log() << Endl;     
+   }
 }
 
 //_______________________________________________________________________
