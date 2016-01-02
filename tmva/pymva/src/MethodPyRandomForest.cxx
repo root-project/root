@@ -279,7 +279,7 @@ void  MethodPyRandomForest::Init()
 
    //Import sklearn
    // Convert the file name to a Python string.
-   PyObject *pName = PyString_FromString("sklearn.ensemble");
+   PyObject *pName = PyUnicode_FromString("sklearn.ensemble");
    // Import the file as a Python module.
    fModule = PyImport_Import(pName);
    Py_DECREF(pName);
@@ -377,9 +377,6 @@ void MethodPyRandomForest::Train()
    }
 
    fClassifier = PyObject_CallMethod(fClassifier, const_cast<char *>("fit"), const_cast<char *>("(OOO)"), fTrainData, fTrainDataClasses, fTrainDataWeights);
-   //     PyObject_Print(fClassifier, stdout, 0);
-   //     pValue =PyObject_CallObject(fClassifier, PyString_FromString("classes_"));
-   //     PyObject_Print(pValue, stdout, 0);
 
    TString path = GetWeightFileDir() + "/PyRFModel.PyData";
    Log() << Endl;
@@ -436,23 +433,7 @@ void MethodPyRandomForest::ReadStateFromFile()
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Loading State File From:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;
-   std::ifstream PyData;
-   std::stringstream PyDataStream;
-   std::string PyDataString;
-
-   PyData.open(path.Data());
-   PyDataStream << PyData.rdbuf();
-   PyDataString = PyDataStream.str();
-   PyData.close();
-
-//   std::cout<<"-----------------------------------\n";
-//   std::cout<<PyDataString.c_str();
-//   std::cout<<"-----------------------------------\n";
-   PyObject *model_arg = Py_BuildValue("(s)", PyDataString.c_str());
-   fClassifier = PyObject_CallObject(fPickleLoads , model_arg);
-
-
-   Py_DECREF(model_arg);
+   UnSerialize(path,&fClassifier);
 }
 
 //_______________________________________________________________________
