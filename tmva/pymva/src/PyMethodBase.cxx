@@ -108,7 +108,7 @@ void PyMethodBase::PyInitialize()
    }
    
    //preparing objects for eval
-   PyObject *bName = PyString_FromString("__builtin__");
+   PyObject *bName =  PyUnicode_FromString("__builtin__");
    // Import the file as a Python module.
    fModuleBuiltin = PyImport_Import(bName);
    if (!fModuleBuiltin) {
@@ -121,7 +121,7 @@ void PyMethodBase::PyInitialize()
    Py_DECREF(bName);
    Py_DECREF(mDict);
    //preparing objects for pickle
-   PyObject *pName = PyString_FromString("pickle");
+   PyObject *pName = PyUnicode_FromString("pickle");
    // Import the file as a Python module.
    fModulePickle = PyImport_Import(pName);
    if (!fModulePickle) {
@@ -177,9 +177,28 @@ void PyMethodBase::Serialize(TString path,PyObject *obj)
  PyObject *model_arg = Py_BuildValue("(O)", obj);
  PyObject *model_data = PyObject_CallObject(fPickleDumps , model_arg);
  std::ofstream PyData;
- PyData.open(path.Data());
- PyData << PyString_AsString(model_data);
+//  PyData.open(path.Data(),std::ios_base::binary|std::ios_base::trunc);
+ PyData.open(path.Data(),std::ios_base::binary|std::ios_base::trunc);
+ PyData << PyBytes_AsString(model_data);
  PyData.close();
  Py_DECREF(model_arg);
  Py_DECREF(model_data);
 }
+
+void PyMethodBase::UnSerialize(TString path,PyObject **obj)
+{
+   std::ifstream PyData;
+   std::stringstream PyDataStream;
+   std::string PyDataString;
+
+   PyData.open(path.Data(),std::ios_base::binary);
+   PyDataStream << PyData.rdbuf();
+   PyDataString = PyDataStream.str();
+   PyData.close();
+
+   PyObject *model_arg = Py_BuildValue("(s)", PyDataString.c_str());
+   *obj = PyObject_CallObject(fPickleLoads , model_arg);
+   Py_DECREF(model_arg);
+}
+
+      
