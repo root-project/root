@@ -46,7 +46,7 @@ class ROOTKernel(MetaKernel):
                      'codemirror_mode': 'text/x-c++src',
                      'mimetype': ' text/x-c++src',
                      'file_extension': '.C'}
-    banner = "CERN ROOT Kernel %s" % ROOT.gROOT.GetVersion()
+    banner = "ROOT Kernel"
 
     def __init__(self,**kwargs):
 
