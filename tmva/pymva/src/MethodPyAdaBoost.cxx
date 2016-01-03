@@ -62,9 +62,6 @@ MethodPyAdaBoost::MethodPyAdaBoost(const TString &jobName,
    algorithm("SAMME.R"),
    random_state("None")
 {
-   // standard constructor for the PyAdaBoost
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
-
 }
 
 //_______________________________________________________________________
@@ -76,7 +73,6 @@ MethodPyAdaBoost::MethodPyAdaBoost(DataSetInfo &theData, const TString &theWeigh
      algorithm("SAMME.R"),
      random_state("None")
 {
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 
@@ -216,11 +212,6 @@ void  MethodPyAdaBoost::Init()
 
 void MethodPyAdaBoost::Train()
 {
-//    base_estimator("None"),
-//    n_estimators(50),
-//    learning_rate(1.0),
-//    algorithm("SAMME.R"),
-//    random_state("None")
    PyObject *pobase_estimator = Eval(base_estimator);
    PyObject *porandom_state = Eval(random_state);
 
@@ -247,10 +238,6 @@ void MethodPyAdaBoost::Train()
    }
 
    fClassifier = PyObject_CallMethod(fClassifier, (char *)"fit", (char *)"(OOO)", fTrainData, fTrainDataClasses, fTrainDataWeights);
-//     PyObject_Print(fClassifier, stdout, 0);
-//     std::cout<<std::endl;
-   //     pValue =PyObject_CallObject(fClassifier, PyUnicode_FromString("classes_"));
-   //     PyObject_Print(pValue, stdout, 0);
 
    TString path = GetWeightFileDir() + "/PyAdaBoostModel.PyData";
    Log() << Endl;

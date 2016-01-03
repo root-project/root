@@ -72,9 +72,6 @@ MethodPyRandomForest::MethodPyRandomForest(const TString &jobName,
    warm_start(kFALSE),
    class_weight("None")
 {
-   // standard constructor for the PyRandomForest
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
-
 }
 
 //_______________________________________________________________________
@@ -96,7 +93,6 @@ MethodPyRandomForest::MethodPyRandomForest(DataSetInfo &theData, const TString &
      warm_start(kFALSE),
      class_weight("None")
 {
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 
