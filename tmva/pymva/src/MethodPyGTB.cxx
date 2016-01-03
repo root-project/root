@@ -72,9 +72,6 @@ MethodPyGTB::MethodPyGTB(const TString &jobName,
    max_leaf_nodes("None"),
    warm_start(kFALSE)
 {
-   // standard constructor for the PyGTB
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
-
 }
 
 //_______________________________________________________________________
@@ -95,7 +92,6 @@ MethodPyGTB::MethodPyGTB(DataSetInfo &theData, const TString &theWeightFile, TDi
      max_leaf_nodes("None"),
      warm_start(kFALSE)
 {
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 
@@ -345,21 +341,6 @@ void  MethodPyGTB::Init()
 
 void MethodPyGTB::Train()
 {
-//    loss("deviance"),
-//    learning_rate(0.1),
-//    n_estimators(100),
-//    subsample(1.0),
-//    min_samples_split(2),
-//    min_samples_leaf(1),
-//    min_weight_fraction_leaf(0.0),
-//    max_depth(3),
-//    init("None"),
-//    random_state("None"),
-//    max_features("None"),
-//    verbose(0),
-//    max_leaf_nodes("None"),
-//    warm_start(kFALSE)
-
    //NOTE: max_features must have 3 defferents variables int, float and string
    //search a solution with PyObject
    PyObject *poinit = Eval(init);
