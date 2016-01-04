@@ -50,7 +50,7 @@
 #include "TStyle.h"
 
 #include <fenv.h> // turn on or off exceptions for NaN and other numeric exceptions
-
+#include <type_traits>
 
 
 namespace TMVA
@@ -169,23 +169,23 @@ namespace TMVA
 
         inline ModeOutputValues operator| (ModeOutputValues lhs, ModeOutputValues rhs)
         {
-            return (ModeOutputValues)(static_cast<std::underlying_type_t<ModeOutputValues>>(lhs) | static_cast<std::underlying_type_t<ModeOutputValues>>(rhs));
+            return (ModeOutputValues)(static_cast<std::underlying_type<ModeOutputValues>::type>(lhs) | static_cast<std::underlying_type<ModeOutputValues>::type>(rhs));
         }
 
         inline ModeOutputValues operator|= (ModeOutputValues& lhs, ModeOutputValues rhs)
         {
-            lhs = (ModeOutputValues)(static_cast<std::underlying_type_t<ModeOutputValues>>(lhs) | static_cast<std::underlying_type_t<ModeOutputValues>>(rhs));
+            lhs = (ModeOutputValues)(static_cast<std::underlying_type<ModeOutputValues>::type>(lhs) | static_cast<std::underlying_type<ModeOutputValues>::type>(rhs));
             return lhs;
         }
 
         inline ModeOutputValues operator& (ModeOutputValues lhs, ModeOutputValues rhs)
         {
-            return (ModeOutputValues)(static_cast<std::underlying_type_t<ModeOutputValues>>(lhs) & static_cast<std::underlying_type_t<ModeOutputValues>>(rhs));
+            return (ModeOutputValues)(static_cast<std::underlying_type<ModeOutputValues>::type>(lhs) & static_cast<std::underlying_type<ModeOutputValues>::type>(rhs));
         }
 
         inline ModeOutputValues operator&= (ModeOutputValues& lhs, ModeOutputValues rhs)
         {
-            lhs = (ModeOutputValues)(static_cast<std::underlying_type_t<ModeOutputValues>>(lhs) & static_cast<std::underlying_type_t<ModeOutputValues>>(rhs));
+            lhs = (ModeOutputValues)(static_cast<std::underlying_type<ModeOutputValues>::type>(lhs) & static_cast<std::underlying_type<ModeOutputValues>::type>(rhs));
             return lhs;
         }
 
