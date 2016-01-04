@@ -119,6 +119,11 @@ macro(config_compiler_and_linker)
     set(cxx_no_rtti_flags "")
   endif()
 
+  CHECK_CXX_COMPILER_FLAG(-Wno-missing-field-initializers HAS_WNOMISSINGFIELDINIT)
+  if (HAS_WNOMISSINGFIELDINIT)
+    set(cxx_base_flags "${cxx_base_flags} -Wno-missing-field-initializers")
+  endif()
+
   if (CMAKE_USE_PTHREADS_INIT)  # The pthreads library is available and allowed.
     set(cxx_base_flags "${cxx_base_flags} -DGTEST_HAS_PTHREAD=1")
   else()
