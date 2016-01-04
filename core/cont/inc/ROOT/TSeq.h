@@ -41,7 +41,7 @@ Random access:
    cout << "Random access: 3rd element is " << ulSeq[2] << endl;
 ~~~
 A function to create sequences inferring the type:
-~~~.{cpp}
+~~~{.cpp}
    for (auto i : MakeSeq(1000000000000UL, 1000000000003UL)) {
       cout << "Element " << i << endl;
    }
