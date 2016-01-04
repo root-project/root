@@ -190,7 +190,7 @@ void Delaunay2D::DoFindTriangles() {
 
 				Triangle tri;
 
-				auto transform = [&] (const uint i) {
+				auto transform = [&] (const unsigned int i) {
 					tri.x[i] = face.vertex(i)->point().x();
 					tri.y[i] = face.vertex(i)->point().y();
 					tri.idx[i] = face.vertex(i)->info();
@@ -326,7 +326,7 @@ void Delaunay2D::DoFindTriangles() {
 	for(int t = 0; t < out.numberoftriangles; ++t){
 		Triangle tri;
 
-		auto transform = [&] (const uint v) {
+		auto transform = [&] (const unsigned int v) {
 			//each triangle as numberofcorners vertices ( = 3)
 			tri.idx[v] = out.trianglelist[t*out.numberofcorners + v];
 
@@ -354,14 +354,14 @@ void Delaunay2D::DoFindTriangles() {
 		auto bx = std::minmax({tri.x[0], tri.x[1], tri.x[2]});
 		auto by = std::minmax({tri.y[0], tri.y[1], tri.y[2]});
 
-		uint cellXmin = CellX(bx.first);
-		uint cellXmax = CellX(bx.second);
+		unsigned int cellXmin = CellX(bx.first);
+		unsigned int cellXmax = CellX(bx.second);
 
-		uint cellYmin = CellY(by.first);
-		uint cellYmax = CellY(by.second);
+		unsigned int cellYmin = CellY(by.first);
+		unsigned int cellYmax = CellY(by.second);
 
-		for(uint i = cellXmin; i <= cellXmax; ++i)
-			for(uint j = cellYmin; j <= cellYmax; ++j){
+		for(unsigned int i = cellXmin; i <= cellXmax; ++i)
+			for(unsigned int j = cellYmin; j <= cellYmax; ++j){
 				//printf("(%u,%u) = %u\n", i, j, Cell(i,j));
 				fCells[Cell(i,j)].insert(t);
 			}
@@ -382,7 +382,7 @@ double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
    ///  FindAllTriangles();
 
     //see comment in header for CGAL fallback section
-    auto bayCoords = [&] (const uint t) -> std::tuple<double, double, double> {
+    auto bayCoords = [&] (const unsigned int t) -> std::tuple<double, double, double> {
     	double la = ( (fTriangles[t].y[1] - fTriangles[t].y[2])*(xx - fTriangles[t].x[2])
     					 + (fTriangles[t].x[2] - fTriangles[t].x[1])*(yy - fTriangles[t].y[2]) ) * fTriangles[t].invDenom;
     	double lb = ( (fTriangles[t].y[2] - fTriangles[t].y[0])*(xx - fTriangles[t].x[2])
@@ -401,7 +401,7 @@ double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
 	if(cX < 0 || cX > fNCells || cY < 0 || cY > fNCells)
 		return fZout; //TODO some more fancy interpolation here
 
-    for(uint t : fCells[Cell(cX, cY)]){
+    for(unsigned int t : fCells[Cell(cX, cY)]){
     	auto coords = bayCoords(t);
 
     	if(inTriangle(coords)){
@@ -415,7 +415,7 @@ double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
 
     //debugging
 
-    /*for(uint t = 0; t < fNdt; ++t){
+    /*for(unsigned int t = 0; t < fNdt; ++t){
     	auto coords = bayCoords(t);
 
     	if(inTriangle(coords)){
@@ -423,17 +423,17 @@ double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
     		//brute force found a triangle -> grid not
     		printf("Found triangle %u for (%f,%f) -> (%u,%u)\n", t, xx,yy, cX, cY);
     		printf("Triangles in grid cell: ");
-    		for(uint x : fCells[Cell(cX, cY)])
+    		for(unsigned int x : fCells[Cell(cX, cY)])
     			printf("%u ", x);
     		printf("\n");
 
     		printf("Triangle %u is in cells: ", t);
-    		for(uint i = 0; i <= fNCells; ++i)
-    			for(uint j = 0; j <= fNCells; ++j)
+    		for(unsigned int i = 0; i <= fNCells; ++i)
+    			for(unsigned int j = 0; j <= fNCells; ++j)
     				if(fCells[Cell(i,j)].count(t))
     					printf("(%u,%u) ", i, j);
     		printf("\n");
-    		for(uint i = 0; i < 3; ++i)
+    		for(unsigned int i = 0; i < 3; ++i)
     			printf("\tpoint %u (%u): (%f,%f) -> (%u,%u)\n", i, fTriangles[t].idx[i], fTriangles[t].x[i], fTriangles[t].y[i], CellX(fTriangles[t].x[i]), CellY(fTriangles[t].y[i]));
 
     		//we found the triangle -> interpolate using the barycentric interpolation
