@@ -928,11 +928,11 @@ void TMVA::Factory::WriteDataInformation()
 /// keeps in mind the "optimal one"... and that's the one that will later on be used
 /// in the main training loop.
 
-void TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType) 
+std::map<TString,Double_t> TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType) 
 {
  
    MVector::iterator itrMethod;
-
+   std::map<TString,Double_t> TunedParameters;
    // iterate over methods and optimize
    for( itrMethod = fMethods.begin(); itrMethod != fMethods.end(); ++itrMethod ) {
       Event::SetIsTraining(kTRUE);
@@ -954,9 +954,11 @@ void TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType)
             << (fAnalysisType == Types::kRegression ? "Regression" : 
                 (fAnalysisType == Types::kMulticlass ? "Multiclass classification" : "Classification")) << Endl;
       
-      mva->OptimizeTuningParameters(fomType,fitType);
+      TunedParameters = mva->OptimizeTuningParameters(fomType,fitType);
       Log() << kINFO << "Optimization of tuning paremters finished for Method:"<<mva->GetName() << Endl;
    }
+   return TunedParameters;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
