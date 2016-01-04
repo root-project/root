@@ -1,3 +1,11 @@
+# -*- coding:utf-8 -*-
+
+#-----------------------------------------------------------------------------
+#  Author: Danilo Piparo <Danilo.Piparo@cern.ch> CERN
+#-----------------------------------------------------------------------------
+
+from __future__ import print_function
+
 import os
 import sys
 import select
@@ -107,7 +115,7 @@ def _getLibExtension(thePlatform):
     return pExtMap.get(thePlatform, '.so')
 
 def welcomeMsg():
-    print "Welcome to JupyROOT %s" %ROOT.gROOT.GetVersion()
+    print("Welcome to JupyROOT %s" %ROOT.gROOT.GetVersion())
 
 @contextmanager
 def _setIgnoreLevel(level):
@@ -301,7 +309,7 @@ class CanvasDrawer(object):
         for unsupportedPattern in _jsNotDrawableClassesPatterns:
             for primitiveTypeName in primitivesTypesNames:
                 if fnmatch.fnmatch(primitiveTypeName,unsupportedPattern):
-                    print >> sys.stderr, "The canvas contains an object of a type jsROOT cannot currently handle (%s). Falling back to a static png." %primitiveTypeName
+                    print("The canvas contains an object of a type jsROOT cannot currently handle (%s). Falling back to a static png." %primitiveTypeName, file=sys.stderr)
                     return False
         return True
 
@@ -309,7 +317,6 @@ class CanvasDrawer(object):
     def getJsCode(self):
         # Workaround to have ConvertToJSON work
         json = ROOT.TBufferJSON.ConvertToJSON(self.canvas, 3)
-        #print "JSON:",json
 
         # Here we could optimise the string manipulation
         divId = 'root_plot_' + str(self._getUID())
