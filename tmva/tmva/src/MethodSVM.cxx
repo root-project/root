@@ -78,6 +78,8 @@
 #include <string>
 #include "TH1F.h"
 #include "TMVA/Results.h"
+#include "TMVA/Interval.h"
+#include "TMVA/OptimizeConfigParameters.h"
 #include "TDirectory.h"
 #include <sstream>
 

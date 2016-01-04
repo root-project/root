@@ -939,7 +939,7 @@ std::map<TString,Double_t> TMVA::Factory::OptimizeAllMethods(TString fomType, TS
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       if (!mva) {
          Log() << kFATAL << "Dynamic cast to MethodBase failed" <<Endl;
-         return;
+         return TunedParameters;
       }
 
       if (mva->Data()->GetNTrainingEvents() < MinNoTrainingEvents) {
