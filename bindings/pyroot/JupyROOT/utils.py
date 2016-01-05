@@ -48,8 +48,6 @@ _jsNotDrawableClassesPatterns = ["TGraph[23]D","TH3*","TGraphPolar","TProf*","TE
 
 
 _jsROOTSourceDir = "https://root.cern.ch/js/dev/"
-_jsCanvasWidth = 800
-_jsCanvasHeight = 600
 
 _jsCode = """
 <div id="{jsDivId}"
@@ -320,8 +318,8 @@ class CanvasDrawer(object):
 
         # Here we could optimise the string manipulation
         divId = 'root_plot_' + str(self._getUID())
-        thisJsCode = _jsCode.format(jsCanvasWidth = _jsCanvasWidth,
-                                    jsCanvasHeight = _jsCanvasHeight,
+        thisJsCode = _jsCode.format(jsCanvasWidth = self.canvas.GetWw(),
+                                    jsCanvasHeight = self.canvas.GetWh(),
                                     jsROOTSourceDir = _jsROOTSourceDir,
                                     jsonContent=json.Data(),
                                     jsDrawOptions="",
