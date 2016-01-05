@@ -1676,7 +1676,7 @@ Int_t TXSocket::SendInterrupt(Int_t type)
 
 void TXSocket::SetInterrupt(Bool_t i)
 {
-   R__LOCKGUARD(fAMtx);
+   std::lock_guard<std::recursive_mutex> lock(fAMtx);
    fRDInterrupt = i;
    if (i && fConn) fConn->SetInterrupt();
    if (i && fAWait) fASem.Post();
