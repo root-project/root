@@ -259,6 +259,7 @@ def GetCanvasDrawers():
 def GetGeometryDrawer():
     if not hasattr(ROOT,'gGeoManager'): return
     if not ROOT.gGeoManager: return
+    if not ROOT.gGeoManager.GetUserPaintVolume(): return
     vol = ROOT.gGeoManager.GetTopVolume()
     if vol:
         return NotebookDrawer(vol)
@@ -311,8 +312,7 @@ class NotebookDrawer(object):
        if self.isCanvas:
            self.drawableObject.ResetDrawn()
        else:
-           # DP Can we optimize this?
-           ROOT.gInterpreter.ProcessLine('if (gGeoManager) delete gGeoManager;')
+           ROOT.gGeoManager.SetUserPaintVolume(None)
 
     def _getListOfPrimitivesNamesAndTypes(self):
        """
@@ -333,7 +333,7 @@ class NotebookDrawer(object):
 
     def _canJsDisplay(self):
         if not hasattr(ROOT,"TBufferJSON"):
-            print("The TBufferJSON class is necessary for JS visualisation to work and cannot be found. Did you enable the http module (-D http=ON for CMake)?" file=sys.stderr)
+            print("The TBufferJSON class is necessary for JS visualisation to work and cannot be found. Did you enable the http module (-D http=ON for CMake)?", file=sys.stderr)
             return False
         if not self.isCanvas: return True
         # to be optimised
