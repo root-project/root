@@ -48,6 +48,8 @@ _jsNotDrawableClassesPatterns = ["TGraph[23]D","TH3*","TGraphPolar","TProf*","TE
 
 
 _jsROOTSourceDir = "https://root.cern.ch/js/dev/"
+_jsCanvasWidth = 800
+_jsCanvasHeight = 600
 
 _jsCode = """
 <div id="{jsDivId}"
@@ -60,10 +62,11 @@ requirejs.config(
   paths: {{
     'JSRootCore'    : '{jsROOTSourceDir}/scripts/JSRootCore',
     'JSRootPainter' : '{jsROOTSourceDir}/scripts/JSRootPainter',
+    'JSRootGeoPainter' : '{jsROOTSourceDir}/scripts/JSRootGeoPainter',
   }}
 }}
 );
-require(['JSRootCore', 'JSRootPainter'],
+require(['JSRootCore', 'JSRootPainter', 'JSRootGeoPainter'],
         function(Core, Painter) {{
           var obj = Core.parse('{jsonContent}');
           Painter.draw("{jsDivId}", obj, "{jsDrawOptions}");
@@ -249,6 +252,27 @@ class StreamCapture(object):
     def register(self):
         self.shell.events.register('post_execute', self.post_execute)
 
+def DrawGeometry():
+    if not hasattr(ROOT,'gGeoManager'): return
+    if not ROOT.gGeoManager: return
+    vol = ROOT.gGeoManager.GetTopVolume()
+    if vol:
+        drawer = NotebookDrawer(vol)
+        drawer.Draw()
+        # DP Can we optimize this?
+        ROOT.gInterpreter.ProcessLine('if (gGeoManager) delete gGeoManager;')
+
+def DrawCanvases():
+    for can in ROOT.gROOT.GetListOfCanvases():
+        if can.IsDrawn():
+            drawer = NotebookDrawer(can)
+            drawer.Draw()
+            can.ResetDrawn()
+
+def NotebookDraw():
+    DrawGeometry()
+    DrawCanvases()
+
 class CaptureDrawnCanvases(object):
     '''
     Capture the canvas which is drawn to display it.
@@ -256,28 +280,36 @@ class CaptureDrawnCanvases(object):
     def __init__(self, ip=get_ipython()):
         self.shell = ip
 
-    def _pre_execute(self):
-        pass
-
     def _post_execute(self):
-        for can in ROOT.gROOT.GetListOfCanvases():
-            if can.IsDrawn():
-               can.Draw()
-               can.ResetDrawn()
+        DrawCanvases()
 
     def register(self):
-        self.shell.events.register('pre_execute', self._pre_execute)
         self.shell.events.register('post_execute', self._post_execute)
 
-class CanvasDrawer(object):
+class CaptureDrawnGeometry(object):
+    '''
+    Capture the canvas which is drawn to display it.
+    '''
+    def __init__(self, ip=get_ipython()):
+        self.shell = ip
+
+    def _post_execute(self):
+        DrawGeometry()
+
+    def register(self):
+        self.shell.events.register('post_execute', self._post_execute)
+
+
+class NotebookDrawer(object):
     '''
     Capture the canvas which is drawn and decide if it should be displayed using
     jsROOT.
     '''
     jsUID = 0
 
-    def __init__(self, thePad):
-        self.canvas = thePad
+    def __init__(self, theObject):
+        self.drawableObject = theObject
+        self.isCanvas = self.drawableObject.ClassName() == "TCanvas"
 
     def _getListOfPrimitivesNamesAndTypes(self):
        """
@@ -297,10 +329,11 @@ class CanvasDrawer(object):
         Every DIV containing a JavaScript snippet must be unique in the
         notebook. This methods provides a unique identifier.
         '''
-        CanvasDrawer.jsUID += 1
-        return CanvasDrawer.jsUID
+        NotebookDrawer.jsUID += 1
+        return NotebookDrawer.jsUID
 
     def _canJsDisplay(self):
+        if not self.isCanvas: return True
         # to be optimised
         if not _enableJSVis: return False
         primitivesTypesNames = self._getListOfPrimitivesNamesAndTypes()
@@ -314,15 +347,25 @@ class CanvasDrawer(object):
 
     def getJsCode(self):
         # Workaround to have ConvertToJSON work
-        json = ROOT.TBufferJSON.ConvertToJSON(self.canvas, 3)
+        json = ROOT.TBufferJSON.ConvertToJSON(self.drawableObject, 3)
 
         # Here we could optimise the string manipulation
         divId = 'root_plot_' + str(self._getUID())
-        thisJsCode = _jsCode.format(jsCanvasWidth = self.canvas.GetWw(),
-                                    jsCanvasHeight = self.canvas.GetWh(),
+
+        height = _jsCanvasHeight
+        width = _jsCanvasHeight
+        options = "all"
+
+        if self.isCanvas:
+            height = self.drawableObject.GetWw()
+            width = self.drawableObject.GetWh()
+            options = ""
+
+        thisJsCode = _jsCode.format(jsCanvasWidth = height,
+                                    jsCanvasHeight = width,
                                     jsROOTSourceDir = _jsROOTSourceDir,
-                                    jsonContent=json.Data(),
-                                    jsDrawOptions="",
+                                    jsonContent = json.Data(),
+                                    jsDrawOptions = options,
                                     jsDivId = divId)
         return thisJsCode
 
@@ -336,7 +379,7 @@ class CanvasDrawer(object):
     def getPngImage(self):
         ofile = tempfile.NamedTemporaryFile(suffix=".png")
         with _setIgnoreLevel(ROOT.kError):
-            self.canvas.SaveAs(ofile.name)
+            self.drawableObject.SaveAs(ofile.name)
         img = IPython.display.Image(filename=ofile.name, format='png', embed=True)
         return img
 
@@ -363,7 +406,7 @@ def _PyDraw(thePad):
    """
    Invoke the draw function and intercept the graphics
    """
-   drawer = CanvasDrawer(thePad)
+   drawer = NotebookDrawer(thePad)
    drawer.Draw()
 
 
@@ -389,6 +432,7 @@ def loadExtensionsAndCapturers():
     captures.append(StreamCapture(sys.stderr))
     captures.append(StreamCapture(sys.stdout))
     captures.append(CaptureDrawnCanvases())
+    captures.append(CaptureDrawnGeometry())
 
     for capture in captures: capture.register()
 
@@ -397,8 +441,6 @@ def enhanceROOTModule():
     ROOT.disableJSVis = disableJSVis
     ROOT.enableJSVisDebug = enableJSVisDebug
     ROOT.disableJSVisDebug = disableJSVisDebug
-    ROOT.TCanvas.DrawCpp = ROOT.TCanvas.Draw
-    ROOT.TCanvas.Draw = _PyDraw
 
 def enableCppHighlighting():
     ipDispJs = IPython.display.display_javascript
