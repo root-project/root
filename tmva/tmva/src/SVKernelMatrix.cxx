@@ -15,6 +15,12 @@
 *      Andrzej Zemla  <azemla@cern.ch>        - IFJ PAN, Krakow, Poland          *
 *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *
 *                                                                                *
+* Minor modification to improve optimisation of kernel values:                   *
+*      Adrian Bevan   <adrian.bevan@cern.ch>  -         Queen Mary               *
+*                                                       University of London, UK *
+*      Tom Stevenson <thomas.james.stevenson@cern.ch> - Queen Mary               *
+*                                                       University of London, UK *
+*                                                                                *
 * Copyright (c) 2005:                                                            *
 *      CERN, Switzerland                                                         *
 *      MPI-K Heidelberg, Germany                                                 *
@@ -26,55 +32,49 @@
 **********************************************************************************/
 
 #include "TMVA/SVKernelMatrix.h"
-
-#include "TMVA/MsgLogger.h"
-#include "TMVA/SVEvent.h"
 #include "TMVA/SVKernelFunction.h"
-#include "TMVA/Types.h"
-
-#include "RtypesCore.h"
-
+#include "TMVA/SVEvent.h"
 #include <iostream>
 #include <stdexcept>
+#include "TMVA/MsgLogger.h"
 
-////////////////////////////////////////////////////////////////////////////////
-/// constructor
-
+//_______________________________________________________________________
 TMVA::SVKernelMatrix::SVKernelMatrix()
    : fSize(0),
      fKernelFunction(0),
      fSVKernelMatrix(0),
      fLogger( new MsgLogger("ResultsRegression", kINFO) )
 {
+   // constructor
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// constructor
-
+//_______________________________________________________________________
 TMVA::SVKernelMatrix::SVKernelMatrix( std::vector<TMVA::SVEvent*>* inputVectors, SVKernelFunction* kernelFunction )
    : fSize(inputVectors->size()),
      fKernelFunction(kernelFunction),
      fLogger( new MsgLogger("SVKernelMatrix", kINFO) )
 {
+   // constructor
    fSVKernelMatrix = new Float_t*[fSize];
    try{
       for (UInt_t i = 0; i < fSize; i++) fSVKernelMatrix[i] = new Float_t[i+1];
    }catch(...){
       Log() << kFATAL << "Input data too large. Not enough memory to allocate memory for Support Vector Kernel Matrix. Please reduce the number of input events or use a different method."<<Endl;
    }
+
+   // We compute the diagonal and one half of the off diagonal. When reading back we use
+   // the symmetry of i,j to j,i to ensure the correct values are returned.
    for (UInt_t i = 0; i < fSize; i++) {
-      fSVKernelMatrix[i][i] = 2*fKernelFunction->Evaluate((*inputVectors)[i], (*inputVectors)[i]);
       for (UInt_t j = 0; j <=i; j++) {
          fSVKernelMatrix[i][j] = fKernelFunction->Evaluate((*inputVectors)[i], (*inputVectors)[j]);
       }
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// destructor
-
+//_______________________________________________________________________
 TMVA::SVKernelMatrix::~SVKernelMatrix()
 {
+   // destructor
    for (UInt_t i = fSize -1; i > 0; i--) {
       delete[] fSVKernelMatrix[i];
       fSVKernelMatrix[i] = 0;
@@ -83,11 +83,11 @@ TMVA::SVKernelMatrix::~SVKernelMatrix()
    fSVKernelMatrix = 0;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// returns a row of the kernel matrix
-
+//_______________________________________________________________________
 Float_t* TMVA::SVKernelMatrix::GetLine( UInt_t line )
 {
+   // returns a row of the kernel matrix
+
    Float_t* fLine = NULL;
    if (line >= fSize) {
       return NULL;
@@ -102,11 +102,11 @@ Float_t* TMVA::SVKernelMatrix::GetLine( UInt_t line )
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// returns an element of the kernel matrix
-
+//_______________________________________________________________________
 Float_t TMVA::SVKernelMatrix::GetElement(UInt_t i, UInt_t j)
 { 
+   // returns an element of the kernel matrix
+
    if (i > j) return fSVKernelMatrix[i][j]; 
    else       return fSVKernelMatrix[j][i]; // it's symmetric, ;)
 }

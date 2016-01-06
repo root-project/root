@@ -20,6 +20,12 @@
  *      Kamil Kraszewski      <kalq@cern.ch>     - IFJ PAN & UJ, Krakow, Poland   *
  *      Maciej Kruk           <mkruk@cern.ch>    - IFJ PAN & AGH, Krakow, Poland  *
  *                                                                                *
+ * Introduction of kernel parameter optimisation                                  *
+ *            and additional kernel functions by:                                 *
+ *      Adrian Bevan          <adrian.bevan@cern.ch> -   Queen Mary               *
+ *                                                       University of London, UK *
+ *      Tom Stevenson <thomas.james.stevenson@cern.ch> - Queen Mary               *
+ *                                                       University of London, UK *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland                                                         *
@@ -36,10 +42,13 @@
 // SMO Platt's SVM classifier with Keerthi & Shavade improvements
 //_______________________________________________________________________
 
+#include <iostream> //added for debugging
+#include <sstream>
+#include <algorithm>
+
 #include "Riostream.h"
-#include "TFile.h"
-#include "TVectorD.h"
 #include "TMath.h"
+#include "TFile.h"
 
 #include "TMVA/ClassifierFactory.h"
 #ifndef ROOT_TMVA_MethodSVM
@@ -64,27 +73,28 @@
 #include "TMVA/SVKernelFunction.h"
 #endif
 
-#include "TMVA/DataSet.h"
-#include "TMVA/DataSetInfo.h"
-#include "TMVA/Event.h"
-#include "TMVA/MethodBase.h"
-#include "TMVA/MsgLogger.h"
-#include "TMVA/Types.h"
+#include "TMVA/ResultsClassification.h"
 
 #include <string>
+#include "TH1F.h"
+#include "TMVA/Results.h"
+#include "TMVA/Interval.h"
+#include "TMVA/OptimizeConfigParameters.h"
+#include "TDirectory.h"
+#include <sstream>
 
 using std::vector;
+using std::string;
+using std::stringstream;
 
 //const Int_t basketsize__ = 1280000;
 REGISTER_METHOD(SVM)
 
 ClassImp(TMVA::MethodSVM)
 
-////////////////////////////////////////////////////////////////////////////////
-/// standard constructor
-
-TMVA::MethodSVM::MethodSVM( const TString& jobName, const TString& methodTitle, DataSetInfo& theData,
-                            const TString& theOption, TDirectory* theTargetDir )
+//_______________________________________________________________________
+   TMVA::MethodSVM::MethodSVM( const TString& jobName, const TString& methodTitle, DataSetInfo& theData,
+                               const TString& theOption, TDirectory* theTargetDir )
    : MethodBase( jobName, Types::kSVM, methodTitle, theData, theOption, theTargetDir )
    , fCost(0)
    , fTolerance(0)
@@ -102,12 +112,23 @@ TMVA::MethodSVM::MethodSVM( const TString& jobName, const TString& methodTitle, 
    , fOrder(0)
    , fTheta(0)
    , fKappa(0)
+   , fMult(0)
+   , fNumVars(0)
+   , fGammas("")
+   , fGammaList("")
+   , fDataSize(0)
+   , fLoss(0)
 {
+   // standard constructor
+  //fmGamma.clear();
+  fVarNames.clear();
+  fNumVars = theData.GetVariableInfos().size();
+  for( int i=0; i<fNumVars; i++){
+    fVarNames.push_back(theData.GetVariableInfos().at(i).GetTitle());
+  }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// constructor from weight file
-
+//_______________________________________________________________________
 TMVA::MethodSVM::MethodSVM( DataSetInfo& theData, const TString& theWeightFile, TDirectory*  theTargetDir )
    : MethodBase( Types::kSVM, theData, theWeightFile, theTargetDir )
    , fCost(0)
@@ -126,54 +147,100 @@ TMVA::MethodSVM::MethodSVM( DataSetInfo& theData, const TString& theWeightFile, 
    , fOrder(0)
    , fTheta(0)
    , fKappa(0)
+   , fMult(0)
+   , fNumVars(0)
+   , fGammas("")
+   , fGammaList("")
+   , fDataSize(0)
+   , fLoss(0)
 {
+  //fmGamma.clear();
+  fVarNames.clear();
+  fNumVars = theData.GetVariableInfos().size();
+  for( int i=0;i<fNumVars; i++){
+    fVarNames.push_back(theData.GetVariableInfos().at(i).GetTitle());
+  }
+  // constructor from weight file
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// destructor
+//_______________________________________________________________________
+void TMVA::MethodSVM::Reset( void )
+{
+  // reset the method, as if it had just been instantiated (forget all training etc.)
+  fSupportVectors->clear();
+  for (UInt_t i=0; i<fInputData->size(); i++){
+    delete fInputData->at(i);
+    fInputData->at(i)=0;
+  }
+  fInputData->clear();
+  if (fWgSet !=0)           { fWgSet=0; }
+  if (fSVKernelFunction !=0 ) { fSVKernelFunction = 0; }
+  if (Data()){
+    Data()->DeleteResults(GetMethodName(), Types::kTraining, GetAnalysisType());
+  }
 
+  Log() << kDEBUG << " successfully(?) reset the method " << Endl;
+}
+
+//_______________________________________________________________________
 TMVA::MethodSVM::~MethodSVM()
 {
-   if (fInputData !=0)       { delete fInputData; fInputData=0; }
-   if (fSupportVectors !=0 ) { delete fSupportVectors; fSupportVectors = 0; }
-   if (fWgSet !=0)           { delete fWgSet; fWgSet=0; }
-   if (fSVKernelFunction !=0 ) { delete fSVKernelFunction; fSVKernelFunction = 0; }
+  // destructor
+
+  fSupportVectors->clear();
+  for (UInt_t i=0; i<fInputData->size(); i++) {
+    delete fInputData->at(i);
+  }
+  if (fWgSet !=0)           { delete fWgSet; fWgSet=0; }
+  if (fSVKernelFunction !=0 ) { delete fSVKernelFunction; fSVKernelFunction = 0; }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// SVM can handle classification with 2 classes and regression with one regression-target
-
+//_______________________________________________________________________
 Bool_t TMVA::MethodSVM::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets )
 {
+   // SVM can handle classification with 2 classes and regression with one regression-target
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    if (type == Types::kRegression     && numberTargets == 1) return kTRUE;
    return kFALSE;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// default initialisation
-
+//_______________________________________________________________________
 void TMVA::MethodSVM::Init()
 {
-   // SVM always uses normalised input variables
-   SetNormalised( kTRUE );
+  // default initialisation
 
-   // Helge: do not book a event vector of given size but rather fill the vector
-   //        later with pus_back. Anyway, this is NOT what is time consuming in
-   //        SVM and it allows to skip totally events with weights == 0 ;)
-   fInputData = new std::vector<TMVA::SVEvent*>(0);
-   fSupportVectors = new std::vector<TMVA::SVEvent*>(0);
+  // SVM always uses normalised input variables
+  SetNormalised( kTRUE );
+
+  // Helge: do not book a event vector of given size but rather fill the vector
+  //        later with pus_back. Anyway, this is NOT what is time consuming in
+  //        SVM and it allows to skip totally events with weights == 0 ;)
+  fInputData = new std::vector<TMVA::SVEvent*>(0);
+  fSupportVectors = new std::vector<TMVA::SVEvent*>(0);
+     
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// declare options available for this method
+//_______________________________________________________________________
 
 void TMVA::MethodSVM::DeclareOptions()
 {
+   // declare options available for this method
+
+   DeclareOptionRef( fTheKernel = "RBF", "Kernel", "Pick which kernel ( RBF or MultiGauss )");
    // for gaussian kernel parameter(s)
    DeclareOptionRef( fGamma = 1., "Gamma", "RBF kernel parameter: Gamma (size of the Kernel)");
-
+   // for polynomial kernel parameter(s)
+   DeclareOptionRef( fOrder = 3, "Order", "Polynomial Kernel parameter: polynomial order");
+   DeclareOptionRef( fTheta = 1., "Theta", "Polynomial Kernel parameter: polynomial theta");
+   // for multi-gaussian kernel parameter(s)
+   DeclareOptionRef( fGammas = "", "GammaList", "MultiGauss parameters" );
+   
    DeclareOptionRef( fCost,   "C",        "Cost parameter" );
+   // for range and step number for kernel paramter optimisation
+   DeclareOptionRef( fTune = "All", "Tune", "Tune Parameters");
+   // for list of kernels to be used with product or sum kernel
+   DeclareOptionRef( fMultiKernels = "None", "KernelList", "Sum or product of kernels");
+   DeclareOptionRef( fLoss = "hinge", "Loss", "Loss function");
    if (DoRegression()) {
       fCost = 0.002;
    }else{
@@ -184,11 +251,10 @@ void TMVA::MethodSVM::DeclareOptions()
 
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// options that are used ONLY for the READER to ensure backward compatibility
-
+//_______________________________________________________________________
 void TMVA::MethodSVM::DeclareCompatibilityOptions()
 {
+   // options that are used ONLY for the READER to ensure backward compatibility
    MethodBase::DeclareCompatibilityOptions();
    DeclareOptionRef( fNSubSets  = 1,    "NSubSets", "Number of training subsets" );
    DeclareOptionRef( fTheKernel = "Gauss", "Kernel", "Uses kernel function");
@@ -201,34 +267,100 @@ void TMVA::MethodSVM::DeclareCompatibilityOptions()
    DeclareOptionRef( fKappa = 1., "Kappa", "Sigmoid Kernel parameter: kappa");
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// option post processing (if necessary)
+//_______________________________________________________________________
 
 void TMVA::MethodSVM::ProcessOptions()
 {
-   if (IgnoreEventsWithNegWeightsInTraining()) {
-      Log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
-            << GetMethodTypeName()
-            << " --> please remove \"IgnoreNegWeightsInTraining\" option from booking string."
-            << Endl;
-   }
+  // option post processing (if necessary)                                                                                                                                          
+  if (IgnoreEventsWithNegWeightsInTraining()) {
+    Log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
+	  << GetMethodTypeName()
+	  << " --> please remove \"IgnoreNegWeightsInTraining\" option from booking string."
+	  << Endl;
+  }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Train SVM
-
+//_______________________________________________________________________
 void TMVA::MethodSVM::Train()
 {
+   // Train SVM
    Data()->SetCurrentType(Types::kTraining);
-
    Log() << kDEBUG << "Create event vector"<< Endl;
-   for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++){
-      if (GetEvent(ievt)->GetWeight() != 0) 
-         fInputData->push_back(new SVEvent(GetEvent(ievt), fCost, DataInfo().IsSignal(GetEvent(ievt)))); 
+   fDataSize = Data()->GetNEvents();
+   Int_t nSignal = Data()->GetNEvtSigTrain();
+   Int_t nBackground = Data()->GetNEvtBkgdTrain();
+   Double_t CSig;
+   Double_t CBkg;
+   // Use number of signal and background from above to weight the cost parameter
+   // so that the training is not biased towards the larger dataset when the signal
+   // and background samples are significantly different sizes.
+   if(nSignal < nBackground){
+     CSig = fCost;
+     CBkg = CSig*((double)nSignal/nBackground);
+   }
+   else{
+     CBkg = fCost;
+     CSig = CBkg*((double)nSignal/nBackground);
    }
 
-   fSVKernelFunction = new SVKernelFunction(fGamma);
 
+   // Loop over events and assign the correct cost parameter.
+   for (Int_t ievnt=0; ievnt<Data()->GetNEvents(); ievnt++){
+     if (GetEvent(ievnt)->GetWeight() != 0){  
+       if(DataInfo().IsSignal(GetEvent(ievnt))){
+	 fInputData->push_back(new SVEvent(GetEvent(ievnt), CSig, DataInfo().IsSignal(GetEvent(ievnt)))); 
+       }
+       else{
+	 fInputData->push_back(new SVEvent(GetEvent(ievnt), CBkg, DataInfo().IsSignal(GetEvent(ievnt)))); 
+       }
+     }
+   }
+
+
+   // Set the correct kernel function.
+   // Here we only use valid Mercer kernels. In the literature some people have reported reasonable
+   // results using Sigmoid kernel function however that is not a valid Mercer kernel and is not used
+   // here.
+   if( fTheKernel == "RBF"){
+     fSVKernelFunction = new SVKernelFunction( SVKernelFunction::kRBF, fGamma);
+   }
+   else if( fTheKernel == "MultiGauss" ){
+     if(fGammas!=""){
+       SetMGamma(fGammas);
+       fGammaList=fGammas;
+     }
+     else{
+       if(fmGamma.size()!=0){ GetMGamma(fmGamma); } // Set fGammas if empty to write to XML file
+     }
+     fSVKernelFunction = new SVKernelFunction(fmGamma);
+   }
+   else if( fTheKernel == "Polynomial" ){
+     fSVKernelFunction = new SVKernelFunction( SVKernelFunction::kPolynomial, fOrder, fTheta);
+   }
+   else if( fTheKernel == "Prod" ){
+     if(fGammas!=""){
+       SetMGamma(fGammas);
+       fGammaList=fGammas;
+     }
+     else{
+       if(fmGamma.size()!=0){ GetMGamma(fmGamma); } // Set fGammas if empty to write to XML file
+     }
+     fSVKernelFunction = new SVKernelFunction( SVKernelFunction::kProd, MakeKernelList(fMultiKernels,fTheKernel), fmGamma, fGamma, fOrder, fTheta );
+   }
+   else if( fTheKernel == "Sum" ){
+     if(fGammas!=""){
+       SetMGamma(fGammas);
+       fGammaList=fGammas;
+     }
+     else{
+       if(fmGamma.size()!=0){ GetMGamma(fmGamma); } // Set fGammas if empty to write to XML file
+     }
+     fSVKernelFunction = new SVKernelFunction( SVKernelFunction::kSum, MakeKernelList(fMultiKernels,fTheKernel), fmGamma, fGamma, fOrder, fTheta );
+   }
+   else {
+     Log() << kWARNING << fTheKernel << " is not a recognised kernel function." << Endl;
+     exit(1);
+   }
    Log()<< kINFO << "Building SVM Working Set...with "<<fInputData->size()<<" event instances"<< Endl;
    Timer bldwstime( GetName());
    fWgSet = new SVWorkingSet( fInputData, fSVKernelFunction,fTolerance, DoRegression() );
@@ -239,32 +371,25 @@ void TMVA::MethodSVM::Train()
    Log() << kINFO << "Sorry, no computing time forecast available for SVM, please wait ..." << Endl;
 
    fWgSet->Train(fMaxIter);
-
    Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime()
          << "                                          " << Endl;
-
    fBparm          = fWgSet->GetBpar();
    fSupportVectors = fWgSet->GetSupportVectors();
-
-
    delete fWgSet;
    fWgSet=0;
-
-   //   for (UInt_t i=0; i<fInputData->size();i++) delete fInputData->at(i);
-   delete fInputData; 
-   fInputData=0;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// write configuration to xml file
-
+//_______________________________________________________________________
 void TMVA::MethodSVM::AddWeightsXMLTo( void* parent ) const
 {
+   // write configuration to xml file
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr(wght,"fBparm",fBparm);
    gTools().AddAttr(wght,"fGamma",fGamma);
+   gTools().AddAttr(wght,"fGammaList",fGammaList);
+   gTools().AddAttr(wght,"fTheta",fTheta);
+   gTools().AddAttr(wght,"fOrder",fOrder);
    gTools().AddAttr(wght,"NSupVec",fSupportVectors->size());
-
    for (std::vector<TMVA::SVEvent*>::iterator veciter=fSupportVectors->begin();
         veciter!=fSupportVectors->end() ; ++veciter ) {
       TVectorD temp(GetNvar()+4);
@@ -285,12 +410,14 @@ void TMVA::MethodSVM::AddWeightsXMLTo( void* parent ) const
       gTools().AddAttr(minnode, "Var"+gTools().StringFromInt(ivar), GetXmin(ivar));
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
+//_______________________________________________________________________
 void TMVA::MethodSVM::ReadWeightsFromXML( void* wghtnode )
 {
    gTools().ReadAttr( wghtnode, "fBparm",fBparm   );
    gTools().ReadAttr( wghtnode, "fGamma",fGamma);
+   gTools().ReadAttr( wghtnode, "fGammaList",fGammaList);
+   gTools().ReadAttr( wghtnode, "fOrder",fOrder);
+   gTools().ReadAttr( wghtnode, "fTheta",fTheta);
    UInt_t fNsupv=0;
    gTools().ReadAttr( wghtnode, "NSupVec",fNsupv   );
 
@@ -298,7 +425,7 @@ void TMVA::MethodSVM::ReadWeightsFromXML( void* wghtnode )
    Float_t alpha_p = 0.;
 
    Int_t typeFlag=-1;
-   // UInt_t ns = 0;
+   //UInt_t ns = 0;
    std::vector<Float_t>* svector = new std::vector<Float_t>(GetNvar());
 
    if (fMaxVars!=0) delete fMaxVars;
@@ -315,7 +442,7 @@ void TMVA::MethodSVM::ReadWeightsFromXML( void* wghtnode )
    for (UInt_t ievt = 0; ievt < fNsupv; ievt++) {
       TVectorD temp(GetNvar()+4);
       gTools().ReadTVectorDFromXML(supportvectornode,"SupportVector",&temp);
-      // ns=(UInt_t)temp[0];
+      //ns=(UInt_t)temp[0];
       typeFlag=(int)temp[1];
       alpha=temp[2];
       alpha_p=temp[3];
@@ -332,24 +459,43 @@ void TMVA::MethodSVM::ReadWeightsFromXML( void* wghtnode )
    for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
       gTools().ReadAttr( maxminnode,"Var"+gTools().StringFromInt(ivar),(*fMinVars)[ivar]);
    if (fSVKernelFunction!=0) delete fSVKernelFunction;
-   fSVKernelFunction = new SVKernelFunction(fGamma);
+   if( fTheKernel == "RBF" ){
+     fSVKernelFunction = new SVKernelFunction(SVKernelFunction::kRBF, fGamma);
+   }
+   else if( fTheKernel == "MultiGauss" ){
+     SetMGamma(fGammaList);
+     fSVKernelFunction = new SVKernelFunction(fmGamma);
+   }
+   else if( fTheKernel == "Polynomial" ){
+     fSVKernelFunction = new SVKernelFunction(SVKernelFunction::kPolynomial, fOrder, fTheta);
+   }
+   else if( fTheKernel == "Prod" ){
+     SetMGamma(fGammaList);
+     fSVKernelFunction = new SVKernelFunction(SVKernelFunction::kSum, MakeKernelList(fMultiKernels,fTheKernel), fmGamma, fGamma, fOrder, fTheta);
+   }
+   else if( fTheKernel == "Sum" ){
+     SetMGamma(fGammaList);
+     fSVKernelFunction = new SVKernelFunction(SVKernelFunction::kSum, MakeKernelList(fMultiKernels,fTheKernel), fmGamma, fGamma, fOrder, fTheta);
+   }
+   else {
+     Log() << kWARNING << fTheKernel << " is not a recognised kernel function." << Endl;
+     exit(1);
+   }
    delete svector;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-///TODO write IT
-/// write training sample (TTree) to file
-
+//_______________________________________________________________________
 void TMVA::MethodSVM::WriteWeightsToStream( TFile& ) const
 {
+   //TODO write IT
+   // write training sample (TTree) to file
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
+//_______________________________________________________________________
 void  TMVA::MethodSVM::ReadWeightsFromStream( std::istream& istr )
 {
-   if (fSupportVectors !=0) { delete fSupportVectors; fSupportVectors = 0;}
-   fSupportVectors = new std::vector<TMVA::SVEvent*>(0);
+  if (fSupportVectors !=0) { delete fSupportVectors; fSupportVectors = 0;}
+  fSupportVectors = new std::vector<TMVA::SVEvent*>(0);
 
    // read configuration from input stream
    istr >> fBparm;
@@ -384,7 +530,7 @@ void  TMVA::MethodSVM::ReadWeightsFromStream( std::istream& istr )
 
    delete fSVKernelFunction;
    if (fTheKernel == "Gauss" ) {
-      fSVKernelFunction = new SVKernelFunction(1/fDoubleSigmaSquared);
+     fSVKernelFunction = new SVKernelFunction(1/fDoubleSigmaSquared);
    } 
    else {
       SVKernelFunction::EKernelType k = SVKernelFunction::kLinear;
@@ -400,43 +546,35 @@ void  TMVA::MethodSVM::ReadWeightsFromStream( std::istream& istr )
    delete svector;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// TODO write IT
-
+//_______________________________________________________________________
 void TMVA::MethodSVM::ReadWeightsFromStream( TFile& /* fFin */ )
 {
+   // TODO write IT
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// returns MVA value for given event
-
+//_______________________________________________________________________
 Double_t TMVA::MethodSVM::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
+   // returns MVA value for given event
    Double_t myMVA = 0;
-
    // TODO: avoid creation of a new SVEvent every time (Joerg)
    SVEvent* ev = new SVEvent( GetEvent(), 0. ); // check for specificators
-
    for (UInt_t ievt = 0; ievt < fSupportVectors->size() ; ievt++) {
       myMVA += ( fSupportVectors->at(ievt)->GetAlpha()
                  * fSupportVectors->at(ievt)->GetTypeFlag()
                  * fSVKernelFunction->Evaluate( fSupportVectors->at(ievt), ev ) );
    }
-
    delete ev;
-
    myMVA -= fBparm;
-
    // cannot determine error
    NoErrorCalc(err, errUpper);
-
    // 08/12/09: changed sign here to make results agree with convention signal=1
    return 1.0/(1.0 + TMath::Exp(myMVA));
 }
-////////////////////////////////////////////////////////////////////////////////
-
+//_______________________________________________________________________
 const std::vector<Float_t>& TMVA::MethodSVM::GetRegressionValues()
 {
+
    if( fRegressionReturnVal == NULL )
       fRegressionReturnVal = new std::vector<Float_t>();
    fRegressionReturnVal->clear();
@@ -465,11 +603,10 @@ const std::vector<Float_t>& TMVA::MethodSVM::GetRegressionValues()
    return *fRegressionReturnVal;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// write specific classifier response
-
+//_______________________________________________________________________
 void TMVA::MethodSVM::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
+   // write specific classifier response
    const int fNsupv = fSupportVectors->size();
    fout << "   // not implemented for class: \"" << className << "\"" << std::endl;
    fout << "   float        fBparameter;" << std::endl;
@@ -542,14 +679,13 @@ void TMVA::MethodSVM::MakeClassSpecific( std::ostream& fout, const TString& clas
    fout << "};" << std::endl<< std::endl;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// get help message text
-///
-/// typical length of text line:
-///         "|--------------------------------------------------------------|"
-
+//_______________________________________________________________________
 void TMVA::MethodSVM::GetHelpMessage() const
 {
+   // get help message text
+   //
+   // typical length of text line:
+   //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;
@@ -580,4 +716,446 @@ void TMVA::MethodSVM::GetHelpMessage() const
    Log() << "each evaluation scales like the square of the number of training " << Endl;
    Log() << "events so that a coarse preliminary tuning should be performed on " << Endl;
    Log() << "reduced data sets." << Endl;
+}
+
+//___________________________________________________________________________________________________
+std::map<TString,Double_t> TMVA::MethodSVM::OptimizeTuningParameters(TString fomType, TString fitType)
+{
+  // This is used to optimise the kernel function parameters and cost. All kernel parameters
+  // are optimised by default with default ranges, however the parameters to be optimised can
+  // be set when booking the method with the option Tune.
+  // Example: "Tune=Gamma[0.01;1.0;100]" would only tune the RBF Gamma between 0.01 and 1.0 with                                                                                      // 100 steps.
+
+  // Call the Optimizer with the set of kernel parameters and ranges that are meant to be tuned.  
+  std::map< TString,std::vector<Double_t> > optVars;
+  // Get parameters and options specified in booking of method.
+  if(fTune != "All"){
+    optVars= GetTuningOptions();
+  }
+  std::map< TString,std::vector<Double_t> >::iterator iter;
+  // Fill all the tuning parameters that should be optimized into a map
+  std::map<TString,TMVA::Interval*> tuneParameters;
+  std::map<TString,Double_t> tunedParameters;
+  // Note: the 3rd parameter in the interval is the "number of bins", NOT the stepsize!!
+  // The actual values are always read from the middle of the bins.
+  Log() << kINFO << "Using the " << fTheKernel << " kernel." << Endl;
+  // Setup map of parameters based on the specified options or defaults.
+  if( fTheKernel == "RBF" ){
+    if(fTune == "All"){
+      tuneParameters.insert(std::pair<TString,Interval*>("Gamma",new Interval(0.01,1.,100)));
+      tuneParameters.insert(std::pair<TString,Interval*>("C",new Interval(0.01,1.,100)));
+    }
+    else{
+      for(iter=optVars.begin(); iter!=optVars.end(); iter++){
+	if( iter->first == "Gamma" || iter->first == "C"){
+	  tuneParameters.insert(std::pair<TString,Interval*>(iter->first, new Interval(iter->second.at(0),iter->second.at(1),iter->second.at(2))));
+	}
+	else{
+	  Log() << kWARNING << iter->first << " is not a recognised tuneable parameter." << Endl;
+	  exit(1);
+	}
+      }
+    }
+  }
+  else if( fTheKernel == "Polynomial" ){
+    if (fTune == "All"){
+      tuneParameters.insert(std::pair<TString,Interval*>("Order", new Interval(1,10,10)));
+      tuneParameters.insert(std::pair<TString,Interval*>("Theta", new Interval(0.01,1.,100)));
+      tuneParameters.insert(std::pair<TString,Interval*>("C", new Interval(0.01,1.,100)));
+    }
+    else{
+      for(iter=optVars.begin(); iter!=optVars.end(); iter++){
+        if( iter->first == "Theta" || iter->first == "C"){
+          tuneParameters.insert(std::pair<TString,Interval*>(iter->first, new Interval(iter->second.at(0),iter->second.at(1),iter->second.at(2))));
+        }
+	else if( iter->first == "Order"){
+	  tuneParameters.insert(std::pair<TString,Interval*>(iter->first, new Interval(iter->second.at(0),iter->second.at(1),iter->second.at(2))));
+	}
+        else{
+          Log() << kWARNING << iter->first << " is not a recognised tuneable parameter." << Endl;
+          exit(1);
+        }
+      }
+    }  
+  }
+  else if( fTheKernel == "MultiGauss" ){
+    if (fTune == "All"){
+      for(int i=0; i<fNumVars; i++){
+	stringstream s;
+	s << fVarNames.at(i);
+	string str = "Gamma_" + s.str();
+	tuneParameters.insert(std::pair<TString,Interval*>(str,new Interval(0.01,1.,100)));
+      }
+      tuneParameters.insert(std::pair<TString,Interval*>("C",new Interval(0.01,1.,100)));
+    } else {
+      for(iter=optVars.begin(); iter!=optVars.end(); iter++){
+        if( iter->first == "GammaList"){
+	  for(int j=0; j<fNumVars; j++){
+            stringstream s;
+            s << fVarNames.at(j);
+            string str = "Gamma_" + s.str();
+            tuneParameters.insert(std::pair<TString,Interval*>(str, new Interval(iter->second.at(0),iter->second.at(1),iter->second.at(2))));
+          }
+        }
+	else if( iter->first == "C"){
+	  tuneParameters.insert(std::pair<TString,Interval*>(iter->first, new Interval(iter->second.at(0),iter->second.at(1),iter->second.at(2))));
+	}
+        else{
+          Log() << kWARNING << iter->first << " is not a recognised tuneable parameter." << Endl;
+          exit(1);
+        }
+      }
+    }
+  }
+  else if( fTheKernel == "Prod" ){
+    std::stringstream tempstring(fMultiKernels);
+    std::string value;
+    while (std::getline(tempstring,value,'*')){
+      if(value == "RBF"){
+	tuneParameters.insert(std::pair<TString,Interval*>("Gamma",new Interval(0.01,1.,100)));
+      }
+      else if(value == "MultiGauss"){
+        for(int i=0; i<fNumVars; i++){
+	  stringstream s;
+	  s << fVarNames.at(i);
+	  string str = "Gamma_" + s.str();
+	  tuneParameters.insert(std::pair<TString,Interval*>(str,new Interval(0.01,1.,100)));
+	}
+      }
+      else if(value == "Polynomial"){
+	tuneParameters.insert(std::pair<TString,Interval*>("Order",new Interval(1,10,10)));
+	tuneParameters.insert(std::pair<TString,Interval*>("Theta",new Interval(0.0,1.0,101)));
+      }
+      else {
+	Log() << kWARNING << value << " is not a recognised kernel function." << Endl;
+	exit(1);
+      }
+    }
+    tuneParameters.insert(std::pair<TString,Interval*>("C",new Interval(0.01,1.,100)));
+  }
+  else if( fTheKernel == "Sum" ){
+    std::stringstream tempstring(fMultiKernels);
+    std::string value;
+    while (std::getline(tempstring,value,'+')){
+      if(value == "RBF"){
+        tuneParameters.insert(std::pair<TString,Interval*>("Gamma",new Interval(0.01,1.,100)));
+      }
+      else if(value == "MultiGauss"){
+	for(int i=0; i<fNumVars; i++){
+	  stringstream s;
+          s << fVarNames.at(i);
+          string str = "Gamma_" + s.str();
+          tuneParameters.insert(std::pair<TString,Interval*>(str,new Interval(0.01,1.,100)));
+	}
+      }
+      else if(value == "Polynomial"){
+        tuneParameters.insert(std::pair<TString,Interval*>("Order",new Interval(1,10,10)));
+        tuneParameters.insert(std::pair<TString,Interval*>("Theta",new Interval(0.0,1.0,101)));
+      }
+      else {
+        Log() << kWARNING << value << " is not a recognised kernel function." << Endl;
+        exit(1);
+      }
+    }
+    tuneParameters.insert(std::pair<TString,Interval*>("C",new Interval(0.01,1.,100)));
+  }
+  else {
+    Log() << kWARNING << fTheKernel << " is not a recognised kernel function." << Endl;
+    exit(1);
+  }
+  Log() << kINFO << " the following SVM parameters will be tuned on the respective *grid*\n" << Endl;
+  std::map<TString,TMVA::Interval*>::iterator it;
+  for(it=tuneParameters.begin(); it!=tuneParameters.end(); it++){
+    Log() << kWARNING << it->first <<Endl;
+    (it->second)->Print(Log());
+    Log()<<Endl;
+  }
+  OptimizeConfigParameters optimize(this, tuneParameters, fomType, fitType);
+  tunedParameters=optimize.optimize();
+  return tunedParameters;
+
+}
+
+//______________________________ TJS set optimised SVM _______________________________________________
+void TMVA::MethodSVM::SetTuneParameters(std::map<TString,Double_t> tuneParameters)
+{
+  // set the tuning parameters according to the argument
+
+  std::map<TString,Double_t>::iterator it;
+  if( fTheKernel == "RBF" ){
+    for(it=tuneParameters.begin(); it!=tuneParameters.end(); it++){
+      Log() << kWARNING << it->first << " = " << it->second << Endl;
+      if (it->first == "Gamma"){
+	SetGamma (it->second);
+      }
+      else if(it->first == "C"){
+	SetCost (it->second);
+      }
+      else {
+	Log() << kFATAL << " SetParameter for " << it->first << " not implemented " << Endl;
+      }
+    }
+  }
+  else if( fTheKernel == "MultiGauss" ){
+    fmGamma.clear();
+    for(int i=0; i<fNumVars; i++){
+      stringstream s;
+      s << fVarNames.at(i);
+      string str = "Gamma_" + s.str();
+      Log() << kWARNING << tuneParameters.find(str)->first << " = " << tuneParameters.find(str)->second << Endl; 
+      fmGamma.push_back(tuneParameters.find(str)->second);
+    }
+    for(it=tuneParameters.begin(); it!=tuneParameters.end(); it++){
+      if (it->first == "C"){
+	Log() << kWARNING << it->first << " = " << it->second << Endl;
+	SetCost(it->second);
+	break;
+      }
+    }
+  }
+  else if( fTheKernel == "Polynomial" ){
+    for(it=tuneParameters.begin(); it!=tuneParameters.end(); it++){
+      Log() << kWARNING << it->first << " = " << it->second << Endl;
+      if (it->first == "Order"){
+	SetOrder(it->second);
+      }
+      else if (it->first == "Theta"){
+	SetTheta(it->second);
+      }
+      else if(it->first == "C"){ SetCost (it->second);
+      }
+      else if(it->first == "Mult"){
+	SetMult(it->second);
+      }
+      else{
+	Log() << kFATAL << " SetParameter for " << it->first << " not implemented " << Endl;
+      }
+    }
+  }
+  else if( fTheKernel == "Prod" || fTheKernel == "Sum"){
+    fmGamma.clear();
+    for(it=tuneParameters.begin(); it!=tuneParameters.end(); it++){
+      bool foundParam = false;
+      Log() << kWARNING << it->first << " = " << it->second << Endl;
+      for(int i=0; i<fNumVars; i++){
+	stringstream s;
+	s << fVarNames.at(i);
+	string str = "Gamma_" + s.str();
+	if(it->first == str){
+	  fmGamma.push_back(it->second);
+	  foundParam = true;
+	}
+      }
+      if (it->first == "Gamma"){
+        SetGamma (it->second);
+	foundParam = true;
+      }
+      else if (it->first == "Order"){
+        SetOrder (it->second);
+	foundParam = true;
+      }
+      else if (it->first == "Theta"){
+        SetTheta (it->second);
+	foundParam = true;
+      }
+      else if (it->first == "C"){ SetCost (it->second);
+	SetCost (it->second);
+	foundParam = true;
+      }
+      else{
+	if(!foundParam){
+	  Log() << kFATAL << " SetParameter for " << it->first << " not implemented " << Endl;
+	}
+      }
+    }
+  }
+  else {
+    Log() << kWARNING << fTheKernel << " is not a recognised kernel function." << Endl;
+    exit(1);
+  }
+}
+
+//______________________________________________________________________________________________________________________
+void TMVA::MethodSVM::SetMGamma(std::string & mg){
+  // Takes as input a string of values for multigaussian gammas and splits it, filling the gamma vector required by
+  // the SVKernelFunction. Example: "GammaList=0.1,0.2,0.3" would make a vector with Gammas of 0.1,0.2 & 0.3
+  // corresponding to input variables 1,2 & 3 respectively.
+  std::stringstream tempstring(mg);
+  Float_t value;
+  while (tempstring >> value){
+      fmGamma.push_back(value);
+
+      if (tempstring.peek() == ','){
+        tempstring.ignore();
+      }
+  }
+}
+
+//________________________________________________________________________________________________________________________
+void TMVA::MethodSVM::GetMGamma(const std::vector<float> & gammas){
+  // Produces GammaList string for multigaussian kernel to be written to xml file
+  std::ostringstream tempstring;
+  for(UInt_t i = 0; i<gammas.size(); ++i){
+    tempstring << gammas.at(i);
+    if(i!=(gammas.size()-1)){
+      tempstring << ",";
+    }
+  }
+  fGammaList= tempstring.str();
+}
+
+//________________________________________________________________________________________________________________________
+std::vector<TMVA::SVKernelFunction::EKernelType> TMVA::MethodSVM::MakeKernelList(std::string multiKernels, TString kernel)
+{
+  // Function providing string manipulation for product or sum of kernels functions to take list of kernels specified 
+  // in the booking of the method and provide a vector of SV kernels to iterate over in SVKernelFunction.
+  // Example: "KernelList=RBF*Polynomial" would use a product of the RBF and Polynomial kernels.
+  std::vector<TMVA::SVKernelFunction::EKernelType> kernelsList;
+  std::stringstream tempstring(multiKernels);
+  std::string value;
+  if(kernel=="Prod"){
+    while (std::getline(tempstring,value,'*')){
+      if(value == "RBF"){ kernelsList.push_back(SVKernelFunction::kRBF);}
+      else if(value == "MultiGauss"){ 
+	kernelsList.push_back(SVKernelFunction::kMultiGauss);
+	if(fGammas!=""){
+	  SetMGamma(fGammas);
+	}
+      }
+      else if(value == "Polynomial"){ kernelsList.push_back(SVKernelFunction::kPolynomial);}
+      else {
+	Log() << kWARNING << value << " is not a recognised kernel function." << Endl;
+	exit(1);
+      }
+    }
+  }
+  else if(kernel=="Sum"){
+    while (std::getline(tempstring,value,'+')){
+      if(value == "RBF"){ kernelsList.push_back(SVKernelFunction::kRBF);}
+      else if(value == "MultiGauss"){
+	kernelsList.push_back(SVKernelFunction::kMultiGauss);
+	if(fGammas!=""){
+	  SetMGamma(fGammas);
+	}
+      }
+      else if(value == "Polynomial"){ kernelsList.push_back(SVKernelFunction::kPolynomial);}
+      else {
+	Log() << kWARNING << value << " is not a recognised kernel function." << Endl;
+	exit(1);
+      }
+    }
+  }
+  else {
+    Log() << kWARNING << "Unable to split MultiKernels. Delimiters */+ required." << Endl;
+    exit(1);
+  }
+  return kernelsList;
+}
+
+//_________________________________________________________________________________________________
+std::map< TString,std::vector<Double_t> > TMVA::MethodSVM::GetTuningOptions()
+{
+  // Function to allow for ranges and number of steps (for scan) when optimising kernel function 
+  // parameters. Specified when booking the method after the parameter to be optimised between 
+  // square brackets with each value separated by ;, the first value is the lower limit, the second
+  // the upper limit and the third is the number of steps.
+  // Example: "Tune=Gamma[0.01;1.0;100]" would only tune the RBF Gamma between 0.01 and 1.0 with
+  // 100 steps.
+  std::map< TString,std::vector<Double_t> > optVars;
+  std::stringstream tempstring(fTune);
+  std::string value;
+  while (std::getline(tempstring,value,',')){
+    unsigned first = value.find('[')+1;
+    unsigned last = value.find_last_of(']');
+    std::string optParam = value.substr(0,first-1);
+    std::stringstream strNew (value.substr(first,last-first));
+    Double_t optInterval;
+    std::vector<Double_t> tempVec;
+    UInt_t i = 0;
+    while (strNew >> optInterval){
+      tempVec.push_back(optInterval);
+      if (strNew.peek() == ';'){
+        strNew.ignore();
+      }
+      ++i;
+    }
+    if(i != 3 && i == tempVec.size()){
+      if(optParam == "C" || optParam == "Gamma" || optParam == "GammaList" || optParam == "Theta"){
+	switch(i){
+	case 0:
+	  tempVec.push_back(0.01);
+	case 1:
+	  tempVec.push_back(1.);
+	case 2:
+	  tempVec.push_back(100);
+	}
+      }
+      else if(optParam == "Order"){
+	switch(i){
+        case 0:
+          tempVec.push_back(1);
+        case 1:
+	  tempVec.push_back(10);
+        case 2:
+          tempVec.push_back(10);
+        }
+      }
+      else{
+	Log() << kWARNING << optParam << " is not a recognised tuneable parameter." << Endl;
+	exit(1);
+      }
+    }
+    optVars.insert(std::pair<TString,std::vector<Double_t> >(optParam,tempVec));
+  }
+  return optVars;
+}
+
+//_________________________________________________________________________________________________________________
+Double_t TMVA::MethodSVM::getLoss(TString lossFunction){
+  // Calculates loss for testing dataset. The loss function can be specified when booking the method, otherwise
+  // defaults to hinge loss. Currently not used however is accesible if required.
+  Double_t loss = 0.0;
+  Double_t sumW = 0.0;
+  Double_t temp = 0.0;
+  Data()->SetCurrentType(Types::kTesting);
+  ResultsClassification* mvaRes = dynamic_cast<ResultsClassification*> ( Data()->GetResults(GetMethodName(),Types::kTesting, Types::kClassification) );
+  for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
+    const Event* ev = GetEvent(ievt);
+    Float_t v = (*mvaRes)[ievt][0];
+    Float_t w = ev->GetWeight();
+    if(DataInfo().IsSignal(ev)){
+      if(lossFunction == "hinge"){
+	temp += w*(1-v);
+      }
+      else if(lossFunction  == "exp"){
+	temp += w*TMath::Exp(-v);
+      }
+      else if(lossFunction == "binomial"){
+	temp += w*TMath::Log(1+TMath::Exp(-2*v));
+      }
+      else{
+	Log() << kWARNING << lossFunction << " is not a recognised loss function." << Endl;
+	exit(1);
+      }
+    }
+    else{
+      if(lossFunction == "hinge"){
+	temp += w*v;
+      }
+      else if(lossFunction == "exp"){
+	temp += w*TMath::Exp(-(1-v));
+      }
+      else if(lossFunction == "binomial"){
+	temp += w*TMath::Log(1+TMath::Exp(-2*(1-v)));
+      }
+      else{
+	Log() << kWARNING << lossFunction << " is not a recognised loss function." << Endl;
+	exit(1);
+      }
+    }
+    sumW += w;
+  }
+  loss = temp/sumW;
+  
+  return loss;
 }

@@ -246,6 +246,9 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
                                                  // iterates through the tuneParameters !!!!
    }
 
+   // added to allow for transformation on input variables i.e. norm
+   GetMethod()->GetTransformationHandler().CalcTransformations(GetMethod()->Data()->GetEventCollection());
+
    // create the fitter
 
    FitterBase* fitter = NULL;
