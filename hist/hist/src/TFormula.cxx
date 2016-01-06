@@ -257,6 +257,7 @@ TFormula::TFormula()
    fNumber = 0;
    fClingName = "";
    fFormula = "";
+   fLambdaPtr = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -290,34 +291,6 @@ TFormula::~TFormula()
    }
 }
 
-#ifdef OLD_VERSION
-TFormula::TFormula(const char *name, Int_t nparams, Int_t ndims)
-{
-   //*-*
-   //*-*  Constructor
-   //*-*  When TF1 is constructed using C++ function, TF1 need space to keep parameters values.
-   //*-*
-
-   fName = name;
-   fTitle = "";
-   fClingInput = "";
-   fReadyToExecute = false;
-   fClingInitialized = false;
-   fAllParametersSetted = false;
-   fMethod = 0;
-   fNdim = ndims;
-   fNpar = 0;
-   fNumber = 0;
-   fClingName = "";
-   fFormula = "";
-   for(Int_t i = 0; i < nparams; ++i)
-   {
-      TString parName = TString::Format("%d",i);
-      DoAddParameter(parName,0,false);
-   }
-}
-#endif
-
 TFormula::TFormula(const char *name, const char *formula, bool addToGlobList)   :
    TNamed(name,formula),
    fClingInput(formula),fFormula(formula)
@@ -328,6 +301,8 @@ TFormula::TFormula(const char *name, const char *formula, bool addToGlobList)   
    fNdim = 0;
    fNpar = 0;
    fNumber = 0;
+   fLambdaPtr = nullptr;
+
    FillDefaults();
 
 
@@ -361,8 +336,10 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
    fClingInput(formula),fFormula(formula)
 {
    fReadyToExecute = false;
-   fClingInitialized = false;
+    fClingInitialized = false;
    fNpar = 0;
+   fLambdaPtr = nullptr;
+
 
    fNdim = ndim;
    for (int i = 0; i < npar; ++i) {
@@ -387,18 +364,18 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
             gROOT->GetListOfFunctions()->Remove(old);
          if (IsReservedName(name))
             Error("TFormula","The name %s is reserved as a TFormula variable name.\n",name);
-      else
-         gROOT->GetListOfFunctions()->Add(this);
+         else
+            gROOT->GetListOfFunctions()->Add(this);
       }
       SetBit(kNotGlobal,!addToGlobList);
    }
    else 
       Error("TFormula","Syntax error in building the lambda expression %s", formula );
 }
-   
-   
 
-TFormula::TFormula(const TFormula &formula) : TNamed(formula.GetName(),formula.GetTitle())
+
+TFormula::TFormula(const TFormula &formula) :
+   TNamed(formula.GetName(),formula.GetTitle())
 {
    fReadyToExecute = false;
    fClingInitialized = false;
@@ -406,10 +383,35 @@ TFormula::TFormula(const TFormula &formula) : TNamed(formula.GetName(),formula.G
    fNdim = formula.GetNdim();
    fNpar = formula.GetNpar();
    fNumber = formula.GetNumber();
-   fFormula = formula.GetExpFormula();
+   fFormula = formula.GetExpFormula();   // returns fFormula in case of Lambda's
+   fLambdaPtr = nullptr;
 
-   FillDefaults();
-   //fName = gNamePrefix + formula.GetName();
+   // case of function based on a C++  expression (lambda's) which is ready to be compiled
+   if (formula.fLambdaPtr && formula.TestBit(TFormula::kLambda)) {
+
+      fClingInput = fFormula;
+      fParams = formula.fParams;
+      fClingParameters = formula.fClingParameters; 
+      fAllParametersSetted = formula.fAllParametersSetted;
+
+      bool ret = InitLambdaExpression(fFormula); 
+
+      if (ret)  {
+         SetBit(TFormula::kLambda);
+         fReadyToExecute = true;
+      }
+      else 
+         Error("TFormula","Syntax error in building the lambda expression %s", fFormula.Data() );
+
+   }
+   else {
+
+      FillDefaults();
+      
+      PreProcessFormula(fFormula);
+      PrepareFormula(fFormula);
+   }
+   
 
    if (!TestBit(TFormula::kNotGlobal) && gROOT ) {
       R__LOCKGUARD2(gROOTMutex);
@@ -423,8 +425,6 @@ TFormula::TFormula(const TFormula &formula) : TNamed(formula.GetName(),formula.G
          gROOT->GetListOfFunctions()->Add(this);
    }
 
-   PreProcessFormula(fFormula);
-   PrepareFormula(fFormula);
 }
 
 TFormula& TFormula::operator=(const TFormula &rhs)
@@ -564,7 +564,20 @@ void TFormula::Copy(TObject &obj) const
    fnew.fAllParametersSetted = fAllParametersSetted;
    fnew.fClingName = fClingName;
 
-   if (fMethod) {
+      // case of function based on a C++  expression (lambda's) which is ready to be compiled
+   if (fLambdaPtr && TestBit(TFormula::kLambda)) {
+
+      bool ret = fnew.InitLambdaExpression(fnew.fFormula); 
+      if (ret)  {
+         fnew.SetBit(TFormula::kLambda);
+         fnew.fReadyToExecute = true;
+      }
+      else {
+         Error("TFormula","Syntax error in building the lambda expression %s", fFormula.Data() );
+         fnew.fReadyToExecute = false;
+      }
+   }
+   else if (fMethod) {
       if (fnew.fMethod) delete fnew.fMethod;
       // use copy-constructor of TMethodCall
       TMethodCall *m = new TMethodCall(*fMethod);
