@@ -137,10 +137,10 @@ def RunAsyncAndPrint(executor, code, ioHandler, printFunction, silent = False, t
    ioHandler.InitCapture()
    executor.AsyncRun(code)
    while not executor.HasFinished():
-         ioHandler.Clear()
          ioHandler.Poll()
          if not silent:
             printFunction(ioHandler)
+            ioHandler.Clear()
          if executor.HasFinished(): break
          timeSleep(.1)
    executor.Wait()
