@@ -332,6 +332,9 @@ class NotebookDrawer(object):
         return NotebookDrawer.jsUID
 
     def _canJsDisplay(self):
+        if not hasattr(ROOT,"TBufferJSON"):
+            print("The TBufferJSON class is necessary for JS visualisation to work and cannot be found. Did you enable the http module (-D http=ON for CMake)?" file=sys.stderr)
+            return False
         if not self.isCanvas: return True
         # to be optimised
         if not _enableJSVis: return False
