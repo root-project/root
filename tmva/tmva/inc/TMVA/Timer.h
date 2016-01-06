@@ -87,6 +87,9 @@ namespace TMVA {
       TString   fPrefix;                // prefix for outputs
       Bool_t    fColourfulOutput;       // flag for use of colors
 
+      Int_t     fPreviousProgress;
+      TString   fPreviousTimeEstimate;
+
       static const TString fgClassName; // used for output
       static const Int_t   fgNbins;     // number of bins in progress bar
 

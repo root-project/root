@@ -110,6 +110,8 @@
 
 #include <math.h>
 #include <fstream>
+#include <thread>
+#include <unordered_map>
 
 #include "Riostream.h"
 #include "TRandom3.h"
@@ -365,16 +367,16 @@ void TMVA::MethodBDT::DeclareOptions()
    DeclareOptionRef(fNegWeightTreatment="InverseBoostNegWeights","NegWeightTreatment","How to treat events with negative weights in the BDT training (particular the boosting) : IgnoreInTraining;  Boost With inverse boostweight; Pair events with negative and positive weights in traning sample and *annihilate* them (experimental!)");
    AddPreDefVal(TString("InverseBoostNegWeights"));
    AddPreDefVal(TString("IgnoreNegWeightsInTraining"));
-   AddPreDefVal(TString("NoNegWeightsInTraining"));    // well, let's be nice to users and keep at least this old name anyway .. 
+   AddPreDefVal(TString("NoNegWeightsInTraining"));    // well, let's be nice to users and keep at least this old name anyway ..
    AddPreDefVal(TString("PairNegWeightsGlobal"));
    AddPreDefVal(TString("Pray"));
 
 
 
-   DeclareOptionRef(fCss=1.,   "Css",   "AdaCost: cost of true signal selected signal"); 
-   DeclareOptionRef(fCts_sb=1.,"Cts_sb","AdaCost: cost of true signal selected bkg"); 
-   DeclareOptionRef(fCtb_ss=1.,"Ctb_ss","AdaCost: cost of true bkg    selected signal"); 
-   DeclareOptionRef(fCbb=1.,   "Cbb",   "AdaCost: cost of true bkg    selected bkg "); 
+   DeclareOptionRef(fCss=1.,   "Css",   "AdaCost: cost of true signal selected signal");
+   DeclareOptionRef(fCts_sb=1.,"Cts_sb","AdaCost: cost of true signal selected bkg");
+   DeclareOptionRef(fCtb_ss=1.,"Ctb_ss","AdaCost: cost of true bkg    selected signal");
+   DeclareOptionRef(fCbb=1.,   "Cbb",   "AdaCost: cost of true bkg    selected bkg ");
 
    DeclareOptionRef(fNodePurityLimit=0.5, "NodePurityLimit", "In boosting/pruning, nodes with purity > NodePurityLimit are signal; background otherwise.");
 
@@ -402,7 +404,7 @@ void TMVA::MethodBDT::DeclareOptions()
    DeclareOptionRef(fDoPreselection=kFALSE,"DoPreselection","and and apply automatic pre-selection for 100% efficient signal (bkg) cuts prior to training");
 
 
-   DeclareOptionRef(fSigToBkgFraction=1,"SigToBkgFraction","Sig to Bkg ratio used in Training (similar to NodePurityLimit, which cannot be used in real adaboost"); 
+   DeclareOptionRef(fSigToBkgFraction=1,"SigToBkgFraction","Sig to Bkg ratio used in Training (similar to NodePurityLimit, which cannot be used in real adaboost");
 
    DeclareOptionRef(fPruneMethodS, "PruneMethod", "Note: for BDTs use small trees (e.g.MaxDepth=3) and NoPruning:  Pruning: Method used for pruning (removal) of statistically insignificant branches ");
    AddPreDefVal(TString("NoPruning"));
@@ -421,6 +423,7 @@ void TMVA::MethodBDT::DeclareOptions()
    DeclareOptionRef(fUseNTrainEvents,"UseNTrainEvents","deprecated: Use *BaggedSampleFraction* instead: Number of randomly picked training events used in randomised (and bagged) trees");
    DeclareOptionRef(fNNodesMax,"NNodesMax","deprecated: Use MaxDepth instead to limit the tree size" );
 
+   DeclareOptionRef(fMaxThreads=0, "MaxThreads", "Maximum number of threads, 0: automatic (default), 1: no multi-threading, 2: use 2 threads, ...");
 
 }
 
@@ -613,6 +616,22 @@ void TMVA::MethodBDT::ProcessOptions()
       Log() << kWARNING << "You have specified a deprecated option *UseBaggedGrad* --> please use  *UseBaggedBoost* instead" << Endl;
    }
 
+   auto hwThreads = std::thread::hardware_concurrency();
+   if (fMaxThreads == 0) {
+      // "automatic" setting
+      // hardware_concurrency can return 0 (aka unknown)
+      if (hwThreads == 0) {
+         Log() << kWARNING << "Cannot determine the number of available thread contexts => not using multithreading." << Endl;
+         fMaxThreads = 1;
+      } else {
+         // use n/2 threads by default, round up in case n/2 is 0.
+         fMaxThreads = hwThreads / 2;
+         if (!fMaxThreads) fMaxThreads = 1;
+      }
+   }
+   if (hwThreads > 0 && fMaxThreads > hwThreads) {
+      Log() << kWARNING << "Your system seems to provide only " << hwThreads << " thread contexts but you have requested " << fMaxThreads << ". This might REDUCE the runtime performace!" << Endl;
+   }
 }
 
 
@@ -1372,32 +1391,41 @@ Double_t TMVA::MethodBDT::GetGradBoostMVA(const TMVA::Event* e, UInt_t nTrees)
 
 void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample, UInt_t cls)
 {
-   if(DoMulticlass()){
+   if (DoMulticlass()) {
       UInt_t nClasses = DataInfo().GetNClasses();
-      for (std::vector<const TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-         fResiduals[*e].at(cls)+=fForest.back()->CheckEvent(*e,kFALSE);
-         if(cls == nClasses-1){
-            for(UInt_t i=0;i<nClasses;i++){
+      std::vector<Double_t> expCache;
+      if (cls == nClasses - 1) {
+         expCache.resize(nClasses);
+      }
+      for (auto e : eventSample) {
+         fResiduals[e].at(cls) += fForest.back()->CheckEvent(e, kFALSE);
+         if (cls == nClasses - 1) {
+            auto &residualsThisEvent = fResiduals[e];
+            std::transform(residualsThisEvent.begin(),
+                           residualsThisEvent.begin() + nClasses,
+                           expCache.begin(), [](Double_t d) { return exp(d); });
+            for (UInt_t i = 0; i < nClasses; i++) {
                Double_t norm = 0.0;
-               for(UInt_t j=0;j<nClasses;j++){
-                  if(i!=j)
-                     norm+=exp(fResiduals[*e].at(j)-fResiduals[*e].at(i));
+               for (UInt_t j = 0; j < nClasses; j++) {
+                  if (i != j) {
+                     norm += expCache[j] / expCache[i];
+                  }
                }
-               Double_t p_cls = 1.0/(1.0+norm);
-               Double_t res = ((*e)->GetClass()==i)?(1.0-p_cls):(-p_cls);
-               const_cast<TMVA::Event*>(*e)->SetTarget(i,res);
+               Double_t p_cls = 1.0 / (1.0 + norm);
+               Double_t res = (e->GetClass() == i) ? (1.0 - p_cls) : (-p_cls);
+               const_cast<TMVA::Event *>(e)->SetTarget(i, res);
             }
          }
       }
-   }
-   else{
-      for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-         fResiduals[*e].at(0)+=fForest.back()->CheckEvent(*e,kFALSE);
-         Double_t p_sig=1.0/(1.0+exp(-2.0*fResiduals[*e].at(0)));
-         Double_t res = (DataInfo().IsSignal(*e)?1:0)-p_sig;
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,res);
+   } else {
+      for (auto e : eventSample) {
+         auto &residualAt0 = fResiduals[e].at(0);
+         residualAt0 += fForest.back()->CheckEvent(e, kFALSE);
+         Double_t p_sig = 1.0 / (1.0 + exp(-2.0 * residualAt0));
+         Double_t res = (DataInfo().IsSignal(e) ? 1 : 0) - p_sig;
+         const_cast<TMVA::Event *>(e)->SetTarget(0, res);
       }
-   }   
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1405,28 +1433,28 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
 
 void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& eventSample, Bool_t first)
 {
-   for (std::vector<const TMVA::Event*>::const_iterator e=fEventSample.begin(); e!=fEventSample.end();e++) {
-      if(!first){
-         fWeightedResiduals[*e].first -= fForest.back()->CheckEvent(*e,kFALSE);
+   if (!first) {
+      for (auto e : fEventSample) {
+         fWeightedResiduals[e].first -= fForest.back()->CheckEvent(e, kFALSE);
       }
-      
    }
-   
+
    fSumOfWeights = 0;
    vector< std::pair<Double_t, Double_t> > temp;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++){
-      temp.push_back(make_pair(fabs(fWeightedResiduals[*e].first),fWeightedResiduals[*e].second));
-      fSumOfWeights += (*e)->GetWeight();
+   temp.reserve(eventSample.size());
+   for (auto e : eventSample) {
+      auto &weightedResidualForEvent = fWeightedResiduals[e];
+      temp.emplace_back(fabs(weightedResidualForEvent.first), weightedResidualForEvent.second);
+      fSumOfWeights += e->GetWeight();
    }
-   fTransitionPoint = GetWeightedQuantile(temp,0.7,fSumOfWeights);
+   fTransitionPoint = GetWeightedQuantile(temp, 0.7, fSumOfWeights);
 
-   Int_t i=0;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
- 
-      if(temp[i].first<=fTransitionPoint)
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,fWeightedResiduals[*e].first);
+   Int_t i = 0;
+   for (auto e : eventSample) {
+      if (temp[i].first <= fTransitionPoint)
+         const_cast<TMVA::Event*>(e)->SetTarget(0, fWeightedResiduals[e].first);
       else
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,fTransitionPoint*(fWeightedResiduals[*e].first<0?-1.0:1.0));
+         const_cast<TMVA::Event*>(e)->SetTarget(0, fTransitionPoint*(fWeightedResiduals[e].first < 0 ? -1.0 : 1.0));
       i++;
    }
 }
@@ -1449,28 +1477,32 @@ Double_t TMVA::MethodBDT::GetWeightedQuantile(vector<  std::pair<Double_t, Doubl
 ////////////////////////////////////////////////////////////////////////////////
 ///Calculate the desired response value for each region
 
-Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt, UInt_t cls)
+Double_t TMVA::MethodBDT::GradBoost(const std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt, UInt_t cls)
 {
-   std::map<TMVA::DecisionTreeNode*,std::vector<Double_t> > leaves;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-      Double_t weight = (*e)->GetWeight();
-      TMVA::DecisionTreeNode* node = dt->GetEventNode(*(*e));
-      if ((leaves[node]).empty()){
-         (leaves[node]).push_back((*e)->GetTarget(cls)* weight);
-         (leaves[node]).push_back(fabs((*e)->GetTarget(cls))*(1.0-fabs((*e)->GetTarget(cls))) * weight* weight);
+   std::unordered_map<TMVA::DecisionTreeNode*, std::vector<Double_t>> leaves;
+   for (auto e : eventSample) {
+      Double_t weight = e->GetWeight();
+      TMVA::DecisionTreeNode* node = dt->GetEventNode(*e);
+      auto &v = leaves[node];
+      auto target = e->GetTarget(cls);
+      if (v.empty()) {
+         v.push_back(target * weight);
+         v.push_back(fabs(target) * (1.0-fabs(target)) * weight * weight);
       }
       else {
-         (leaves[node])[0]+=((*e)->GetTarget(cls)* weight);
-         (leaves[node])[1]+=fabs((*e)->GetTarget(cls))*(1.0-fabs((*e)->GetTarget(cls))) * weight* weight;
+         v[0] += target * weight;
+         v[1] += fabs(target) * (1.0-fabs(target)) * weight * weight;
       }
    }
-   for (std::map<TMVA::DecisionTreeNode*,std::vector<Double_t> >::iterator iLeave=leaves.begin();
-        iLeave!=leaves.end();++iLeave){
-      if ((iLeave->second)[1]<1e-30) (iLeave->second)[1]=1e-30;
 
-      (iLeave->first)->SetResponse(fShrinkage/DataInfo().GetNClasses()*(iLeave->second)[0]/((iLeave->second)[1]));
+   for (auto &iLeave : leaves) {
+      constexpr auto minValue = 1e-30;
+      if (iLeave.second[1] < minValue) {
+         iLeave.second[1] = minValue;
+      }
+      iLeave.first->SetResponse(fShrinkage/DataInfo().GetNClasses() * iLeave.second[0]/iLeave.second[1]);
    }
-   
+
    //call UpdateTargets before next tree is grown
 
    DoMulticlass() ? UpdateTargets(fEventSample, cls) : UpdateTargets(fEventSample);
@@ -1480,29 +1512,33 @@ Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation of M_TreeBoost using a Huber loss function as desribed by Friedman 1999
 
-Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt )
+Double_t TMVA::MethodBDT::GradBoostRegression(const std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt )
 {
-   std::map<TMVA::DecisionTreeNode*,Double_t > leaveWeights;
-   std::map<TMVA::DecisionTreeNode*,vector< std::pair<Double_t, Double_t> > > leaves;
-   UInt_t i =0;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-      TMVA::DecisionTreeNode* node = dt->GetEventNode(*(*e));      
-      (leaves[node]).push_back(make_pair(fWeightedResiduals[*e].first,(*e)->GetWeight()));
-      (leaveWeights[node]) += (*e)->GetWeight();
-      i++;
+   struct DTNodeAdditionalInformation {
+      Double_t leafWeight = 0;
+      std::vector<std::pair<Double_t, Double_t>> leaves;
+   };
+   std::unordered_map<TMVA::DecisionTreeNode*, DTNodeAdditionalInformation> nodeInfos;
+
+   for (auto e : eventSample) {
+      auto eventWeight = e->GetWeight();
+      TMVA::DecisionTreeNode* node = dt->GetEventNode(*e);
+      auto &nodeInfo = nodeInfos[node];
+      nodeInfo.leaves.push_back(make_pair(fWeightedResiduals[e].first, eventWeight));
+      nodeInfo.leafWeight += eventWeight;
    }
 
-   for (std::map<TMVA::DecisionTreeNode*,vector< std::pair<Double_t, Double_t> > >::iterator iLeave=leaves.begin();
-        iLeave!=leaves.end();++iLeave){
-      Double_t shift=0,diff= 0;
-      Double_t ResidualMedian = GetWeightedQuantile(iLeave->second,0.5,leaveWeights[iLeave->first]);
-      for(UInt_t j=0;j<((iLeave->second).size());j++){
-         diff = (iLeave->second)[j].first-ResidualMedian;
-         shift+=1.0/((iLeave->second).size())*((diff<0)?-1.0:1.0)*TMath::Min(fTransitionPoint,fabs(diff));
+   for (auto &node_to_info : nodeInfos) {
+      Double_t shift = 0;
+      Double_t diff = 0;
+      Double_t ResidualMedian = GetWeightedQuantile(node_to_info.second.leaves, 0.5, node_to_info.second.leafWeight);
+      for (auto &leafPair : node_to_info.second.leaves) {
+         diff = leafPair.first - ResidualMedian;
+         shift += 1.0 / node_to_info.second.leaves.size() * ((diff<0)?-1.0:1.0)*TMath::Min(fTransitionPoint,fabs(diff));
       }
-      (iLeave->first)->SetResponse(fShrinkage*(ResidualMedian+shift));          
+      node_to_info.first->SetResponse(fShrinkage * (ResidualMedian + shift));
    }
-   
+
    UpdateTargetsRegression(*fTrainSample);
    return 1;
 }
@@ -1525,10 +1561,9 @@ void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSampl
      
       //Store the weighted median as a first boosweight for later use
       fBoostWeights.push_back(weightedMedian);
-      std::map<const TMVA::Event*, std::pair<Double_t, Double_t> >::iterator res = fWeightedResiduals.begin();
-      for (; res!=fWeightedResiduals.end(); ++res ) {
+      for (auto &r : fWeightedResiduals) {
          //substract the gloabl median from all residuals
-         (*res).second.first -= weightedMedian;  
+         r.second.first -= weightedMedian;
       }
 
       UpdateTargetsRegression(*fTrainSample,kTRUE);
@@ -2390,9 +2425,6 @@ const std::vector<Float_t>& TMVA::MethodBDT::GetMulticlassValues()
    return *fMulticlassReturnVal;
 }
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// get the regression value generated by the BDTs
 
@@ -2451,9 +2483,42 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
       evT->SetTarget(0, rVal/Double_t(count) );
    }
    else if(fBoostType=="Grad"){
-      for (UInt_t itree=0; itree<fForest.size(); itree++) {
-         myMVA += fForest[itree]->CheckEvent(ev,kFALSE);
+      auto sumJob = [](std::vector <TMVA::DecisionTree*>::const_iterator ibegin, std::vector <TMVA::DecisionTree*>::const_iterator iend, const TMVA::Event *event, Double_t &result) {
+         result = 0;
+         for (auto it = ibegin; it != iend; ++it) result += (*it)->CheckEvent(event, kFALSE);
+      };
+
+      // somehow I don't have any performance gain when using a future
+      // via auto f = std::async(std::launch::async, job, ...);
+      // and returning the partial sum using the future's .get() method.
+      if (fMaxThreads > 1) {
+         // splitting only useful when we have enough trees in the forest,
+         // let's require at least 600 trees for splitting.
+         // This number is just a guess!! and depends for example on the depth of the trees.
+         auto jobs = 1 + fForest.size() / 600;
+         if (jobs > fMaxThreads) jobs = fMaxThreads;
+
+         std::vector<Double_t> partialSums(jobs - 1);
+         std::vector<std::thread> threads; threads.reserve(jobs - 1);
+
+         auto div = fForest.size() / jobs;
+         auto mod = fForest.size() % jobs;
+
+         // jobs 1..fMaxThreads-1 run as threads
+         for (auto job = 1ul; job < jobs; ++job) {
+            auto low = div * job + std::min(job, mod);
+            auto high = low + div;
+            if (job < mod) ++high;
+            threads.emplace_back(sumJob, fForest.begin() + low, fForest.begin() + high, ev, std::ref(partialSums[job - 1]));
+         }
+         // job 0 is run in the main thread
+         sumJob(fForest.begin(), fForest.begin() + div + (0 < mod), ev, myMVA);
+         for (auto &t : threads) t.join();
+         myMVA = std::accumulate(partialSums.begin(), partialSums.end(), myMVA);
+      } else {
+         sumJob(fForest.begin(), fForest.end(), ev, myMVA);
       }
+
       //      fRegressionReturnVal->push_back( myMVA+fBoostWeights[0]);
       evT->SetTarget(0, myMVA+fBoostWeights[0] );
    }

@@ -72,7 +72,7 @@ namespace TMVA {
       virtual ~GiniIndexWithLaplace(){}
       
       // Return the separation index (a measure for "purity" of the sample")
-      virtual Double_t GetSeparationIndex( const Double_t &s, const Double_t &b );
+      virtual Double_t GetSeparationIndex( const Double_t s, const Double_t b );
 
    protected:
       

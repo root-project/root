@@ -40,6 +40,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
+#include <unordered_map>
 #ifndef ROOT_TH2
 #include "TH2.h"
 #endif
@@ -195,8 +196,8 @@ namespace TMVA {
       // binomial likelihood gradient boost for classification
       // (see Friedman: "Greedy Function Approximation: a Gradient Boosting Machine"
       // Technical report, Dept. of Statistics, Stanford University)
-      Double_t GradBoost( std::vector<const TMVA::Event*>&, DecisionTree *dt, UInt_t cls = 0);
-      Double_t GradBoostRegression(std::vector<const TMVA::Event*>&, DecisionTree *dt );
+      Double_t GradBoost(const std::vector<const TMVA::Event*>&, DecisionTree *dt, UInt_t cls = 0);
+      Double_t GradBoostRegression(const std::vector<const TMVA::Event*>&, DecisionTree *dt);
       void InitGradBoost( std::vector<const TMVA::Event*>&);
       void UpdateTargets( std::vector<const TMVA::Event*>&, UInt_t cls = 0);
       void UpdateTargetsRegression( std::vector<const TMVA::Event*>&,Bool_t first=kFALSE);
@@ -221,8 +222,8 @@ namespace TMVA {
       Bool_t                          fBaggedBoost;     // turn bagging in combination with boost on/off
       Bool_t                          fBaggedGradBoost; // turn bagging in combination with grad boost on/off
       Double_t                        fSumOfWeights;    // sum of all event weights
-      std::map< const TMVA::Event*, std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
-      std::map< const TMVA::Event*,std::vector<double> > fResiduals; // individual event residuals for gradient boost
+      std::unordered_map< const TMVA::Event*, std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
+      std::unordered_map< const TMVA::Event*,std::vector<double> > fResiduals; // individual event residuals for gradient boost
 
       //options for the decision Tree
       SeparationBase                 *fSepType;         // the separation used in node splitting
@@ -258,6 +259,7 @@ namespace TMVA {
       Bool_t                           fTrainWithNegWeights; // yes there are negative event weights and we don't ignore them
       Bool_t                           fDoBoostMonitor; //create control plot with ROC integral vs tree number
 
+      UInt_t                           fMaxThreads; // number of threads the algorithm is allowed to use
 
       //some histograms for monitoring
       TTree*                           fMonitorNtuple;   // monitoring ntuple

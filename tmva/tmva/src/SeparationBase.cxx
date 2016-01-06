@@ -72,8 +72,8 @@ TMVA::SeparationBase::SeparationBase( const SeparationBase& s ) :
 /// this is then the quality crition which is optimized for when trying
 /// to increase the information in the system (making the best selection
 
-Double_t TMVA::SeparationBase::GetSeparationGain(const Double_t &nSelS, const Double_t& nSelB,
-                                                 const Double_t& nTotS, const Double_t& nTotB)
+Double_t TMVA::SeparationBase::GetSeparationGain(const Double_t nSelS, const Double_t nSelB,
+                                                 const Double_t nTotS, const Double_t nTotB)
 {
    if ( (nTotS-nSelS)==nSelS && (nTotB-nSelB)==nSelB) return 0.;
 

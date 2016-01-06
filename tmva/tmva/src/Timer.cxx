@@ -116,6 +116,8 @@ void TMVA::Timer::Init( Int_t ncounts )
 void TMVA::Timer::Reset( void )
 {
    TStopwatch::Start( kTRUE );
+   fPreviousProgress = -1;
+   fPreviousTimeEstimate.Clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,6 +191,14 @@ void TMVA::Timer::DrawProgressBar( Int_t icounts, const TString& comment  )
    if (icounts < 0         ) icounts = 0;
    Int_t ic = Int_t(Float_t(icounts)/Float_t(fNcounts)*fgNbins);
 
+   auto timeLeft = this->GetLeftTime( icounts );
+
+   // do not redraw progress bar when neither time not ticks are different
+   if (ic == fPreviousProgress && timeLeft == fPreviousTimeEstimate && icounts != fNcounts-1) return;
+   fPreviousProgress = ic;
+   fPreviousTimeEstimate = timeLeft;
+
+
    std::clog << fLogger->GetPrintedSource();
    if (fColourfulOutput) std::clog << gTools().Color("white_on_green") << gTools().Color("dyellow") << "[" << gTools().Color("reset");
    else                  std::clog << "[";
@@ -209,12 +219,12 @@ void TMVA::Timer::DrawProgressBar( Int_t icounts, const TString& comment  )
       std::clog << "(" << gTools().Color("red") << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" << gTools().Color("reset")
                << ", " 
                << "time left: "
-               << this->GetLeftTime( icounts ) << gTools().Color("reset") << ") ";
+               << timeLeft << gTools().Color("reset") << ") ";
    }
    else {
       std::clog << "] " ;
       std::clog << "(" << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" 
-               << ", " << "time left: " << this->GetLeftTime( icounts ) << ") ";
+               << ", " << "time left: " << timeLeft << ") ";
    }
    if (comment != "") {
       std::clog << "[" << comment << "]  ";
