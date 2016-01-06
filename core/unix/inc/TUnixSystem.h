@@ -38,22 +38,23 @@ int StackTraceExec(void *);
 
 typedef void (*SigHandler_t)(ESignals);
 
-struct TStackTraceHelper {
-   static const int             stringLength = 255;
-   char                         shellExec[stringLength];
-   char                         pidString[stringLength];
-   char                         pidNum[stringLength];
-   int                          parentToChild[2];
-   int                          childToParent[2];
-   std::unique_ptr<std::thread> helperThread;
-};
 
 class TUnixSystem : public TSystem {
 
    friend int     StackTraceExec(void *);
 
 private:
-   static struct TStackTraceHelper fStackTraceHelper;
+   struct StackTraceHelper_t {
+      static const int fStringLength = 255;
+      char             fShellExec[fStringLength];
+      char             fPidString[fStringLength];
+      char             fPidNum[fStringLength];
+      int              fParentToChild[2];
+      int              fChildToParent[2];
+      std::unique_ptr<std::thread> fHelperThread;
+   };
+
+   static StackTraceHelper_t fStackTraceHelper;
 
 protected:
    const char    *FindDynamicLibrary(TString &lib, Bool_t quiet = kFALSE);
@@ -91,10 +92,10 @@ protected:
    static int          UnixSend(int sock, const void *buf, int len, int flag);
 
    // added helper static members for stacktrace
-   static char *const                  kStackArgv[];
-   static char *const *                GetStackArgv();
-   static void                         StackTraceHelperThread();
-   void                                CachePidInfo();
+   static char *const  kStackArgv[];
+   static char *const *GetStackArgv();
+   static void         StackTraceHelperThread();
+   void                CachePidInfo();
 
 public:
    TUnixSystem();
