@@ -311,7 +311,6 @@ class NotebookDrawer(object):
        if self.isCanvas:
            self.drawableObject.ResetDrawn()
        else:
-           print("Deleting the geom")
            # DP Can we optimize this?
            ROOT.gInterpreter.ProcessLine('if (gGeoManager) delete gGeoManager;')
 
