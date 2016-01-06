@@ -60,8 +60,8 @@ _jsCode = """
 requirejs.config(
 {{
   paths: {{
-    'JSRootCore'    : '{jsROOTSourceDir}/scripts/JSRootCore',
-    'JSRootPainter' : '{jsROOTSourceDir}/scripts/JSRootPainter',
+    'JSRootCore'       : '{jsROOTSourceDir}/scripts/JSRootCore',
+    'JSRootPainter'    : '{jsROOTSourceDir}/scripts/JSRootPainter',
     'JSRootGeoPainter' : '{jsROOTSourceDir}/scripts/JSRootGeoPainter',
   }}
 }}
@@ -252,28 +252,38 @@ class StreamCapture(object):
     def register(self):
         self.shell.events.register('post_execute', self.post_execute)
 
-def DrawGeometry():
+def GetCanvasDrawers():
+    lOfC = ROOT.gROOT.GetListOfCanvases()
+    return [NotebookDrawer(can) for can in lOfC if can.IsDrawn()]
+
+def GetGeometryDrawer():
     if not hasattr(ROOT,'gGeoManager'): return
     if not ROOT.gGeoManager: return
     vol = ROOT.gGeoManager.GetTopVolume()
     if vol:
-        drawer = NotebookDrawer(vol)
+        return NotebookDrawer(vol)
+
+def GetDrawers():
+    drawers = GetCanvasDrawers()
+    geometryDrawer = GetGeometryDrawer()
+    if geometryDrawer: drawers.append(geometryDrawer)
+    return drawers
+
+def DrawGeometry():
+    drawer = GetGeometryDrawer()
+    if drawer:
         drawer.Draw()
-        # DP Can we optimize this?
-        ROOT.gInterpreter.ProcessLine('if (gGeoManager) delete gGeoManager;')
 
 def DrawCanvases():
-    for can in ROOT.gROOT.GetListOfCanvases():
-        if can.IsDrawn():
-            drawer = NotebookDrawer(can)
-            drawer.Draw()
-            can.ResetDrawn()
+    drawers = GetCanvasDrawers()
+    for drawer in drawers:
+        drawer.Draw()
 
 def NotebookDraw():
     DrawGeometry()
     DrawCanvases()
 
-class CaptureDrawnCanvases(object):
+class CaptureDrawnPrimitives(object):
     '''
     Capture the canvas which is drawn to display it.
     '''
@@ -281,24 +291,10 @@ class CaptureDrawnCanvases(object):
         self.shell = ip
 
     def _post_execute(self):
-        DrawCanvases()
+        NotebookDraw()
 
     def register(self):
         self.shell.events.register('post_execute', self._post_execute)
-
-class CaptureDrawnGeometry(object):
-    '''
-    Capture the canvas which is drawn to display it.
-    '''
-    def __init__(self, ip=get_ipython()):
-        self.shell = ip
-
-    def _post_execute(self):
-        DrawGeometry()
-
-    def register(self):
-        self.shell.events.register('post_execute', self._post_execute)
-
 
 class NotebookDrawer(object):
     '''
@@ -311,6 +307,14 @@ class NotebookDrawer(object):
         self.drawableObject = theObject
         self.isCanvas = self.drawableObject.ClassName() == "TCanvas"
 
+    def __del__(self):
+       if self.isCanvas:
+           self.drawableObject.ResetDrawn()
+       else:
+           print("Deleting the geom")
+           # DP Can we optimize this?
+           ROOT.gInterpreter.ProcessLine('if (gGeoManager) delete gGeoManager;')
+
     def _getListOfPrimitivesNamesAndTypes(self):
        """
        Get the list of primitives in the pad, recursively descending into
@@ -318,10 +322,6 @@ class NotebookDrawer(object):
        """
        primitives = self.canvas.GetListOfPrimitives()
        primitivesNames = map(lambda p: p.ClassName(), primitives)
-       #primitivesWithFunctions = filter(lambda primitive: hasattr(primitive,"GetListOfFunctions"), primitives)
-       #for primitiveWithFunctions in primitivesWithFunctions:
-       #    for function in primitiveWithFunctions.GetListOfFunctions():
-       #        primitivesNames.append(function.GetName())
        return sorted(primitivesNames)
 
     def _getUID(self):
@@ -345,7 +345,7 @@ class NotebookDrawer(object):
         return True
 
 
-    def getJsCode(self):
+    def _getJsCode(self):
         # Workaround to have ConvertToJSON work
         json = ROOT.TBufferJSON.ConvertToJSON(self.drawableObject, 3)
 
@@ -369,14 +369,14 @@ class NotebookDrawer(object):
                                     jsDivId = divId)
         return thisJsCode
 
+    def _getJsDiv(self):
+        return HTML(self._getJsCode())
 
     def _jsDisplay(self):
-        thisJsCode = self.getJsCode()
-        # display is the key point of this hook
-        IPython.display.display(HTML(thisJsCode))
+        IPython.display.display(self._getJsDiv())
         return 0
 
-    def getPngImage(self):
+    def _getPngImage(self):
         ofile = tempfile.NamedTemporaryFile(suffix=".png")
         with _setIgnoreLevel(ROOT.kError):
             self.drawableObject.SaveAs(ofile.name)
@@ -384,7 +384,7 @@ class NotebookDrawer(object):
         return img
 
     def _pngDisplay(self):
-        img = self.getPngImage()
+        img = self._getPngImage()
         IPython.display.display(img)
 
     def _display(self):
@@ -397,18 +397,18 @@ class NotebookDrawer(object):
          else:
             self._pngDisplay()
 
+    def GetDrawableObject(self):
+        if not self.isCanvas:
+           return self._getJsDiv()
+
+        if self._canJsDisplay():
+           return self._getJsDiv()
+        else:
+           return self._getPngImage()
 
     def Draw(self):
         self._display()
         return 0
-
-def _PyDraw(thePad):
-   """
-   Invoke the draw function and intercept the graphics
-   """
-   drawer = NotebookDrawer(thePad)
-   drawer.Draw()
-
 
 def setStyle():
     style=ROOT.gStyle
@@ -431,8 +431,7 @@ def loadExtensionsAndCapturers():
     cppcompleter.load_ipython_extension(ip)
     captures.append(StreamCapture(sys.stderr))
     captures.append(StreamCapture(sys.stdout))
-    captures.append(CaptureDrawnCanvases())
-    captures.append(CaptureDrawnGeometry())
+    captures.append(CaptureDrawnPrimitives())
 
     for capture in captures: capture.register()
 

@@ -23,10 +23,9 @@ except ImportError:
 
 import ROOT
 
-from JupyROOT.utils import setStyle, invokeAclic
+from JupyROOT.utils import setStyle, invokeAclic, GetDrawers
 from JupyROOT.handlers import RunAsyncAndPrint
 from JupyROOT.cppcompleter import CppCompleter
-from JupyROOT.kernel.draw import LoadDrawer, CanvasDrawer
 from JupyROOT.kernel.utils import GetIOHandler, GetExecutor, GetDeclarer, MagicLoader
 
 import IPython
@@ -51,7 +50,6 @@ class ROOTKernel(MetaKernel):
     def __init__(self,**kwargs):
 
         MetaKernel.__init__(self,**kwargs)
-        LoadDrawer()
         setStyle()
         self.ioHandler = GetIOHandler()
         self.Executor  = GetExecutor()
@@ -85,17 +83,9 @@ class ROOTKernel(MetaKernel):
                              silent,
                              .1)
 
-            canvaslist = ROOT.gROOT.GetListOfCanvases()
-            if canvaslist:
-                for canvas in canvaslist:
-                    if canvas.IsDrawn():
-                        self.drawer = CanvasDrawer(canvas)
-                        if self.drawer._canJsDisplay():
-                            self.Display(HTML(self.drawer.getJsCode()))
-                        else:
-                            self.Display(self.drawer.getPngImage())
-                        canvas.ResetDrawn()
-
+            drawers = GetDrawers()
+            for drawer in drawers:
+                self.Display(drawer.GetDrawableObject())
 
         except KeyboardInterrupt:
             ROOT.gROOT.SetInterrupt()
