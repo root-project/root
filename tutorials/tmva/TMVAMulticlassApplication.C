@@ -73,7 +73,7 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
    reader->AddVariable( "var4", &var4 );
 
    // book the MVA methods
-   TString dir    = "weights/";
+   TString dir    = "dataset/weights/";
    TString prefix = "TMVAMulticlass";
    
    for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {

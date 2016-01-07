@@ -57,6 +57,7 @@ using namespace std;
 TMVA::ROCCalc::ROCCalc(TH1* mvaS, TH1* mvaB) :
    fMaxIter(100),
    fAbsTol(0.0),
+   fStatus(kTRUE),
    fmvaS(0),
    fmvaB(0),
    fmvaSpdf(0),
@@ -70,6 +71,9 @@ TMVA::ROCCalc::ROCCalc(TH1* mvaS, TH1* mvaB) :
    fnBtot(0),
    fSignificance(0),
    fPurity(0),
+   effBvsS(0),
+   rejBvsS(0),
+   inveffBvsS(0),
    fLogger ( new TMVA::MsgLogger("ROCCalc") )
 {
    fUseSplines = kTRUE;
@@ -84,15 +88,27 @@ TMVA::ROCCalc::ROCCalc(TH1* mvaS, TH1* mvaB) :
    if (TMath::Abs(fXmax-fmvaB->GetXaxis()->GetXmax()) > 0.000001 || 
        TMath::Abs(fXmin-fmvaB->GetXaxis()->GetXmin()) > 0.000001 || 
        fmvaB->GetNbinsX() != fmvaS->GetNbinsX()) {
-      Log() << kFATAL << " Cannot cal ROC curve etc, as in put mvaS and mvaB have differen #nbins or range "<<Endl;
+       Log() << kERROR << "Cannot cal ROC curve etc, as in put mvaS and mvaB have differen #nbins or range "<<Endl;
+       fStatus=kFALSE;
    }
    if (!strcmp(fmvaS->GetXaxis()->GetTitle(),"")) fmvaS->SetXTitle("MVA-value");
    if (!strcmp(fmvaB->GetXaxis()->GetTitle(),"")) fmvaB->SetXTitle("MVA-value");
    if (!strcmp(fmvaS->GetYaxis()->GetTitle(),"")) fmvaS->SetYTitle("#entries");
    if (!strcmp(fmvaB->GetYaxis()->GetTitle(),"")) fmvaB->SetYTitle("#entries");
    ApplySignalAndBackgroundStyle(fmvaS, fmvaB);
-   fmvaSpdf = mvaS->RebinX(mvaS->GetNbinsX()/100,"MVA Signal PDF"); 
-   fmvaBpdf = mvaB->RebinX(mvaB->GetNbinsX()/100,"MVA Backgr PDF");
+//    std::cout<<"mvaS->GetNbinsX()"<<mvaS->GetNbinsX()<<std::endl;
+//    std::cout<<"mvaB->GetNbinsX()"<<mvaB->GetNbinsX()<<std::endl; 
+   //the output of mvaS->GetNbinsX() is about 40 and if we divide it by 100 the results is 0
+   //the I will divide it by 10 anyway doing some tests ROC integral is the same
+   fmvaSpdf = mvaS->RebinX(mvaS->GetNbinsX()/10,"MVA Signal PDF"); 
+   fmvaBpdf = mvaB->RebinX(mvaB->GetNbinsX()/10,"MVA Backgr PDF");
+   if(fmvaSpdf==0||fmvaBpdf==0)
+   {
+       Log() << kERROR << "Cannot Rebin Histograms mvaS and mvaB, ROC values will be calculated without Rebin histograms."<<Endl;
+       fStatus=kFALSE;
+       fmvaSpdf = (TH1*)mvaS->Clone("MVA Signal PDF"); 
+       fmvaBpdf = (TH1*)mvaB->Clone("MVA Backgr PDF");
+   }
    fmvaSpdf->SetTitle("MVA Signal PDF"); 
    fmvaBpdf->SetTitle("MVA Backgr PDF");
    fmvaSpdf->Scale(1./fmvaSpdf->GetSumOfWeights());
@@ -171,7 +187,9 @@ TMVA::ROCCalc::~ROCCalc() {
    if (fSplmvaCumB)      { delete fSplmvaCumB; fSplmvaCumB = 0; }
    if (fmvaScumul)       { delete fmvaScumul; }
    if (fmvaBcumul)       { delete fmvaBcumul; }
-
+   if (effBvsS)          { delete effBvsS; }
+   if (rejBvsS)          { delete rejBvsS; }
+   if (inveffBvsS)       { delete inveffBvsS; }
    delete fLogger;
 }
 
@@ -183,8 +201,9 @@ TH1D* TMVA::ROCCalc::GetROC(){
    // --> efficiencies vs cut value
    fNevtS = fmvaS->GetSumOfWeights(); // needed to get the error on the eff.. will only be correct if the histogram is not scaled to "integral == 1" Yet;
    if (fNevtS < 2) {
-      Log() << kWARNING << "I guess the mva distributions fed into ROCCalc were already normalized, therefore the calculated error on the efficiency will be incorrect !! " << Endl;
+      Log() << kERROR << "I guess the mva distributions fed into ROCCalc were already normalized, therefore the calculated error on the efficiency will be incorrect !! " << Endl;
       fNevtS = 0;  // reset to zero --> no error will be calculated on the efficiencies
+      fStatus=kFALSE;
    }
    fmvaScumul = gTools().GetCumulativeDist(fmvaS);
    fmvaBcumul = gTools().GetCumulativeDist(fmvaB);
@@ -196,17 +215,17 @@ TH1D* TMVA::ROCCalc::GetROC(){
    //   fmvaBcumul->Draw("histsame");
 
    // background efficiency versus signal efficiency
-   TH1D* effBvsS = new TH1D("effBvsS", "ROC-Curve", fNbins, 0, 1 );
+   if(effBvsS==0) effBvsS = new TH1D("effBvsS", "ROC-Curve", fNbins, 0, 1 );
    effBvsS->SetXTitle( "Signal eff" );
    effBvsS->SetYTitle( "Backgr eff" );
 
    // background rejection (=1-eff.) versus signal efficiency
-   TH1D* rejBvsS = new TH1D( "rejBvsS", "ROC-Curve", fNbins, 0, 1 );
+   if(rejBvsS==0) rejBvsS = new TH1D( "rejBvsS", "ROC-Curve", fNbins, 0, 1 );
    rejBvsS->SetXTitle( "Signal eff" );
    rejBvsS->SetYTitle( "Backgr rejection (1-eff)" );
    
    // inverse background eff (1/eff.) versus signal efficiency
-   TH1D* inveffBvsS = new TH1D("invBeffvsSeff", "ROC-Curve" , fNbins, 0, 1 );
+   if(inveffBvsS ==0) inveffBvsS = new TH1D("invBeffvsSeff", "ROC-Curve" , fNbins, 0, 1 );
    inveffBvsS->SetXTitle( "Signal eff" );
    inveffBvsS->SetYTitle( "Inverse backgr. eff (1/eff)" );
 

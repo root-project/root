@@ -188,6 +188,7 @@ namespace TMVA {
 
       void               SetMsgType( EMsgType t ) const;
 
+      DataSetManager*   GetDataSetManager(){return fDataSetManager;}
    private:
 
       TMVA::DataSetManager*            fDataSetManager; // DSMTEST

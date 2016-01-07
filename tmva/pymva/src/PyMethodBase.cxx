@@ -20,6 +20,7 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
+#include <fstream>
 
 using namespace TMVA;
 
@@ -27,9 +28,17 @@ ClassImp(PyMethodBase)
 
 PyObject *PyMethodBase::fModuleBuiltin = NULL;
 PyObject *PyMethodBase::fEval = NULL;
+PyObject *PyMethodBase::fOpen = NULL;
+
 PyObject *PyMethodBase::fModulePickle = NULL;
 PyObject *PyMethodBase::fPickleDumps = NULL;
 PyObject *PyMethodBase::fPickleLoads = NULL;
+
+PyObject *PyMethodBase::fMain = NULL;
+PyObject *PyMethodBase::fGlobalNS = NULL;
+PyObject *PyMethodBase::fLocalNS = NULL;
+
+
 
 //_______________________________________________________________________
 PyMethodBase::PyMethodBase(const TString &jobName,
@@ -60,23 +69,14 @@ PyMethodBase::PyMethodBase(Types::EMVA methodType,
 //_______________________________________________________________________
 PyMethodBase::~PyMethodBase()
 {
-   if (PyIsInitialized()) {
-//     PyFinalize();
-   }
 }
 
 //_______________________________________________________________________
 PyObject *PyMethodBase::Eval(TString code)
 {
-   PyObject *main = PyImport_AddModule("__main__");
-   PyObject *global = PyModule_GetDict(main);
-   PyObject *local = PyDict_New();
-
-   PyObject *pycode = Py_BuildValue("(sOO)", code.Data(), global, local);
+   if(!PyIsInitialized()) PyInitialize();
+   PyObject *pycode = Py_BuildValue("(sOO)", code.Data(), fGlobalNS, fLocalNS);
    PyObject *result = PyObject_CallObject(fEval, pycode);
-//     Py_DECREF(main);
-//     Py_DECREF(global);
-//     Py_DECREF(local);
    Py_DECREF(pycode);
    return result;
 }
@@ -88,23 +88,54 @@ void PyMethodBase::PyInitialize()
    if (!PyIsInitialized()) {
       Py_Initialize();
       _import_array();
-      import_array();
    }
+   
+   fMain = PyImport_AddModule("__main__");
+   if (!fMain) {
+      Log << kFATAL << "Can't import __main__" << Endl;
+      Log << Endl;
+   }
+   
+   fGlobalNS = PyModule_GetDict(fMain);
+   if (!fGlobalNS) {
+      Log << kFATAL << "Can't init global namespace" << Endl;
+      Log << Endl;
+   }
+   
+   fLocalNS = PyDict_New();
+   if (!fMain) {
+      Log << kFATAL << "Can't init local namespace" << Endl;
+      Log << Endl;
+   }
+   
+   #if PY_MAJOR_VERSION < 3 
    //preparing objects for eval
-   PyObject *bName = PyString_FromString("__builtin__");
+   PyObject *bName =  PyUnicode_FromString("__builtin__");
    // Import the file as a Python module.
    fModuleBuiltin = PyImport_Import(bName);
    if (!fModuleBuiltin) {
       Log << kFATAL << "Can't import __builtin__" << Endl;
       Log << Endl;
    }
+   #else   
+   //preparing objects for eval
+   PyObject *bName =  PyUnicode_FromString("builtins");
+   // Import the file as a Python module.
+   fModuleBuiltin = PyImport_Import(bName);
+   if (!fModuleBuiltin) {
+      Log << kFATAL << "Can't import builtins" << Endl;
+      Log << Endl;
+   }
+   #endif
+   
    PyObject *mDict = PyModule_GetDict(fModuleBuiltin);
    fEval = PyDict_GetItemString(mDict, "eval");
-
+   fOpen = PyDict_GetItemString(mDict, "open");
+   
    Py_DECREF(bName);
    Py_DECREF(mDict);
    //preparing objects for pickle
-   PyObject *pName = PyString_FromString("pickle");
+   PyObject *pName = PyUnicode_FromString("pickle");
    // Import the file as a Python module.
    fModulePickle = PyImport_Import(pName);
    if (!fModulePickle) {
@@ -112,8 +143,8 @@ void PyMethodBase::PyInitialize()
       Log << Endl;
    }
    PyObject *pDict = PyModule_GetDict(fModulePickle);
-   fPickleDumps = PyDict_GetItemString(pDict, "dumps");
-   fPickleLoads = PyDict_GetItemString(pDict, "loads");
+   fPickleDumps = PyDict_GetItemString(pDict, "dump");
+   fPickleLoads = PyDict_GetItemString(pDict, "load");
 
    Py_DECREF(pName);
    Py_DECREF(pDict);
@@ -125,15 +156,19 @@ void PyMethodBase::PyInitialize()
 void PyMethodBase::PyFinalize()
 {
    Py_Finalize();
-   if (fEval) delete fEval;
-   if (fModuleBuiltin) delete fModuleBuiltin;
-   if (fPickleDumps) delete fPickleDumps;
-   if (fPickleLoads) delete fPickleLoads;
-
+   if (fEval) Py_DECREF(fEval);
+   if (fModuleBuiltin) Py_DECREF(fModuleBuiltin);
+   if (fPickleDumps) Py_DECREF(fPickleDumps);
+   if (fPickleLoads) Py_DECREF(fPickleLoads);
+   if(fMain) Py_DECREF(fMain);//objects fGlobalNS and fLocalNS will be free here
 }
 void PyMethodBase::PySetProgramName(TString name)
 {
-   Py_SetProgramName(const_cast<char *>(name.Data()));
+   #if PY_MAJOR_VERSION < 3 
+   Py_SetProgramName(const_cast<char*>(name.Data()));
+   #else
+   Py_SetProgramName((wchar_t *)name.Data());
+   #endif
 }
 //_______________________________________________________________________
 TString PyMethodBase::Py_GetProgramName()
@@ -151,4 +186,31 @@ int  PyMethodBase::PyIsInitialized()
    return kTRUE;
 }
 
+void PyMethodBase::Serialize(TString path,PyObject *obj)
+{
+ if(!PyIsInitialized()) PyInitialize();
+ PyObject *file_arg = Py_BuildValue("(ss)", path.Data(),"wb");
+ PyObject *file = PyObject_CallObject(fOpen,file_arg);
+ PyObject *model_arg = Py_BuildValue("(OO)", obj,file);
+ PyObject *model_data = PyObject_CallObject(fPickleDumps , model_arg);
 
+ Py_DECREF(file_arg);
+ Py_DECREF(file);
+ Py_DECREF(model_arg);
+ Py_DECREF(model_data);
+}
+
+void PyMethodBase::UnSerialize(TString path,PyObject **obj)
+{
+ PyObject *file_arg = Py_BuildValue("(ss)", path.Data(),"rb");
+ PyObject *file = PyObject_CallObject(fOpen,file_arg);
+ 
+ PyObject *model_arg = Py_BuildValue("(O)", file);
+ *obj = PyObject_CallObject(fPickleLoads , model_arg);
+
+ Py_DECREF(file_arg);
+ Py_DECREF(file);
+ Py_DECREF(model_arg);
+}
+
+      

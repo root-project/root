@@ -38,6 +38,7 @@
 
 #include "TMVA/Tools.h"
 #include "TMVA/Factory.h"
+#include "TMVA/DataLoader.h"
 #include "TMVA/TMVARegGui.h"
 
 
@@ -128,8 +129,10 @@ void TMVARegression( TString myMethodList = "" )
    // All TMVA output can be suppressed by removing the "!" (not) in 
    // front of the "Silent" argument in the option string
    TMVA::Factory *factory = new TMVA::Factory( "TMVARegression", outputFile, 
-                                               "!V:!Silent:Color:DrawProgressBar" );
+                                               "!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression" );
 
+   
+   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
    // If you wish to modify default settings 
    // (please check "src/Config.h" to see all available global options)
    //    (TMVA::gConfig().GetVariablePlotting()).fTimesRMS = 8.0;
@@ -138,17 +141,17 @@ void TMVARegression( TString myMethodList = "" )
    // Define the input variables that shall be used for the MVA training
    // note that you may also use variable expressions, such as: "3*var1/var2*abs(var3)"
    // [all types of expressions that can also be parsed by TTree::Draw( "expression" )]
-   factory->AddVariable( "var1", "Variable 1", "units", 'F' );
-   factory->AddVariable( "var2", "Variable 2", "units", 'F' );
+   dataloader->AddVariable( "var1", "Variable 1", "units", 'F' );
+   dataloader->AddVariable( "var2", "Variable 2", "units", 'F' );
 
    // You can add so-called "Spectator variables", which are not used in the MVA training, 
    // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the 
    // input variables, the response values of all trained MVAs, and the spectator variables
-   factory->AddSpectator( "spec1:=var1*2",  "Spectator 1", "units", 'F' );
-   factory->AddSpectator( "spec2:=var1*3",  "Spectator 2", "units", 'F' );
+   dataloader->AddSpectator( "spec1:=var1*2",  "Spectator 1", "units", 'F' );
+   dataloader->AddSpectator( "spec2:=var1*3",  "Spectator 2", "units", 'F' );
 
    // Add the variable carrying the regression target
-   factory->AddTarget( "fvalue" ); 
+   dataloader->AddTarget( "fvalue" ); 
 
    // It is also possible to declare additional targets for multi-dimensional regression, ie:
    // -- factory->AddTarget( "fvalue2" );
@@ -177,24 +180,24 @@ void TMVARegression( TString myMethodList = "" )
    Double_t regWeight  = 1.0;   
 
    // You can add an arbitrary number of regression trees
-   factory->AddRegressionTree( regTree, regWeight );
+   dataloader->AddRegressionTree( regTree, regWeight );
 
    // This would set individual event weights (the variables defined in the 
    // expression need to exist in the original TTree)
-   factory->SetWeightExpression( "var1", "Regression" );
+   dataloader->SetWeightExpression( "var1", "Regression" );
 
    // Apply additional cuts on the signal and background samples (can be different)
    TCut mycut = ""; // for example: TCut mycut = "abs(var1)<0.5 && abs(var2-0.5)<1";
 
-   // tell the factory to use all remaining events in the trees after training for testing:
-   factory->PrepareTrainingAndTestTree( mycut, 
+   // tell the DataLoader to use all remaining events in the trees after training for testing:
+   dataloader->PrepareTrainingAndTestTree( mycut, 
                                          "nTrain_Regression=1000:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V" );
-   // factory->PrepareTrainingAndTestTree( mycut, 
+   // dataloader->PrepareTrainingAndTestTree( mycut, 
    //                                      "nTrain_Regression=0:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V" );
 
    // If no numbers of events are given, half of the events in the tree are used 
    // for training, and the other half for testing:
-   //    factory->PrepareTrainingAndTestTree( mycut, "SplitMode=random:!V" );  
+   //    dataloader->PrepareTrainingAndTestTree( mycut, "SplitMode=random:!V" );  
 
    // ---- Book MVA methods
    //
@@ -205,58 +208,58 @@ void TMVARegression( TString myMethodList = "" )
 
    // PDE - RS method
    if (Use["PDERS"])
-      factory->BookMethod( TMVA::Types::kPDERS, "PDERS", 
+      factory->BookMethod( dataloader,  TMVA::Types::kPDERS, "PDERS", 
                            "!H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=40:NEventsMax=60:VarTransform=None" );
    // And the options strings for the MinMax and RMS methods, respectively:
    //      "!H:!V:VolumeRangeMode=MinMax:DeltaFrac=0.2:KernelEstimator=Gauss:GaussSigma=0.3" );   
    //      "!H:!V:VolumeRangeMode=RMS:DeltaFrac=3:KernelEstimator=Gauss:GaussSigma=0.3" );   
 
    if (Use["PDEFoam"])
-       factory->BookMethod( TMVA::Types::kPDEFoam, "PDEFoam", 
+       factory->BookMethod( dataloader,  TMVA::Types::kPDEFoam, "PDEFoam", 
 			    "!H:!V:MultiTargetRegression=F:TargetSelection=Mpv:TailCut=0.001:VolFrac=0.0666:nActiveCells=500:nSampl=2000:nBin=5:Compress=T:Kernel=None:Nmin=10:VarTransform=None" );
 
    // K-Nearest Neighbour classifier (KNN)
    if (Use["KNN"])
-      factory->BookMethod( TMVA::Types::kKNN, "KNN", 
+      factory->BookMethod( dataloader,  TMVA::Types::kKNN, "KNN", 
                            "nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" );
 
    // Linear discriminant
    if (Use["LD"])
-      factory->BookMethod( TMVA::Types::kLD, "LD", 
+      factory->BookMethod( dataloader,  TMVA::Types::kLD, "LD", 
                            "!H:!V:VarTransform=None" );
 
 	// Function discrimination analysis (FDA) -- test of various fitters - the recommended one is Minuit (or GA or SA)
    if (Use["FDA_MC"]) 
-      factory->BookMethod( TMVA::Types::kFDA, "FDA_MC",
+      factory->BookMethod( dataloader,  TMVA::Types::kFDA, "FDA_MC",
                           "!H:!V:Formula=(0)+(1)*x0+(2)*x1:ParRanges=(-100,100);(-100,100);(-100,100):FitMethod=MC:SampleSize=100000:Sigma=0.1:VarTransform=D" );
    
    if (Use["FDA_GA"]) // can also use Simulated Annealing (SA) algorithm (see Cuts_SA options) .. the formula of this example is good for parabolas
-      factory->BookMethod( TMVA::Types::kFDA, "FDA_GA",
+      factory->BookMethod( dataloader,  TMVA::Types::kFDA, "FDA_GA",
                            "!H:!V:Formula=(0)+(1)*x0+(2)*x1:ParRanges=(-100,100);(-100,100);(-100,100):FitMethod=GA:PopSize=100:Cycles=3:Steps=30:Trim=True:SaveBestGen=1:VarTransform=Norm" );
 
    if (Use["FDA_MT"]) 
-      factory->BookMethod( TMVA::Types::kFDA, "FDA_MT",
+      factory->BookMethod( dataloader,  TMVA::Types::kFDA, "FDA_MT",
                            "!H:!V:Formula=(0)+(1)*x0+(2)*x1:ParRanges=(-100,100);(-100,100);(-100,100);(-10,10):FitMethod=MINUIT:ErrorLevel=1:PrintLevel=-1:FitStrategy=2:UseImprove:UseMinos:SetBatch" );
 
    if (Use["FDA_GAMT"]) 
-      factory->BookMethod( TMVA::Types::kFDA, "FDA_GAMT",
+      factory->BookMethod( dataloader,  TMVA::Types::kFDA, "FDA_GAMT",
                            "!H:!V:Formula=(0)+(1)*x0+(2)*x1:ParRanges=(-100,100);(-100,100);(-100,100):FitMethod=GA:Converger=MINUIT:ErrorLevel=1:PrintLevel=-1:FitStrategy=0:!UseImprove:!UseMinos:SetBatch:Cycles=1:PopSize=5:Steps=5:Trim" );
 
    // Neural network (MLP)
    if (Use["MLP"])
-      factory->BookMethod( TMVA::Types::kMLP, "MLP", "!H:!V:VarTransform=Norm:NeuronType=tanh:NCycles=20000:HiddenLayers=N+20:TestRate=6:TrainingMethod=BFGS:Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-6:ConvergenceTests=15:!UseRegulator" );
+      factory->BookMethod( dataloader,  TMVA::Types::kMLP, "MLP", "!H:!V:VarTransform=Norm:NeuronType=tanh:NCycles=20000:HiddenLayers=N+20:TestRate=6:TrainingMethod=BFGS:Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-6:ConvergenceTests=15:!UseRegulator" );
 
    // Support Vector Machine
    if (Use["SVM"])
-      factory->BookMethod( TMVA::Types::kSVM, "SVM", "Gamma=0.25:Tol=0.001:VarTransform=Norm" );
+      factory->BookMethod( dataloader,  TMVA::Types::kSVM, "SVM", "Gamma=0.25:Tol=0.001:VarTransform=Norm" );
 
    // Boosted Decision Trees
    if (Use["BDT"])
-     factory->BookMethod( TMVA::Types::kBDT, "BDT",
+     factory->BookMethod( dataloader,  TMVA::Types::kBDT, "BDT",
                            "!H:!V:NTrees=100:MinNodeSize=1.0%:BoostType=AdaBoostR2:SeparationType=RegressionVariance:nCuts=20:PruneMethod=CostComplexity:PruneStrength=30" );
 
    if (Use["BDTG"])
-     factory->BookMethod( TMVA::Types::kBDT, "BDTG",
+     factory->BookMethod( dataloader,  TMVA::Types::kBDT, "BDTG",
                            "!H:!V:NTrees=2000::BoostType=Grad:Shrinkage=0.1:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=3:MaxDepth=4" );
    // --------------------------------------------------------------------------------------------------
 
@@ -280,6 +283,7 @@ void TMVARegression( TString myMethodList = "" )
    std::cout << "==> TMVARegression is done!" << std::endl;      
 
    delete factory;
+   delete dataloader;
 
    // Launch the GUI for the root macros
    if (!gROOT->IsBatch()) TMVA::TMVARegGui( outfileName );
