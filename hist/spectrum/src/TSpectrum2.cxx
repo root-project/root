@@ -192,7 +192,7 @@ void TSpectrum2::Print(Option_t *) const
 ///   The polymarker coordinates correspond to the npeaks peaks found in
 ///   the histogram.
 ///   A pointer to the polymarker object can be retrieved later via:
-/// ~~~ {cpp}
+/// ~~~ {.cpp}
 ///    TList *functions = hin->GetListOfFunctions();
 ///    TPolyMarker *pm = (TPolyMarker*)functions->FindObject("TPolyMarker")
 /// ~~~

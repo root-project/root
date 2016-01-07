@@ -2677,7 +2677,7 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
 /// We allow them to type:
 /// ~~~ {.cpp}
 ///  .X myfunc.C++(arg1,arg2)
-///  ~~~
+/// ~~~
 /// or
 /// ~~~ {.cpp}
 ///  .X myfunc.C+(arg1,arg2)
@@ -3843,7 +3843,7 @@ void TSystem::SetMakeExe(const char *directives)
 /// the use of ';' to separate several instructions. However, shell specific
 /// construct should be avoided. In particular this description can contain
 /// environment variables, like $ROOTSYS (or %ROOTSYS% on windows).
-///  ~~~ {.cpp}
+/// ~~~ {.cpp}
 /// Five special variables will be expanded before execution:
 ///   Variable name       Expands to
 ///   -------------       ----------
@@ -3860,7 +3860,7 @@ void TSystem::SetMakeExe(const char *directives)
 ///                       set fFlagsDebug and fFlagsOpt
 /// ~~~
 /// e.g.:
-///  ~~~ {.cpp}
+/// ~~~ {.cpp}
 /// gSystem->SetMakeSharedLib(
 /// "KCC -n32 --strict $IncludePath -K0 \$Opt $SourceFile
 ///  --no_exceptions --signed_chars --display_error_number
@@ -3881,7 +3881,7 @@ void TSystem::SetMakeExe(const char *directives)
 ///  -D_WINDOWS $IncludePath $SourceFile
 ///  /link -PDB:NONE /NODEFAULTLIB /INCREMENTAL:NO /RELEASE /NOLOGO
 ///  $LinkedLibs -entry:_DllMainCRTStartup@12 -dll /out:$SharedLib")
-///  ~~~
+/// ~~~
 
 void TSystem::SetMakeSharedLib(const char *directives)
 {
@@ -3917,15 +3917,15 @@ void TSystem::AddLinkedLibs(const char *linkedLib)
 /// the directives given to SetMakeSharedLib() and SetMakeExe(), e.g.:
 /// ~~~ {.cpp}
 ///    gSystem->SetInclude("-I$ROOTSYS/include -Imydirectory/include");
-///  ~~~
+/// ~~~
 /// the default value of IncludePath on Unix is:
-///  ~~~ {.cpp}
+/// ~~~ {.cpp}
 ///    "-I$ROOTSYS/include "
-///  ~~~
+/// ~~~
 /// and on Windows:
-///  ~~~ {.cpp}
+/// ~~~ {.cpp}
 ///    "/I%ROOTSYS%/include "
-///  ~~~
+/// ~~~
 
 void TSystem::SetIncludePath(const char *includePath)
 {
@@ -3956,9 +3956,9 @@ void  TSystem::SetLinkedLibs(const char *linkedLibs)
 /// of the dictionary.  It should be noted that the file is intended
 /// as a linkdef `fragment`, so usually you would not list the
 /// typical:
-///~~~ {.cpp}
+/// ~~~ {.cpp}
 ///   #pragma link off ....
-///~~~
+/// ~~~
 
 void  TSystem::SetLinkdefSuffix(const char *suffix)
 {
@@ -3984,9 +3984,9 @@ void TSystem::SetObjExt(const char *ObjExt)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This method split a filename of the form:
-///  ~~~ {.cpp}
+/// ~~~ {.cpp}
 ///   [path/]macro.C[+|++[k|f|g|O|c|s|d|v|-]][(args)].
-///  ~~~
+/// ~~~
 /// It stores the ACliC mode [+|++[options]] in 'mode',
 /// the arguments (including parenthesis) in arg
 /// and the I/O indirection in io

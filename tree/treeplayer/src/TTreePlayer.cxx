@@ -3005,6 +3005,7 @@ void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
 /// The function return the status of the fit in the following form
 /// ~~~{.cpp}
 ///     fitResult = migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
+/// ~~~
 /// -  The fitResult is 0 is the fit is OK.
 /// -  The fitResult is negative in case of an error not connected with the fit.
 /// -  The number of entries used in the fit can be obtained via
