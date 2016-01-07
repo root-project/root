@@ -65,7 +65,7 @@
 #include "TMVA/ResultsRegression.h"
 #include "TMVA/ResultsMulticlass.h"
 
-const Int_t  MinNoTrainingEvents = 10;
+//const Int_t  MinNoTrainingEvents = 10;
 //const Int_t  MinNoTestEvents     = 1;
 
 ClassImp(TMVA::DataLoader)

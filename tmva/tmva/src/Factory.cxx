@@ -1439,6 +1439,7 @@ TH1F* TMVA::Factory::EvaluateImportance(DataLoader *loader,VIType vitype, Types:
   }else
   {
       std::cerr<<"Error in Variable Importance: Random mode require more that 10 variables in the dataset."<<std::endl;
+      return nullptr;
   }
 }
 
@@ -1735,7 +1736,7 @@ TH1F* TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds,
       fgTargetFile->Delete(Form("%s;1",seedloader->GetName()));
       fgTargetFile->Flush();
       delete seedloader;
-      std::vector<TMVA::VariableTransformBase *>::iterator trfIt = fDefaultTrfs.begin();
+      // std::vector<TMVA::VariableTransformBase *>::iterator trfIt = fDefaultTrfs.begin();
       gSystem->Exec(Form("rm -rf %s", xbitset.to_string().c_str()));
       
       this->DeleteAllMethods();
