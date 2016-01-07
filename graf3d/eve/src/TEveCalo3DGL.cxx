@@ -330,7 +330,7 @@ void TEveCalo3DGL::RenderGrid(TGLRnrCtx & rnrCtx) const
 ///    | 2-----|-3
 ///    |/      |/
 ///    1-------0
-///~~~
+/// ~~~
 
 void TEveCalo3DGL::RenderBox(const Float_t pnts[8]) const
 {

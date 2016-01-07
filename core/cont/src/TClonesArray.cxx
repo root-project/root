@@ -664,7 +664,7 @@ void TClonesArray::RemoveRange(Int_t idx1, Int_t idx2)
 /// Create an array of clone objects of class cl. The class must inherit from
 /// TObject. If the class defines an own operator delete(), make sure that
 /// it looks like this:
-///  ~~~ {.cpp}
+/// ~~~ {.cpp}
 ///    void MyClass::operator delete(void *vp)
 ///    {
 ///       if ((Long_t) vp != TObject::GetDtorOnly())

@@ -23,10 +23,10 @@ rfio:/afs/cern.ch/user/r/rdm/galice.root
 # where galice.root is a symlink of the type /shift/.../... 
 rfio:na49db1:/data1/raw.root                                   
 rfio:/castor/cern.ch/user/r/rdm/test.root                      
-~~~                      
+~~~
 If Castor 2.1 is used the file names can be given also in the     
 following ways:                                                   
-~~~{.bash}                                                            
+~~~{.bash}
 rfio://host:port/?path=FILEPATH                                  
 rfio://host/?path=FILEPATH                                       
 rfio:///castor?path=FILEPATH                                     

@@ -5964,7 +5964,7 @@ void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
 ///       im1->GetImageBuffer(&buf, &int, TImage::kXpm); /*raw buffer*/
 ///       TImage *im2 = TImage::Create();
 ///       im2->SetImageBuffer(&buf, TImage::kXpm);
-///  ~~~
+/// ~~~
 ///      2.  xpm as an array of strings (pre-parsed)
 /// ~~~ {.cpp}
 ///    For example:

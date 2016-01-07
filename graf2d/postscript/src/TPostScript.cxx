@@ -47,9 +47,9 @@ with a command such as:
     myps.Close();
 ~~~
 You can set the default paper size with:
- ~~~ {.cpp}
+~~~ {.cpp}
     gStyle->SetPaperSize(xsize,ysize);
- ~~~
+~~~
 You can resume writing again in this file with `myps.Open();`.
 Note that you may have several Postscript files opened simultaneously.
 
@@ -98,7 +98,7 @@ The following macro is an example illustrating how to open a Postscript
 file and draw several pictures. The generation of a new Postscript page
 is automatic when `TCanvas::Clear` is called by `object->Draw()`.
 
- ~~~ {.cpp}
+~~~ {.cpp}
      {
         TFile f("hsimple.root");
         TCanvas c1("c1","canvas",800,600);
@@ -122,7 +122,7 @@ is automatic when `TCanvas::Clear` is called by `object->Draw()`.
         c1.Update();
         ps.Close();
      }
- ~~~
+~~~
 
 ## Making several pictures in the same Postscript file: case 2
 
@@ -158,7 +158,7 @@ Note that `c1->Update` must be called at the end of the first picture.
         // invoke Postscript viewer
         gSystem->Exec("gs file.ps");
      }
- ~~~
+~~~
 
 ## Making several pictures in the same Postscript file: case 3
 This is the recommended way. If the Postscript file name finishes with
@@ -166,7 +166,7 @@ This is the recommended way. If the Postscript file name finishes with
 finishes with ")" and the file has been opened with "(", the file is closed.
 
 Example:
- ~~~ {.cpp}
+~~~ {.cpp}
      {
         TCanvas c1("c1");
         h1.Draw();
@@ -176,7 +176,7 @@ Example:
         h3.Draw();
         c1.Print("c1.ps)");  // canvas is added to "c1.ps" and ps file is closed
      }
- ~~~
+~~~
 The `TCanvas::Print("file.ps(")` mechanism is very useful, but it can
 be a little inconvenient to have the action of opening/closing a file being
 atomic with printing a page. Particularly if pages are being generated in some
@@ -185,7 +185,7 @@ munge the argument to Print() accordingly.
 The "[" and "]" can be used instead of "(" and ")" as shown below.
 
 Example:
- ~~~ {.cpp}
+~~~ {.cpp}
      c1.Print("file.ps[");        // No actual print, just open file.ps
 
      for (int i=0; i<10; ++i) {
@@ -196,7 +196,7 @@ Example:
      }
 
      c1.Print("file.ps]");        // No actual print, just close the file
- ~~~
+~~~
 
  ## Color Model
 
@@ -206,12 +206,12 @@ used for printing purposes. CMY means Cyan Magenta Yellow to convert RGB
 to CMY it is enough to do: C=1-R, M=1-G and Y=1-B. CMYK has one more
 component K (black). The conversion from RGB to CMYK is:
 
- ~~~ {.cpp}
+~~~ {.cpp}
      Double_t Black   = TMath::Min(TMath::Min(1-Red,1-Green),1-Blue);
      Double_t Cyan    = (1-Red-Black)/(1-Black);
      Double_t Magenta = (1-Green-Black)/(1-Black);
      Double_t Yellow  = (1-Blue-Black)/(1-Black);
- ~~~
+~~~
 CMYK add the black component which allows to have a better quality for black
 printing. PostScript support the CMYK model.
 
@@ -2417,7 +2417,7 @@ void TPostScript::SetLineColor( Color_t cindex )
 /// \image html postscript_1.png
 ///
 /// To change the line join behaviour just do:
-/// ~~~ {cpp}
+/// ~~~ {.cpp}
 /// TPostScript::SetLineJoin(2); // Set the PS line join to bevel.
 /// ~~~
 

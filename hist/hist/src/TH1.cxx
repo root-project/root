@@ -4140,7 +4140,7 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 /// Getting quantiles q from two histograms and storing results in a TGraph,
 /// a so-called QQ-plot
 ///
-/// ~~~{.cpp}
+/// ~~~ {.cpp}
 /// TGraph *gr = new TGraph(nprob);
 /// h1->GetQuantiles(nprob,gr->GetX());
 /// h2->GetQuantiles(nprob,gr->GetY());
@@ -4149,7 +4149,7 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 ///
 /// Example:
 ///
-/// ~~~{cpp}
+/// ~~~ {.cpp}
 /// void quantiles() {
 ///    // demo for quantiles
 ///    const Int_t nq = 20;
@@ -5273,7 +5273,7 @@ Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
 /// be a multiple of the bin width.
 /// Example:
 ///
-/// ~~~{.cpp}
+/// ~~~ {.cpp}
 /// void atest() {
 ///   TH1F *h1 = new TH1F("h1","h1",110,-110,0);
 ///   TH1F *h2 = new TH1F("h2","h2",220,0,110);
