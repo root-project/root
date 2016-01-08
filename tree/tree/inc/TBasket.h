@@ -56,8 +56,10 @@ protected:
    Bool_t      fHeaderOnly;      //True when only the basket header must be read/written
    Int_t      *fDisplacement;    //![fNevBuf] Displacement of entries in fBuffer(TKey)
    Int_t      *fEntryOffset;     //[fNevBuf] Offset of entries in fBuffer(TKey)
+   Int_t      *fCompressedEntryOffset;  // Offset of compressed entries
    TBranch    *fBranch;          //Pointer to the basket support branch
    TBuffer    *fCompressedBufferRef; //! Compressed buffer.
+   Bool_t      fRandomAccessCompression; // Compression with Random Access Capability
    Bool_t      fOwnsCompressedBuffer; //! Whether or not we own the compressed buffer.
    Int_t       fLastWriteBufferSize; //! Size of the buffer last time we wrote it to disk
 
@@ -78,6 +80,7 @@ public:
            Int_t   GetEntryPointer(Int_t Entry);
            Int_t   GetNevBuf() const {return fNevBuf;}
            Int_t   GetNevBufSize() const {return fNevBufSize;}
+           Bool_t  GetRandomAccessCompression() const {return fRandomAccessCompression;}
            Int_t   GetLast() const {return fLast;}
    virtual void    MoveEntries(Int_t dentries);
    virtual void    PrepareBasket(Long64_t /* entry */) {};
@@ -90,6 +93,7 @@ public:
 
            void    SetBranch(TBranch *branch) { fBranch = branch; }
            void    SetNevBufSize(Int_t n) { fNevBufSize=n; }
+           void    SetRandomAccessCompression() { fRandomAccessCompression = 1; }
    virtual void    SetReadMode();
    virtual void    SetWriteMode();
    inline  void    Update(Int_t newlast) { Update(newlast,newlast); };

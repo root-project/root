@@ -1009,8 +1009,14 @@ Int_t TBasket::WriteBuffer()
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
          else bufmax = kMAXZIPBUF;
          //compress the buffer
-         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
-
+         if (!GetRandomAccessCompression()) {
+            R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
+         else {
+            Int_t entries = fNevBuf+1;
+            Int_t *entryoffsets = fEntryOffset;
+            Int_t *compressedentryoffsets = fCompressedEntryOffsets;
+            R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm, entries, entryoffsets, compressedentryoffsets);
+         }
          // test if buffer has really been compressed. In case of small buffers
          // when the buffer contains random data, it may happen that the compressed
          // buffer is larger than the input. In this case, we write the original uncompressed buffer
