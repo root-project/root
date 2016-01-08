@@ -123,7 +123,7 @@ bool JupyROOTExecutorImpl(const char *code)
 
       if (err == TInterpreter::kProcessing) {
          gInterpreter->ProcessLine(".@");
-         gInterpreter->ProcessLine("cerr << \"Unbalanced curly braces. This cell was not processed.\" << endl;");
+         gInterpreter->ProcessLine("cerr << \"Unbalanced braces. This cell was not processed.\" << endl;");
       }
    } catch (...) {
       status = true;
