@@ -9,6 +9,8 @@ if(fortran)
     set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
   endif()
   enable_language(Fortran OPTIONAL)
+else()
+  set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
 endif()
 
 #----Get the compiler file name (to ensure re-location)---------------------------------------------
