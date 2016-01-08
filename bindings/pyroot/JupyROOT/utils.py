@@ -319,7 +319,7 @@ class NotebookDrawer(object):
        Get the list of primitives in the pad, recursively descending into
        histograms and graphs looking for fitted functions.
        """
-       primitives = self.canvas.GetListOfPrimitives()
+       primitives = self.drawableObject.GetListOfPrimitives()
        primitivesNames = map(lambda p: p.ClassName(), primitives)
        return sorted(primitivesNames)
 
