@@ -50,7 +50,7 @@ See picture in TTree.
 ////////////////////////////////////////////////////////////////////////////////
 /// Default contructor.
 
-TBasket::TBasket() : fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
+TBasket::TBasket() : fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fRandomAccessCompression(kTRUE), fRandomAccessCompression(kTRUE), fLastWriteBufferSize(0)
 {
    fDisplacement  = 0;
    fEntryOffset   = 0;
@@ -67,7 +67,7 @@ TBasket::TBasket() : fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLa
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor used during reading.
 
-TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir),fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
+TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir),fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fRandomAccessCompression(kTRUE), fRandomAccessCompression(kTRUE), fLastWriteBufferSize(0)
 {
    fDisplacement  = 0;
    fEntryOffset   = 0;
@@ -85,7 +85,7 @@ TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir),fCompressedBufferRef(0
 /// Basket normal constructor, used during writing.
 
 TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
-   TKey(branch->GetDirectory()),fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
+   TKey(branch->GetDirectory()),fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fRandomAccessCompression(kTRUE), fLastWriteBufferSize(0)
 {
    SetName(name);
    SetTitle(title);
@@ -1015,7 +1015,7 @@ Int_t TBasket::WriteBuffer()
             Int_t entries = fNevBuf+1;
             Int_t *entryoffsets = fEntryOffset;
             Int_t *compressedentryoffsets = fCompressedEntryOffsets;
-            R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm, entries, entryoffsets, compressedentryoffsets);
+            R__zipMultipleAlgorithm_RAC(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm, entries, entryoffsets, compressedentryoffsets);
          }
          // test if buffer has really been compressed. In case of small buffers
          // when the buffer contains random data, it may happen that the compressed

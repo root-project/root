@@ -712,7 +712,7 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   }
 }
 
-void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm, int entries, int *entryoffsets, int *compressedentryoffsets)
+void R__zipMultipleAlgorithm_RAC(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm, int entries, int *entryoffsets, int *compressedentryoffsets)
      /* int cxlevel;                      compression level */
      /* int  *srcsize, *tgtsize, *irep;   source and target sizes, replay */
      /* char *tgt, *src;                  source and target buffers */
@@ -723,7 +723,7 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
 {
   int err;
   int method   = Z_DEFLATED;
-  printf("In R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm, int entries, int *entryoffsets, int *compressedentryoffsets\n");
+  printf("In R__zipMultipleAlgorithm_RAC(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm, int entries, int *entryoffsets, int *compressedentryoffsets\n");
   printf("entries = %d\n", entries);
   if (cxlevel <= 0) {
     *irep = 0;

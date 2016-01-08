@@ -59,8 +59,8 @@ protected:
    Int_t      *fCompressedEntryOffset;  // Offset of compressed entries
    TBranch    *fBranch;          //Pointer to the basket support branch
    TBuffer    *fCompressedBufferRef; //! Compressed buffer.
-   Bool_t      fRandomAccessCompression; // Compression with Random Access Capability
    Bool_t      fOwnsCompressedBuffer; //! Whether or not we own the compressed buffer.
+   Bool_t      fRandomAccessCompression; // Compression with Random Access Capability
    Int_t       fLastWriteBufferSize; //! Size of the buffer last time we wrote it to disk
 
 public:
@@ -80,7 +80,7 @@ public:
            Int_t   GetEntryPointer(Int_t Entry);
            Int_t   GetNevBuf() const {return fNevBuf;}
            Int_t   GetNevBufSize() const {return fNevBufSize;}
-           Bool_t  GetRandomAccessCompression() const {return fRandomAccessCompression;}
+           Bool_t  IsRandomAccessCompression() const {return fRandomAccessCompression;}
            Int_t   GetLast() const {return fLast;}
    virtual void    MoveEntries(Int_t dentries);
    virtual void    PrepareBasket(Long64_t /* entry */) {};
@@ -93,7 +93,7 @@ public:
 
            void    SetBranch(TBranch *branch) { fBranch = branch; }
            void    SetNevBufSize(Int_t n) { fNevBufSize=n; }
-           void    SetRandomAccessCompression() { fRandomAccessCompression = 1; }
+           void    SetRandomAccessCompression() { fRandomAccessCompression = gROOT->IsRandomAccessCompression()? kTRUE: kFALSE; }
    virtual void    SetReadMode();
    virtual void    SetWriteMode();
    inline  void    Update(Int_t newlast) { Update(newlast,newlast); };
