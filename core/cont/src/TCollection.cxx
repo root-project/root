@@ -322,7 +322,7 @@ void TCollection::PrintCollectionEntry(TObject* entry, Option_t* option, Int_t r
 /// ~~~
 /// Otherwise override the `Print(Option_t *option, Int_t)`
 /// variant. Remember to declare:
-/// ~~~ {.cpp]
+/// ~~~ {.cpp}
 ///   using TCollection::Print;
 /// ~~~
 /// somewhere close to the method declaration.

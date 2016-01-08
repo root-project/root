@@ -151,14 +151,14 @@ void TQCommand::Init(const char *clname, void *obj, const char *redo, const char
 ///       '=' must precede to argument value.
 ///
 ///  Example:
-/// ~~~ {cpp}
+/// ~~~ {.cpp}
 ///   TQCommand("TPad", gPad, "SetEditable(=kTRUE)", "SetEditable(=kFALSE)");
 /// ~~~
 ///   undo method can be same as redo one. In that case undo parameter
 ///   can be omitted.
 ///
 ///  Example:
-/// ~~~ {cpp}
+/// ~~~ {.cpp}
 ///   TQCommand("TPad", gPad, "SetFillStyle(Style_t)");
 /// ~~~
 
@@ -181,7 +181,7 @@ TQCommand::TQCommand(const char *clname, void *obj, const char *redo,
 ///   '=' must precede to argument value.
 ///
 ///  Example:
-/// ~~~ {cpp}
+/// ~~~ {.cpp}
 ///    TQCommand(gPad, "SetEditable(=kTRUE)", "SetEditable(=kFALSE)");
 /// ~~~
 ///
@@ -189,7 +189,7 @@ TQCommand::TQCommand(const char *clname, void *obj, const char *redo,
 ///   can parameter be omitted.
 ///
 ///  Example:
-/// ~~~ {cpp}
+/// ~~~ {.cpp}
 ///    TQCommand(gPad, "SetFillStyle(Style_t)");
 /// ~~~
 

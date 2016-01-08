@@ -810,7 +810,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const char* classname)
 ///      MyClass *obj = (MyClass*)directory->GetObjectChecked("some object of MyClass","MyClass"));
 /// ~~~
 ///  Note: We recommend using the method TDirectory::GetObject:
-/// ~~~ {.cpp}~
+/// ~~~ {.cpp}
 ///      MyClass *obj = 0;
 ///      directory->GetObject("some object inheriting from MyClass",obj);
 ///      if (obj) { ... we found what we are looking for ... }

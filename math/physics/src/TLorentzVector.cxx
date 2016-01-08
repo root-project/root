@@ -16,7 +16,7 @@ energy (px,py,pz,E).
 TLorentzVector has been implemented as a set a TVector3 and a Double_t variable.
 By default all components are initialized by zero.
 
-~~~
+~~~ {.cpp}
   TLorentzVector v1;      // initialized by (0., 0., 0., 0.)
   TLorentzVector v2(1., 1., 1., 1.);
   TLorentzVector v3(v1);
@@ -35,7 +35,7 @@ but the first set is more relevant for use where TLorentzVector
 describes a combination of position and time and the second set is more
 relevant where TLorentzVector describes momentum and energy:
 
-~~~
+~~~ {.cpp}
   Double_t xx =v.X();
   ...
   Double_t tt = v.T();
@@ -43,11 +43,11 @@ relevant where TLorentzVector describes momentum and energy:
   Double_t px = v.Px();
   ...
   Double_t ee = v.E();
-  ~~~
+~~~
 
 The components of TLorentzVector can also accessed by index:
 
-~~~
+~~~ {.cpp}
   xx = v(0);       or     xx = v[0];
   yy = v(1);              yy = v[1];
   zz = v(2);              zz = v[2];
@@ -57,12 +57,13 @@ The components of TLorentzVector can also accessed by index:
 You can use the Vect() member function to get the vector component
 of TLorentzVector:
 
-~~~
+~~~ {.cpp}
   TVector3 p = v.Vect();
 ~~~
 
 For setting components also two sets of member functions can be used:
-~~~
+
+~~~ {.cpp}
   v.SetX(1.);        or    v.SetPx(1.);
   ...                               ...
   v.SetT(1.);              v.SetE(1.);
@@ -73,7 +74,7 @@ function for the TVector3 part or SetXYZT(), SetPxPyPzE(). For convenience there
 
 also a SetXYZM():
 
-~~~
+~~~ {.cpp}
   v.SetVect(TVector3(1,2,3));
   v.SetXYZT(x,y,z,t);
   v.SetPxPyPzE(px,py,pz,e);
@@ -85,7 +86,7 @@ There are a couple of member functions to get and set the TVector3
 part of the parameters in
 spherical coordinate systems:
 
-~~~
+~~~ {.cpp}
   Double_t m, theta, cost, phi, pp, pp2, ppv2, pp2v2;
   m = v.Rho();
   t = v.Theta();
@@ -99,7 +100,7 @@ spherical coordinate systems:
 
 or get information about the r-coordinate in cylindrical systems:
 
-~~~
+~~~ {.cpp}
   Double_t pp, pp2, ppv2, pp2v2;
   pp = v.Perp();         // get transvers component
   pp2 = v.Perp2();       // get transverse component squared
@@ -115,7 +116,7 @@ and SetPtEtaPhiM(pt,eta,phi,m);
 The TLorentzVector class provides operators to add, subtract or
 compare four-vectors:
 
-~~~
+~~~ {.cpp}
   v3 = -v1;
   v1 = v2+v3;
   v1+= v3;
@@ -132,13 +133,14 @@ metric,
 
    i.e.   `s = v1*v2 = t1*t2-x1*x2-y1*y2-z1*z2`
 The magnitude squared mag2 of a four-vector is therefore:
-~~~
+
+~~~ {.cpp}
           mag2 = v*v = t*t-x*x-y*y-z*z
 ~~~
 It mag2 is negative mag = -Sqrt(-mag*mag). The member
 functions are:
 
-~~~
+~~~ {.cpp}
   Double_t s, s2;
   s  = v1.Dot(v2);     // scalar product
   s  = v1*v2;          // scalar product
@@ -158,7 +160,7 @@ With x = (x,y,z) and gamma = 1/Sqrt(1-beta*beta) (beta being the module of vecto
 an arbitrary active Lorentz boost transformation (from the rod frame
 to the original frame) can be written as:
 
-~~~
+~~~ {.cpp}
           x = x' + (gamma-1)/(beta*beta) * (b*x') * b + gamma * t' * b
           t = gamma (t'+ b*x').
 ~~~
@@ -167,7 +169,7 @@ The member function Boost() performs a boost transformation
 from the rod frame to the original frame. BoostVector() returns
 a TVector3 of the spatial components divided by the time component:
 
-~~~
+~~~ {.cpp}
   TVector3 b;
   v.Boost(bx,by,bz);
   v.Boost(b);
@@ -179,7 +181,8 @@ There are four sets of functions to rotate the TVector3 component
 of a TLorentzVector:
 
 #### rotation around axes
-~~~
+
+~~~ {.cpp}
   v.RotateX(TMath::Pi()/2.);
   v.RotateY(.5);
   v.RotateZ(.99);
@@ -189,12 +192,14 @@ of a TLorentzVector:
   v.Rotate(TMath::Pi()/4., v1); // rotation around v1
 
 #### transformation from rotated frame
-~~~
+
+~~~ {.cpp}
   v.RotateUz(direction); //  direction must be a unit TVector3
 ~~~
 
 #### by TRotation (see TRotation)
-~~~
+
+~~~ {.cpp}
   TRotation r;
   v.Transform(r);    or     v *= r; // Attention v=M*v
 ~~~
@@ -202,7 +207,8 @@ of a TLorentzVector:
 ### Misc
 
 #### Angle between two vectors
-~~~
+
+~~~ {.cpp}
   Double_t a = v1.Angle(v2.Vect());  // get angle between v1 and v2
 ~~~
 
@@ -210,7 +216,7 @@ of a TLorentzVector:
 Member functions Plus() and Minus() return the positive
 and negative light-cone components:
 
-~~~
+~~~ {.cpp}
   Double_t pcone = v.Plus();
   Double_t mcone = v.Minus();
 ~~~
@@ -225,7 +231,7 @@ A general Lorentz transformation see class TLorentzRotation can
 be used by the Transform() member function, the *= or
 * operator of the TLorentzRotation class:
 
-~~~
+~~~ {.cpp}
   TLorentzRotation l;
   v.Transform(l);
   v = l*v;     or     v *= l;  // Attention v = l*v

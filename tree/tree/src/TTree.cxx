@@ -2599,9 +2599,9 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */, Boo
 ///     T->Fill(); //loop
 ///     file->Write();
 ///     file->Close();
-///~~~
+/// ~~~
 /// but do the following:
-///~~~ {.cpp}
+/// ~~~ {.cpp}
 ///     TFile *file = new TFile("myfile.root","recreate");
 ///     TTree *T = new TTree("T","title");
 ///     T->Fill(); //loop
@@ -3704,9 +3704,9 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// option is the drawing option.
 ///  - See TH1::Draw for the list of all drawing options.
 ///  - If option COL is specified when varexp has three fields:
-///~~~ {.cpp}
+/// ~~~ {.cpp}
 ///      tree.Draw("e1:e2:e3","","col");
-///~~~
+/// ~~~
 ///    a 2D scatter is produced with e1 vs e2, and e3 is mapped on the color
 ///    table. The colors for e3 are evaluated once in linear scale before
 ///    painting. Therefore changing the pad to log scale along Z as no effect
@@ -5216,7 +5216,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
             // branch at task creation time, the scheduler would not necessarily
             // respect our sorting.
             Int_t j = pos.fetch_add(1);
-            
+
             Int_t nbtask = 0;
             auto branch = fSortedBranches[j].second;
 
@@ -5241,7 +5241,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
          });
       }
       g.wait();
-      
+
       if (errnb < 0) {
          nb = errnb;
       }
@@ -6614,7 +6614,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
 /// ~~~ {.cpp}
 ///     TPrincipal *principal =
 ///     (TPrincipal*)gROOT->GetListOfSpecials()->FindObject("principal");
-///  ~~~
+/// ~~~
 
 TPrincipal* TTree::Principal(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
@@ -6790,11 +6790,11 @@ void TTree::PrintCacheStats(Option_t* option) const
 ///
 /// It may be more interesting to invoke directly the other Process function
 /// accepting a TSelector* as argument.eg
-///  ~~~ {.cpp}
+/// ~~~ {.cpp}
 ///     MySelector *selector = (MySelector*)TSelector::GetSelector(filename);
 ///     selector->CallSomeFunction(..);
 ///     mytree.Process(selector,..);
-///  ~~~
+/// ~~~
 /// ## NOTE2
 //
 /// One should not call this function twice with the same selector file

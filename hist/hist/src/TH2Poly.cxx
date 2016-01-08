@@ -71,7 +71,7 @@ contains the input coordinates), especially if the histogram is to be filled
 many times.
 
 The following very simple macro shows how to build and fill a `TH2Poly`:
-~~~ {.cpp]
+~~~ {.cpp}
 {
     TH2Poly *h2p = new TH2Poly();
 
