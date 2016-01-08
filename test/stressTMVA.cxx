@@ -2097,7 +2097,7 @@ void MethodUnitTestWithROCLimits::run()
 
   // setup test tree access
   TFile* testFile = new TFile("weights/TMVA.root");
-  TTree* testTree = (TTree*)(testFile->Get("TestTree"));
+  TTree* testTree = (TTree*)(testFile->GetDirectory("dataset")->Get("TestTree"));
   for (UInt_t i=0;i<_VariableNames->size();i++)
      testTree->SetBranchAddress(_TreeVariableNames->at(i),&testvar[i]);
   testTree->SetBranchAddress(_methodTitle.Data(),&testTreeVal);
@@ -2106,15 +2106,15 @@ void MethodUnitTestWithROCLimits::run()
   variableNames2.push_back("var0");
   variableNames2.push_back("var1");
   TFile* testFile2 = new TFile("weights/ByHand.root");
-  TTree* testTree2 = (TTree*)(testFile2->Get("TestTree"));
+  TTree* testTree2 = (TTree*)(testFile2->GetDirectory("dataset")->Get("TestTree"));
   testTree2->SetBranchAddress("var0",&dummy[0]);
   testTree2->SetBranchAddress("var1",&dummy[1]);
 
   TString readerName = _methodTitle + TString(" method");
   TString readerOption="!Color:Silent";
-  TString dir    = "weights/TMVAUnitTesting_";
+  TString dir    = "dataset/weights/TMVAUnitTesting_";
   TString weightfile=dir+_methodTitle+".weights.xml";
-  TString weightfile2="weights/ByHand_BDT.weights.xml"; //TMVATest3VarF2VarI_BDT.weights.xml
+  TString weightfile2="dataset/weights/ByHand_BDT.weights.xml"; //TMVATest3VarF2VarI_BDT.weights.xml
   TString readerName2 = "BDT method";
   double diff, maxdiff = 0., sumdiff=0., previousVal=0.;
   int stuckCount=0, nevt= TMath::Min((int) testTree->GetEntries(),100);
@@ -2505,7 +2505,7 @@ void RegressionUnitTestWithDeviation::run()
 
    // setup test tree access
    TFile* testFile = new TFile("weights/TMVARegUT.root"); // fix me hardcoded file name
-   TTree* testTree = (TTree*)(testFile->Get("TestTree"));
+   TTree* testTree = (TTree*)(testFile->GetDirectory("dataset")->Get("TestTree"));
    const int nTest=3; // 3 reader usages
    float testTarget,readerVal=0.;
 
@@ -2523,7 +2523,7 @@ void RegressionUnitTestWithDeviation::run()
    testTree->SetBranchAddress(_methodTitle.Data(),&testTarget);
 
    TString readerName = _methodTitle + TString(" method");
-   TString dir    = "weights/TMVARegressionUnitTesting_";
+   TString dir    = "dataset/weights/TMVARegressionUnitTesting_";
    TString weightfile=dir+_methodTitle+".weights.xml";
    double diff, maxdiff = 0., sumdiff=0., previousVal=0.;
    int stuckCount=0, nevt= TMath::Min((int) testTree->GetEntries(),50);
