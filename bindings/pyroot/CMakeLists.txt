@@ -39,12 +39,12 @@ foreach(pyfile ${pyfiles})
   install(FILES ${pyfile} DESTINATION ${runtimedir})
   install(CODE "execute_process(COMMAND python -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/${pyfile} )")
   install(CODE "execute_process(COMMAND python -O -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/${pyfile} )")
-  file(COPY ${pyfile} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
+  file(COPY ${pyfile} DESTINATION ${localruntimedir})
 endforeach()
 
-set( JupyROOTDirName "JupyROOT")
+set(JupyROOTDirName "JupyROOT")
 install (DIRECTORY ${JupyROOTDirName} DESTINATION ${runtimedir})
-file(COPY ${JupyROOTDirName} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
+file(COPY ${JupyROOTDirName} DESTINATION ${localruntimedir})
 
 #---Install headers----------------------------------------------------------
 ROOT_INSTALL_HEADERS()
