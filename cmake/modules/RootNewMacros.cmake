@@ -431,9 +431,6 @@ function(ROOT_LINKER_LIBRARY library)
   if(TARGET G__${library})
     add_dependencies(${library} G__${library})
   endif()
-  if(TARGET move_headers)
-    add_dependencies(${library} move_headers)
-  endif()
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
   set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
   set_target_properties(${library} PROPERTIES LINK_INTERFACE_LIBRARIES "${ARG_DEPENDENCIES}")
@@ -467,9 +464,6 @@ function(ROOT_OBJECT_LIBRARY library)
   add_library( ${library} OBJECT ${lib_srcs})
   if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
      add_dependencies(${library} ${CMAKE_MATCH_2})
-  endif()
-  if(TARGET move_headers)
-    add_dependencies(${library} move_headers)
   endif()
 
   #--- Only for building shared libraries
@@ -511,9 +505,6 @@ function(ROOT_MODULE_LIBRARY library)
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
   include_directories(${CMAKE_BINARY_DIR}/include)
   add_library( ${library} SHARED ${lib_srcs})
-  if(TARGET move_headers)
-    add_dependencies(${library} move_headers)
-  endif()
   set_target_properties(${library}  PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
   target_link_libraries(${library} ${ARG_LIBRARIES})
   #----Installation details-------------------------------------------------------
@@ -590,6 +581,10 @@ function(ROOT_INSTALL_HEADERS)
                            PATTERN ".svn" EXCLUDE
                            REGEX "LinkDef" EXCLUDE
                            ${ARG_OPTIONS})
+    file(COPY ${d} DESTINATION ${CMAKE_BINARY_DIR}/include
+                   PATTERN ".svn" EXCLUDE
+                   REGEX "LinkDef" EXCLUDE
+                   ${ARG_OPTIONS})
     set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/${d})
   endforeach()
 endfunction()
@@ -628,9 +623,6 @@ function(ROOT_EXECUTABLE executable)
   set_target_properties(${executable} PROPERTIES OUTPUT_NAME ${executable_name})
   if (ARG_ADDITIONAL_COMPILE_FLAGS)
     set_target_properties(${executable} PROPERTIES COMPILE_FLAGS ${ARG_ADDITIONAL_COMPILE_FLAGS})
-  endif()
-  if(TARGET move_headers)
-    add_dependencies(${executable} move_headers)
   endif()
 
   #----Installation details------------------------------------------------------

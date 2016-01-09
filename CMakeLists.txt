@@ -135,7 +135,7 @@ foreach(var ${variables})
   endif()
 endforeach()
 
-#---Move (copy) the headers and other directories to binary tree---------------------------------
+#---Move (copy) directories to binary tree------------------------------------------------------
 set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
 add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc
@@ -147,11 +147,7 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/README ${CMAKE_BINARY_DIR}/README
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
                    COMMENT "Moving directories such as etc, icons, fonts, etc. to build area")
-add_custom_target(move_headers DEPENDS ${stamp_file}
-                               COMMAND ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
-                                                        -DCOMPONENTS="headers"
-                                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake)
-include_directories(${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
+add_custom_target(move_artifacts DEPENDS ${stamp_file})
 
 
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
@@ -232,10 +228,12 @@ if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall
   ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
   if(WIN32)
     add_custom_command(OUTPUT tutorials/hsimple.root
+                       DEPENDS move_artifacts
                        COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} && $<TARGET_FILE:hsimple.exe>
                        WORKING_DIRECTORY tutorials DEPENDS Cling)
   else()
     add_custom_command(OUTPUT tutorials/hsimple.root
+                       DEPENDS move_artifacts
                        COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
                                $<TARGET_FILE:hsimple.exe>
                        WORKING_DIRECTORY tutorials DEPENDS Cling)

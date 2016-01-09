@@ -1367,7 +1367,6 @@ runtimedirs:
 		--exclude proofd.xinetd \
 		--exclude rootd.rc.d \
 		--exclude rootd.xinetd \
-		--exclude gitinfo.txt \
 		$(ROOT_SRCDIR)/etc . ; \
 	echo "Rsync'ing $(ROOT_SRCDIR)/macros..."; \
 	$(RSYNC) \
