@@ -37,6 +37,18 @@ const char ** *TROOT__GetExtraInterpreterArgs()
 }
 
 extern "C"
+const char *TROOT__GetIncludeDir()
+{
+   return TROOT::GetIncludeDir().Data();
+}
+
+extern "C"
+const char *TROOT__GetEtcDir()
+{
+   return TROOT::GetEtcDir().Data();
+}
+
+extern "C"
 cling::Interpreter *TCling__GetInterpreter()
 {
    static bool sInitialized = false;

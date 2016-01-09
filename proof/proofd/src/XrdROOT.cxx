@@ -384,11 +384,19 @@ int XrdROOTMgr::Config(bool rcf)
    } else {
       // Check the ROOT dirs
       if (fROOT.size() <= 0) {
+         XrdOucString dir, bd, ld, id, dd;
 #ifdef R__HAVE_CONFIG
-         XrdOucString dir(ROOTPREFIX), bd(ROOTBINDIR), ld(ROOTLIBDIR),
-                      id(ROOTINCDIR), dd(ROOTDATADIR);
-#else
-         XrdOucString dir(getenv("ROOTSYS")), bd, ld, id, dd;
+         if (getenv("ROOTIGNOREPREFIX"))
+#endif
+            dir = getenv("ROOTSYS");
+#ifdef R__HAVE_CONFIG
+         else {
+            dir = ROOTPREFIX;
+            bd = ROOTBINDIR;
+            ld = ROOTLIBDIR;
+            id = ROOTINCDIR;
+            dd = ROOTDATADIR;
+         }
 #endif
          // None defined: use ROOTSYS as default, if any; otherwise we fail
          if (dir.length() > 0) {

@@ -83,46 +83,29 @@ TGResourcePool::TGResourcePool(TGClient *client)
    TString framebgpixmap  = gEnv->GetValue("Gui.FrameBackgroundPixmap", "");
    TString docbgpixmap    = gEnv->GetValue("Gui.DocumentBackgroundPixmap", "");
 
-   TString icon_path;
-   TString mime_file;
-   TString line;
-
+   TString icon_path = gEnv->GetValue("Gui.IconPath", "");
+   if (icon_path.IsNull()) {
+      icon_path = "icons";
+      gSystem->PrependPathName(gSystem->HomeDirectory(), icon_path);
 #ifndef R__WIN32
-# ifdef ROOTICONPATH
-   icon_path = TString::Format("%s/icons:%s:.:", gSystem->HomeDirectory(),
-                               ROOTICONPATH);
-#  ifdef EXTRAICONPATH
-   icon_path += gEnv->GetValue("Gui.IconPath", EXTRAICONPATH);
-#  else
-   icon_path += gEnv->GetValue("Gui.IconPath", "");
-#  endif
-# else
-   icon_path = TString::Format("%s/icons:%s/icons:.:", gSystem->HomeDirectory(),
-                                                       gSystem->Getenv("ROOTSYS"));
-   icon_path += gEnv->GetValue("Gui.IconPath", "");
-# endif
-   line = TString::Format("%s/.root.mimes", gSystem->HomeDirectory());
+      icon_path = ".:" + icon_path + ":" + TROOT::GetIconPath() + ":" + EXTRAICONPATH;
+#else
+      icon_path = ".;" + icon_path + ";" + TROOT::GetIconPath() + ";" + EXTRAICONPATH;
+#endif
+   }
 
-   mime_file = gEnv->GetValue("Gui.MimeTypeFile", line.Data());
+   TString mime_file = ".root.mimes";
+   gSystem->PrependPathName(gSystem->HomeDirectory(), mime_file);
+   mime_file = gEnv->GetValue("Gui.MimeTypeFile", mime_file.Data());
    char *mf = gSystem->ExpandPathName(mime_file.Data());
    if (mf) {
       mime_file = mf;
       delete [] mf;
    }
-   if (gSystem->AccessPathName(mime_file, kReadPermission))
-#ifdef ROOTETCDIR
-      mime_file = TString::Format("%s/root.mimes", ROOTETCDIR);
-#else
-      mime_file = TString::Format("%s/etc/root.mimes", gSystem->Getenv("ROOTSYS"));
-#endif
-#else // R__WIN32
-   icon_path = TString::Format("%s\\icons:.:\\", gSystem->Getenv("ROOTSYS"));
-   icon_path += gEnv->GetValue("Gui.IconPath", "");
-   line = TString::Format("%s\\root.mimes", gSystem->HomeDirectory());
-   mime_file = gEnv->GetValue("Gui.MimeTypeFile", line.Data());
-   if (gSystem->AccessPathName(mime_file, kReadPermission))
-      mime_file = TString::Format("%s\\etc\\root.mimes", gSystem->Getenv("ROOTSYS"));
-#endif
+   if (gSystem->AccessPathName(mime_file, kReadPermission)) {
+      mime_file = "root.mimes";
+      gSystem->PrependPathName(TROOT::GetEtcDir(), mime_file);
+   }
 
    // Setup colors...
    fClient->GetColorByName("white", fWhite);  // white and black always exist

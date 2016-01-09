@@ -699,13 +699,6 @@ QPixmap *TGQt::MakeIcon(Int_t i)
                           GetSystemMetrics(SM_CYSMICON));
    HDC dc = tempIcon->handle();
    DrawIcon (dc, 0, 0, icon);
-#else
-# ifdef ROOTICONPATH
-   gSystem->ExpandPathName(ROOTICONPATH);
-# else
-   gSystem->ExpandPathName("$ROOTSYS/icons/");
-//   tempIcon =new QPixmap (16,16),
-# endif
 #endif
    return tempIcon;
 }
@@ -795,13 +788,7 @@ TQtApplication *TGQt::CreateQtApplicationImp()
    static TQtApplication *app = 0;
    if (!app) {
       //    app = new TQtApplication(gApplication->ApplicationName(),gApplication->Argc(),gApplication->Argv());
-      static TString argvString (
-#ifdef ROOTBINDIR
-             ROOTBINDIR "/root.exe"
-#else
-             "$ROOTSYS/bin/root.exe"
-#endif
-             );
+      static TString argvString (TROOT::GetBinDir() + "/root.exe");
       gSystem->ExpandPathName(argvString);
       static char *argv[] = {(char *)argvString.Data()};
       static int nArg = 1;
@@ -989,14 +976,8 @@ Bool_t TGQt::Init(void* /*display*/)
     }
 
     if (isXdfSupport && !symbolFontFound) {
-// Load the local ROOT font
-       QString fontdir =
-#ifdef TTFFONTDIR
-         TTFFONTDIR
-#else
-         "$ROOTSYS/fonts"
-#endif
-        ;
+        // Load the local ROOT font
+        QString fontdir = TROOT::GetTTFFontDir().Data();
         QString symbolFontFile = fontdir + "/" + QString(fSymbolFontFamily).toLower() + ".ttf";
         symbolFontFound = QFontDatabase::addApplicationFont(symbolFontFile);
     }
@@ -1006,12 +987,7 @@ Bool_t TGQt::Init(void* /*display*/)
         fontFamily = fSymbolFontFamily = "Arial";
         qDebug() << " Substitute it with \""<<fontFamily <<"\"";
         qDebug() << " Make sure your local \"~/.fonts.conf\" or \"/etc/fonts/fonts.conf\" file points to \""
-                 <<
-#ifdef TTFFONTDIR
-               TTFFONTDIR
-#else
-               "$ROOTSYS/fonts"
-#endif
+                 << TROOT::GetTTFFontDir()
                  << "\" directory to get the proper support for ROOT TLatex class";
         // create a custom codec
         new QSymbolCodec();

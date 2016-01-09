@@ -462,7 +462,9 @@ static const char *GetExePath()
 
 static void SetRootSys()
 {
-#ifndef ROOTPREFIX
+#ifdef ROOTPREFIX
+   if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
+#endif
    void *addr = (void *)SetRootSys;
    Dl_info info;
    if (dladdr(addr, &info) && info.dli_fname && info.dli_fname[0]) {
@@ -475,8 +477,8 @@ static void SetRootSys()
          gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
       }
    }
-#else
-   return;
+#ifdef ROOTPREFIX
+   }
 #endif
 }
 #endif
@@ -504,7 +506,9 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
    TRegexp sovers = "libCore\\.[0-9]+\\.*[0-9]*\\.so";
    TRegexp dyvers = "libCore\\.[0-9]+\\.*[0-9]*\\.dylib";
 
-#ifndef ROOTPREFIX
+#ifdef ROOTPREFIX
+   if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
+#endif
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
    // first loaded is the app so set ROOTSYS to app bundle
    if (i == 1) {
@@ -530,6 +534,8 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
       }
    }
 #endif
+#ifdef ROOTPREFIX
+   }
 #endif
 
    // when libSystem.B.dylib is loaded we have finished loading all dylibs
@@ -617,13 +623,9 @@ Bool_t TUnixSystem::Init()
    SetRootSys();
 #endif
 
-#ifndef ROOTPREFIX
-   gRootDir = Getenv("ROOTSYS");
-   if (gRootDir == 0)
-      gRootDir= "/usr/local/root";
-#else
-   gRootDir = ROOTPREFIX;
-#endif
+   // This is a fallback in case TROOT::GetRootSys() can't determine ROOTSYS
+   gRootDir = "/usr/local/root";
+   gRootDir = TROOT::GetRootSys().Data();
 
    return kFALSE;
 }
@@ -2155,22 +2157,17 @@ void TUnixSystem::StackTrace()
       if (AccessPathName(gdbscript, kReadPermission)) {
          fprintf(stderr, "Root.StacktraceScript %s does not exist\n", gdbscript.Data());
          gdbscript = "";
-      } else {
-         gdbscript += " ";
       }
    }
    if (gdbscript == "") {
-#ifdef ROOTETCDIR
-      gdbscript.Form("%s/gdb-backtrace.sh", ROOTETCDIR);
-#else
-      gdbscript.Form("%s/etc/gdb-backtrace.sh", Getenv("ROOTSYS"));
-#endif
+      gdbscript = "gdb-backtrace.sh";
+      gSystem->PrependPathName(TROOT::GetEtcDir(), gdbscript);
       if (AccessPathName(gdbscript, kReadPermission)) {
          fprintf(stderr, "Error in <TUnixSystem::StackTrace> script %s is missing\n", gdbscript.Data());
          return;
       }
-      gdbscript += " ";
    }
+   gdbscript += " ";
 
    TString gdbmess = gEnv->GetValue("Root.StacktraceMessage", "");
    gdbmess = gdbmess.Strip();
@@ -4488,11 +4485,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
       rdynpath.ReplaceAll(": ", ":");  // in case DynamicPath was extended
       if (rdynpath.IsNull()) {
-#ifdef ROOTLIBDIR
-         rdynpath = ".:"; rdynpath += ROOTLIBDIR;
-#else
-         rdynpath = ".:"; rdynpath += gRootDir; rdynpath += "/lib";
-#endif
+         rdynpath = ".:"; rdynpath += TROOT::GetLibDir();
       }
       TString ldpath;
 #if defined (R__AIX)
@@ -4513,16 +4506,9 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       else {
          dynpath = ldpath; dynpath += ":"; dynpath += rdynpath;
       }
-
-#ifdef ROOTLIBDIR
-      if (!dynpath.Contains(ROOTLIBDIR)) {
-         dynpath += ":"; dynpath += ROOTLIBDIR;
+      if (!dynpath.Contains(TROOT::GetLibDir())) {
+         dynpath += ":"; dynpath += TROOT::GetLibDir();
       }
-#else
-      if (!dynpath.Contains(TString::Format("%s/lib", gRootDir))) {
-         dynpath += ":"; dynpath += gRootDir; dynpath += "/lib";
-      }
-#endif
       if (gCling) {
          dynpath += ":"; dynpath += gCling->GetSTLIncludePath();
       } else

@@ -64,27 +64,27 @@ else()
                     DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
 endif()
 
-set(R__LLVMRESOURCEDIR ${CMAKE_BINARY_DIR}/etc/cling)
-configure_file(src/rootcling.cxx rootcling_tmp.cxx @ONLY)
+configure_file(src/rootcling.cxx src/rootcling_tmp.cxx @ONLY)
 
 if(WIN32)
-  set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-D_WIN32 -DNOMINMAX -DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR")
+  set_source_files_properties(src/rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-D_WIN32 -DNOMINMAX -DROOT_STAGE1_BUILD")
 else()
   if(CXX_HAS_fno_rtti)
-    set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR -fno-rtti")
+    set_source_files_properties(src/rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -fno-rtti")
   else()
-    set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR")
+    set_source_files_properties(src/rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD")
   endif()
 endif()
 
 ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx src/DictSelectionReader.cxx
-                              src/TModuleGenerator.cxx ${CMAKE_CURRENT_BINARY_DIR}/rootcling_tmp.cxx
+                              src/TModuleGenerator.cxx src/rootcling_tmp.cxx
                               ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
                               $<TARGET_OBJECTS:Clib>
                               $<TARGET_OBJECTS:MetaUtils>
                               $<TARGET_OBJECTS:MetaUtilsLLVM>
                               LIBRARIES ${CLING_LIBRARIES}  ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                               NOINSTALL)
+set_target_properties(rootcling_tmp PROPERTIES RUNTIME_OUTPUT_DIRECTORY src)
 add_dependencies(rootcling_tmp CLING LLVMRES)
 set_source_files_properties(src/LinkdefReader.cxx PROPERTIES COMPILE_FLAGS -fno-rtti)
 set_source_files_properties(src/TModuleGenerator.cxx PROPERTIES COMPILE_FLAGS -fno-rtti)

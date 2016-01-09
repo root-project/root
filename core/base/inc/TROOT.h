@@ -329,7 +329,19 @@ public:
    static Int_t       ConvertVersionInt2Code(Int_t v);
    static Int_t       RootVersionCode();
    static const char**&GetExtraInterpreterArgs();
-   static const char *GetTutorialsDir();
+
+   static const TString& GetRootSys();
+   static const TString& GetBinDir();
+   static const TString& GetLibDir();
+   static const TString& GetIncludeDir();
+   static const TString& GetEtcDir();
+   static const TString& GetDataDir();
+   static const TString& GetDocDir();
+   static const TString& GetMacroDir();
+   static const TString& GetTutorialsDir();
+   static const TString& GetSourceDir();
+   static const TString& GetIconPath();
+   static const TString& GetTTFFontDir();
 
    ClassDef(TROOT,0)  //Top level (or root) structure for all classes
 };

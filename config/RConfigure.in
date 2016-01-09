@@ -14,9 +14,10 @@
 #define ROOTTUTDIR    "@tutdir@"
 #define ROOTSRCDIR    "@srcdir@"
 #define ROOTICONPATH  "@iconpath@"
-#define EXTRAICONPATH "@extraiconpath@"
 #define TTFFONTDIR    "@ttffontdir@"
 #endif
+
+#define EXTRAICONPATH "@extraiconpath@"
 
 #@setresuid@ R__HAS_SETRESUID   /**/
 #@hasmathmore@ R__HAS_MATHMORE   /**/

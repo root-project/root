@@ -1050,10 +1050,10 @@ TCling::TCling(const char *name, const char *title)
    if (!fromRootCling) {
       ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
 
-      interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
-      clingArgsStorage.push_back(interpInclude);
+      interpInclude = TROOT::GetEtcDir();
+      clingArgsStorage.push_back("-I" + interpInclude);
 
-      std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
+      std::string pchFilename = interpInclude + "/allDict.cxx.pch";
       if (gSystem->Getenv("ROOT_PCH")) {
          pchFilename = gSystem->Getenv("ROOT_PCH");
       }
@@ -1064,14 +1064,8 @@ TCling::TCling(const char *name, const char *title)
       // clingArgsStorage.push_back("-fmodules");
 
       std::string include;
-#ifndef ROOTINCDIR
-      include = gSystem->Getenv("ROOTSYS");
-      include += "/include";
-#else // ROOTINCDIR
-      include = ROOTINCDIR;
-#endif // ROOTINCDIR
-      clingArgsStorage.push_back("-I");
-      clingArgsStorage.push_back(include);
+      include = TROOT::GetIncludeDir();
+      clingArgsStorage.push_back("-I" + include);
       clingArgsStorage.push_back("-Wno-undefined-inline");
       clingArgsStorage.push_back("-fsigned-char");
    }
@@ -1081,7 +1075,11 @@ TCling::TCling(const char *name, const char *title)
            eArg = clingArgsStorage.end(); iArg != eArg; ++iArg)
       interpArgs.push_back(iArg->c_str());
 
-   std::string llvmResourceDir = ROOT::TMetaUtils::GetLLVMResourceDir(false);
+#ifdef R__EXTERN_LLVMDIR
+   TString llvmResourceDir = R__EXTERN_LLVMDIR;
+#else
+   TString llvmResourceDir = TROOT::GetEtcDir() + "/cling";
+#endif
    // Add statically injected extra arguments, usually coming from rootcling.
    for (const char** extraArgs = TROOT::GetExtraInterpreterArgs();
         extraArgs && *extraArgs; ++extraArgs) {
@@ -1095,7 +1093,7 @@ TCling::TCling(const char *name, const char *title)
 
    fInterpreter = new cling::Interpreter(interpArgs.size(),
                                          &(interpArgs[0]),
-                                         llvmResourceDir.c_str());
+                                         llvmResourceDir);
 
    if (!fromRootCling) {
       fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
@@ -1104,13 +1102,13 @@ TCling::TCling(const char *name, const char *title)
       // llvm/clang header files shouldn't be there at all. We have to get rid of
       // that dependency and avoid copying the header files.
       // Use explicit TCling::AddIncludePath() to avoid vtable: we're in the c'tor!
-      TCling::AddIncludePath((interpInclude.substr(2) + "/cling").c_str());
+      TCling::AddIncludePath((interpInclude + "/cling").c_str());
 
       // Add the current path to the include path
       // TCling::AddIncludePath(".");
 
       // Add the root include directory and etc/ to list searched by default.
-      TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
+      TCling::AddIncludePath(TROOT::GetIncludeDir().Data());
    }
 
    // Don't check whether modules' files exist.
@@ -4543,20 +4541,11 @@ void TCling::InitRootmapFile(const char *name)
 
    TString sname = "system";
    sname += name;
-#ifdef ROOTETCDIR
-   char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
-#else
-   TString etc = gRootDir;
-#ifdef WIN32
-   etc += "\\etc";
-#else
-   etc += "/etc";
-#endif
 #if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
    // on iOS etc does not exist and system<name> resides in $ROOTSYS
-   etc = gRootDir;
-#endif
-   char *s = gSystem->ConcatFileName(etc, sname);
+   char *s = gSystem->ConcatFileName(TROOT::GetRootSys(), sname);
+#else
+   char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sname);
 #endif
 
    Int_t ret = ReadRootmapFile(s);

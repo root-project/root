@@ -31,11 +31,7 @@ ROOT_GENERATE_DICTIONARY(G__TMVAGui ${theaders1}   MODULE TMVAGui LINKDEF LinkDe
 ROOT_LINKER_LIBRARY(TMVAGui *.cxx G__TMVAGui.cxx LIBRARIES Core
                     DEPENDENCIES RIO Hist Tree TreeViewer  MLP Minuit XMLIO TMVA Gui)
 
-install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
-                            COMPONENT headers
-                            PATTERN ".svn" EXCLUDE
-                            REGEX "LinkDef" EXCLUDE )
-set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+ROOT_INSTALL_HEADERS()
 
 if(NOT gnuinstall)
   install(DIRECTORY test DESTINATION tmva 

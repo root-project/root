@@ -335,22 +335,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
       }
    }
 
-   TString confdir;
-#ifndef ROOTPREFIX
-   // try to guess the config directory...
-   if (gSystem->Getenv("ROOTSYS")) {
-      confdir = TString(gSystem->Getenv("ROOTSYS"));
-   } else {
-      // Try to guess it from 'root.exe' path
-      char *rootexe = gSystem->Which(gSystem->Getenv("PATH"),
-                                     "root.exe", kExecutePermission);
-      confdir = rootexe;
-      confdir.Resize(confdir.Last('/'));
-      delete [] rootexe;
-   }
-#else
-   confdir = TString(ROOTPREFIX);
-#endif
+   TString confdir = TROOT::GetRootSys();
    if (!confdir.Length()) {
       Error("Authenticate", "config dir undefined");
       return kFALSE;

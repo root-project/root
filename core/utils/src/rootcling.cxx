@@ -3968,11 +3968,6 @@ int RootCling(int argc,
       clingArgs.push_back("-DG__VECTOR_HAS_CLASS_ITERATOR");
    }
 
-#if defined(ROOTINCDIR)
-   if (!buildingROOT)
-      SetRootSys();
-#endif
-
    if (ic < argc && !strcmp(argv[ic], "-c")) {
       // Simply ignore the -c options.
       ic++;
@@ -4122,7 +4117,11 @@ int RootCling(int argc,
    }
 
    ic = nextStart;
-   clingArgs.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(buildingROOT));
+#ifdef ROOT_STAGE1_BUILD
+   clingArgs.push_back(std::string("-I") + getenv("ROOTSYS") + "/include");
+#else
+   clingArgs.push_back(std::string("-I") + TROOT__GetIncludeDir());
+#endif
 
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
@@ -4131,7 +4130,11 @@ int RootCling(int argc,
    }
 
    // cling-only arguments
-   clingArgs.push_back(TMetaUtils::GetInterpreterExtraIncludePath(buildingROOT));
+#ifdef ROOT_STAGE1_BUILD
+   clingArgs.push_back(std::string("-I") + getenv("ROOTSYS") + "/etc");
+#else
+   clingArgs.push_back(std::string("-I") + TROOT__GetEtcDir());
+#endif
    clingArgs.push_back("-D__ROOTCLING__");
    clingArgs.push_back("-fsyntax-only");
    clingArgs.push_back("-Xclang");
@@ -4153,10 +4156,14 @@ int RootCling(int argc,
    }
 
    std::string resourceDir;
-#ifdef R__LLVMRESOURCEDIR
-   resourceDir = "@R__LLVMRESOURCEDIR@";
+#ifdef R__EXTERN_LLVMDIR
+   resourceDir = R__EXTERN_LLVMDIR;
 #else
-   resourceDir = TMetaUtils::GetLLVMResourceDir(buildingROOT);
+#ifdef ROOT_STAGE1_BUILD
+   resourceDir = std::string(getenv("ROOTSYS")) + "/etc/cling";
+#else
+   resourceDir = std::string(TROOT__GetEtcDir()) + "/cling";
+#endif
 #endif
 
 #ifndef ROOT_STAGE1_BUILD
@@ -4175,11 +4182,6 @@ int RootCling(int argc,
 
    interp.getOptions().ErrorOut = true;
    interp.enableRawInput(true);
-#ifdef ROOTINCDIR
-   const bool useROOTINCDIR = !buildingROOT;
-#else
-   const bool useROOTINCDIR = false;
-#endif
    if (isGenreflex) {
       if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
          // There was an error.
@@ -4196,17 +4198,10 @@ int RootCling(int argc,
                               "#include <math.h>\n"
                               "#include <string.h>\n"
                              ) != cling::Interpreter::kSuccess
-            || (!useROOTINCDIR
-                && interp.declare("#include \"Rtypes.h\"\n"
-                                  "#include \"TClingRuntime.h\"\n"
-                                  "#include \"TObject.h\"") != cling::Interpreter::kSuccess)
-#ifdef ROOTINCDIR
-            || (useROOTINCDIR
-                && interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"\n"
-                                  "#include \"" ROOTINCDIR "/TClingRuntime.h\"\n"
-                                  "#include \"" ROOTINCDIR "/TObject.h\"") != cling::Interpreter::kSuccess
-               )
-#endif
+            || interp.declare("#include \"Rtypes.h\"\n"
+                              "#include \"TClingRuntime.h\"\n"
+                              "#include \"TObject.h\""
+                             ) != cling::Interpreter::kSuccess
          ) {
          // There was an error.
          ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");

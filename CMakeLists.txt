@@ -200,13 +200,23 @@ add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${CMAKE_SOURCE_DIR} . ${__clingetcpch} -- ${CMAKE_CXX_FLAGS_SEPARATE}
                    DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__allFiles})
 
-add_custom_command(OUTPUT etc/allDict.cxx.pch
-                   COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}
-                   DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
-                           etc/dictpch/allLinkDefs.h
-                           etc/dictpch/allHeaders.h
-                           etc/dictpch/allCppflags.txt
-                           rootcling)
+if (WIN32)
+  add_custom_command(OUTPUT etc/allDict.cxx.pch
+                     COMMAND set ROOTIGNOREPREFIX=1 && ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/include
+                     DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
+                             etc/dictpch/allLinkDefs.h
+                             etc/dictpch/allHeaders.h
+                             etc/dictpch/allCppflags.txt
+                             rootcling)
+else()
+  add_custom_command(OUTPUT etc/allDict.cxx.pch
+                     COMMAND ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/include
+                     DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
+                             etc/dictpch/allLinkDefs.h
+                             etc/dictpch/allHeaders.h
+                             etc/dictpch/allCppflags.txt
+                             rootcling)
+endif()
 add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
 set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
 add_dependencies(onepcm ${__allTargets})
@@ -222,24 +232,22 @@ if(cxxmodules)
 endif(cxxmodules)
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
-if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall
-  add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
-  add_dependencies(hsimple onepcm)
-  ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
-  if(WIN32)
-    add_custom_command(OUTPUT tutorials/hsimple.root
-                       DEPENDS move_artifacts
-                       COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} && $<TARGET_FILE:hsimple.exe>
-                       WORKING_DIRECTORY tutorials DEPENDS Cling)
-  else()
-    add_custom_command(OUTPUT tutorials/hsimple.root
-                       DEPENDS move_artifacts
-                       COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
-                               $<TARGET_FILE:hsimple.exe>
-                       WORKING_DIRECTORY tutorials DEPENDS Cling)
-  endif()
-  install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
+add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
+add_dependencies(hsimple onepcm)
+ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
+set_target_properties(hsimple.exe PROPERTIES RUNTIME_OUTPUT_DIRECTORY test)
+if(WIN32)
+  add_custom_command(OUTPUT tutorials/hsimple.root
+                     DEPENDS move_artifacts
+                     COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} && set ROOTIGNOREPREFIX=1 && $<TARGET_FILE:hsimple.exe>
+                     WORKING_DIRECTORY tutorials DEPENDS Cling)
+else()
+  add_custom_command(OUTPUT tutorials/hsimple.root
+                     DEPENDS move_artifacts
+                     COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ROOTIGNOREPREFIX=1 $<TARGET_FILE:hsimple.exe>
+                     WORKING_DIRECTORY tutorials DEPENDS Cling)
 endif()
+install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 
 #---version--------------------------------------------------------------------------------------
 add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh ${CMAKE_BINARY_DIR}
@@ -277,9 +285,6 @@ endif()
 #---Configure Testing using CTest----------------------------------------------------------------
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
 if(testing)
-  if(gnuinstall)
-    message(FATAL_ERROR "You cannot enable to run the tests in the build directory (testing=ON) and at the same time select a GNU style installation (gnuinstall=ON). This is because the code is built with the final installation location (CMAKE_INSTALL_PREFIX) for many ancillary files (tutorials, etc, icons, macros, etc.) and these are not available before installation. Tests can be run against the installation once is completed. See the instructions in the web")
-  endif()
   include(RootCTest)
   if(roottest)
     find_package(Git REQUIRED)
