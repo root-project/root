@@ -93,7 +93,7 @@ public:
 
            void    SetBranch(TBranch *branch) { fBranch = branch; }
            void    SetNevBufSize(Int_t n) { fNevBufSize=n; }
-           void    SetRandomAccessCompression() { fRandomAccessCompression = gROOT->IsRandomAccessCompression()? kTRUE: kFALSE; }
+           void    SetRandomAccessCompression( Bool_t random = kTRUE ) { fRandomAccessCompression = random; }
    virtual void    SetReadMode();
    virtual void    SetWriteMode();
    inline  void    Update(Int_t newlast) { Update(newlast,newlast); };
