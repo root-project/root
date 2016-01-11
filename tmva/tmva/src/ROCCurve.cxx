@@ -66,7 +66,7 @@ TMVA::ROCCurve::~ROCCurve() {
 Double_t TMVA::ROCCurve::GetROCIntegral(){
   
   Float_t integral=0;
-  int ndivisions = 20;
+  int ndivisions = 40;
   std::vector<Float_t> vec_epsilon_s(1);
   vec_epsilon_s.push_back(0);
   
