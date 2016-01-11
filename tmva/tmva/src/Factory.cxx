@@ -879,8 +879,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
       Bool_t doMulticlass = kFALSE;
 
       // iterate over methods and evaluate
-      MVector::iterator itrMethod ;
-      for (itrMethod =methods->begin(); itrMethod != methods->end(); itrMethod++) {
+      for (MVector::iterator itrMethod =methods->begin(); itrMethod != methods->end(); itrMethod++) {
 	  Event::SetIsTraining(kFALSE);
 	  MethodBase* theMethod = dynamic_cast<MethodBase*>(*itrMethod);
 	  if(theMethod==0) continue;
@@ -1093,7 +1092,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 		Int_t ivar = 0;
 		std::vector<TString>* theVars = new std::vector<TString>;
 		std::vector<ResultsClassification*> mvaRes;
-		for (itrMethod = methodsNoCuts.begin(); itrMethod != methodsNoCuts.end(); itrMethod++, ivar++) {
+		for (MVector::iterator itrMethod = methodsNoCuts.begin(); itrMethod != methodsNoCuts.end(); itrMethod++, ivar++) {
 		    MethodBase* m = dynamic_cast<MethodBase*>(*itrMethod);
 		    if(m==0) continue;
 		    theVars->push_back( m->GetTestvarName() );
@@ -1293,8 +1292,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 	  Log() << kINFO << "Evaluation results ranked by best signal efficiency times signal purity " << Endl;
 	  Log() << kINFO << hLine << Endl;
 	  // iterate over methods and evaluate
-	  MVector::iterator itrMethod;
-	  for (itrMethod    = methods->begin(); itrMethod != methods->end(); itrMethod++) {
+	  for (MVector::iterator itrMethod    = methods->begin(); itrMethod != methods->end(); itrMethod++) {
 	      MethodBase* theMethod = dynamic_cast<MethodBase*>(*itrMethod);
 	      if(theMethod==0) continue;
 
@@ -1834,11 +1832,10 @@ TH1F* TMVA::Factory::GetImportance(const int nbits,std::vector<Double_t> importa
   
   vih1->LabelsOption("v >", "X");
   vih1->SetBarWidth(0.97);
-  Int_t ci, ca;
-  ca = TColor::GetColor("#006600");
+  Int_t ca = TColor::GetColor("#006600");
   vih1->SetFillColor(ca);
-  ci = TColor::GetColor("#990000");
-  
+  //Int_t ci = TColor::GetColor("#990000");
+
   vih1->GetYaxis()->SetTitle("Importance (%)");
   vih1->GetYaxis()->SetTitleSize(0.045);
   vih1->GetYaxis()->CenterTitle();
