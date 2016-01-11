@@ -57,7 +57,7 @@
 #include "TMVA/Tools.h"
 #include "TMVA/TMVAGui.h"
 
-int TMVAClassification( TString myMethodList = "" )
+void TMVAClassification( TString myMethodList = "" )
 {
    // The explicit loading of the shared libTMVA is done in TMVAlogon.C, defined in .rootrc
    // if you use your private .rootrc, or run from a different directory, please copy the
@@ -154,7 +154,7 @@ int TMVAClassification( TString myMethodList = "" )
             std::cout << "Method \"" << regMethod << "\" not known in TMVA under this name. Choose among the following:" << std::endl;
             for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) std::cout << it->first << " ";
             std::cout << std::endl;
-            return 1;
+            return;
          }
          Use[regMethod] = 1;
       }
@@ -496,8 +496,6 @@ int TMVAClassification( TString myMethodList = "" )
    delete dataloader;
    // Launch the GUI for the root macros
    if (!gROOT->IsBatch()) TMVA::TMVAGui( outfileName );
-
-   return 0;
 }
 
 int main( int argc, char** argv )
@@ -510,5 +508,7 @@ int main( int argc, char** argv )
       if (!methodList.IsNull()) methodList += TString(","); 
       methodList += regMethod;
    }
-   return TMVAClassification(methodList); 
+
+   TMVAClassification(methodList); 
+   return 0;
 }
