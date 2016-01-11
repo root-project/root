@@ -99,6 +99,8 @@ Custom streamers need to #include TBuffer.h explicitly (see
 
 ## 2D Graphics Libraries
 
+* In `TColor::SetPalette`, make sure the high quality palettes are defined
+  only ones.
 
 ## 3D Graphics Libraries
 
