@@ -109,21 +109,26 @@ if(builtin_pcre)
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ${CMAKE_COMMAND} nmake -nologo -f Makefile.msc 
                                      CFG=${pcrebuild} NMCXXFLAGS=${CMAKE_CC_FLAGS}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different libpcre-8.37.lib .libs/pcre.lib
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different libpcre-8.37.lib  <INSTALL_DIR>/lib/pcre.lib
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre.h  <INSTALL_DIR>/include
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre_scanner.h  <INSTALL_DIR>/include
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre_stringpiece.h  <INSTALL_DIR>/include
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcrecpp.h  <INSTALL_DIR>/include
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcrecpparg.h  <INSTALL_DIR>/include
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcreposix.h  <INSTALL_DIR>/include              
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
   else()
     set(_pcre_cflags -O)
     ExternalProject_Add(
       PCRE
       URL ${CMAKE_SOURCE_DIR}/core/pcre/src/pcre-${pcre_version}.tar.gz
-      CONFIGURE_COMMAND ./configure --with-pic --disable-shared
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic --disable-shared
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_pcre_cflags}
-      INSTALL_COMMAND ""     
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
   endif()
-  ExternalProject_Get_Property(PCRE SOURCE_DIR)
-  set(PCRE_INCLUDE_DIR ${SOURCE_DIR})
-  set(PCRE_LIBRARY ${SOURCE_DIR}/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}pcre${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set(PCRE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+  set(PCRE_LIBRARY ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pcre${CMAKE_STATIC_LIBRARY_SUFFIX})
   set(PCRE_LIBRARIES ${PCRE_LIBRARY})
 endif()
 
