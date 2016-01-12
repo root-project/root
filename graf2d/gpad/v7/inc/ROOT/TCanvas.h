@@ -22,6 +22,7 @@
 #include "ROOT/TDrawable.h"
 
 namespace ROOT {
+namespace v7 {
 
 /** \class TCanvas
   Graphic container for `TDrawable`-s.
@@ -56,6 +57,7 @@ public:
   static const std::vector<TCoopPtr<TCanvas>>& GetCanvases();
 };
 
-}
+} // namespace v7
+} // namespace ROOT
 
 #endif

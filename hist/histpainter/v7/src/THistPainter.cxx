@@ -15,8 +15,8 @@
 #include <iostream>
 #include "ROOT/THistDrawable.h"
 
-using namespace ROOT;
-using namespace ROOT::Internal;
+using namespace ROOT::v7;
+using namespace ROOT::v7::Internal;
 
 namespace {
 class THistPainter1D: public THistPainterBase<1> {

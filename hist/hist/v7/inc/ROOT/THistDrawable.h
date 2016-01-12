@@ -25,6 +25,7 @@
 #include <memory>
 
 namespace ROOT {
+namespace v7 {
 
 template<int DIMENSIONS, class PRECISION> class THist;
 
@@ -72,6 +73,7 @@ public:
 };
 
 } // namespace Internal
+} // namespace v7
 } // namespace ROOT
 
 #endif

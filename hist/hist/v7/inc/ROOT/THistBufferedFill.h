@@ -18,6 +18,7 @@
 #include "ROOT/RArrayView.h"
 
 namespace ROOT {
+namespace v7 {
 
 namespace Internal {
 template<class DERIVED, class HIST, int SIZE>
@@ -110,6 +111,7 @@ public:
 
     static constexpr int GetNDim() { return HIST::GetNDim(); }
   };
-}
+} // namespace v7
+} // namespace ROOT
 
 #endif

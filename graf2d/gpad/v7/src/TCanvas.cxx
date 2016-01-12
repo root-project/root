@@ -17,7 +17,7 @@
 
 #include "ROOT/TDrawable.h"
 
-void ROOT::TCanvas::Paint() {
+void ROOT::v7::TCanvas::Paint() {
   for (auto&& drw: fPrimitives) {
     drw->Paint();
   }
@@ -25,18 +25,18 @@ void ROOT::TCanvas::Paint() {
 
 namespace {
 static
-std::vector<ROOT::TCoopPtr<ROOT::TCanvas>>& GetHeldCanvases() {
-  static std::vector<ROOT::TCoopPtr<ROOT::TCanvas>> sCanvases;
+std::vector<ROOT::v7::TCoopPtr<ROOT::v7::TCanvas>>& GetHeldCanvases() {
+  static std::vector<ROOT::v7::TCoopPtr<ROOT::v7::TCanvas>> sCanvases;
   return sCanvases;
 }
 };
 
-const std::vector<ROOT::TCoopPtr<ROOT::TCanvas>> &
-ROOT::TCanvas::GetCanvases() {
+const std::vector<ROOT::v7::TCoopPtr<ROOT::v7::TCanvas>> &
+ROOT::v7::TCanvas::GetCanvases() {
   return GetHeldCanvases();
 }
 
-ROOT::TCoopPtr<ROOT::TCanvas> ROOT::TCanvas::Create(
+ROOT::v7::TCoopPtr<ROOT::v7::TCanvas> ROOT::v7::TCanvas::Create(
    std::experimental::string_view name) {
   // TODO: name registration (TDirectory?)
   auto pCanvas = TCoopPtr<TCanvas>(new TCanvas());

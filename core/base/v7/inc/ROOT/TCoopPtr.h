@@ -19,6 +19,7 @@
 #include <type_traits>
 
 namespace ROOT {
+namespace v7 {
 
 /**
   \class TCoopPtr
@@ -166,6 +167,8 @@ public:
   ~TCoopPtrTypeErased() final = default;
 };
 } // namespace Internal
-}
+
+} // namespace v7
+} // namespace ROOT
 
 #endif

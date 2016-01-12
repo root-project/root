@@ -16,8 +16,10 @@
 #define ROOT7_THistDrawOptions
 
 namespace ROOT {
+namespace v7 {
 
 namespace Internal {
+
 template <int DIMENSION>
 struct THistDrawOptionsEnum;
 
@@ -68,7 +70,9 @@ namespace Hist {
 static constexpr const THistDrawOptions<2> box(Internal::THistDrawOptionsEnum<2>::kBox);
 static constexpr const THistDrawOptions<2> text(Internal::THistDrawOptionsEnum<2>::kText);
 }
-}
+
+} // namespace v7
+} // namespace ROOT
 
 
 #endif

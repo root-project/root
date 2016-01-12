@@ -21,6 +21,8 @@
 #include <mutex>
 
 namespace ROOT {
+namespace v7 {
+
 
 template <class HIST, int SIZE> class THistConcurrentFillManager;
 
@@ -114,6 +116,7 @@ public:
 
 };
 
-}
+} // namespace v7
+} // namespace ROOT
 
 #endif

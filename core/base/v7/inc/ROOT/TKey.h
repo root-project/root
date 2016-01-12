@@ -18,6 +18,8 @@
 #include <chrono>
 
 namespace ROOT {
+namespace v7 {
+
 class TKey {
 public:
   using clock_t = std::chrono::system_clock;
@@ -49,15 +51,16 @@ inline bool operator<=(const TKey& lhs, const TKey& rhs) {
 inline bool operator>=(const TKey& lhs, const TKey& rhs) {
   return !(lhs.GetName() < rhs.GetName());
 }
-}
+} // namespace v7
+} // namespace ROOT
 
 namespace std {
 template<>
-struct hash<ROOT::TKey> {
+struct hash<ROOT::v7::TKey> {
   /// A TKey is uniquely identified by its name.
-  size_t operator ()(const ROOT::TKey& key) const {
+  size_t operator()(const ROOT::v7::TKey &key) const {
     return hash<std::string>()(key.GetName());
   }
 };
-}
+} // namespace std
 #endif

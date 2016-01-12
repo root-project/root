@@ -21,6 +21,7 @@
 #include <experimental/string_view>
 
 namespace ROOT {
+namespace v7 {
 
 namespace Internal {
 /** \class TFileImplBase
@@ -97,5 +98,7 @@ private:
   /// Constructed by
   TFilePtr(TCoopPtr<Internal::TFileImplBase>);
 };
-}
+
+} // namespace v7
+} // namespace ROOT
 #endif

@@ -23,6 +23,7 @@
 #include <experimental/string_view>
 
 namespace ROOT {
+namespace v7 {
 
 /**
  Key/value store of objects.
@@ -108,6 +109,7 @@ public:
   static TDirectory& Heap();
 };
 
-}
+} // namespace v7
+} // namespace ROOT
 
 #endif
