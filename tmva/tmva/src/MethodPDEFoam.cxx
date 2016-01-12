@@ -1497,8 +1497,11 @@ void TMVA::MethodPDEFoam::FillVariableNamesToFoam() const
 /// write PDEFoam-specific classifier response
 /// NOT IMPLEMENTED YET!
 
-void TMVA::MethodPDEFoam::MakeClassSpecific( std::ostream& /*fout*/, const TString& /*className*/ ) const
+void TMVA::MethodPDEFoam::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
+   // write specific classifier response
+   fout << "   // not implemented for class: \"" << className << "\"" << std::endl;
+   fout << "};" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
