@@ -27,11 +27,11 @@ public:
 
 bool TLogHandlerDefault::Emit(const ROOT::TLogEntry &entry) {
   constexpr static std::array<const char *, 5> sTag{
-     "Debug",
+    {"Debug",
      "Info",
      "Warning",
      "Log",
-     "FATAL"
+     "FATAL"}
   };
   std::cerr << "ROOT ";
   if (!entry.fGroup.empty())
