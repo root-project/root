@@ -22,6 +22,8 @@ set(MetaUtils_dict_headers ${headers} PARENT_SCOPE)
 include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
 add_definitions(${CLING_CXXFLAGS})
 
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS  -Wno-shadow)
+
 ROOT_OBJECT_LIBRARY(MetaUtils ${sources})
 ROOT_OBJECT_LIBRARY(MetaUtilsLLVM ${sources_llvm})
 
