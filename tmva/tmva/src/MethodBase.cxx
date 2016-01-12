@@ -1148,6 +1148,13 @@ void TMVA::MethodBase::TestClassification()
    Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Loop over test events and fill histograms with classifier response..." << Endl;
    if (mvaProb) Log() << kINFO << "Also filling probability and rarity histograms (on request)..." << Endl;
    std::vector<Bool_t>* mvaResTypes = mvaRes->GetValueVectorTypes();
+
+   //LM: this is needed to avoid crashes in ROOCCURVE
+   if ( mvaRes->GetSize() != GetNEvents() ) {
+      Log() << kFATAL << TString::Format("Inconsistent result size  %lld with number of events %u ",    mvaRes->GetSize() ,  GetNEvents() ) << Endl;
+      assert(mvaRes->GetSize() == GetNEvents());
+   }
+
    for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
 
       const Event* ev = GetEvent(ievt);

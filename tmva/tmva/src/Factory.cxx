@@ -1338,8 +1338,12 @@ void TMVA::Factory::EvaluateAllMethods( void )
 		      TMVA::Results *results=theMethod->Data()->GetResults(mname[k][i],Types::kTesting,Types::kClassification);
                       std::vector<Float_t> *mvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
                       std::vector<Bool_t>  *mvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
-		      TMVA::ROCCurve *fROCCurve = new TMVA::ROCCurve(*mvaRes, *mvaResType);
-		      Double_t fROCalcValue = fROCCurve->GetROCIntegral();
+                      Double_t fROCalcValue = 0;
+                      TMVA::ROCCurve *fROCCurve = nullptr;
+                      if (mvaResType->size() != 0) { 
+                         fROCCurve = new TMVA::ROCCurve(*mvaRes, *mvaResType);
+                         fROCalcValue = fROCCurve->GetROCIntegral();
+                      }
 		      
 		        if (sep[k][i] < 0 || sig[k][i] < 0) {
 			  // cannot compute separation/significance -> no MVA (usually for Cuts)
@@ -1362,7 +1366,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 						  effArea[k][i],fROCalcValue, 
 						  sep[k][i], sig[k][i]) << Endl;
 			}
-			delete fROCCurve;
+			if (fROCCurve) delete fROCCurve;
 		  }
 		}
 		Log() << kINFO << hLine << Endl;
