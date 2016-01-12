@@ -29,7 +29,7 @@ class PowerLawFunc {
 
 public:
 
-  PowerLawFunc(double p0, double p1) : fP0(p0), fP1(p1) {}
+  PowerLawFunc(double _p0, double _p1) : fP0(_p0), fP1(_p1) {}
 
   ~PowerLawFunc() {}
 
