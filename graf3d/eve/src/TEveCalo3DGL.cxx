@@ -23,9 +23,10 @@
 #include "TEveRGBAPalette.h"
 #include "TEveUtil.h"
 
-//______________________________________________________________________________
-//
-// OpenGL renderer class for TEveCalo3D.
+/** \class TEveCalo3DGL
+\ingroup TEve
+OpenGL renderer class for TEveCalo3D.
+*/
 
 ClassImp(TEveCalo3DGL);
 
@@ -318,21 +319,21 @@ void TEveCalo3DGL::RenderGrid(TGLRnrCtx & rnrCtx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Render box with given points.
+/// ~~~ {.cpp}
+///    z
+///    |
+///    |
+///    |________y
+///   /  6-------7
+///  /  /|      /|
+/// x  5-------4 |
+///    | 2-----|-3
+///    |/      |/
+///    1-------0
+/// ~~~
 
 void TEveCalo3DGL::RenderBox(const Float_t pnts[8]) const
 {
-   //    z
-   //    |
-   //    |
-   //    |________y
-   //   /  6-------7
-   //  /  /|      /|
-   // x  5-------4 |
-   //    | 2-----|-3
-   //    |/      |/
-   //    1-------0
-   //
-
    const Float_t *p = pnts;
    Float_t cross[3];
 
@@ -534,7 +535,6 @@ void TEveCalo3DGL::RenderEndCapCell(const TEveCaloData::CellGeom_t &cellData, Fl
       offset -= towerH * Cos(cellData.ThetaMin());
 
 } // end RenderEndCapCell
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// GL rendering.

@@ -301,9 +301,6 @@ bool buildingROOT = false;
 # define R__LLVMDIR "./interpreter/llvm/inst" // only works for rootbuild for now!
 #endif
 
-#define xstringify(s) #s
-#define stringify(s) xstringify(s)
-
 namespace {
    // Copy-pasted from TClass.h We cannot #include TClass.h because we are compiling in -fno-rtti mode
    template <typename T> struct IsPointerTClassCopy {
@@ -1088,7 +1085,7 @@ int STLContainerStreamer(const clang::FieldDecl &m,
    //        fprintf(stderr,"Add %s (%d) which is also %s\n",
    //                m.Type()->Name(), stltype, m.Type()->TrueName() );
    clang::QualType utype(ROOT::TMetaUtils::GetUnderlyingType(m.getType()), 0);
-   RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
+   Internal::RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
 
    if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
 
@@ -1529,7 +1526,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
       if (filename[i] == '\\') filename[i] = '/';
    }
    dictStream << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl) << "," << std::endl
-              << "                     ::ROOT::DefineBehavior((void*)0,(void*)0)," << std::endl
+              << "                     ::ROOT::Internal::DefineBehavior((void*)0,(void*)0)," << std::endl
               << "                     ";
 
    if (Namespace__HasMethod(cl, "Dictionary", interp)) {
@@ -2016,7 +2013,7 @@ void WriteAutoStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
          ++iter) {
       int k = ROOT::TMetaUtils::IsSTLContainer(*iter);
       if (k != 0) {
-         RStl::Instance().GenerateTClassFor(iter->getType(), interp, normCtxt);
+         Internal::RStl::Instance().GenerateTClassFor(iter->getType(), interp, normCtxt);
       }
    }
 
@@ -3070,7 +3067,7 @@ int GenerateFullDict(std::ostream &dictStream,
          if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */)) {
             // Register the collections
             // coverity[fun_call_w_exception] - that's just fine.
-            RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
+            Internal::RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
          } else {
             ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
             EmitStreamerInfo(selClass.GetNormalizedName());
@@ -3098,7 +3095,7 @@ int GenerateFullDict(std::ostream &dictStream,
 
    // LINKDEF SELECTION LOOP
    // Loop to get the shadow class for the class marked 'RequestOnlyTClass' (but not the
-   // STL class which is done via RStl::Instance().WriteClassInit(0);
+   // STL class which is done via Internal::RStl::Instance().WriteClassInit(0);
    // and the ClassInit
 
    for (auto const & selClass : scan.fSelectedClasses) {
@@ -3126,7 +3123,7 @@ int GenerateFullDict(std::ostream &dictStream,
 
    // Loop on the registered collections internally
    // coverity[fun_call_w_exception] - that's just fine.
-   ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy, EmitStreamerInfo);
+   ROOT::Internal::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy, EmitStreamerInfo);
 
 #ifndef ROOT_STAGE1_BUILD
    EmitTypedefs(scan.fSelectedTypedefs);
@@ -3659,9 +3656,10 @@ std::string GenerateFwdDeclString(const RScanner &scan,
    for (auto* TD: scan.fSelectedTypedefs)
       selectedDecls.push_back(TD);
 
-   fwdDeclString += "R\"DICTFWDDCLS(\n";
+   // The "R\"DICTFWDDCLS(\n" ")DICTFWDDCLS\"" pieces have been moved to
+   // TModuleGenerator to be able to make the diagnostics more telling in presence
+   // of an issue ROOT-6752.
    fwdDeclString += Decls2FwdDecls(selectedDecls,interp);
-   fwdDeclString += ")DICTFWDDCLS\"";
 
    // Functions
 //    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
@@ -3677,7 +3675,7 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 //          fwdDeclString+="\""+buffer+"\"\n";
 //    }
 
-   if (fwdDeclString.empty()) fwdDeclString = R"("")";
+   if (fwdDeclString.empty()) fwdDeclString = "";
    return fwdDeclString;
 }
 
@@ -4156,7 +4154,7 @@ int RootCling(int argc,
 
    std::string resourceDir;
 #ifdef R__LLVMRESOURCEDIR
-   resourceDir = stringify(R__LLVMRESOURCEDIR);
+   resourceDir = "@R__LLVMRESOURCEDIR@";
 #else
    resourceDir = TMetaUtils::GetLLVMResourceDir(buildingROOT);
 #endif
@@ -4221,7 +4219,7 @@ int RootCling(int argc,
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
-   ROOT::TMetaUtils::TClingLookupHelper helper(interp, normCtxt, 0);
+   ROOT::TMetaUtils::TClingLookupHelper helper(interp, normCtxt, 0, 0);
    TClassEdit::Init(&helper);
 
    // flags used only for the pragma parser:
@@ -4546,10 +4544,19 @@ int RootCling(int argc,
 
    }
 
+   // Speed up the operations with rules
+   selectionRules.FillCache();
+   selectionRules.Optimize();
+
+   if (isGenreflex){
+      if (0 != selectionRules.CheckDuplicates()){
+         return 1;
+      }
+   }
+
    // If we want to validate the selection only, we just quit.
    if (selSyntaxOnly)
       return 0;
-
 
    //---------------------------------------------------------------------------
    // Write schema evolution related headers and declarations
@@ -4663,6 +4670,7 @@ int RootCling(int argc,
       // priority first.
       if (!interpreteronly) {
          constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("TRootIOCtor", interp));
+         constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("__void__", interp)); // ROOT-7723
          constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("", interp));
       }
    }
@@ -5248,6 +5256,19 @@ void RiseWarningIfPresent(std::vector<ROOT::option::Option> &options,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool IsGoodLibraryName(const std::string &name)
+{
+
+
+   auto isGood = ROOT::TMetaUtils::EndsWith(name, gLibraryExtension);
+#ifdef __APPLE__
+   isGood |= ROOT::TMetaUtils::EndsWith(name, ".dylib");
+#endif
+   return isGood;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Translate the aruments of genreflex into rootcling ones and forward them
 /// to the RootCling function.
 /// These are two typical genreflex and rootcling commandlines
@@ -5706,7 +5727,7 @@ int GenReflex(int argc, char **argv)
    std::string targetLibName;
    if (options[TARGETLIB]) {
       targetLibName = options[TARGETLIB].arg;
-      if (!ROOT::TMetaUtils::EndsWith(targetLibName, gLibraryExtension)) {
+      if (!IsGoodLibraryName(targetLibName)) {
          ROOT::TMetaUtils::Error("",
                                  "Invalid target library extension: filename is %s and extension %s is expected!\n",
                                  targetLibName.c_str(),
@@ -5750,7 +5771,7 @@ int GenReflex(int argc, char **argv)
    }
 
    // Add the .so extension to the rootmap lib if not there
-   if (!rootmapLibName.empty() && !ROOT::TMetaUtils::EndsWith(rootmapLibName, gLibraryExtension)) {
+   if (!rootmapLibName.empty() && !IsGoodLibraryName(rootmapLibName)) {
       rootmapLibName += gLibraryExtension;
    }
 

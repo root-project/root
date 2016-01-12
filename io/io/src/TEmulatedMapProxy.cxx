@@ -23,6 +23,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+/**
+ \class TEmulatedMapProxy
+ \ingroup IO
+
+Streamer around a map container. For optimization reasons this functionality 
+is separated from the TEmulatedProxy.
+*/
+
 #include "TEmulatedMapProxy.h"
 #include "TClassEdit.h"
 #include "TStreamerInfo.h"

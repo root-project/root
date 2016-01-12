@@ -33,9 +33,10 @@
 #include "TGLPlotCamera.h"
 #include "TGLIncludes.h"
 
-//______________________________________________________________________________
-//
-// Implements painting of TH2 with "SURF" option.
+/** \class TGLSurfacePainter
+\ingroup opengl
+Implements painting of TH2 with "SURF" option.
+*/
 
 ClassImp(TGLSurfacePainter)
 
@@ -1085,11 +1086,6 @@ void TGLSurfacePainter::ClampZ(Double_t &zVal)const
 
 char *TGLSurfacePainter::WindowPointTo3DPoint(Int_t px, Int_t py)const
 {
-/*   if (!MakeGLContextCurrent()) {
-      static char err[] = { "Apocalipshit!" };
-      return err;
-   }*/
-
    py = fCamera->GetHeight() - py;
 
    const Int_t nY = fCoord->GetNYBins() - 1;

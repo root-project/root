@@ -39,9 +39,8 @@ ClassImp(TMultiGraph)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Begin_Html
-<center><h2>TMultiGraph class</h2></center>
-
+/** \class TMultiGraph
+    \ingroup Hist
 A TMultiGraph is a collection of TGraph (or derived) objects. It allows to
 manipulate a set of graphs as a single entity. In particular, when drawn,
 the X and Y axis ranges are automatically computed such as all the graphs
@@ -52,10 +51,9 @@ will be visible.
 The TMultiGraph owns the objects in the list.
 <p>
 The drawing options are the same as for TGraph.
-Like for TGraph, the painting is performed thanks to the
-<a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
-class. All details about the various painting options are given in
-<a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
+Like for TGraph, the painting is performed thanks to the TGraphPainter
+class. All details about the various painting options are given in this class.
+
 Example:
 <pre>
      TGraph *gr1 = new TGraph(...
@@ -67,7 +65,7 @@ Example:
 </pre>
 A special option <tt>3D</tt> allows to draw the graphs in a 3D space. See the
 following example:
-End_Html
+
 Begin_Macro(source)
 {
    c0 = new TCanvas("c1","multigraph L3",200,10,700,500);
@@ -100,7 +98,7 @@ Begin_Macro(source)
    return c0;
 }
 End_Macro
-Begin_Html
+
 <p>
 The number of graphs in a multigraph can be retrieve with:
 <pre>
@@ -115,7 +113,7 @@ otherwise the graph will be drawn with the option specified in
 <tt>TMultiGraph::Draw</tt>.
 <p>
 The following example shows how to fit a TMultiGraph.
-End_Html
+
 Begin_Macro(source)
 {
    TCanvas *c1 = new TCanvas("c1","c1",600,400);
@@ -150,7 +148,7 @@ Begin_Macro(source)
    return c1;
 }
 End_Macro
-Begin_Html
+
 <p>
 The axis titles can be modified the following way:
 <p>
@@ -166,18 +164,16 @@ The axis titles can be modified the following way:
 When the graphs in a TMultiGraph are fitted, the fit parameters boxes
 overlap. The following example shows how to make them all visible.
 
-End_Html
+
 Begin_Macro(source)
 ../../../tutorials/graphs/multigraph.C
 End_Macro
-Begin_Html
 
 <p>
 The axis limits can be changed the like for TGraph. The same methods apply on
 the multigraph.
 Note the two differents ways to change limits on X and Y axis.
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
@@ -206,13 +202,11 @@ Begin_Macro(source)
    return c2;
 }
 End_Macro
-Begin_Html
+
 <p>
-The method <a href="http://root.cern.ch/root/html/TPad.html#TPad:BuildLegend">
-<tt>TPad::BuildLegend</tt></a> is able to extract the graphs inside a
+The method TPad::BuildLegend is able to extract the graphs inside a
 multigraph. The following example demonstrate this.
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c3 = new TCanvas("c3","c3",600, 400);
@@ -270,10 +264,7 @@ Begin_Macro(source)
    return c3;
 }
 End_Macro
-Begin_Html
-
-
-End_Html */
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////

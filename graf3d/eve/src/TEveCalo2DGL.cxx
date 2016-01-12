@@ -22,9 +22,10 @@
 #include "TGLUtil.h"
 #include "TAxis.h"
 
-//______________________________________________________________________________
-// OpenGL renderer class for TEveCalo2D.
-//
+/** \class TEveCalo2DGL
+\ingroup TEve
+OpenGL renderer class for TEveCalo2D.
+*/
 
 ClassImp(TEveCalo2DGL);
 
@@ -38,8 +39,6 @@ TEveCalo2DGL::TEveCalo2DGL() :
    // fDLCache = kFALSE; // Disable display list.
    fMultiColor = kTRUE;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
@@ -58,7 +57,6 @@ void TEveCalo2DGL::SetBBox()
    SetAxisAlignedBBox(((TEveCalo2D*)fExternalObj)->AssertBBox());
 }
 
-/******************************************************************************/
 ////////////////////////////////////////////////////////////////////////////////
 /// Is current projection type RPhi
 
@@ -201,10 +199,6 @@ void TEveCalo2DGL::DrawRPhiHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
    delete [] sliceVal;
    delete [] sliceValRef;
 }
-
-
-/*******************************************************************************/
-/*******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw cell in RhoZ projection.

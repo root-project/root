@@ -1,7 +1,7 @@
 """ Pythonization API.
 """
 
-# TODO: externalize this (have PythonizationScope and UserPythonization as
+# TODO: externalize this (have PythonizationScope and UserPythonizations as
 # globals here and picked up from this module
 
 # TODO: set explicit export list
@@ -13,40 +13,153 @@ def _set_backend( backend ):
    global _backend
    _backend = backend
 
-#--- Pythonization factories --------------------------------------------
-
 def set_pythonization_scope(scope):
    _backend.PythonizationScope = scope
-   if scope not in _backend.UserPythonization:
-      _backend.UserPythonization[scope] = []
+   if scope not in _backend.UserPythonizations:
+      _backend.UserPythonizations[scope] = []
 
 
-def install_pythonization(pythonization):
+def add_pythonization(pythonizor):
+   """Takes a callable that should take two arguments -- the class proxy,
+   and its C++ name -- and which is called the first time the named
+   class is bound.
+   """
    scope = _backend.PythonizationScope
-   _backend.UserPythonizations[scope].append(pythonization)
+   #scope = _pythonization_scope
+   if pythonizor and not callable(pythonizor):
+      raise TypeError("given '%s' object is not callable" % str(pythonizor))
+   if pythonizor:
+      # _pythonizations[scope]
+      _backend.UserPythonizations[scope].append(pythonizor)
 
 
-def add_class_method(match_class, match_method, addition):
-   class method_pythonizor:
-      def __init__(self, match_class, match_method, backend):
+def pin_type(derived_type, base_type):
+   _backend.SetTypePinning(derived_type, base_type)
+
+
+def make_interface(base_type):
+   pin_type(base_type, base_type)
+
+
+def ignore_type_pinning(some_type):
+   _backend.IgnoreTypePinning(some_type)
+
+
+def cast(some_object, new_type):
+   return _backend.Cast(some_object, new_type)
+
+
+def add_exception_mapping(cpp_exception, py_exception):
+   _backend.UserExceptions[cpp_exception] = py_exception
+
+
+
+#--- Pythonization factories --------------------------------------------
+
+def set_gil_policy(match_class, match_method, release_gil=True):
+   return set_method_property(match_class, match_method, '_threaded', int(release_gil))
+
+
+def set_ownership_policy(match_class, match_method, python_owns_result):
+   return set_method_property(match_class, match_method, 
+                              '_creates', int(python_owns_result))
+
+def set_smart_ptr_policy(match_class, match_method, manage_smart_ptr=False):
+   return set_method_property(match_class, match_method, 
+                              '_manage_smart_ptr', bool(manage_smart_ptr))
+
+
+# NB: Ideally, we'd use the version commented out below, but for now, we
+#     make do with the hackier version here.
+def rename_attribute(match_class, orig_attribute, new_attribute, keep_orig=False):
+   class attribute_pythonizor(object):
+      class getter(object):
+         def __init__(self, attr):
+            self.attr = attr
+         def __call__(self, obj):
+            return getattr(obj, self.attr)
+
+      class setter(object):
+         def __init__(self, attr):
+            self.attr = attr
+         def __call__(self, obj, value):
+            return setattr(obj, self.attr, value)
+
+      class deleter(object):
+         def __init__(self, attr):
+            self.attr = attr
+         def __call__(self, obj):
+            return delattr(obj, self.attr)
+
+      def __init__(self, match_class, orig_attribute, new_attribute, keep_orig):
          import re
-         self.backend = backend
          self.match_class = re.compile(match_class)
-         self.match_method = re.compile(match_method)
+         self.match_attr = re.compile(orig_attribute)
+         self.new_attr = new_attribute
+         self.keep_orig = keep_orig
 
       def __call__(self, obj, name):
          if not self.match_class.match(name):
             return
-         for k in obj.__dict__:
-            tmp = getattr(obj, k)
+         for k in dir(obj): #.__dict__:
+            if self.match_attr.match(k):
+               tmp = property(self.getter(k), self.setter(k), self.deleter(k))
+               setattr(obj, self.new_attr, tmp)
+               #if not self.keep_orig: delattr(obj, k)
+   return attribute_pythonizor(match_class, orig_attribute, new_attribute, keep_orig)
+
+# def rename_attribute(match_class, orig_attribute, new_attribute, keep_orig=False):
+#    class method_pythonizor:
+#       def __init__(self, match_class, orig_attribute, new_attribute, keep_orig):
+#          import re
+#          self.match_class = re.compile(match_class)
+#          self.match_attr = re.compile(orig_attribute)
+#          self.new_attr = new_attribute
+#          self.keep_orig = keep_orig
+
+#       def __call__(self, obj, name):
+#          import sys
+#          if not self.match_class.match(name):
+#             return
+#          sys.stderr.write("%s %s %s %s" % ("!!!", obj, name, "\n"))
+#          for k in dir(obj): #obj.__dict__:
+#             if not self.match_attr.match(k): continue
+#             try:
+#                tmp = getattr(obj, k)
+#             except Exception as e:
+#                continue
+#             setattr(obj, self.new_attr, tmp)
+#             if not self.keep_orig: delattr(obj, k)
+#    return method_pythonizor(match_class, orig_attribute, new_attribute, keep_orig)
+
+
+# Shared with PyPy:
+
+def add_overload(match_class, match_method, overload):
+   class method_pythonizor(object):
+      def __init__(self, match_class, match_method, overload):
+         import re
+         self.match_class = re.compile(match_class)
+         self.match_method = re.compile(match_method)
+         self.overload = overload
+
+      def __call__(self, obj, name):
+         if not self.match_class.match(name):
+            return
+         for k in dir(obj): #.__dict__:
+            try:
+               tmp = getattr(obj, k)
+            except:
+               continue
             if self.match_method.match(k):
-               if isinstance(tmp, self.backend.MethodProxy):
-                  tmp.__add_overload__(addition)
-   return method_pythonizor(match_class, match_method, _backend)
+                try:
+                    tmp.__add_overload__(overload)
+                except AttributeError: pass
+   return method_pythonizor(match_class, match_method, overload)
 
 
 def compose_method(match_class, match_method, g):
-   class composition_pythonizor:
+   class composition_pythonizor(object):
       def __init__(self, match_class, match_method, g):
          import re
          self.match_class = re.compile(match_class)
@@ -57,39 +170,23 @@ def compose_method(match_class, match_method, g):
          if not self.match_class.match(name):
             return
          g = self.g
-         for k in obj.__dict__:
+         for k in dir(obj): #.__dict__:
             if not self.match_method.match(k):
                continue
-            f = getattr(obj, k)
+            try:
+               f = getattr(obj, k)
+            except:
+               continue
             def h(self, *args, **kwargs):
                return g(self, f(self, *args, **kwargs))
             setattr(obj, k, h)
    return composition_pythonizor(match_class, match_method, g)
 
 
-def decorate_method(match_class, match_method, decorator):
-   class decoration_pythonizor:
-      def __init__(self, match_class, match_method, decorator):
+def set_method_property(match_class, match_method, prop, value):
+   class method_pythonizor(object):
+      def __init__(self, match_class, match_method, prop, value):
          import re
-         self.match_class = re.compile(match_class)
-         self.match_method = re.compile(match_method)
-         self.decorator = decorator
-
-      def __call__(self, obj, name):
-         if not self.match_class.match(name):
-            return
-         for k in obj.__dict__:
-            if not self.match_method.match(k):
-               continue
-            setattr(obj, k, self.decorator(getattr(obj, k)))
-   return decoration_pythonizor(match_class, match_method, decorator)
-
-
-def set_methodproxy_property(match_class, match_method, prop, value):
-   class method_pythonizor:
-      def __init__(self, match_class, match_method, prop, value, backend):
-         import re
-         self.backend = backend
          self.match_class = re.compile(match_class)
          self.match_method = re.compile(match_method)
          self.prop = prop
@@ -98,20 +195,18 @@ def set_methodproxy_property(match_class, match_method, prop, value):
       def __call__(self, obj, name):
          if not self.match_class.match(name):
             return
-         for k in obj.__dict__:
-            tmp = getattr(obj, k)
+         for k in dir(obj): #.__dict__:
+            try:
+               tmp = getattr(obj, k)
+            except:
+               continue
             if self.match_method.match(k):
-               if isinstance(tmp, self.backend.MethodProxy):
-                  setattr(tmp, self.prop, self.value)
-   return method_pythonizor(match_class, match_method, prop, value, _backend)
-
-
-def set_gil_policy(match_class, match_method, release_gil=True):
-   return set_methodproxy_property(match_class, match_method, '_threaded', int(release_gil))
+               setattr(tmp, self.prop, self.value)
+   return method_pythonizor(match_class, match_method, prop, value)
 
 
 def make_property(match_class, match_get, match_set=None, match_del=None, prop_name=None):
-   class property_pythonizor:
+   class property_pythonizor(object):
       def __init__(self, match_class, match_get, match_set, match_del, prop_name):
          import re
          self.match_class = re.compile(match_class)
@@ -145,7 +240,7 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
          self.prop_name = prop_name
 
       def make_get_del_proxy(self, getter):
-         class proxy:
+         class proxy(object):
             def __init__(self, getter):
                self.getter = getter
 
@@ -154,7 +249,7 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
          return proxy(getter)
 
       def make_set_proxy(self, setter):
-         class proxy:
+         class proxy(object):
             def __init__(self, setter):
                self.setter = setter
 
@@ -174,9 +269,13 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
          if not self.match_many:
             fget, fset, fdel = None, None, None
 
-         for k in obj.__dict__:
+         for k in dir(obj): #.__dict__:
             match = self.match_get.match(k)
-            if match and hasattr(getattr(obj, k), '__call__'):
+            try:
+               tmp = getattr(obj, k)
+            except:
+               continue
+            if match and hasattr(tmp, '__call__'):
                if self.match_many:
                   name = match.group(1)
                   named_getters[name] = k
@@ -185,9 +284,13 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
                   break
 
          if self.match_set:
-            for k in obj.__dict__:
+            for k in dir(obj): #.__dict__:
                match = self.match_set.match(k)
-               if match and hasattr(getattr(obj, k), '__call__'):
+               try:
+                  tmp = getattr(obj, k)
+               except:
+                  continue
+               if match and hasattr(tmp, '__call__'):
                   if self.match_many:
                      name = match.group(1)
                      named_setters[name] = k
@@ -196,9 +299,13 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
                      break
 
          if self.match_del:
-            for k in obj.__dict__:
+            for k in dir(obj): #.__dict__:
                match = self.match_del.match(k)
-               if match and hasattr(getattr(obj, k), '__call__'):
+               try:
+                  tmp = getattr(obj, k)
+               except:
+                  continue
+               if match and hasattr(tmp, '__call__'):
                   if self.match_many:
                      name = match.group(1)
                      named_deleters[name] = k
@@ -243,42 +350,3 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
 
    return property_pythonizor(match_class, match_get, match_set, match_del, prop_name)
 
-
-def rename_attribute(match_class, orig_attribute, new_attribute, keep_orig=False):
-   class attribute_pythonizor:
-      def __init__(self, match_class, orig_attribute, new_attribute, keep_orig):
-         import re
-         self.match_class = re.compile(match_class)
-         self.match_attr = re.compile(orig_attribute)
-         self.new_attr = new_attribute
-         self.keep_orig = keep_orig
-
-      def __call__(self, obj, name):
-         if not self.match_class.match(name):
-            return
-         for k in obj.__dict__:
-            tmp = getattr(obj, k)
-            if self.match_attr.match(k):
-               setattr(obj, self.new_attr, tmp)
-               if not self.keep_orig: delattr(obj, k)
-   return method_pythonizor(match_class, orig_attribute, new_attribute, keep_orig)
-
-
-def pin_type(derived_type, base_type):
-   _backend.SetTypePinning(match_class, cast_to)
-
-
-def make_interface(base_type):
-   pin_type(base_type, base_type)
-
-
-def ignore_type_pinning(some_type):
-   _backend.IgnoreTypePinning(some_type)
-
-
-def cast(some_object, new_type):
-   return _backend.Cast(some_object, new_type)
-
-
-def add_exception_mapping(cpp_exception, py_exception):
-   _backend.UserExceptions[cpp_exception] = py_exception

@@ -37,8 +37,9 @@
 //_______________________________________________________________________
 
 #include "Riostream.h"
-#include "TMath.h"
 #include "TFile.h"
+#include "TVectorD.h"
+#include "TMath.h"
 
 #include "TMVA/ClassifierFactory.h"
 #ifndef ROOT_TMVA_MethodSVM
@@ -62,6 +63,13 @@
 #ifndef ROOT_TMVA_SVKernelFunction
 #include "TMVA/SVKernelFunction.h"
 #endif
+
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/Event.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
 
 #include <string>
 

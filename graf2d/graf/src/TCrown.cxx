@@ -17,10 +17,10 @@
 
 ClassImp(TCrown)
 
+/** \class TCrown
+\ingroup BasicGraphics
 
-////////////////////////////////////////////////////////////////////////////////
-/*! \class TCrown
-\brief To draw a Crown.
+To draw a Crown.
 
 A crown is specified with the position of its centre, its inner/outer radius
 a minimum and maximum angle. The attributes of the outline line are given via
@@ -52,14 +52,12 @@ Begin_Macro(source)
 End_Macro
 */
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Crown default constructor.
 
 TCrown::TCrown(): TEllipse()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Crown normal constructor.
@@ -79,7 +77,6 @@ TCrown::TCrown(Double_t x1, Double_t y1,Double_t radin, Double_t radout,Double_t
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Crown copy constructor.
 
@@ -89,14 +86,12 @@ TCrown::TCrown(const TCrown &crown) : TEllipse(crown)
    ((TCrown&)crown).Copy(*this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Crown default destructor.
 
 TCrown::~TCrown()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this crown to crown.
@@ -106,7 +101,6 @@ void TCrown::Copy(TObject &crown) const
 
    TEllipse::Copy(crown);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a crown.
@@ -157,7 +151,6 @@ Int_t TCrown::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this crown with new coordinates.
 
@@ -171,7 +164,6 @@ void TCrown::DrawCrown(Double_t x1, Double_t y1,Double_t radin,Double_t radout,D
    newcrown->AppendPad(option);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event
 ///
@@ -182,7 +174,6 @@ void TCrown::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    TEllipse::ExecuteEvent(event,px,py);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this crown with its current attributes.
@@ -235,7 +226,6 @@ void TCrown::Paint(Option_t *)
       if (GetLineStyle()) gPad->PaintPolyLine(2*np+3,x,y);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.

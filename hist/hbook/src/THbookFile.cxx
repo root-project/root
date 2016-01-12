@@ -9,25 +9,27 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////
-//  This class is an interface to the Hbook objects in Hbook files
-//  Any Hbook object (1-D, 2-D, Profile, RWN or CWN can be read
-//  NB: a THbookFile can only be used in READ mode
-//      Use the utility in $ROOTSYS/bin/h2root to convert Hbook to Root
-//
-// Example of use:
-//  gSystem->Load("libHbook");
-//  THbookFile f("myfile.hbook");
-//  f.ls();
-//  TH1F *h1 = (TH1F*)f.Get(1);  //import histogram ID=1 in h1
-//  h1->Fit("gaus");
-//  THbookTree *T = (THbookTree*)f.Get(111); //import ntuple header
-//  T->Print();  //show the Hbook ntuple variables
-//  T->Draw("x","y<0"); // as in normal TTree::Draw
-//
-//  THbookFile can be browsed via TBrowser.
-//
-////////////////////////////////////////////////////////////////////////
+/** \class THbookFile
+    \ingroup Hist
+ This class is an interface to the Hbook objects in Hbook files.
+ Any Hbook object (1-D, 2-D, Profile, RWN or CWN can be read
+
+ NB: a THbookFile can only be used in READ mode
+        Use the utility in $ROOTSYS/bin/h2root to convert Hbook to Root
+
+ Example of use:
+
+     gSystem->Load("libHbook");
+     THbookFile f("myfile.hbook");
+     f.ls();
+     TH1F *h1 = (TH1F*)f.Get(1);  //import histogram ID=1 in h1
+     h1->Fit("gaus");
+     THbookTree *T = (THbookTree*)f.Get(111); //import ntuple header
+     T->Print();  //show the Hbook ntuple variables
+     T->Draw("x","y<0"); // as in normal TTree::Draw
+
+ THbookFile can be browsed via TBrowser.
+*/
 
 #include <stdlib.h>
 #include <string.h>
@@ -47,7 +49,13 @@
 #include "TSystem.h"
 #include "TMath.h"
 
-#define PAWC_SIZE 2000000
+// NOTE: THe following comments and declarations are a duplicate
+// of those in main/src/h2root.cxx
+
+// Note that with gcc3.4 or above the size of PAWC_SIZE must be the same
+// as in the Fortran definition in hbook.f and zebra
+// Also, the arrays must be declared extern like on Windows
+#define PAWC_SIZE 4000000
 
 //  Define the names of the Fortran common blocks for the different OSs
 
@@ -57,11 +65,11 @@
 #  define hcbits hcbits_
 #  define hcbook hcbook_
 #  define rzcl rzcl_
-int pawc[PAWC_SIZE];
-int quest[100];
-int hcbits[37];
-int hcbook[51];
-int rzcl[11];
+extern "C" int pawc[PAWC_SIZE];
+extern "C" int quest[100];
+extern "C" int hcbits[37];
+extern "C" int hcbook[51];
+extern "C" int rzcl[11];
 #else
 #  define pawc   PAWC
 #  define quest  QUEST

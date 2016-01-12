@@ -49,7 +49,6 @@
   #define NOGDI
   #define NOMINMAX
   #include <Windows.h>
-  #include <sstream>
   #include <direct.h>
   #define popen _popen
   #define pclose _pclose
@@ -322,17 +321,22 @@ namespace {
     Opts.MathErrno = 0;
 #endif
 
-    // C++11 is turned on if cling is built with C++11: it's an interperter;
+    // C++11 is turned on if cling is built with C++11: it's an interpreter;
     // cross-language compilation doesn't make sense.
     // Extracted from Boost/config/compiler.
     // SunProCC has no C++11.
     // VisualC's support is not obvious to extract from Boost...
 
-#if __cplusplus >= 201402L
-     if (Opts.CPlusPlus) Opts.CPlusPlus14 = 1;
+    // The value of __cplusplus in GCC < 5.0 (e.g. 4.9.3) when
+    // either -std=c++1y or -std=c++14 is specified is 201300L, which fails
+    // the test for C++14 or more (201402L) as previously specified.
+    // I would claim that the check should be relaxed to:
+
+#if __cplusplus > 201103L
+    if (Opts.CPlusPlus) Opts.CPlusPlus14 = 1;
 #endif
 #if __cplusplus >= 201103L
-     if (Opts.CPlusPlus) Opts.CPlusPlus11 = 1;
+    if (Opts.CPlusPlus) Opts.CPlusPlus11 = 1;
 #endif
 
 #ifdef _REENTRANT
@@ -421,6 +425,13 @@ namespace {
         }
       }
 #else // _MSC_VER
+      // Skip LLVM_CXX execution if -nostdinc++ was provided.
+      for (const auto arg : args) {
+        if (!strcmp(arg, "-nostdinc++")) {
+          return;
+        }
+      }
+
       static const char *CppInclQuery =
         "echo | LC_ALL=C " LLVM_CXX " -xc++ -E -v - 2>&1 >/dev/null "
         "| awk '/^#include </,/^End of search"
@@ -637,9 +648,14 @@ namespace {
       delete Invocation;
       return 0;
     }
+
     clang::CompilerInvocation::CreateFromArgs(*Invocation, CC1Args->data() + 1,
                                               CC1Args->data() + CC1Args->size(),
                                               *Diags);
+    // We appreciate the error message about an unknown flag (or do we? if not
+    // we should switch to a different DiagEngine for parsing the flags).
+    // But in general we'll happily go on.
+    Diags->Reset();
 
     // Create and setup a compiler instance.
     std::unique_ptr<CompilerInstance> CI(new CompilerInstance());
@@ -819,7 +835,6 @@ namespace {
     // want debug info
     //CI->getCodeGenOpts().setDebugInfo(clang::CodeGenOptions::FullDebugInfo);
     // CI->getCodeGenOpts().EmitDeclMetadata = 1; // For unloading, for later
-    CI->getCodeGenOpts().OptimizationLevel = 0; // see pure SSA, that comes out
     CI->getCodeGenOpts().CXXCtorDtorAliases = 0; // aliasing the complete
                                                  // ctor to the base ctor causes
                                                  // the JIT to crash

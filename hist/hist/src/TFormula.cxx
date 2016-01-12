@@ -26,6 +26,7 @@
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
+#include <functional>
 
 using namespace std;
 
@@ -43,7 +44,8 @@ using namespace std;
 #include "v5/TFormula.h"
 
 ClassImp(TFormula)
-/** \class TFormula
+/** \class TFormula  TFormula.h "inc/TFormula.h"
+    \ingroup Hist
 The  F O R M U L A  class
 
 <p>This is a new version of the TFormula class based on Cling.
@@ -255,6 +257,7 @@ TFormula::TFormula()
    fNumber = 0;
    fClingName = "";
    fFormula = "";
+   fLambdaPtr = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -288,34 +291,6 @@ TFormula::~TFormula()
    }
 }
 
-#ifdef OLD_VERSION
-TFormula::TFormula(const char *name, Int_t nparams, Int_t ndims)
-{
-   //*-*
-   //*-*  Constructor
-   //*-*  When TF1 is constructed using C++ function, TF1 need space to keep parameters values.
-   //*-*
-
-   fName = name;
-   fTitle = "";
-   fClingInput = "";
-   fReadyToExecute = false;
-   fClingInitialized = false;
-   fAllParametersSetted = false;
-   fMethod = 0;
-   fNdim = ndims;
-   fNpar = 0;
-   fNumber = 0;
-   fClingName = "";
-   fFormula = "";
-   for(Int_t i = 0; i < nparams; ++i)
-   {
-      TString parName = TString::Format("%d",i);
-      DoAddParameter(parName,0,false);
-   }
-}
-#endif
-
 TFormula::TFormula(const char *name, const char *formula, bool addToGlobList)   :
    TNamed(name,formula),
    fClingInput(formula),fFormula(formula)
@@ -326,6 +301,8 @@ TFormula::TFormula(const char *name, const char *formula, bool addToGlobList)   
    fNdim = 0;
    fNpar = 0;
    fNumber = 0;
+   fLambdaPtr = nullptr;
+
    FillDefaults();
 
 
@@ -353,7 +330,52 @@ TFormula::TFormula(const char *name, const char *formula, bool addToGlobList)   
 
 }
 
-TFormula::TFormula(const TFormula &formula) : TNamed(formula.GetName(),formula.GetTitle())
+/// constructor from a full compileable C++ expression
+TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bool addToGlobList)   :
+   TNamed(name,formula),
+   fClingInput(formula),fFormula(formula)
+{
+   fReadyToExecute = false;
+    fClingInitialized = false;
+   fNpar = 0;
+   fLambdaPtr = nullptr;
+
+
+   fNdim = ndim;
+   for (int i = 0; i < npar; ++i) {
+      DoAddParameter(TString::Format("p%d",i), 0, false); 
+   }
+   fAllParametersSetted = true;
+   assert (fNpar == npar);
+
+   bool ret = InitLambdaExpression(formula); 
+
+   if (ret)  {
+
+      SetBit(TFormula::kLambda);
+
+      fReadyToExecute = true;
+
+      if (addToGlobList && gROOT) {
+         TFormula *old = 0;
+         R__LOCKGUARD2(gROOTMutex);
+         old = dynamic_cast<TFormula*> ( gROOT->GetListOfFunctions()->FindObject(name) );
+         if (old)
+            gROOT->GetListOfFunctions()->Remove(old);
+         if (IsReservedName(name))
+            Error("TFormula","The name %s is reserved as a TFormula variable name.\n",name);
+         else
+            gROOT->GetListOfFunctions()->Add(this);
+      }
+      SetBit(kNotGlobal,!addToGlobList);
+   }
+   else 
+      Error("TFormula","Syntax error in building the lambda expression %s", formula );
+}
+
+
+TFormula::TFormula(const TFormula &formula) :
+   TNamed(formula.GetName(),formula.GetTitle())
 {
    fReadyToExecute = false;
    fClingInitialized = false;
@@ -361,10 +383,35 @@ TFormula::TFormula(const TFormula &formula) : TNamed(formula.GetName(),formula.G
    fNdim = formula.GetNdim();
    fNpar = formula.GetNpar();
    fNumber = formula.GetNumber();
-   fFormula = formula.GetExpFormula();
+   fFormula = formula.GetExpFormula();   // returns fFormula in case of Lambda's
+   fLambdaPtr = nullptr;
 
-   FillDefaults();
-   //fName = gNamePrefix + formula.GetName();
+   // case of function based on a C++  expression (lambda's) which is ready to be compiled
+   if (formula.fLambdaPtr && formula.TestBit(TFormula::kLambda)) {
+
+      fClingInput = fFormula;
+      fParams = formula.fParams;
+      fClingParameters = formula.fClingParameters; 
+      fAllParametersSetted = formula.fAllParametersSetted;
+
+      bool ret = InitLambdaExpression(fFormula); 
+
+      if (ret)  {
+         SetBit(TFormula::kLambda);
+         fReadyToExecute = true;
+      }
+      else 
+         Error("TFormula","Syntax error in building the lambda expression %s", fFormula.Data() );
+
+   }
+   else {
+
+      FillDefaults();
+      
+      PreProcessFormula(fFormula);
+      PrepareFormula(fFormula);
+   }
+   
 
    if (!TestBit(TFormula::kNotGlobal) && gROOT ) {
       R__LOCKGUARD2(gROOTMutex);
@@ -378,8 +425,6 @@ TFormula::TFormula(const TFormula &formula) : TNamed(formula.GetName(),formula.G
          gROOT->GetListOfFunctions()->Add(this);
    }
 
-   PreProcessFormula(fFormula);
-   PrepareFormula(fFormula);
 }
 
 TFormula& TFormula::operator=(const TFormula &rhs)
@@ -393,6 +438,43 @@ TFormula& TFormula::operator=(const TFormula &rhs)
    }
    return *this;
 }
+
+Bool_t TFormula::InitLambdaExpression(const char * formula) {
+
+   std::string lambdaExpression = formula;
+
+   // check if formula exist already in the map
+   {
+      R__LOCKGUARD2(gROOTMutex);
+
+      auto funcit = gClingFunctions.find(lambdaExpression);
+      if (funcit != gClingFunctions.end() ) {
+         fLambdaPtr = funcit->second;
+         fClingInitialized = true;
+         return true;
+      }
+   }
+   
+   // set the cling name using hash of the static formulae map
+   auto hasher = gClingFunctions.hash_function();
+   TString lambdaName = TString::Format("lambda__id%zu",(unsigned long) hasher(lambdaExpression) );
+   
+   //lambdaExpression = TString::Format("[&](double * x, double *){ return %s ;}",formula);
+   //TString lambdaName = TString::Format("mylambda_%s",GetName() );
+   TString lineExpr = TString::Format("std::function<double(double*,double*)> %s = %s ;",lambdaName.Data(), lambdaExpression.c_str() ); 
+   gInterpreter->ProcessLine(lineExpr);
+   fLambdaPtr = (void*) gInterpreter->ProcessLine(TString(lambdaName)+TString(";"));  // add ; to avoid printing 
+   if (fLambdaPtr != nullptr) { 
+      R__LOCKGUARD2(gROOTMutex);
+      gClingFunctions.insert ( std::make_pair ( lambdaExpression, fLambdaPtr) );
+      fClingInitialized = true;
+      return true;
+   }
+   fClingInitialized = false;
+   return false;
+}
+
+
 
 Int_t TFormula::Compile(const char *expression)
 {
@@ -417,6 +499,12 @@ Int_t TFormula::Compile(const char *expression)
    if (!fFormula.IsNull() ) Clear();
 
    fFormula = formula;
+
+   if (TestBit(TFormula::kLambda) ) {
+      bool ret = InitLambdaExpression(fFormula);
+      return (ret) ? 0 : 1;
+   }
+   
    if (fVars.empty() ) FillDefaults();
    // prepare the formula for Cling
    //printf("compile: processing formula %s\n",fFormula.Data() );
@@ -476,7 +564,20 @@ void TFormula::Copy(TObject &obj) const
    fnew.fAllParametersSetted = fAllParametersSetted;
    fnew.fClingName = fClingName;
 
-   if (fMethod) {
+      // case of function based on a C++  expression (lambda's) which is ready to be compiled
+   if (fLambdaPtr && TestBit(TFormula::kLambda)) {
+
+      bool ret = fnew.InitLambdaExpression(fnew.fFormula); 
+      if (ret)  {
+         fnew.SetBit(TFormula::kLambda);
+         fnew.fReadyToExecute = true;
+      }
+      else {
+         Error("TFormula","Syntax error in building the lambda expression %s", fFormula.Data() );
+         fnew.fReadyToExecute = false;
+      }
+   }
+   else if (fMethod) {
       if (fnew.fMethod) delete fnew.fMethod;
       // use copy-constructor of TMethodCall
       TMethodCall *m = new TMethodCall(*fMethod);
@@ -696,7 +797,6 @@ void TFormula::HandlePolN(TString &formula)
    Int_t polPos = formula.Index("pol");
    while(polPos != kNPOS)
    {
-      SetBit(kLinear,1);
 
       Bool_t defaultVariable = false;
       TString variable;
@@ -727,7 +827,7 @@ void TFormula::HandlePolN(TString &formula)
          degree = TString(formula(polPos+3,temp - polPos - 3)).Atoi();
          counter = 0;
       }
-      fNumber = 300 + degree;
+
       TString replacement = TString::Format("[%d]",counter);
       if(polPos - 1 < 0 || !IsFunctionNameChar(formula[polPos-1]) || formula[polPos-1] == ':' )
       {
@@ -768,6 +868,11 @@ void TFormula::HandlePolN(TString &formula)
       if (!formula.Contains(pattern)) {
          Error("HandlePolN","Error handling polynomial function - expression is %s - trying to replace %s with %s ", formula.Data(), pattern.Data(), replacement.Data() );
          break;
+      }
+      if (formula == pattern) {
+         // case of single polynomial
+         SetBit(kLinear,1);
+         fNumber = 300 + degree;
       }
       formula.ReplaceAll(pattern,replacement);
       polPos = formula.Index("pol");
@@ -1090,17 +1195,24 @@ void TFormula::HandleExponentiation(TString &formula)
          // handle cases x^-2 or x^+2
          // need to handle also cases x^sin(x+y)
          Int_t depth = 0;
+         // stop right expression if is an operator or if is a ")" from a zero depth
          while(temp < formula.Length() && ( (depth > 0) || !IsOperator(formula[temp]) ) )
          {
             temp++;
             // handle scientific notation cases (1.e-2 ^ 3 )
             if (temp>=2 && IsScientificNotation(formula, temp) ) temp+=2;
             // for internal parenthesis
-            if (formula[temp] == '(') depth++;
-            if (depth > 0 && formula[temp] == ')') depth--;
+            if (temp < formula.Length() && formula[temp] == '(') depth++;
+            if (temp < formula.Length() && formula[temp] == ')') { 
+               if (depth > 0) 
+                  depth--;
+               else
+                  break;  // case of end of a previously started expression e.g. sin(x^2)
+            }
          }
       }
       right = formula(caretPos + 1, (temp - 1) - caretPos );
+      //std::cout << "right to replace is " << right << std::endl;
 
       TString pattern = TString::Format("%s^%s",left.Data(),right.Data());
       TString replacement = TString::Format("pow(%s,%s)",left.Data(),right.Data());
@@ -1336,7 +1448,11 @@ void TFormula::ExtractFunctors(TString &formula)
             //std::cout << "check if character : " << i << " " << formula[i] << " from name " << name << "  is a function " << std::endl;
 
             // check if function is provided by gROOT
-            TObject *obj = gROOT->GetListOfFunctions()->FindObject(name);
+            TObject *obj = 0;
+            {
+               R__LOCKGUARD2(gROOTMutex);
+               obj = gROOT->GetListOfFunctions()->FindObject(name);
+            }
             TFormula * f = dynamic_cast<TFormula*> (obj);
             if (!f) {
                // maybe object is a TF1
@@ -1485,7 +1601,7 @@ void TFormula::ProcessFormula(TString &formula)
             TString functionName = fun.fName(index + 2, fun.fName.Length());
 
             Bool_t silent = true;
-            TClass *tclass = new TClass(className,silent);
+            TClass *tclass = TClass::GetClass(className,silent);
             // std::cout << "looking for class " << className << std::endl;
             const TList *methodList = tclass->GetListOfAllPublicMethods();
             TIter next(methodList);
@@ -1503,7 +1619,11 @@ void TFormula::ProcessFormula(TString &formula)
          if(!fun.fFound)
          {
             // try to look into all the global functions in gROOT
-            TFunction * f = (TFunction*) gROOT->GetListOfGlobalFunctions(true)->FindObject(fun.fName);
+           TFunction* f;
+            {
+               R__LOCKGUARD2(gROOTMutex);
+               f = (TFunction*) gROOT->GetListOfGlobalFunctions(true)->FindObject(fun.fName);
+            }
             // if found a function with matching arguments
             if (f && fun.GetNargs() <=  f->GetNargs() && fun.GetNargs() >=  f->GetNargs() - f->GetNargsOpt() )
             {
@@ -1521,7 +1641,11 @@ void TFormula::ProcessFormula(TString &formula)
       }
       else
       {
-         TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(gNamePrefix + fun.fName);
+         TFormula* old = 0;
+         {
+            R__LOCKGUARD2(gROOTMutex);
+            old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(gNamePrefix + fun.fName);
+         }
          if(old)
          {
             // we should not go here (this analysis is done before in ExtractFunctors)
@@ -2404,7 +2528,6 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
    //*-*    If parameter has default value, and has not been setted, appropriate warning is shown.
    //*-*
 
-
    if(!fReadyToExecute)
    {
       Error("Eval","Formula is invalid and not ready to execute ");
@@ -2417,6 +2540,14 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
          }
       }
       return TMath::QuietNaN();
+   }
+   if (fLambdaPtr && TestBit(TFormula::kLambda)) {// case of lambda functions
+      std::function<double(double *, double *)> & fptr = * ( (std::function<double(double *, double *)> *) fLambdaPtr);
+      assert(x);
+      //double * v = (x) ? const_cast<double*>(x) : const_cast<double*>(fClingVariables.data());
+      double * v = const_cast<double*>(x);
+      double * p = (params) ? const_cast<double*>(params) : const_cast<double*>(fClingParameters.data());
+      return fptr(v, p); 
    }
    // this is needed when reading from a file
    if (!fClingInitialized) {
@@ -2454,7 +2585,7 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
 TString TFormula::GetExpFormula(Option_t *option) const
 {
    TString opt(option);
-   if (opt.IsNull() ) return fFormula;
+   if (opt.IsNull() || TestBit(TFormula::kLambda) ) return fFormula;
    opt.ToUpper();
 
    //  if (opt.Contains("N") ) {
@@ -2534,7 +2665,7 @@ void TFormula::Print(Option_t *option) const
    //if (fReadyToExecute) Eval();
 
    if (opt.Contains("V") ) {
-      if (fNdim > 0) {
+      if (fNdim > 0 && !TestBit(TFormula::kLambda)) {
          printf("List of  Variables: \n");
          assert(int(fClingVariables.size()) >= fNdim);
          for ( int ivar = 0; ivar < fNdim ; ++ivar) {
@@ -2624,33 +2755,45 @@ void TFormula::Streamer(TBuffer &b)
          // case of formula contains only parameters
          if (fFormula.IsNull() ) return;
 
+         
          // store parameter values, names and order
          std::vector<double> parValues = fClingParameters;
          auto paramMap = fParams;
          fNpar = fParams.size();
 
-         //std::cout << "Streamer::Reading preprocess the formula " << fFormula << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
-         // for ( auto &p : fParams) 
-         //    std::cout << "parameter " << p.first << " index " << p.second << std::endl;
+         if (!TestBit(TFormula::kLambda) ) {
+
+            //std::cout << "Streamer::Reading preprocess the formula " << fFormula << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
+            // for ( auto &p : fParams) 
+            //    std::cout << "parameter " << p.first << " index " << p.second << std::endl;
+            
+            fClingParameters.clear();  // need to be reset before re-initializing it
+            
+            FillDefaults();
+            
+
+            PreProcessFormula(fFormula);
+
+            //std::cout << "Streamer::after pre-process the formula " << fFormula << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
+
+            PrepareFormula(fFormula);
          
-         fClingParameters.clear();  // need to be reset before re-initializing it
-
-         FillDefaults();
+            //std::cout << "Streamer::after prepared " << fClingInput << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
 
 
-         PreProcessFormula(fFormula);
-
-         //std::cout << "Streamer::after pre-process the formula " << fFormula << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
-
-         PrepareFormula(fFormula);
-
-         //std::cout << "Streamer::after prepared " << fClingInput << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
-
-
-         // restore parameter values
-         if (fNpar != (int) parValues.size() ) {
-            Error("Streamer","number of parameters computed (%d) is not same as the stored parameters (%d)",fNpar,int(parValues.size()) );
-            Print("v");
+            // restore parameter values
+            if (fNpar != (int) parValues.size() ) {
+               Error("Streamer","number of parameters computed (%d) is not same as the stored parameters (%d)",fNpar,int(parValues.size()) );
+               Print("v");
+            }
+         }
+         else {
+            // case of lamda expressions
+            bool ret = InitLambdaExpression(fFormula);
+            if (ret) {
+               fReadyToExecute  = true;
+               fClingInitialized  = true;
+            }
          }
          assert(fNpar == (int) parValues.size() );
          std::copy( parValues.begin(), parValues.end(), fClingParameters.begin() );
@@ -2670,6 +2813,8 @@ void TFormula::Streamer(TBuffer &b)
          // fClingInput.ReplaceAll(oldClingName, fClingName);
          // InputFormulaIntoCling();
 
+
+         
          if (!TestBit(kNotGlobal)) {
             R__LOCKGUARD2(gROOTMutex);
             gROOT->GetListOfFunctions()->Add(this);

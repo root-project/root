@@ -1,13 +1,13 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'VALIDATION AND MC STUDIES' RooFit tutorial macro #802
-// 
-// RooMCStudy: using separate fit and generator models, using the chi^2 calculator model 
-//
-// 
-// 07/2008 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'VALIDATION AND MC STUDIES' RooFit tutorial macro #802
+///
+///  RooMCStudy: using separate fit and generator models, using the chi^2 calculator model
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

@@ -11,15 +11,6 @@
 #ifndef ROOSTATS_RatioOfProfiledLikelihoodsTestStat
 #define ROOSTATS_RatioOfProfiledLikelihoodsTestStat
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-TestStatistic that returns the ratio of profiled likelihoods.
-</p>
-END_HTML
-*/
-//
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
@@ -37,7 +28,47 @@ END_HTML
 #include "RooStats/ProfileLikelihoodTestStat.h"
 #endif
 
+
+
+
 namespace RooStats {
+
+   /**
+
+TestStatistic that returns the ratio of profiled likelihoods.
+
+By default the calculation is:
+
+\f[
+	\log{    \frac{  \lambda( \mu_{alt} , {conditional \: MLE \: for \: alt \: nuisance}) }
+   	              { \lambda(\mu_{null} , {conditional \: MLE \: for \:  null \: nuisance}) } }
+\f]
+
+where \f$ \lambda \f$ is the profile likeihood ratio, so the 
+MLE for the null and alternate are subtracted off.
+
+If ``SetSubtractMLE(false)`` then it calculates:
+
+\f[
+
+	\log{    \frac{ L( \mu_alt , {conditional \: MLE \: for \: alt \: nuisance} ) }         
+                      { L(\mu_null , {conditional \: MLE \: for \:  null \: nuisance}) } }
+
+where \f$ L\$ is the Likelihood function. 
+
+The values of the parameters of interest for the alternative 
+hypothesis are taken at the time of the construction.
+If empty, it treats all free parameters as nuisance parameters.
+
+The value of the parameters of interest for the null hypotheses 
+are given at each call of Evaluate.
+
+This test statitsic is often called the Tevatron test statistic, because it has been used by the Tevatron experiments. 
+
+ \ingroup Roostats
+
+*/
+
 
 class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
 
@@ -62,32 +93,8 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
     fDetailedOutputEnabled(false),
     fDetailedOutput(NULL)
       {
-	/*
-         Calculates the ratio of profiled likelihoods. 
+         //  Calculates the ratio of profiled likelihoods. 
 
-	 By default the calculation is:
-
-	    Lambda(mu_alt , conditional MLE for alt nuisance) 
-	log --------------------------------------------
-   	    Lambda(mu_null , conditional MLE for null nuisance)
-
-	where Lambda is the profile likeihood ratio, so the 
-	MLE for the null and alternate are subtracted off.
-
-	If SetSubtractMLE(false) then it calculates:
-
-	    L(mu_alt , conditional MLE for alt nuisance) 
-	log --------------------------------------------
-	    L(mu_null , conditional MLE for null nuisance)
-
-
-	The values of the parameters of interest for the alternative 
-	hypothesis are taken at the time of the construction.
-	If empty, it treats all free parameters as nuisance parameters.
-
-	The value of the parameters of interest for the null hypotheses 
-	are given at each call of Evaluate(data,nullPOI).
-	*/
 	if(altPOI)
 	  fAltPOI = (RooArgSet*) altPOI->snapshot();
 	else

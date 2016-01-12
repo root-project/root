@@ -12,15 +12,13 @@
 #ifndef ROOT_TVirtualObject
 #define ROOT_TVirtualObject
 
+/**
+\class TVirtualObject
+\ingroup IO
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualObject                                                       //
-//                                                                      //
-// Wrapper around an object and giving indirect access to its content    //
-// even if the object is not of a class in the Cint/Reflex dictionary.  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+Wrapper around an object and giving indirect access to its content
+even if the object is not of a class in the Cint/Reflex dictionary.
+*/
 
 #ifndef ROOT_TClassRef
 #include "TClassRef.h"

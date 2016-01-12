@@ -16,9 +16,10 @@
 #include "TGLSelectRecord.h"
 #include "TGLIncludes.h"
 
-//______________________________________________________________________________
-// OpenGL renderer class for TEveDigitSet.
-//
+/** \class TEveDigitSetGL
+\ingroup TEve
+OpenGL renderer class for TEveDigitSet.
+*/
 
 ClassImp(TEveDigitSetGL);
 

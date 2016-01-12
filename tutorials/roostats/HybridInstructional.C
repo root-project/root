@@ -1,58 +1,59 @@
-//+  example demostrating usage of HybridCalcultor
-/*
-HybridInstructional
-
-Authors: Kyle Cranmer, Wouter Verkerke, and Sven Kreiss
-date  May 2010 Part 1-3
-date  Dec 2010 Part 4-6
-
-A hypothesis testing example based on number counting
-with background uncertainty.
-
-NOTE: This example must be run with the ACLIC (the + option ) due to the
-new class that is defined.
-
-This example:
- - demonstrates the usage of the HybridCalcultor (Part 4-6)
- - demonstrates the numerical integration of RooFit (Part 2)
- - validates the RooStats against an example with a known analytic answer
- - demonstrates usage of different test statistics
- - explains subtle choices in the prior used for hybrid methods
- - demonstrates usage of different priors for the nuisance parameters
- - demonstrates usage of PROOF
-
-The basic setup here is that a main measurement has observed x events with an
-expectation of s+b.  One can choose an ad hoc prior for the uncertainty on b,
-or try to base it on an auxiliary measurement.  In this case, the auxiliary
-measurement (aka control measurement, sideband) is another counting experiment
-with measurement y and expectation tau*b.  With an 'original prior' on b,
-called \eta(b) then one can obtain a posterior from the auxiliary measurement
-\pi(b) = \eta(b) * Pois(y|tau*b).  This is a principled choice for a prior
-on b in the main measurement of x, which can then be treated in a hybrid
-Bayesian/Frequentist way.  Additionally, one can try to treat the two
-measurements simultaneously, which is detailed in Part 6 of the tutorial.
-
-This tutorial is related to the FourBin.C tutorial in the modeling, but
-focuses on hypothesis testing instead of interval estimation.
-
-More background on this 'prototype problem' can be found in the
-following papers:
-
-Evaluation of three methods for calculating statistical significance
-when incorporating a systematic uncertainty into a test of the
-background-only hypothesis for a Poisson process
-Authors: Robert D. Cousins, James T. Linnemann, Jordan Tucker
-http://arxiv.org/abs/physics/0702156
-NIM  A 595 (2008) 480--501
-
-Statistical Challenges for Searches for New Physics at the LHC
-Authors: Kyle Cranmer
-http://arxiv.org/abs/physics/0511028
-
- Measures of Significance in HEP and Astrophysics
- Authors: J. T. Linnemann
- http://arxiv.org/abs/physics/0312059
-*/
+/// \file
+/// \ingroup tutorial_roostats
+/// Example demonstrating usage of HybridCalcultor
+///
+/// A hypothesis testing example based on number counting
+/// with background uncertainty.
+///
+/// NOTE: This example must be run with the ACLIC (the + option ) due to the
+/// new class that is defined.
+///
+/// This example:
+///  - demonstrates the usage of the HybridCalcultor (Part 4-6)
+///  - demonstrates the numerical integration of RooFit (Part 2)
+///  - validates the RooStats against an example with a known analytic answer
+///  - demonstrates usage of different test statistics
+///  - explains subtle choices in the prior used for hybrid methods
+///  - demonstrates usage of different priors for the nuisance parameters
+///  - demonstrates usage of PROOF
+///
+/// The basic setup here is that a main measurement has observed x events with an
+/// expectation of s+b.  One can choose an ad hoc prior for the uncertainty on b,
+/// or try to base it on an auxiliary measurement.  In this case, the auxiliary
+/// measurement (aka control measurement, sideband) is another counting experiment
+/// with measurement y and expectation tau*b.  With an 'original prior' on b,
+/// called \eta(b) then one can obtain a posterior from the auxiliary measurement
+/// \pi(b) = \eta(b) * Pois(y|tau*b).  This is a principled choice for a prior
+/// on b in the main measurement of x, which can then be treated in a hybrid
+/// Bayesian/Frequentist way.  Additionally, one can try to treat the two
+/// measurements simultaneously, which is detailed in Part 6 of the tutorial.
+///
+/// This tutorial is related to the FourBin.C tutorial in the modeling, but
+/// focuses on hypothesis testing instead of interval estimation.
+///
+/// More background on this 'prototype problem' can be found in the
+/// following papers:
+///
+/// Evaluation of three methods for calculating statistical significance
+/// when incorporating a systematic uncertainty into a test of the
+/// background-only hypothesis for a Poisson process
+/// Authors: Robert D. Cousins, James T. Linnemann, Jordan Tucker
+/// http://arxiv.org/abs/physics/0702156
+/// NIM  A 595 (2008) 480--501
+///
+/// Statistical Challenges for Searches for New Physics at the LHC
+/// Authors: Kyle Cranmer
+/// http://arxiv.org/abs/physics/0511028
+///
+///  Measures of Significance in HEP and Astrophysics
+///  Authors: J. T. Linnemann
+///  http://arxiv.org/abs/physics/0312059
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \authors Kyle Cranmer, Wouter Verkerke, and Sven Kreiss
 
 #include "RooGlobalFunc.h"
 #include "RooRealVar.h"
@@ -294,7 +295,7 @@ void HybridInstructional() {
   //
   // or we can use some other ad hoc prior that do not naturally
   // follow from the known form of the auxiliary measurement.
-  // The common choice is the equivlaent Gaussian:
+  // The common choice is the equivalent Gaussian:
   w->factory("Gaussian::gauss_prior(b,y, expr::sqrty('sqrt(y)',y))");
   // this corresponds to the "Z_N" calculation.
   //

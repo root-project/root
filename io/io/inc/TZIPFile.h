@@ -12,25 +12,6 @@
 #ifndef ROOT_TZIPFile
 #define ROOT_TZIPFile
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TZIPFile                                                             //
-//                                                                      //
-// This class describes a ZIP archive file containing multiple          //
-// sub-files. Typically the sub-files are ROOT files. Notice that       //
-// the ROOT files should not be compressed when being added to the      //
-// ZIP file, since ROOT files are normally already compressed.          //
-// Such a ZIP file should be created like:                              //
-//                                                                      //
-//    zip -n root multi file1.root file2.root                           //
-//                                                                      //
-// which creates a ZIP file multi.zip.                                  //
-//                                                                      //
-// For more on the ZIP file structure see TZIPFile.cxx.                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TArchiveFile
 #include "TArchiveFile.h"
 #endif
@@ -41,10 +22,10 @@ class TZIPMember;
 class TZIPFile : public TArchiveFile {
 
 protected:
-   Long64_t    fDirPos;     // Central directory position
-   Long64_t    fDirSize;    // Central directory size
-   Long64_t    fDirOffset;  // Central directory offset (from the beginning of the archive)
-   TString     fComment;    // Archive comment
+   Long64_t    fDirPos;     ///< Central directory position
+   Long64_t    fDirSize;    ///< Central directory size
+   Long64_t    fDirOffset;  ///< Central directory offset (from the beginning of the archive)
+   TString     fComment;    ///< Archive comment
 
    Long64_t   FindEndHeader();
    Int_t      ReadEndHeader(Long64_t pos);
@@ -56,7 +37,7 @@ protected:
    ULong64_t  Get64(const void *buffer, Int_t bytes);
    Int_t      DecodeZip64ExtendedExtraField(TZIPMember *m, Bool_t global = kTRUE);
 
-   // ZIP archive constants
+   /// ZIP archive constants
    enum EZIPConstants {
       // - Archive version required (and made)
       kARCHIVE_VERSION     = 45,
@@ -67,10 +48,10 @@ protected:
       kEND_HEADER_MAGIC       = 0x06054b50,
       kZIP64_EDR_HEADER_MAGIC = 0x06064b50,
       kZIP64_EDL_HEADER_MAGIC = 0x07064b50,
-      kZIP64_EXTENDED_MAGIC   = 0x0001,     // Zip64 Extended Information Extra Field
-      kZIP_MAGIC_LEN          = 4,          // Length of magic's
-      kMAX_VAR_LEN            = 0xffff,     // Max variable-width field length
-      kMAX_SIZE               = 0xffffffff, // Max size of things
+      kZIP64_EXTENDED_MAGIC   = 0x0001,     ///< Zip64 Extended Information Extra Field
+      kZIP_MAGIC_LEN          = 4,          ///< Length of magic's
+      kMAX_VAR_LEN            = 0xffff,     ///< Max variable-width field length
+      kMAX_SIZE               = 0xffffffff, ///< Max size of things
 
       // - Offsets into the central directory headers
       kDIR_MAGIC_OFF      = 0,
@@ -145,8 +126,8 @@ protected:
       kZIP64_EXTENDED_SIZE           = 32,
 
       // - Compression method and strategy
-      kSTORED              = 0,            // Stored as is
-      kDEFLATED            = 8             // Stored using deflate
+      kSTORED              = 0,            ///< Stored as is
+      kDEFLATED            = 8             ///< Stored using deflate
    };
 
    TZIPFile(const TZIPFile&); // Not implemented
@@ -165,31 +146,29 @@ public:
    ClassDef(TZIPFile,1)  //A ZIP archive file
 };
 
+/**
+\class TZIPMember
+\ingroup IO
+A ZIP archive consists of files compressed with the popular ZLIB
+compression algorithm; this class records the information about a
+single archive member.
+*/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TZIPMember                                                           //
-//                                                                      //
-// A ZIP archive consists of files compressed with the popular ZLIB     //
-// compression algorithm; this class records the information about a    //
-// single archive member.                                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TZIPMember : public TArchiveMember {
 
 friend class TZIPFile;
 
 private:
-   void          *fLocal;     // Extra file header data
-   UInt_t         fLocalLen;  // Length of extra file header data
-   void          *fGlobal;    // Extra directory data
-   UInt_t         fGlobalLen; // Length of extra directory data
-   UInt_t         fCRC32;     // CRC-32 for all decompressed data
-   UInt_t         fAttrInt;   // Internal file attributes
-   UInt_t         fAttrExt;   // External file attributes
-   UInt_t         fMethod;    // Compression type
-   UInt_t         fLevel;     // Compression level
+   void          *fLocal;     ///< Extra file header data
+   UInt_t         fLocalLen;  ///< Length of extra file header data
+   void          *fGlobal;    ///< Extra directory data
+   UInt_t         fGlobalLen; ///< Length of extra directory data
+   UInt_t         fCRC32;     ///< CRC-32 for all decompressed data
+   UInt_t         fAttrInt;   ///< Internal file attributes
+   UInt_t         fAttrExt;   ///< External file attributes
+   UInt_t         fMethod;    ///< Compression type
+   UInt_t         fLevel;     ///< Compression level
 
 public:
    TZIPMember();

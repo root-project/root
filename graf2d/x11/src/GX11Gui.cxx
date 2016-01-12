@@ -9,19 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGX11 (GUI related part)                                             //
-//                                                                      //
-// This class is the basic interface to the X11 graphics system. It is  //
-// an implementation of the abstract TVirtualX class. The companion     //
-// class for Win32 is TGWin32.                                          //
-//                                                                      //
-// This file contains the implementation of the GUI methods of the      //
-// TGX11 class. Most of the methods are used by the machine independent //
-// GUI classes (libGUI.so).                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGX11
+*/
+
+// This file contains the implementation of the GUI methods of the
+// TGX11 class. Most of the methods are used by the machine independent
+// GUI classes (libGUI.so).
 
 #include <stdio.h>
 #include <string.h>
@@ -865,7 +858,7 @@ void TGX11::CloseDisplay()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns handle to display (might be usefull in some cases where
+/// Returns handle to display (might be useful in some cases where
 /// direct X11 manipulation outside of TVirtualX is needed, e.g. GL
 /// interface).
 
@@ -875,7 +868,7 @@ Display_t TGX11::GetDisplay() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns handle to visual (might be usefull in some cases where
+/// Returns handle to visual (might be useful in some cases where
 /// direct X11 manipulation outside of TVirtualX is needed, e.g. GL
 /// interface).
 
@@ -885,7 +878,7 @@ Visual_t TGX11::GetVisual() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns handle to colormap (might be usefull in some cases where
+/// Returns handle to colormap (might be useful in some cases where
 /// direct X11 manipulation outside of TVirtualX is needed, e.g. GL
 /// interface).
 
@@ -895,7 +888,7 @@ Colormap_t TGX11::GetColormap() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns screen number (might be usefull in some cases where
+/// Returns screen number (might be useful in some cases where
 /// direct X11 manipulation outside of TVirtualX is needed, e.g. GL
 /// interface).
 
@@ -978,7 +971,7 @@ FontH_t TGX11::GetFontHandle(FontStruct_t fs)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Explicitely delete font structure obtained with LoadQueryFont().
+/// Explicitly delete font structure obtained with LoadQueryFont().
 
 void TGX11::DeleteFont(FontStruct_t fs)
 {
@@ -1048,7 +1041,7 @@ void TGX11::CopyGC(GContext_t org, GContext_t dest, Mask_t mask)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Explicitely delete a graphics context.
+/// Explicitly delete a graphics context.
 
 void TGX11::DeleteGC(GContext_t gc)
 {
@@ -1108,7 +1101,7 @@ Pixmap_t TGX11::CreateBitmap(Drawable_t id, const char *bitmap,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Explicitely delete pixmap resource.
+/// Explicitly delete pixmap resource.
 
 void TGX11::DeletePixmap(Pixmap_t pmap)
 {
@@ -1250,7 +1243,7 @@ Bool_t TGX11::CreatePictureFromFile(Drawable_t id, const char *filename,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a pixture pixmap from data. The picture attributes
+/// Create a picture pixmap from data. The picture attributes
 /// are used for input and output. Returns kTRUE in case of success,
 /// kFALSE otherwise. If mask does not exist it is set to kNone.
 
@@ -1321,7 +1314,7 @@ void TGX11::DeletePictureData(void *data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Specify a dash pattertn. Offset defines the phase of the pattern.
+/// Specify a dash pattern. Offset defines the phase of the pattern.
 /// Each element in the dash_list array specifies the length (in pixels)
 /// of a segment of the pattern. N defines the length of the list.
 
@@ -1757,7 +1750,7 @@ void TGX11::DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1, Int_t x2,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clear a window area to the bakcground color.
+/// Clear a window area to the background color.
 
 void TGX11::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
@@ -1837,7 +1830,7 @@ void TGX11::SetKeyAutoRepeat(Bool_t on)
 ////////////////////////////////////////////////////////////////////////////////
 /// Establish passive grab on a certain key. That is, when a certain key
 /// keycode is hit while certain modifier's (Shift, Control, Meta, Alt)
-/// are active then the keyboard will be grabed for window id.
+/// are active then the keyboard will be grabbed for window id.
 /// When grab is false, ungrab the keyboard for this key and modifier.
 
 void TGX11::GrabKey(Window_t id, Int_t keycode, UInt_t modifier, Bool_t grab)
@@ -1858,7 +1851,7 @@ void TGX11::GrabKey(Window_t id, Int_t keycode, UInt_t modifier, Bool_t grab)
 ////////////////////////////////////////////////////////////////////////////////
 /// Establish passive grab on a certain mouse button. That is, when a
 /// certain mouse button is hit while certain modifier's (Shift, Control,
-/// Meta, Alt) are active then the mouse will be grabed for window id.
+/// Meta, Alt) are active then the mouse will be grabbed for window id.
 /// When grab is false, ungrab the mouse button for this button and modifier.
 
 void TGX11::GrabButton(Window_t id, EMouseButton button, UInt_t modifier,
@@ -2166,7 +2159,7 @@ void TGX11::ClearWindow(Window_t id)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert a keysym to the appropriate keycode. For example keysym is
-/// a letter and keycode is the matching keyboard key (which is dependend
+/// a letter and keycode is the matching keyboard key (which is dependent
 /// on the current keyboard mapping).
 
 Int_t TGX11::KeysymToKeycode(UInt_t keysym)
@@ -2209,7 +2202,7 @@ void TGX11::DrawSegments(Drawable_t id, GContext_t gc, Segment_t *seg, Int_t nse
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Defines which input events the window is interested in. By default
-/// events are propageted up the window stack. This mask can also be
+/// events are propagated up the window stack. This mask can also be
 /// set at window creation time via the SetWindowAttributes_t::fEventMask
 /// attribute.
 

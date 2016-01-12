@@ -11,20 +11,15 @@
 
 #include "TGLOverlay.h"
 
-//==============================================================================
-// TGLOverlayElement
-//==============================================================================
-
-//______________________________________________________________________
-//
-// An overlay element. Supports drawing (Render) and event-handling
-//
-//
+/** \class TGLOverlayElement
+\ingroup opengl
+An overlay element. Supports drawing (Render) and event-handling
+*/
 
 ClassImp(TGLOverlayElement);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Mouse has enetered this element.
+/// Mouse has entered this element.
 /// Return TRUE if you want additional events.
 
 Bool_t TGLOverlayElement::MouseEnter(TGLOvlSelectRecord& /*selRec*/)
@@ -63,14 +58,10 @@ void TGLOverlayElement::MouseLeave()
 }
 
 
-//==============================================================================
-// TGLOverlayList
-//==============================================================================
-
-//______________________________________________________________________
-//
-// Manage a collection of overlay elements.
-//
-// Not used yet.
+/** \class TGLOverlayList
+\ingroup opengl
+Manage a collection of overlay elements.
+Not used yet.
+*/
 
 ClassImp(TGLOverlayList);

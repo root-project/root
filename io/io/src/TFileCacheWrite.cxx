@@ -9,21 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFileCacheWrite : a cache when writing files over the network        //
-//                                                                      //
-// A caching system to speed up network I/O, i.e. when there is         //
-// no operating system caching support (like the buffer cache for       //
-// local disk I/O). The cache makes sure that every I/O is done with    //
-// a (large) fixed length buffer thereby avoiding many small I/O's.     //
-// Currently the write cache system is used by the classes TNetFile,    //
-// TXNetFile and TWebFile (via TFile::WriteBuffers()).                  //
-//                                                                      //
-// The write cache is automatically created when writing a remote file  //
-// (created in TFile::Open()).                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**                                                                   
+\class TFileCacheWrite TFileCacheWrite.cxx
+\ingroup IO
+A cache when writing files over the network      
+                                                                   
+A caching system to speed up network I/O, i.e. when there is       
+no operating system caching support (like the buffer cache for     
+local disk I/O). The cache makes sure that every I/O is done with  
+a (large) fixed length buffer thereby avoiding many small I/O's.   
+Currently the write cache system is used by the classes TNetFile,  
+TXNetFile and TWebFile (via TFile::WriteBuffers()).                
+                                                                   
+The write cache is automatically created when writing a remote file
+(created in TFile::Open()).                                        
+*/
 
 
 #include "TFile.h"

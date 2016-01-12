@@ -22,6 +22,9 @@ set(LLVM_TOOLS_DIR "${LLVM_TOOLS_BINARY_DIR}/%(build_config)s")
 set(LLVM_LIBS_DIR "${LLVM_BINARY_DIR}/lib/%(build_config)s")
 set(CLING_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/..")
 set(CLING_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/..")
+set(TARGET_TRIPLE "${LLVM_DEFAULT_TARGET_TRIPLE}")
+set(TARGET_SHLIBEXT "${CMAKE_SHARED_LIBRARY_SUFFIX}")
+
 if(BUILD_SHARED_LIBS)
   set(ENABLE_SHARED 1)
 else()
@@ -114,5 +117,5 @@ add_custom_target(cling-headers DEPENDS cling-headers.stamp)
 
   add_dependencies(cling-test cling-test.deps)
   add_dependencies(cling-test.deps
-                   cling cling-headers clang FileCheck c-index-test diagtool arcmt-test c-arcmt-test)
+                   cling clang FileCheck c-index-test diagtool arcmt-test c-arcmt-test)
 endif()

@@ -12,26 +12,6 @@
 #ifndef ROOT_TMapFile
 #define ROOT_TMapFile
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMapFile                                                             //
-//                                                                      //
-// This class implements a shared memory region mapped to a file.       //
-// Objects can be placed into this shared memory area using the Add()   //
-// member function. Whenever the mapped object(s) change(s) call        //
-// Update() to put a fresh copy in the shared memory. This extra        //
-// step is necessary since it is not possible to share objects with     //
-// virtual pointers between processes (the vtbl ptr points to the       //
-// originators unique address space and can not be used by the          //
-// consumer process(es)). Consumer processes can map the memory region  //
-// from this file and access the objects stored in it via the Get()     //
-// method (which returns a copy of the object stored in the shared      //
-// memory with correct vtbl ptr set). Only objects of classes with a    //
-// Streamer() member function defined can be shared.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifdef WIN32
 #include "Windows4Root.h"
 #endif
@@ -56,29 +36,29 @@ class TMapFile : public TObject {
 friend class TMapRec;
 
 private:
-   Int_t       fFd;             //Descriptor of mapped file
-   Int_t       fVersion;        //ROOT version (or -1 for shadow map file)
-   char       *fName;           //Name of mapped file
-   char       *fTitle;          //Title of mapped file
-   char       *fOption;         //Directory creation options
-   void       *fMmallocDesc;    //Pointer to mmalloc descriptor
-   ULong_t     fBaseAddr;       //Base address of mapped memory region
-   Int_t       fSize;           //Original start size of memory mapped region
-   TMapRec    *fFirst;          //List of streamed objects is shared memory
-   TMapRec    *fLast;           //Last object in list of shared objects
-   Long_t      fOffset;         //Offset in bytes for region mapped by reader
-   TDirectory *fDirectory;      //Pointer to directory associated to this mapfile
-   TList      *fBrowseList;     //List of KeyMapFile objects
-   Bool_t      fWritable;       //TRUE if mapped file opened in RDWR mode
-   Int_t       fSemaphore;      //Modification semaphore (or getpid() for WIN32)
-   ULong_t     fhSemaphore;     //HANDLE of WIN32 Mutex object to implement semaphore
-   TObject    *fGetting;        //Don't deadlock in update mode, when from Get() Add() is called
-   Int_t       fWritten;        //Number of objects written sofar
-   Double_t    fSumBuffer;      //Sum of buffer sizes of objects written sofar
-   Double_t    fSum2Buffer;     //Sum of squares of buffer sizes of objects written so far
+   Int_t       fFd;             ///< Descriptor of mapped file
+   Int_t       fVersion;        ///< ROOT version (or -1 for shadow map file)
+   char       *fName;           ///< Name of mapped file
+   char       *fTitle;          ///< Title of mapped file
+   char       *fOption;         ///< Directory creation options
+   void       *fMmallocDesc;    ///< Pointer to mmalloc descriptor
+   ULong_t     fBaseAddr;       ///< Base address of mapped memory region
+   Int_t       fSize;           ///< Original start size of memory mapped region
+   TMapRec    *fFirst;          ///< List of streamed objects is shared memory
+   TMapRec    *fLast;           ///< Last object in list of shared objects
+   Long_t      fOffset;         ///< Offset in bytes for region mapped by reader
+   TDirectory *fDirectory;      ///< Pointer to directory associated to this mapfile
+   TList      *fBrowseList;     ///< List of KeyMapFile objects
+   Bool_t      fWritable;       ///< TRUE if mapped file opened in RDWR mode
+   Int_t       fSemaphore;      ///< Modification semaphore (or getpid() for WIN32)
+   ULong_t     fhSemaphore;     ///< HANDLE of WIN32 Mutex object to implement semaphore
+   TObject    *fGetting;        ///< Don't deadlock in update mode, when from Get() Add() is called
+   Int_t       fWritten;        ///< Number of objects written sofar
+   Double_t    fSumBuffer;      ///< Sum of buffer sizes of objects written sofar
+   Double_t    fSum2Buffer;     ///< Sum of squares of buffer sizes of objects written so far
 
-   static Long_t fgMapAddress;  //Map to this address, set address via SetMapAddress()
-   static void  *fgMmallocDesc; //Used in Close() and operator delete()
+   static Long_t fgMapAddress;  ///< Map to this address, set address via SetMapAddress()
+   static void  *fgMmallocDesc; ///< Used in Close() and operator delete()
 
 protected:
    TMapFile();
@@ -143,26 +123,27 @@ public:
 
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMapRec                                                              //
-//                                                                      //
-// A TMapFile contains a list of TMapRec objects which keep track of    //
-// the actual objects stored in the mapped file.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TMapRec
+\ingroup IO
+
+Keep track of an object in the mapped file.
+
+A TMapFile contains a list of TMapRec objects which keep track of
+the actual objects stored in the mapped file.
+*/
 
 class TMapRec {
 
 friend class TMapFile;
 
 private:
-   char            *fName;       // object name
-   char            *fClassName;  // class name
-   TObject         *fObject;     // pointer to original object
-   void            *fBuffer;     // buffer containing object of class name
-   Int_t            fBufSize;    // buffer size
-   TMapRec         *fNext;       // next MapRec in list
+   char            *fName;       ///< Object name
+   char            *fClassName;  ///< Class name
+   TObject         *fObject;     ///< Pointer to original object
+   void            *fBuffer;     ///< Buffer containing object of class name
+   Int_t            fBufSize;    ///< Buffer size
+   TMapRec         *fNext;       ///< Next MapRec in list
 
    TMapRec(const TMapRec&);            // Not implemented.
    TMapRec &operator=(const TMapRec&); // Not implemented.
@@ -178,18 +159,18 @@ public:
    TMapRec      *GetNext(Long_t offset = 0) const { return (TMapRec *)((Long_t) fNext + offset); }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the current location in the memory region for this malloc heap which
+/// represents the end of memory in use. Returns 0 if map file was closed.
 
-//______________________________________________________________________________
 inline void *TMapFile::GetBreakval() const
 {
-   // Return the current location in the memory region for this malloc heap which
-   // represents the end of memory in use. Returns 0 if map file was closed.
-
    if (!fMmallocDesc) return 0;
    return (void *)((struct mdesc *)fMmallocDesc)->breakval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline TMapFile *TMapFile::WhichMapFile(void *addr)
 {
    if (!gROOT || !gROOT->GetListOfMappedFiles()) return 0;

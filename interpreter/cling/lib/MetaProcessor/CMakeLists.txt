@@ -18,6 +18,8 @@ add_cling_library(clingMetaProcessor
   clangBasic
   )
 
+add_dependencies(clingMetaProcessor clangBasic)
+
 if ( MSVC )
   set_target_properties(clingMetaProcessor PROPERTIES
   COMPILE_FLAGS "/D_HAS_EXCEPTIONS=0")

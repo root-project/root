@@ -17,23 +17,25 @@
 
 ClassImp(TFree)
 
-//______________________________________________________________________________
-//
-// Service class for TFile.
-// Each file has a linked list of free segments. Each free segment
-// is described by its firts and last address.
-// When an object is written to a file via TObject::Write, a new Key (see TKey)
-// is created. The first free segment big enough to accomodate the object
-// is used.
-// If the object size has a length corresponding to the size of the free segment,
-// the free segment is deleted from the list of free segments.
-// When an object is deleted from a file, a new TFree object is generated.
-// If the deleted object is contiguous to an already deleted object, the free
-// segments are merged in one single segment.
-//
+/**
+\class TFree
+\ingroup IO
+Service class for TFile.
+
+Each file has a linked list of free segments. Each free segment is described 
+by its firts and last address.
+When an object is written to a file, a new Key (see TKey)
+is created. The first free segment big enough to accomodate the object
+is used.
+If the object size has a length corresponding to the size of the free segment,
+the free segment is deleted from the list of free segments.
+When an object is deleted from a file, a new TFree object is generated.
+If the deleted object is contiguous to an already deleted object, the free
+segments are merged in one single segment.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TFree default constructor.
+/// Default constructor.
 
 TFree::TFree()
 {
@@ -41,7 +43,7 @@ TFree::TFree()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor for a FREE segment.
+/// Constructor for a free segment.
 
 TFree::TFree(TList *lfree, Long64_t first, Long64_t last)
 {
@@ -53,11 +55,11 @@ TFree::TFree(TList *lfree, Long64_t first, Long64_t last)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a new free segment to the list of free segments.
 ///
-///  If last just precedes an existing free segment, then first becomes
+///   - if last just precedes an existing free segment, then first becomes
 ///     the new starting location of the free segment.
-///  if first just follows an existing free segment, then last becomes
+///   - if first just follows an existing free segment, then last becomes
 ///     the new ending location of the free segment.
-///  if first just follows an existing free segment AND last just precedes
+///   - if first just follows an existing free segment AND last just precedes
 ///     an existing free segment, these two segments are merged into
 ///     one single segment.
 ///
@@ -95,14 +97,14 @@ TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TFree Destructor.
+/// Destructor.
 
 TFree::~TFree()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Encode FREE structure into output buffer.
+/// Encode fre structure into output buffer.
 
 void TFree::FillBuffer(char *&buffer)
 {
@@ -160,7 +162,7 @@ void TFree::ls(Option_t *) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Decode one FREE structure from input buffer
+/// Decode one free structure from input buffer
 
 void TFree::ReadBuffer(char *&buffer)
 {

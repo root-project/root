@@ -320,7 +320,7 @@ Int_t TMessage::Compress()
    Int_t messlen  = Length() - hdrlen;
    Int_t nbuffers = 1 + (messlen - 1) / kMAXZIPBUF;
    Int_t chdrlen  = 3*sizeof(UInt_t);   // compressed buffer header length
-   Int_t buflen   = TMath::Max(512, chdrlen + messlen + 9*nbuffers);
+   Int_t buflen   = std::max(512, chdrlen + messlen + 9*nbuffers);
    fBufComp       = new char[buflen];
    char *messbuf  = Buffer() + hdrlen;
    char *bufcur   = fBufComp + chdrlen;

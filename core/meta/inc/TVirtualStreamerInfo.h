@@ -36,7 +36,7 @@ class TStreamerElement;
 class TStreamerBasicType;
 class TVirtualCollectionProxy;
 class TClassStreamer;
-namespace ROOT { class TCollectionProxyInfo; }
+namespace ROOT { namespace Detail { class TCollectionProxyInfo; } }
 
 class TVirtualStreamerInfo : public TNamed {
 
@@ -177,8 +177,8 @@ public:
 
    virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name, Bool_t silent) = 0;
    virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name, Bool_t silent) = 0;
-   virtual TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info, TClass *cl ) = 0;
-   virtual TClassStreamer *GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info, TClass *cl ) = 0;
+   virtual TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::Detail::TCollectionProxyInfo &info, TClass *cl ) = 0;
+   virtual TClassStreamer *GenExplicitClassStreamer( const ::ROOT::Detail::TCollectionProxyInfo &info, TClass *cl ) = 0;
    static TVirtualStreamerInfo *Factory();
 
    //WARNING this class version must be the same as TStreamerInfo

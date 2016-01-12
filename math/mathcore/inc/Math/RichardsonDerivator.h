@@ -110,16 +110,30 @@ public:
       central difference formulas
       interpolation error is decreased by making the step size h smaller.
    */
-   double Derivative1 (double x);
-   double operator() (double x) { return Derivative1(x); }
+   double Derivative1 (double x) { return Derivative1(*fFunction,x,fStepSize); }
+   double operator() (double x) { return Derivative1(*fFunction,x,fStepSize); }
 
    /**
-      First Derivative calculation passing function and step-size
+      First Derivative calculation passing function object and step-size
     */
-   double Derivative1(const IGenFunction & f, double x, double h) {
-      fFunction = &f;
-      fStepSize = h;
-      return Derivative1(x);
+   double Derivative1(const IGenFunction & f, double x, double h);
+
+   /// Computation of the first derivative using a forward formula
+   double DerivativeForward(double x) {
+      return DerivativeForward(*fFunction, x, fStepSize); 
+   }
+
+   /// Computation of the first derivative using a forward formula
+   double DerivativeForward(const IGenFunction &f, double x, double h); 
+
+      /// Computation of the first derivative using a bacward formula
+   double DerivativeBackward(double x) {
+      return DerivativeBackward(*fFunction, x, fStepSize); 
+   }
+
+   /// Computation of the first derivative using a forward formula
+   double DerivativeBackward(const IGenFunction &f, double x, double h) {
+      return DerivativeForward(f, x, -h); 
    }
 
    /**
@@ -149,16 +163,14 @@ public:
       central difference formulas
       interpolation error is decreased by making the step size h smaller.
    */
-   double Derivative2 (double x);
+   double Derivative2 (double x) {
+      return Derivative2( *fFunction, x, fStepSize); 
+   }
 
    /**
       Second Derivative calculation passing function and step-size
     */
-   double Derivative2(const IGenFunction & f, double x, double h) {
-      fFunction = &f;
-      fStepSize = h;
-      return Derivative2(x);
-   }
+   double Derivative2(const IGenFunction & f, double x, double h);
 
    /**
       Returns the third derivative of the function at point x,
@@ -187,16 +199,14 @@ public:
       central difference formulas
       interpolation error is decreased by making the step size h smaller.
    */
-   double Derivative3 (double x);
+   double Derivative3 (double x) {
+      return Derivative3(*fFunction, x, fStepSize); 
+   }
 
    /**
       Third Derivative calculation passing function and step-size
     */
-   double Derivative3(const IGenFunction & f, double x, double h) {
-      fFunction = &f;
-      fStepSize = h;
-      return Derivative3(x);
-   }
+   double Derivative3(const IGenFunction & f, double x, double h);
 
    /** Set function for derivative calculation (copy the function if option has been enabled in the constructor)
 

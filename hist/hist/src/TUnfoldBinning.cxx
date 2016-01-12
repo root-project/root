@@ -6,37 +6,34 @@
 //  History:
 //    Version 17.0, initial version, numbered in parallel to TUnfold
 
-//////////////////////////////////////////////////////////////////////////
-//
-//  TUnfoldBinning
-//
-//  This class serves as a container of analysis bins
-//  analysis bins are specified by defining the axes of a distribution.
-//  It is also possible to have unconnected analysis bins without axis.
-//  Multiple TUnfoldBinning objects may be arranged in a tree,
-//  such that a full tree structure of histograms and bins is supported
-//
-//  If you use this software, please consider the following citation
-//       S.Schmitt, JINST 7 (2012) T10003 [arXiv:1205.6201]
-//
-//  More documentation and updates are available on
-//      http://www.desy.de/~sschmitt
-//
-//  Functionality
-//
-//  The class gives access to all analysis bins numbered in sequence.
-//  Such a sequence of bins may be stored in a 1-dimension histogram.
-//  Correlations between two TUnfoldBinning objects may be stored in
-//  a 2-dimensional histogram. This type of ordering is required for
-//  the TUnfold class.
-//
-//  In addition, it is possible to have root histograms, using the
-//  axes as defined with the distributions. Underflow/overflow bins
-//  can be included or excluded when mapping bins on root histograms.
-//  In addition, it is possible to collapse one of more axes when going
-//  from a N-dimensional distribution to a root histogram.
-//
-//////////////////////////////////////////////////////////////////////////
+/** \class TUnfoldBinning
+    \ingroup Hist
+  This class serves as a container of analysis bins
+  analysis bins are specified by defining the axes of a distribution.
+  It is also possible to have unconnected analysis bins without axis.
+  Multiple TUnfoldBinning objects may be arranged in a tree,
+  such that a full tree structure of histograms and bins is supported
+
+  If you use this software, please consider the following citation
+       S.Schmitt, JINST 7 (2012) T10003 [arXiv:1205.6201]
+
+  More documentation and updates are available on
+      http://www.desy.de/~sschmitt
+
+  Functionality
+
+  The class gives access to all analysis bins numbered in sequence.
+  Such a sequence of bins may be stored in a 1-dimension histogram.
+  Correlations between two TUnfoldBinning objects may be stored in
+  a 2-dimensional histogram. This type of ordering is required for
+  the TUnfold class.
+
+  In addition, it is possible to have root histograms, using the
+  axes as defined with the distributions. Underflow/overflow bins
+  can be included or excluded when mapping bins on root histograms.
+  In addition, it is possible to collapse one of more axes when going
+  from a N-dimensional distribution to a root histogram.
+*/
 
 /*
  This file is part of TUnfold.

@@ -13,14 +13,13 @@
 #define ROOT_TVirtualArray
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualArray                                                       //
-//                                                                      //
-// Wrapper around an object and giving indirect access to its content    //
-// even if the object is not of a class in the Cint/Reflex dictionary.  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/**
+\class TVirtualArray
+\ingroup IO
+Wrapper around an object and giving indirect access to its content
+even if the object is not of a class in the Cint/Reflex dictionary.
+*/
 
 #include "TClassRef.h"
 
@@ -29,7 +28,7 @@ public:
    TClassRef  fClass;
    UInt_t     fCapacity;
    UInt_t     fSize;
-   char      *fArray; //[fSize]
+   char      *fArray; ///<[fSize]
 
    TVirtualArray( TClass *cl, UInt_t size ) : fClass(cl), fCapacity(size), fSize(size), fArray( (char*)( cl ? cl->NewArray(size) : 0) ) {};
    ~TVirtualArray() { if (fClass) fClass->DeleteArray( fArray ); }

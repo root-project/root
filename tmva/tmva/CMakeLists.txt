@@ -11,7 +11,7 @@ if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
   include(${ROOTSYS}/cmake/modules/StandaloneBuild.cmake)
 endif()
 
-set(headers1 Configurable.h Event.h Factory.h MethodBase.h MethodCompositeBase.h
+set(headers1 Configurable.h Event.h Factory.h DataLoader.h MethodBase.h MethodCompositeBase.h
 	     MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h
 	     MethodKNN.h MethodCFMlpANN.h MethodCFMlpANN_Utils.h MethodLikelihood.h
 	     MethodHMatrix.h MethodPDERS.h MethodBDT.h MethodDT.h MethodSVM.h MethodBayesClassifier.h
@@ -34,7 +34,7 @@ set(headers4 TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivation
          TActivationTanh.h TActivationRadial.h TActivationReLU.h TNeuronInputChooser.h TNeuronInput.h TNeuronInputSum.h
 	     TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h
 	     VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h 
-	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h ROCCalc.h)
+	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h ROCCalc.h ROCCurve.h)
 
 #---Need to suffix each header name by TMVA/  -----------------
 foreach(hs headers1 headers2 headers3 headers4)

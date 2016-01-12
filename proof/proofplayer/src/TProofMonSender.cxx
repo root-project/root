@@ -10,14 +10,13 @@
  *************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofMonSender                                                      //
-//                                                                      //
-// Provides the interface for PROOF monitoring to different writers.    //
-// Allows to decouple the information sent from the backend.            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofMonSender
+\ingroup proofkernel
+
+Provides the interface for PROOF monitoring to different writers.
+Allows to decouple the information sent from the backend.
+
+*/
 
 #include "TProofDebug.h"
 #include "TProofMonSender.h"

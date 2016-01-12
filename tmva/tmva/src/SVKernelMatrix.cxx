@@ -26,11 +26,16 @@
 **********************************************************************************/
 
 #include "TMVA/SVKernelMatrix.h"
-#include "TMVA/SVKernelFunction.h"
+
+#include "TMVA/MsgLogger.h"
 #include "TMVA/SVEvent.h"
+#include "TMVA/SVKernelFunction.h"
+#include "TMVA/Types.h"
+
+#include "RtypesCore.h"
+
 #include <iostream>
 #include <stdexcept>
-#include "TMVA/MsgLogger.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

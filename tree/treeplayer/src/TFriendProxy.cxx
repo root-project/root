@@ -18,9 +18,10 @@ Concrete implementation of the proxy around a Friend Tree.
 #include "TList.h"
 #include "TFriendElement.h"
 
-ClassImp(ROOT::TFriendProxy);
+ClassImp(ROOT::Internal::TFriendProxy);
 
 namespace ROOT {
+namespace Internal {
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -74,4 +75,6 @@ TFriendProxy::TFriendProxy() : fDirector(0,-1), fIndex(-1)
          fDirector.SetTree(0);
       }
    }
-}
+
+} // namespace Internal
+} // namespace ROOT

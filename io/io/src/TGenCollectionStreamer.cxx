@@ -9,19 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGenCollectionStreamer
-//
-// Streamer around an arbitrary container, which implements basic
-// functionality and iteration.
-//
-// In particular this is used to implement splitting and abstract
-// element access of any container. Access to compiled code is necessary
-// to implement the abstract iteration sequence and functionality like
-// size(), clear(), resize(). resize() may be a void operation.
-//
-//////////////////////////////////////////////////////////////////////////
+/*
+\class TGenCollectionStreamer
+\ingroup IO
+
+Streamer around an arbitrary container, which implements basic
+functionality and iteration.
+
+In particular this is used to implement splitting and abstract
+element access of any container. Access to compiled code is necessary
+to implement the abstract iteration sequence and functionality like
+size(), clear(), resize(). resize() may be a void operation.
+**/
 
 #include "TGenCollectionStreamer.h"
 #include "TClassEdit.h"

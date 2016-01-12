@@ -9,15 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TListOfEnums                                                         //
-//                                                                      //
-// A collection of TEnum objects designed for fast access given a       //
-// DeclId_t and for keep track of TEnum that were described             //
-// unloaded enum.                                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TListOfEnums
+A collection of TEnum objects designed for fast access given a
+DeclId_t and for keep track of TEnum that were described
+unloaded enum.
+*/
 
 #include <forward_list>
 
@@ -320,7 +316,7 @@ TObject *TListOfEnums::Remove(TObjLink *lnk)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Load all the DataMembers known to the intepreter for the scope 'fClass'
+/// Load all the DataMembers known to the interpreter for the scope 'fClass'
 /// into this collection.
 
 void TListOfEnums::Load()

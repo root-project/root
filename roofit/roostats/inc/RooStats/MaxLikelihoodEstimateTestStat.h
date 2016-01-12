@@ -11,15 +11,8 @@
 #ifndef ROOSTATS_MaxLikelihoodEstimateTestStat
 #define ROOSTATS_MaxLikelihoodEstimateTestStat
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-MaxLikelihoodEstimateTestStat: TestStatistic that returns maximum likelihood estimate of a specified parameter.
-</p>
-END_HTML
-*/
-//
+
+
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
@@ -41,6 +34,12 @@ END_HTML
 
 namespace RooStats {
 
+   /**
+      MaxLikelihoodEstimateTestStat: TestStatistic that returns maximum likelihood estimate of a specified parameter.
+      \ingroup Roostats
+   */
+
+
 class MaxLikelihoodEstimateTestStat: public TestStatistic {
 
    public:
@@ -49,9 +48,9 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
    MaxLikelihoodEstimateTestStat() :
    fPdf(NULL),fParameter(NULL), fUpperLimit(true)
    {
-     // constructor
-     //      fPdf = pdf;
-     //      fParameter = parameter;
+     /// constructor
+     ///      fPdf = pdf;
+     ///      fParameter = parameter;
 
 	fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
 	fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();

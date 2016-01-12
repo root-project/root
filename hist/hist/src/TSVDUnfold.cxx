@@ -25,8 +25,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Begin_Html
- <center><h2>SVD Approach to Data Unfolding</h2></center>
+/** \class TSVDUnfold
+   \ingroup Hist
+ SVD Approach to Data Unfolding
  <p>
  Reference: <a href="http://arXiv.org/abs/hep-ph/9509307">Nucl. Instrum. Meth. A372, 469 (1996) [hep-ph/9509307]</a>
  <p>
@@ -56,9 +57,7 @@
  Covariance matrices on the measured spectrum (for either the total uncertainties or individual sources of uncertainties) can be propagated to covariance matrices using the <tt>GetUnfoldCovMatrix</tt> method, which uses pseudo experiments for the propagation. In addition, <tt>GetAdetCovMatrix</tt> allows for the propagation of the statistical uncertainties on the response matrix using pseudo experiments. The covariance matrix corresponding to <tt>Bcov</tt> is also computed as described in <a href="http://arXiv.org/abs/hep-ph/9509307">Nucl. Instrum. Meth. A372, 469 (1996) [hep-ph/9509307]</a> and can be obtained from <tt>tsvdunf->GetXtau()</tt> and its (regularisation independent) inverse from  <tt>tsvdunf->GetXinv()</tt>. The distribution of singular values can be retrieved using <tt>tsvdunf->GetSV()</tt>.
  <p>
  See also the tutorial for a toy example.
- End_Html */
-//_______________________________________________________________________
-
+*/
 
 #include <iostream>
 

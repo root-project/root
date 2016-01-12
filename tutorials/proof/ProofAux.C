@@ -1,10 +1,13 @@
-#define ProofAux_cxx
+/// \file
+/// \ingroup tutorial_ProofAux
+///
+/// Selector used for auxiliary actions in the PROOF tutorials
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
-//////////////////////////////////////////////////////////////
-//
-// Selector used for auxiliary actions in the PROOF tutorials
-//
-//////////////////////////////////////////////////////////////
+#define ProofAux_cxx
 
 #include "ProofAux.h"
 #include "TDSet.h"

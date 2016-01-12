@@ -14,29 +14,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
-This class provides simple and straightforward utilities to plot a MCMCInterval
-object.  Basic use only requires a few lines once you have an MCMCInterval*:
-</p>
-<p>
-MCMCIntervalPlot plot(*interval);
-plot.Draw();
-</p>
-<p>
-The standard Draw() function will currently draw the confidence interval
-range with bars if 1-D and a contour if 2-D.  The MCMC posterior will also be
-plotted for the 1-D case.
-</p>
-END_HTML
-*/
-//_________________________________________________
 
 #ifndef ROOSTATS_MCMCIntervalPlot
 #include "RooStats/MCMCIntervalPlot.h"
 #endif
-#include <iostream>
+#include "RooStats/MCMCInterval.h"
+#include "RooStats/MarkovChain.h"
+
 #ifndef ROOT_TROOT
 #include "TROOT.h"
 #endif
@@ -79,6 +63,8 @@ END_HTML
 #ifndef ROO_GLOBAL_FUNC
 #include "RooGlobalFunc.h"
 #endif
+
+#include <iostream>
 
 // Extra draw commands
 //static const char* POSTERIOR_HIST = "posterior_hist";

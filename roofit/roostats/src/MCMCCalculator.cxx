@@ -9,29 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
-MCMCCalculator is a concrete implementation of IntervalCalculator.  It uses a
-MetropolisHastings object to construct a Markov Chain of data points in the
-parameter space.  From this Markov Chain, this class can generate a
-MCMCInterval as per user specification.
-</p>
-
-<p>
-The interface allows one to pass the model, data, and parameters via a
-workspace and then specify them with names.
-</p>
-
-<p>
-After configuring the calculator, one only needs to ask GetInterval(), which
-will return an ConfInterval (MCMCInterval in this case).
-</p>
-END_HTML
-*/
-//_________________________________________________
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"

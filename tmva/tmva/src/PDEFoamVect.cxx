@@ -26,12 +26,12 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+#include "TMVA/PDEFoamVect.h"
+
+#include "Rtypes.h"
+
 #include <iostream>
 #include <iomanip>
-
-#ifndef ROOT_TMVA_PDEFoamVect
-#include "TMVA/PDEFoamVect.h"
-#endif
 
 using namespace std;
 

@@ -40,7 +40,8 @@ MATHMOREDH1  := $(MODDIRI)/Math/DistFuncMathMore.h \
                 $(MODDIRI)/Math/MCParameters.h \
                 $(MODDIRI)/Math/GSLMinimizer1D.h \
                 $(MODDIRI)/Math/ChebyshevApprox.h  \
-                $(MODDIRI)/Math/Random.h \
+                $(MODDIRI)/Math/GSLRandom.h \
+                $(MODDIRI)/Math/GSLRandomFunctions.h \
                 $(MODDIRI)/Math/GSLRndmEngines.h \
                 $(MODDIRI)/Math/QuasiRandom.h \
                 $(MODDIRI)/Math/GSLQuasiRandom.h \

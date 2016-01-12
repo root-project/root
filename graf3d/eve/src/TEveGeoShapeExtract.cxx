@@ -17,17 +17,14 @@
 #include "TGeoManager.h"
 #include "TGeoShape.h"
 
-//==============================================================================
-// TEveGeoShapeExtract
-//==============================================================================
+/** \class TEveGeoShapeExtract
+\ingroup TEve
+Globally positioned TGeoShape with rendering attributes and an
+optional list of daughter shape-extracts.
 
-//______________________________________________________________________________
-//
-// Globally positioned TGeoShape with rendering attributes and an
-// optional list of daughter shape-extracts.
-//
-// Vessel to carry hand-picked geometry from gled to reve.
-// This class exists in both frameworks.
+Vessel to carry hand-picked geometry from gled to reve.
+This class exists in both frameworks.
+*/
 
 ClassImp(TEveGeoShapeExtract);
 
@@ -58,8 +55,6 @@ TEveGeoShapeExtract::~TEveGeoShapeExtract()
    delete fElements;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// True if has at least one element.
 
@@ -78,8 +73,6 @@ void TEveGeoShapeExtract::AddElement(TEveGeoShapeExtract* gse)
 
    fElements->Add(gse);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set transformation matrix.

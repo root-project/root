@@ -9,16 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMemberInspector                                                     //
-//                                                                      //
-// Abstract base class for accessing the datamembers of a class.        //
-// Classes derived from this class can be given as argument to the      //
-// ShowMembers() methods of ROOT classes. This feature facilitates      //
-// the writing of class browsers and inspectors.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMemberInspector
+
+Abstract base class for accessing the data-members of a class.
+Classes derived from this class can be given as argument to the
+ShowMembers() methods of ROOT classes. This feature facilitates
+the writing of class browsers and inspectors.
+*/
 
 #include "TMemberInspector.h"
 #include "TInterpreter.h"
@@ -112,7 +109,7 @@ void TMemberInspector::GenericShowMembers(const char *topClassName, const void *
    // function or by rootcint-generated code using the typeid (i.e. the
    // difference is a lookup in a TList instead of in a map).
 
-   // To avoid a spurrious error message in case the data member is
+   // To avoid a spurious error message in case the data member is
    // transient and does not have a dictionary we check first.
    if (isTransient) {
       if (!TClassEdit::IsSTLCont(topClassName)) {

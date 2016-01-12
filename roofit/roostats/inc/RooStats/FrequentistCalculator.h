@@ -11,17 +11,6 @@
 #ifndef ROOSTATS_FrequentistCalculator
 #define ROOSTATS_FrequentistCalculator
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-The use of ToyMCSampler as the TestStatSampler is assumed.
-</p>
-END_HTML
-*/
-//
-
-
 
 #ifndef ROOSTATS_HypoTestCalculatorGeneric
 #include "RooStats/HypoTestCalculatorGeneric.h"
@@ -37,7 +26,20 @@ END_HTML
 
 #include "RooFitResult.h"
 
+
+
+
 namespace RooStats {
+
+   /**
+   Hypothesis Test Calculator using a full frequentist procedure for sampling the 
+   test statistic distribution.
+   The nuisance parameters are fixed to their MLEs.
+   The use of ToyMCSampler as the TestStatSampler is assumed.
+
+   \ingroup Roostats
+*/
+
 
    class FrequentistCalculator : public HypoTestCalculatorGeneric {
 
@@ -67,14 +69,14 @@ namespace RooStats {
       }
 
 
-      // set number of toys
+      /// set number of toys
       void SetToys(int toysNull, int toysAlt) { fNToysNull = toysNull; fNToysAlt = toysAlt; }
 
-      // set least number of toys in tails
+      /// set least number of toys in tails
       void SetNToysInTails(int toysNull, int toysAlt) { fNToysNullTail = toysNull; fNToysAltTail = toysAlt; }
 
-      // set given nuisance parameters to a specific value that will be used instead of their
-      // profiled value for Null toys
+      /// set given nuisance parameters to a specific value that will be used instead of their
+      /// profiled value for Null toys
       void SetConditionalMLEsNull( const RooArgSet* c ) {
          if( fConditionalMLEsNull ) delete fConditionalMLEsNull;
          
@@ -82,8 +84,8 @@ namespace RooStats {
          else fConditionalMLEsNull = NULL;
       }
 
-      // set given nuisance parameters to a specific value that will be used instead of their
-      // profiled value for Alternate toys
+      /// set given nuisance parameters to a specific value that will be used instead of their
+      /// profiled value for Alternate toys
       void SetConditionalMLEsAlt( const RooArgSet* c ) {
          if( fConditionalMLEsAlt ) delete fConditionalMLEsAlt;
          
@@ -100,10 +102,10 @@ namespace RooStats {
       }
 
    protected:
-      // configure TestStatSampler for the Null run
+      /// configure TestStatSampler for the Null run
       int PreNullHook(RooArgSet *parameterPoint, double obsTestStat) const;
 
-      // configure TestStatSampler for the Alt run
+      /// configure TestStatSampler for the Alt run
       int PreAltHook(RooArgSet *parameterPoint, double obsTestStat) const;
 
       void PreHook() const;

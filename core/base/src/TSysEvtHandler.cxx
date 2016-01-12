@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSysEvtHandler                                                       //
-//                                                                      //
-// Abstract base class for handling system events.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSysEvtHandler
+Abstract base class for handling system events.
+*/
 
 #include "TSysEvtHandler.h"
 #include "TSystem.h"
@@ -68,7 +64,7 @@ TFileHandler::TFileHandler(int fd, int mask)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Notify when event occured on descriptor associated with this handler.
+/// Notify when event occurred on descriptor associated with this handler.
 
 Bool_t TFileHandler::Notify()
 {
@@ -193,11 +189,11 @@ void TSignalHandler::Remove()
 /// Virtual method EStatus Handle(std::exception& exc) is called on the
 /// collection of handlers registered to TSystem. The return value of
 /// each handler influences the continuation of handling procedure:
-///    kSEProceed - Proceed with passing of the exception to other
+///  - kSEProceed - Proceed with passing of the exception to other
 ///                 handlers, the exception has not been handled.
-///    kSEHandled - The exception has been handled, do not pass it to
+///  - kSEHandled - The exception has been handled, do not pass it to
 ///                 other handlers.
-///    kSEAbort   - Abort application.
+///  - kSEAbort   - Abort application.
 /// If all handlers return kSEProceed TSystem::Run() rethrows the
 /// exception, possibly resulting in process abortion.
 

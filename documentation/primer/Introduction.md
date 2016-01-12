@@ -89,7 +89,7 @@ ROOT is available for many platforms (Linux, Mac OS X, Windows...), but
 in this guide we will implicitly assume that you are using Linux. The
 first thing you need to do with ROOT is install it, don't you ? Obtaining
 the latest ROOT version is straightforward. Just seek the "Pro" version
-on this webpage <http://root.cern.ch/drupal/content/downloading-root>.
+on this webpage <http://root.cern.ch/downloading-root>.
 You will find precompiled versions for the different architectures, or
 the ROOT source code to compile yourself. Just pick up the flavour you
 need and follow the installation instructions.

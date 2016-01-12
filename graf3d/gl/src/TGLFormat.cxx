@@ -22,9 +22,10 @@
 #include "TVirtualX.h"
 #include "RConfigure.h"
 
-//______________________________________________________________________________
-//
-// Encapsulation of format / contents of an OpenGL buffer.
+/** \class TGLFormat
+\ingroup opengl
+Encapsulation of format / contents of an OpenGL buffer.
+*/
 
 ClassImp(TGLFormat);
 
@@ -53,7 +54,7 @@ TGLFormat::TGLFormat() :
    //-with depth buffer
    //-no accumulation buffer
    //-with stencil
-   //-multi-sampling depends on seeting of "OpenGL.Framebuffer.Multisample"
+   //-multi-sampling depends on setting of "OpenGL.Framebuffer.Multisample"
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,7 +222,7 @@ void TGLFormat::SetSamples(Int_t samples)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Check, if multi-sampling is requred.
+///Check, if multi-sampling is required.
 
 Bool_t TGLFormat::HasMultiSampling()const
 {

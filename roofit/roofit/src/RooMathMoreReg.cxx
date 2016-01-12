@@ -10,11 +10,12 @@
  *                                                                           *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// END_HTML
-//
+/**
+\file RooMathMoreReg.cxx
+\class RooMathMoreReg
+\ingroup Roofit
+
+**/
 
 #include "Riostream.h" 
 #include "RooMathMoreReg.h"

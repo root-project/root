@@ -79,6 +79,7 @@ extra libraries (Histogram, display, etc).
 
 #include "HFitInterface.h"
 #include "Foption.h"
+#include "Fit/DataVector.h"
 #include "Fit/UnBinData.h"
 #include "Math/MinimizerOptions.h"
 
@@ -303,7 +304,7 @@ Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix,
 
    TString selname = wrapperPrefix;
 
-   TTreeProxyGenerator gp(fTree,realname,realcutname,selname,option,3);
+   ROOT::Internal::TTreeProxyGenerator gp(fTree,realname,realcutname,selname,option,3);
 
    selname = gp.GetFileName();
    if (aclicMode.Length()==0) {
@@ -1915,7 +1916,7 @@ Int_t TTreePlayer::MakeProxy(const char *proxyClassname,
       return 0;
    }
 
-   TTreeProxyGenerator gp(fTree,macrofilename,cutfilename,proxyClassname,option,maxUnrolling);
+   ROOT::Internal::TTreeProxyGenerator gp(fTree,macrofilename,cutfilename,proxyClassname,option,maxUnrolling);
 
    return 0;
 }
@@ -1966,7 +1967,7 @@ Int_t TTreePlayer::MakeReader(const char *classname, Option_t *option)
 {
    if (!classname) classname = fTree->GetName();
 
-   TTreeReaderGenerator gsr(fTree, classname, option);
+   ROOT::Internal::TTreeReaderGenerator gsr(fTree, classname, option);
 
    return 0;
 }
@@ -3004,6 +3005,7 @@ void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
 /// The function return the status of the fit in the following form
 /// ~~~{.cpp}
 ///     fitResult = migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
+/// ~~~
 /// -  The fitResult is 0 is the fit is OK.
 /// -  The fitResult is negative in case of an error not connected with the fit.
 /// -  The number of entries used in the fit can be obtained via

@@ -21,6 +21,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <errno.h>
+#include <random>
 
 #include "TApplicationRemote.h"
 
@@ -29,7 +30,6 @@
 #include "TError.h"
 #include "THashList.h"
 #include "TMonitor.h"
-#include "TRandom.h"
 #include "TROOT.h"
 #include "TServerSocket.h"
 #include "TSystem.h"
@@ -117,10 +117,11 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    Int_t port = -1;
    Int_t na = fgPortAttempts;
    Long64_t now = gSystem->Now();
-   gRandom->SetSeed((UInt_t)now);
+   std::default_random_engine randomEngine(now);
+   std::uniform_int_distribution<Int_t> randomPort(fgPortLower, fgPortUpper);
    TServerSocket *ss = 0;
    while (na--) {
-      port = (Int_t) (gRandom->Rndm() * (fgPortUpper - fgPortLower)) + fgPortLower;
+      port = randomPort(randomEngine);
       ss = new TServerSocket(port);
       if (ss->IsValid())
          break;

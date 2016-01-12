@@ -397,6 +397,7 @@ TGeoManager::TGeoManager()
       fMatrixReflection = kFALSE;
       fGLMatrix = 0;
       fPaintVolume = 0;
+      fUserPaintVolume = 0;
       fElementTable = 0;
       fHashVolumes = 0;
       fHashGVolumes = 0;
@@ -497,6 +498,7 @@ void TGeoManager::Init()
    fMatrixReflection = kFALSE;
    fGLMatrix = new TGeoHMatrix();
    fPaintVolume = 0;
+   fUserPaintVolume = 0;
    fElementTable = 0;
    fHashVolumes = 0;
    fHashGVolumes = 0;
@@ -569,6 +571,7 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fNodeIdArray(gm.fNodeIdArray),
   fNLevel(gm.fNLevel),
   fPaintVolume(gm.fPaintVolume),
+  fUserPaintVolume(gm.fUserPaintVolume),
   fHashVolumes(gm.fHashVolumes),
   fHashGVolumes(gm.fHashGVolumes),
   fHashPNE(gm.fHashPNE),
@@ -651,6 +654,7 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fNodeIdArray=gm.fNodeIdArray;
       fNLevel=gm.fNLevel;
       fPaintVolume=gm.fPaintVolume;
+      fUserPaintVolume=gm.fUserPaintVolume;
       fHashVolumes=gm.fHashVolumes;
       fHashGVolumes=gm.fHashGVolumes;
       fHashPNE=gm.fHashPNE;
@@ -962,8 +966,8 @@ void TGeoManager::SetMaxThreads(Int_t nthreads)
       return;
    }
    if (!fMultiThread) {
-      TThread::Initialize();
-      Long_t threadId = TThread::SelfId();
+      ROOT::EnableThreadSafety();
+      Long_t threadId =TThread::SelfId();
       NavigatorsMap_t::const_iterator it = fNavigators.find(0);
       if (it != fNavigators.end()) {
          TGeoNavigatorArray *array = it->second;
@@ -1541,7 +1545,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
       if (fParallelWorld) {
          if (fgVerboseLevel>0) Info("CloseGeometry","Recreating parallel world %s ...",fParallelWorld->GetName());
          fParallelWorld->CloseGeometry();
-      }   
+      }
 
       if (fgVerboseLevel>0) Info("CloseGeometry","%i nodes/ %i volume UID's in %s", fNNodes, fUniqueVolumes->GetEntriesFast()-1, GetTitle());
       if (fgVerboseLevel>0) Info("CloseGeometry","----------------modeler ready----------------");

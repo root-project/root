@@ -16,17 +16,12 @@
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
-//==============================================================================
-// TEveQuadSetGL
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// GL-renderer for TEveQuadSet class.
+/** \class TEveQuadSetGL
+\ingroup TEve
+GL-renderer for TEveQuadSet class.
+*/
 
 ClassImp(TEveQuadSetGL);
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -37,8 +32,6 @@ TEveQuadSetGL::TEveQuadSetGL() : TEveDigitSetGL(), fM(0)
    fMultiColor = kTRUE;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -47,8 +40,6 @@ Bool_t TEveQuadSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
    fM = SetModelDynCast<TEveQuadSet>(obj);
    return kTRUE;
 }
-
-/******************************************************************************/
 
 namespace
 {

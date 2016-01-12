@@ -28,6 +28,58 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+/** \class TLimit
+    \ingroup Hist
+ Algorithm to compute 95% C.L. limits using the Likelihood ratio
+ semi-bayesian method.
+ 
+ Implemented by C. Delaere from the mclimit code written by Tom Junk [HEP-EX/9902006]. 
+ See [http://cern.ch/thomasj/searchlimits/ecl.html](http://cern.ch/thomasj/searchlimits/ecl.html) for more details.
+
+ It takes signal, background and data histograms wrapped in a
+ TLimitDataSource as input and runs a set of Monte Carlo experiments in
+ order to compute the limits. If needed, inputs are fluctuated according
+ to systematics. The output is a TConfidenceLevel.
+
+ The class TLimitDataSource takes the signal, background and data histograms as well as different
+ systematics sources to form the TLimit input.
+
+ The class TConfidenceLevel represents the final result of the TLimit algorithm. It is created just after the
+ time-consuming part and can be stored in a TFile for further processing.
+ It contains light methods to return CLs, CLb and other interesting
+ quantities.
+
+ The actual algorithm...
+
+ From an input (TLimitDataSource) it produces an output TConfidenceLevel.
+ For this, nmc Monte Carlo experiments are performed.
+ As usual, the larger this number, the longer the compute time,
+ but the better the result.
+
+ Supposing that there is a plotfile.root file containing 3 histograms
+ (signal, background and data), you can imagine doing things like:
+
+~~~{.cpp}
+ TFile* infile=new TFile("plotfile.root","READ");
+ infile->cd();
+ TH1* sh=(TH1*)infile->Get("signal");
+ TH1* bh=(TH1*)infile->Get("background");
+ TH1* dh=(TH1*)infile->Get("data");
+ TLimitDataSource* mydatasource = new TLimitDataSource(sh,bh,dh);
+ TConfidenceLevel *myconfidence = TLimit::ComputeLimit(mydatasource,50000);
+ std::cout << "  CLs    : " << myconfidence->CLs()  << std::endl;
+ std::cout << "  CLsb   : " << myconfidence->CLsb() << std::endl;
+ std::cout << "  CLb    : " << myconfidence->CLb()  << std::endl;
+ std::cout << "< CLs >  : " << myconfidence->GetExpectedCLs_b()  << std::endl;
+ std::cout << "< CLsb > : " << myconfidence->GetExpectedCLsb_b() << std::endl;
+ std::cout << "< CLb >  : " << myconfidence->GetExpectedCLb_b()  << std::endl;
+ delete myconfidence;
+ delete mydatasource;
+ infile->Close();
+~~~
+ More information can still be found on [this page](http://cern.ch/aleph-proj-alphapp/doc/tlimit.html)
+ */
+
 #include "TLimit.h"
 #include "TArrayD.h"
 #include "TVectorD.h"
@@ -52,65 +104,6 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
                                        Int_t nmc, bool stat,
                                        TRandom * generator)
 {
-   // class TLimit
-   // ------------
-   // Algorithm to compute 95% C.L. limits using the Likelihood ratio
-   // semi-bayesian method.
-   // It takes signal, background and data histograms wrapped in a
-   // TLimitDataSource as input and runs a set of Monte Carlo experiments in
-   // order to compute the limits. If needed, inputs are fluctuated according
-   // to systematics. The output is a TConfidenceLevel.
-   //
-   // class TLimitDataSource
-   // ----------------------
-   //
-   // Takes the signal, background and data histograms as well as different
-   // systematics sources to form the TLimit input.
-   //
-   //  class TConfidenceLevel
-   //  ----------------------
-   //
-   // Final result of the TLimit algorithm. It is created just after the
-   // time-consuming part and can be stored in a TFile for further processing.
-   // It contains light methods to return CLs, CLb and other interesting
-   // quantities.
-   //
-   // The actual algorithm...
-   // From an input (TLimitDataSource) it produces an output TConfidenceLevel.
-   // For this, nmc Monte Carlo experiments are performed.
-   // As usual, the larger this number, the longer the compute time,
-   // but the better the result.
-   //Begin_Html
-   /*
-   <FONT SIZE=+0>
-   <p>Supposing that there is a plotfile.root file containing 3 histograms
-           (signal, background and data), you can imagine doing things like:</p>
-   <p>
-   <BLOCKQUOTE><PRE>
-    TFile* infile=new TFile("plotfile.root","READ");
-    infile->cd();
-    TH1* sh=(TH1*)infile->Get("signal");
-    TH1* bh=(TH1*)infile->Get("background");
-    TH1* dh=(TH1*)infile->Get("data");
-    TLimitDataSource* mydatasource = new TLimitDataSource(sh,bh,dh);
-    TConfidenceLevel *myconfidence = TLimit::ComputeLimit(mydatasource,50000);
-    std::cout &lt&lt "  CLs    : " &lt&lt myconfidence->CLs()  &lt&lt std::endl;
-    std::cout &lt&lt "  CLsb   : " &lt&lt myconfidence->CLsb() &lt&lt std::endl;
-    std::cout &lt&lt "  CLb    : " &lt&lt myconfidence->CLb()  &lt&lt std::endl;
-    std::cout &lt&lt "&lt CLs &gt  : " &lt&lt myconfidence->GetExpectedCLs_b()  &lt&lt std::endl;
-    std::cout &lt&lt "&lt CLsb &gt : " &lt&lt myconfidence->GetExpectedCLsb_b() &lt&lt std::endl;
-    std::cout &lt&lt "&lt CLb &gt  : " &lt&lt myconfidence->GetExpectedCLb_b()  &lt&lt std::endl;
-    delete myconfidence;
-    delete mydatasource;
-    infile->Close();
-   </PRE></BLOCKQUOTE></p>
-   <p></p>
-   <p>More information can still be found on
-   <a HREF="http://cern.ch/aleph-proj-alphapp/doc/tlimit.html">this</a> page.</p>
-   </FONT>
-   */
-   //End_Html
-
    // The final object returned...
    TConfidenceLevel *result = new TConfidenceLevel(nmc);
    // The random generator used...

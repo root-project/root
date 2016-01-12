@@ -151,8 +151,8 @@ int main() {
     if(!min.IsValid()) {
       //try with higher strategy
       std::cout<<"FM is invalid, try with strategy = 2."<<std::endl;
-      MnMigrad migrad(fFCN, upar, 2);
-      min = migrad();
+      MnMigrad migrad2(fFCN, upar, 2);
+      min = migrad2();
     }
     std::cout<<"minimum: "<<min<<std::endl;
   }
@@ -171,8 +171,8 @@ int main() {
     if(!min.IsValid()) {
       //try with higher strategy
       std::cout<<"FM is invalid, try with strategy = 2."<<std::endl;
-      MnMigrad migrad(fFCN, upar, 2);
-      min = migrad();
+      MnMigrad migrad2(fFCN, upar, 2);
+      min = migrad2();
     }
     std::cout<<"minimum: "<<min<<std::endl;
   }

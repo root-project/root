@@ -12,15 +12,6 @@
 #ifndef ROOT_TKeyMapFile
 #define ROOT_TKeyMapFile
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TKeyMapFile                                                          //
-//                                                                      //
-// Utility class for browsing TMapFile objects.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
@@ -34,7 +25,7 @@ private:
    TKeyMapFile(const TKeyMapFile&);            // TKeyMapFile objects are not copiable.
    TKeyMapFile& operator=(const TKeyMapFile&); // TKeyMapFile objects are not copiable.
 
-   TMapFile      *fMapFile;       //pointer to map file
+   TMapFile      *fMapFile;       ///< Pointer to map file
 
 public:
    TKeyMapFile();

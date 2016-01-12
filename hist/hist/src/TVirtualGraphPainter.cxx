@@ -18,11 +18,10 @@ TVirtualGraphPainter *TVirtualGraphPainter::fgPainter = 0;
 
 ClassImp(TVirtualGraphPainter)
 
-//______________________________________________________________________________
-//
-//  TVirtualGraphPainter is an abstract interface to a histogram painter.
-//
-
+/** \class TVirtualGraphPainter
+ \ingroup Hist
+ Abstract interface to a histogram painter
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function returning a pointer to the current graph painter.

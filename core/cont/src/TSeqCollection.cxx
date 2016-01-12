@@ -9,14 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSeqCollection                                                       //
-//                                                                      //
-// Sequenceable collection abstract base class. TSeqCollection's have   //
-// an ordering relation, i.e. there is a first and last element.        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSeqCollection
+\ingroup Containers
+Sequenceable collection abstract base class. TSeqCollection's have
+an ordering relation, i.e. there is a first and last element.
+*/
 
 #include "TSeqCollection.h"
 #include "TCollection.h"
@@ -174,8 +171,8 @@ void TSeqCollection::QSort(TObject **a, Int_t nBs, TObject ***b, Int_t first, In
 /// have a Merge function (like TObjString), rather than merging, a copy of each
 /// instance (via a call to Clone) is appended to the output.
 ///
-/// Example
-/// =========
+/// ### Example
+/// ~~~ {.cpp}
 ///   this                          list
 /// ____________                  ---------------------|
 /// | A (TH1F) |  __________      | L1 (TSeqCollection)|- [A1, B1(C1,D1,E1)]
@@ -183,6 +180,7 @@ void TSeqCollection::QSort(TObject **a, Int_t nBs, TObject ***b, Int_t first, In
 /// |__________| | D (TH1F) |     | ...                |- [...]
 ///              | E (TH1F) |     |____________________|
 ///              |__________|
+/// ~~~
 
 Long64_t TSeqCollection::Merge(TCollection *list)
 {
@@ -218,6 +216,8 @@ Long64_t TSeqCollection::Merge(TCollection *list)
       if (mergeable) {
          // Current object mergeable - get corresponding objects in input lists
          templist = (TSeqCollection*)IsA()->New();
+         // Make sure original objects are not deleted; some containers, e.g. TSelectorList, maybe owners
+         templist->SetOwner(kFALSE);
       } else {
          templist = 0;
       }

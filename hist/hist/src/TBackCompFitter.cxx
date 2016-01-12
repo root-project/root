@@ -11,6 +11,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TBackCompFitter
+    \ingroup Hist
     \brief Backward compatible implementation of TVirtualFitter
 
 Backward compatible implementation of TVirtualFitter using the
@@ -58,6 +59,7 @@ class before issuing a new fit to avoid deleting this information.
 #include "HFitInterface.h"
 #include "Math/Minimizer.h"
 #include "Fit/BinData.h"
+#include "Fit/FitConfig.h"
 #include "Fit/UnBinData.h"
 #include "Fit/PoissonLikelihoodFCN.h"
 #include "Fit/LogLikelihoodFCN.h"

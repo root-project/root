@@ -27,6 +27,7 @@
 
 namespace clang {
   class DiagnosticsEngine;
+  class CodeGenOptions;
 }
 
 namespace llvm {
@@ -127,7 +128,8 @@ namespace cling {
     clang::DiagnosticsEngine& m_Diags;
 #endif
 
-    std::unique_ptr<llvm::TargetMachine> CreateHostTargetMachine() const;
+    std::unique_ptr<llvm::TargetMachine>
+       CreateHostTargetMachine(const clang::CodeGenOptions& CGOpt) const;
 
   public:
     enum ExecutionResult {
@@ -137,7 +139,8 @@ namespace cling {
       kNumExeResults
     };
 
-    IncrementalExecutor(clang::DiagnosticsEngine& diags);
+    IncrementalExecutor(clang::DiagnosticsEngine& diags,
+                        const clang::CodeGenOptions& CGOpt);
 
     ~IncrementalExecutor();
 
@@ -263,7 +266,8 @@ namespace cling {
         T fun;
         void* address;
       } p2f;
-      p2f.address = (void*)m_JIT->getSymbolAddress(funcname);
+      p2f.address = (void*)m_JIT->getSymbolAddress(funcname,
+                                                   false /*no dlsym*/);
 
       // check if there is any unresolved symbol in the list
       if (diagnoseUnresolvedSymbols(funcname, "function") || !p2f.address) {

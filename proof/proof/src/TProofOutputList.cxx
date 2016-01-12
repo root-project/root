@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofOutputList                                                     //
-//                                                                      //
-// Derivation of TList with an overload of ls() and Print() allowing    //
-// to filter out some of the variables.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofOutputList
+\ingroup proofkernel
+
+Derivation of TList with an overload of ls() and Print() allowing to filter
+out some of the variables
+
+*/
 
 #include "TObjString.h"
 #include "TProof.h"

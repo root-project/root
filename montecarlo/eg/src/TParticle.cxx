@@ -9,41 +9,49 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-//
-// a dynamic particle class created by event generators and used during
-// the propagation in detectors. The static attributes of a TParticle
-// are described by TParticlePDG.
-//
-//  Int_t          fPdgCode;              // PDG code of the particle
-//  Int_t          fStatusCode;           // generation status code
-//  Int_t          fMother[2];            // Indices of the mother particles
-//  Int_t          fDaughter[2];          // Indices of the daughter particles
-//  Float_t        fWeight;               // particle weight
-//
-//  Double_t       fCalcMass;             // Calculated mass
-//
-//  Double_t       fPx;                   // x component of momentum
-//  Double_t       fPy;                   // y component of momentum
-//  Double_t       fPz;                   // z component of momentum
-//  Double_t       fE;                    // Energy
-//
-//  Double_t       fVx;                   // x of production vertex
-//  Double_t       fVy;                   // y of production vertex
-//  Double_t       fVz;                   // z of production vertex
-//  Double_t       fVt;                   // t of production vertex
-//
-//  Double_t       fPolarTheta;           // Polar angle of polarisation
-//  Double_t       fPolarPhi;             // azymutal angle of polarisation
-//
-//  TParticlePDG*  fParticlePDG;          //! reference to the particle record in PDG database
+/** \class  TParticle
+    \ingroup eg
 
+Description of the dynamic properties of a particle.
+
+A dynamic particle class created by event generators and used during
+the propagation in detectors. The static attributes of a TParticle
+are described by TParticlePDG.
+
+\verbatim
+ Int_t          fPdgCode;              // PDG code of the particle
+ Int_t          fStatusCode;           // generation status code
+ Int_t          fMother[2];            // Indices of the mother particles
+ Int_t          fDaughter[2];          // Indices of the daughter particles
+ Float_t        fWeight;               // particle weight
+
+ Double_t       fCalcMass;             // Calculated mass
+
+ Double_t       fPx;                   // x component of momentum
+ Double_t       fPy;                   // y component of momentum
+ Double_t       fPz;                   // z component of momentum
+ Double_t       fE;                    // Energy
+
+ Double_t       fVx;                   // x of production vertex
+ Double_t       fVy;                   // y of production vertex
+ Double_t       fVz;                   // z of production vertex
+ Double_t       fVt;                   // t of production vertex
+
+ Double_t       fPolarTheta;           // Polar angle of polarisation
+ Double_t       fPolarPhi;             // azymutal angle of polarisation
+
+ TParticlePDG*  fParticlePDG;          //! reference to the particle record in PDG database
+\endverbatim
+*/
+
+#include "TParticle.h"
+
+#include "TBuffer.h"
 #include "TView.h"
 #include "TVirtualPad.h"
 #include "TPolyLine3D.h"
 #include "TParticlePDG.h"
 #include "TDatabasePDG.h"
-#include "TParticle.h"
 #include "TClass.h"
 #include "X3DBuffer.h"
 
@@ -197,13 +205,12 @@ Int_t TParticle::Strangeness() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Compute distance from point px,py to a primary track*-*-*-*
-///*-*            ====================================================
-///*-*
-///*-*  Compute the closest distance of approach from point px,py to each segment
-///*-*  of a track.
-///*-*  The distance is computed in pixels units.
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Compute distance from point px,py to a primary track
+///
+/// Compute the closest distance of approach from point px,py to each segment
+/// of a track.
+/// The distance is computed in pixels units.
+///ß
 
 Int_t TParticle::DistancetoPrimitive(Int_t px, Int_t py)
 {
@@ -236,8 +243,8 @@ Int_t TParticle::DistancetoPrimitive(Int_t px, Int_t py)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-///*-*                  =========================================
+/// Execute action corresponding to one event
+///
 
 void TParticle::ExecuteEvent(Int_t, Int_t, Int_t)
 {
@@ -245,7 +252,7 @@ void TParticle::ExecuteEvent(Int_t, Int_t, Int_t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///return particle name
+/// Return particle name
 
 const char* TParticle::GetName() const {
    static char def[4] = "XXX";
@@ -256,9 +263,9 @@ const char* TParticle::GetName() const {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// returns a pointer to the TParticlePDG object using the pdgcode
-/// if mode == 0 (default) always get a fresh value for the pointer.
-/// if mode != 0 this function returns directly the previously
+/// Returns a pointer to the TParticlePDG object using the pdgcode.
+/// - if mode == 0 (default) always get a fresh value for the pointer.
+/// - if mode != 0 this function returns directly the previously
 ///              computed pointer from a previous call
 /// One can use mode=1 (faster) when the TParticle object is not part of a
 /// TClonesArray used in split mode in a Root TTree.
@@ -272,7 +279,7 @@ TParticlePDG*  TParticle::GetPDG(Int_t mode) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///return particle polarisation
+/// Return particle polarisation
 
 void TParticle::GetPolarisation(TVector3 &v) const
 {
@@ -286,7 +293,7 @@ void TParticle::GetPolarisation(TVector3 &v) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///return particle title
+/// Return particle title
 
 const char *TParticle::GetTitle() const
 {
@@ -329,7 +336,6 @@ void TParticle::Paint(Option_t *option)
 ///
 ///  Print the internals of the primary vertex particle
 ///
-///TParticlePDG* pdg = ((TParticle*)this)->GetPDG();
 
 void TParticle::Print(Option_t *) const
 {
@@ -339,9 +345,10 @@ void TParticle::Print(Option_t *) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///change the PDG code for this particle
-///Get a new pointer to a TParticlePDG from TDatabasePDG
-///Recompute the mass
+/// Change the PDG code for this particle
+///
+/// Get a new pointer to a TParticlePDG from TDatabasePDG.
+/// Recompute the mass.
 
 void TParticle::SetPdgCode(Int_t pdg)
 {
@@ -362,7 +369,7 @@ void TParticle::SetPdgCode(Int_t pdg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///set particle polarisation
+/// Set particle polarisation
 
 void TParticle::SetPolarisation(Double_t polx, Double_t poly, Double_t polz)
 {
@@ -376,8 +383,8 @@ void TParticle::SetPolarisation(Double_t polx, Double_t poly, Double_t polz)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Return total X3D size of this primary*-*-*-*-*-*-*
-///*-*        =====================================
+/// Return total X3D size of this primary
+///
 
 void TParticle::Sizeof3D() const
 {

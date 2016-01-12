@@ -36,9 +36,12 @@
 
 
 #include "TMVA/MCFitter.h"
+#include "TMVA/FitterBase.h"
 #include "TMVA/GeneticRange.h"
 #include "TMVA/Interval.h"
+#include "TMVA/MsgLogger.h"
 #include "TMVA/Timer.h"
+#include "TMVA/Types.h"
 #include "TRandom3.h"
 
 ClassImp(TMVA::MCFitter)

@@ -26,22 +26,17 @@
 
 #include "TEveCalo.h"
 
-
-//==============================================================================
-//==============================================================================
-// TEveLegoEventHandler
-//==============================================================================
+/** \class TEveLegoEventHandler
+\ingroup TEve
+A base class of TGLEventHandler. Switches current camera from perspective
+to orthographic bird-view, if camera theta is less than given threshold. It sets back
+perspective camera when accumulated angle is more than transition theta.
+*/
 
 ClassImp(TEveLegoEventHandler);
 
-//______________________________________________________________________________
-//
-// A base class of TGLEventHandler. Switches current camera from perspective
-// to orthographic bird-view, if camera theta is less than given threshold. It sets back
-// perspective camera when accumulated angle is more than transition theta.
-//
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveLegoEventHandler::TEveLegoEventHandler(TGWindow *w, TObject *obj, TEveCaloLego *lego):
    TGLEventHandler(w, obj),
@@ -52,7 +47,6 @@ TEveLegoEventHandler::TEveLegoEventHandler(TGWindow *w, TObject *obj, TEveCaloLe
 
    fLego(lego)
 {
-   // Constructor.
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -24,6 +24,7 @@
 #include "TVirtualStreamerInfo.h"
 
 namespace ROOT {
+namespace Internal {
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Constructor.
@@ -236,4 +237,6 @@ namespace ROOT {
       }
       return objInfo;
    }
-}
+
+} // namespace Internal
+} // namespace ROOT

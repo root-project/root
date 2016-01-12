@@ -22,6 +22,10 @@
 #include "TGFrame.h"
 #endif
 
+#ifndef ROOT_TTree
+#include "TTree.h"
+#endif
+
 class TTreeViewer;
 class TTVLVContainer;
 class TTVLVEntry;
@@ -206,7 +210,7 @@ public:
    void          Message(const char* msg);
    void          NewExpression();                                // *MENU*
    void          PrintEntries();
-   Long64_t      Process(const char* filename, Option_t *option="", Long64_t nentries=1000000000, Long64_t firstentry=0); // *MENU*
+   Long64_t      Process(const char* filename, Option_t *option="", Long64_t nentries=TTree::kMaxEntries, Long64_t firstentry=0); // *MENU*
    Bool_t        ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    void          RemoveItem();
    void          RemoveLastRecord();                             // *MENU*

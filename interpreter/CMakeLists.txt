@@ -11,13 +11,15 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON)
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF)
 if(cxx14)
-  set(LLVM_ENABLE_CXX1Y ON)
+  set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "")
 endif()
 
 set(CMAKE_REQUIRED_QUIET 1)  # Make the configuration of LLVM quiet
 
 if(ROOT_ARCHITECTURE MATCHES linuxarm64)
   set(ROOT_CLING_TARGET "AArch64")
+elseif(ROOT_ARCHITECTURE MATCHES linuxppc64gcc)
+  set(ROOT_CLING_TARGET "PowerPC")
 elseif(ROOT_ARCHITECTURE MATCHES linux)
   set(ROOT_CLING_TARGET "X86")
 elseif(ROOT_ARCHITECTURE MATCHES macosx)
@@ -40,6 +42,16 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${INTERP_ADDITIONAL_FLAGS}")
 
 #---Do not transform warnings in errors-------------------------------------------------------------
 string(REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+string(REPLACE "-Wshadow" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
+#---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
+
+#--- FIXME: Do not build LLVM/Clang with modules until next LLVM upgrade----------------------------
+if(cxxmodules)
+  string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+endif(cxxmodules)
 
 #---Build type--------------------------------------------------------------------------------------
 if(NOT DEFINED LLVM_BUILD_TYPE)

@@ -12,18 +12,16 @@
 #include "TEveVSD.h"
 #include "TFile.h"
 
-//==============================================================================
-// TEveVSD
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Visualization Summary Data - a collection of trees holding standard
-// event data in experiment independent format.
+/** \class TEveVSD
+\ingroup TEve
+Visualization Summary Data - a collection of trees holding standard
+event data in experiment independent format.
+*/
 
 ClassImp(TEveVSD);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveVSD::TEveVSD(const char* , const char*) :
    TObject(),
@@ -51,7 +49,6 @@ TEveVSD::TEveVSD(const char* , const char*) :
    fCC(), fpCC(&fCC),
    fGI(), fpGI(&fGI)
 {
-   // Constructor.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,8 +58,6 @@ TEveVSD::~TEveVSD()
 {
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set directory in which the trees are (or will be) created.
 
@@ -70,8 +65,6 @@ void TEveVSD::SetDirectory(TDirectory* dir)
 {
    fDirectory = dir;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create internal trees.
@@ -90,7 +83,7 @@ void TEveVSD::CreateTrees()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Delete interal trees.
+/// Delete internal trees.
 
 void TEveVSD::DeleteTrees()
 {
@@ -150,8 +143,6 @@ void TEveVSD::WriteTrees()
 {
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Load internal trees from directory.
 
@@ -206,10 +197,8 @@ void TEveVSD::LoadTrees()
 
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Disble TObject streamers for those VSD structs that inherit from
+/// Disable TObject streamers for those VSD structs that inherit from
 /// TObject directly.
 
 void TEveVSD::DisableTObjectStreamersForVSDStruct()

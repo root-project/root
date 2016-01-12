@@ -12,6 +12,7 @@
 
 #include "Fit/BinData.h"
 #include "Math/Error.h"
+#include "Math/IParamFunctionfwd.h"
 
 #include <cassert>
 #include <cmath>

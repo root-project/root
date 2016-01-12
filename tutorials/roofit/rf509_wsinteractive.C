@@ -1,17 +1,17 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #509
-// 
-//  Easy CINT interactive access to workspace contents through a 
-//  'C++' namespace in CINT that maps the workspace contents in a typesafe way
-//
-//  *********************************************************************************
-//  *** NB: This macro exploits a feature native to CINT and _cannot_ be compiled ***
-//  *********************************************************************************
-//
-// 04/2009 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #509
+///
+///   Easy CINT interactive access to workspace contents through a
+///   'C++' namespace in CINT that maps the workspace contents in a typesafe way
+///
+///   *********************************************************************************
+///   *** NB: This macro exploits a feature native to CINT and _cannot_ be compiled ***
+///   *********************************************************************************
+///
+/// \macro_code
+/// \author 04/2009 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

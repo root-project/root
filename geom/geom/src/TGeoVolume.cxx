@@ -24,7 +24,7 @@
 // placement of the other volumes they may contain. Therefore a volume can
 // be replicated several times in the geometry. In order to create a volume, one
 // has to put together a shape and a medium which are already defined. Volumes
-// have to be named by users at creation time. Every different name may represent a 
+// have to be named by users at creation time. Every different name may represent a
 // an unique volume object, but may also represent more general a family (class)
 // of volume objects having the same shape type and medium, but possibly
 // different shape parameters. It is the user's task to provide different names
@@ -314,7 +314,7 @@
 // volume family (e.g. slicey). This should be done as if the coordinate system
 // of the generic slice was the same as the one of the divided volume. The generic
 // slice in case of PHI divisioned is centered with respect to X axis. If the
-// family contains slices of different sizes, any volume positioned inside should 
+// family contains slices of different sizes, any volume positioned inside should
 // fit into the smallest one.
 //    Examples for specific divisions according to shape types can be found inside
 // shape classes.
@@ -1162,6 +1162,7 @@ Int_t TGeoVolume::DistancetoPrimitive(Int_t px, Int_t py)
 void TGeoVolume::Draw(Option_t *option)
 {
    if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
+   fGeoManager->SetUserPaintVolume(this);
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    TGeoAtt::SetVisRaytrace(kFALSE);
    if (!IsVisContainers()) SetVisLeaves();

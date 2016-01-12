@@ -12,11 +12,11 @@
 #include "TEveGridStepper.h"
 #include "TEveTrans.h"
 
-//______________________________________________________________________________
-// TEveGridStepper
-//
-// Provide discrete position coordinates for placement of objects on
-// regular grids.
+/** \class TEveGridStepper
+\ingroup TEve
+Provide discrete position coordinates for placement of objects on
+regular grids.
+*/
 
 ClassImp(TEveGridStepper)
 
@@ -68,8 +68,6 @@ void TEveGridStepper::Subtract(TEveGridStepper& s)
    fOz = -(s.fOz + s.fCz*s.fDz);
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Move to the next grid position.
 
@@ -87,8 +85,6 @@ Bool_t TEveGridStepper::Step()
    }
    return kTRUE;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get current position.

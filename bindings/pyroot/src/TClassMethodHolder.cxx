@@ -17,7 +17,7 @@ PyObject* PyROOT::TClassMethodHolder::Call(
    }
 
 // setup as necessary
-   if ( ! this->Initialize() )
+   if ( ! this->Initialize( ctxt ) )
       return 0;                              // important: 0, not Py_None
 
 // translate the arguments

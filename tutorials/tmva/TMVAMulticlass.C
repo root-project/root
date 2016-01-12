@@ -21,6 +21,7 @@
 
 #include "TMVA/Tools.h"
 #include "TMVA/Factory.h"
+#include "TMVA/DataLoader.h"
 #include "TMVA/TMVAMultiClassGui.h"
 
 
@@ -75,10 +76,12 @@ void TMVAMulticlass( TString myMethodList = "" )
    
    TMVA::Factory *factory = new TMVA::Factory( "TMVAMulticlass", outputFile,
                                                "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=multiclass" );
-   factory->AddVariable( "var1", 'F' );
-   factory->AddVariable( "var2", "Variable 2", "", 'F' );
-   factory->AddVariable( "var3", "Variable 3", "units", 'F' );
-   factory->AddVariable( "var4", "Variable 4", "units", 'F' );
+   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
+   
+   dataloader->AddVariable( "var1", 'F' );
+   dataloader->AddVariable( "var2", "Variable 2", "", 'F' );
+   dataloader->AddVariable( "var3", "Variable 3", "units", 'F' );
+   dataloader->AddVariable( "var4", "Variable 4", "units", 'F' );
 
    TFile *input(0);
    TString fname = "./tmva_example_multiple_background.root";
@@ -105,21 +108,21 @@ void TMVAMulticlass( TString myMethodList = "" )
    TTree *background2 = (TTree*)input->Get("TreeB2");
    
    gROOT->cd( outfileName+TString(":/") );
-   factory->AddTree    (signal,"Signal");
-   factory->AddTree    (background0,"bg0");
-   factory->AddTree    (background1,"bg1");
-   factory->AddTree    (background2,"bg2");
+   dataloader->AddTree    (signal,"Signal");
+   dataloader->AddTree    (background0,"bg0");
+   dataloader->AddTree    (background1,"bg1");
+   dataloader->AddTree    (background2,"bg2");
    
-   factory->PrepareTrainingAndTestTree( "", "SplitMode=Random:NormMode=NumEvents:!V" );
+   dataloader->PrepareTrainingAndTestTree( "", "SplitMode=Random:NormMode=NumEvents:!V" );
 
    if (Use["BDTG"]) // gradient boosted decision trees
-      factory->BookMethod( TMVA::Types::kBDT, "BDTG", "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.50:nCuts=20:MaxDepth=2");
+      factory->BookMethod( dataloader,  TMVA::Types::kBDT, "BDTG", "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.50:nCuts=20:MaxDepth=2");
    if (Use["MLP"]) // neural network
-      factory->BookMethod( TMVA::Types::kMLP, "MLP", "!H:!V:NeuronType=tanh:NCycles=1000:HiddenLayers=N+5,5:TestRate=5:EstimatorType=MSE");
+      factory->BookMethod( dataloader,  TMVA::Types::kMLP, "MLP", "!H:!V:NeuronType=tanh:NCycles=1000:HiddenLayers=N+5,5:TestRate=5:EstimatorType=MSE");
    if (Use["FDA_GA"]) // functional discriminant with GA minimizer
-      factory->BookMethod( TMVA::Types::kFDA, "FDA_GA", "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=GA:PopSize=300:Cycles=3:Steps=20:Trim=True:SaveBestGen=1" );
+      factory->BookMethod( dataloader,  TMVA::Types::kFDA, "FDA_GA", "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=GA:PopSize=300:Cycles=3:Steps=20:Trim=True:SaveBestGen=1" );
    if (Use["PDEFoam"]) // PDE-Foam approach
-      factory->BookMethod( TMVA::Types::kPDEFoam, "PDEFoam", "!H:!V:TailCut=0.001:VolFrac=0.0666:nActiveCells=500:nSampl=2000:nBin=5:Nmin=100:Kernel=None:Compress=T" );
+      factory->BookMethod( dataloader,  TMVA::Types::kPDEFoam, "PDEFoam", "!H:!V:TailCut=0.001:VolFrac=0.0666:nActiveCells=500:nSampl=2000:nBin=5:Nmin=100:Kernel=None:Compress=T" );
    
   // Train MVAs using the set of training events
    factory->TrainAllMethods();
@@ -139,6 +142,7 @@ void TMVAMulticlass( TString myMethodList = "" )
    std::cout << "==> TMVAClassification is done!" << std::endl;
    
    delete factory;
+   delete dataloader;
    
    // Launch the GUI for the root macros
    if (!gROOT->IsBatch()) TMVAMultiClassGui( outfileName );

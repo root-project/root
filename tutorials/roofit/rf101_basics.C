@@ -1,15 +1,15 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #101
-// 
-// Fitting, plotting, toy data generation on one-dimensional p.d.f
-//
-// pdf = gauss(x,m,s) 
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'BASIC FUNCTIONALITY' RooFit tutorial macro #101
+///
+///  Fitting, plotting, toy data generation on one-dimensional p.d.f
+///
+///  pdf = gauss(x,m,s)
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

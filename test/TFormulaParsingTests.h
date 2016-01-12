@@ -161,24 +161,37 @@ bool test8() {
    f = new TFormula("f","x^y");
 
    ok &= (f->Eval(2,3) == 8);
+   delete f; 
 
    f = new TFormula("f","(x+[0])^y");
    f->SetParameter(0,1);
    ok &= (f->Eval(2,3) == 27);
+   delete f; 
 
    f = new TFormula("f","sqrt(x+[0])^y");
    f->SetParameter(0,2);
    ok &= (f->Eval(2,3) == 8);
+   delete f; 
 
    f = new TFormula("f","[0]/((x+2)^y)");
    f->SetParameter(0,27);
    ok &= (f->Eval(1,3) == 1);
+   delete f; 
    
    f = new TFormula("f","[0]/((x+2)^(y+1))");
    f->SetParameter(0,27);
    ok &= (f->Eval(1,2) == 1);
-
    delete f; 
+
+   // test also nested operators
+   f = new TFormula("f","((x+1)^y)^z");
+   ok &= (f->Eval(1,3,4) == 4096);
+   delete f; 
+
+   f = new TFormula("f","x^((y+1)^z)");
+   ok &= (f->Eval(2,1,3) == 256);
+   delete f;
+   
    return ok;
    
 }
@@ -520,6 +533,18 @@ bool test31() {
 
 }
 
+bool test32() { 
+// test polynomial are linear and have right number
+   bool ok = true; 
+   TF1 f1("f1","pol2"); 
+   ok &= (f1.GetNumber() == 302); 
+   ok &= (f1.IsLinear() ); 
+
+   TF1 f2("f2","gaus(0)+pol1(3)"); 
+   ok &= (f2.GetNumber() == 0); 
+   ok &= (!f2.IsLinear()); 
+   return ok;
+}
 
    
 void PrintError(int itest)  { 
@@ -570,6 +595,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test29() ) { PrintError(itest); }
    IncrTest(itest); if (!test30() ) { PrintError(itest); }
    IncrTest(itest); if (!test31() ) { PrintError(itest); }
+   IncrTest(itest); if (!test32() ) { PrintError(itest); }
 
    std::cout << ".\n";
     
@@ -578,8 +604,8 @@ int runTests(bool debug = false) {
    else {
       Error("TFORMULA Tests","%d tests failed ",int(failedTests.size()) );
       std::cout << "failed tests are : ";
-      for (auto & itest : failedTests) { 
-         std::cout << itest << "   ";
+      for (auto & ittest : failedTests) { 
+         std::cout << ittest << "   ";
       }
       std::cout << std::endl;
    }

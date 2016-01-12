@@ -5,6 +5,7 @@
 #define ROOT_TGenericTable
 
 #include "TTable.h"
+#include "TTableDescriptor.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

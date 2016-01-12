@@ -21,10 +21,10 @@
 #include "TGButton.h"
 #include "TGNumberEntry.h"
 
-//______________________________________________________________________________
-// TEveGridStepperSubEditor
-//
-// Sub-editor for TEveGridStepper class.
+/** \class TEveGridStepperSubEditor
+\ingroup TEve
+Sub-editor for TEveGridStepper class.
+*/
 
 ClassImp(TEveGridStepperSubEditor)
 
@@ -160,11 +160,10 @@ void TEveGridStepperSubEditor::DoDs()
    Changed();
 }
 
-
-//______________________________________________________________________________
-// TEveGridStepperEditor
-//
-// Editor for TEveGridStepper class.
+/** \class TEveGridStepperEditor
+\ingroup TEve
+Editor for TEveGridStepper class.
+*/
 
 ClassImp(TEveGridStepperEditor)
 

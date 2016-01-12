@@ -1,11 +1,16 @@
+/// \file
+/// \ingroup tutorial_io
+/// Macro demonstrating the merging of containers.
+/// \macro_code
+///
+/// \author The Root Team
+
 TFile *f;
 
 TSeqCollection *GetCollection();
 
 void testMergeCont()
 {
-   // Macro to test merging of containers.
-
    TString tutdir = gROOT->GetTutorialsDir();
    gROOT->LoadMacro(tutdir+"/hsimple.C");
    TList *list = (TList *)GetCollection();

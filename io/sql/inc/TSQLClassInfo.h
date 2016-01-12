@@ -12,15 +12,6 @@
 #ifndef ROOT_TSQLClassInfo
 #define ROOT_TSQLClassInfo
 
-
-/////////////////////////////////////////////////////////////////////////
-//                                                                     //
-// TSQLClassInfo keeps table information relevant for one class        //
-//                                                                     //
-/////////////////////////////////////////////////////////////////////////
-
-
-
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
@@ -86,13 +77,13 @@ public:
 
 protected:
 
-   TString    fClassName;            //! class name
-   Int_t      fClassVersion;         //! class version
-   Long64_t      fClassId;              //! sql class id
-   TString    fClassTable;           //! name of table with class data
-   TString    fRawTable;             //! name of table with raw data
-   TObjArray* fColumns;              //! name and type of columns - array of TNamed
-   Bool_t     fRawtableExist;        //! indicate that raw table is exist
+   TString    fClassName;            ///<! class name
+   Int_t      fClassVersion;         ///<! class version
+   Long64_t      fClassId;           ///<! sql class id
+   TString    fClassTable;           ///<! name of table with class data
+   TString    fRawTable;             ///<! name of table with raw data
+   TObjArray* fColumns;              ///<! name and type of columns - array of TNamed
+   Bool_t     fRawtableExist;        ///<! indicate that raw table is exist
 
    ClassDef(TSQLClassInfo, 1); //  Keeps the table information relevant for one class
 };

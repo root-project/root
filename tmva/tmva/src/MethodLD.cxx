@@ -27,6 +27,8 @@
  *                                                                                *
  **********************************************************************************/
 
+#include "TMVA/MethodLD.h"
+
 #include <iomanip>
 
 #include "TMath.h"
@@ -34,13 +36,16 @@
 #include "TMatrix.h"
 #include "TMatrixD.h"
 
-#include "TMVA/VariableTransformBase.h"
-#include "TMVA/MethodLD.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Ranking.h"
-#include "TMVA/Types.h"
-#include "TMVA/PDF.h"
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/PDF.h"
+#include "TMVA/Ranking.h"
+#include "TMVA/Tools.h"
+#include "TMVA/TransformationHandler.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableTransformBase.h"
 
 using std::vector;
 

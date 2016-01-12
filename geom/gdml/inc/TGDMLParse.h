@@ -183,6 +183,7 @@ private:
    //'structure' section
    XMLNodePointer_t  VolProcess(TXMLEngine* gdml, XMLNodePointer_t node);
    XMLNodePointer_t  AssProcess(TXMLEngine* gdml, XMLNodePointer_t node);
+   XMLNodePointer_t  UsrProcess(TXMLEngine* gdml, XMLNodePointer_t node);
    Int_t             SetAxis(const char* axisString); //Set Axis for Division
 
    //'setup' section

@@ -9,13 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofPerfAnalysis                                                       //
-//                                                                      //
-// Set of tools to analyse the performance tree                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TProofPerfAnalysis
+\ingroup proofbench
+
+Set of tools to analyse the performance tree
+
+*/
+
 #include <errno.h>
 
 #include "TProofPerfAnalysis.h"

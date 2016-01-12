@@ -16,19 +16,15 @@
 #include "TGSlider.h"
 #include "TGDoubleSlider.h"
 
-
-/******************************************************************************/
-// TEveGValuatorBase
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// Base class for composite GUI elements for setting of numeric
-// values.
+/** \class TEveGValuatorBase
+\ingroup TEve
+Base class for composite GUI elements for setting of numeric values.
+*/
 
 ClassImp(TEveGValuatorBase);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveGValuatorBase::TEveGValuatorBase(const TGWindow *p, const char* name,
                                      UInt_t w, UInt_t h, Int_t widgetId) :
@@ -43,24 +39,19 @@ TEveGValuatorBase::TEveGValuatorBase(const TGWindow *p, const char* name,
 
    fLabel (0)
 {
-   // Constructor.
-
    SetName(name);
 }
 
-
-/******************************************************************************/
-// TEveGValuator
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// Composite GUI element for single value selection (supports label,
-// number-entry and slider).
+/** \class TEveGValuator
+\ingroup TEve
+Composite GUI element for single value selection (supports label,
+number-entry and slider).
+*/
 
 ClassImp(TEveGValuator);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveGValuator::TEveGValuator(const TGWindow *p, const char* title,
                              UInt_t w, UInt_t h, Int_t widgetId) :
@@ -75,7 +66,6 @@ TEveGValuator::TEveGValuator(const TGWindow *p, const char* title,
    fEntry  (0),
    fSlider (0)
 {
-   // Constructor.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -247,19 +237,16 @@ void TEveGValuator::SetEnabled(Bool_t state)
    }
 }
 
-
-/******************************************************************************/
-// TEveGDoubleValuator
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// Composite GUI element for selection of range (label, two
-// number-entries and double-slider).
+/** \class TEveGDoubleValuator
+\ingroup TEve
+Composite GUI element for selection of range (label, two
+number-entries and double-slider).
+*/
 
 ClassImp(TEveGDoubleValuator);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveGDoubleValuator::TEveGDoubleValuator(const TGWindow *p, const char* title,
                                          UInt_t w, UInt_t h, Int_t widgetId) :
@@ -269,7 +256,6 @@ TEveGDoubleValuator::TEveGDoubleValuator(const TGWindow *p, const char* title,
    fMaxEntry(0),
    fSlider(0)
 {
-   // Constructor.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -422,20 +408,17 @@ void TEveGDoubleValuator::ValueSet()
    Emit("ValueSet()");
 }
 
-
-/******************************************************************************/
-// TEveGTriVecValuator
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// Composite GUI element for setting three numerical values (label,
-// three number-entries). All three values have the same number-format
-// and value-range.
+/** \class TEveGTriVecValuator
+\ingroup TEve
+Composite GUI element for setting three numerical values (label,
+three number-entries). All three values have the same number-format
+and value-range.
+*/
 
 ClassImp(TEveGTriVecValuator);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveGTriVecValuator::TEveGTriVecValuator(const TGWindow *p, const char* name,
                                          UInt_t w, UInt_t h, Int_t widgetId) :
@@ -445,8 +428,6 @@ TEveGTriVecValuator::TEveGTriVecValuator(const TGWindow *p, const char* name,
    fNELength   (5),
    fNEHeight   (20)
 {
-   // Constructor.
-
    SetName(name);
 }
 
@@ -483,8 +464,6 @@ void TEveGTriVecValuator::ValueSet()
    Emit("ValueSet()");
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set limits for all three number-entries, integer values.
 
@@ -503,5 +482,4 @@ void TEveGTriVecValuator::SetLimits(Float_t min, Float_t max,
    for (Int_t i=0; i<3; ++i)
       fVal[i]->SetLimits(min, max, 0, nef);
 }
-
 

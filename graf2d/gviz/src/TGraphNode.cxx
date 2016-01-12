@@ -17,13 +17,11 @@
 
 ClassImp(TGraphNode)
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class TGraphNode
+\ingroup gviz
 
-/* Begin_Html
-<center><h2>Graph Node class</h2></center>
-TGraphNode is a graph node object which can be added in a TGraphStruct.
-End_Html */
-
+A graph node object which can be added in a TGraphStruct.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph node default constructor.
@@ -36,7 +34,6 @@ TGraphNode::TGraphNode(): TNamed(), TAttText()
    fW      = 0;
    fH      = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph node normal constructor.
@@ -51,14 +48,12 @@ TGraphNode::TGraphNode(const char *name,const char *title)
    fH      = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph Node default destructor.
 
 TGraphNode::~TGraphNode()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the GraphViz node into the GraphViz data structure gv.
@@ -76,7 +71,6 @@ void TGraphNode::CreateGVNode(GVizAgraph_t *gv)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a node.
 
@@ -92,7 +86,6 @@ Int_t TGraphNode::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 
@@ -105,7 +98,6 @@ void TGraphNode::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    fW = ellipse.GetR1();
    fH = ellipse.GetR2();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Layout this node in the GraphViz space. This is done after gvLayout
@@ -124,7 +116,6 @@ void TGraphNode::Layout()
    fW = ND_width((Agnode_t*)fGVNode)*36;
    fH = ND_height((Agnode_t*)fGVNode)*36;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this node with its current attributes.
@@ -150,14 +141,12 @@ void TGraphNode::Paint(Option_t *)
    text.PaintLatex(fX, fY, 0., GetTextSize(), (char*)GetTitle());
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
 void TGraphNode::SavePrimitive(std::ostream &, Option_t *)
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save attributes as a C++ statement(s) on output stream out

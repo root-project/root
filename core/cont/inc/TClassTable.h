@@ -70,7 +70,7 @@ public:
    ~TClassTable();
 
    static void          Add(const char *cname, Version_t id,
-                            const type_info &info, DictFuncPtr_t dict,
+                            const std::type_info &info, DictFuncPtr_t dict,
                             Int_t pragmabits);
    static void          Add(TProtoClass *protoClass);
    static void          AddAlternate(const char *normname, const char *alternate);
@@ -80,7 +80,7 @@ public:
    static Version_t     GetID(const char *cname);
    static Int_t         GetPragmaBits(const char *name);
    static DictFuncPtr_t GetDict(const char *cname);
-   static DictFuncPtr_t GetDict(const type_info& info);
+   static DictFuncPtr_t GetDict(const std::type_info& info);
    static DictFuncPtr_t GetDictNorm(const char *cname);
    static TProtoClass  *GetProto(const char *cname);
    static TProtoClass  *GetProtoNorm(const char *cname);

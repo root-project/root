@@ -1,8 +1,47 @@
-// Author: Stefan Schmitt
-// DESY, 14.10.2008
-
-//  Version 17.0 example for multi-dimensional unfolding
-//
+/// \defgroup tutorial_unfold5 TUnfoldDensity and TUnfoldBinning test suite
+/// \ingroup tutorial_unfold
+///
+/// This is an example of unfolding a two-dimensional distribution.
+/// Also using an auxiliary measurement to constrain some background
+///
+/// The example comprises several macros:
+///
+///  - testUnfold5a.C   create root files with TTree objects for
+///                     signal, background and data.
+///                     - write files:
+///                           - testUnfold5_signal.root
+///                           - testUnfold5_background.root
+///                           - testUnfold5_data.root
+///
+///  - testUnfold5b.C   create a root file with the TUnfoldBinning objects
+///            -> write file  testUnfold5_binning.root
+///
+///  - testUnfold5c.C   loop over trees and fill histograms based on the
+///                     TUnfoldBinning objects
+///                     - read:
+///                           - testUnfold5_binning.root
+///                           - testUnfold5_signal.root
+///                           - testUnfold5_background.root
+///                           - testUnfold5_data.root
+///                     - write:
+///                           - testUnfold5_histograms.root
+///
+///  - testUnfold5d.C   run the unfolding
+///                     - read:
+///                           - testUnfold5_histograms.root
+///                     - write:
+///                           - testUnfold5_result.root
+///                           - testUnfold5_result.ps
+///
+/// \file
+/// \ingroup tutorial_unfold5
+///
+/// Version 17.0 example for multi-dimensional unfolding
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Stefan Schmitt, DESY
 
 #include <iostream>
 #include <map>
@@ -13,58 +52,6 @@
 #include <TTree.h>
 
 using namespace std;
-
-/*
-  This file is part of TUnfold.
-
-  TUnfold is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  TUnfold is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-///////////////////////////////////////////////////////////////////////
-//
-// Test program for the classes TUnfoldDensity and TUnfoldBinning
-//
-// A toy test of the TUnfold package
-//
-// This is an example of unfolding a two-dimensional distribution
-// also using an auxillary measurement to constrain some background
-//
-// The example comprizes several macros
-//   testUnfold5a.C   create root files with TTree objects for
-//                      signal, background and data
-//            -> write files  testUnfold5_signal.root
-//                            testUnfold5_background.root
-//                            testUnfold5_data.root
-//
-//   testUnfold5b.C   create a root file with the TUnfoldBinning objects
-//            -> write file  testUnfold5_binning.root
-//
-//   testUnfold5c.C   loop over trees and fill histograms based on the
-//                      TUnfoldBinning objects
-//            -> read  testUnfold5_binning.root
-//                     testUnfold5_signal.root
-//                     testUnfold5_background.root
-//                     testUnfold5_data.root
-//
-//            -> write testUnfold5_histograms.root
-//
-//   testUnfold5d.C   run the unfolding
-//            -> read  testUnfold5_histograms.root
-//            -> write testUnfold5_result.root
-//                     testUnfold5_result.ps
-//
-///////////////////////////////////////////////////////////////////////
 
 TRandom *g_rnd=0;
 

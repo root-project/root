@@ -9,15 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TGeometry.h"
 #include "TMaterial.h"
+
+#include "TBuffer.h"
+#include "TGeometry.h"
 
 ClassImp(TMaterial)
 
-//______________________________________________________________________________
-//
-// Manages a detector material. See class TGeometry
-//
+/** \class TMaterial
+\ingroup g3d
+Manages a detector material. See class TGeometry
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Material default constructor.
@@ -31,7 +33,6 @@ TMaterial::TMaterial()
    fRadLength = 0;
    fZ = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Material normal constructor.
@@ -49,7 +50,6 @@ TMaterial::TMaterial(const char *name, const char *title, Float_t a, Float_t z, 
    gGeometry->GetListOfMaterials()->Add(this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Material normal constructor.
 
@@ -66,7 +66,6 @@ TMaterial::TMaterial(const char *name, const char *title, Float_t a, Float_t z, 
    gGeometry->GetListOfMaterials()->Add(this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Material default destructor.
 
@@ -75,7 +74,6 @@ TMaterial::~TMaterial()
    if (gGeometry) gGeometry->GetListOfMaterials()->Remove(this);
 
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TMaterial.

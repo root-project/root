@@ -24,6 +24,7 @@
 ClassImp(TF2)
 
 /** \class TF2
+    \ingroup Hist 
 A 2-Dim function with parameters
 
 TF2 graphics function is via the TH1 drawing functions.

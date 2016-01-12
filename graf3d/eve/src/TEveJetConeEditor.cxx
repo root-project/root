@@ -22,14 +22,15 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-
-//______________________________________________________________________________
-// GUI editor for TEveJetCone.
-//
+/** \class TEveJetConeEditor
+\ingroup TEve
+GUI editor for TEveJetCone.
+*/
 
 ClassImp(TEveJetConeEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveJetConeEditor::TEveJetConeEditor(const TGWindow *p, Int_t width, Int_t height,
                                      UInt_t options, Pixel_t back) :
@@ -37,8 +38,6 @@ TEveJetConeEditor::TEveJetConeEditor(const TGWindow *p, Int_t width, Int_t heigh
    fM(0)
    // Initialize widget pointers to 0
 {
-   // Constructor.
-
    MakeTitle("TEveJetCone");
 
    // Create widgets
@@ -46,8 +45,6 @@ TEveJetConeEditor::TEveJetConeEditor(const TGWindow *p, Int_t width, Int_t heigh
    // AddFrame(fXYZZ, new TGLayoutHints(...));
    // fXYZZ->Connect("SignalName()", "Reve::TEveJetConeEditor", this, "DoXYZZ()");
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
@@ -60,15 +57,3 @@ void TEveJetConeEditor::SetModel(TObject* obj)
    // fXYZZ->SetValue(fM->GetXYZZ());
 }
 
-/******************************************************************************/
-
-// Implements callback/slot methods
-
-//______________________________________________________________________________
-// void TEveJetConeEditor::DoXYZZ()
-// {
-//    // Slot for XYZZ.
-//
-//    fM->SetXYZZ(fXYZZ->GetValue());
-//    Update();
-// }

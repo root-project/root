@@ -1,11 +1,14 @@
-#
-# This macro displays the ROOT Directory data structure
-#
+## \file
+## \ingroup tutorial_pyroot
+## This macro displays the ROOT Directory data structure
+##
+## \macro_image
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TPaveLabel, TPaveText, TText, TArrow, TLine
 from ROOT import gROOT
-
-
 
 c1 = TCanvas( 'c1', 'ROOT FilDir description', 700, 900 )
 c1.Range( 1, 1, 19, 24.5 )

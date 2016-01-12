@@ -38,8 +38,12 @@
 #include "TMVA/GeneticAlgorithm.h"
 #include "TMVA/Interval.h"
 #include "TMVA/IFitterTarget.h"
-
 #include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+
+#include "RtypesCore.h"
+#include "Rtypes.h"
+#include "TMath.h"
 
 namespace TMVA {
    const Bool_t GeneticAlgorithm__DEBUG__ = kFALSE;

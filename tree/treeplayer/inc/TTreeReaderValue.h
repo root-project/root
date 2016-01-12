@@ -38,6 +38,7 @@ class TLeaf;
 class TTreeReader;
 
 namespace ROOT {
+namespace Internal {
 
    class TTreeReaderValueBase {
    public:
@@ -91,7 +92,7 @@ namespace ROOT {
 
       virtual const char* GetDerivedTypeName() const = 0;
 
-      ROOT::TBranchProxy* GetProxy() const { return fProxy; }
+      Detail::TBranchProxy* GetProxy() const { return fProxy; }
 
       void MarkTreeReaderUnavailable() { fTreeReader = 0; }
 
@@ -99,7 +100,7 @@ namespace ROOT {
       TString      fLeafName;
       TTreeReader* fTreeReader; // tree reader we belong to
       TDictionary* fDict; // type that the branch should contain
-      ROOT::TBranchProxy* fProxy; // proxy for this branch, owned by TTreeReader
+      Detail::TBranchProxy* fProxy; // proxy for this branch, owned by TTreeReader
       TLeaf*       fLeaf;
       Long64_t     fTreeLastOffset;
       ESetupStatus fSetupStatus; // setup status of this data access
@@ -112,11 +113,12 @@ namespace ROOT {
       friend class ::TTreeReader;
    };
 
+} // namespace Internal
 } // namespace ROOT
 
 
 template <typename T>
-class TTreeReaderValue: public ROOT::TTreeReaderValueBase {
+class TTreeReaderValue: public ROOT::Internal::TTreeReaderValueBase {
 public:
    TTreeReaderValue() {}
    TTreeReaderValue(TTreeReader& tr, const char* branchname):

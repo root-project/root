@@ -16,11 +16,10 @@
 
 #include "TGLIncludes.h"
 
-//______________________________________________________________________
-// TGLLightSet
-//
-// Encapsulates a set of lights for OpenGL.
-//
+/** \class TGLLightSet
+\ingroup opengl
+Encapsulates a set of lights for OpenGL.
+*/
 
 ClassImp(TGLLightSet)
 
@@ -137,7 +136,7 @@ void TGLLightSet::StdSetupLights(const TGLBoundingBox& bbox,
       glLightfv(GL_LIGHT4, GL_DIFFUSE,  sideLightColor);
    }
 
-   // Set light states everytime - must be defered until now when we know we
+   // Set light states every time - must be deferred until now when we know we
    // are in the correct thread for GL context
    // TODO: Could detect state change and only adjust if a change
    for (UInt_t light = 0; (1<<light) < kLightMask; light++)

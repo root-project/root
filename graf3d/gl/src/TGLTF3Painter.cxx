@@ -27,9 +27,10 @@
 #include "TGLTF3Painter.h"
 #include "TGLIncludes.h"
 
-//______________________________________________________________________________
-//
-// Plot-painter for TF3 functions.
+/** \class TGLTF3Painter
+\ingroup opengl
+Plot-painter for TF3 functions.
+*/
 
 ClassImp(TGLTF3Painter)
 
@@ -156,7 +157,7 @@ void TGLTF3Painter::AddOption(const TString &/*option*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Change color sheme.
+///Change color scheme.
 
 void TGLTF3Painter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
@@ -377,9 +378,10 @@ void TGLTF3Painter::DrawSectionXOY() const
 }
 
 
-//______________________________________________________________________________
-//
-// "gliso" option for TH3.
+/** \class TGLIsoPainter
+\ingroup opengl
+"gliso" option for TH3.
+*/
 
 ClassImp(TGLIsoPainter)
 
@@ -461,7 +463,7 @@ Bool_t TGLIsoPainter::InitGeometry()
    //mesh cache.
    for (UInt_t i = 0; i < nContours; ++i) {
       if (firstMesh != fCache.end()) {
-         //There is a mesh in a chache.
+         //There is a mesh in a cache.
          SetMesh(*firstMesh, fColorLevels[i]);
          MeshIter_t next = firstMesh;
          ++next;
@@ -561,7 +563,7 @@ void TGLIsoPainter::AddOption(const TString &/*option*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Change color sheme.
+///Change color scheme.
 
 void TGLIsoPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {

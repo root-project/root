@@ -9,20 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofResourcesStatic                                                //
-//                                                                      //
-// Implementation of PROOF static resources.                            //
-// The purpose of this class is to provide a standard interface to      //
-// static config files. It interprets Proof config files (proof.conf)   //
-// and sorts the contents into TProofNodeInfo objects. Master info will //
-// be placed in fMaster (of type TProofNodeInfo). Submaster info will   //
-// be put in fSubmasterList (a TList of TProofNodeInfo objects), while  //
-// workers (and condorworkers) will be placed in fWorkerList (a TList   //
-// of TProofNodeInfo objects).                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofResourcesStatic
+\ingroup proofkernel
+
+The purpose of this class is to provide a standard interface to
+static config files. It interprets Proof config files (proof.conf)
+and sorts the contents into TProofNodeInfo objects. Master info will
+be placed in fMaster (of type TProofNodeInfo). Submaster info will
+be put in fSubmasterList (a TList of TProofNodeInfo objects), while
+workers (and condorworkers) will be placed in fWorkerList (a TList
+of TProofNodeInfo objects).
+
+*/
 
 #include "Riostream.h"
 #include "TProofResourcesStatic.h"

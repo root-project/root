@@ -1,7 +1,12 @@
-// @(#)root/eve:$Id$
-// Author: Alja Mrak-Tadel
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates usage of TEveArrow class.
+///
+/// \image html eve_arrow.png
+/// \macro_code
+///
+/// \author Alja Mrak-Tadel
 
-// Demonstrates usage of TEveArrow class.
 
 void arrow()
 {

@@ -1,3 +1,5 @@
+#include "iterplugin.cxx"
+
 iterplugin *plugin = 0;
 
 void runplugin()
@@ -14,7 +16,8 @@ void runplugin()
 // root[3]   select(3,kBlue)
 // ...
 
-   gROOT->ProcessLine(".x $ROOTSYS/tutorials/geom/rootgeom.C");
+   TString tutdir = gROOT->GetTutorialsDir();
+   gROOT->ProcessLine(".x " + tutdir + "/geom/rootgeom.C");
    plugin = new iterplugin();
    gGeoManager->GetGeomPainter()->SetIteratorPlugin(plugin);
 }

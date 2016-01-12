@@ -31,35 +31,45 @@
 
 namespace RooStats {
 
+   /**
+
+      \ingroup Roostats
+
+
+      This class provides simple and straightforward utilities to plot SamplingDistribution
+      objects.
+   */
+
+
  class SamplingDistPlot : public TNamed, public RooPrintable {
 
    public:
-    // Constructors for SamplingDistribution
+    /// Constructors for SamplingDistribution
     SamplingDistPlot(Int_t nbins = 100);
     SamplingDistPlot(Int_t nbins, Double_t min, Double_t max);
 //    SamplingDistPlot(const char* name, const char* title, Int_t nbins, Double_t xmin, Double_t xmax);
 
-    // Destructor of SamplingDistribution
+    /// Destructor of SamplingDistribution
     virtual ~SamplingDistPlot();
 
-    // adds the sampling distribution and returns the scale factor
+    /// adds the sampling distribution and returns the scale factor
     Double_t AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions="NORMALIZE HIST");
-    // Like AddSamplingDistribution, but also sets a shaded area in the
-    // minShaded and maxShaded boundaries.
+    /// Like AddSamplingDistribution, but also sets a shaded area in the
+    /// minShaded and maxShaded boundaries.
     Double_t AddSamplingDistributionShaded(const SamplingDistribution *samplingDist, Double_t minShaded, Double_t maxShaded, Option_t *drawOptions="NORMALIZE HIST");
 
-    // add a line
+    /// add a line
     void AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char* title = NULL);
-    // add a TH1
+    /// add a TH1
     void AddTH1(TH1* h, Option_t *drawOptions="");
-    // add a TF1
+    /// add a TF1
     void AddTF1(TF1* f, const char* title = NULL, Option_t *drawOptions="SAME");
-    // set legend
+    /// set legend
     void SetLegend(TLegend* l){ fLegend = l; }
     
     void Draw(Option_t *options=0);
 
-    // Applies a predefined style if fApplyStyle is kTRUE (default).
+    /// Applies a predefined style if fApplyStyle is kTRUE (default).
     void ApplyDefaultStyle(void);
 
     void SetLineColor(Color_t color, const SamplingDistribution *samplDist = 0);
@@ -74,32 +84,32 @@ namespace RooStats {
 
     void SetAxisTitle(char *varName) { fVarName = TString(varName); }
 
-    // If you do not want SamplingDistPlot to interfere with your style settings, call this
-    // function with "false" before Draw().
+    /// If you do not want SamplingDistPlot to interfere with your style settings, call this
+    /// function with "false" before Draw().
     void SetApplyStyle(Bool_t s) { fApplyStyle = s; }
 
-    // Returns the TH1F associated with the give SamplingDistribution.
-    // Intended use: Access to member functions of TH1F like GetMean(),
-    // GetRMS() etc.
-    // The return objects is managed by  SamplingDistPlot
+    /// Returns the TH1F associated with the give SamplingDistribution.
+    /// Intended use: Access to member functions of TH1F like GetMean(),
+    /// GetRMS() etc.
+    /// The return objects is managed by  SamplingDistPlot
     TH1F* GetTH1F(const SamplingDistribution *samplDist = NULL);
     TH1 * GetHistogram(const SamplingDistribution *samplDist = NULL) { return GetTH1F(samplDist); }
 
-    // return plotter class used to draw the sampling distribution histograms
-    // object is managed by SamplingDistPlot
+    /// return plotter class used to draw the sampling distribution histograms
+    /// object is managed by SamplingDistPlot
     RooPlot * GetPlot() { return fRooPlot; }
 
-    // changes plot to log scale on x axis
+    /// changes plot to log scale on x axis
     void SetLogXaxis(Bool_t lx) { fLogXaxis = lx; }
-    // changes plot to log scale on y axis
+    /// changes plot to log scale on y axis
     void SetLogYaxis(Bool_t ly) { fLogYaxis = ly; }
 
-    // change x range
+    /// change x range
     void SetXRange( double mi, double ma ) { fXMin = mi; fXMax = ma; }
-    // change y range
+    /// change y range
     void SetYRange( double mi, double ma ) { fYMin = mi; fYMax = ma; }
 
-    // write to Root file
+    /// write to Root file
     void DumpToFile(const char* RootFileName, Option_t *option="", const char *ftitle="", Int_t compress=1);
 
   private:
@@ -119,9 +129,9 @@ namespace RooStats {
     TH1F* fHist;
     TLegend *fLegend;
 
-    RooList fItems; // holds TH1Fs only
-    RooList fOtherItems; // other objects to be drawn like TLine etc.
-    TIterator* fIterator; // TODO remove class variable and instantiate locally as necessary
+    RooList fItems; /// holds TH1Fs only
+    RooList fOtherItems; /// other objects to be drawn like TLine etc.
+    TIterator* fIterator; /// TODO remove class variable and instantiate locally as necessary
     RooPlot* fRooPlot;
     Bool_t fLogXaxis;
     Bool_t fLogYaxis;
@@ -137,7 +147,7 @@ namespace RooStats {
     void addOtherObject(TObject *obj, Option_t *drawOptions=0);
     void GetAbsoluteInterval(Double_t &theMin, Double_t &theMax, Double_t &theYMax) const;
 
-    ClassDef(SamplingDistPlot,1)  // Class containing the results of the HybridCalculator
+    ClassDef(SamplingDistPlot,1)  /// Class containing the results of the HybridCalculator
   };
 }
 

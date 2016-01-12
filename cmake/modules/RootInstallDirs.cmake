@@ -78,7 +78,7 @@ if(NOT DEFINED CMAKE_INSTALL_DATAROOTDIR)
   if(gnuinstall)
     set(CMAKE_INSTALL_DATAROOTDIR "share" CACHE PATH "root for the data (share)")
   else()
-    set(CMAKE_INSTALL_DATAROOTDIR "" CACHE PATH "root for the data ()")
+    set(CMAKE_INSTALL_DATAROOTDIR "." CACHE PATH "root for the data ()")
   endif()
 endif()
 

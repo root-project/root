@@ -31,10 +31,11 @@
 
 #include "TGLFontManager.h"
 
-//______________________________________________________________________________
-//
-// This class encapsulates window-system specific information about a
-// GL-context and alows their proper management in ROOT.
+/** \class TGLContext
+\ingroup opengl
+This class encapsulates window-system specific information about a
+GL-context and alows their proper management in ROOT.
+*/
 
 ClassImp(TGLContext);
 
@@ -461,11 +462,12 @@ TGLContext *TGLContext::GetCurrent()
 }
 
 
-//______________________________________________________________________________
-//
-// Identifier of a shared GL-context.
-// Objects shared among GL-contexts include:
-// display-list definitions, texture objects and shader programs.
+/** \class TGLContextIdentity
+\ingroup opengl
+Identifier of a shared GL-context.
+Objects shared among GL-contexts include:
+display-list definitions, texture objects and shader programs.
+*/
 
 ClassImp(TGLContextIdentity)
 

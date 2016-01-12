@@ -1,4 +1,11 @@
-// example of CrystalBall Function and its distribution (pdf and cdf)
+/// \file
+/// \ingroup tutorial_math
+/// Example of CrystalBall Function and its distribution (pdf and cdf)
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 void CrystalBall()  {
 
@@ -14,7 +21,7 @@ void CrystalBall()  {
    f1->Draw();
    // use directly the functionin ROOT::MATH note that the parameters definition is different is (alpha, n sigma, mu)
    auto f2 = new TF1("f2","ROOT::Math::crystalball_function(x, 2, 1, 1, 0)",-5,5);
-   f2->SetLineColor(kGreen); 
+   f2->SetLineColor(kGreen);
    f2->Draw("same");
    auto f3 = new TF1("f3","ROOT::Math::crystalball_function(x, 2, 2, 1, 0)",-5,5);
    f3->SetLineColor(kBlue);
@@ -31,7 +38,7 @@ void CrystalBall()  {
    pdf1->SetParameters(2, 0, 1, 2, 3);
    pdf1->Draw();
    auto pdf2 = new TF1("pdf","ROOT::Math::crystalball_pdf(x, 3, 1.01, 1, 0)",-5,5);
-   pdf2->SetLineColor(kBlue); 
+   pdf2->SetLineColor(kBlue);
    pdf2->Draw("same");
    auto pdf3 = new TF1("pdf","ROOT::Math::crystalball_pdf(x, 2, 2, 1, 0)",-5,5);
    pdf3->SetLineColor(kGreen);
@@ -57,5 +64,4 @@ void CrystalBall()  {
    legend->AddEntry(cdf,"N=1.2 alpha=2","L");
    legend->AddEntry(cdfc,"N=1.2 alpha=2","L");
    legend->Draw();
-   
 }

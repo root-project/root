@@ -40,11 +40,18 @@
 // phase-space point using range-searching.
 // _____________________________________________________________________
 
-#include <cmath>
 
-#ifndef ROOT_TMVA_PDEFoamTargetDensity
 #include "TMVA/PDEFoamTargetDensity.h"
-#endif
+
+#include "TMVA/BinarySearchTree.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+#include "TMVA/Volume.h"
+
+#include "Rtypes.h"
+
+#include <cmath>
+#include <vector>
 
 ClassImp(TMVA::PDEFoamTargetDensity)
 

@@ -9,20 +9,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// Cholesky Decomposition class                                          //
-//                                                                       //
-// Decompose a symmetric, positive definite matrix A = U^T * U           //
-//                                                                       //
-// where U is a upper triangular matrix                                  //
-//                                                                       //
-// The decomposition fails if a diagonal element of fU is <= 0, the      //
-// matrix is not positive negative . The matrix fU is made invalid .     //
-//                                                                       //
-// fU has the same index range as A .                                    //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
+/** \class TDecompChol
+    \ingroup Matrix
+
+ Cholesky Decomposition class
+
+ Decompose a symmetric, positive definite matrix A = U^T * U
+
+ where U is a upper triangular matrix
+
+ The decomposition fails if a diagonal element of fU is <= 0, the
+ matrix is not positive negative . The matrix fU is made invalid .
+
+ fU has the same index range as A .
+*/
 
 #include "TDecompChol.h"
 #include "TMath.h"
@@ -100,7 +100,7 @@ TDecompChol::TDecompChol(const TDecompChol &another) : TDecompBase(another)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Matrix A is decomposed in component U so that A = U^T * U 
+/// Matrix A is decomposed in component U so that A = U^T * U
 /// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
 
 Bool_t TDecompChol::Decompose()
@@ -452,11 +452,13 @@ TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B)
 ////////////////////////////////////////////////////////////////////////////////
 /// Solve min {(A . X_j - B_j)^T W (A . X_j - B_j)} for each column j in
 /// B and X
+/// ~~~
 ///   A : (m x n ) matrix, m >= n
 ///   B : (m x nb) matrix, nb >= 1
 ///  mX : (n x nb) matrix
 ///   W : (m x m) weight matrix with W(i,j) = 1/std(i)^2  for i == j
 ///                                         = 0           fir i != j
+/// ~~~
 
 TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B,const TVectorD &std)
 {

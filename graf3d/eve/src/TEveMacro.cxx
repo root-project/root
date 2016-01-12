@@ -15,10 +15,11 @@
 #include "TSystem.h"
 #include "TROOT.h"
 
-//______________________________________________________________________________
-//
-// Sub-class of TMacro, overriding Exec to unload the previous verison
-// and cleanup after the execution.
+/** \class TEveMacro
+\ingroup TEve
+Sub-class of TMacro, overriding Exec to unload the previous version
+and cleanup after the execution.
+*/
 
 ClassImp(TEveMacro);
 
@@ -52,8 +53,6 @@ TEveMacro::TEveMacro(const char* name) :
    }
    ReadFile(fTitle);
 }
-
-/******************************************************************************/
 
 #include "TTimer.h"
 

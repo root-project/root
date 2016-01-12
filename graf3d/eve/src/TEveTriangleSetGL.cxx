@@ -15,15 +15,12 @@
 
 #include "TGLIncludes.h"
 
-//==============================================================================
-// TEveTriangleSetGL
-//==============================================================================
+/** \class TEveTriangleSetGL
+\ingroup TEve
+GL-renderer for TEveTriangleSet class.
 
-//______________________________________________________________________________
-//
-// GL-renderer for TEveTriangleSet class.
-//
-// See also: TGLObject, TGLLogicalShape.
+See also: TGLObject, TGLLogicalShape.
+*/
 
 ClassImp(TEveTriangleSetGL);
 
@@ -43,8 +40,6 @@ TEveTriangleSetGL::~TEveTriangleSetGL()
 {
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -63,7 +58,6 @@ void TEveTriangleSetGL::SetBBox()
    SetAxisAlignedBBox(((TEveTriangleSet*)fExternalObj)->AssertBBox());
 }
 
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Low-level GL rendering.

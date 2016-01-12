@@ -18,16 +18,13 @@
 
 ClassImp(TPaveLabel)
 
+/** \class TPaveLabel
+\ingroup BasicGraphics
 
-//______________________________________________________________________________
-//*  A PaveLabel is a Pave (see TPave) with a text centered in the Pave.
-//Begin_Html
-/*
-<img src="gif/pavelabel.gif">
+A Pave (see TPave) with a text centered in the Pave.
+
+\image html graf_pavelabel.png
 */
-//End_Html
-//
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Pavelabel default constructor.
@@ -35,7 +32,6 @@ ClassImp(TPaveLabel)
 TPaveLabel::TPaveLabel(): TPave(), TAttText()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Pavelabel normal constructor.
@@ -50,14 +46,12 @@ TPaveLabel::TPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, const
    fLabel  = label;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Pavelabel default destructor.
 
 TPaveLabel::~TPaveLabel()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Pavelabel copy constructor.
@@ -66,7 +60,6 @@ TPaveLabel::TPaveLabel(const TPaveLabel &pavelabel) : TPave(pavelabel), TAttText
 {
    ((TPaveLabel&)pavelabel).Copy(*this);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this pavelabel to pavelabel.
@@ -77,7 +70,6 @@ void TPaveLabel::Copy(TObject &obj) const
    TAttText::Copy(((TPaveLabel&)obj));
    ((TPaveLabel&)obj).fLabel      = fLabel;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this pavelabel with its current attributes.
@@ -91,7 +83,6 @@ void TPaveLabel::Draw(Option_t *option)
    AppendPad(opt);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this pavelabel with new coordinates.
 
@@ -101,7 +92,6 @@ void TPaveLabel::DrawPaveLabel(Double_t x1, Double_t y1, Double_t x2, Double_t y
    newpavelabel->SetBit(kCanDelete);
    newpavelabel->AppendPad();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this pavelabel with its current attributes.
@@ -113,7 +103,6 @@ void TPaveLabel::Paint(Option_t *option)
 
    PaintPaveLabel(fX1, fY1, fX2, fY2, GetLabel(), strlen(option)?option:GetOption());
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this pavelabel with new coordinates.
@@ -191,7 +180,6 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
    if (valign == 3) y = y2 - 0.02*(y2-y1);
    latex.PaintLatex(x, y, GetTextAngle(),labelsize,GetLabel());
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out

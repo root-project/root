@@ -17,6 +17,8 @@ if(WIN32)
                 -include:_G__cpp_setupG__MathCore)
 endif()
 ROOT_LINKER_LIBRARY(PyROOT *.cxx G__PyROOT.cxx LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES})
+ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx LIBRARIES Core)
+
 
 if(MSVC)
   add_custom_command(TARGET PyROOT POST_BUILD
@@ -40,9 +42,9 @@ foreach(pyfile ${pyfiles})
   file(COPY ${pyfile} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
 endforeach()
 
-set( ROOTaaSDirName "ROOTaaS")
-install (DIRECTORY ${ROOTaaSDirName} DESTINATION ${runtimedir})
-file(COPY ${ROOTaaSDirName} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
+set( JupyROOTDirName "JupyROOT")
+install (DIRECTORY ${JupyROOTDirName} DESTINATION ${runtimedir})
+file(COPY ${JupyROOTDirName} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
 
 #---Install headers----------------------------------------------------------
 ROOT_INSTALL_HEADERS()

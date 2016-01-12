@@ -9,160 +9,155 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//________________________________________________________________________
-//
-// The main motivation for the TSQLFile development is to have
-// "transparent" access to SQL data base via standard TFile interface.
-//
-// The main approach that each class (but not each object) has one or two tables
-// with names like $(CLASSNAME)_ver$(VERSION) and $(CLASSNAME)_raw$(VERSION)
-// For example: TAxis_ver8 or TList_raw5
-// Second kind of tables appears, when some of class members can not be converted to
-// normalized form or when class has custom streamer.
-// For instance, for TH1 class two tables are required: TH1_ver4 and TH1_raw4
-// Most of memebers are stored in TH1_ver4 table columnwise, and only memeber:
-//
-//  Double_t*  fBuffer;  //[fBufferSize]
-//
-// can not be represented as column while size of array is not known apriory.
-// Therefore, fBuffer will be written as list of values in TH1_raw4 table.
-//
-// All objects, stored in the DB, will be registered in table "ObjectsTable".
-// In this there are following columns:
-//     "key:id"  - key identifier to which belong object
-//     "obj:id"  - object identifier
-//     "Class"   - object class name
-//     "Version" - object class version
-//  Data in each "ObjectsTable" row uniqly identify, in which table
-//  and which column object is stored.
-//
-// In normal situation all class data should be sorted columnwise.
-// Up to now following member are supported:
-// 1) Basic data types
-//     Here is everything clear. Column SQL type will be as much as possible
-//     close to the original type of value.
-// 2) Fixed array of basic data types
-//     In this case n columns like fArr[0], fArr[1] and so on will be created.
-//     If there is multidimensional array, names will be fArr2[1][2][1] and so on
-// 3) Parent class
-//     In this case version of parent class is stored and
-//     data of parent class will be stored with the same obj:id in corrspondent table.
-//     There is a special case, when parent store nothing (this is for instance TQObject).
-//     In that case just -1 is written to avoid any extra checks if table exist or not.
-// 4) Object as data member.
-//     In that case object is saved in normal way to data base and column
-//     will contain id of this object.
-// 5) Pointer on object
-//     Same as before. In case if object was already stored, just its id
-//     will be placed in the column. For NULL pointer 0 is used.
-// 6) TString
-//     Now column with limited width like VARCAHR(255) in MySQL is used.
-//     Later this will be improved to support maximum possible strings
-// 7) Anything else.
-//     Data will be converted to raw format and saved in _streamer_ table.
-//     Each row supplied with obj:id and row:id, where row:id indicates
-//     data, corresponding to this particular data member, and column
-//     will contain this raw:id
-//
-// All conversion to SQL statements are done with help of TSQLStructure class.
-// This is special hierarchical structure wich internally is very similar
-// to XML structures. TBufferSQL2 creates these structures, when object
-// data is streamed by ROOT and only afterwards all SQL statements will be produced
-// and applied all together.
-//
-// When data is reading, TBufferSQL2 will produce requests to database
-// during unstreaming of object data.
-//
-// Optionally (default this options on) name of column includes
-// suffix which indicates type of column. For instance:
-//   *:parent  - parent class, column contain class version
-//   *:object  - other object, column contain object id
-//   *:rawdata - raw data, column contains id of raw data from _streamer_ table
-//   *:Int_t   - column with integer value
-// Use TSQLFile::SetUseSuffixes(kFALSE) to disable suffixes usage.
-//
-// This and several other options can be changed only when
-// TSQLFile created with options "CREATE" or "RECREATE" and only before
-// first write operation. These options are:
-//     SetUseSuffixes() - suffix usage in column names (default - on)
-//     SetArrayLimit()  - defines maximum array size, which can
-//                        has column for each element (default 21)
-//     SetTablesType()  - table type name in MySQL database (default "InnoDB")
-//     SetUseIndexes()  - usage of indexes in database (default kIndexesBasic)
-// Normally these functions should be called immidiately after TSQLFile constructor.
-//
-// When objects data written to database, by default START TRANSACTION/COMMIT
-// SQL commands are used before and after data storage. If TSQLFile detects
-// any problems, ROLLBACK command will be used to restore
-// previous state of data base. If transactions not supported by SQL server,
-// they can be disabled by SetUseTransactions(kTransactionsOff). Or user
-// can take responsibility to use transactions function to hime
-//
-// By default only indexes for basic tables are created.
-// In most cases usage of indexes increase perfomance to data reading,
-// but it also can increase time of writing data to database.
-// There are several modes of index usage available in SetUseIndexes() method
-//
-// There is MakeSelectQuery(TClass*) method, which
-// produces SELECT statement to get objects data of specified class.
-// Difference from simple statement like:
-//   mysql> SELECT * FROM TH1I_ver1
-// that not only data for that class, but also data from parent classes
-// will be extracted from other tables and combined in single result table.
-// Such select query can be usufull for external access to objects data.
-//
-// Up to now MySQL 4.1 and Oracle 9i were tested.
-// Some extra work is required for other SQL databases.
-// Hopefully, this should be straigthforward.
-//
-// Known problems and open questions.
-// 1) TTree is not supported by TSQLFile. There is independent development
-//    of TTreeSQL class, which allows to store trees directly in SQL database
-// 2) TClonesArray is store objects in raw format,
-//    which can not be accessed outside ROOT.
-//    This will be changed later.
-// 3) TDirectory cannot work. Hopefully, will (changes in ROOT basic I/O is required)
-// 4) Streamer infos are not written to file, therefore schema evolution
-//    is not yet supported. All eforts are done to enable this feature in
-//    the near future
-//
-// Example how TSQLFile can be used:
-//
-// example of a session saving data to a SQL data base
-// =====================================================
-//
-//  const char* dbname = "mysql://host.domain:3306/dbname";
-//  const char* username = "username";
-//  const char* userpass = "userpass";
-//
-//  // Clean data base and create primary tables
-//  TSQLFile* f = new TSQLFile(dbname, "recreate", username, userpass);
-//  // Write with standard I/O functions
-//  arr->Write("arr", TObject::kSingleKey);
-//  h1->Write("histo");
-//  // Close connection to DB
-//  delete f;
-//
-// example of a session read data from SQL data base
-// =====================================================
-//
-//  // Open database again in read-only mode
-//  TSQLFile* f = new TSQLFile(dbname, "open", username, userpass);
-//  // Show list of keys
-//  f->ls();
-//  // Read stored object, again standard ROOT I/O
-//  TH1* h1 = (TH1*) f->Get("histo");
-//  if (h1!=0) { h1->SetDirectory(0); h1->Draw(); }
-//  TObject* obj = f->Get("arr");
-//  if (obj!=0) obj->Print("*");
-//  // close connection to DB
-//  delete f;
-//
-// The "SQL I/O" package is currently under development.
-// Any bug reports and suggestions are welcome.
-// Author: S.Linev, GSI Darmstadt,   S.Linev@gsi.de
-//
-//______________________________________________________________________________
+/**
+\class TSQLFile
+\ingroup IO
+
+Access an SQL db via the TFile interface.
+
+The main motivation for the TSQLFile development is to have
+"transparent" access to SQL data base via standard TFile interface.
+The main approach that each class (but not each object) has one or two tables
+with names like $(CLASSNAME)_ver$(VERSION) and $(CLASSNAME)_raw$(VERSION)
+For example: TAxis_ver8 or TList_raw5
+Second kind of tables appears, when some of class members can not be converted to
+normalized form or when class has custom streamer.
+For instance, for TH1 class two tables are required: TH1_ver4 and TH1_raw4
+Most of memebers are stored in TH1_ver4 table columnwise, and only memeber:
+    Double_t*  fBuffer;  //[fBufferSize]
+can not be represented as column while size of array is not known apriory.
+Therefore, fBuffer will be written as list of values in TH1_raw4 table.
+All objects, stored in the DB, will be registered in table "ObjectsTable".
+In this there are following columns:
+| Name | Description |
+|------|-------------|
+| "key:id"  | key identifier to which belong object |
+| "obj:id"  | object identifier |
+| "Class"   | object class name |
+| "Version" | object class version |
+
+ Data in each "ObjectsTable" row uniqly identify, in which table
+ and which column object is stored.
+
+In normal situation all class data should be sorted columnwise.
+Up to now following member are supported:
+  -# Basic data types. Here is everything clear. Column SQL type will be as much as possible
+    close to the original type of value.
+  -# Fixed array of basic data types. In this case n columns like fArr[0],
+    fArr[1] and so on will be created.
+    If there is multidimensional array, names will be fArr2[1][2][1] and so on
+  -# Parent class. In this case version of parent class is stored and
+    data of parent class will be stored with the same obj:id in corrspondent table.
+    There is a special case, when parent store nothing (this is for instance TQObject).
+    In that case just -1 is written to avoid any extra checks if table exist or not.
+  -# Object as data member. In that case object is saved in normal way to data base and column
+    will contain id of this object.
+  -# Pointer on object. Same as before. In case if object was already stored, just its id
+    will be placed in the column. For NULL pointer 0 is used.
+  -# TString. Now column with limited width like VARCAHR(255) in MySQL is used.
+    Later this will be improved to support maximum possible strings
+  -# Anything else. Data will be converted to raw format and saved in _streamer_ table.
+    Each row supplied with obj:id and row:id, where row:id indicates
+    data, corresponding to this particular data member, and column
+    will contain this raw:id
+
+All conversion to SQL statements are done with help of TSQLStructure class.
+This is special hierarchical structure wich internally is very similar
+to XML structures. TBufferSQL2 creates these structures, when object
+data is streamed by ROOT and only afterwards all SQL statements will be produced
+and applied all together.
+When data is reading, TBufferSQL2 will produce requests to database
+during unstreaming of object data.
+Optionally (default this options on) name of column includes
+suffix which indicates type of column. For instance:
+| Name | Description |
+|------|-------------|
+|  *:parent  | parent class, column contain class version |
+|  *:object  | other object, column contain object id |
+|  *:rawdata | raw data, column contains id of raw data from _streamer_ table |
+|  *:Int_t   | column with integer value |
+
+Use TSQLFile::SetUseSuffixes(kFALSE) to disable suffixes usage.
+This and several other options can be changed only when
+TSQLFile created with options "CREATE" or "RECREATE" and only before
+first write operation. These options are:
+| Name | Description |
+|------|-------------|
+| SetUseSuffixes() | suffix usage in column names (default - on) |
+| SetArrayLimit()  | defines maximum array size, which can has column for each element (default 21) |
+| SetTablesType()  | table type name in MySQL database (default "InnoDB") |
+| SetUseIndexes()  | usage of indexes in database (default kIndexesBasic) |
+
+Normally these functions should be called immidiately after TSQLFile constructor.
+When objects data written to database, by default START TRANSACTION/COMMIT
+SQL commands are used before and after data storage. If TSQLFile detects
+any problems, ROLLBACK command will be used to restore
+previous state of data base. If transactions not supported by SQL server,
+they can be disabled by SetUseTransactions(kTransactionsOff). Or user
+can take responsibility to use transactions function to hime
+By default only indexes for basic tables are created.
+In most cases usage of indexes increase perfomance to data reading,
+but it also can increase time of writing data to database.
+There are several modes of index usage available in SetUseIndexes() method
+There is MakeSelectQuery(TClass*) method, which
+produces SELECT statement to get objects data of specified class.
+Difference from simple statement like:
+    mysql> SELECT * FROM TH1I_ver1
+that not only data for that class, but also data from parent classes
+will be extracted from other tables and combined in single result table.
+Such select query can be usufull for external access to objects data.
+
+Up to now MySQL 4.1 and Oracle 9i were tested.
+Some extra work is required for other SQL databases.
+Hopefully, this should be straigthforward.
+
+Known problems and open questions.
+  -# TTree is not supported by TSQLFile. There is independent development
+   of TTreeSQL class, which allows to store trees directly in SQL database
+  -# TClonesArray is store objects in raw format,
+   which can not be accessed outside ROOT.
+   This will be changed later.
+  -# TDirectory cannot work. Hopefully, will (changes in ROOT basic I/O is required)
+  -# Streamer infos are not written to file, therefore schema evolution
+   is not yet supported. All eforts are done to enable this feature in
+   the near future
+
+### Example how TSQLFile can be used
+
+#### A session saving data to a SQL data base
+~~~{.cpp}
+auto dbname = "mysql://host.domain:3306/dbname";
+auto username = "username";
+auto userpass = "userpass";
+
+// Clean data base and create primary tables
+auto f = new TSQLFile(dbname, "recreate", username, userpass);
+// Write with standard I/O functions
+arr->Write("arr", TObject::kSingleKey);
+h1->Write("histo");
+// Close connection to DB
+delete f;
+~~~
+
+#### A session read data from SQL data base
+~~~{.cpp}
+// Open database again in read-only mode
+auto f = new TSQLFile(dbname, "open", username, userpass);
+// Show list of keys
+f->ls();
+// Read stored object, again standard ROOT I/O
+auto h1 = (TH1*) f->Get("histo");
+if (h1!=0) { h1->SetDirectory(0); h1->Draw(); }
+auto obj = f->Get("arr");
+if (obj!=0) obj->Print("*");
+// close connection to DB
+delete f;
+~~~
+
+The "SQL I/O" package is currently under development.
+Any bug reports and suggestions are welcome.
+Author: S.Linev, GSI Darmstadt,   S.Linev@gsi.de
+*/
 
 #include "TSQLFile.h"
 
@@ -305,25 +300,19 @@ TSQLFile::TSQLFile() :
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Connects to SQL server with provided arguments.
+///
 /// If the constructor fails in any way IsZombie() will
 /// return true. Use IsOpen() to check if the file is (still) open.
+/// | Option | Description |
+/// |--------|-------------|
+/// | NEW or CREATE  | Create a ROOT tables in database if the tables already exists connection is not opened.|
+/// | RECREATE       | Create completely new tables. Any existing table will be deleted.|
+/// | UPDATE         | Open an existing database for writing. If data base open by other TSQLFile instance for writing, write access will be rejected.|
+/// | BREAKLOCK      | Special case when lock was not correctly released by TSQLFile instance. This may happen if program crashed when TSQLFile was open with write access mode.|
+/// | READ / OPEN    | Open an existing data base for reading.|
 ///
-/// If option = NEW or CREATE   create a ROOT tables in database
-///                             if the tables already exists connection is
-///                             not opened.
-///           = RECREATE        create completely new tables. Any existing tables
-///                             will be deleted
-///           = UPDATE          open an existing database for writing.
-///                             If data base open by other TSQLFile instance for writing,
-///                             write access will be rejected
-///           = BREAKLOCK       Special case when lock was not correctly released
-///                             by TSQLFile instance. This may happen if program crashed when
-///                             TSQLFile was open with write access mode.
-///           = READ or OPEN    open an existing data base for reading.
-///
-/// For more details see comments for TFile::TFile() constructor
-///
-/// For a moment TSQLFile does not support TTree objects and subdirectories
+/// For more details see comments for TFile::TFile() constructor.
+/// For a moment TSQLFile does not support TTree objects and subdirectories.
 
 TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const char* pass) :
    TFile(),
@@ -561,7 +550,7 @@ void TSQLFile::SetArrayLimit(Int_t limit)
 ////////////////////////////////////////////////////////////////////////////////
 /// Defines tables type, which is used in CREATE TABLE statements
 /// Now is only used for MySQL database, where following types are supported:
-///    "BDB", "HEAP", "ISAM", "InnoDB", "MERGE", "MRG_MYISAM", "MYISAM"
+///     "BDB", "HEAP", "ISAM", "InnoDB", "MERGE", "MRG_MYISAM", "MYISAM"
 /// Default for TSQLFile is "InnoDB". For more detailes see MySQL docs.
 
 void TSQLFile::SetTablesType(const char* tables_type)
@@ -574,12 +563,12 @@ void TSQLFile::SetTablesType(const char* tables_type)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Defines usage of transactions statements for writing objects data to database.
-///    kTransactionsOff=0   - no transaction operation are allowed
-///    kTransactionsAuto=1  - automatic mode. Each write operation,
-///        produced by TSQLFile, will be supplied by START TRANSACTION and COMMIT calls.
-///        If any error happen, ROLLBACK will returns database to previous state
-///    kTransactionsUser=2  - transactions are delegated to user. Methods
-///        StartTransaction(), Commit() and Rollback() should be called by user.
+/// | Index | Description |
+/// |-------|-------------|
+/// | kTransactionsOff=0   - no transaction operation are allowed |
+/// | kTransactionsAuto=1  - automatic mode. Each write operation, produced by TSQLFile, will be supplied by START TRANSACTION and COMMIT calls. If any error happen, ROLLBACK will returns database to previous state |
+/// | kTransactionsUser=2  - transactions are delegated to user. Methods StartTransaction(), Commit() and Rollback() should be called by user. |
+///
 /// Default UseTransactions option is kTransactionsAuto
 
 void TSQLFile::SetUseTransactions(Int_t mode)
@@ -589,10 +578,11 @@ void TSQLFile::SetUseTransactions(Int_t mode)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Start user transaction.
-/// This can be usesfull, when big number of objects should be stored in
+///
+/// This can be usesful, when big number of objects should be stored in
 /// data base and commitment required only if all operations were successful.
 /// In that case in the end of all operations method Commit() should be
-/// called. If operation on user-level is looks like not successfull,
+/// called. If operation on user-level is looks like not successful,
 /// method Rollback() will return database data and TSQLFile instance to
 /// previous state.
 /// In MySQL not all tables types support transaction mode of operation.
@@ -638,11 +628,13 @@ Bool_t TSQLFile::Rollback()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Specify usage of indexes for data tables
-///    kIndexesNone = 0  - no indexes are used
-///    kIndexesBasic = 1 - indexes used only for keys list and
-///                        objects list tables (default)
-///    kIndexesClass = 2 - index also created for every normal class table
-///    kIndexesAll = 3   - index created for every table, including _streamer_ tables
+/// | Index | Description |
+/// |-------|-------------|
+/// | kIndexesNone = 0  | no indexes are used|
+/// | kIndexesBasic = 1 | indexes used only for keys list and objects list tables (default)|
+/// | kIndexesClass = 2 | index also created for every normal class table|
+/// | kIndexesAll = 3   | index created for every table, including _streamer_ tables|
+///
 /// Indexes in general should increase speed of access to objects data,
 /// but they required more operations and more disk space on server side
 
@@ -1240,13 +1232,14 @@ void TSQLFile::IncrementModifyCounter()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Produce SELECT statement which can be used to get all data
-/// of class cl in one SELECT statement
-/// This statement also can be used to create VIEW by command like
-/// mysql> CREATE VIEW TH1I_view AS $CLASSSELECT$
-/// Where $CLASSSELECT$ argument should be produced by call
-///   f->MakeSelectQuery(TH1I::Class());
-/// VIEWs supported by latest MySQL 5 and Oracle
+/// Produce \b SELECT statement which can be used to get all data
+/// of class cl in one \b SELECT statement.
+///
+/// This statement also can be used to create \b VIEW by command like
+///     mysql> CREATE VIEW TH1I_view AS $CLASSSELECT$
+/// Where \b $CLASSSELECT$ argument should be produced by call
+///     f->MakeSelectQuery(TH1I::Class());
+/// \b VIEWs supported by latest MySQL 5 and Oracle
 
 TString TSQLFile::MakeSelectQuery(TClass* cl)
 {
@@ -1419,12 +1412,14 @@ Bool_t TSQLFile::IsReadAccess()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// submits query to SQL server
-/// if flag==0, result is not interesting and will be deleted
-/// if flag==1, return result of submitted query
-/// if flag==2, results is may be necessary for long time
-///             Oracle plugin do not support working with several TSQLResult
-///             objects, therefore explicit deep copy will be produced
+/// Submits query to SQL server.
+///
+/// | Flag Value | Effect|
+/// |------------|-------|
+/// | 0 | result is not interesting and will be deleted|
+/// | 1 | return result of submitted query
+/// | 2 | results is may be necessary for long time Oracle plugin do not support working with several TSQLResult objects, therefore explicit deep copy will be produced|
+///
 /// If ok!=0, it will contains kTRUE is Query was successfull, otherwise kFALSE
 
 TSQLResult* TSQLFile::SQLQuery(const char* cmd, Int_t flag, Bool_t* ok)
@@ -1628,7 +1623,7 @@ Int_t TSQLFile::SQLMaxIdentifierLength()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// remove key with specified id from keys table
+/// Remove key with specified id from keys table
 /// also removes all objects data, related to this table
 
 void TSQLFile::DeleteKeyFromDB(Long64_t keyid)
@@ -1708,7 +1703,7 @@ TKeySQL* TSQLFile::FindSQLKey(TDirectory* dir, Long64_t keyid)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// add entry into keys table
+/// Add entry into keys table
 
 Bool_t TSQLFile::WriteKeyData(TKeySQL* key)
 {
@@ -1739,7 +1734,7 @@ Bool_t TSQLFile::WriteKeyData(TKeySQL* key)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// updates (overwrites) key data in KeysTable
+/// Updates (overwrites) key data in KeysTable
 
 Bool_t TSQLFile::UpdateKeyData(TKeySQL* key)
 {
@@ -1790,7 +1785,7 @@ Long64_t TSQLFile::DefineNextKeyId()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return (if exists) TSQLClassInfo for specified class name and version
+/// Return (if exists) TSQLClassInfo for specified class name and version
 
 TSQLClassInfo* TSQLFile::FindSQLClassInfo(const char* clname, Int_t version)
 {
@@ -1815,7 +1810,7 @@ TSQLClassInfo* TSQLFile::FindSQLClassInfo(const TClass* cl)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// search in database tables for specified class and return TSQLClassInfo object
+/// Search in database tables for specified class and return TSQLClassInfo object
 
 TSQLClassInfo* TSQLFile::RequestSQLClassInfo(const char* clname, Int_t version)
 {
@@ -1847,7 +1842,7 @@ TSQLClassInfo* TSQLFile::RequestSQLClassInfo(const char* clname, Int_t version)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// proposes table name for class
+/// Proposes table name for class
 
 TString TSQLFile::DefineTableName(const char* clname, Int_t version, Bool_t rawtable)
 {
@@ -1893,7 +1888,7 @@ TString TSQLFile::DefineTableName(const char* clname, Int_t version, Bool_t rawt
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// test if table name exists
+/// Test if table name exists
 
 Bool_t TSQLFile::HasTable(const char* name)
 {
@@ -1910,7 +1905,7 @@ Bool_t TSQLFile::HasTable(const char* name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// search in database tables for specified class and return TSQLClassInfo object
+/// Search in database tables for specified class and return TSQLClassInfo object
 
 TSQLClassInfo* TSQLFile::RequestSQLClassInfo(const TClass* cl)
 {
@@ -2163,7 +2158,7 @@ Bool_t TSQLFile::CreateClassTable(TSQLClassInfo* sqlinfo, TObjArray* colinfos)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///create the raw table
+/// Create the raw table
 
 Bool_t TSQLFile::CreateRawTable(TSQLClassInfo* sqlinfo)
 {
@@ -2245,7 +2240,7 @@ Bool_t TSQLFile::VerifyLongStringTable()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// produces id which will be placed in column instead of string itself
+/// Produces id which will be placed in column instead of string itself
 
 TString TSQLFile::CodeLongString(Long64_t objid, Int_t strid)
 {
@@ -2255,7 +2250,7 @@ TString TSQLFile::CodeLongString(Long64_t objid, Int_t strid)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// checks if this is long string code
+/// Checks if this is long string code
 /// returns 0, if not or string id
 
 Int_t TSQLFile::IsLongStringCode(Long64_t objid, const char* value)
@@ -2292,7 +2287,7 @@ Int_t TSQLFile::IsLongStringCode(Long64_t objid, const char* value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// returns value of string, extracted from special table,
+/// Returns value of string, extracted from special table,
 /// where long strings are stored
 
 Bool_t TSQLFile::GetLongString(Long64_t objid, Int_t strid, TString& value)
@@ -2470,7 +2465,7 @@ TSQLResult* TSQLFile::GetNormalClassData(Long64_t objid, TSQLClassInfo* sqlinfo)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return data for several objects from the range from normal class table
+/// Return data for several objects from the range from normal class table
 
 TSQLResult* TSQLFile::GetNormalClassDataAll(Long64_t minobjid, Long64_t maxobjid, TSQLClassInfo* sqlinfo)
 {
@@ -2485,7 +2480,7 @@ TSQLResult* TSQLFile::GetNormalClassDataAll(Long64_t minobjid, Long64_t maxobjid
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Method return request results for specified objid from _streamer_ classtable
+/// Method return request results for specified objid from _streamer_ classtable
 
 TSQLResult* TSQLFile::GetBlobClassData(Long64_t objid, TSQLClassInfo* sqlinfo)
 {
@@ -2501,8 +2496,8 @@ TSQLResult* TSQLFile::GetBlobClassData(Long64_t objid, TSQLClassInfo* sqlinfo)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Method return request results for specified objid from _streamer_ classtable
-///  Data returned in form of statement, where direct access to values are possible
+/// Method return request results for specified objid from _streamer_ classtable
+/// Data returned in form of statement, where direct access to values are possible
 
 TSQLStatement* TSQLFile::GetBlobClassDataStmt(Long64_t objid, TSQLClassInfo* sqlinfo)
 {
@@ -2578,7 +2573,7 @@ Long64_t TSQLFile::StoreObjectInTables(Long64_t keyid, const void* obj, const TC
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// returns sql type name which is most closer to ROOT basic type
+/// Returns sql type name which is most closer to ROOT basic type.
 /// typ should be from TVirtualStreamerInfo:: constansts like TVirtualStreamerInfo::kInt
 
 const char* TSQLFile::SQLCompatibleType(Int_t typ) const
@@ -2676,8 +2671,8 @@ void TSQLFile::DirWriteHeader(TDirectory* dir)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// streamer for TSQLFile class
-/// stores only data for TDirectory
+/// Streamer for TSQLFile class.
+/// Stores only data for TDirectory.
 
 void TSQLFile::Streamer(TBuffer &b)
 {

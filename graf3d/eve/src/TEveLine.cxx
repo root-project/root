@@ -17,14 +17,10 @@ namespace
    inline Float_t sqr(Float_t x) { return x*x; }
 }
 
-//==============================================================================
-//==============================================================================
-// TEveLine
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// An arbitrary polyline with fixed line and marker attributes.
+/** \class TEveLine
+\ingroup TEve
+An arbitrary polyline with fixed line and marker attributes.
+*/
 
 ClassImp(TEveLine);
 
@@ -180,8 +176,6 @@ void TEveLine::SetSmooth(Bool_t r)
    }
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Make sure that no segment is longer than max.
 /// Per point references and integer ids are lost.
@@ -260,8 +254,6 @@ TEveVector TEveLine::GetLineEnd() const
    return v;
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy visualization parameters from element el.
 
@@ -301,8 +293,6 @@ TClass* TEveLine::ProjectedClass(const TEveProjection*) const
    return TEveLineProjected::Class();
 }
 
-//------------------------------------------------------------------------------
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get default value for smooth-line drawing flag.
 /// Static function.
@@ -321,16 +311,10 @@ void TEveLine::SetDefaultSmooth(Bool_t r)
    fgDefaultSmooth = r;
 }
 
-
-
-//==============================================================================
-//==============================================================================
-// TEveLineProjected
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Projected copy of a TEveLine.
+/** \class TEveLineProjected
+\ingroup TEve
+Projected copy of a TEveLine.
+*/
 
 ClassImp(TEveLineProjected);
 

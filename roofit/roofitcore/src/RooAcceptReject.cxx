@@ -14,16 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// Class RooAcceptReject is a generic toy monte carlo generator implement
-// the accept/reject sampling technique on any positively valued function.
-// The RooAcceptReject generator is used by the various generator context
-// classes to take care of generation of observables for which p.d.fs
-// do not define internal methods
-// END_HTML
-//
+/**
+\file RooAcceptReject.cxx
+\class RooAcceptReject
+\ingroup Roofitcore
+
+Class RooAcceptReject is a generic toy monte carlo generator implement
+the accept/reject sampling technique on any positively valued function.
+The RooAcceptReject generator is used by the various generator context
+classes to take care of generation of observables for which p.d.fs
+do not define internal methods
+**/
 
 
 #include "RooFit.h"
@@ -106,19 +107,21 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
     else {
       _minTrials= _minTrialsArray[_realSampleDim]*_catSampleMult;
     }
+    if (_realSampleDim > 1) {
+       coutW(Generation) << "RooAcceptReject::ctor(" << fName 
+                         << ") WARNING: performing accept/reject sampling on a p.d.f in " 
+                         << _realSampleDim << " dimensions without prior knowledge on maximum value "
+                         << "of p.d.f. Determining maximum value by taking " << _minTrials 
+                         << " trial samples. If p.d.f contains sharp peaks smaller than average "
+                         << "distance between trial sampling points these may be missed and p.d.f. "
+                         << "may be sampled incorrectly." << endl ;
+    }
   } else {
     // No trials needed if we know the maximum a priori
     _minTrials=0 ;
   }
 
   // Need to fix some things here
-  if (_realSampleDim > 1) {
-    coutW(Generation) << "RooAcceptReject::ctor(" << fName 
-		      << ") WARNING: performing accept/reject sampling on a p.d.f in " << _realSampleDim << " dimensions "
-		      << "without prior knowledge on maximum value of p.d.f. Determining maximum value by taking " << _minTrials 
-		      << " trial samples. If p.d.f contains sharp peaks smaller than average distance between trial sampling points"
-		      << " these may be missed and p.d.f. may be sampled incorrectly." << endl ;
-  }
   if (_minTrials>10000) {
     coutW(Generation) << "RooAcceptReject::ctor(" << fName << "): WARNING: " << _minTrials << " trial samples requested by p.d.f for " 
 		      << _realSampleDim << "-dimensional accept/reject sampling, this may take some time" << endl ;

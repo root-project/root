@@ -11,12 +11,6 @@
 
 #include "TEveVSDStructs.h"
 
-
-//______________________________________________________________________________
-//
-// Not documented.
-//
-
 ClassImp(TEveMCTrack);
 ClassImp(TEveHit);
 ClassImp(TEveCluster);

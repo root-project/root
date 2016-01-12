@@ -16,6 +16,10 @@
 #include "TGLPlotCamera.h"
 #include "TGLIncludes.h"
 
+/** \class TGLH2PolyPainter
+\ingroup opengl
+Paint TH2Poly.
+*/
 
 ClassImp(TGLH2PolyPainter)
 
@@ -404,7 +408,6 @@ Bool_t TGLH2PolyPainter::CacheGeometry()
          if (!BuildTesselation(tesselator, mg, binZ))
             return kFALSE;
       } else {
-         //Da vy chto, sgovorilis' chto li???
          Error("TGLH2PolyPainter::CacheGeometry", "Bin contains object of unknown type");
          return kFALSE;
       }
@@ -468,7 +471,6 @@ Bool_t TGLH2PolyPainter::BuildTesselation(Rgl::Pad::Tesselator &tess, const TMul
    for(TObjLink *link = graphs->FirstLink(); link; link = link->Next()) {
       const TGraph *graph = dynamic_cast<TGraph *>(link->GetObject());
       if (!graph) {
-         //Da chto za fignia v konce koncov????
          Error("TGLH2PolyPainter::BuildTesselation", "TGraph expected inside a multigraph, got something else");
          return kFALSE;
       }
@@ -483,8 +485,7 @@ Bool_t TGLH2PolyPainter::BuildTesselation(Rgl::Pad::Tesselator &tess, const TMul
 ////////////////////////////////////////////////////////////////////////////////
 ///Update cap's z-coordinates for all caps.
 ///Here no pointers are checked, this was already done
-///by InitGeometry. So, if histogram was broken somehow
-///- hehe, good luck.
+///by InitGeometry.
 
 Bool_t TGLH2PolyPainter::UpdateGeometry()
 {

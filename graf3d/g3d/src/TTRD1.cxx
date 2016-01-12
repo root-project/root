@@ -14,19 +14,22 @@
 
 ClassImp(TTRD1)
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/trd1.gif"> </P> End_Html
-// TRD1 is a trapezoid with the x dimension varying along z.
-// It has 7 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - dx1        half-length along x at the z surface positioned at -DZ
-//     - dx2        half-length along x at the z surface positioned at +DZ
-//     - dy         half-length along the y-axis
-//     - dz         half-length along the z-axis
+/** \class TTRD1
+\ingroup g3d
+A trapezoid with the x dimension varying along z.
 
+\image html g3d_trd1.png
+
+It has 7 parameters:
+
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - dx1:        half-length along x at the z surface positioned at -DZ
+  - dx2:        half-length along x at the z surface positioned at +DZ
+  - dy:         half-length along the y-axis
+  - dz:         half-length along the z-axis
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TRD1 shape default constructor
@@ -35,7 +38,6 @@ TTRD1::TTRD1()
 {
    fDx2 = 0.;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TRD1 shape normal constructor
@@ -46,14 +48,12 @@ TTRD1::TTRD1(const char *name, const char *title, const char *material, Float_t 
    fDx2 = dx2;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TRD1 shape default destructor
 
 TTRD1::~TTRD1()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create TRD1 points

@@ -28,18 +28,26 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include <algorithm>
+#include "TMVA/RuleFit.h"
 
+#include "TMVA/DataSet.h"
+#include "TMVA/DecisionTree.h"
+#include "TMVA/Event.h"
+#include "TMVA/Factory.h" // for root base dir
+#include "TMVA/GiniIndex.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MethodRuleFit.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Timer.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/SeparationBase.h"
+
+#include "TH2F.h"
 #include "TKey.h"
 #include "TRandom3.h"
 
-#include "TMVA/SeparationBase.h"
-#include "TMVA/GiniIndex.h"
-#include "TMVA/RuleFit.h"
-#include "TMVA/MethodRuleFit.h"
-#include "TMVA/Timer.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Factory.h" // for root base dir
+#include <algorithm>
 
 ClassImp(TMVA::RuleFit)
 

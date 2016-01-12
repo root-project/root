@@ -39,9 +39,10 @@ namespace PyROOT {
          kIsConstructor  =    4,   // if method is a C++ constructor
          kUseHeuristics  =    8,   // if method applies heuristics memory policy
          kUseStrict      =   16,   // if method applies strict memory policy
-         kReleaseGIL     =   32,   // if method should release the GIL
-         kFast           =   64,   // if method should NOT handle signals
-         kSafe           =  128    // if method should return on signals
+         kManageSmartPtr =   32,   // if executor should manage smart pointers
+         kReleaseGIL     =   64,   // if method should release the GIL
+         kFast           =  128,   // if method should NOT handle signals
+         kSafe           =  256    // if method should return on signals
       };
 
    // memory handling
@@ -69,6 +70,10 @@ namespace PyROOT {
       return flags & TCallContext::kIsConstructor;
    }
 
+   inline Bool_t ManagesSmartPtr( TCallContext* ctxt ) {
+      return ctxt->fFlags & TCallContext::kManageSmartPtr;
+   }
+
    inline Bool_t ReleasesGIL( UInt_t flags ) {
       return flags & TCallContext::kReleaseGIL;
    }
@@ -78,8 +83,12 @@ namespace PyROOT {
    }
 
    inline Bool_t UseStrictOwnership( TCallContext* ctxt ) {
-      return ctxt ? (ctxt->fFlags & TCallContext::kUseStrict) : 
-                    (TCallContext::sMemoryPolicy & TCallContext::kUseStrict);
+      if ( ctxt && (ctxt->fFlags & TCallContext::kUseStrict) )
+         return kTRUE;
+      if ( ctxt && (ctxt->fFlags & TCallContext::kUseHeuristics) )
+         return kFALSE;
+
+      return TCallContext::sMemoryPolicy == TCallContext::kUseStrict;
    }
 
 } // namespace PyROOT

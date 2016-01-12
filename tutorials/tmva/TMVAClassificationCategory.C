@@ -35,6 +35,7 @@
 
 #include "TMVA/MethodCategory.h"
 #include "TMVA/Factory.h"
+#include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
 #include "TMVA/TMVAGui.h"
 
@@ -64,17 +65,20 @@ void TMVAClassificationCategory()
   if (batchMode) factoryOptions += ":!Color:!DrawProgressBar";
 
    TMVA::Factory *factory = new TMVA::Factory( "TMVAClassificationCategory", outputFile, factoryOptions );
+  
+   // Create DataLoader
+   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
 
    // Define the input variables used for the MVA training
-   factory->AddVariable( "var1", 'F' );
-   factory->AddVariable( "var2", 'F' );
-   factory->AddVariable( "var3", 'F' );
-   factory->AddVariable( "var4", 'F' );
+   dataloader->AddVariable( "var1", 'F' );
+   dataloader->AddVariable( "var2", 'F' );
+   dataloader->AddVariable( "var3", 'F' );
+   dataloader->AddVariable( "var4", 'F' );
 
    // You can add so-called "Spectator variables", which are not used in the MVA training,
    // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the
    // input variables, the response values of all trained MVAs, and the spectator variables
-   factory->AddSpectator( "eta" );
+   dataloader->AddSpectator( "eta" );
 
    // Load the signal and background event samples from ROOT trees
    TFile *input(0);
@@ -104,24 +108,24 @@ void TMVAClassificationCategory()
    Double_t backgroundWeight = 1.0;
 
    /// You can add an arbitrary number of signal or background trees
-   factory->AddSignalTree    ( signal,     signalWeight     );
-   factory->AddBackgroundTree( background, backgroundWeight );
+   dataloader->AddSignalTree    ( signal,     signalWeight     );
+   dataloader->AddBackgroundTree( background, backgroundWeight );
 
    // Apply additional cuts on the signal and background samples (can be different)
    TCut mycuts = ""; // for example: TCut mycuts = "abs(var1)<0.5 && abs(var2-0.5)<1";
    TCut mycutb = ""; // for example: TCut mycutb = "abs(var1)<0.5";
 
    // Tell the factory how to use the training and testing events
-   factory->PrepareTrainingAndTestTree( mycuts, mycutb,
+   dataloader->PrepareTrainingAndTestTree( mycuts, mycutb,
                                         "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" );
 
    // ---- Book MVA methods
 
    // Fisher discriminant
-   factory->BookMethod( TMVA::Types::kFisher, "Fisher", "!H:!V:Fisher" );
+   factory->BookMethod( dataloader, TMVA::Types::kFisher, "Fisher", "!H:!V:Fisher" );
 
    // Likelihood
-   factory->BookMethod( TMVA::Types::kLikelihood, "Likelihood",
+   factory->BookMethod( dataloader, TMVA::Types::kLikelihood, "Likelihood",
                         "!H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" ); 
 
    // --- Categorised classifier
@@ -132,13 +136,13 @@ void TMVAClassificationCategory()
    TString theCat2Vars = (UseOffsetMethod ? "var1:var2:var3:var4" : "var1:var2:var3");
 
    // Fisher with categories
-   TMVA::MethodBase* fiCat = factory->BookMethod( TMVA::Types::kCategory, "FisherCat","" );
+   TMVA::MethodBase* fiCat = factory->BookMethod( dataloader, TMVA::Types::kCategory, "FisherCat","" );
    mcat = dynamic_cast<TMVA::MethodCategory*>(fiCat);
    mcat->AddMethod( "abs(eta)<=1.3", theCat1Vars, TMVA::Types::kFisher, "Category_Fisher_1","!H:!V:Fisher" );
    mcat->AddMethod( "abs(eta)>1.3",  theCat2Vars, TMVA::Types::kFisher, "Category_Fisher_2","!H:!V:Fisher" );
 
    // Likelihood with categories
-   TMVA::MethodBase* liCat = factory->BookMethod( TMVA::Types::kCategory, "LikelihoodCat","" );
+   TMVA::MethodBase* liCat = factory->BookMethod( dataloader, TMVA::Types::kCategory, "LikelihoodCat","" );
    mcat = dynamic_cast<TMVA::MethodCategory*>(liCat);
    mcat->AddMethod( "abs(eta)<=1.3",theCat1Vars, TMVA::Types::kLikelihood,
                     "Category_Likelihood_1","!H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" );
@@ -166,6 +170,7 @@ void TMVAClassificationCategory()
 
    // Clean up
    delete factory;
+   delete dataloader;
 
    // Launch the GUI for the root macros
    if (!gROOT->IsBatch()) TMVA::TMVAGui( outfileName );

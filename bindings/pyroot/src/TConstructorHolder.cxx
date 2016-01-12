@@ -13,7 +13,7 @@
 
 
 //- protected members --------------------------------------------------------
-Bool_t PyROOT::TConstructorHolder::InitExecutor_( TExecutor*& executor )
+Bool_t PyROOT::TConstructorHolder::InitExecutor_( TExecutor*& executor, TCallContext* )
 {
 // pick up special case new object executor
    executor = CreateExecutor( "__init__" );
@@ -48,7 +48,7 @@ PyObject* PyROOT::TConstructorHolder::Call(
    }
 
 // setup as necessary
-   if ( ! this->Initialize() )
+   if ( ! this->Initialize( ctxt ) )
       return 0;                              // important: 0, not Py_None
 
 // fetch self, verify, and put the arguments in usable order

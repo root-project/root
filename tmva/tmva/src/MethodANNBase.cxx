@@ -53,8 +53,10 @@
 #include "TH1.h"
 #include "TMath.h"
 
+#include "TMVA/DataSetInfo.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/MethodANNBase.h"
+#include "TMVA/MsgLogger.h"
 #include "TMVA/TNeuron.h"
 #include "TMVA/TSynapse.h"
 #include "TMVA/TActivationChooser.h"

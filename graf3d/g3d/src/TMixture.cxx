@@ -10,15 +10,16 @@
  *************************************************************************/
 
 #include "TMixture.h"
+
+#include "TBuffer.h"
 #include "TMath.h"
 
 ClassImp(TMixture)
 
-//______________________________________________________________________________
-//
-// Manages a detector mixture. See class TGeometry.
-//
-
+/** \class TMixture
+\ingroup g3d
+Manages a detector mixture. See class TGeometry.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Mixture default constructor.
@@ -31,23 +32,22 @@ TMixture::TMixture()
    fNmixt = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Mixture normal constructor
 ///
-///       Defines mixture OR COMPOUND as composed by
-///       the basic nmixt materials defined later by DefineElement.
+/// Defines mixture OR COMPOUND as composed by
+/// the basic nmixt materials defined later by DefineElement.
 ///
-///       If nmixt > 0 then Wmixt contains the PROPORTION BY WEIGHTS
-///       of each basic material in the mixture.
+/// If nmixt > 0 then Wmixt contains the PROPORTION BY WEIGHTS
+/// of each basic material in the mixture.
 ///
-///       If nmixt < 0 then Wmixt contains the number of atoms
-///       of a given kind into the molecule of the COMPOUND
-///       In this case, Wmixt is changed to relative weights.
+/// If nmixt < 0 then Wmixt contains the number of atoms
+/// of a given kind into the molecule of the COMPOUND
+/// In this case, Wmixt is changed to relative weights.
 ///
-///       nb : the radiation length is computed according
-///            the EGS manual slac-210 uc-32 June-78
-///                          formula  2-6-8 (37)
+/// nb : the radiation length is computed according
+/// the EGS manual slac-210 uc-32 June-78
+/// formula  2-6-8 (37)
 
 TMixture::TMixture(const char *name, const char *title, Int_t nmixt)
            :TMaterial(name,title,0,0,0)
@@ -67,7 +67,6 @@ TMixture::TMixture(const char *name, const char *title, Int_t nmixt)
    fWmixt   = new Float_t[nm];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Mixture default destructor.
 
@@ -81,7 +80,6 @@ TMixture::~TMixture()
    fWmixt = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Define one mixture element.
 
@@ -92,7 +90,6 @@ void TMixture::DefineElement(Int_t n, Float_t a, Float_t z, Float_t w)
    fZmixt[n] = z;
    fWmixt[n] = w;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream a class object.

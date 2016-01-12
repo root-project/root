@@ -27,6 +27,16 @@
 
 namespace RooStats {
 
+/**
+
+ \ingroup Roostats
+
+ This class provides simple and straightforward utilities to plot a LikelihoodInterval
+ object.
+
+*/
+
+
  class LikelihoodIntervalPlot : public TNamed, public RooPrintable {
 
    public:
@@ -34,69 +44,69 @@ namespace RooStats {
 
     LikelihoodIntervalPlot(LikelihoodInterval* theInterval);
 
-    // Destructor of SamplingDistribution
+    /// Destructor of SamplingDistribution
     virtual ~LikelihoodIntervalPlot();
 
 
-    // returned plotted object (RooPlot or histograms)
+    /// returned plotted object (RooPlot or histograms)
     TObject * GetPlottedObject() const { return fPlotObject; }
 
     void SetLikelihoodInterval(LikelihoodInterval* theInterval);
     void SetPlotParameters(const RooArgSet *params) ;
 
 
-    // set plot range (for 1D plot)
+    /// set plot range (for 1D plot)
     void SetRange(double x1, double x2) { fXmin = x1; fXmax = x2; }
-    // set plot range (for 2D plot)
+    /// set plot range (for 2D plot)
     void SetRange(double x1, double y1, double x2, double y2) {
        fXmin = x1; fXmax = x2; 
        fYmin = y1; fYmax = y2; 
     }
 
-    //set plot precision (when drawing a RooPlot)
+    ///set plot precision (when drawing a RooPlot)
     void SetPrecision(double eps) { fPrecision = eps; }
-    // set the line color for the 1D interval lines or contours (2D)
+    /// set the line color for the 1D interval lines or contours (2D)
     void SetLineColor(const Color_t color) {fLineColor = color;}
-    // set the fill contour color
+    /// set the fill contour color
     void SetFillStyle(const Style_t style) {fFillStyle = style;}
-    // set the fill contour color
+    /// set the fill contour color
     void SetContourColor(const Color_t color) {fColor = color;}
     void SetMaximum(const Double_t theMaximum) {fMaximum = theMaximum;}
     void SetNPoints(Int_t np) { fNPoints = np; }
 
 
-    // draw the likelihood interval or contour
-    // for the 1D case a RooPlot is drawn by default of the profiled Log-Likelihood ratio
-    // if option "TF1" is used the objects is drawn using a TF1 scanning the LL function in a 
-    // grid of the setetd points (by default 
-    // the TF1 can be costumized by setting maximum and the number of points to scan 
+    /// draw the likelihood interval or contour
+    /// for the 1D case a RooPlot is drawn by default of the profiled Log-Likelihood ratio
+    /// if option "TF1" is used the objects is drawn using a TF1 scanning the LL function in a 
+    /// grid of the setetd points (by default 
+    /// the TF1 can be costumized by setting maximum and the number of points to scan 
     void Draw(const Option_t *options=0);
 
   private:
 
-    Color_t fColor;         // color for the contour (for 2D) or function (in 1D)
-    Style_t fFillStyle;     // fill style for contours
-    Color_t fLineColor;     // line color for the interval (1D) or for other contours (2D)
+    Color_t fColor;         /// color for the contour (for 2D) or function (in 1D)
+    Style_t fFillStyle;     /// fill style for contours
+    Color_t fLineColor;     /// line color for the interval (1D) or for other contours (2D)
     Int_t fNdimPlot;
-    Int_t fNPoints; // number of points used to scan the PL 
+    Int_t fNPoints; /// number of points used to scan the PL 
 
-    Double_t fMaximum;   // function maximum
+    Double_t fMaximum;   /// function maximum
     // ranges for plots 
     Double_t fXmin;
     Double_t fXmax;
     Double_t fYmin;
     Double_t fYmax;
-    Double_t fPrecision;  // RooCurve precision
+    Double_t fPrecision;  /// RooCurve precision
 
     LikelihoodInterval *fInterval;
 
     RooArgSet *fParamsPlot;
-    TObject * fPlotObject;    // plotted object
+    TObject * fPlotObject;    /// plotted object
 
 
   protected:
 
-    ClassDef(LikelihoodIntervalPlot,2)  // Class containing the results of the IntervalCalculator
+    ClassDef(LikelihoodIntervalPlot,2)  /// Class containing the results of the IntervalCalculator
   };
 }
 

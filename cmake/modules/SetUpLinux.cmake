@@ -35,10 +35,10 @@ elseif(${SYSCTL_OUTPUT} MATCHES ppc64le)
   set(SPECIAL_CINT_FLAGS "-DG__64BIT")
   if(CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "Found GNU compiler collection")
-    set(ROOT_ARCHITECTURE ppc64le)
+    set(ROOT_ARCHITECTURE linuxppc64gcc)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
     message(STATUS "Found CLANG compiler")
-    set(ROOT_ARCHITECTURE ppc64le)
+    set(ROOT_ARCHITECTURE linuxppc64gcc)
   else()
     message(FATAL_ERROR "There is no Setup for this compiler up to now. Don't know what to do. Stop cmake at this point.")
   endif()
@@ -67,7 +67,7 @@ set(CMAKE_M_LIBS -lm)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -Woverloaded-virtual -fsigned-char -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wshadow -Wall -W -Woverloaded-virtual -fsigned-char -fPIC")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -fPIC")
 
   set(CMAKE_Fortran_FLAGS "${CMAKE_FORTRAN_FLAGS} ${BIT_ENVIRONMENT} -std=legacy")
@@ -104,7 +104,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -Woverloaded-virtual -fsigned-char -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wshadow -Wall -W -Woverloaded-virtual -fsigned-char -fPIC")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -fPIC")
 
   set(CMAKE_Fortran_FLAGS "${CMAKE_FORTRAN_FLAGS} ${BIT_ENVIRONMENT} -std=legacy")

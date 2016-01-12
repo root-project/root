@@ -11,11 +11,11 @@
  *************************************************************************/
 
 
-//______________________________________________________________________________
-//
-// Implementation of the TVirtualMCGeometry interface
-// for building TGeo geometry.
-//______________________________________________________________________________
+/** \class TGeoMCGeometry
+
+Implementation of the TVirtualMCGeometry interface
+for building TGeo geometry.
+*/
 
 #include <ctype.h>
 #include "TError.h"
@@ -91,9 +91,8 @@ TGeoManager* TGeoMCGeometry::GetTGeoManager() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Converts Float_t* array to Double_t*,
+/// Convert Float_t* array to Double_t*,
 /// !! The new array has to be deleted by user.
-/// ---
 
 Double_t* TGeoMCGeometry::CreateDoubleArray(Float_t* array, Int_t size) const
 {
@@ -110,7 +109,7 @@ Double_t* TGeoMCGeometry::CreateDoubleArray(Float_t* array, Int_t size) const
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-///  convert name to upper case. Make vname at least 4 chars
+/// Convert name to upper case. Make vname at least 4 chars
 ///
 
 void TGeoMCGeometry::Vname(const char *name, char *vname) const
@@ -136,22 +135,21 @@ void TGeoMCGeometry::Vname(const char *name, char *vname) const
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// Defines a Material
+/// Define a material
 ///
-///  kmat               number assigned to the material
-///  name               material name
-///  a                  atomic mass in au
-///  z                  atomic number
-///  dens               density in g/cm3
-///  absl               absorbtion length in cm
-///                     if >=0 it is ignored and the program
-///                     calculates it, if <0. -absl is taken
-///  radl               radiation length in cm
-///                     if >=0 it is ignored and the program
-///                     calculates it, if <0. -radl is taken
-///  buf                pointer to an array of user words
-///  nbuf               number of user words
-///
+/// - kmat   number assigned to the material
+/// - name   material name
+/// - a      atomic mass in au
+/// - z      atomic number
+/// - dens   density in g/cm3
+/// - absl   absorption length in cm;
+///               if >=0 it is ignored and the program
+///               calculates it, if <0. -absl is taken
+/// - radl   radiation length in cm
+///               if >=0 it is ignored and the program
+///               calculates it, if <0. -radl is taken
+/// - buf    pointer to an array of user words
+/// - nwbuf  number of user words
 
 void TGeoMCGeometry::Material(Int_t& kmat, const char* name, Double_t a, Double_t z,
                        Double_t dens, Double_t radl, Double_t absl, Float_t* buf,
@@ -164,22 +162,21 @@ void TGeoMCGeometry::Material(Int_t& kmat, const char* name, Double_t a, Double_
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// Defines a Material
+/// Define a material
 ///
-///  kmat               number assigned to the material
-///  name               material name
-///  a                  atomic mass in au
-///  z                  atomic number
-///  dens               density in g/cm3
-///  absl               absorbtion length in cm
-///                     if >=0 it is ignored and the program
-///                     calculates it, if <0. -absl is taken
-///  radl               radiation length in cm
-///                     if >=0 it is ignored and the program
-///                     calculates it, if <0. -radl is taken
-///  buf                pointer to an array of user words
-///  nbuf               number of user words
-///
+/// - kmat   number assigned to the material
+/// - name   material name
+/// - a      atomic mass in au
+/// - z      atomic number
+/// - dens   density in g/cm3
+/// - absl   absorption length in cm;
+///               if >=0 it is ignored and the program
+///               calculates it, if <0. -absl is taken
+/// - radl   radiation length in cm
+///               if >=0 it is ignored and the program
+///               calculates it, if <0. -radl is taken
+/// - buf    pointer to an array of user words
+/// - nwbuf  number of user words
 
 void TGeoMCGeometry::Material(Int_t& kmat, const char* name, Double_t a, Double_t z,
                      Double_t dens, Double_t radl, Double_t absl, Double_t* /*buf*/,
@@ -190,17 +187,17 @@ void TGeoMCGeometry::Material(Int_t& kmat, const char* name, Double_t a, Double_
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// Defines mixture OR COMPOUND IMAT as composed by
-/// THE BASIC NLMAT materials defined by arrays A,Z and WMAT
+/// Define a mixture or a compound
+/// with a number kmat composed by the basic nlmat materials defined
+/// by arrays a, z and wmat
 ///
-/// If NLMAT > 0 then wmat contains the proportion by
+/// If nlmat > 0 then wmat contains the proportion by
 /// weights of each basic material in the mixture.
 ///
-/// If nlmat < 0 then WMAT contains the number of atoms
-/// of a given kind into the molecule of the COMPOUND
-/// In this case, WMAT in output is changed to relative
-/// weigths.
-///
+/// If nlmat < 0 then wmat contains the number of atoms
+/// of a given kind into the molecule of the compound.
+/// In this case, wmat in output is changed to relative
+/// weights.
 
 void TGeoMCGeometry::Mixture(Int_t& kmat, const char* name, Float_t* a, Float_t* z,
                     Double_t dens, Int_t nlmat, Float_t* wmat)
@@ -221,17 +218,17 @@ void TGeoMCGeometry::Mixture(Int_t& kmat, const char* name, Float_t* a, Float_t*
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// Defines mixture OR COMPOUND IMAT as composed by
-/// THE BASIC NLMAT materials defined by arrays A,Z and WMAT
+/// Define a mixture or a compound
+/// with a number kmat composed by the basic nlmat materials defined
+/// by arrays a, z and wmat
 ///
-/// If NLMAT > 0 then wmat contains the proportion by
+/// If nlmat > 0 then wmat contains the proportion by
 /// weights of each basic material in the mixture.
 ///
-/// If nlmat < 0 then WMAT contains the number of atoms
-/// of a given kind into the molecule of the COMPOUND
-/// In this case, WMAT in output is changed to relative
-/// weigths.
-///
+/// If nlmat < 0 then wmat contains the number of atoms
+/// of a given kind into the molecule of the compound.
+/// In this case, wmat in output is changed to relative
+/// weights.
 
 void TGeoMCGeometry::Mixture(Int_t& kmat, const char* name, Double_t* a, Double_t* z,
                     Double_t dens, Int_t nlmat, Double_t* wmat)
@@ -252,22 +249,26 @@ void TGeoMCGeometry::Mixture(Int_t& kmat, const char* name, Double_t* a, Double_
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-///  kmed      tracking medium number assigned
-///  name      tracking medium name
-///  nmat      material number
-///  isvol     sensitive volume flag
-///  ifield    magnetic field
-///  fieldm    max. field value (kilogauss)
-///  tmaxfd    max. angle due to field (deg/step)
-///  stemax    max. step allowed
-///  deemax    max. fraction of energy lost in a step
-///  epsil     tracking precision (cm)
-///  stmin     min. step due to continuous processes (cm)
+/// Define a medium.
 ///
-///  ifield = 0 if no magnetic field; ifield = -1 if user decision in guswim;
-///  ifield = 1 if tracking performed with g3rkuta; ifield = 2 if tracking
-///  performed with g3helix; ifield = 3 if tracking performed with g3helx3.
-///
+/// - kmed      tracking medium number assigned
+/// - name      tracking medium name
+/// - nmat      material number
+/// - isvol     sensitive volume flag
+/// - ifield    magnetic field:
+///                  - ifield = 0 if no magnetic field;
+///                  - ifield = -1 if user decision in guswim;
+///                  - ifield = 1 if tracking performed with g3rkuta;
+///                  - ifield = 2 if tracking performed with g3helix;
+///                  - ifield = 3 if tracking performed with g3helx3.
+/// - fieldm    max. field value (kilogauss)
+/// - tmaxfd    max. angle due to field (deg/step)
+/// - stemax    max. step allowed
+/// - deemax    max. fraction of energy lost in a step
+/// - epsil     tracking precision (cm)
+/// - stmin     min. step due to continuous processes (cm)
+/// - ubuf      pointer to an array of user words
+/// - nbuf      number of user words
 
 void TGeoMCGeometry::Medium(Int_t& kmed, const char* name, Int_t nmat, Int_t isvol,
                    Int_t ifield, Double_t fieldm, Double_t tmaxfd,
@@ -283,22 +284,26 @@ void TGeoMCGeometry::Medium(Int_t& kmed, const char* name, Int_t nmat, Int_t isv
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-///  kmed      tracking medium number assigned
-///  name      tracking medium name
-///  nmat      material number
-///  isvol     sensitive volume flag
-///  ifield    magnetic field
-///  fieldm    max. field value (kilogauss)
-///  tmaxfd    max. angle due to field (deg/step)
-///  stemax    max. step allowed
-///  deemax    max. fraction of energy lost in a step
-///  epsil     tracking precision (cm)
-///  stmin     min. step due to continuos processes (cm)
+/// Define a medium.
 ///
-///  ifield = 0 if no magnetic field; ifield = -1 if user decision in guswim;
-///  ifield = 1 if tracking performed with g3rkuta; ifield = 2 if tracking
-///  performed with g3helix; ifield = 3 if tracking performed with g3helx3.
-///
+/// - kmed      tracking medium number assigned
+/// - name      tracking medium name
+/// - nmat      material number
+/// - isvol     sensitive volume flag
+/// - ifield    magnetic field:
+///                  - ifield = 0 if no magnetic field;
+///                  - ifield = -1 if user decision in guswim;
+///                  - ifield = 1 if tracking performed with g3rkuta;
+///                  - ifield = 2 if tracking performed with g3helix;
+///                  - ifield = 3 if tracking performed with g3helx3.
+/// - fieldm    max. field value (kilogauss)
+/// - tmaxfd    max. angle due to field (deg/step)
+/// - stemax    max. step allowed
+/// - deemax    max. fraction of energy lost in a step
+/// - epsil     tracking precision (cm)
+/// - stmin     min. step due to continuous processes (cm)
+/// - ubuf      pointer to an array of user words
+/// - nbuf      number of user words
 
 void TGeoMCGeometry::Medium(Int_t& kmed, const char* name, Int_t nmat, Int_t isvol,
                    Int_t ifield, Double_t fieldm, Double_t tmaxfd,
@@ -310,16 +315,15 @@ void TGeoMCGeometry::Medium(Int_t& kmed, const char* name, Int_t nmat, Int_t isv
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-///  krot     rotation matrix number assigned
-///  theta1   polar angle for axis i
-///  phi1     azimuthal angle for axis i
-///  theta2   polar angle for axis ii
-///  phi2     azimuthal angle for axis ii
-///  theta3   polar angle for axis iii
-///  phi3     azimuthal angle for axis iii
+/// Define a rotation matrix
 ///
-///  it defines the rotation matrix number irot.
-///
+/// - krot     rotation matrix number assigned
+/// - thetaX   polar angle for axis X
+/// - phiX     azimuthal angle for axis X
+/// - thetaY   polar angle for axis Y
+/// - phiY     azimuthal angle for axis Y
+/// - thetaZ   polar angle for axis Z
+/// - phiZ     azimuthal angle for axis Z
 
 void TGeoMCGeometry::Matrix(Int_t& krot, Double_t thex, Double_t phix, Double_t they,
                    Double_t phiy, Double_t thez, Double_t phiz)
@@ -330,14 +334,13 @@ void TGeoMCGeometry::Matrix(Int_t& krot, Double_t thex, Double_t phix, Double_t 
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-///  NAME   Volume name
-///  SHAPE  Volume type
-///  NUMED  Tracking medium number
-///  NPAR   Number of shape parameters
-///  UPAR   Vector containing shape parameters
+/// Create a new volume
 ///
-///  It creates a new volume in the JVOLUM data structure.
-///
+/// - name   Volume name
+/// - shape  Volume type
+/// - nmed   Tracking medium number
+/// - np     Number of shape parameters
+/// - upar   Vector containing shape parameters
 
 Int_t TGeoMCGeometry::Gsvolu(const char *name, const char *shape, Int_t nmed,
                     Float_t *upar, Int_t npar)
@@ -350,14 +353,13 @@ Int_t TGeoMCGeometry::Gsvolu(const char *name, const char *shape, Int_t nmed,
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-///  NAME   Volume name
-///  SHAPE  Volume type
-///  NUMED  Tracking medium number
-///  NPAR   Number of shape parameters
-///  UPAR   Vector containing shape parameters
+/// Create a new volume
 ///
-///  It creates a new volume in the JVOLUM data structure.
-///
+/// - name   Volume name
+/// - shape  Volume type
+/// - nmed   Tracking medium number
+/// - np     Number of shape parameters
+/// - upar   Vector containing shape parameters
 
 Int_t TGeoMCGeometry::Gsvolu(const char *name, const char *shape, Int_t nmed,
                     Double_t *upar, Int_t npar)
@@ -379,14 +381,12 @@ Int_t TGeoMCGeometry::Gsvolu(const char *name, const char *shape, Int_t nmed,
 ///
 /// Create a new volume by dividing an existing one
 ///
-///  NAME   Volume name
-///  MOTHER Mother volume name
-///  NDIV   Number of divisions
-///  IAXIS  Axis value
-///
-///  X,Y,Z of CAXIS will be translated to 1,2,3 for IAXIS.
-///  It divides a previously defined volume.
-///
+/// It divides a previously defined volume
+/// - name   Volume name
+/// - mother Mother volume name
+/// - ndiv   Number of divisions
+/// - iaxis  Axis value:
+///               X,Y,Z of CAXIS will be translated to 1,2,3 for IAXIS.
 
 void  TGeoMCGeometry::Gsdvn(const char *name, const char *mother, Int_t ndiv,
                    Int_t iaxis)
@@ -403,10 +403,9 @@ void  TGeoMCGeometry::Gsdvn(const char *name, const char *mother, Int_t ndiv,
 ///
 /// Create a new volume by dividing an existing one
 ///
-/// Divides mother into ndiv divisions called name
+/// Divide mother into ndiv divisions called name
 /// along axis iaxis starting at coordinate value c0.
 /// the new volume created will be medium number numed.
-///
 
 void  TGeoMCGeometry::Gsdvn2(const char *name, const char *mother, Int_t ndiv,
                     Int_t iaxis, Double_t c0i, Int_t numed)
@@ -422,14 +421,13 @@ void  TGeoMCGeometry::Gsdvn2(const char *name, const char *mother, Int_t ndiv,
 ///
 /// Create a new volume by dividing an existing one
 ///
-///       Divides MOTHER into divisions called NAME along
-///       axis IAXIS in steps of STEP. If not exactly divisible
-///       will make as many as possible and will centre them
-///       with respect to the mother. Divisions will have medium
-///       number NUMED. If NUMED is 0, NUMED of MOTHER is taken.
-///       NDVMX is the expected maximum number of divisions
-///          (If 0, no protection tests are performed)
-///
+/// Divide mother into divisions called name along
+/// axis iaxis in steps of step. If not exactly divisible
+/// will make as many as possible and will center them
+/// with respect to the mother. Divisions will have medium
+/// number numed. If numed is 0, numed of mother is taken.
+/// ndvmx is the expected maximum number of divisions
+/// (If 0, no protection tests are performed in Geant3)
 
 void  TGeoMCGeometry::Gsdvt(const char *name, const char *mother, Double_t step,
                    Int_t iaxis, Int_t numed, Int_t /*ndvmx*/)
@@ -446,14 +444,13 @@ void  TGeoMCGeometry::Gsdvt(const char *name, const char *mother, Double_t step,
 ///
 /// Create a new volume by dividing an existing one
 ///
-///           Divides MOTHER into divisions called NAME along
-///            axis IAXIS starting at coordinate value C0 with step
-///            size STEP.
-///           The new volume created will have medium number NUMED.
-///           If NUMED is 0, NUMED of mother is taken.
-///           NDVMX is the expected maximum number of divisions
-///             (If 0, no protection tests are performed)
-///
+/// Divides mother into divisions called name along
+/// axis iaxis starting at coordinate value c0 with step
+/// size step.
+/// The new volume created will have medium number numed.
+/// If numed is 0, numed of mother is taken.
+/// ndvmx is the expected maximum number of divisions
+/// (If 0, no protection tests are performed in Geant3)
 
 void  TGeoMCGeometry::Gsdvt2(const char *name, const char *mother, Double_t step,
                     Int_t iaxis, Double_t c0, Int_t numed, Int_t /*ndvmx*/)
@@ -468,18 +465,19 @@ void  TGeoMCGeometry::Gsdvt2(const char *name, const char *mother, Double_t step
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-///    Flags volume CHNAME whose contents will have to be ordered
-///    along axis IAX, by setting the search flag to -IAX
-///           IAX = 1    X axis
-///           IAX = 2    Y axis
-///           IAX = 3    Z axis
-///           IAX = 4    Rxy (static ordering only  -> GTMEDI)
-///           IAX = 14   Rxy (also dynamic ordering -> GTNEXT)
-///           IAX = 5    Rxyz (static ordering only -> GTMEDI)
-///           IAX = 15   Rxyz (also dynamic ordering -> GTNEXT)
-///           IAX = 6    PHI   (PHI=0 => X axis)
-///           IAX = 7    THETA (THETA=0 => Z axis)
-///
+/// Flag volume name whose contents will have to be ordered
+/// along axis iax, by setting the search flag to -iax
+/// (Geant3 only)
+/// - IAX = 1    X axis
+/// - IAX = 2    Y axis
+/// - IAX = 3    Z axis
+/// - IAX = 4    Rxy (static ordering only  -> GTMEDI)
+/// - IAX = 14   Rxy (also dynamic ordering -> GTNEXT)
+/// - IAX = 5    Rxyz (static ordering only -> GTMEDI)
+/// - IAX = 15   Rxyz (also dynamic ordering -> GTNEXT)
+/// - IAX = 6    PHI   (PHI=0 => X axis)
+/// - IAX = 7    THETA (THETA=0 => Z axis)
+/// Nothing to be done for TGeo  //xx
 
 void  TGeoMCGeometry::Gsord(const char * /*name*/, Int_t /*iax*/)
 {
@@ -491,17 +489,15 @@ void  TGeoMCGeometry::Gsord(const char * /*name*/, Int_t /*iax*/)
 ///
 /// Position a volume into an existing one
 ///
-///  NAME   Volume name
-///  NUMBER Copy number of the volume
-///  MOTHER Mother volume name
-///  X      X coord. of the volume in mother ref. sys.
-///  Y      Y coord. of the volume in mother ref. sys.
-///  Z      Z coord. of the volume in mother ref. sys.
-///  IROT   Rotation matrix number w.r.t. mother ref. sys.
-///  ONLY   ONLY/MANY flag
-///
-///  It positions a previously defined volume in the mother.
-///
+/// It positions a previously defined volume in the mother.
+/// - name   Volume name
+/// - nr     Copy number of the volume
+/// - mother Mother volume name
+/// - x      X coord. of the volume in mother ref. sys.
+/// - y      Y coord. of the volume in mother ref. sys.
+/// - z      Z coord. of the volume in mother ref. sys.
+/// - irot   Rotation matrix number w.r.t. mother ref. sys.
+/// - konly  ONLY/MANY flag
 
 void  TGeoMCGeometry::Gspos(const char *name, Int_t nr, const char *mother, Double_t x,
                    Double_t y, Double_t z, Int_t irot, const char *konly)
@@ -521,9 +517,8 @@ void  TGeoMCGeometry::Gspos(const char *name, Int_t nr, const char *mother, Doub
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-///      Place a copy of generic volume NAME with user number
-///      NR inside MOTHER, with its parameters UPAR(1..NP)
-///
+/// Place a copy of generic volume name with user number
+///  nr inside mother, with its parameters upar(1..np)
 
 void  TGeoMCGeometry::Gsposp(const char *name, Int_t nr, const char *mother,
                     Double_t x, Double_t y, Double_t z, Int_t irot,
@@ -536,9 +531,8 @@ void  TGeoMCGeometry::Gsposp(const char *name, Int_t nr, const char *mother,
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-///      Place a copy of generic volume NAME with user number
-///      NR inside MOTHER, with its parameters UPAR(1..NP)
-///
+/// Place a copy of generic volume name with user number
+///  nr inside mother, with its parameters upar(1..np)
 
 void  TGeoMCGeometry::Gsposp(const char *name, Int_t nr, const char *mother,
                     Double_t x, Double_t y, Double_t z, Int_t irot,
@@ -559,7 +553,6 @@ void  TGeoMCGeometry::Gsposp(const char *name, Int_t nr, const char *mother,
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// Return the unique numeric identifier for volume name
-///
 
 Int_t TGeoMCGeometry::VolId(const char *name) const
 {
@@ -574,7 +567,6 @@ Int_t TGeoMCGeometry::VolId(const char *name) const
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// Return the unique numeric identifier for medium name
-///
 
 Int_t TGeoMCGeometry::MediumId(const char *name) const
 {
@@ -588,7 +580,6 @@ Int_t TGeoMCGeometry::MediumId(const char *name) const
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// Return the volume name given the volume identifier
-///
 
 const char* TGeoMCGeometry::VolName(Int_t id) const
 {
@@ -603,7 +594,6 @@ const char* TGeoMCGeometry::VolName(Int_t id) const
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// Return total number of volumes in the geometry
-///
 
 Int_t TGeoMCGeometry::NofVolumes() const
 {
@@ -613,7 +603,6 @@ Int_t TGeoMCGeometry::NofVolumes() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return number of daughters of the volume specified by volName
 /// According to A. Morsch' G3toRoot class (by A. Morsch)
-/// ---
 
 Int_t TGeoMCGeometry::NofVolDaughters(const char* volName) const
 {
@@ -630,7 +619,6 @@ Int_t TGeoMCGeometry::NofVolDaughters(const char* volName) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the name of i-th daughters of the volume specified by volName
 /// According to A. Morsch' G3toRoot class.
-/// ---
 
 const char*  TGeoMCGeometry::VolDaughterName(const char* volName, Int_t i) const
 {
@@ -654,11 +642,9 @@ const char*  TGeoMCGeometry::VolDaughterName(const char* volName, Int_t i) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the copyNo of i-th daughters of the volume specified by volName
 /// According to A. Morsch' G3toRoot class.
-/// ---
 
 Int_t TGeoMCGeometry::VolDaughterCopyNo(const char* volName, Int_t i) const
 {
-
    // Get volume
    TGeoVolume* volume = GetTGeoManager()->GetVolume(volName);
    if (!volume) {
@@ -679,7 +665,6 @@ Int_t TGeoMCGeometry::VolDaughterCopyNo(const char* volName, Int_t i) const
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// Return material number for a given volume id
-///
 
 Int_t TGeoMCGeometry::VolId2Mate(Int_t id) const
 {
@@ -694,24 +679,25 @@ Int_t TGeoMCGeometry::VolId2Mate(Int_t id) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the Transformation matrix between the volume specified
-/// by the path volumePath and the Top or mater volume. The format
-/// of the path volumePath is as follows (assuming ALIC is the Top volume)
+/// Return the transformation matrix between the volume specified
+/// by the path volumePath and the Top or mater volume.
+///
+/// The format of the path volumePath is as follows (assuming ALIC is the Top volume)
 /// "/ALIC_1/DDIP_1/S05I_2/S05H_1/S05G_3". Here ALIC is the top most
 /// or master volume which has only 1 instance of. Of all of the daughter
 /// volumes of ALICE, DDIP volume copy #1 is indicated. Similarly for
 /// the daughter volume of DDIP is S05I copy #2 and so on.
-/// Inputs:
-///   TString& volumePath  The volume path to the specific volume
-///                        for which you want the matrix. Volume name
-///                        hierarchy is separated by "/" while the
-///                        copy number is appended using a "_".
-/// Outputs:
-///  TGeoHMatrix &mat      A matrix with its values set to those
-///                        appropriate to the Local to Master transformation
-/// Return:
-///   A logical value if kFALSE then an error occurred and no change to
-///   mat was made.
+/// - Inputs:
+///   - TString& volumePath  The volume path to the specific volume
+///                          for which you want the matrix. Volume name
+///                          hierarchy is separated by "/" while the
+///                          copy number is appended using a "_".
+/// - Outputs:
+///   - TGeoHMatrix &mat     A matrix with its values set to those
+///                          appropriate to the Local to Master transformation
+/// - Return:
+///   - A logical value if kFALSE then an error occurred and no change to
+///     mat was made.
 
 Bool_t TGeoMCGeometry::GetTransformation(const TString &volumePath,TGeoHMatrix &mat)
 {
@@ -728,15 +714,15 @@ Bool_t TGeoMCGeometry::GetTransformation(const TString &volumePath,TGeoHMatrix &
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the shape and its parameters for the volume specified
 /// by volumeName.
-/// Inputs:
-///   TString& volumeName  The volume name
-/// Outputs:
-///   TString &shapeType   Shape type
-///   TArrayD &par         A TArrayD of parameters with all of the
-///                        parameters of the specified shape.
-/// Return:
-///   A logical indicating whether there was an error in getting this
-///   information
+/// - Inputs:
+///   - TString& volumeName  The volume name
+/// - Outputs:
+///   - TString &shapeType   Shape type
+///   - TArrayD &par         A TArrayD of parameters with all of the
+///                          parameters of the specified shape.
+/// - Return:
+///   - A logical indicating whether there was an error in getting this
+///     information
 
 Bool_t TGeoMCGeometry::GetShape(const TString &volumePath,TString &shapeType,
                          TArrayD &par)
@@ -987,22 +973,23 @@ Bool_t TGeoMCGeometry::GetShape(const TString &volumePath,TString &shapeType,
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the Material and its parameters for the volume specified
 /// by volumeName.
+///
 /// Note, Geant3 stores and uses mixtures as an element with an effective
 /// Z and A. Consequently, if the parameter Z is not integer, then
 /// this material represents some sort of mixture.
-/// Inputs:
-///   TString& volumeName  The volume name
-/// Outputs:
-///   TSrting   &name       Material name
-///   Int_t     &imat       Material index number
-///   Double_t  &a          Average Atomic mass of material
-///   Double_t  &z          Average Atomic number of material
-///   Double_t  &dens       Density of material [g/cm^3]
-///   Double_t  &radl       Average radiation length of material [cm]
-///   Double_t  &inter      Average interaction length of material [cm]
-///   TArrayD   &par        A TArrayD of user defined parameters.
-/// Return:
-///   kTRUE if no errors
+/// - Inputs:
+///   - TString& volumeName  The volume name
+/// - Outputs:
+///   - TSrting   &name       Material name
+///   - Int_t     &imat       Material index number
+///   - Double_t  &a          Average Atomic mass of material
+///   - Double_t  &z          Average Atomic number of material
+///   - Double_t  &dens       Density of material [g/cm^3]
+///   - Double_t  &radl       Average radiation length of material [cm]
+///   - Double_t  &inter      Average interaction length of material [cm]
+///   - TArrayD   &par        A TArrayD of user defined parameters.
+/// - Return:
+///   - kTRUE if no errors
 
 Bool_t TGeoMCGeometry::GetMaterial(const TString &volumeName,
                             TString &name,Int_t &imat,
@@ -1029,25 +1016,26 @@ Bool_t TGeoMCGeometry::GetMaterial(const TString &volumeName,
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the Medium and its parameters for the volume specified
 /// by volumeName.
-/// Inputs:
-///   TString& volumeName  The volume name.
-/// Outputs:
-///   TString  &name       Medium name
-///   Int_t    &nmat       Material number defined for this medium
-///   Int_t    &imed       The medium index number
-///   Int_t    &isvol      volume number defined for this medium
-///   Int_t    &iflield    Magnetic field flag
-///   Double_t &fieldm     Magnetic field strength
-///   Double_t &tmaxfd     Maximum angle of deflection per step
-///   Double_t &stemax     Maximum step size
-///   Double_t &deemax     Maximum fraction of energy allowed to be lost
-///                        to continuous process.
-///   Double_t &epsil      Boundary crossing precision
-///   Double_t &stmin      Minimum step size allowed
-///   TArrayD  &par        A TArrayD of user parameters with all of the
-///                        parameters of the specified medium.
-/// Return:
-///   kTRUE if there where no errors
+///
+/// - Inputs:
+///   - TString& volumeName  The volume name.
+/// - Outputs:
+///   - TString  &name       Medium name
+///   - Int_t    &nmat       Material number defined for this medium
+///   - Int_t    &imed       The medium index number
+///   - Int_t    &isvol      volume number defined for this medium
+///   - Int_t    &iflield    Magnetic field flag
+///   - Double_t &fieldm     Magnetic field strength
+///   - Double_t &tmaxfd     Maximum angle of deflection per step
+///   - Double_t &stemax     Maximum step size
+///   - Double_t &deemax     Maximum fraction of energy allowed to be lost
+///   -                      to continuous process.
+///   - Double_t &epsil      Boundary crossing precision
+///   - Double_t &stmin      Minimum step size allowed
+///   - TArrayD  &par        A TArrayD of user parameters with all of the
+///                          parameters of the specified medium.
+/// - Return:
+///   - kTRUE if there where no errors
 
 Bool_t TGeoMCGeometry::GetMedium(const TString &volumeName,TString &name,
                           Int_t &imed,Int_t &nmat,Int_t &isvol,Int_t &ifield,

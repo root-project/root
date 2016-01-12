@@ -24,14 +24,15 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//______________________________________________________________________________
-// TEveGeoNodeEditor
-//
-// Editor for TEveGeoNode class.
+/** \class TEveGeoNodeEditor
+\ingroup TEve
+Editor for TEveGeoNode class.
+*/
 
 ClassImp(TEveGeoNodeEditor)
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveGeoNodeEditor::TEveGeoNodeEditor(const TGWindow *p,
                                      Int_t width, Int_t height,
@@ -45,8 +46,6 @@ TEveGeoNodeEditor::TEveGeoNodeEditor(const TGWindow *p,
    fVizVolume(0),
    fVizVolumeDaughters(0)
 {
-   // Constructor.
-
    MakeTitle("GeoNode");
 
    // --- Visibility control
@@ -76,8 +75,6 @@ TEveGeoNodeEditor::TEveGeoNodeEditor(const TGWindow *p,
        "TEveGeoNodeEditor", this, "DoVizVolumeDaughters()");
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -92,8 +89,6 @@ void TEveGeoNodeEditor::SetModel(TObject* obj)
    fVizVolume->SetState(vol->IsVisible() ? kButtonDown : kButtonUp);
    fVizVolumeDaughters->SetState(vol->IsVisDaughters() ? kButtonDown : kButtonUp);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for VizNode.
@@ -131,15 +126,15 @@ void TEveGeoNodeEditor::DoVizVolumeDaughters()
    Update();
 }
 
-
-//______________________________________________________________________________
-// TEveGeoTopNodeEditor
-//
-// Editor for TEveGeoTopNode class.
+/** \class TEveGeoTopNodeEditor
+\ingroup TEve
+Editor for TEveGeoTopNode class.
+*/
 
 ClassImp(TEveGeoTopNodeEditor)
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveGeoTopNodeEditor::TEveGeoTopNodeEditor(const TGWindow *p,
                                            Int_t width, Int_t height,
@@ -151,8 +146,6 @@ TEveGeoTopNodeEditor::TEveGeoTopNodeEditor(const TGWindow *p,
    fVisLevel    (0),
    fMaxVisNodes (0)
 {
-   // Constructor.
-
    MakeTitle("GeoTopNode");
 
    Int_t labelW = 64;
@@ -188,8 +181,6 @@ TEveGeoTopNodeEditor::TEveGeoTopNodeEditor(const TGWindow *p,
    AddFrame(fMaxVisNodes, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -205,8 +196,6 @@ void TEveGeoTopNodeEditor::SetModel(TObject* obj)
    else
       fMaxVisNodes->MapWindow();
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for VisOption.

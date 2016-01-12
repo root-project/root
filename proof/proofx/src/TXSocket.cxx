@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXSocket                                                             //
-//                                                                      //
-// High level handler of connections to xproofd.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TXSocket
+\ingroup proofx
+
+High level handler of connections to XProofD.
+See TSocket for details.
+
+*/
 
 #include "MessageTypes.h"
 #include "TEnv.h"
@@ -103,7 +103,7 @@ TXSockPipe   TXSocket::fgPipe;               // Pipe for input monitoring
 TString      TXSocket::fgLoc = "undef";      // Location string
 
 // Static buffer manager
-TMutex       TXSocket::fgSMtx;               // To protect spare list
+std::mutex   TXSocket::fgSMtx;               // To protect spare list
 std::list<TXSockBuf *> TXSocket::fgSQue;     // list of spare buffers
 Long64_t     TXSockBuf::fgBuffMem = 0;       // Total allocated memory
 Long64_t     TXSockBuf::fgMemMax = 10485760; // Max allowed allocated memory [10 MB]
@@ -141,17 +141,9 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
       InitEnvs();
 
    // Async queue related stuff
-   if (!(fAMtx = new TMutex(kTRUE))) {
-      Error("TXSocket", "problems initializing mutex for async queue");
-      return;
-   }
    fAQue.clear();
 
    // Interrupts queue related stuff
-   if (!(fIMtx = new TMutex(kTRUE))) {
-      Error("TXSocket", "problems initializing mutex for interrupts");
-      return;
-   }
    fILev = -1;
    fIForward = kFALSE;
 
@@ -233,23 +225,6 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
    }
 }
 
-#if 0
-////////////////////////////////////////////////////////////////////////////////
-/// TXSocket copy ctor.
-
-TXSocket::TXSocket(const TXSocket &s) : TSocket(s),XrdClientAbsUnsolMsgHandler(s)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// TXSocket assignment operator.
-
-TXSocket& TXSocket::operator=(const TXSocket&)
-{
-   return *this;
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
@@ -259,10 +234,6 @@ TXSocket::~TXSocket()
    // responsible of the underlying physical connection, so we do not
    // force its closing)
    Close();
-
-   // Delete mutexes
-   SafeDelete(fAMtx);
-   SafeDelete(fIMtx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -491,7 +462,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
          //
          // Interrupt
          lab = !lab ? "kXPD_interrupt" : lab;
-         { R__LOCKGUARD(fIMtx);
+         {  std::lock_guard<std::recursive_mutex> lock(fIMtx);
             if (acod == kXPD_interrupt) {
                memcpy(&ilev, pdata, sizeof(kXR_int32));
                ilev = net2host(ilev);
@@ -666,7 +637,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
       case kXPD_msg:
          //
          // Data message
-         {  R__LOCKGUARD(fAMtx);
+         {  std::lock_guard<std::recursive_mutex> lock(fAMtx);
 
             // Get a spare buffer
             TXSockBuf *b = PopUpSpare(len);
@@ -750,7 +721,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
       case kXPD_msgsid:
          //
          // Data message
-         { R__LOCKGUARD(fAMtx);
+         { std::lock_guard<std::recursive_mutex> lock(fAMtx);
 
             // The next 4 bytes contain the sessiond id
             kXR_int32 cid = 0;
@@ -896,7 +867,7 @@ void TXSocket::PostMsg(Int_t type, const char *msg)
 
    //
    // Data message
-   R__LOCKGUARD(fAMtx);
+   std::lock_guard<std::recursive_mutex> lock(fAMtx);
 
    // Get a spare buffer
    TXSockBuf *b = PopUpSpare(mlen);
@@ -929,6 +900,60 @@ void TXSocket::PostMsg(Int_t type, const char *msg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Wake up all threads waiting for at the semaphore (used by TXSlave)
+
+void TXSocket::PostSemAll()
+{
+   std::lock_guard<std::recursive_mutex> lock(fAMtx);
+
+   // Post semaphore to wake up anybody waiting; send as many posts as needed
+   while (fASem.TryWait() != 1)
+      fASem.Post();
+  
+   return;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Getter for logical connection ID
+
+Int_t TXSocket::GetLogConnID() const
+{
+   return (fConn ? fConn->GetLogConnID() : -1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Getter for last error
+
+Int_t TXSocket::GetOpenError() const
+{
+   return (fConn ? fConn->GetOpenError() : -1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Getter for server type
+
+Int_t TXSocket::GetServType() const
+{
+   return (fConn ? fConn->GetServType() : -1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Getter for session ID
+
+Int_t TXSocket::GetSessionID() const
+{
+   return (fConn ? fConn->GetSessionID() : -1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Getter for validity status
+
+Bool_t TXSocket::IsValid() const
+{
+   return (fConn ? (fConn->IsValid()) : kFALSE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return kTRUE if the remote server is a 'proofd'
 
 Bool_t TXSocket::IsServProofd()
@@ -947,9 +972,9 @@ Bool_t TXSocket::IsServProofd()
 Int_t TXSocket::GetInterrupt(Bool_t &forward)
 {
    if (gDebug > 2)
-      Info("GetInterrupt","%p: waiting to lock mutex %p", this, fIMtx);
+      Info("GetInterrupt","%p: waiting to lock mutex", this);
 
-   R__LOCKGUARD(fIMtx);
+   std::lock_guard<std::recursive_mutex> lock(fIMtx);
 
    // Reset values
    Int_t ilev = -1;
@@ -982,7 +1007,7 @@ Int_t TXSocket::Flush()
    list<TXSockBuf *> splist;
    list<TXSockBuf *>::iterator i;
 
-   {  R__LOCKGUARD(fAMtx);
+   {  std::lock_guard<std::recursive_mutex> lock(fAMtx);
 
       // Must have something to flush
       if (fAQue.size() > 0) {
@@ -1008,7 +1033,7 @@ Int_t TXSocket::Flush()
    }
 
    // Move spares to the spare queue
-   {  R__LOCKGUARD(&fgSMtx);
+   {  std::lock_guard<std::mutex> lock(fgSMtx);
       if (splist.size() > 0) {
          for (i = splist.begin(); i != splist.end();) {
             fgSQue.push_back(*i);
@@ -1444,7 +1469,7 @@ Int_t TXSocket::PickUpReady()
    if (gDebug > 2)
       Info("PickUpReady", "%p: %s: waken up", this, GetTitle());
 
-   R__LOCKGUARD(fAMtx);
+   std::lock_guard<std::recursive_mutex> lock(fAMtx);
 
    // Get message, if any
    if (fAQue.size() <= 0) {
@@ -1489,9 +1514,7 @@ TXSockBuf *TXSocket::PopUpSpare(Int_t size)
    TXSockBuf *buf = 0;
    static Int_t nBuf = 0;
 
-
-   R__LOCKGUARD(&fgSMtx);
-
+   std::lock_guard<std::mutex> lock(fgSMtx);
 
    Int_t maxsz = 0;
    if (fgSQue.size() > 0) {
@@ -1536,7 +1559,7 @@ TXSockBuf *TXSocket::PopUpSpare(Int_t size)
 
 void TXSocket::PushBackSpare()
 {
-   R__LOCKGUARD(&fgSMtx);
+   std::lock_guard<std::mutex> lock(fgSMtx);
 
    if (gDebug > 2)
       Info("PushBackSpare","release buf %p, sz: %d (BuffMem: %lld)",
@@ -1647,6 +1670,16 @@ Int_t TXSocket::SendInterrupt(Int_t type)
    // Failure notification (avoid using the handler: we may be exiting)
    Error("SendInterrupt", "problems sending interrupt to server");
    return -1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TXSocket::SetInterrupt(Bool_t i)
+{
+   std::lock_guard<std::recursive_mutex> lock(fAMtx);
+   fRDInterrupt = i;
+   if (i && fConn) fConn->SetInterrupt();
+   if (i && fAWait) fASem.Post();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1940,6 +1973,12 @@ void TXSocket::SendUrgent(Int_t type, Int_t int1, Int_t int2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+Int_t TXSocket::GetLowSocket() const {
+   return (fConn ? fConn->GetLowSocket() : -1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Init environment variables for XrdClient
 
 void TXSocket::InitEnvs()
@@ -2217,7 +2256,7 @@ void TXSockBuf::SetMemMax(Long64_t memmax)
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-TXSockPipe::TXSockPipe(const char *loc) : fMutex(kTRUE), fLoc(loc)
+TXSockPipe::TXSockPipe(const char *loc) : fLoc(loc)
 {
    // Create the pipe
    if (pipe(fPipe) != 0) {
@@ -2248,7 +2287,7 @@ Int_t TXSockPipe::Post(TSocket *s)
 
    // This must be an atomic action
    Int_t sz = 0;
-   {  R__LOCKGUARD(&fMutex);
+   {  std::lock_guard<std::recursive_mutex> lock(fMutex);
       // Add this one
       fReadySock.Add(s);
 
@@ -2279,7 +2318,7 @@ Int_t TXSockPipe::Clean(TSocket *s)
    // Only one char
    Int_t sz = 0;
    Char_t c = 0;
-   { R__LOCKGUARD(&fMutex);
+   {  std::lock_guard<std::recursive_mutex> lock(fMutex);
       if (read(fPipe[0],(void *)&c, sizeof(Char_t)) < 1) {
          Printf("TXSockPipe::Clean: %s: can't read from pipe", fLoc.Data());
          return -1;
@@ -2309,7 +2348,7 @@ Int_t TXSockPipe::Flush(TSocket *s)
 
    TObject *o = 0;
    // This must be an atomic action
-   {  R__LOCKGUARD(&fMutex);
+   {  std::lock_guard<std::recursive_mutex> lock(fMutex);
       o = fReadySock.FindObject(s);
 
       while (o) {
@@ -2338,7 +2377,7 @@ Int_t TXSockPipe::Flush(TSocket *s)
 
 void TXSockPipe::DumpReadySock()
 {
-   R__LOCKGUARD(&fMutex);
+   std::lock_guard<std::recursive_mutex> lock(fMutex);
 
    TString buf = Form("%d |", fReadySock.GetSize());
    TIter nxs(&fReadySock);
@@ -2353,7 +2392,7 @@ void TXSockPipe::DumpReadySock()
 
 TXSocket *TXSockPipe::GetLastReady()
 {
-   R__LOCKGUARD(&fMutex);
+   std::lock_guard<std::recursive_mutex> lock(fMutex);
 
    return (TXSocket *) fReadySock.Last();
 }

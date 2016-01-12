@@ -43,6 +43,8 @@
 #include "TProofQueryResult.h"
 #endif
 
+#include <mutex>
+
 class TDataSetManager;
 class TDataSetManagerFile;
 class TDSet;
@@ -55,7 +57,6 @@ class TList;
 class TMap;
 class TMessage;
 class TMonitor;
-class TMutex;
 class TProof;
 class TProofLockPath;
 class TQueryResultManager;
@@ -139,7 +140,7 @@ private:
 
    TList        *fWaitingQueries;   //list of TProofQueryResult waiting to be processed
    Bool_t        fIdle;             //TRUE if idle
-   TMutex       *fQMtx;             // To protect async msg queue
+   std::recursive_mutex fQMtx;      // To protect async msg queue
 
    TList        *fQueuedMsg;        //list of messages waiting to be processed
 
@@ -258,6 +259,7 @@ public:
    const char    *GetTopSessionTag() const { return fTopSessionTag; }
    const char    *GetSessionDir() const { return fSessionDir; }
    const char    *GetPackageDir() const { return fPackageDir; }
+   const char    *GetCacheDir()    const { return fCacheDir; }
    const char    *GetDataDir()    const { return fDataDir; }
    const char    *GetDataDirOpts() const { return fDataDirOpts; }
    Int_t          GetProtocol()   const { return fProtocol; }
@@ -290,8 +292,6 @@ public:
    void           TruncateLogFile();  // Called also by TDSetProxy::Next()
 
    TProofLockPath *GetCacheLock() { return fCacheLock; }      //cache dir locker; used by TProofPlayer
-   Int_t          CopyFromCache(const char *name, Bool_t cpbin);
-   Int_t          CopyToCache(const char *name, Int_t opt = 0);
 
    virtual EQueryAction GetWorkers(TList *workers, Int_t &prioritychange,
                                    Bool_t resume = kFALSE);

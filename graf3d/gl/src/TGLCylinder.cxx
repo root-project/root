@@ -506,14 +506,11 @@ void TCylinderSegMesh::Draw() const
 }
 
 
-//==============================================================================
-// TGLCylinder
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Implements a native ROOT-GL cylinder that can be rendered at
-// different levels of detail.
+/** \class TGLCylinder
+\ingroup opengl
+Implements a native ROOT-GL cylinder that can be rendered at
+different levels of detail.
+*/
 
 ClassImp(TGLCylinder);
 
@@ -635,7 +632,7 @@ void TGLCylinder::DirectDraw(TGLRnrCtx & rnrCtx) const
    }
 
    // As we are now support display list caching we can create, draw and
-   // delete mesh parts of suitible LOD (quality) here - it will be cached
+   // delete mesh parts of suitable LOD (quality) here - it will be cached
    // into a display list by base-class TGLLogicalShape::Draw(),
    // against our id and the LOD value. So this will only occur once
    // for a certain cylinder/LOD combination

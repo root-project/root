@@ -1,9 +1,13 @@
-// Author: Stefan Schmitt
-// DESY, 14.10.2008
-
-//  Version 17.0 example for multi-dimensional unfolding
-//
-
+/// \file
+/// \ingroup tutorial_unfold5
+///
+/// Version 17.0 example for multi-dimensional unfolding
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Stefan Schmitt, DESY
 #include <iostream>
 #include <cmath>
 #include <map>
@@ -16,58 +20,6 @@
 #include "TUnfoldDensity.h"
 
 using namespace std;
-
-/*
-  This file is part of TUnfold.
-
-  TUnfold is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  TUnfold is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-///////////////////////////////////////////////////////////////////////
-//
-// Test program for the classes TUnfoldDensity and TUnfoldBinning
-//
-// A toy test of the TUnfold package
-//
-// This is an example of unfolding a two-dimensional distribution
-// also using an auxillary measurement to constrain some background
-//
-// The example comprizes several macros
-//   testUnfold5a.C   create root files with TTree objects for
-//                      signal, background and data
-//            -> write files  testUnfold5_signal.root
-//                            testUnfold5_background.root
-//                            testUnfold5_data.root
-//
-//   testUnfold5b.C   create a root file with the TUnfoldBinning objects
-//            -> write file  testUnfold5_binning.root
-//
-//   testUnfold5c.C   loop over trees and fill histograms based on the
-//                      TUnfoldBinning objects
-//            -> read  testUnfold5_binning.root
-//                     testUnfold5_signal.root
-//                     testUnfold5_background.root
-//                     testUnfold5_data.root
-//
-//            -> write testUnfold5_histograms.root
-//
-//   testUnfold5d.C   run the unfolding
-//            -> read  testUnfold5_histograms.root
-//            -> write testUnfold5_result.root
-//                     testUnfold5_result.ps
-//
-///////////////////////////////////////////////////////////////////////
 
 // #define PRINT_MATRIX_L
 
@@ -212,27 +164,27 @@ void testUnfold5d()
      ("histGlobalCorrScan",0,SCAN_DISTRIBUTION,SCAN_AXISSTEERING,kFALSE);
   TH2 *histCorrCoeff=unfold.GetRhoIJtotal("histCorrCoeff",0,0,0,kFALSE);
 
-  TCanvas canvas;
-  canvas.Print("testUnfold5.ps[");
+  TCanvas *canvas = new TCanvas();
+  canvas->Print("testUnfold5.ps[");
 
   //========== page 1 ============
   // unfolding control plots
   // input, matrix, output
   // tau-scan, global correlations, correlation coefficients
-  canvas.Clear();
-  canvas.Divide(3,2);
+  canvas->Clear();
+  canvas->Divide(3,2);
 
   // (1) all bins, compare to original MC distribution
-  canvas.cd(1);
+  canvas->cd(1);
   histDataReco->SetMinimum(0.0);
   histDataReco->Draw("E");
   histMCReco->SetLineColor(kBlue);
   histMCReco->Draw("SAME HIST");
   // (2) matrix of probabilities
-  canvas.cd(2);
+  canvas->cd(2);
   histProbability->Draw("BOX");
   // (3) unfolded data, data truth, MC truth
-  canvas.cd(3);
+  canvas->cd(3);
   gPad->SetLogy();
   histDataUnfold->Draw("E");
   histDataTruth->SetLineColor(kBlue);
@@ -240,25 +192,25 @@ void testUnfold5d()
   histMCTruth->SetLineColor(kRed);
   histMCTruth->Draw("SAME HIST");
   // (4) scan of correlation vs tau
-  canvas.cd(4);
+  canvas->cd(4);
   rhoLogTau->Draw();
   knots->Draw("*");
   bestRhoLogTau->SetMarkerColor(kRed);
   bestRhoLogTau->Draw("*");
   // (5) global correlation coefficients for the distributions
   //     used during the scan
-  canvas.cd(5);
+  canvas->cd(5);
   //histCorrCoeff->Draw("BOX");
   histGlobalCorrScan->Draw("HIST");
   // (6) L-curve
-  canvas.cd(6);
+  canvas->cd(6);
   lCurve->Draw("AL");
   bestLCurve->SetMarkerColor(kRed);
   bestLCurve->Draw("*");
 
 
-  canvas.Print("testUnfold5.ps");
+  canvas->Print("testUnfold5.ps");
 
-  canvas.Print("testUnfold5.ps]");
+  canvas->Print("testUnfold5.ps]");
 
 }

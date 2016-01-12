@@ -15,9 +15,9 @@
 #include "TGLTH3Composition.h"
 #include "TGLIncludes.h"
 
-//
-//TGLTH3Composition.
-//
+/** \class TGLTH3Composition
+\ingroup opengl
+*/
 
 ClassImp(TGLTH3Composition)
 
@@ -103,9 +103,9 @@ void TGLTH3Composition::Paint(Option_t * /*option*/)
    fPainter->Paint("dummy");
 }
 
-//
-//TGLTH3CompositionPainter.
-//
+/** \class TGLTH3CompositionPainter
+\ingroup opengl
+*/
 
 ClassImp(TGLTH3CompositionPainter)
 

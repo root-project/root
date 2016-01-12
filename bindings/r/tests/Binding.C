@@ -90,7 +90,7 @@ r<<"print(s)";
 // r["d"]<<str;//double with string
 // r<<"print(d)";
 
-r["Function"]<<ROOT::R::TRFunction(Function);
+r["Function"]<<ROOT::R::TRFunctionExport(Function);
 r<<"print(Function(-1))";
 
 r<<"print(Function(1))";//division by zero producess Inf.

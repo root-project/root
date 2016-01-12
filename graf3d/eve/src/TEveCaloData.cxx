@@ -24,10 +24,10 @@
 #include <algorithm>
 #include <set>
 
-//------------------------------------------------------------------------------
-// TEveCaloData::CellGeom_t
-//------------------------------------------------------------------------------
-
+/** \class  TEveCaloData::CellGeom_t
+\ingroup TEve
+Cell geometry inner structure.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print member data.
@@ -59,9 +59,10 @@ void TEveCaloData::CellGeom_t::Configure(Float_t etaMin, Float_t etaMax, Float_t
    fThetaMax = EtaToTheta(fEtaMin);
 }
 
-//------------------------------------------------------------------------------
-// TEveCaloData::CellData_t
-//------------------------------------------------------------------------------
+/** \class TEveCaloData::CellData_t
+\ingroup TEve
+Cell data inner structure.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return energy value associated with the cell, usually Et.
@@ -99,15 +100,11 @@ Float_t* TEveCaloData::RebinData_t::GetSliceVals(Int_t bin)
    return &fSliceData[fBinData[bin]];
 }
 
-//==============================================================================
-// TEveCaloData
-//==============================================================================
-
-//______________________________________________________________________________
-//
-//  A central manager for calorimeter event data. It provides a list of
-//  cells within requested phi and eta range.
-//
+/** \class TEveCaloData
+\ingroup TEve
+A central manager for calorimeter event data. It provides a list of
+cells within requested phi and eta range.
+*/
 
 ClassImp(TEveCaloData);
 
@@ -306,9 +303,6 @@ void TEveCaloData::ProcessSelection(vCellId_t& sel_cells, TGLSelectRecord& rec)
    }
 }
 
-
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set threshold for given slice.
 
@@ -425,13 +419,10 @@ Float_t TEveCaloData::EtaToTheta(Float_t eta)
 }
 
 
-//==============================================================================
-// TEveCaloDataVec
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Calo data for universal cell geometry.
+/** \class  TEveCaloDataVec
+\ingroup TEve
+Calo data for universal cell geometry.
+*/
 
 ClassImp(TEveCaloDataVec);
 
@@ -734,27 +725,22 @@ void  TEveCaloDataVec::SetAxisFromBins(Double_t epsX, Double_t epsY)
    fPhiAxis->SetNdivisions(510);
 }
 
-//==============================================================================
-// TEveCaloDataHist
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// A central manager for calorimeter data of an event written in TH2F.
-// X axis is used for eta and Y axis for phi.
-//
+/** \class TEveCaloDataHist
+\ingroup TEve
+A central manager for calorimeter data of an event written in TH2F.
+X axis is used for eta and Y axis for phi.
+*/
 
 ClassImp(TEveCaloDataHist);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveCaloDataHist::TEveCaloDataHist():
    TEveCaloData(),
 
    fHStack(0)
 {
-   // Constructor.
-
    fHStack = new THStack();
    fEps    = 1e-5;
 }
@@ -860,8 +846,8 @@ void TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
    } // eta bins
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Rebin
 
 void TEveCaloDataHist::Rebin(TAxis* ax, TAxis* ay, TEveCaloData::vCellId_t &ids, Bool_t et, RebinData_t &rdata) const
 {
@@ -905,7 +891,6 @@ void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id,
                       hist->GetYaxis()->GetBinLowEdge(y),
                       hist->GetYaxis()->GetBinUpEdge(y));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add new slice to calo tower. Updates cached variables fMaxValE

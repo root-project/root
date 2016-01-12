@@ -12,15 +12,12 @@
 #include "TEveVector.h"
 #include "TVector3.h"
 
-//==============================================================================
-// TEveVector
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Minimal, templated three-vector.
-// No TObject inheritance and virtual functions.
-// Also used in VSD.
+/** \class TEveVectorT
+\ingroup TEve
+Minimal, templated three-vector.
+No TObject inheritance and virtual functions.
+Also used in VSD.
+*/
 
 ClassImp(TEveVectorT<Float_t>);
 ClassImp(TEveVectorT<Double_t>);
@@ -97,16 +94,12 @@ template<typename TT> void TEveVectorT<TT>::OrthoNormBase(TEveVectorT<TT>& a, TE
 template class TEveVectorT<Float_t>;
 template class TEveVectorT<Double_t>;
 
-
-//==============================================================================
-// TEveVector4
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Minimal, templated four-vector.
-// No TObject inheritance and virtual functions.
-// Also used in VSD.
+/** \class TEveVector4T
+\ingroup TEve
+Minimal, templated four-vector.
+No TObject inheritance and virtual functions.
+Also used in VSD.
+*/
 
 ClassImp(TEveVector4T<Float_t>);
 ClassImp(TEveVector4T<Double_t>);
@@ -122,16 +115,12 @@ template<typename TT> void TEveVector4T<TT>::Dump() const
 template class TEveVector4T<Float_t>;
 template class TEveVector4T<Double_t>;
 
-
-//==============================================================================
-// TEveVector2T
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Minimal, templated two-vector.
-// No TObject inheritance and virtual functions.
-// Also used in VSD.
+/** \class TEveVector2T
+\ingroup TEve
+Minimal, templated two-vector.
+No TObject inheritance and virtual functions.
+Also used in VSD.
+*/
 
 ClassImp(TEveVector2T<Float_t>);
 ClassImp(TEveVector2T<Double_t>);

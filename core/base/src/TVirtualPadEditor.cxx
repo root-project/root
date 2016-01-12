@@ -8,13 +8,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualPadEditor                                                    //
-//                                                                      //
-// Abstract base class used by ROOT graphics editor                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TVirtualPadEditor
+Abstract base class used by ROOT graphics editor
+*/
 
 #include "TROOT.h"
 #include "TVirtualPadEditor.h"

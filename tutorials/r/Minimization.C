@@ -32,10 +32,10 @@ void Minimization()
    ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
  
  //passsing RosenBrock function to R
- r["RosenBrock"]=ROOT::R::TRFunction(RosenBrock);
+ r["RosenBrock"]=ROOT::R::TRFunctionExport(RosenBrock);
  
  //passsing RosenBrockGrad function to R
- r["RosenBrockGrad"]=ROOT::R::TRFunction(RosenBrockGrad);
+ r["RosenBrockGrad"]=ROOT::R::TRFunctionExport(RosenBrockGrad);
  //the option "method" could be "Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN","Brent"
  
  //the option "control" lets you put some constraints like 

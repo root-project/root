@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXSlave                                                              //
-//                                                                      //
-// This is the version of TSlave for slave servers based on XRD.        //
-// See TSlave for details.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TXSlave
+\ingroup proofx
+
+This is the version of TSlave for workers servers based on XProofD.
+See TSlave and TXSocket for details.
+
+*/
 
 #include "TXSlave.h"
 #include "TProof.h"
@@ -30,11 +29,12 @@
 #include "TError.h"
 #include "TSysEvtHandler.h"
 #include "TVirtualMutex.h"
-#include "TThread.h"
 #include "TXSocket.h"
 #include "TXSocketHandler.h"
 #include "Varargs.h"
 #include "XProofProtocol.h"
+
+#include <mutex>
 
 ClassImp(TXSlave)
 
@@ -247,7 +247,6 @@ void TXSlave::Init(const char *host, Int_t stype)
                        "the connection at %s - exit", url.GetUrl(kTRUE));
       ParseBuffer(); // For the log path
       // Fill some useful info
-      R__LOCKGUARD2(gProofMutex);
       fUser = ((TXSocket *)fSocket)->fUser;
       PDB(kGlobal,3) Info("Init","%s: fUser is .... %s", iam.Data(), fUser.Data());
       SafeDelete(fSocket);
@@ -287,8 +286,6 @@ void TXSlave::Init(const char *host, Int_t stype)
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(fSocket);
    }
-
-   R__LOCKGUARD2(gProofMutex);
 
    // Fill some useful info
    fUser = ((TXSocket *)fSocket)->fUser;
@@ -441,17 +438,13 @@ void TXSlave::Interrupt(Int_t type)
          Warning("Interrupt", "%p: reference to PROOF missing", this);
       }
 
-      // Post semaphore to wake up anybody waiting; send as many posts as needed
-      if (fSocket) {
-         R__LOCKGUARD(((TXSocket *)fSocket)->fAMtx);
-         TSemaphore *sem = &(((TXSocket *)fSocket)->fASem);
-         while (sem->TryWait() != 1)
-            sem->Post();
-      }
+      // Post semaphore to wake up anybody waiting
+      if (fSocket) ((TXSocket *)fSocket)->PostSemAll();
+
       return;
    }
 
-   ((TXSocket *)fSocket)->SendInterrupt(type);
+   if (fSocket) ((TXSocket *)fSocket)->SendInterrupt(type);
    Info("Interrupt","Interrupt of type %d sent", type);
 }
 

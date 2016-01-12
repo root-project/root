@@ -1,15 +1,15 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #111
-// 
-// Numerical 1st,2nd and 3rd order derivatives w.r.t. observables and parameters
-//
-// pdf = gauss(x,m,s) 
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'BASIC FUNCTIONALITY' RooFit tutorial macro #111
+///
+///  Numerical 1st,2nd and 3rd order derivatives w.r.t. observables and parameters
+///
+///  pdf = gauss(x,m,s)
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

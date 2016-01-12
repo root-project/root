@@ -1,15 +1,88 @@
 # JSROOT changelog
 
+## Changes in 4.0
+1. New TGeo classes support:
+   - browsing  through volumes hieararchy
+   - changing visibility flags
+   - drawing of selected volumes
+2. New 'flex' layout:
+   - create frames like in Multi Document Interface
+   - one could move/resize/minimize/maximize such frames
+3. Significant (factor 4) I/O performance improvement:
+   - use ArrayBuffer class in HTTP requests instead of String
+   - use native arrays (like Int32Array) for array data members
+   - highly optimize streamer infos handling 
+4. TH2 drawing optimization:
+   - if there are too many non-empty bins, combine them together
+   - when zoom-in, all original bins will be displayed separately
+   - let draw big TH2 histogram faster than in 1 sec
+   - optimization can be disabled by providing '&optimize=0' in URL             
+5. TF1 drawing optimization:
+   - function 'compiled' only once
+6. Reorganize scripts structure:
+   - move all math functions to JSRootMath.js
+   - TH2, TF1, THStack and TMultiGraph painters moved into JSRootPainter.more.js script
+   - reduce size of scripts required for default functionality
+7. Update all basic libraries:
+    - d3.js - v3.5.9, 
+    - jquery.js - v2.1.4, 
+    - jquery-ui.js - v1.11.4, 
+    - three.js - r73  
+8. Implement ROOT6-like color palettes:
+    - all palettes in range 51...112 are implemented 
+    - by default palette 57 is used
+    - one could change default palette with '&palette=111' in URL
+    - or palette can be specified in draw option like '&opt=colz,pal77'
+
+
+## Changes in 3.9
+1. Support non-equidistant bins for TH1/TH2 objects.
+2. Display entries count from histo.fEntries member, only when not set use computed value  
+3. Support italic and bold text when used with MathJax
+4. Improve TF1 drawing - support exp function in TFormula, fix errors with logx scale, enable zoom-in, (re)calculate function points when zooming
+5. Support several columns in TLegend
+6. Introduce context menus for x/y axis, add some items similar to native ROOT menus
+7. Introduce context menu for TPaveStats, let switch single elements in the box   
+8. Enable usage of all context menus on touch devices 
+9. Implement JSROOT.Math.Prob function, provides probability value in stat box 
+10. Introduce context menu for color palette (z axis)
+11. Implement col0 and col0z draw option for TH2 histograms, similar to ROOT6
+
+
+## Changes in 3.8
+1. Let use HTML element pointer in JSROOT.draw function like:
+       JSROOT.draw(document.getElementsByTagName("div")[0], obj, "hist");
+   Normally unique identifier was used before, which is not required any longer.
+   Of course, old functionality with element identifier will work as well. 
+2. TreePlayer can also be used for trees, which not yet read from the file.
+   Requires appropriate changes in TRootSniffer class. 
+3. Fix error in I/O with members like:   `Double_t *fArr; //[fN]`  
+4. Introduce JSROOT.OpenFile function. It loads I/O functionality automatically,
+   therefore can be used directly after loading JSRootCore.js script
+5. Same is done with JSROOT.draw function. It is defined in the JSRootCore.js
+   and can be used directly. Makes usage of JSROOT easier    
+6. Introduce JSRootPainter.more.js script, where painters for auxiliary classes
+   will be implemented.
+7. Implement painter for TEllipse, TLine, TArrow classes     
+8. Fix several problems with markers drawing; implement plus, asterisk, mult symbols. 
+9. Implement custom layout, which allows to configure user-defined layout for displayed objects
+10. Fix errors with scaling of axis labels.     
+11. Support also Y axis with custom labels like: http://jsroot.gsi.de/dev/?nobrowser&file=../files/atlas.root&item=LEDShapeHeightCorr_Gain0;1&opt=col   
+
+
 ## Changes in 3.7
-1. Support of X axis with custom labels like:
-      http://web-docs.gsi.de/~linev/js/dev/index.htm?nobrowser&json=../files/hist_xlabels.json
+1. Support of X axis with custom labels like: http://jsroot.gsi.de/dev/index.htm?nobrowser&json=../files/hist_xlabels.json
 2. Extend functionality of JSROOT.addDrawFunc() function. One could register type-specific
    `make_request` and `after_request` functions; `icon`, `prereq`, `script`, `monitor` properties.
    This let add more custom elements to the generic gui, implemented with JSROOT.HierarchyPainter   
 3. Provide full support of require.js. One could load now JSRootCore.js script like:
+
       <script type="text/javascript" src="require.js" data-main="scripts/JSRootCore.js"></script>
+      
    After this several modules are defined and can be used with syntax like:
+   
       require(['JSRootPainter'], function(jsroot) { /*any user code*/});
+      
    Also inside JSROOT require.js used to load all dependencies. 
 
 
@@ -28,16 +101,15 @@
 8. Fix problem with GetBBox - it only can be used for visible elements in mozilla.    
 9. Support drawing of fit parameters in stat box, use (as far as possible) stat and
    fit format for statistic display 
-10.Implement 'g' formatting kind for stat box output - one need to checks 
-   significant digits when producing output.  
-11.Support new draw options for TGraph: 'C', 'B1', '0', '2', '3', '4', '[]'
-12.Primary support for STL containers in IO part. Allows to read ROOT6 TF1.
-13.Full support of TGraphBentErrors
-14.Support objects drawing from JSON files in default user interface, including
-   monitoring. One could open file from link like: 
-      https://root.cern.ch/js/dev/?json=demo/canvas_tf1.json 
-15.Introduce JSROOT.FFormat function to convert numeric values into string according
-   format like 6.4g or 5.7e. Used for statistic display.
+10. Implement 'g' formatting kind for stat box output - one need to checks 
+    significant digits when producing output.  
+11. Support new draw options for TGraph: 'C', 'B1', '0', '2', '3', '4', '[]'
+12. Primary support for STL containers in IO part. Allows to read ROOT6 TF1.
+13. Full support of TGraphBentErrors
+14. Support objects drawing from JSON files in default user interface, including
+    monitoring. One could open file from link like: https://root.cern.ch/js/dev/?json=demo/canvas_tf1.json 
+15. Introduce JSROOT.FFormat function to convert numeric values into string according
+    format like 6.4g or 5.7e. Used for statistic display.
 
 
 ## Changes in 3.5

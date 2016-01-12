@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooRangeBoolean
-// END_HTML
-//
+/**
+\file RooRangeBoolean.cxx
+\class RooRangeBoolean
+\ingroup Roofitcore
+
+RooRangeBoolean
+**/
 
 #include "RooFit.h"
 

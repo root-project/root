@@ -33,9 +33,9 @@ GLH          := $(filter-out $(MODDIRI)/TX11GL.h, $(GLH))
 endif
 
 # Excluded from rootcint
-GLH1         := $(MODDIRI)/gl2ps.h $(MODDIRI)/CsgOps.h \
+GLH1         := $(MODDIRI)/CsgOps.h \
                 $(MODDIRI)/TGLIncludes.h $(MODDIRI)/TGLWSIncludes.h \
-                $(MODDIRI)/TGLContextPrivate.h $(MODDIRI)/TGLMarchingCubes.h \
+                $(MODDIRI)/TGLMarchingCubes.h \
 		$(MODDIRI)/TKDEAdapter.h $(MODDIRI)/TGL5DPainter.h \
 		$(MODDIRI)/TKDEFGT.h $(MODDIRI)/TGLIsoMesh.h
 
@@ -120,6 +120,16 @@ $(call stripsrc,$(GLDIRS)/TGLText.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINC) $(FT
 
 $(call stripsrc,$(GLDIRS)/TGLFontManager.o): $(FREETYPEDEP)
 $(call stripsrc,$(GLDIRS)/TGLFontManager.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
+
+#FIXME: Disable modules build for graf3d until the glew.h issue gets fixed.
+ifeq ($(CXXMODULES),yes)
+ifeq ($(PLATFORM),macosx)
+$(call stripsrc,$(GLDIRS)/TGLFontManager.o) \
+$(call stripsrc,$(GLDIRS)/TGLText.o): CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
+        CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
+endif
+endif
+
 $(GLO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
 
 # Optimize dictionary with stl containers.

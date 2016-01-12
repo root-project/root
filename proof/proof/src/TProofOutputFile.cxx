@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofOutputFile                                                     //
-//                                                                      //
-// Small class to steer the merging of files produced on the workers    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofOutputFile
+\ingroup proofkernel
+
+Class to steer the merging of files produced on the workers
+
+*/
 
 #include "TProofOutputFile.h"
 #include <TEnv.h>

@@ -213,7 +213,7 @@ public:
    virtual Long64_t      Draw(const char *varexp, const TCut &selection,
                               Option_t *option = "", Long64_t nentries = -1,
                               Long64_t firstentry = 0); // *MENU*
-   virtual void          Draw(Option_t *opt) { Draw(opt, "", "", 1000000000, 0); }
+   virtual void          Draw(Option_t *opt) { Draw(opt, "", "", -1, 0); }
 
    Int_t                 ExportFileList(const char *filepath, Option_t *opt = "");
 

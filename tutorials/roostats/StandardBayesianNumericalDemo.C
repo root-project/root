@@ -1,27 +1,28 @@
-// Standard demo of the numerical Bayesian calculator
-
-/*
-
-
-Author: Kyle Cranmer
-date: Dec. 2010
-
-This is a standard demo that can be used with any ROOT file
-prepared in the standard way.  You specify:
- - name for input ROOT file
- - name of workspace inside ROOT file that holds model and data
- - name of ModelConfig that specifies details for calculator tools
- - name of dataset
-
-With default parameters the macro will attempt to run the
-standard hist2workspace example and read the ROOT file
-that it produces.
-
-The actual heart of the demo is only about 10 lines long.
-
-The BayesianCalculator is based on Bayes's theorem
-and performs the integration using ROOT's numeric integration utilities
-*/
+/// \file
+/// \ingroup tutorial_roostats
+/// Standard demo of the numerical Bayesian calculator
+///
+/// This is a standard demo that can be used with any ROOT file
+/// prepared in the standard way.  You specify:
+///  - name for input ROOT file
+///  - name of workspace inside ROOT file that holds model and data
+///  - name of ModelConfig that specifies details for calculator tools
+///  - name of dataset
+///
+/// With default parameters the macro will attempt to run the
+/// standard hist2workspace example and read the ROOT file
+/// that it produces.
+///
+/// The actual heart of the demo is only about 10 lines long.
+///
+/// The BayesianCalculator is based on Bayes's theorem
+/// and performs the integration using ROOT's numeric integration utilities
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer
 
 #include "TFile.h"
 #include "TROOT.h"
@@ -49,7 +50,7 @@ bool scanPosterior = false;    // flag to compute interval by scanning posterior
 int nScanPoints = 20;          // number of points for scanning the posterior (if scanPosterior = false it is used only for plotting). Use by default a low value to speed-up tutorial
 int intervalType = 1;          // type of interval (0 is shortest, 1 central, 2 upper limit)
 double   maxPOI = -999;        // force a different value of POI for doing the scan (default is given value)
-double   nSigmaNuisance = -1;   // force integration of nuisance parameters to be withing nSigma of their error (do first a model fit to find nuisance error)
+double   nSigmaNuisance = -1;   // force integration of nuisance parameters to be within nSigma of their error (do first a model fit to find nuisance error)
 
 void StandardBayesianNumericalDemo(const char* infile = "",
                                    const char* workspaceName = "combined",
@@ -135,7 +136,7 @@ void StandardBayesianNumericalDemo(const char* infile = "",
   //mc->SetNuisanceParameters(RooArgSet() );
   if (nSigmaNuisance > 0) {
      RooAbsPdf * pdf = mc->GetPdf();
-     assert(pdf); 
+     assert(pdf);
      RooFitResult * res = pdf->fitTo(*data, Save(true), Minimizer(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str()), Hesse(true),
                                      PrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1) );
 
@@ -144,7 +145,7 @@ void StandardBayesianNumericalDemo(const char* infile = "",
      for (int i = 0; i < nuisPar.getSize(); ++i) {
         RooRealVar * v = dynamic_cast<RooRealVar*> (&nuisPar[i] );
         assert( v);
-        v->setMin( TMath::Max( v->getMin(), v->getVal() - nSigmaNuisance * v->getError() ) ); 
+        v->setMin( TMath::Max( v->getMin(), v->getVal() - nSigmaNuisance * v->getError() ) );
         v->setMax( TMath::Min( v->getMax(), v->getVal() + nSigmaNuisance * v->getError() ) );
         std::cout << "setting interval for nuisance  " << v->GetName() << " : [ " << v->getMin() << " , " << v->getMax() << " ]" << std::endl;
      }

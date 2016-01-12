@@ -154,7 +154,7 @@ FULL_PATH_NAMES        = YES
 # will be relative from the directory where doxygen is started.
 # This tag requires that the tag FULL_PATH_NAMES is set to YES.
 
-STRIP_FROM_PATH        = ${DOXYGEN_STRIP_PATH}
+STRIP_FROM_PATH        = $(DOXYGEN_STRIP_PATH)
 
 # The STRIP_FROM_INC_PATH tag can be used to strip a user-defined part of the
 # path mentioned in the documentation of a class, which tells the reader which
@@ -163,7 +163,7 @@ STRIP_FROM_PATH        = ${DOXYGEN_STRIP_PATH}
 # specify the list of include paths that are normally passed to the compiler
 # using the -I flag.
 
-STRIP_FROM_INC_PATH    = ${DOXYGEN_INCLUDE_PATH}
+STRIP_FROM_INC_PATH    = $(DOXYGEN_INCLUDE_PATH)
 
 # If the SHORT_NAMES tag is set to YES, doxygen will generate much shorter (but
 # less readable) file names. This can be useful is your file systems doesn't
@@ -753,55 +753,96 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ../../core/base/ \
+INPUT                  = . \
+                         ../../bindings/pyroot/ \
+                         ../../bindings/r/ \
+                         ../../bindings/ruby/ \
+                         ../../core/base/ \
                          ../../core/cont/ \
+                         ../../core/macosx/ \
                          ../../core/meta/ \
                          ../../core/metautils/ \
+                         ../../core/multiproc/ \
                          ../../core/rint/ \
                          ../../core/thread/ \
                          ../../core/unix/ \
+                         ../../core/winnt/ \
                          ../../geom/gdml/ \
+                         ../../geom/geocad/ \
                          ../../geom/geom \
                          ../../geom/geombuilder/ \
                          ../../geom/geompainter/ \
                          ../../graf2d/asimage/ \
+                         ../../graf2d/cocoa/ \
                          ../../graf2d/fitsio/ \
                          ../../graf2d/gpad/ \
                          ../../graf2d/graf/ \
                          ../../graf2d/gviz/ \
                          ../../graf2d/postscript/ \
+                         ../../graf2d/quartz/ \
+                         ../../graf2d/win32gdk/ \
+                         ../../graf2d/x11/ \
+                         ../../graf2d/x11ttf/ \
                          ../../graf3d/eve/ \
                          ../../graf3d/g3d/ \
                          ../../graf3d/gl/ \
                          ../../graf3d/gviz3d/ \
-                         ../../hist/hist/ \
-                         ../../hist/histpainter/ \
-                         ../../hist/hbook/ \
-                         ../../hist/spectrum/ \
-                         ../../hist/spectrumpainter/ \
+                         ../../gui/fitpanel/ \
+                         ../../gui/ged/ \
+                         ../../gui/gui/ \
+                         ../../gui/guibuilder/ \
+                         ../../gui/guihtml/ \
+                         ../../gui/qtgsi/ \
+                         ../../gui/qtroot/ \
+                         ../../gui/recorder/ \
+                         ../../gui/sessionviewer/ \
+                         ../../hist/ \
+                         ../../html/ \
+                         ../../io/castor/ \
+                         ../../io/chirp/ \
+                         ../../io/dcache/ \
+                         ../../io/gfal/ \
+                         ../../io/hdfs/ \
                          ../../io/io/ \
+                         ../../io/rfio/ \
                          ../../io/sql/ \
                          ../../io/xml/ \
                          ../../io/xmlparser/ \
                          ../../math/ \
                          ../../misc/memstat/ \
-                         ../../montecarlo/eg/ \
-                         ../../montecarlo/pythia8/ \
-                         ../../montecarlo/vmc/ \
+                         ../../misc/table/ \
+                         ../../montecarlo/ \
+                         ../../net/alien/ \
                          ../../net/auth/ \
+                         ../../net/bonjour/ \
+                         ../../net/davix/ \
+                         ../../net/glite/ \
                          ../../net/http/ \
                          ../../net/krb5auth/ \
+                         ../../net/ldap/ \
+                         ../../net/monalisa/ \
                          ../../net/net/ \
                          ../../net/netx/ \
                          ../../net/netxng/ \
-                         ../../proof \
-                         ../../tmva \
-                         ../../roofit \
-                         ../../tree \
+                         ../../proof/ \
+                         ../../tmva/ \
+                         ../../roofit/ \
+                         ../../tree/ \
                          ../../sql/ \
-                         ../../gui/gui/ \
-                         ../../gui/fitpanel/
-#                         ../../gui/ged/ \
+                         ../../tutorials/
+#                         ../../core/clib/
+#                         ../../core/lzma/
+#                         ../../core/newdelete/
+#                         ../../core/textinput/
+#                         ../../core/zip/
+#                         ../../graf2d/ios/
+#                         ../../graf2d/qt/ \
+#                         ../../graf2d/mathtext/
+#                         ../../graf3d/ftgl/
+#                         ../../graf3d/glew/
+#                         ../../graf3d/x3d/
+#                         ../../net/rootd/
+#                         ../../net/rpdutils/
 
 
 # This tag can be used to specify the character encoding of the source files
@@ -843,12 +884,6 @@ FILE_PATTERNS          = *.c \
                          *.hxx \
                          *.hpp \
                          *.h++ \
-                         *.cs \
-                         *.php \
-                         *.php4 \
-                         *.php5 \
-                         *.phtml \
-                         *.html \
                          *.inc \
                          *.m \
                          *.markdown \
@@ -898,7 +933,10 @@ EXCLUDE_SYMLINKS       = NO
 
 EXCLUDE_PATTERNS       =  */G__* \
                           */src/unuran-* \
-                          */libAfterImage/*
+                          */libAfterImage/* \
+                          */doc/v6* */doc/v5* v7 \
+                          */win32gdk/gdk/* \
+                          makeimage.C filter.cxx
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -1191,7 +1229,7 @@ HTML_STYLESHEET        =
 # see the documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_EXTRA_STYLESHEET  =
+HTML_EXTRA_STYLESHEET  = ROOT.css
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
 # other source files which should be copied to the HTML output directory. Note
@@ -1247,7 +1285,7 @@ HTML_TIMESTAMP         = YES
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_DYNAMIC_SECTIONS  = YES
+HTML_DYNAMIC_SECTIONS  = NO
 
 # With HTML_INDEX_NUM_ENTRIES one can control the preferred number of entries
 # shown in the various tree structured indices initially; the user can expand
@@ -1530,7 +1568,7 @@ FORMULA_TRANSPARENT    = YES
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-USE_MATHJAX            = NO
+USE_MATHJAX            = YES
 
 # When MathJax is enabled you can set the default output format to be used for
 # the MathJax output. See the MathJax site (see:
@@ -1553,7 +1591,7 @@ MATHJAX_FORMAT         = HTML-CSS
 # The default value is: http://cdn.mathjax.org/mathjax/latest.
 # This tag requires that the tag USE_MATHJAX is set to YES.
 
-MATHJAX_RELPATH        = http://cdn.mathjax.org/mathjax/latest
+MATHJAX_RELPATH        = ./mathjax
 
 # The MATHJAX_EXTENSIONS tag can be used to specify one or more MathJax
 # extension names that should be enabled during MathJax rendering. For example
@@ -2102,7 +2140,7 @@ TAGFILES               =
 # tag file that is based on the input files it reads. See section "Linking to
 # external documentation" for more information about the usage of tag files.
 
-GENERATE_TAGFILE       =
+GENERATE_TAGFILE       = $(DOXYGEN_OUTPUT_DIRECTORY)/html/ROOT.tag
 
 # If the ALLEXTERNALS tag is set to YES all external class will be listed in the
 # class index. If set to NO only the inherited external classes will be listed.
@@ -2338,7 +2376,7 @@ DOT_IMAGE_FORMAT       = svg
 # The default value is: NO.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-INTERACTIVE_SVG        = YES
+INTERACTIVE_SVG        = NO
 
 # The DOT_PATH tag can be used to specify the path where the dot tool can be
 # found. If left blank, it is assumed the dot tool can be found in the path.

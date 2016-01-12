@@ -27,6 +27,7 @@
 
 class TGraph2D;
 class TGraphDelaunay;
+class TGraphDelaunay2D;
 class TList;
 
 class TGraph2DPainter : public TObject {
@@ -57,17 +58,23 @@ protected:
    Int_t      *fNTried;       //!Pointer to fDelaunay->fNTried
    Int_t      *fMTried;       //!Pointer to fDelaunay->fMTried
 
-   TGraphDelaunay *fDelaunay; // Pointer to the TGraphDelaunay to be painted
+
+   TGraphDelaunay   *fDelaunay; // Pointer to the TGraphDelaunay2D to be painted
+   TGraphDelaunay2D *fDelaunay2D; // Pointer to the TGraphDelaunay2D to be painted
    TGraph2D *fGraph2D;        // Pointer to the TGraph2D in fDelaunay
 
    void     FindTriangles();
-   void     PaintLevels(Int_t *T, Double_t *x, Double_t *y, Int_t nblev=0, Double_t *glev=0);
+   void     PaintLevels(Int_t *v, Double_t *x, Double_t *y, Int_t nblev=0, Double_t *glev=0);
    void     PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y);
+
+   void   PaintTriangles_old(Option_t *option);
+   void   PaintTriangles_new(Option_t *option);
 
 public:
 
    TGraph2DPainter();
    TGraph2DPainter(TGraphDelaunay *gd);
+   TGraph2DPainter(TGraphDelaunay2D *gd);
 
    virtual ~TGraph2DPainter();
 
@@ -79,7 +86,7 @@ public:
    void   PaintPolyLine(Option_t *option);
    void   PaintTriangles(Option_t *option);
 
-   ClassDef(TGraph2DPainter,0)  // TGraph2D painter
+   ClassDef(TGraph2DPainter,1)  // TGraph2D painter
 };
 
 #endif

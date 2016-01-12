@@ -69,6 +69,14 @@ public:
 
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ;
     
+  virtual void setCacheAndTrackHints(RooArgSet&) ;
+
+  virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
+                                       const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
+  virtual Bool_t changeModel(const RooResolutionModel& newModel) ;
+
+  const RooRealVar* convVar() const ;  //  Convolution variable 
+
 protected:
   Double_t getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const TNamed* rangeName) const ;
 
@@ -79,16 +87,11 @@ protected:
   void makeCoefVarList(RooArgList&) const ;
 
   friend class RooConvGenContext ;
-  Bool_t changeModel(const RooResolutionModel& newModel) ;
-  virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
-                                       const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
 
   RooRealProxy _model ; // Original model
   RooRealProxy _convVar ; // Convolution variable
 
   RooArgSet* parseIntegrationRequest(const RooArgSet& intSet, Int_t& coefCode, RooArgSet* analVars=0) const ;
-
-  const RooRealVar* convVar() const ;  //  Convolution variable 
 
   RooListProxy _convSet  ;             //  Set of (resModel (x) basisFunc) convolution objects
   RooArgList _basisList ;              //!  List of created basis functions

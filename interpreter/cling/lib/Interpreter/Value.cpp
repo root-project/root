@@ -115,13 +115,6 @@ namespace cling {
       AllocatedValue::getFromPayload(m_Storage.m_Ptr)->Retain();
   }
 
-  Value::Value(Value&& other):
-    m_Storage(other.m_Storage), m_StorageType(other.m_StorageType),
-    m_Type(other.m_Type), m_Interpreter(other.m_Interpreter) {
-    // Invalidate other so it will not release.
-    other.m_StorageType = kUnsupportedType;
-  }
-
   Value::Value(clang::QualType clangTy, Interpreter& Interp):
     m_StorageType(determineStorageType(clangTy)),
     m_Type(clangTy.getAsOpaquePtr()),
@@ -229,7 +222,7 @@ namespace cling {
       DtorType = ArrTy->getElementType();
     }
     if (const clang::RecordType* RTy = DtorType->getAs<clang::RecordType>())
-      dtorFunc = GetDtorWrapperPtr(RTy->getDecl());
+      dtorFunc = m_Interpreter->compileDtorCallFor(RTy->getDecl());
 
     const clang::ASTContext& ctx = getASTContext();
     unsigned payloadSize = ctx.getTypeSizeInChars(getType()).getQuantity();
@@ -241,34 +234,6 @@ namespace cling {
 
   void Value::AssertOnUnsupportedTypeCast() const {
     assert("unsupported type in Value, cannot cast simplistically!" && 0);
-  }
-
-  /// \brief Get the function address of the wrapper of the destructor.
-  void* Value::GetDtorWrapperPtr(const clang::RecordDecl* RD) const {
-    std::string funcname;
-    {
-      llvm::raw_string_ostream namestr(funcname);
-      namestr << "__cling_StoredValue_Destruct_" << RD;
-    }
-
-    // Check whether the function exists before calling
-    // utils::TypeName::GetFullyQualifiedName which is expensive
-    // (memory-wise). See ROOT-6909.
-    std::string code;
-    if (!m_Interpreter->getAddressOfGlobal(funcname)) {
-      code = "extern \"C\" void ";
-      clang::QualType RDQT(RD->getTypeForDecl(), 0);
-      std::string typeName
-        = utils::TypeName::GetFullyQualifiedName(RDQT, RD->getASTContext());
-      std::string dtorName = RD->getNameAsString();
-      code += funcname + "(void* obj){((" + typeName + "*)obj)->~"
-        + dtorName + "();}";
-    }
-    // else we have an empty code string - but the function alreday exists
-    // so we'll be fine and take the existing one (ifUniq = true).
-
-    return m_Interpreter->compileFunction(funcname, code, true /*ifUniq*/,
-                                          false /*withAccessControl*/);
   }
 
   namespace valuePrinterInternal {

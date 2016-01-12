@@ -1,3 +1,11 @@
+## \file
+## \ingroup tutorial_pyroot
+## Display demo help.
+##
+## \macro_code
+##
+## \author Wim Lavrijsen
+
 import os
 from ROOT import TCanvas, TPaveText
 from ROOT import gROOT

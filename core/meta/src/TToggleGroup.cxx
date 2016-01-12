@@ -9,14 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TToggleGroup                                                         //
-//                                                                      //
-// This class defines check-box facility for TToggle objects            //
-// It is used in context menu "selectors" for picking up a value.       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TToggleGroup
+
+This class defines check-box facility for TToggle objects
+It is used in context menu "selectors" for picking up a value.
+*/
 
 
 #include "TMethod.h"

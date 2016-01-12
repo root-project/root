@@ -9,19 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TDomParser                                                           //
-//                                                                      //
-// DOM stands for the Document Object Model; this is an API for         //
-// accessing XML or HTML structured documents.                          //
-// The Document Object Model is a platform and language-neutral         //
-// interface that will allow programs and scripts to dynamically        //
-// access and update the content, structure and style of documents.     //
-//                                                                      //
-// The parser returns a tree built during the document analysis.        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TDomParser
+\ingroup IO
+
+DOM stands for the Document Object Model; this is an API for
+accessing XML or HTML structured documents.
+The Document Object Model is a platform and language-neutral
+interface that will allow programs and scripts to dynamically
+access and update the content, structure and style of documents.
+
+The parser returns a tree built during the document analysis.
+*/
 
 #include "TDOMParser.h"
 #include "TXMLDocument.h"
@@ -33,7 +32,7 @@
 ClassImp(TDOMParser);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TDOMParser constructor
+/// TDOMParser constructor.
 
 TDOMParser::TDOMParser() : fTXMLDoc(0)
 {
@@ -111,9 +110,9 @@ Int_t TDOMParser::ParseBuffer(const char *buffer, Int_t len)
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates a XML document for the parser.
 /// It returns 0 on success, and
-/// -1 if no XML document was created,
-/// -5 if the document is not well formated,
-/// -6 if document is not valid.
+///   - \b -1 if no XML document was created,
+///   - \b -5 if the document is not well formated,
+///   - \b -6 if document is not valid.
 
 Int_t TDOMParser::ParseContext()
 {

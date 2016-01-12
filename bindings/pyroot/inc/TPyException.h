@@ -43,8 +43,6 @@
 
 namespace PyROOT {
 
-R__EXTERN void* TPyExceptionMagic;
-
 class TPyException : public std::exception {
 public:
 // default constructor

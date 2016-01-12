@@ -16,15 +16,13 @@
 #include "TROOT.h"
 #include "Riostream.h"
 
-
 ClassImp(TLegendEntry)
 
+/** \class TLegendEntry
+\ingroup BasicGraphics
 
-//____________________________________________________________________________
-// TLegendEntry   Matthew.Adam.Dobbs@Cern.CH, September 1999
-// Storage class for one entry of a TLegend
-//
-
+Storage class for one entry of a TLegend.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TLegendEntry do-nothing default constructor
@@ -34,19 +32,21 @@ TLegendEntry::TLegendEntry(): TAttText(), TAttLine(), TAttFill(), TAttMarker()
    fObject = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// TLegendEntry normal constructor for one entry in a TLegend
-///   obj is the object this entry will represent. If obj has
-///   line/fill/marker attributes, then the TLegendEntry will display
-///   these attributes.
-///   label is the text that will describe the entry, it is displayed using
-///   TLatex, so may have a complex format.
-///   option may have values
-///    L draw line associated w/ TAttLine if obj inherits from TAttLine
-///    P draw polymarker assoc. w/ TAttMarker if obj inherits from TAttMarker
-///    F draw a box with fill associated w/ TAttFill if obj inherits TAttFill
-///   default is object = "LPF"
+/// TLegendEntry normal constructor for one entry in a TLegend.
+///
+/// obj is the object this entry will represent. If obj has
+/// line/fill/marker attributes, then the TLegendEntry will display
+/// these attributes.
+///
+/// label is the text that will describe the entry, it is displayed using
+/// TLatex, so may have a complex format.
+///
+/// option may have values
+///  - L draw line associated w/ TAttLine if obj inherits from TAttLine
+///  - P draw polymarker assoc. w/ TAttMarker if obj inherits from TAttMarker
+///  - F draw a box with fill associated w/ TAttFill if obj inherits TAttFill
+///    default is object = "LPF"
 
 TLegendEntry::TLegendEntry(const TObject* obj, const char* label, Option_t* option )
              :TAttText(0,0,0,0,0), TAttLine(1,1,1), TAttFill(0,0), TAttMarker(1,21,1)
@@ -58,7 +58,6 @@ TLegendEntry::TLegendEntry(const TObject* obj, const char* label, Option_t* opti
    if (obj) SetObject((TObject*)obj);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TLegendEntry copy constructor
 
@@ -67,7 +66,6 @@ TLegendEntry::TLegendEntry( const TLegendEntry &entry ) : TObject(entry), TAttTe
    ((TLegendEntry&)entry).Copy(*this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TLegendEntry default destructor
 
@@ -75,7 +73,6 @@ TLegendEntry::~TLegendEntry()
 {
    fObject = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// copy this TLegendEntry into obj
@@ -91,7 +88,6 @@ void TLegendEntry::Copy( TObject &obj ) const
    ((TLegendEntry&)obj).fLabel = fLabel;
    ((TLegendEntry&)obj).fOption = fOption;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// dump this TLegendEntry to std::cout
@@ -110,7 +106,6 @@ void TLegendEntry::Print( Option_t *) const
    else output = "NULL";
    std::cout << output << std::endl;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save this TLegendEntry as C++ statements on output stream out
@@ -134,7 +129,6 @@ void TLegendEntry::SaveEntry(std::ostream &out, const char* name )
    SaveTextAttributes(out,"entry",0,0,0,0,0);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// (re)set the obj pointed to by this entry
 
@@ -145,7 +139,6 @@ void TLegendEntry::SetObject(TObject* obj )
    }
    fObject = obj;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// (re)set the obj pointed to by this entry

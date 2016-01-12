@@ -1,6 +1,12 @@
 
 add_subdirectory(tmva)
 add_subdirectory(tmvagui)
+if(python AND NUMPY_FOUND)
+   add_subdirectory(pymva)
+endif()
+if(r)
+add_subdirectory(rmva)
+endif()
 #if(testing)
 # add_subdirectory(test)
 #endif()

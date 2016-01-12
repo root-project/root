@@ -22,10 +22,10 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-
-//______________________________________________________________________________
-// GUI editor for TEveWindow.
-//
+/** \class TEveWindowEditor
+\ingroup TEve
+GUI editor for TEveWindow.
+*/
 
 ClassImp(TEveWindowEditor);
 
@@ -45,8 +45,6 @@ TEveWindowEditor::TEveWindowEditor(const TGWindow *p, Int_t width, Int_t height,
    fShowTitleBar->Connect("Clicked()", "TEveWindowEditor", this,
                           "DoShowTitleBar()");
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.

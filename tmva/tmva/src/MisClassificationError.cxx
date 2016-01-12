@@ -34,6 +34,8 @@
 
 #include "TMVA/MisClassificationError.h"
 
+#include "Rtypes.h"
+
 ClassImp(TMVA::MisClassificationError)
 
 ////////////////////////////////////////////////////////////////////////////////

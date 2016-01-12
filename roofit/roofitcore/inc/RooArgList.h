@@ -17,7 +17,6 @@
 #define ROO_ARG_LIST
 
 #include "RooAbsCollection.h"
-#include "RooErrorHandler.h"
 
 class RooArgList : public RooAbsCollection {
 public:

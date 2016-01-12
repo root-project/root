@@ -14,15 +14,15 @@
 
 ClassImp(TDecompSparse)
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// Sparse Symmetric Decomposition class                                  //
-//                                                                       //
-// Solve a sparse symmetric system of linear equations using a method    //
-// based on Gaussian elimination as discussed in Duff and Reid,          //
-// ACM Trans. Math. Software 9 (1983), 302-325.                          //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
+/** \class TDecompSparse
+    \ingroup Matrix
+
+ Sparse Symmetric Decomposition class
+
+ Solve a sparse symmetric system of linear equations using a method
+ based on Gaussian elimination as discussed in Duff and Reid,
+ ACM Trans. Math. Software 9 (1983), 302-325.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -576,7 +576,7 @@ void TDecompSparse::InitPivot(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Factorization routine, the workhorse for the decompostion step
+/// Factorization routine, the workhorse for the decomposition step
 
 void TDecompSparse::Factor(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI &Aicn,TArrayD &Aa,
                            TArrayI &Aiw,TArrayI &Aikeep,const Int_t nsteps,Int_t &maxfrt,

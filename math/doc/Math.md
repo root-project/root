@@ -2,12 +2,12 @@
 
 \defgroup Math Math 
 
-The %ROOT Mathematical library.
+\brief The %ROOT Mathematical Libraries.
 
-See the \subpage MathPage "Math" libraries description page.
+See the \subpage MathPage "Mathematical Libraries" description page.
 
 
-\page MathPage The %ROOT Mathematical Libraries 
+\page MathPage The ROOT Mathematical Libraries 
 
 
 The %ROOT Mathematical libraries consist of the following components:

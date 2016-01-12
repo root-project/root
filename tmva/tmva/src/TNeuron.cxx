@@ -27,13 +27,10 @@
 //
 //_______________________________________________________________________
 
-#include "TH1D.h"
+#include "TMVA/TNeuron.h"
 
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMVA_TNeuron
-#include "TMVA/TNeuron.h"
 #endif
 #ifndef ROOT_TMVA_TActivation
 #include "TMVA/TActivation.h"
@@ -44,6 +41,9 @@
 #ifndef ROOT_TMVA_TNeuronInput
 #include "TMVA/TNeuronInput.h"
 #endif
+#include "TMVA/Types.h"
+
+#include "TH1D.h"
 
 static const Int_t UNINITIALIZED = -1;
 

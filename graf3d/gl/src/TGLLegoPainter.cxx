@@ -27,10 +27,11 @@
 #include "TGLPlotCamera.h"
 #include "TGLIncludes.h"
 
-//______________________________________________________________________________
-//
-// Plot-painter implementing LEGO rendering of TH2 histograms in
-// cartesian, polar, cylindrical and spherical coordinates.
+/** \class TGLLegoPainter
+\ingroup opengl
+Plot-painter implementing LEGO rendering of TH2 histograms in
+cartesian, polar, cylindrical and spherical coordinates.
+*/
 
 ClassImp(TGLLegoPainter)
 
@@ -689,7 +690,7 @@ void TGLLegoPainter::DrawLegoPolar()const
    if (fLegoType == kColorLevel && !fSelectionPass)
       fPalette.DisableTexture();
 
-   //Draw otulines.
+   //Draw outlines.
    if (!fSelectionPass) {
       glDisable(GL_POLYGON_OFFSET_FILL);//0]
       const TGLDisableGuard lightGuard(GL_LIGHTING);//[2-2]
@@ -794,7 +795,7 @@ void TGLLegoPainter::DrawLegoCylindrical()const
    if (fLegoType == kColorLevel && !fSelectionPass)
       fPalette.DisableTexture();
 
-   //Draw otulines.
+   //Draw outlines.
    if (!fSelectionPass) {
       glDisable(GL_POLYGON_OFFSET_FILL);//0]
       const TGLDisableGuard lightGuard(GL_LIGHTING);//[2-2]
@@ -916,7 +917,7 @@ void TGLLegoPainter::DrawLegoSpherical()const
    if (fLegoType == kColorLevel && !fSelectionPass)
       fPalette.DisableTexture();
 
-   //Draw otulines.
+   //Draw outlines.
    if (!fSelectionPass) {
       glDisable(GL_POLYGON_OFFSET_FILL);//0]
       const TGLDisableGuard lightGuard(GL_LIGHTING);//[2-2]

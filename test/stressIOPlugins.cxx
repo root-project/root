@@ -452,8 +452,8 @@ void stressIOPlugins4()
    {
       Bprint(0,"treename to AddFile");
       TChain  mychain("nosuchtree");
-      mychain.AddFile(gPfx + "Event_8a.root", TChain::kBigNumber, "T");
-      mychain.AddFile(gPfx + "Event_8b.root", TChain::kBigNumber, "T");
+      mychain.AddFile(gPfx + "Event_8a.root", TTree::kMaxEntries, "T");
+      mychain.AddFile(gPfx + "Event_8b.root", TTree::kMaxEntries, "T");
       nent = mychain.GetEntries();
       if (nent != 200) {
          printf("FAILED\n");
@@ -476,8 +476,8 @@ void stressIOPlugins4()
    {
       Bprint(0,"bad treename to AddFile, good in filename");
       TChain  mychain("nosuchtree");
-      mychain.AddFile(gPfx + "Event_8a.root/T", TChain::kBigNumber, "nosuchtree2");
-      mychain.AddFile(gPfx + "Event_8b.root/T", TChain::kBigNumber, "nosuchtree2");
+      mychain.AddFile(gPfx + "Event_8a.root/T", TTree::kMaxEntries, "nosuchtree2");
+      mychain.AddFile(gPfx + "Event_8b.root/T", TTree::kMaxEntries, "nosuchtree2");
       nent = mychain.GetEntries();
       if (nent != 200) {
          printf("FAILED\n");

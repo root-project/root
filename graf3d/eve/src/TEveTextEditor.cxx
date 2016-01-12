@@ -26,13 +26,15 @@
 #include "TG3DLine.h"
 
 
-//______________________________________________________________________________
-// GUI editor for TEveText.
-//
+/** \class TEveTextEditor
+\ingroup TEve
+GUI editor for TEveText.
+*/
 
 ClassImp(TEveTextEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveTextEditor::TEveTextEditor(const TGWindow *p, Int_t width, Int_t height,
                                UInt_t options, Pixel_t back) :
@@ -47,8 +49,6 @@ TEveTextEditor::TEveTextEditor(const TGWindow *p, Int_t width, Int_t height,
    fLighting(0),
    fAutoLighting(0)
 {
-   // Constructor.
-
    MakeTitle("TEveText");
 
    // Text entry

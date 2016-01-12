@@ -21,6 +21,8 @@
 #include "Math/IParamFunction.h"
 #endif
 
+#include "Math/IFunction.h"
+#include "Math/IFunctionfwd.h"
 
 #ifndef ROOT_Fit_BinData
 #include "Fit/BinData.h"

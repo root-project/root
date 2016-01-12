@@ -11,107 +11,98 @@
 //    Version 14, remove some print-out, do not add unused sys.errors
 //    Version 13, support for systematic errors
 
-////////////////////////////////////////////////////////////////////////
-//
-//  TUnfoldSys : public TUnfold
-//
-//  TUnfold is used to decompose a measurement y into several sources x
-//  given the measurement uncertainties and a matrix of migrations A
-//
-//  TUnfoldSys adds error propagation of systematic errors to TUnfold
-//  Also, background sources (with errors) can be subtracted.
-//
-//  *************************************************************
-//  * For most applications, it is better to use TUnfoldDensity *
-//  * instead of using TUnfoldSys or TUnfold                    *
-//  *************************************************************
-//
-//  If you use this software, please consider the following citation
-//       S.Schmitt, JINST 7 (2012) T10003 [arXiv:1205.6201]
-//
-//  More documentation and updates are available on
-//      http://www.desy.de/~sschmitt
-//
-//
-//  The following sources of systematic error are considered in TUnfoldSys
-//
-//  (a) uncorrelated errors on the input matrix histA, taken as the
-//      errors provided with the histogram.
-//      These are typically statistical errors from finite Monte Carlo samples
-//
-//  (b) correlated shifts of the input matrix histA. These shifts are taken
-//      as one-sigma effects when switchig on a given error soure.
-//      several such error sources may be defined
-//
-//  (c) a systematic error on the regularisation parameter tau
-//
-//  (d) uncorrelated errors on background sources, taken as the errors
-//      provided with the background histograms
-//
-//  (e) scale errors on background sources
-//
-// In addition there is the (statistical) uncertainty of the input vector (i)
-//
-// Source (a) is providede with the original histogram histA
-//     TUnfoldSys(histA,...)
-//
-// Sources (b) are added by calls to
-//     AddSysError()
-//
-// The systematic uncertainty on tau (c) is set by
-//     SetTauError()
-//
-// Backgound sources causing errors of type (d) and (e) are added by
-//     SubtractBackground()
-//
-//
-// NOTE:
-// ======
-//    Systematic errors (a), (b), (c) are propagated to the result
-//       AFTER unfolding
-//
-//    Background errors (d) and (e) are added to the data errors
-//       BEFORE unfolding
-//
-// For this reason:
-//  errors of type (d) and (e) are INCLUDED in the standard error matrix
-//  and other methods provided by the base class TUnfold:
-//      GetOutput()
-//      GetEmatrix()
-//      ...
-//  whereas errors of type (a), (b), (c) are NOT INCLUDED in the methods
-//  provided by the base class TUnfold.
-//
-// Accessing error matrices:
-// ===================================
-//  The error sources (b),(c) and (e) propagate to shifts of the result.
-//  These shifts may be accessed as histograms using the methods
-//     GetDeltaSysSource()            corresponds to (b)
-//     GetDeltaSysTau()               corresponds to (c)
-//     GetDeltaSysBackgroundScale()   corresponds to (e)
-//  The error sources (a) and (d) originate from many uncorrelated errors,
-//  which in general are NOT uncorrelated on the result vector.
-//  Thus, there is no corresponding shift of the output vector, only error
-//  matrices are available
-//
-//  Method to get error matrix       corresponds to error sources
-//  ===============================================================
-//   GetEmatrixSysUncorr()             (a)
-//   GetEmatrixSysSource()             (b)
-//   GetEmatrixSysTau()                (c)
-//   GetEmatrixSysBackgroundUncorr()   (d)
-//   GetEmatrixSysBackgroundScale()    (e)
-//   GetEmatrixInput()                 (i)
-//   GetEmatrix()                      (i)+(d)+(e)
-//   GetEmatrixTotal()                 (i)+(a)+(b)+(c)+(d)+(e)
-//
-//  Error matrices can be added to existing histograms.
-//  This is useful to retreive the sum of several error matrices.
-//  If the last argument of the GetEmatrixXXX() methods is set to kFALSE,
-//  the histogram is not cleared, but the error matrix is simply added to the
-//  existing histogram
-//
-////////////////////////////////////////////////////////////////////////
+/** \class TUnfoldSys
+    \ingroup Hist
+  TUnfold is used to decompose a measurement y into several sources x
+  given the measurement uncertainties and a matrix of migrations A
+
+  TUnfoldSys adds error propagation of systematic errors to TUnfold
+  Also, background sources (with errors) can be subtracted.
+
+  **For most applications, it is better to use TUnfoldDensity
+  instead of using TUnfoldSys or TUnfold**
+
+  If you use this software, please consider the following citation
+       S.Schmitt, JINST 7 (2012) T10003 [arXiv:1205.6201]
+
+  More documentation and updates are available on
+      http://www.desy.de/~sschmitt
+
+  The following sources of systematic error are considered in TUnfoldSys
+
+  (a) uncorrelated errors on the input matrix histA, taken as the
+      errors provided with the histogram.
+      These are typically statistical errors from finite Monte Carlo samples
+
+  (b) correlated shifts of the input matrix histA. These shifts are taken
+      as one-sigma effects when switchig on a given error soure.
+      several such error sources may be defined
+
+  (c) a systematic error on the regularisation parameter tau
+
+  (d) uncorrelated errors on background sources, taken as the errors
+      provided with the background histograms
+
+  (e) scale errors on background sources
+
+ In addition there is the (statistical) uncertainty of the input vector (i)
+
+ Source (a) is providede with the original histogram histA
+     TUnfoldSys(histA,...)
+
+ Sources (b) are added by calls to
+     AddSysError()
+
+ The systematic uncertainty on tau (c) is set by
+     SetTauError()
+
+ Backgound sources causing errors of type (d) and (e) are added by
+     SubtractBackground()
+
+ NOTE:
+    Systematic errors (a), (b), (c) are propagated to the result
+       AFTER unfolding
+
+    Background errors (d) and (e) are added to the data errors
+       BEFORE unfolding
+
+ For this reason:
+  errors of type (d) and (e) are INCLUDED in the standard error matrix
+  and other methods provided by the base class TUnfold:
+      GetOutput()
+      GetEmatrix()
+      ...
+  whereas errors of type (a), (b), (c) are NOT INCLUDED in the methods
+  provided by the base class TUnfold.
+
+  ## Accessing error matrices:
+  The error sources (b),(c) and (e) propagate to shifts of the result.
+  These shifts may be accessed as histograms using the methods
+     GetDeltaSysSource()            corresponds to (b)
+     GetDeltaSysTau()               corresponds to (c)
+     GetDeltaSysBackgroundScale()   corresponds to (e)
+  The error sources (a) and (d) originate from many uncorrelated errors,
+  which in general are NOT uncorrelated on the result vector.
+  Thus, there is no corresponding shift of the output vector, only error
+  matrices are available
+
+  Method to get error matrix   |     corresponds to error sources
+  -----------------------------|---------------------------------
+   GetEmatrixSysUncorr()           |  (a)
+   GetEmatrixSysSource()           |  (b)
+   GetEmatrixSysTau()              |  (c)
+   GetEmatrixSysBackgroundUncorr() |  (d)
+   GetEmatrixSysBackgroundScale()  |  (e)
+   GetEmatrixInput()               |  (i)
+   GetEmatrix()                    |  (i)+(d)+(e)
+   GetEmatrixTotal()               |  (i)+(a)+(b)+(c)+(d)+(e)
+
+  Error matrices can be added to existing histograms.
+  This is useful to retreive the sum of several error matrices.
+  If the last argument of the GetEmatrixXXX() methods is set to kFALSE,
+  the histogram is not cleared, but the error matrix is simply added to the
+  existing histogram
+*/
 
 /*
   This file is part of TUnfold.

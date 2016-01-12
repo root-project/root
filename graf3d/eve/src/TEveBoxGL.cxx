@@ -17,13 +17,10 @@
 
 #include "TMath.h"
 
-//==============================================================================
-// TEveBoxGL
-//==============================================================================
-
-//______________________________________________________________________________
-// OpenGL renderer class for TEveBox.
-//
+/** \class TEveBoxGL
+\ingroup TEve
+OpenGL renderer class for TEveBox.
+*/
 
 ClassImp(TEveBoxGL);
 
@@ -53,8 +50,6 @@ void TEveBoxGL::SetBBox()
    // !! This ok if master sub-classed from TAttBBox
    SetAxisAlignedBBox(((TEveBox*)fExternalObj)->AssertBBox());
 }
-
-//==============================================================================
 
 namespace
 {
@@ -229,13 +224,10 @@ void TEveBoxGL::DirectDraw(TGLRnrCtx&) const
 }
 
 
-//==============================================================================
-// TEveBoxProjectedGL
-//==============================================================================
-
-//______________________________________________________________________________
-// OpenGL renderer class for TEveBoxProjected.
-//
+/** \class TEveBoxProjectedGL
+\ingroup TEve
+OpenGL renderer class for TEveBoxProjected.
+*/
 
 ClassImp(TEveBoxProjectedGL);
 
@@ -247,8 +239,6 @@ TEveBoxProjectedGL::TEveBoxProjectedGL() :
 {
    // fDLCache = kFALSE; // Disable display list.
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
@@ -266,9 +256,6 @@ void TEveBoxProjectedGL::SetBBox()
 {
    SetAxisAlignedBBox(((TEveBoxProjected*)fExternalObj)->AssertBBox());
 }
-
-//------------------------------------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Render points with given GL mode.

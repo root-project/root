@@ -19,6 +19,7 @@
 class TTree;
 
 namespace ROOT {
+namespace Internal {
 
    class TFriendProxy {
    protected:
@@ -34,6 +35,7 @@ namespace ROOT {
       void     Update(TTree *newmain);
    };
 
-}
+} // namespace Internal
+} // namespace ROOT
 
 #endif

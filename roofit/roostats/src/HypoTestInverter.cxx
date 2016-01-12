@@ -10,20 +10,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
-   HypoTestInverter class for performing an hypothesis test inversion by scanning the hypothesis test results of an 
-  HypoTestCalculator  for various values of the parameter of interest. By looking at the confidence level curve of 
- the result  an upper limit, where it intersects the desired confidence level, can be derived.
- The class implements the RooStats::IntervalCalculator interface and returns an  RooStats::HypoTestInverterResult class.
- The result is a SimpleInterval, which via the method UpperLimit returns to the user the upper limit value.
-
-The  HypoTestInverter implements various option for performing the scan. HypoTestInverter::RunFixedScan will scan using a fixed grid the parameter of interest. HypoTestInverter::RunAutoScan will perform an automatic scan to find optimally the curve and it will stop until the desired precision is obtained.
-The confidence level value at a given point can be done via  HypoTestInverter::RunOnePoint.
-The class can scan the CLs+b values or alternativly CLs (if the method HypoTestInverter::UseCLs has been called).
-
-
-   Contributions to this class have been written by Giovanni Petrucciani and Annapaola Decosa
-**/
 
 // include other header files
 

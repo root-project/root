@@ -18,10 +18,10 @@ TClass *TVirtualHistPainter::fgPainter = 0;
 
 ClassImp(TVirtualHistPainter)
 
-//______________________________________________________________________________
-//
-//  TVirtualHistPainter is an abstract interface to a histogram painter.
-//
+/** \class TVirtualHistPainter
+ \ingroup Hist
+ Abstract interface to a histogram painter
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -17,13 +17,10 @@
 #include "TGLRnrCtx.h"
 #include "TGLSelectRecord.h"
 
-//==============================================================================
-// TEveTrackGL
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// GL-renderer for TEveTrack class.
+/** \class TEveTrackGL
+\ingroup TEve
+GL-renderer for TEveTrack class.
+*/
 
 ClassImp(TEveTrackGL);
 
@@ -34,8 +31,6 @@ TEveTrackGL::TEveTrackGL() : TEveLineGL()
 {
    // fDLCache = false; // Disable display list.
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.

@@ -9,56 +9,60 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-//                R O O T top level object description
-//
-//    The TROOT object is the entry point to the ROOT system.
-//    The single instance of TROOT is accessible via the global gROOT.
-//    Using the gROOT pointer one has access to basically every object
-//    created in a ROOT based program. The TROOT object is essentially a
-//    container of several lists pointing to the main ROOT objects.
-//
-//    The following lists are accessible from gROOT object:
-//       gROOT->GetListOfClasses
-//       gROOT->GetListOfColors
-//       gROOT->GetListOfTypes
-//       gROOT->GetListOfGlobals
-//       gROOT->GetListOfGlobalFunctions
-//       gROOT->GetListOfFiles
-//       gROOT->GetListOfMappedFiles
-//       gROOT->GetListOfSockets
-//       gROOT->GetListOfSecContexts
-//       gROOT->GetListOfCanvases
-//       gROOT->GetListOfStyles
-//       gROOT->GetListOfFunctions
-//       gROOT->GetListOfSpecials (for example graphical cuts)
-//       gROOT->GetListOfGeometries
-//       gROOT->GetListOfBrowsers
-//       gROOT->GetListOfCleanups
-//       gROOT->GetListOfMessageHandlers
-//
-//   The TROOT class provides also many useful services:
-//     - Get pointer to an object in any of the lists above
-//     - Time utilities TROOT::Time
-//
-//   The ROOT object must be created as a static object. An example
-//   of a main program creating an interactive version is shown below:
-//
-//---------------------Example of a main program--------------------------------
-//
-//       #include "TRint.h"
-//
-//       int main(int argc, char **argv)
-//       {
-//          TRint *theApp = new TRint("ROOT example", &argc, argv);
-//
-//          // Init Intrinsics, build all windows, and enter event loop
-//          theApp->Run();
-//
-//          return(0);
-//       }
-//-----------------------End of Main program--------------------------------
-////////////////////////////////////////////////////////////////////////////////
+/** \class TROOT
+ROOT top level object description.
+
+   The TROOT object is the entry point to the ROOT system.
+   The single instance of TROOT is accessible via the global gROOT.
+   Using the gROOT pointer one has access to basically every object
+   created in a ROOT based program. The TROOT object is essentially a
+   container of several lists pointing to the main ROOT objects.
+
+   The following lists are accessible from gROOT object:
+
+~~~ {.cpp}
+      gROOT->GetListOfClasses
+      gROOT->GetListOfColors
+      gROOT->GetListOfTypes
+      gROOT->GetListOfGlobals
+      gROOT->GetListOfGlobalFunctions
+      gROOT->GetListOfFiles
+      gROOT->GetListOfMappedFiles
+      gROOT->GetListOfSockets
+      gROOT->GetListOfSecContexts
+      gROOT->GetListOfCanvases
+      gROOT->GetListOfStyles
+      gROOT->GetListOfFunctions
+      gROOT->GetListOfSpecials (for example graphical cuts)
+      gROOT->GetListOfGeometries
+      gROOT->GetListOfBrowsers
+      gROOT->GetListOfCleanups
+      gROOT->GetListOfMessageHandlers
+~~~
+
+  The TROOT class provides also many useful services:
+    - Get pointer to an object in any of the lists above
+    - Time utilities TROOT::Time
+
+  The ROOT object must be created as a static object. An example
+  of a main program creating an interactive version is shown below:
+
+### Example of a main program
+
+~~~ {.cpp}
+      #include "TRint.h"
+
+      int main(int argc, char **argv)
+      {
+         TRint *theApp = new TRint("ROOT example", &argc, argv);
+
+         // Init Intrinsics, build all windows, and enter event loop
+         theApp->Run();
+
+         return(0);
+      }
+~~~
+*/
 
 #include "RConfig.h"
 #include "RConfigure.h"
@@ -152,7 +156,7 @@ static void *gInterpreterLib = 0;
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = 0;
 
-// For accesing TThread::Tsd indirectly.
+// For accessing TThread::Tsd indirectly.
 void **(*gThreadTsd)(void*,Int_t) = 0;
 
 //-------- Names of next three routines are a small homage to CMZ --------------
@@ -263,11 +267,13 @@ Bool_t TROOT::fgRootInit = kFALSE;
 Bool_t TROOT::fgMemCheck = kFALSE;
 
 static void at_exit_of_TROOT() {
-   gROOT->~TROOT();
+   if (ROOT::Internal::gROOTLocal)
+      ROOT::Internal::gROOTLocal->~TROOT();
 }
 
 // This local static object initializes the ROOT system
 namespace ROOT {
+namespace Internal {
    class TROOTAllocator {
       // Simple wrapper to separate, time-wise, the call to the
       // TROOT destructor and the actual free-ing of the memory.
@@ -303,8 +309,9 @@ namespace ROOT {
       char fHolder[sizeof(TROOT)];
    public:
       TROOTAllocator() {
-         new ( &(fHolder[0]) ) TROOT("root", "The ROOT of EVERYTHING");
+         new(&(fHolder[0])) TROOT("root", "The ROOT of EVERYTHING");
       }
+
       ~TROOTAllocator() {
          if (gROOTLocal) {
             gROOTLocal->~TROOT();
@@ -317,10 +324,10 @@ namespace ROOT {
 
    // Initially this function pointer's value is & GetROOT1 whose role is to
    // create and initialize the TROOT object itself.
-   // At the very end of the TROOT constructor the value of the funtion pointer
+   // At the very end of the TROOT constructor the value of the function pointer
    // is switch to & GetROOT2 whose role is to initialize the interpreter.
 
-   // This mechanism was primarly intented to fix the issues with order in which
+   // This mechanism was primarily intended to fix the issues with order in which
    // global TROOT and LLVM globals are initialized. TROOT was initializing
    // Cling, but Cling could not be used yet due to LLVM globals not being
    // initialized yet.  The solution is to delay initializing the interpreter in
@@ -340,12 +347,14 @@ namespace ROOT {
    // code).
 
    extern TROOT *gROOTLocal;
+
    TROOT *GetROOT1() {
       if (gROOTLocal)
          return gROOTLocal;
       static TROOTAllocator alloc;
       return gROOTLocal;
    }
+
    TROOT *GetROOT2() {
       static Bool_t initInterpreter = kFALSE;
       if (!initInterpreter) {
@@ -357,21 +366,102 @@ namespace ROOT {
       return gROOTLocal;
    }
    typedef TROOT *(*GetROOTFun_t)();
+
    static GetROOTFun_t gGetROOT = &GetROOT1;
-   TROOT *GetROOT() {
-      return (*gGetROOT)();
+
+   static Func_t GetSymInLibThread(const char *funcname)
+   {
+      const static bool loadSuccess = 0 <= gSystem->Load("libThread");
+      if (loadSuccess) {
+         if (auto sym = gSystem->DynFindSymbol(nullptr, funcname)) {
+            return sym;
+         } else {
+            Error("GetSymInLibThread", "Cannot get symbol %s.", funcname);
+         }
+      }
+      return nullptr;
    }
+
+} // end of Internal sub namespace
+// back to ROOT namespace
+
+   TROOT *GetROOT() {
+      return (*Internal::gGetROOT)();
+   }
+
    TString &GetMacroPath() {
       static TString macroPath;
       return macroPath;
    }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Enables the global mutex to make ROOT thread safe/aware.
+   void EnableThreadSafety()
+   {
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TThread_Initialize");
+      if (sym)
+         sym();
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Globally enables the implicit multi-threading in ROOT, activating the
+   /// parallel execution of those methods in ROOT that provide an internal
+   /// parallelisation.
+   /// The 'numthreads' parameter allows to control the number of threads to
+   /// be used by the implicit multi-threading. However, this parameter is just
+   /// a hint for ROOT, which will try to satisfy the request if the execution
+   /// scenario allows it. For example, if ROOT is configured to use an external
+   /// scheduler, setting a value for 'numthreads' might not have any effect.
+   /// @param[in] numthreads Number of threads to use. If not specified or
+   ///                       set to zero, the number of threads is automatically
+   ///                       decided by the implementation. Any other value is
+   ///                       used as a hint.
+   void EnableImplicitMT(UInt_t numthreads)
+   {
+#ifdef R__USE_IMT
+      static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableImplicitMT");
+      if (sym)
+         sym(numthreads);
+#else
+      ::Warning("EnableImplicitMT", "Cannot enable implicit multi-threading with %d threads, please build ROOT with -Dimt=ON", numthreads);
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Disables the implicit multi-threading in ROOT.
+   void DisableImplicitMT()
+   {
+#ifdef R__USE_IMT
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableImplicitMT");
+      if (sym)
+         sym();
+#else
+      ::Warning("DisableImplicitMT", "Cannot disable implicit multi-threading, please build ROOT with -Dimt=ON");
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Returns true if the implicit multi-threading in ROOT is enabled.
+   Bool_t IsImplicitMTEnabled()
+   {
+#ifdef R__USE_IMT
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsImplicitMTEnabled");
+      if (sym)
+         return sym();
+      else
+         return kFALSE;
+#else
+      return kFALSE;
+#endif
+   }
+
 }
 
-TROOT *ROOT::gROOTLocal = ROOT::GetROOT();
+TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
 
 // Global debug flag (set to > 0 to get debug output).
 // Can be set either via the interpreter (gDebug is exported to CINT),
-// via the rootrc resouce "Root.Debug", via the shell environment variable
+// via the rootrc resource "Root.Debug", via the shell environment variable
 // ROOTDEBUG, or via the debugger.
 Int_t gDebug;
 
@@ -427,14 +517,14 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
      fProofs(0),fClipboard(0),fDataSets(0),fUUIDs(0),fRootFolder(0),fBrowsables(0),
      fPluginManager(0)
 {
-   if (fgRootInit || ROOT::gROOTLocal) {
+   if (fgRootInit || ROOT::Internal::gROOTLocal) {
       //Warning("TROOT", "only one instance of TROOT allowed");
       return;
    }
 
    R__LOCKGUARD2(gROOTMutex);
 
-   ROOT::gROOTLocal = this;
+   ROOT::Internal::gROOTLocal = this;
    gDirectory = 0;
 
    // initialize gClassTable is not already done
@@ -519,6 +609,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fProofs      = new TList; fProofs->SetName("Proofs");
    fClipboard   = new TList; fClipboard->SetName("Clipboard");
    fDataSets    = new TList; fDataSets->SetName("DataSets");
+   fTypes       = new TListOfTypes;
 
    TProcessID::AddProcessID();
    fUUIDs = new TProcessUUID();
@@ -613,7 +704,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    atexit(CleanUpROOTAtExit);
 
-   ROOT::gGetROOT = &ROOT::GetROOT2;
+   ROOT::Internal::gGetROOT = &ROOT::Internal::GetROOT2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -622,10 +713,12 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
 TROOT::~TROOT()
 {
-   if (ROOT::gROOTLocal == this) {
+   using namespace ROOT::Internal;
+
+   if (gROOTLocal == this) {
 
       // If the interpreter has not yet been initialized, don't bother
-      ROOT::gGetROOT = &ROOT::GetROOT1;
+      gGetROOT = &GetROOT1;
 
       // Mark the object as invalid, so that we can veto some actions
       // (like autoloading) while we are in the destructor.
@@ -635,7 +728,7 @@ TROOT::~TROOT()
       // already been deleted during the destruction phase
       gGlobalMutex = 0;
 
-      // Return when error occured in TCling, i.e. when setup file(s) are
+      // Return when error occurred in TCling, i.e. when setup file(s) are
       // out of date
       if (!fVersionInt) return;
 
@@ -713,7 +806,7 @@ TROOT::~TROOT()
       // On some 'newer' platform (Fedora Core 17+, Ubuntu 12), the
       // initialization order is (by default?) is 'wrong' and so we can't
       // delete the interpreter now .. because any of the static in the
-      // interpreter's libray have already been deleted.
+      // interpreter's library have already been deleted.
       // On the link line, we must list the most dependent .o file
       // and end with the least dependent (LLVM libraries), unfortunately,
       // Fedora Core 17+ or Ubuntu 12 will also execute the initialization
@@ -734,7 +827,7 @@ TROOT::~TROOT()
       // Prints memory stats
       TStorage::PrintStatistics();
 
-      ROOT::gROOTLocal = 0;
+      gROOTLocal = 0;
       fgRootInit = kFALSE;
    }
 }
@@ -815,7 +908,7 @@ namespace {
          }
          cursor = cursor->Next();
       };
-      // Now were done, clear the list but do not delete the objecs as
+      // Now were done, clear the list but do not delete the objects as
       // they have been moved to the list of closed objects and must be
       // deleted from there in order to avoid a double delete from a
       // use objects (on the interpreter stack).
@@ -832,6 +925,9 @@ void TROOT::CloseFiles()
    if (fFiles && fFiles->First()) {
       R__ListSlowClose(static_cast<TList*>(fFiles));
    }
+   // and Close TROOT itself.
+   Close();
+   // Now sockets.
    if (fSockets && fSockets->First()) {
       if (0==fCleanups->FindObject(fSockets) ) {
          fCleanups->Add(fSockets);
@@ -883,7 +979,7 @@ void TROOT::CloseFiles()
          }
          // Now were done, clear the list
          fSockets->Clear();
-         // Readd the one we did not close
+         // Read the one we did not close
          cursor = notclosed.FirstLink();
          while (cursor) {
             static_cast<TList*>(fSockets)->AddLast(cursor->GetObject());
@@ -1076,7 +1172,7 @@ TObject *TROOT::FindObjectAnyFile(const char *name) const
    TIter next(GetListOfFiles());
    while ((d = (TDirectory*)next())) {
       // Call explicitly TDirectory::FindObject to restrict the search to the
-      // arlready in memory object.
+      // already in memory object.
       TObject *obj = d->TDirectory::FindObject(name);
       if (obj) return obj;
    }
@@ -1104,7 +1200,7 @@ const char *TROOT::FindObjectClassName(const char *name) const
 /// The function returns the first occurence of the object in the list
 /// of folders. The returned string points to a static char array in TROOT.
 /// If this function is called in a loop or recursively, it is the
-/// user's responsability to copy this string in their area.
+/// user's responsibility to copy this string in their area.
 
 const char *TROOT::FindObjectPathName(const TObject *) const
 {
@@ -1161,7 +1257,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load, Bool_t silent) const
 /// Return pointer to class from its name. Obsolete, use TClass::GetClass directly
 /// See TClass::GetClass
 
-TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load, Bool_t silent) const
+TClass *TROOT::GetClass(const std::type_info& typeinfo, Bool_t load, Bool_t silent) const
 {
    return TClass::GetClass(typeinfo,load,silent);
 }
@@ -1470,27 +1566,24 @@ TCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
 /// currently defined.
 ///
 /// The list is populated on demand.  Calling
+/// ~~~ {.cpp}
 ///    gROOT->GetListOfTypes()->FindObject(nameoftype);
+/// ~~~
 /// will return the TDataType corresponding to 'nameoftype'.  If the
 /// TDataType is not already in the list itself and the type does exist,
 /// a new TDataType will be created and added to the list.
 ///
 /// Calling
+/// ~~~ {.cpp}
 ///    gROOT->GetListOfTypes()->ls(); // or Print()
-/// list only the typedefs that have been previously accessed throught the
+/// ~~~
+/// list only the typedefs that have been previously accessed through the
 /// list (plus the builtins types).
-///
 
 TCollection *TROOT::GetListOfTypes(Bool_t /* load */)
 {
    if (!fInterpreter)
       Fatal("GetListOfTypes", "fInterpreter not initialized");
-
-   if (!fTypes) {
-      R__LOCKGUARD2(gROOTMutex);
-
-      if (!fTypes) fTypes = new TListOfTypes;
-   }
 
    return fTypes;
 }
@@ -1652,16 +1745,8 @@ void TROOT::InitSystem()
 
 void TROOT::InitThreads()
 {
-   if (gEnv->GetValue("Root.UseThreads", 0)) {
-      char *path;
-      if ((path = gSystem->DynamicPathName("libThread", kTRUE))) {
-         delete [] path;
-         TInterpreter::EErrorCode code = TInterpreter::kNoError;
-         fInterpreter->Calc("TThread::Initialize();", &code);
-         if (code != TInterpreter::kNoError) {
-            Error("InitThreads","Thread mechanism not initialization properly.");
-         }
-      }
+   if (gEnv->GetValue("Root.UseThreads", 0) || gEnv->GetValue("Root.EnableThreadSafety", 0)) {
+      ROOT::EnableThreadSafety();
    }
 }
 
@@ -2090,10 +2175,10 @@ Bool_t &GetReadingObject() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Deprecated (will be removed in next release).
 
 Bool_t TROOT::ReadingObject() const
 {
-   /* Deprecated (will be removed in next release) */
    return GetReadingObject();
 }
 
@@ -2143,7 +2228,9 @@ void TROOT::RefreshBrowsers()
 
 static void CallCloseFiles()
 {
-   if (TROOT::Initialized() && ROOT::gROOTLocal) gROOT->CloseFiles();
+   if (TROOT::Initialized() && ROOT::Internal::gROOTLocal) {
+      gROOT->CloseFiles();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2487,7 +2574,7 @@ const char**& TROOT::GetExtraInterpreterArgs() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the tuorials directory in the installtion. Static utility function.
+/// Get the tutorials directory in the installation. Static utility function.
 
 const char *TROOT::GetTutorialsDir()
 {

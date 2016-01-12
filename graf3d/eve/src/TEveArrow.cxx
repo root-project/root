@@ -13,9 +13,10 @@
 #include "TEveTrans.h"
 
 
-//______________________________________________________________________________
-//
-// TEveElement class used for display of a thick arrow.
+/** \class TEveArrow
+\ingroup TEve
+Class used for display of a thick arrow.
+*/
 
 ClassImp(TEveArrow);
 

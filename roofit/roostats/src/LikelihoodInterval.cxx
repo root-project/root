@@ -18,42 +18,6 @@
  *****************************************************************************/
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-/*
-BEGIN_HTML
-<p>
-LikelihoodInterval is a concrete implementation of the RooStats::ConfInterval interface.  
-It implements a connected N-dimensional intervals based on the contour of a likelihood ratio.
-The boundary of the inteval is equivalent to a MINUIT/MINOS contour about the maximum likelihood estimator
-[<a href="#minuit">1</a>].
-The interval does not need to be an ellipse (eg. it is not the HESSE error matrix).
-The level used to make the contour is the same as that used in MINOS, eg. it uses Wilks' theorem, 
-which states that under certain regularity conditions the function -2* log (profile likelihood ratio) is asymptotically distributed as a chi^2 with N-dof, where 
-N is the number of parameters of interest.  
-</p>
-
-<p>
-Note, a boundary on the parameter space (eg. s>= 0) or a degeneracy (eg. mass of signal if Nsig = 0) can lead to violations of the conditions necessary for Wilks' theorem to be true.
-</p>
-
-<p>
-Also note, one can use any RooAbsReal as the function that will be used in the contour; however, the level of the contour
-is based on Wilks' theorem as stated above.
-</p>
-
-<P>References</P>
-
-<p><A NAME="minuit">1</A>
-F.&nbsp;James., Minuit.Long writeup D506, CERN, 1998.
-</p>
-  
-END_HTML
-*/
-//
-//
-
 #ifndef RooStats_LikelihoodInterval
 #include "RooStats/LikelihoodInterval.h"
 #endif

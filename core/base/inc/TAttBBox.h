@@ -47,6 +47,8 @@ public:
    Float_t* AssertBBox()      { if(fBBox == 0) ComputeBBox(); return fBBox; }
    void     ResetBBox()       { if(fBBox != 0) BBoxClear(); }
 
+   void     SetupBBoxCube(Float_t extent, Float_t x, Float_t y, Float_t z);
+
    virtual void ComputeBBox() = 0;
 
    ClassDef(TAttBBox,1); // Helper for management of bounding-box information

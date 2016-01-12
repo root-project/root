@@ -12,6 +12,8 @@
 
 #include "TIndexTable.h"
 
+#include "TTableDescriptor.h"
+
 //////////////////////////////////////////////////////////////////////////////
 // TIndexTable class is helper class to keep the list of the referencs to the
 // TTable rows and iterate over it.

@@ -15,6 +15,7 @@
 #include <iostream>
 
 /** \class TFitResult
+    \ingroup Hist
 Extends the ROOT::Fit::Result class with a TNamed inheritance
 providing easy possibility for I/O
 */

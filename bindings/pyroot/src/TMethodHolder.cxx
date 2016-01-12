@@ -15,6 +15,7 @@
 #include "TClass.h"           // for exception types (to move to Cppyy.cxx)
 #include "TException.h"       // for TRY ... CATCH
 #include "TVirtualMutex.h"    // for R__LOCKGUARD2
+#include "TClassEdit.h"       // demangler
 
 // Standard
 #include <assert.h>
@@ -23,7 +24,7 @@
 #include <sstream>
 #include <string>
 #include <typeinfo>
-
+#include <memory>
 
 //- data and local helpers ---------------------------------------------------
 namespace PyROOT {
@@ -66,13 +67,20 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, 
    try {       // C++ try block
       result = fExecutor->Execute( fMethod, (Cppyy::TCppObject_t)((Long_t)self + offset), ctxt );
    } catch ( TPyException& ) {
-      result = (PyObject*)TPyExceptionMagic;
+      result = nullptr;           // error already set
    } catch ( std::exception& e ) {
    // map user exceptions .. this needs to move to Cppyy.cxx
       TClass* cl = TClass::GetClass( typeid(e) );
 
       PyObject* pyUserExcepts = PyObject_GetAttrString( gRootModule, "UserExceptions" );
-      std::string exception_type = cl->GetName();
+      std::string exception_type;
+      if (cl) exception_type = cl->GetName();
+      else {
+	int errorCode;
+        std::unique_ptr<char[]> demangled(TClassEdit::DemangleTypeIdName(typeid(e),errorCode));
+        if (errorCode) exception_type = typeid(e).name();
+        else exception_type = demangled.get();
+      }
       PyObject* pyexc = PyDict_GetItemString( pyUserExcepts, exception_type.c_str() );
       if ( !pyexc ) {
          PyErr_Clear();
@@ -87,14 +95,13 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, 
       if ( pyexc ) {
          PyErr_Format( pyexc, "%s", e.what() );
       } else {
-         PyErr_Format( PyExc_Exception, "%s (C++ exception of type %s)", e.what(), cl->GetName() );
+         PyErr_Format( PyExc_Exception, "%s (C++ exception of type %s)", e.what(), exception_type.c_str() );
       }
       result = nullptr;
    } catch ( ... ) {
       PyErr_SetString( PyExc_Exception, "unhandled, unknown C++ exception" );
       result = nullptr;
    }
-
    return result;
 }
 
@@ -156,11 +163,12 @@ Bool_t PyROOT::TMethodHolder::InitConverters_()
 ////////////////////////////////////////////////////////////////////////////////
 /// install executor conform to the return type
 
-Bool_t PyROOT::TMethodHolder::InitExecutor_( TExecutor*& executor )
+Bool_t PyROOT::TMethodHolder::InitExecutor_( TExecutor*& executor, TCallContext* ctxt )
 {
    executor = CreateExecutor( (Bool_t)fMethod == true ?
-      Cppyy::ResolveName( Cppyy::GetMethodResultType( fMethod ) )
-      : Cppyy::GetScopedFinalName( fScope ) );
+      Cppyy::ResolveName( Cppyy::GetMethodResultType( fMethod ) ) : Cppyy::GetScopedFinalName( fScope ),
+      ctxt ? ManagesSmartPtr( ctxt ) : kFALSE );
+
    if ( ! executor )
       return kFALSE;
 
@@ -413,7 +421,7 @@ PyObject* PyROOT::TMethodHolder::GetScopeProxy()
 ////////////////////////////////////////////////////////////////////////////////
 /// done if cache is already setup
 
-Bool_t PyROOT::TMethodHolder::Initialize()
+Bool_t PyROOT::TMethodHolder::Initialize( TCallContext* ctxt )
 {
    if ( fIsInitialized == kTRUE )
       return kTRUE;
@@ -421,7 +429,7 @@ Bool_t PyROOT::TMethodHolder::Initialize()
    if ( ! InitConverters_() )
       return kFALSE;
 
-   if ( ! InitExecutor_( fExecutor ) )
+   if ( ! InitExecutor_( fExecutor, ctxt ) )
       return kFALSE;
 
 // minimum number of arguments when calling
@@ -516,8 +524,7 @@ PyObject* PyROOT::TMethodHolder::Execute( void* self, ptrdiff_t offset, TCallCon
       result = CallSafe( self, offset, ctxt );
    }
 
-   if ( result && result != (PyObject*)TPyExceptionMagic
-           && Utility::PyErr_Occurred_WithGIL() ) {
+   if ( result && Utility::PyErr_Occurred_WithGIL() ) {
    // can happen in the case of a CINT error: trigger exception processing
       Py_DECREF( result );
       result = 0;
@@ -539,7 +546,7 @@ PyObject* PyROOT::TMethodHolder::Call(
    }
 
 // setup as necessary
-   if ( ! Initialize() )
+   if ( ! Initialize( ctxt ) )
       return 0;                              // important: 0, not Py_None
 
 // fetch self, verify, and put the arguments in usable order
@@ -572,8 +579,8 @@ PyObject* PyROOT::TMethodHolder::Call(
 
 // actual call; recycle self instead of returning new object for same address objects
    ObjectProxy* pyobj = (ObjectProxy*)Execute( object, offset, ctxt );
-   if ( pyobj != (ObjectProxy*)TPyExceptionMagic &&
-        ObjectProxy_Check( pyobj ) &&
+
+   if ( ObjectProxy_Check( pyobj ) &&
         derived && pyobj->ObjectIsA() == derived &&
         pyobj->GetObject() == object ) {
       Py_INCREF( (PyObject*)self );

@@ -9,17 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGWin32                                                              //
-//                                                                      //
-// This class is the basic interface to the Win32 graphics system.      //
-// It is  an implementation of the abstract TVirtualX class.            //
-//                                                                      //
-// This code was initially developed in the context of HIGZ and PAW     //
-// by Olivier Couet (package X11INT).                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/// \defgroup win32 Win32 backend
+/// \brief Interface to Windows graphics.
+/// \ingroup GraphicsBackends
+
+/** \class TGWin32
+\ingroup win32
+This class is the basic interface to the Win32 graphics system.
+It is  an implementation of the abstract TVirtualX class.
+
+This code was initially developed in the context of HIGZ and PAW
+by Olivier Couet (package X11INT).
+*/
 
 #include <ft2build.h>
 #include FT_FREETYPE_H

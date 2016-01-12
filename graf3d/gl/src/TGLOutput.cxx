@@ -19,23 +19,21 @@
 #include "TError.h"
 #include <assert.h>
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLOutput                                                            //
-//                                                                      //
-// Wrapper class for GL capture & output routines                       //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLOutput
+\ingroup opengl
+Wrapper class for GL capture & output routines
+*/
 
 ClassImp(TGLOutput)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Capture viewer to file. Arguments are:
-/// 'viewer' - viewer object to capture from
-/// 'format' - output format - only postscript types presently.
-///            One of kEPS_SIMPLE, kEPS_BSP, kPDF_SIMPLE or kPDF_BSP
-///             See TGLOutput::CapturePostscript() for meanings
-/// 'filePath' - file output name. If null defaults to './viewer.eps' or './viewer.pdf'
-/// depending on format requested
+///  - 'viewer' - viewer object to capture from
+///  - 'format' - output format - only postscript types presently.
+///               One of kEPS_SIMPLE, kEPS_BSP, kPDF_SIMPLE or kPDF_BSP
+///               See TGLOutput::CapturePostscript() for meanings
+///  - 'filePath' - file output name. If null defaults to './viewer.eps' or './viewer.pdf'
+///                depending on format requested
 ///
 /// Note : Output files can be large and take considerable time (up to mins)
 /// to generate
@@ -57,13 +55,13 @@ Bool_t TGLOutput::Capture(TGLViewer & viewer, EFormat format, const char * fileP
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Capture viewer to postscript file. Arguments are:
-/// 'viewer' - viewer object to capture from
-/// 'format' - output format
-///                kEPS_SIMPLE - lower quality EPS
-///                kEPS_BSP    - higher quality EPS
-///                kPDF_SIMPLE - lower quality PDF
-///                kPDF_BSP    - higher quality PDF
-/// 'filePath' - file output name. If null defaults to './viewer.eps' or './viewer.pdf'
+///  - 'viewer' - viewer object to capture from
+///  - 'format' - output format
+///              -  kEPS_SIMPLE - lower quality EPS
+///              -  kEPS_BSP    - higher quality EPS
+///              -  kPDF_SIMPLE - lower quality PDF
+///              -  kPDF_BSP    - higher quality PDF
+///  - 'filePath' - file output name. If null defaults to './viewer.eps' or './viewer.pdf'
 /// depending on format requested
 
 Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const char * filePath)
@@ -133,7 +131,7 @@ Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const ch
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///this function used by gl-in-pad
+/// this function used by gl-in-pad
 
 void TGLOutput::StartEmbeddedPS()
 {
@@ -148,13 +146,6 @@ void TGLOutput::StartEmbeddedPS()
    xx[1] = gPad->GetUxmax();
    yy[1] = gPad->GetUymax();
    gVirtualPS->PrintStr("@");
-
-///gVirtualPS->DrawPS(0, xx, yy);
-///gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
-///gVirtualPS->PrintStr(" add exch");
-///gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
-///gVirtualPS->PrintStr(" add exch translate");
-///gVirtualPS->PrintStr("@");
 
    GLint vp[4];
    glGetIntegerv(GL_VIEWPORT,vp);

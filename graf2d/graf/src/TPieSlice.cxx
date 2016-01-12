@@ -21,14 +21,13 @@
 
 ClassImp(TPieSlice)
 
+/** \class TPieSlice
+\ingroup BasicGraphics
 
-//______________________________________________________________________________
-//
-// A slice of a piechart, see the TPie class.
-//
-// This class describe the property of single
-//
+A slice of a piechart, see the TPie class.
 
+This class describe the property of single
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This is the default constructor, used to create the standard.
@@ -40,7 +39,6 @@ TPieSlice::TPieSlice() : TNamed(), TAttFill(), TAttLine()
    fRadiusOffset = 0;
    fIsActive = kFALSE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This constructor create a slice with a particular value.
@@ -54,7 +52,6 @@ TPieSlice::TPieSlice(const char *name, const char *title,
    fRadiusOffset = 0;
    fIsActive = kFALSE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Eval if the mouse is over the area associated with this slice.
@@ -72,7 +69,6 @@ Int_t TPieSlice::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
    return dist;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// return the value of the offset in radial direction for this slice.
 
@@ -80,7 +76,6 @@ Double_t TPieSlice::GetRadiusOffset()
 {
    return fRadiusOffset;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the value of this slice.
@@ -90,14 +85,12 @@ Double_t TPieSlice::GetValue()
    return fValue;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Do nothing.
 
 void TPieSlice::SavePrimitive(std::ostream &/*out*/, Option_t * /*opts*/)
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the radial offset of this slice.
@@ -107,7 +100,6 @@ void TPieSlice::SetRadiusOffset(Double_t val)
    fRadiusOffset = val;
    if (fRadiusOffset<.0) fRadiusOffset = .0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the value for this slice.

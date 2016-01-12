@@ -1,7 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstrates usage of TEveBoxSet class.
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates usage of TEveBoxSet class.
+///
+/// \image html eve_boxset.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 TEveBoxSet* boxset(Float_t x=0, Float_t y=0, Float_t z=0,
                    Int_t num=100, Bool_t registerSet=kTRUE)

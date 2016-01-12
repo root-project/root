@@ -34,6 +34,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TF1Convolution
+    \ingroup Hist 
     \brief Class wrapping convolution of two functions
 
 Class wrapping convolution of two functions: evaluation of \f$\int f(x)g(x-t)dx\f$

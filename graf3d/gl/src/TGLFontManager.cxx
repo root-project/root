@@ -22,7 +22,7 @@
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
 
-// Direct inclussion of FTGL headers is deprecated in ftgl-2.1.3 while
+// Direct inclusion of FTGL headers is deprecated in ftgl-2.1.3 while
 // ftgl-2.1.2 shipped with ROOT requires manual inclusion.
 #ifndef BUILTIN_FTGL
 # include <FTGL/ftgl.h>
@@ -37,13 +37,12 @@
 #endif
 
 
-//______________________________________________________________________________
-// TGLFont
-//
-// A wrapper class for FTFont.
-// Holds pointer to FTFont object and its description: face size, font file
-// and class ID. It  wraps Render and BBox functions.
-//
+/** \class TGLFont
+\ingroup opengl
+A wrapper class for FTFont.
+Holds pointer to FTFont object and its description: face size, font file
+and class ID. It  wraps Render and BBox functions.
+*/
 
 ClassImp(TGLFont);
 
@@ -409,13 +408,13 @@ void TGLFont::PostRender() const
    glPopAttrib();
 }
 
+/** \class TGLFontManager
+\ingroup opengl
+A FreeType GL font manager.
 
-//______________________________________________________________________________
-//
-// A FreeType GL font manager.
-//
-// Each GL rendering context has an instance of FTGLManager.
-// This enables FTGL fonts to be shared same way as textures and display lists.
+Each GL rendering context has an instance of FTGLManager.
+This enables FTGL fonts to be shared same way as textures and display lists.
+*/
 
 ClassImp(TGLFontManager);
 

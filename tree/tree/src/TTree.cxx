@@ -8,8 +8,20 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+/**
+  \defgroup tree Tree Library
+
+  To store large quantities of same-class objects, ROOT provides the TTree and
+  TNtuple classes. The TTree class is optimized to
+  reduce disk space and enhance access speed. A TNtuple is a TTree that is limited
+  to only hold floating-point numbers; a TTree on the other hand can hold all kind
+  of data, such as objects or arrays in addition to all the simple types.
+
+*/
 
 /** \class TTree
+\ingroup tree
+
 A TTree object has a header with a name and a title.
 
 It consists of a list of independent branches (TBranch). Each branch has its own
@@ -211,7 +223,9 @@ the performance.
 For these reasons, ROOT offers the concept of friends for trees (and chains).
 We encourage you to use TTree::AddFriend rather than adding a branch manually.
 
-\image html ttree_layout.png
+Begin_Macro
+../../../tutorials/tree/tree.C
+End_Macro
 
 ~~~ {.cpp}
     // A simple example with histograms and a tree
@@ -368,12 +382,24 @@ We encourage you to use TTree::AddFriend rather than adding a branch manually.
 #include "TSchemaRuleSet.h"
 #include "TFileMergeInfo.h"
 
+#include <chrono>
 #include <cstddef>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <stdio.h>
 #include <limits.h>
+
+#ifdef R__USE_IMT
+#include "tbb/task.h"
+#include "tbb/task_group.h"
+#include <thread>
+#include <string>
+#include <sstream>
+#endif
+
+constexpr Int_t   kNEntriesResort    = 100;
+constexpr Float_t kNEntriesResortInv = 1.f/kNEntriesResort;
 
 Int_t    TTree::fgBranchStyle = 1;  // Use new TBranch style with TBranchElement.
 Long64_t TTree::fgMaxTreeSize = 100000000000LL;
@@ -663,6 +689,8 @@ TTree::TTree()
 , fTransientBuffer(0)
 , fCacheDoAutoInit(kTRUE)
 , fCacheUserSet(kFALSE)
+, fIMTEnabled(ROOT::IsImplicitMTEnabled())
+, fNEntriesSinceSorting(0)
 {
    fMaxEntries = 1000000000;
    fMaxEntries *= 1000;
@@ -739,6 +767,8 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 , fTransientBuffer(0)
 , fCacheDoAutoInit(kTRUE)
 , fCacheUserSet(kFALSE)
+, fIMTEnabled(ROOT::IsImplicitMTEnabled())
+, fNEntriesSinceSorting(0)
 {
    // TAttLine state.
    SetLineColor(gStyle->GetHistLineColor());
@@ -2569,9 +2599,9 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */, Boo
 ///     T->Fill(); //loop
 ///     file->Write();
 ///     file->Close();
-///~~~
+/// ~~~
 /// but do the following:
-///~~~ {.cpp}
+/// ~~~ {.cpp}
 ///     TFile *file = new TFile("myfile.root","recreate");
 ///     TTree *T = new TTree("T","title");
 ///     T->Fill(); //loop
@@ -2764,7 +2794,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
 
       if ( ptrClass->GetCollectionProxy() && expectedClass->GetCollectionProxy() ) {
          if (gDebug > 7)
-            Info("SetBranchAddress", "Matching STL colleciton (at least according to the SchemaRuleSet when "
+            Info("SetBranchAddress", "Matching STL collection (at least according to the SchemaRuleSet when "
                "reading a %s into a %s",expectedClass->GetName(),ptrClass->GetName());
 
          bEl->SetTargetClass( ptrClass->GetName() );
@@ -2832,12 +2862,19 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       } else {
          // In this case, it is okay if the first data member is of the right type (to support the case where we are being passed
          // a struct).
-         bool good = false;
+         bool found = false;
          if (ptrClass->IsLoaded()) {
             TIter next(ptrClass->GetListOfRealData());
             TRealData *rdm;
             while ((rdm = (TRealData*)next())) {
                if (rdm->GetThisOffset() == 0) {
+                  TDataType *dmtype = rdm->GetDataMember()->GetDataType();
+                  if (dmtype) {
+                     EDataType etype = (EDataType)dmtype->GetType();
+                     if (etype == expectedType) {
+                        found = true;
+                     }
+                  }
                   break;
                }
             }
@@ -2849,16 +2886,24 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
                   TDataType *dmtype = dm->GetDataType();
                   if (dmtype) {
                      EDataType etype = (EDataType)dmtype->GetType();
-                     good = (etype == expectedType);
+                     if (etype == expectedType) {
+                        found = true;
+                     }
                   }
                   break;
                }
             }
          }
-         if (!good) {
-            Error("SetBranchAddress", "The pointer type given \"%s\" does not correspond to the type needed \"%s\" (%d) by the branch: %s",
-                  ptrClass->GetName(), TDataType::GetTypeName(expectedType), expectedType, branch->GetName());
+         if (found) {
+            // let's check the size.
+            TLeaf *last = (TLeaf*)branch->GetListOfLeaves()->Last();
+            long len = last->GetOffset() + last->GetLenType() * last->GetLen();
+            if (len <= ptrClass->Size()) {
+               return kMatch;
+            }
          }
+         Error("SetBranchAddress", "The pointer type given \"%s\" does not correspond to the type needed \"%s\" (%d) by the branch: %s",
+               ptrClass->GetName(), TDataType::GetTypeName(expectedType), expectedType, branch->GetName());
       }
       return kMismatch;
    }
@@ -3020,8 +3065,8 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
       if (!branch || !branch->TestBit(kDoNotProcess)) {
          continue;
       }
-//      TObjArray* branches = newtree->GetListOfBranches();
-//      Int_t nb = branches->GetEntriesFast();
+      // size might change at each iteration of the loop over the leaves.
+      nb = branches->GetEntriesFast();
       for (Long64_t i = 0; i < nb; ++i) {
          TBranch* br = (TBranch*) branches->UncheckedAt(i);
          if (br == branch) {
@@ -3454,7 +3499,7 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
 /// Only selected entries are copied to the new tree.
 /// NOTE that only the active branches are copied.
 
-TTree* TTree::CopyTree(const char* selection, Option_t* option /* = 0 */, Long64_t nentries /* = 1000000000 */, Long64_t firstentry /* = 0 */)
+TTree* TTree::CopyTree(const char* selection, Option_t* option /* = 0 */, Long64_t nentries /* = TTree::kMaxEntries */, Long64_t firstentry /* = 0 */)
 {
    GetPlayer();
    if (fPlayer) {
@@ -3659,9 +3704,9 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// option is the drawing option.
 ///  - See TH1::Draw for the list of all drawing options.
 ///  - If option COL is specified when varexp has three fields:
-///~~~ {.cpp}
+/// ~~~ {.cpp}
 ///      tree.Draw("e1:e2:e3","","col");
-///~~~
+/// ~~~
 ///    a 2D scatter is produced with e1 vs e2, and e3 is mapped on the color
 ///    table. The colors for e3 are evaluated once in linear scale before
 ///    painting. Therefore changing the pad to log scale along Z as no effect
@@ -3999,7 +4044,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// ## Making a Profile histogram
 ///
 ///  In case of a 2-Dim expression, one can generate a TProfile histogram
-///  instead of a TH2F histogram by specyfying option=prof or option=profs
+///  instead of a TH2F histogram by specifying option=prof or option=profs
 ///  or option=profi or option=profg ; the trailing letter select the way
 ///  the bin error are computed, See TProfile2D::SetErrorOption for
 ///  details on the differences.
@@ -4906,7 +4951,7 @@ Int_t TTree::GetBranchStyle()
 ///
 /// Estimates a suitable size for the tree cache based on AutoFlush.
 /// A cache sizing factor is taken from the configuration. If this yields zero
-/// and withDefault is true the historical algoirthm for default size is used.
+/// and withDefault is true the historical algorithm for default size is used.
 
 Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
 {
@@ -5137,19 +5182,87 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    Int_t i;
    Int_t nbytes = 0;
    fReadEntry = entry;
-   TBranch *branch;
 
    // create cache if wanted
    if (fCacheDoAutoInit) SetCacheSizeAux();
 
    Int_t nbranches = fBranches.GetEntriesFast();
    Int_t nb=0;
-   for (i=0;i<nbranches;i++)  {
-      branch = (TBranch*)fBranches.UncheckedAt(i);
-      nb = branch->GetEntry(entry, getall);
-      if (nb < 0) return nb;
-      nbytes += nb;
+
+   auto seqprocessing = [&]() {
+      TBranch *branch;
+      for (i=0;i<nbranches;i++)  {
+         branch = (TBranch*)fBranches.UncheckedAt(i);
+         nb = branch->GetEntry(entry, getall);
+         if (nb < 0) break;
+         nbytes += nb;
+      }
+   };
+
+#ifdef R__USE_IMT
+   if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
+      if (fSortedBranches.empty()) InitializeSortedBranches();
+
+      Int_t errnb = 0;
+      std::atomic<Int_t> pos(0);
+      std::atomic<Int_t> nbpar(0);
+      tbb::task_group g;
+
+      for (i = 0; i < nbranches; i++) {
+         g.run([&]() {
+            // The branch to process is obtained when the task starts to run.
+            // This way, since branches are sorted, we make sure that branches
+            // leading to big tasks are processed first. If we assigned the
+            // branch at task creation time, the scheduler would not necessarily
+            // respect our sorting.
+            Int_t j = pos.fetch_add(1);
+
+            Int_t nbtask = 0;
+            auto branch = fSortedBranches[j].second;
+
+            if (gDebug > 0) {
+               std::stringstream ss;
+               ss << std::this_thread::get_id();
+               Info("GetEntry", "[IMT] Thread %lu", std::stoul(ss.str()));
+               Info("GetEntry", "[IMT] Running task for branch #%d: %s", j, branch->GetName());
+            }
+
+            std::chrono::time_point<std::chrono::system_clock> start, end;
+
+            start = std::chrono::system_clock::now();
+            nbtask = branch->GetEntry(entry, getall);
+            end = std::chrono::system_clock::now();
+
+            Long64_t tasktime = (Long64_t)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+            fSortedBranches[j].first += tasktime;
+
+            if (nbtask < 0) errnb = nbtask;
+            else            nbpar += nbtask;
+         });
+      }
+      g.wait();
+
+      if (errnb < 0) {
+         nb = errnb;
+      }
+      else {
+         // Save the number of bytes read by the tasks
+         nbytes = nbpar;
+
+         // Re-sort branches if necessary
+         if (++fNEntriesSinceSorting == kNEntriesResort) {
+            SortBranchesByTime();
+            fNEntriesSinceSorting = 0;
+         }
+      }
    }
+   else {
+      seqprocessing();
+   }
+#else
+   seqprocessing();
+#endif
+   if (nb < 0) return nb;
 
    // GetEntry in list of friends
    if (!fFriends) return nbytes;
@@ -5171,6 +5284,51 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
       }
    }
    return nbytes;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Initializes the vector of top-level branches and sorts it by branch size.
+
+void TTree::InitializeSortedBranches()
+{
+   Int_t nbranches = fBranches.GetEntriesFast();
+   for (Int_t i = 0; i < nbranches; i++)  {
+      Long64_t bbytes = 0;
+      TBranch* branch = (TBranch*)fBranches.UncheckedAt(i);
+      if (branch) bbytes = branch->GetTotBytes("*");
+      fSortedBranches.emplace_back(bbytes, branch);
+   }
+
+   std::sort(fSortedBranches.begin(),
+             fSortedBranches.end(),
+             [](std::pair<Long64_t,TBranch*> a, std::pair<Long64_t,TBranch*> b) {
+                return a.first > b.first;
+             });
+
+   for (Int_t i = 0; i < nbranches; i++)  {
+      fSortedBranches[i].first = 0LL;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sorts top-level branches by the last average task time recorded per branch.
+
+void TTree::SortBranchesByTime()
+{
+   Int_t nbranches = fBranches.GetEntriesFast();
+   for (Int_t i = 0; i < nbranches; i++)  {
+      fSortedBranches[i].first *= kNEntriesResortInv;
+   }
+
+   std::sort(fSortedBranches.begin(),
+             fSortedBranches.end(),
+             [](std::pair<Long64_t,TBranch*> a, std::pair<Long64_t,TBranch*> b) {
+                return a.first > b.first;
+             });
+
+   for (Int_t i = 0; i < nbranches; i++)  {
+      fSortedBranches[i].first = 0LL;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5203,7 +5361,7 @@ Long64_t TTree::GetEntryNumber(Long64_t entry) const
 /// the BuildIndex function has created a table of Long64_t* of sorted values
 /// corresponding to val = major<<31 + minor;
 /// The function performs binary search in this sorted table.
-/// If it finds a pair that maches val, it returns directly the
+/// If it finds a pair that matches val, it returns directly the
 /// index in the table.
 /// If an entry corresponding to major and minor is not found, the function
 /// returns the index of the major,minor pair immediately lower than the
@@ -5227,7 +5385,7 @@ Long64_t TTree::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) cons
 /// the BuildIndex function has created a table of Long64_t* of sorted values
 /// corresponding to val = major<<31 + minor;
 /// The function performs binary search in this sorted table.
-/// If it finds a pair that maches val, it returns directly the
+/// If it finds a pair that matches val, it returns directly the
 /// index in the table, otherwise it returns -1.
 ///
 /// See also GetEntryNumberWithBestIndex
@@ -6456,7 +6614,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
 /// ~~~ {.cpp}
 ///     TPrincipal *principal =
 ///     (TPrincipal*)gROOT->GetListOfSpecials()->FindObject("principal");
-///  ~~~
+/// ~~~
 
 TPrincipal* TTree::Principal(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
@@ -6632,11 +6790,11 @@ void TTree::PrintCacheStats(Option_t* option) const
 ///
 /// It may be more interesting to invoke directly the other Process function
 /// accepting a TSelector* as argument.eg
-///  ~~~ {.cpp}
+/// ~~~ {.cpp}
 ///     MySelector *selector = (MySelector*)TSelector::GetSelector(filename);
 ///     selector->CallSomeFunction(..);
 ///     mytree.Process(selector,..);
-///  ~~~
+/// ~~~
 /// ## NOTE2
 //
 /// One should not call this function twice with the same selector file
@@ -7132,7 +7290,7 @@ void TTree::Refresh()
    fTotBytes = tree->fTotBytes;
    fZipBytes = tree->fZipBytes;
    fSavedBytes = tree->fSavedBytes;
-   fTotalBuffers = tree->fTotalBuffers;
+   fTotalBuffers = tree->fTotalBuffers.load();
 
    //loop on all branches and update them
    Int_t nleaves = fLeaves.GetEntriesFast();

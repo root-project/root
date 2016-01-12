@@ -44,6 +44,7 @@ fi
 
 # generate pch
 touch allDict.cxx.h
+echo $rootdir/bin/rootcling $rootbuild -1 -f allDict.cxx -noDictSelection -c $cxxflags $allheaders $@ $alllinkdefs
 $rootdir/bin/rootcling $rootbuild -1 -f allDict.cxx -noDictSelection -c $cxxflags $allheaders $@ $alllinkdefs
 res=$?
 if [ $res -eq 0 ] ; then

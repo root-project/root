@@ -1,11 +1,26 @@
-// Author: Stefan Schmitt
-// DESY, 14.10.2008
-
-//  Version 16.1, parallel to changes in TUnfold
-//
-//  History:
-//    Version 16.0, parallel to changes in TUnfold
-//    Version 15, use L-curve scan to scan the average correlation
+/// \file
+/// \ingroup tutorial_unfold
+/// Test program for the class TUnfoldSys
+///
+/// Simple toy tests of the TUnfold package
+///
+/// Pseudo data (5000 events) are unfolded into three components
+/// The unfolding is performed once without and once with area constraint
+///
+/// Ideally, the pulls may show that the result is biased if no constraint
+/// is applied. This is expected because the true data errors are not known,
+/// and instead the sqrt(data) errors are used.
+///
+///  History:
+///  - Version 16.1, parallel to changes in TUnfold
+///  - Version 16.0, parallel to changes in TUnfold
+///  - Version 15, use L-curve scan to scan the average correlation
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Stefan Schmitt, DESY
 
 #include <TMath.h>
 #include <TCanvas.h>
@@ -19,38 +34,6 @@
 #include "TUnfoldDensity.h"
 
 using namespace std;
-
-/*
-  This file is part of TUnfold.
-
-  TUnfold is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  TUnfold is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-///////////////////////////////////////////////////////////////////////
-//
-// Test program for the class TUnfoldSys
-//
-// Simple toy tests of the TUnfold package
-//
-// Pseudo data (5000 events) are unfolded into three components
-// The unfolding is performed once without and once with area constraint
-//
-// Ideally, the pulls may show that the result is biased if no constraint
-// is applied. This is expected because the true data errors are not known,
-// and instead the sqrt(data) errors are used.
-//
-///////////////////////////////////////////////////////////////////////
 
 TRandom *rnd=0;
 
@@ -203,20 +186,19 @@ void testUnfold4()
      }
 
   }
-  TCanvas output;
-  output.Divide(3,2);
+  TCanvas *output = new TCanvas();
+  output->Divide(3,2);
 
   gStyle->SetOptFit(1111);
 
   for(int i=0;i<nGen;i++) {
-     output.cd(i+1);
+     output->cd(i+1);
      histPullNC[i]->Fit("gaus");
      histPullNC[i]->Draw();
   }
   for(int i=0;i<nGen;i++) {
-     output.cd(i+4);
+     output->cd(i+4);
      histPullArea[i]->Fit("gaus");
      histPullArea[i]->Draw();
   }
-  output.SaveAs("testUnfold4.ps");
 }

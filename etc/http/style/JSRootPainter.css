@@ -41,6 +41,8 @@
    display: block;
 }
 
+.jsroot-resizable-helper { border: 2px dotted #00F; }
+
 .img_minus {
     display: inline-block;
     height: 18px;
@@ -123,13 +125,6 @@
    height: 18px;
    width: 18px;
    background-image: url("data:image/gif;base64, R0lGODlhEgASAOYAAPv7++/v7/j7/+32/8HBweTk5P39/djr/8Df//7///P5/8Ph//T09fn5+YGVw2t0pc7n/15hkFWn7ZOq0nqDsMDA/9nh7YSbyoqo2eTx/5G46pK873N+sPX6//f395Cjy83m/7rd/9jl9m13qGVqmoeh0n+OvI+z5Yyu387T//b6/2dtnvz9/32JtpS/8sbGxv7+/tvn92lwom96rHJ8rnSAsoep3NHp/8nk/7e3t+vr67a2tun1/3V4o+Hw/9vt/////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAEEALAAAAAASABIAAAejgEGCg4SFhoeILjaLjDY1AQCHG0AGAA0eDBY1E5CGGjBAoQkCMTUSHwGGJwaiAh0iNbEvhiihAgIDPDwpFRw5hhgsuLk8Pz8HNL+FJSoKuT4+xzczyoQXzjzQxjcgI9WDDrraPzc4OA/fgibZ0eTmCzLpQS0Z7TflCwgr8hT2EOYIQpCQ16OgwYMRCBgqQGCHw4cOCRQwBCCAjosYL3ZCxNFQIAA7");
-}
-
-.img_remove {
-   display: inline-block;
-   height: 16px;
-   width: 16px;
-   background-image: url("data:image/gif;base64, R0lGODlhEAAQAN0AAMMZALwUAMkfANYqANAkAPfu7v339pAOCN0wAKEHAJorJ+A9EJ0uJ7QOALYOAK8SAMYlAKoMAMEgAKk5J/bWzvva0dmtrdqurf749v/49vnv7vrw7u97WbxOO7NMRJkwLrRHNONoSudsStBXStVbSv///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAACUALAAAAAAQABAAAAZnwJJwSCwaj8jk0fIpCAsfy/FySCgKBUXicDF6Go4IgxFxNDxGwygQeDzYI8PRQALYAST5UdMR+AUdGkcbExIEhwQSExtGIBADAyEhkBAgRhQLCCIYGCIICxRHFRwZQhkcFUqqq6xGQQA7");
 }
 
 .img_question {
@@ -300,4 +295,49 @@ svg:not(:root) { overflow: hidden; }
   z-index:11;
   overflow: visible;
   font-size: 11px;
+}
+
+/*--------------------------------------------------|
+| Flexible MDI display                              |
+|--------------------------------------------------*/
+
+.flex_frame {
+   display: table; 
+}
+
+.flex_header {
+   height:1em;
+   display: table-row;
+}
+
+.flex_draw {
+   display: table-row; 
+   width:100%;
+   height:100%;
+   background-color:white;
+   overflow:hidden;
+}
+
+/*--------------------------------------------------|
+| progress message                                  |
+|--------------------------------------------------*/
+
+.progressbox {
+  position:absolute;
+  min-width:100px;
+  height:auto;
+  overflow: visible;
+  z-index:11;
+  border: 1px solid #999;
+  background: #F8F8F8;
+  left: 10px;
+  bottom: 10px;
+}
+
+.progressbox p {
+   font-size: 10px;
+   margin-left : 10px;
+   margin-right : 10px;
+   margin-top : 3px;
+   margin-bottom : 3px;
 }

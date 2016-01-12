@@ -1,325 +1,332 @@
-//
-// Macro to run examples of analysis on PROOF, corresponding to the TSelector
-// implementations found under <ROOTSYS>/tutorials/proof .
-// This macro uses an existing PROOF session or starts one at the indicated URL.
-// In the case non existing PROOF session is found and no URL is given, the
-// macro tries to start a local PROOF session.
-//
-// To run the macro:
-//
-//   root[] .L proof/runProof.C+
-//   root[] runProof("<analysis>")
-//
-//   Currently available analysis are (to see how all this really works check
-//   the scope for the specified option inside the macro):
-//
-//   1. "simple"
-//
-//      Selector: ProofSimple.h.C
-//
-//      root[] runProof("simple")
-//
-//      This will create a local PROOF session and run an analysis filling
-//      100 histos with 100000 gaussian random numbers, and displaying them
-//      in a canvas with 100 pads (10x10).
-//      The number of histograms can be passed as argument 'nhist' to 'simple',
-//      e.g. to fill 16 histos with 1000000 entries use
-//
-//      root[] runProof("simple(nevt=1000000,nhist=16)")
-//
-//      The argument nhist3 controls the creation of 3d histos to simulate
-//      merging load. By default, no 3D hitogram is created.
-//
-//   2. "h1"
-//
-//      Selector: tutorials/tree/h1analysis.h.C
-//
-//      root[] runProof("h1")
-//
-//      This runs the 'famous' H1 analysis from $ROOTSYS/tree/h1analysis.C.h.
-//      By default the data are read from the HTTP server at root.cern.ch,
-//      the data source can be changed via the argument 'h1src', e.g.
-//
-//      root[] runProof("h1,h1src=/data/h1")
-//
-//      (the directory specified must contain the 4 H1 files).
-//
-//      The 'h1' example is also used to show how to use entry-lists in PROOF.
-//      To fill the list for the events used for the final plots add the option
-//      'fillList':
-//
-//      root[] runProof("h1,fillList")
-//
-//      To use the list previously created for the events used for the
-//      final plots add the option 'useList':
-//
-//      root[] runProof("h1,useList")
-//
-//  3. "event"
-//
-//      Selector: ProofEvent.h,.C
-//
-//      This is an example of using PROOF par files.
-//      It runs event generation and simple analysis based on the 'Event'
-//      class found under test.
-//
-//      root[] runProof("event")
-//
-//  4. "eventproc"
-//
-//      Selector: ProofEventProc.h.C
-//
-//      This is an example of using PROOF par files and process 'event'
-//      data from the ROOT HTTP server. It runs the ProofEventProc selector
-//      which is derived from the EventTree_Proc one found under
-//      test/ProofBench. The following specific arguments are available:
-//      - 'readall'  to read the whole event, by default only the branches
-//                   needed by the analysis are read (read 25% more bytes)
-//      - 'datasrc=<dir-with-files>' to read the files from another server,
-//                   the files must be named 'event_<num>.root' where <num>=1,2,...
-//        or
-//      - 'datasrc=<file-with-files>' to take the file content from a text file,
-//                   specified one file per line; usefull when testing differences
-//                   between several sources and distributions
-//      - 'files=N'  to change the number of files to be analysed (default
-//                   is 10, max is 50 for the HTTP server).
-//      - 'uneven'   to process uneven entries from files following the scheme
-//                   {50000,5000,5000,5000,5000} and so on
-//
-//      root[] runProof("eventproc")
-//
-//  5. "pythia8"
-//
-//      Selector: ProofPythia.h.C
-//
-//      This runs Pythia8 generation based on main03.cc example in Pythia 8.1
-//
-//      To run this analysis ROOT must be configured with pythia8.
-//
-//      Note that before executing this analysis, the env variable PYTHIA8
-//      must point to the pythia8100 (or newer) directory, in particular,
-//      $PYTHIA8/xmldoc must contain the file Index.xml. The tutorial assumes
-//      that the Pythia8 directory is the same on all machines, i.e. local
-//      and worker ones.
-//
-//      root[] runProof("pythia8")
-//
-//  6. "ntuple"
-//
-//      Selector: ProofNtuple.h.C
-//
-//      This is an example of final merging via files created on the workers,
-//      using TProofOutputFile. The final file is called ProofNtuple.root
-//      and it is created in the directory where the tutorial is run. If
-//      the PROOF cluster is remote, the file is received by a local xrootd
-//      daemon started for the purpose. Because of this, this example can be
-//      run only on unix clients.
-//
-//      root[] runProof("ntuple")
-//
-//      By default the random numbers are generate anew. There is the
-//      possibility use a file of random numbers (to have reproducible results)
-//      by specify the option 'inputrndm', e.g.
-//
-//      root[] runProof("ntuple(inputrndm)")
-//
-//      By default the output will be saved in the local file SimpleNtuple.root;
-//      location and name of the file can be changed via the argument 'outfile',
-//      e.g.
-//
-//      root[] runProof("simplefile(outfile=/data0/testntuple.root)")
-//      root[] runProof("simplefile(outfile=root://aserver//data/testntuple.root)")
-//
-//  7. "dataset"
-//
-//      Selector: ProofNtuple.h.C
-//
-//      This is an example of automatic creation of a dataset from files
-//      created on the workers, using TProofOutputFile. The dataset is
-//      called testNtuple and it is automatically registered and verified.
-//      The files contain the same ntuple as in previous example/tutorial 6
-//      (the same selector ProofNTuple is used with a slightly different
-//      configuration). The dataset is then used to produce the same plot
-//      as in 5 but using the DrawSelect methods of PROOF, which also show
-//      how to set style, color and other drawing attributes in PROOF.
-//      Depending on the relative worker perforance, some of the produced
-//      files may result in having no entries. If this happens, the file
-//      will be added to the missing (skipped) file list. Increasing the
-//      number of events (via nevt=...) typically solves this issue.
-//
-//      root[] runProof("dataset")
-//
-//  8. "friends"
-//
-//      Selectors: ProofFriends.h(.C), ProofAux.h(.C)
-//
-//      This is an example of TTree friend processing in PROOF. It also shows
-//      how to use the TPacketizerFile to steer creation of files.
-//
-//      root[] runProof("friends")
-//
-//      The trees are by default created in separate files; to create
-//      them in the same file use option 'samefile', e.g.
-//
-//      root[] runProof("friends(samefile)")
-//
-//   9. "simplefile"
-//
-//      Selector: ProofSimpleFile.h.C
-//
-//      root[] runProof("simplefile")
-//
-//      This will create a local PROOF session and run an analysis filling
-//      16+16 histos with 100000 gaussian random numbers. The merging of
-//      these histos goes via file; 16 histos are saved in the top directory,
-//      the other 16 into a subdirectory called 'blue'. The final display
-//      is done in two canvanses, one for each set of histograms and with
-//      16 pads each (4x4).
-//      The number of histograms in each set can be passed as argument
-//      'nhist' to 'simplefile', e.g. to fill 25 histos with 1000000 entries use
-//
-//      root[] runProof("simplefile(nevt=1000000,nhist=25)")
-//
-//      By default the output will be saved in the local file SimpleFile.root;
-//      location and name of the file can be changed via the argument 'outfile',
-//      e.g.
-//
-//      root[] runProof("simplefile(outfile=/data0/testsimple.root)")
-//      root[] runProof("simplefile(outfile=root://aserver//data/testsimple.root)")
-//
-// 10. "stdvec"
-//
-//      Selector: ProofStdVect.h.C
-//
-//      This is an example of using standard vectors (vector<vector<bool> > and
-//      vector<vector<float> >) in a TSelector. The same selector is run twice:
-//      in 'create' mode it creates a dataset with the tree 'stdvec' containing
-//      3 branches, a vector<vector<bool> > and two vector<vector<float> >. The
-//      tree is saved into a file on each worker and a dataset is created with
-//      these files (the dataset is called 'TestStdVect'); in 'read' mode the
-//      dataset is read and a couple fo histograms filled and displayed.
-//
-//      root[] runProof("stdvec")
-//
-//   General arguments
-//   -----------------
-//
-//   The following arguments are valid for all examples (the ones specific
-//   to each tutorial have been explained above)
-//
-//   0. ACLiC mode
-//      By default all processing is done with ACLiC mode '+', i.e. compile
-//      if changed. However, this may lead to problems if the available
-//      selector libs were compiled in previous sessions with a different
-//      set of loaded libraries (this is a general problem in ROOT). When
-//      this happens the best solution is to force recompilation (ACLiC
-//      mode '++'). To do this just add one or more '+' to the name of the
-//      tutorial, e.g. runProof("simple++")
-//
-//   1. debug=[what:]level
-//
-//      Controls verbosity; 'level' is an integer number and the optional string
-//      'what' one or more of the enum names in TProofDebug.h .
-//      e.g. runProof("eventproc(debug=kPacketizer|kCollect:2)") runs 'eventproc' enabling
-//           all printouts matching TProofDebug::kPacketizer and having level
-//           equal or larger than 2 .
-//
-//   2. nevt=N and/or first=F
-//
-//      Set the number of entries to N, eventually (when it makes sense, i.e. when
-//      processing existing files) starting from F
-//      e.g. runProof("simple(nevt=1000000000)") runs simple with 1000000000
-//           runProof("eventproc(first=65000)") runs eventproc processing
-//           starting with event 65000
-//           runProof("eventproc(nevt=100000,first=65000)") runs eventproc processing
-//           100000 events starting with event 65000
-//
-//   3. asyn
-//
-//      Run in non blocking mode
-//      e.g. root[] runProof("h1(asyn)")
-//
-//   4. nwrk=N
-//
-//      Set the number of active workers to N, usefull to test performance
-//      on a remote cluster where control about the number of workers is
-//      not possible, e.g. runProof("event(nwrk=2)") runs 'event' with
-//      2 workers.
-//
-//   5. punzip
-//
-//      Use parallel unzipping in reading files where relevant
-//      e.g. root[] runProof("eventproc(punzip)")
-//
-//   6. cache=<bytes> (or <kbytes>K or <mbytes>M)
-//
-//      Change the size of the tree cache; 0 or <0 disables the cache,
-//      value cane be in bytes (no suffix), kilobytes (suffix 'K') or
-//      megabytes (suffix 'M'), e.g. root[] runProof("eventproc(cache=0)")
-//
-//   7. submergers[=S]
-//
-//      Enabling merging via S submergers or the optimal number if S is
-//      not specified, e.g. root[] runProof("simple(hist=1000,submergers)")
-//
-//   8. rateest=average
-//
-//      Enable processed entries estimation for constant progress reporting based on
-//      the measured average. This may screw up the progress bar in some cases, which
-//      is the reason why it is not on by default .
-//      e.g. root[] runProof("eventproc(rateest=average)")
-//
-//   9. perftree=perftreefile.root
-//
-//      Generate the perfomance tree and save it to file 'perftreefile.root',
-//      e.g. root[] runProof("eventproc(perftree=perftreefile.root)")
-//
-//   10. feedback=name1[,name2,name3,...]|off
-//
-//      Enable feedback for the specified names or switch it off; by default it is
-//      enabled for the 'stats' histograms (events,packest, packets-being processed).
-//
-//   In all cases, to run on a remote PROOF cluster, the master URL must
-//   be passed as second argument; e.g.
-//
-//      root[] runProof("simple","master.do.main")
-//
-//   A rough parsing of the URL is done to determine the locality of the cluster.
-//   If using a tunnel the URL can start by localhost even for external clusters:
-//   in such cases the default locality determination will be wrong, so one has
-//   to tell explicity that the cluster is external via the option field, e.g.
-//
-//      root[] runProof("simple","localhost:33002/?external")
-//
-//   In the case of local running it is possible to specify the number of
-//   workers to start as third argument (the default is the number of cores
-//   of the machine), e.g.
-//
-//      root[] runProof("simple",0,4)
-//
-//   will start 4 workers. Note that the real number of workers is changed
-//   only the first time you call runProof into a ROOT session. Following
-//   calls can reduce the number of active workers, but not increase it.
-//   For example, in the same session of the call above starting 4 workers,
-//   this
-//
-//   root[] runProof("simple",0,8)
-//
-//   will still use 4 workers, while this
-//
-//   root[] runProof("simple",0,2)
-//
-//   will disable 2 workers and use the other 2.
-//
-//   Finally, it is possible to pass as 4th argument a list of objects to be added
-//   to the input list to further control the PROOF behaviour:
-//
-//   root [] TList *ins = new TList
-//   root [] ins->Add(new TParameter<Int_t>("MyParm", 3))
-//   root [] runProof("simple",0,4,ins)
-//
-//   the content of 'ins' will then be copied to the input list before processing.
-//
+/// \file
+/// \ingroup proof
+///
+/// Macro to run examples of analysis on PROOF, corresponding to the TSelector
+/// implementations found under <ROOTSYS>/tutorials/proof .
+/// This macro uses an existing PROOF session or starts one at the indicated URL.
+/// In the case non existing PROOF session is found and no URL is given, the
+/// macro tries to start a local PROOF session.
+///
+/// To run the macro:
+///
+///   root[] .L proof/runProof.C+
+///   root[] runProof("<analysis>")
+///
+///   Currently available analysis are (to see how all this really works check
+///   the scope for the specified option inside the macro):
+///
+///   1. "simple"
+///
+///      Selector: ProofSimple.h.C
+///
+///      root[] runProof("simple")
+///
+///      This will create a local PROOF session and run an analysis filling
+///      100 histos with 100000 gaussian random numbers, and displaying them
+///      in a canvas with 100 pads (10x10).
+///      The number of histograms can be passed as argument 'nhist' to 'simple',
+///      e.g. to fill 16 histos with 1000000 entries use
+///
+///      root[] runProof("simple(nevt=1000000,nhist=16)")
+///
+///      The argument nhist3 controls the creation of 3d histos to simulate
+///      merging load. By default, no 3D hitogram is created.
+///
+///   2. "h1"
+///
+///      Selector: tutorials/tree/h1analysis.h.C
+///
+///      root[] runProof("h1")
+///
+///      This runs the 'famous' H1 analysis from $ROOTSYS/tree/h1analysis.C.h.
+///      By default the data are read from the HTTP server at root.cern.ch,
+///      the data source can be changed via the argument 'h1src', e.g.
+///
+///      root[] runProof("h1,h1src=/data/h1")
+///
+///      (the directory specified must contain the 4 H1 files).
+///
+///      The 'h1' example is also used to show how to use entry-lists in PROOF.
+///      To fill the list for the events used for the final plots add the option
+///      'fillList':
+///
+///      root[] runProof("h1,fillList")
+///
+///      To use the list previously created for the events used for the
+///      final plots add the option 'useList':
+///
+///      root[] runProof("h1,useList")
+///
+///   3. "event"
+///
+///      Selector: ProofEvent.h,.C
+///
+///      This is an example of using PROOF par files.
+///      It runs event generation and simple analysis based on the 'Event'
+///      class found under test.
+///
+///      root[] runProof("event")
+///
+///   4. "eventproc"
+///
+///      Selector: ProofEventProc.h.C
+///
+///      This is an example of using PROOF par files and process 'event'
+///      data from the ROOT HTTP server. It runs the ProofEventProc selector
+///      which is derived from the EventTree_Proc one found under
+///      test/ProofBench. The following specific arguments are available:
+///      - 'readall'  to read the whole event, by default only the branches
+///                   needed by the analysis are read (read 25% more bytes)
+///      - 'datasrc=<dir-with-files>' to read the files from another server,
+///                   the files must be named 'event_<num>.root' where <num>=1,2,...
+///        or
+///      - 'datasrc=<file-with-files>' to take the file content from a text file,
+///                   specified one file per line; usefull when testing differences
+///                   between several sources and distributions
+///      - 'files=N'  to change the number of files to be analysed (default
+///                   is 10, max is 50 for the HTTP server).
+///      - 'uneven'   to process uneven entries from files following the scheme
+///                   {50000,5000,5000,5000,5000} and so on
+///
+///      root[] runProof("eventproc")
+///
+///   5. "pythia8"
+///
+///      Selector: ProofPythia.h.C
+///
+///      This runs Pythia8 generation based on main03.cc example in Pythia 8.1
+///
+///      To run this analysis ROOT must be configured with pythia8.
+///
+///      Note that before executing this analysis, the env variable PYTHIA8
+///      must point to the pythia8100 (or newer) directory, in particular,
+///      $PYTHIA8/xmldoc must contain the file Index.xml. The tutorial assumes
+///      that the Pythia8 directory is the same on all machines, i.e. local
+///      and worker ones.
+///
+///      root[] runProof("pythia8")
+///
+///   6. "ntuple"
+///
+///      Selector: ProofNtuple.h.C
+///
+///      This is an example of final merging via files created on the workers,
+///      using TProofOutputFile. The final file is called ProofNtuple.root
+///      and it is created in the directory where the tutorial is run. If
+///      the PROOF cluster is remote, the file is received by a local xrootd
+///      daemon started for the purpose. Because of this, this example can be
+///      run only on unix clients.
+///
+///      root[] runProof("ntuple")
+///
+///      By default the random numbers are generate anew. There is the
+///      possibility use a file of random numbers (to have reproducible results)
+///      by specify the option 'inputrndm', e.g.
+///
+///      root[] runProof("ntuple(inputrndm)")
+///
+///      By default the output will be saved in the local file SimpleNtuple.root;
+///      location and name of the file can be changed via the argument 'outfile',
+///      e.g.
+///
+///      root[] runProof("simplefile(outfile=/data0/testntuple.root)")
+///      root[] runProof("simplefile(outfile=root://aserver//data/testntuple.root)")
+///
+///   7. "dataset"
+///
+///      Selector: ProofNtuple.h.C
+///
+///      This is an example of automatic creation of a dataset from files
+///      created on the workers, using TProofOutputFile. The dataset is
+///      called testNtuple and it is automatically registered and verified.
+///      The files contain the same ntuple as in previous example/tutorial 6
+///      (the same selector ProofNTuple is used with a slightly different
+///      configuration). The dataset is then used to produce the same plot
+///      as in 5 but using the DrawSelect methods of PROOF, which also show
+///      how to set style, color and other drawing attributes in PROOF.
+///      Depending on the relative worker perforance, some of the produced
+///      files may result in having no entries. If this happens, the file
+///      will be added to the missing (skipped) file list. Increasing the
+///      number of events (via nevt=...) typically solves this issue.
+///
+///      root[] runProof("dataset")
+///
+///   8. "friends"
+///
+///      Selectors: ProofFriends.h(.C), ProofAux.h(.C)
+///
+///      This is an example of TTree friend processing in PROOF. It also shows
+///      how to use the TPacketizerFile to steer creation of files.
+///
+///      root[] runProof("friends")
+///
+///      The trees are by default created in separate files; to create
+///      them in the same file use option 'samefile', e.g.
+///
+///      root[] runProof("friends(samefile)")
+///
+///   9. "simplefile"
+///
+///      Selector: ProofSimpleFile.h.C
+///
+///      root[] runProof("simplefile")
+///
+///      This will create a local PROOF session and run an analysis filling
+///      16+16 histos with 100000 gaussian random numbers. The merging of
+///      these histos goes via file; 16 histos are saved in the top directory,
+///      the other 16 into a subdirectory called 'blue'. The final display
+///      is done in two canvanses, one for each set of histograms and with
+///      16 pads each (4x4).
+///      The number of histograms in each set can be passed as argument
+///      'nhist' to 'simplefile', e.g. to fill 25 histos with 1000000 entries use
+///
+///      root[] runProof("simplefile(nevt=1000000,nhist=25)")
+///
+///      By default the output will be saved in the local file SimpleFile.root;
+///      location and name of the file can be changed via the argument 'outfile',
+///      e.g.
+///
+///      root[] runProof("simplefile(outfile=/data0/testsimple.root)")
+///      root[] runProof("simplefile(outfile=root://aserver//data/testsimple.root)")
+///
+///   10. "stdvec"
+///
+///      Selector: ProofStdVect.h.C
+///
+///      This is an example of using standard vectors (vector<vector<bool> > and
+///      vector<vector<float> >) in a TSelector. The same selector is run twice:
+///      in 'create' mode it creates a dataset with the tree 'stdvec' containing
+///      3 branches, a vector<vector<bool> > and two vector<vector<float> >. The
+///      tree is saved into a file on each worker and a dataset is created with
+///      these files (the dataset is called 'TestStdVect'); in 'read' mode the
+///      dataset is read and a couple fo histograms filled and displayed.
+///
+///      root[] runProof("stdvec")
+///
+///   General arguments
+///   -----------------
+///
+///   The following arguments are valid for all examples (the ones specific
+///   to each tutorial have been explained above)
+///
+///   1. ACLiC mode
+///
+///      By default all processing is done with ACLiC mode '+', i.e. compile
+///      if changed. However, this may lead to problems if the available
+///      selector libs were compiled in previous sessions with a different
+///      set of loaded libraries (this is a general problem in ROOT). When
+///      this happens the best solution is to force recompilation (ACLiC
+///      mode '++'). To do this just add one or more '+' to the name of the
+///      tutorial, e.g. runProof("simple++")
+///
+///   2. debug=[what:]level
+///
+///      Controls verbosity; 'level' is an integer number and the optional string
+///      'what' one or more of the enum names in TProofDebug.h .
+///      e.g. runProof("eventproc(debug=kPacketizer|kCollect:2)") runs 'eventproc' enabling
+///           all printouts matching TProofDebug::kPacketizer and having level
+///           equal or larger than 2 .
+///
+///   3. nevt=N and/or first=F
+///
+///      Set the number of entries to N, eventually (when it makes sense, i.e. when
+///      processing existing files) starting from F
+///      e.g. runProof("simple(nevt=1000000000)") runs simple with 1000000000
+///           runProof("eventproc(first=65000)") runs eventproc processing
+///           starting with event 65000
+///           runProof("eventproc(nevt=100000,first=65000)") runs eventproc processing
+///           100000 events starting with event 65000
+///
+///   4. asyn
+///
+///      Run in non blocking mode
+///      e.g. root[] runProof("h1(asyn)")
+///
+///   5. nwrk=N
+///
+///      Set the number of active workers to N, usefull to test performance
+///      on a remote cluster where control about the number of workers is
+///      not possible, e.g. runProof("event(nwrk=2)") runs 'event' with
+///      2 workers.
+///
+///   6. punzip
+///
+///      Use parallel unzipping in reading files where relevant
+///      e.g. root[] runProof("eventproc(punzip)")
+///
+///   7. cache=<bytes> (or <kbytes>K or <mbytes>M)
+///
+///      Change the size of the tree cache; 0 or <0 disables the cache,
+///      value cane be in bytes (no suffix), kilobytes (suffix 'K') or
+///      megabytes (suffix 'M'), e.g. root[] runProof("eventproc(cache=0)")
+///
+///   8. submergers[=S]
+///
+///      Enabling merging via S submergers or the optimal number if S is
+///      not specified, e.g. root[] runProof("simple(hist=1000,submergers)")
+///
+///   9. rateest=average
+///
+///      Enable processed entries estimation for constant progress reporting based on
+///      the measured average. This may screw up the progress bar in some cases, which
+///      is the reason why it is not on by default .
+///      e.g. root[] runProof("eventproc(rateest=average)")
+///
+///   10. perftree=perftreefile.root
+///
+///      Generate the perfomance tree and save it to file 'perftreefile.root',
+///      e.g. root[] runProof("eventproc(perftree=perftreefile.root)")
+///
+///   11. feedback=name1[,name2,name3,...]|off
+///
+///      Enable feedback for the specified names or switch it off; by default it is
+///      enabled for the 'stats' histograms (events,packest, packets-being processed).
+///
+///   In all cases, to run on a remote PROOF cluster, the master URL must
+///   be passed as second argument; e.g.
+///
+///      root[] runProof("simple","master.do.main")
+///
+///   A rough parsing of the URL is done to determine the locality of the cluster.
+///   If using a tunnel the URL can start by localhost even for external clusters:
+///   in such cases the default locality determination will be wrong, so one has
+///   to tell explicity that the cluster is external via the option field, e.g.
+///
+///      root[] runProof("simple","localhost:33002/?external")
+///
+///   In the case of local running it is possible to specify the number of
+///   workers to start as third argument (the default is the number of cores
+///   of the machine), e.g.
+///
+///      root[] runProof("simple",0,4)
+///
+///   will start 4 workers. Note that the real number of workers is changed
+///   only the first time you call runProof into a ROOT session. Following
+///   calls can reduce the number of active workers, but not increase it.
+///   For example, in the same session of the call above starting 4 workers,
+///   this
+///
+///   root[] runProof("simple",0,8)
+///
+///   will still use 4 workers, while this
+///
+///   root[] runProof("simple",0,2)
+///
+///   will disable 2 workers and use the other 2.
+///
+///   Finally, it is possible to pass as 4th argument a list of objects to be added
+///   to the input list to further control the PROOF behaviour:
+///
+///   root [] TList *ins = new TList
+///   root [] ins->Add(new TParameter<Int_t>("MyParm", 3))
+///   root [] runProof("simple",0,4,ins)
+///
+///   the content of 'ins' will then be copied to the input list before processing.
+///
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis
 
 
 #include "TCanvas.h"

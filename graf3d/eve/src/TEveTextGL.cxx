@@ -18,10 +18,10 @@
 #include "TGLIncludes.h"
 #include "TGLBoundingBox.h"
 
-//______________________________________________________________________________
-//
-// OpenGL renderer class for TEveText.
-//
+/** \class TEveTextGL
+\ingroup TEve
+OpenGL renderer class for TEveText.
+*/
 
 ClassImp(TEveTextGL);
 
@@ -52,8 +52,6 @@ void TEveTextGL::SetBBox()
 {
    fBoundingBox.SetEmpty();
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Actual rendering code.

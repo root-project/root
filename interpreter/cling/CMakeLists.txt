@@ -85,6 +85,8 @@ if (LLVM_COMPILER_IS_GCC_COMPATIBLE)
   endif()
 endif ()
 
+string(REPLACE "-fvisibility=hidden" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
 # The package needs to be compiler without RTTI information
 if(MSVC)
   add_definitions(/GR-)
@@ -192,18 +194,19 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
   PATTERN "*.inc"
   )
 
-add_definitions( -D_GNU_SOURCE
-  -DCLING_INCLUDE_PATHS="${CLING_SOURCE_DIR}/include:${CLING_BINARY_DIR}/include" )
-
 # Determine cling's version:
 file (STRINGS "VERSION" CLING_VERSION)
 set(CLING_VERSION ROOT_${CLING_VERSION})
 
+add_definitions( -D_GNU_SOURCE
+  -DCLING_VERSION=${CLING_VERSION}
+  -DCLING_INCLUDE_PATHS="${CMAKE_INSTALL_PREFIX}/include:${CMAKE_CURRENT_SOURCE_DIR}/include:${CMAKE_CURRENT_SOURCE_DIR}/../clang/include:${CMAKE_CURRENT_SOURCE_DIR}/../../include" )
+
 add_subdirectory(lib)
 add_subdirectory(tools)
 
-# TODO: docs.
-#add_subdirectory(test)
+add_subdirectory(docs)
+
 option(CLING_INCLUDE_TESTS
        "Generate build targets for the Cling unit tests."
        ${LLVM_INCLUDE_TESTS})

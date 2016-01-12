@@ -14,32 +14,32 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// A RooPlot is a plot frame and a container for graphics objects
-// within that frame. As a frame, it provides the TH1-style public interface
-// for settting plot ranges, configuring axes, etc. As a container, it
-// holds an arbitrary set of objects that might be histograms of data,
-// curves representing a fit model, or text labels. Use the Draw()
-// method to draw a frame and the objects it contains. Use the various
-// add...() methods to add objects to be drawn.  In general, the
-// add...() methods create a private copy of the object you pass them
-// and return a pointer to this copy. The caller owns the input object
-// and this class owns the returned object.
-// <p>
-// All RooAbsReal and RooAbsData derived classes implement plotOn()
-// functions that facilitate to plot themselves on a given RooPlot, e.g.
-// <pre>
-// RooPlot *frame = x.frame() ;
-// data.plotOn(frame) ;
-// pdf.plotOn(frame) ;
-// </pre>
-// These high level functions also take care of any projections
-// or other mappings that need to be made to plot a multi-dimensional
-// object onto a one-dimensional plot.
-// END_HTML
-//
+/**
+\file RooPlot.cxx
+\class RooPlot
+\ingroup Roofitcore
+
+A RooPlot is a plot frame and a container for graphics objects
+within that frame. As a frame, it provides the TH1-style public interface
+for settting plot ranges, configuring axes, etc. As a container, it
+holds an arbitrary set of objects that might be histograms of data,
+curves representing a fit model, or text labels. Use the Draw()
+method to draw a frame and the objects it contains. Use the various
+add...() methods to add objects to be drawn.  In general, the
+add...() methods create a private copy of the object you pass them
+and return a pointer to this copy. The caller owns the input object
+and this class owns the returned object.
+All RooAbsReal and RooAbsData derived classes implement plotOn()
+functions that facilitate to plot themselves on a given RooPlot, e.g.
+~~~ {.cpp}
+RooPlot *frame = x.frame() ;
+data.plotOn(frame) ;
+pdf.plotOn(frame) ;
+~~~
+These high level functions also take care of any projections
+or other mappings that need to be made to plot a multi-dimensional
+object onto a one-dimensional plot.
+**/
 
 
 #include "RooFit.h"
@@ -109,7 +109,7 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
   _hist->Sumw2(kFALSE) ;
   _hist->GetSumw2()->Set(0) ;
 
-  
+
   TH1::AddDirectory(histAddDirStatus) ;
 
 
@@ -538,8 +538,8 @@ void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label)
   if(GetMaximum() < ymax) {
     _defYmax = ymax ;
     SetMaximum(ymax);
-    // if we don't do this - Unzoom on y-axis will reset upper bound to 1 
-    _hist->SetBinContent(1,ymax) ; 
+    // if we don't do this - Unzoom on y-axis will reset upper bound to 1
+    _hist->SetBinContent(1,ymax) ;
   }
   if(GetMinimum() > ymin) {
     _defYmin = ymin ;
@@ -561,8 +561,8 @@ void RooPlot::Draw(Option_t *option)
   TString optArg = option ;
   optArg.ToLower() ;
 
-  // This draw options prevents the histogram with one dummy entry 
-  // to be drawn 
+  // This draw options prevents the histogram with one dummy entry
+  // to be drawn
   if (optArg.Contains("same")) {
     _hist->Draw("FUNCSAME");
   } else {
@@ -575,8 +575,8 @@ void RooPlot::Draw(Option_t *option)
     DrawOpt opt(_iterator->GetOption()) ;
     if (!opt.invisible) {
        //LM:  in case of a TGraph derived object, do not use default "" option
-       // which is "ALP" from 5.34.10 (and will then redrawn the axis) but  use "LP" 
-       if (!strlen(opt.drawOptions) && obj->IsA()->InheritsFrom(TGraph::Class()) ) strlcpy(opt.drawOptions,"LP",3); 
+       // which is "ALP" from 5.34.10 (and will then redrawn the axis) but  use "LP"
+       if (!strlen(opt.drawOptions) && obj->IsA()->InheritsFrom(TGraph::Class()) ) strlcpy(opt.drawOptions,"LP",3);
        obj->Draw(opt.drawOptions);
     }
   }
@@ -1180,6 +1180,12 @@ void RooPlot::Streamer(TBuffer &R__b)
 
     TH1::AddDirectory(kFALSE) ;
 
+    // The default c'tor might have registered this with a TDirectory.
+    // Streaming the TNamed will make this not retrievable anymore, so
+    // unregister first.
+    if (_dir)
+      _dir->Remove(this);
+
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
     if (R__v > 1) {
@@ -1206,7 +1212,8 @@ void RooPlot::Streamer(TBuffer &R__b)
     }
 
     TH1::AddDirectory(kTRUE) ;
-
+    if (_dir)
+      _dir->Append(this);
 
   } else {
     R__b.WriteClassBuffer(RooPlot::Class(),this);

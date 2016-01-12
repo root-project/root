@@ -68,7 +68,8 @@ void TriggerDictionaryInitialization_libGui();
 class TGClientInit {
 public:
    TGClientInit() {
-      if (ROOT::gROOTLocal && ROOT::gROOTLocal->IsBatch()) {
+      TROOT *rootlocal = ROOT::Internal::gROOTLocal;
+      if (rootlocal && rootlocal->IsBatch()) {
          // For now check if the heaeder files (or the module containing them)
          // has been loaded in Cling.
          // This is required because the dictionaries must be initialized
@@ -147,7 +148,7 @@ TGClient::TGClient(const char *dpyName)
       return;
    }
 
-   if (fXfd >= 0 && !ROOT::gROOTLocal->IsBatch()) {
+   if (fXfd >= 0 && !ROOT::Internal::gROOTLocal->IsBatch()) {
       TGInputHandler *xi = new TGInputHandler(this, fXfd);
       if (fXfd) gSystem->AddFileHandler(xi);
       // X11 events are handled via gXDisplay->Notify() in

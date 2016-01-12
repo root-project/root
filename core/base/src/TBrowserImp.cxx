@@ -9,14 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//________________________________________________________________________
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBrowserImp                                                          //
-//                                                                      //
-// ABC describing GUI independent browser implementation protocol.      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBrowserImp
+ABC describing GUI independent browser implementation protocol.
+*/
 
 #include "TBrowserImp.h"
 

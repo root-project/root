@@ -1,8 +1,13 @@
-void gerrors2() {
-   //Draw two graphs with error bars
-   // To see the output of this macro, click begin_html <a href="gif/gerrors2.gif">here</a>. end_html
-   //Author: Rene Brun
+/// \file
+/// \ingroup tutorial_graphs
+/// Draw two graphs with error bars
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+void gerrors2() {
    TCanvas *c1 = new TCanvas("c1","gerrors2",200,10,700,500);
    c1->SetFillColor(42);
    c1->SetGrid();

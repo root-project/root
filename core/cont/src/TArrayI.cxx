@@ -9,13 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TArrayI                                                              //
-//                                                                      //
-// Array of integers (32 bits per element).                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TArrayI
+\ingroup Containers
+Array of integers (32 bits per element).
+*/
 
 #include "TArrayI.h"
 #include "TBuffer.h"

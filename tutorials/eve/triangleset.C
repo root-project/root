@@ -1,7 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstrates usage of class TEveTriangleSet.
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates usage of class TEveTriangleSet.
+///
+/// \image html eve_triangleset.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 #include "TCanvas.h"
 #include "TStyle.h"

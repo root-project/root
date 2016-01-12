@@ -9,37 +9,42 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMatrixDEigen                                                        //
-//                                                                      //
-// Eigenvalues and eigenvectors of a real matrix.                       //
-//                                                                      //
-// If A is not symmetric, then the eigenvalue matrix D is block         //
-// diagonal with the real eigenvalues in 1-by-1 blocks and any complex  //
-// eigenvalues, a + i*b, in 2-by-2 blocks, [a, b; -b, a].  That is, if  //
-// the complex eigenvalues look like                                    //
-//                                                                      //
-//     u + iv     .        .          .      .    .                     //
-//       .      u - iv     .          .      .    .                     //
-//       .        .      a + ib       .      .    .                     //
-//       .        .        .        a - ib   .    .                     //
-//       .        .        .          .      x    .                     //
-//       .        .        .          .      .    y                     //
-//                                                                      //
-// then D looks like                                                    //
-//                                                                      //
-//       u        v        .          .      .    .                     //
-//      -v        u        .          .      .    .                     //
-//       .        .        a          b      .    .                     //
-//       .        .       -b          a      .    .                     //
-//       .        .        .          .      x    .                     //
-//       .        .        .          .      .    y                     //
-//                                                                      //
-// This keeps V a real matrix in both symmetric and non-symmetric       //
-// cases, and A*V = V*D.                                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMatrixDEigen
+    \ingroup Matrix
+
+ TMatrixDEigen
+
+ Eigenvalues and eigenvectors of a real matrix.
+
+ If A is not symmetric, then the eigenvalue matrix D is block
+ diagonal with the real eigenvalues in 1-by-1 blocks and any complex
+ eigenvalues, a + i*b, in 2-by-2 blocks, [a, b; -b, a].  That is, if
+ the complex eigenvalues look like
+
+~~~
+     u + iv     .        .          .      .    .
+       .      u - iv     .          .      .    .
+       .        .      a + ib       .      .    .
+       .        .        .        a - ib   .    .
+       .        .        .          .      x    .
+       .        .        .          .      .    y
+~~~
+
+ then D looks like
+
+~~~
+       u        v        .          .      .    .
+      -v        u        .          .      .    .
+       .        .        a          b      .    .
+       .        .       -b          a      .    .
+       .        .        .          .      x    .
+       .        .        .          .      .    y
+~~~
+
+ This keeps V a real matrix in both symmetric and non-symmetric
+ cases, and A*V = V*D.
+
+*/
 
 #include "TMatrixDEigen.h"
 #include "TMath.h"
@@ -750,21 +755,25 @@ TMatrixDEigen &TMatrixDEigen::operator=(const TMatrixDEigen &source)
 ///    a + i*b, in 2-by-2 blocks, [a, b; -b, a].
 ///  That is, if the complex eigenvalues look like
 ///
+/// ~~~
 ///     u + iv     .        .          .      .    .
 ///       .      u - iv     .          .      .    .
 ///       .        .      a + ib       .      .    .
 ///       .        .        .        a - ib   .    .
 ///       .        .        .          .      x    .
 ///       .        .        .          .      .    y
+/// ~~~
 ///
 /// then D looks like
 ///
+/// ~~~
 ///     u        v        .          .      .    .
 ///    -v        u        .          .      .    .
 ///     .        .        a          b      .    .
 ///     .        .       -b          a      .    .
 ///     .        .        .          .      x    .
 ///     .        .        .          .      .    y
+/// ~~~
 ///
 /// This keeps V a real matrix in both symmetric and non-symmetric
 /// cases, and A*V = V*D.
@@ -772,7 +781,7 @@ TMatrixDEigen &TMatrixDEigen::operator=(const TMatrixDEigen &source)
 /// Indexing:
 ///  If matrix A has the index/shape (rowLwb,rowUpb,rowLwb,rowUpb)
 ///  each eigen-vector must have the shape (rowLwb,rowUpb) .
-///  For convinience, the column index of the eigen-vector matrix
+///  For convenience, the column index of the eigen-vector matrix
 ///  also runs from rowLwb to rowUpb so that the returned matrix
 ///  has also index/shape (rowLwb,rowUpb,rowLwb,rowUpb) .
 ///

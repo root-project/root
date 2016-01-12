@@ -63,8 +63,6 @@ protected:
 
   RooListProxy _compRSet ;
   RooListProxy _compCSet ;
-  TIterator* _compRIter ;  //! do not persist
-  TIterator* _compCIter ;  //! do not persist
 
   class CacheElem : public RooAbsCacheElement {
   public:

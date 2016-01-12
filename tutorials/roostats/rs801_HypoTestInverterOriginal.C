@@ -1,12 +1,14 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'Hypothesis Test Inversion' RooStats tutorial macro #801
-// author: Gregory Schott
-// date Sep 2009
-//
-// This tutorial shows an example of using the HypoTestInverterOriginal class
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roostats
+/// 'Hypothesis Test Inversion' RooStats tutorial macro #801
+///
+/// This tutorial shows an example of using the HypoTestInverterOriginal class
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Gregory Schott
 
 #include "RooRealVar.h"
 #include "RooConstVar.h"

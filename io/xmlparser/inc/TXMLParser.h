@@ -12,22 +12,6 @@
 #ifndef ROOT_TXMLParser
 #define ROOT_TXMLParser
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXMLParser                                                           //
-//                                                                      //
-// TXMLParser is an abstract class which interfaces with Libxml2.       //
-// Libxml2 is the XML C parser and toolkit developed for the Gnome      //
-// project.                                                             //
-//                                                                      //
-// The libxml library provides two interfaces to the parser, a DOM      //
-// style tree interface and a SAX style event based interface.          //
-//                                                                      //
-// TXMLParser is parent class of TSAXParser and TDOMParser, which are   //
-// a SAX interface and DOM interface of libxml.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TQObject
 #include "TQObject.h"
 #endif
@@ -50,13 +34,13 @@ private:
    TXMLParser& operator=(const TXMLParser&); // Not implemented
 
 protected:
-   _xmlParserCtxt     *fContext;          // parse the xml file
-   Bool_t              fValidate;         // to validate the parse context
-   Bool_t              fReplaceEntities;  // replace entities
-   Bool_t              fStopError;        // stop when parse error occurs
-   TString             fValidateError;    // parse error
-   TString             fValidateWarning;  // parse warning
-   Int_t               fParseCode;        // to keep track of the errorcodes
+   _xmlParserCtxt     *fContext;          ///< Parse the xml file
+   Bool_t              fValidate;         ///< To validate the parse context
+   Bool_t              fReplaceEntities;  ///< Replace entities
+   Bool_t              fStopError;        ///< Stop when parse error occurs
+   TString             fValidateError;    ///< Parse error
+   TString             fValidateWarning;  ///< Parse warning
+   Int_t               fParseCode;        ///< To keep track of the errorcodes
 
    virtual void        InitializeContext();
    virtual void        ReleaseUnderlying();

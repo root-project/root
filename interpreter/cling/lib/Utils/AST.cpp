@@ -214,30 +214,46 @@ namespace utils {
   }
 
   static bool
-  GetFullyQualifiedTemplateArgument(const ASTContext& Ctx, TemplateArgument &arg)
-  {
-     bool changed = false;
+  GetFullyQualifiedTemplateArgument(const ASTContext& Ctx,
+                                    TemplateArgument &arg) {
+    bool changed = false;
 
-     // Note: we do not handle TemplateArgument::Expression, to replace it
-     // we need the information for the template instance decl.
-     // See GetPartiallyDesugaredTypeImpl
+    // Note: we do not handle TemplateArgument::Expression, to replace it
+    // we need the information for the template instance decl.
+    // See GetPartiallyDesugaredTypeImpl
 
-     if (arg.getKind() == TemplateArgument::Template) {
-        TemplateName tname = arg.getAsTemplate();
-        changed = GetFullyQualifiedTemplateName(Ctx, tname);
-        if (changed) {
-           arg = TemplateArgument(tname);
-        }
-     } else if (arg.getKind() == TemplateArgument::Type) {
-        QualType SubTy = arg.getAsType();
-        // Check if the type needs more desugaring and recurse.
-        QualType QTFQ = TypeName::GetFullyQualifiedType(SubTy, Ctx);
-        if (QTFQ != SubTy) {
-           arg = TemplateArgument(QTFQ);
-           changed = true;
-        }
-     }
-     return changed;
+    if (arg.getKind() == TemplateArgument::Template) {
+      TemplateName tname = arg.getAsTemplate();
+      changed = GetFullyQualifiedTemplateName(Ctx, tname);
+      if (changed) {
+        arg = TemplateArgument(tname);
+      }
+    } else if (arg.getKind() == TemplateArgument::Type) {
+      QualType SubTy = arg.getAsType();
+      // Check if the type needs more desugaring and recurse.
+      QualType QTFQ = TypeName::GetFullyQualifiedType(SubTy, Ctx);
+      if (QTFQ != SubTy) {
+        arg = TemplateArgument(QTFQ);
+        changed = true;
+      }
+    } else if (arg.getKind() == TemplateArgument::Pack) {
+      SmallVector<TemplateArgument, 2> desArgs;
+      for (auto I = arg.pack_begin(), E = arg.pack_end(); I != E; ++I) {
+        TemplateArgument pack_arg(*I);
+        changed = GetFullyQualifiedTemplateArgument(Ctx,pack_arg);
+        desArgs.push_back(pack_arg);
+      }
+      if (changed) {
+        // The allocator in ASTContext is mutable ...
+        // Keep the argument const to be inline will all the other interfaces
+        // like:  NestedNameSpecifier::Create
+        ASTContext &mutableCtx( const_cast<ASTContext&>(Ctx) );
+        arg =TemplateArgument(TemplateArgument::CreatePackCopy(mutableCtx,
+                                                               desArgs.data(),
+                                                               desArgs.size()));
+      }
+    }
+    return changed;
   }
 
   static const Type*
@@ -819,6 +835,94 @@ namespace utils {
     return desugared;
   }
 
+  static bool GetPartiallyDesugaredTypeImpl(const ASTContext& Ctx,
+                                            TemplateArgument &arg,
+                                            const Transform::Config& TypeConfig,
+                                            bool fullyQualifyTmpltArg) {
+    bool changed = false;
+
+    if (arg.getKind() == TemplateArgument::Template) {
+      TemplateName tname = arg.getAsTemplate();
+      // Note: should we not also desugar?
+      changed = GetFullyQualifiedTemplateName(Ctx, tname);
+      if (changed) {
+        arg = TemplateArgument(tname);
+      }
+    } else if (arg.getKind() == TemplateArgument::Type) {
+
+      QualType SubTy = arg.getAsType();
+      // Check if the type needs more desugaring and recurse.
+      if (isa<TypedefType>(SubTy)
+          || isa<TemplateSpecializationType>(SubTy)
+          || isa<ElaboratedType>(SubTy)
+          || fullyQualifyTmpltArg) {
+        changed = true;
+        QualType PDQT
+              = GetPartiallyDesugaredTypeImpl(Ctx, SubTy, TypeConfig,
+                    /*fullyQualifyType=*/true,
+                    /*fullyQualifyTmpltArg=*/true);
+        arg = TemplateArgument(PDQT);
+      }
+    } else if (arg.getKind() == TemplateArgument::Pack) {
+      SmallVector<TemplateArgument, 2> desArgs;
+      for (auto I = arg.pack_begin(), E = arg.pack_end(); I != E; ++I) {
+        TemplateArgument pack_arg(*I);
+        changed = GetPartiallyDesugaredTypeImpl(Ctx,pack_arg,
+                                                TypeConfig,
+                                                fullyQualifyTmpltArg);
+        desArgs.push_back(pack_arg);
+      }
+      if (changed) {
+        // The allocator in ASTContext is mutable ...
+        // Keep the argument const to be inline will all the other interfaces
+        // like:  NestedNameSpecifier::Create
+        ASTContext &mutableCtx( const_cast<ASTContext&>(Ctx) );
+        arg =TemplateArgument(TemplateArgument::CreatePackCopy(mutableCtx,
+                                                               desArgs.data(),
+                                                               desArgs.size()));
+      }
+    }
+    return changed;
+  }
+
+  static const TemplateArgument*
+  GetTmpltArgDeepFirstIndexPack(size_t &cur,
+                                const TemplateArgument& arg,
+                                size_t idx) {
+    SmallVector<TemplateArgument, 2> desArgs;
+    for (auto I = arg.pack_begin(), E = arg.pack_end();
+         cur < idx && I != E; ++cur,++I) {
+      if ((*I).getKind() == TemplateArgument::Pack) {
+        auto p_arg = GetTmpltArgDeepFirstIndexPack(cur,(*I),idx);
+        if (cur == idx) return p_arg;
+      } else if (cur == idx) {
+        return I;
+      }
+    }
+    return nullptr;
+  }
+
+  // Return the template argument corresponding to the index (idx)
+  // when the composite list of arguement is seen flattened out deep
+  // first (where depth is provided by template argument packs)
+  static const TemplateArgument*
+  GetTmpltArgDeepFirstIndex(const TemplateArgumentList& templateArgs,
+                            size_t idx) {
+
+    for (size_t cur = 0, I = 0, E = templateArgs.size();
+         cur <= idx && I < E; ++I, ++cur) {
+      auto &arg = templateArgs[I];
+      if (arg.getKind() == TemplateArgument::Pack) {
+        // Need to recurse.
+        auto p_arg = GetTmpltArgDeepFirstIndexPack(cur,arg,idx);
+        if (cur == idx) return p_arg;
+     } else if (cur == idx) {
+        return &arg;
+      }
+    }
+    return nullptr;
+  }
+
   static QualType GetPartiallyDesugaredTypeImpl(const ASTContext& Ctx,
     QualType QT, const Transform::Config& TypeConfig,
     bool fullyQualifyType, bool fullyQualifyTmpltArg)
@@ -1160,7 +1264,9 @@ namespace utils {
                 = TSTdecl->getTemplateArgs();
 
               mightHaveChanged = true;
-              desArgs.push_back(templateArgs[argi]);
+              const TemplateArgument *match
+                  = GetTmpltArgDeepFirstIndex(templateArgs,argi);
+              if (match) desArgs.push_back(*match);
               continue;
             }
           }
@@ -1228,16 +1334,16 @@ namespace utils {
           for(unsigned int I = 0, E = templateArgs.size();
               I != E; ++I) {
 
-#if 0
-            // This alternative code is not quite right as it would
-            // not call GetPartiallyDesugaredTypeImpl on Types.
+#if 1
 
             // cheap to copy and potentially modified by
-            // GetFullyQualifedTemplateArgument
-            TemplateArgument arg(*I);
-            mightHaveChanged | = GetFullyQualifiedTemplateArgument(Ctx,arg);
+            // GetPartiallyDesugaredTypeImpl
+            TemplateArgument arg(templateArgs[I]);
+            mightHaveChanged |= GetPartiallyDesugaredTypeImpl(Ctx,arg,
+                                                              TypeConfig,
+                                                          fullyQualifyTmpltArg);
             desArgs.push_back(arg);
-#endif
+#else
             if (templateArgs[I].getKind() == TemplateArgument::Template) {
                TemplateName tname = templateArgs[I].getAsTemplate();
                // Note: should we not also desugar?
@@ -1270,6 +1376,7 @@ namespace utils {
             } else {
               desArgs.push_back(templateArgs[I]);
             }
+#endif
           }
 
           // If desugaring happened allocate new type in the AST.
@@ -1352,13 +1459,17 @@ namespace utils {
     if (!Within)
       S->LookupName(R, S->TUScope);
     else {
-      if (const clang::TagDecl* TD = dyn_cast<clang::TagDecl>(Within)) {
-        if (!TD->getDefinition()) {
-          // No definition, no lookup result.
-          return 0;
-        }
+      const DeclContext* primaryWithin = nullptr;
+      if (const clang::TagDecl *TD = dyn_cast<clang::TagDecl>(Within)) {
+        primaryWithin = dyn_cast_or_null<DeclContext>(TD->getDefinition());
+      } else {
+        primaryWithin = Within->getPrimaryContext();
       }
-      S->LookupQualifiedName(R, const_cast<DeclContext*>(Within));
+      if (!primaryWithin) {
+        // No definition, no lookup result.
+        return 0;
+      }
+      S->LookupQualifiedName(R, const_cast<DeclContext*>(primaryWithin));
     }
 
     if (R.empty())
@@ -1513,6 +1624,19 @@ namespace utils {
       // Add back the qualifiers.
       QT = Ctx.getQualifiedType(QT, quals);
       return QT;
+    }
+
+    // Remove the part of the type related to the type being a template
+    // parameter (we won't report it as part of the 'type name' and it is
+    // actually make the code below to be more complex (to handle those)
+    while (isa<SubstTemplateTypeParmType>(QT.getTypePtr())) {
+      // Get the qualifiers.
+      Qualifiers quals = QT.getQualifiers();
+
+      QT = dyn_cast<SubstTemplateTypeParmType>(QT.getTypePtr())->desugar();
+
+      // Add back the qualifiers.
+      QT = Ctx.getQualifiedType(QT, quals);
     }
 
     NestedNameSpecifier* prefix = 0;

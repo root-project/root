@@ -29,12 +29,10 @@
 
 #include <KeySymbols.h>
 
-//______________________________________________________________________________
-//
-//
-// GL-overaly annotation.
-//
-//
+/** \class TGLAnnotation
+\ingroup opengl
+GL-overlay annotation.
+*/
 
 ClassImp(TGLAnnotation);
 
@@ -96,7 +94,7 @@ TGLAnnotation::TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t po
    fAllowClose(kTRUE)
 {
    // Constructor.
-   // Create annotaton by picking an object.
+   // Create annotation by picking an object.
 
    fPointer = ref;
    parent->AddOverlayElement(this);
@@ -207,11 +205,11 @@ void TGLAnnotation::MouseLeave()
    fActive = kFALSE;
 }
 
-/**************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Render the annotation.
+
 void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
 {
-   // Render the annotation.
-
    const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
    if (vp.Width() == 0 && vp.Height() == 0)
       return;
@@ -472,8 +470,8 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns transparecy of annotation outline.
-/// If annotation is selected enforce visiblity of outline.
+/// Returns transparency of annotation outline.
+/// If annotation is selected enforce visibility of outline.
 
 Char_t TGLAnnotation::GetLineTransparency() const
 {

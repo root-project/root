@@ -14,24 +14,26 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsData is the common abstract base class for binned and unbinned
-// datasets. The abstract interface defines plotting and tabulating entry
-// points for its contents and provides an iterator over its elements
-// (bins for binned data sets, data points for unbinned datasets).
-// END_HTML
-//
-//
+/**
+\file RooAbsData.cxx
+\class RooAbsData
+\ingroup Roofitcore
+
+RooAbsData is the common abstract base class for binned and unbinned
+datasets. The abstract interface defines plotting and tabulating entry
+points for its contents and provides an iterator over its elements
+(bins for binned data sets, data points for unbinned datasets).
+**/
+
+#include "RooAbsData.h"
 
 #include "RooFit.h"
 #include "Riostream.h"
 
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TMath.h"
 
-#include "RooAbsData.h"
 #include "RooAbsData.h"
 #include "RooFormulaVar.h"
 #include "RooCmdConfig.h"
@@ -45,6 +47,7 @@
 #include "RooDataHist.h"
 #include "RooCompositeDataStore.h"
 #include "RooCategory.h"
+#include "RooTrace.h"
 
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
@@ -117,7 +120,8 @@ RooAbsData::RooAbsData()
   _dstore = 0 ;
   _iterator = _vars.createIterator() ;
   _cacheIter = _cachedVars.createIterator() ;
-  //cout << "created dataset " << this << endl ;
+
+  RooTrace::create(this) ;
 }
 
 
@@ -155,6 +159,8 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
 
   _iterator= _vars.createIterator();
   _cacheIter = _cachedVars.createIterator() ;
+
+  RooTrace::create(this) ;
 }
 
 
@@ -207,7 +213,8 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
     // Convert to vector store if default is vector
     _dstore = other._dstore->clone(_vars,newname?newname:other.GetName()) ;
   }
-  
+
+  RooTrace::create(this) ;
 }
 
 
@@ -233,6 +240,7 @@ RooAbsData::~RooAbsData()
     delete iter->second ;
   }
 
+  RooTrace::destroy(this) ;
 }
 
 
@@ -962,7 +970,7 @@ Double_t RooAbsData::moment(RooRealVar &var, Double_t order, Double_t offset, co
   }
 
   // Check if dataset is not empty
-  if(sumEntries() == 0.) {
+  if(sumEntries(cutSpec, cutRange) == 0.) {
     coutE(InputArguments) << "RooDataSet::moment(" << GetName() << ") WARNING: empty dataset" << endl ;
     return 0;
   }
@@ -984,7 +992,7 @@ Double_t RooAbsData::moment(RooRealVar &var, Double_t order, Double_t offset, co
     
     sum+= weight() * TMath::Power(varPtr->getVal() - offset,order);
   }
-  return sum/sumEntries();
+  return sum/sumEntries(cutSpec, cutRange);
 }
 
 
@@ -1021,7 +1029,7 @@ Double_t RooAbsData::corrcov(RooRealVar &x,RooRealVar &y, const char* cutSpec, c
   if (!xdata||!ydata) return 0 ;
 
   // Check if dataset is not empty
-  if(sumEntries() == 0.) {
+  if(sumEntries(cutSpec, cutRange) == 0.) {
     coutW(InputArguments) << "RooDataSet::" << (corr?"correlation":"covariance") << "(" << GetName() << ") WARNING: empty dataset, returning zero" << endl ;
     return 0;
   }
@@ -1047,12 +1055,12 @@ Double_t RooAbsData::corrcov(RooRealVar &x,RooRealVar &y, const char* cutSpec, c
   }
 
   // Normalize entries
-  xysum/=sumEntries() ;
-  xsum/=sumEntries() ;
-  ysum/=sumEntries() ;
+  xysum/=sumEntries(cutSpec, cutRange) ;
+  xsum/=sumEntries(cutSpec, cutRange) ;
+  ysum/=sumEntries(cutSpec, cutRange) ;
   if (corr) {
-    x2sum/=sumEntries() ;
-    y2sum/=sumEntries() ;
+    x2sum/=sumEntries(cutSpec, cutRange) ;
+    y2sum/=sumEntries(cutSpec, cutRange) ;
   }
 
   // Cleanup
@@ -1088,7 +1096,7 @@ TMatrixDSym* RooAbsData::corrcovMatrix(const RooArgList& vars, const char* cutSp
 
 
   // Check if dataset is not empty
-  if(sumEntries() == 0.) {
+  if(sumEntries(cutSpec, cutRange) == 0.) {
     coutW(InputArguments) << "RooDataSet::covariance(" << GetName() << ") WARNING: empty dataset, returning zero" << endl ;
     return 0;
   }
@@ -1133,12 +1141,12 @@ TMatrixDSym* RooAbsData::corrcovMatrix(const RooArgList& vars, const char* cutSp
 
   // Normalize sums 
   for (Int_t ix=0 ; ix<varList.getSize() ; ix++) {
-    xsum[ix] /= sumEntries() ;
+    xsum[ix] /= sumEntries(cutSpec, cutRange) ;
     if (corr) {
-      x2sum[ix] /= sumEntries() ;
+      x2sum[ix] /= sumEntries(cutSpec, cutRange) ;
     }
     for (Int_t iy=0 ; iy<varList.getSize() ; iy++) {      
-      xysum(ix,iy) /= sumEntries() ;
+      xysum(ix,iy) /= sumEntries(cutSpec, cutRange) ;
     }
   }    
 
@@ -1226,7 +1234,7 @@ RooRealVar* RooAbsData::rmsVar(RooRealVar &var, const char* cutSpec, const char*
 
   // Fill in this variable's value and error
   Double_t meanVal(moment(var,1,0,cutSpec,cutRange)) ;
-  Double_t N(sumEntries());
+  Double_t N(sumEntries(cutSpec, cutRange));
   Double_t rmsVal= sqrt(moment(var,2,meanVal,cutSpec,cutRange)*N/(N-1));
   rms->setVal(rmsVal) ;
   rms->setError(rmsVal/sqrt(2*N));

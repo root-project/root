@@ -26,8 +26,17 @@ else()
                          TWin32Thread.cxx TWin32ThreadFactory.cxx)
 endif()
 
+if (imt)
+  set(sources_imt TImplicitMT.cxx)
+endif()
+
 ROOT_GENERATE_DICTIONARY(G__Thread ${headers} STAGE1 MODULE Thread LINKDEF LinkDef.h)
 
 ROOT_OBJECT_LIBRARY(ThreadObjs ${sources} G__Thread.cxx)
-ROOT_LINKER_LIBRARY(Thread $<TARGET_OBJECTS:ThreadObjs> LIBRARIES  ${CMAKE_THREAD_LIBS_INIT} DEPENDENCIES Core)
+ROOT_LINKER_LIBRARY(Thread $<TARGET_OBJECTS:ThreadObjs> ${sources_imt} LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBRARIES} DEPENDENCIES Core)
 ROOT_INSTALL_HEADERS(${installoptions})
+
+if(builtin_tbb)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(Thread TBB)
+endif()
+

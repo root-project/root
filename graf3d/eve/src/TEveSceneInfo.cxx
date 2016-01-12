@@ -15,10 +15,10 @@
 
 #include "TGLSceneInfo.h"
 
-//______________________________________________________________________________
-// TEveSceneInfo
-//
-// TEveUtil representation of TGLSceneInfo.
+/** \class TEveSceneInfo
+\ingroup TEve
+TEveUtil representation of TGLSceneInfo.
+*/
 
 ClassImp(TEveSceneInfo)
 
@@ -35,8 +35,6 @@ TEveSceneInfo::TEveSceneInfo(TEveViewer* viewer, TEveScene* scene, TGLSceneInfo*
 {
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the TGLSceneBase represented by this SceneInfo object.
 
@@ -44,8 +42,6 @@ TGLSceneBase* TEveSceneInfo::GetGLScene() const
 {
    return fGLSceneInfo->GetScene();
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Override from TEveElement.
@@ -59,8 +55,6 @@ void TEveSceneInfo::AddStamp(UChar_t bits)
       fGLSceneInfo->SetActive(fRnrSelf);
    }
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual from TEveElement.

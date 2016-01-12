@@ -613,8 +613,8 @@ void mp3player()
    pad3->Draw();
    pad3->cd();
 
-   TImage *image=TImage::Open("mp3.jpg");
-   image->Draw();
+   //TImage *image=TImage::Open("mp3.jpg");
+   //image->Draw();
 
 
 

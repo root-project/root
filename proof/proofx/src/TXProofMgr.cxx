@@ -8,17 +8,21 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+/**
+  \defgroup proofx XProofD client Library
+  \ingroup proof
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXProofMgr                                                           //
-//                                                                      //
-// The PROOF manager interacts with the PROOF server coordinator to     //
-// create or destroy a PROOF session, attach to or detach from          //
-// existing one, and to monitor any client activity on the cluster.     //
-// At most one manager instance per server is allowed.                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+  The XProofD client library, libProofx, contain the classes providing 
+  the client to interact with the XRootD-based xproofd daemon.
+
+*/
+
+/** \class TXProofMgr
+\ingroup proofx
+
+Implementation of the functionality provided by TProofMgr in the case of a xproofd-based session.
+
+*/
 
 #include <errno.h>
 #include <memory>
@@ -39,6 +43,8 @@
 #include "TStopwatch.h"
 #include "TSysEvtHandler.h"
 #include "XProofProtocol.h"
+
+#include "XrdProofConn.h"
 
 ClassImp(TXProofMgr)
 

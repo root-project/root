@@ -1,14 +1,14 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #206
-// 
-// Tools for visualization of RooAbsArg expression trees
-//
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #206
+///
+///  Tools for visualization of RooAbsArg expression trees
+///
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

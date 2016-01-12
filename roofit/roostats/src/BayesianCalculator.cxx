@@ -9,42 +9,8 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-
-/*
-BEGIN_HTML
-<p>
-BayesianCalculator is a concrete implementation of IntervalCalculator, providing the computation 
-of a credible interval using a Bayesian method. 
-The class works only for one single parameter of interest and it integrates the likelihood function with the given prior
-probability density function to compute the posterior probability. The result of the class is a one dimensional interval 
-(class SimpleInterval ), which is obtained from inverting the cumulative posterior distribution. 
-</p>
-
-<p>
-The interface allows one to construct the class by passing the data set, probability density function for the model, the prior
-functions and then the parameter of interest to scan. The nuisance parameters can also be passed to be marginalized when 
-computing the posterior. Alternatively, the class can be constructed by passing the data and the ModelConfig containing
-all the needed information (model pdf, prior pdf, parameter of interest, nuisance parameters, etc..)
-</p>
-<p>
-After configuring the calculator, one only needs to ask GetInterval(), which
-will return an SimpleInterval object. By default the extrem of the integral are obtained by inverting directly the
-cumulative posterior distribution. By using the method <tt>SetScanOfPosterior(nbins)</tt> the interval is then obtained by 
-scanning  the posterior function in the given number of points. The firts method is in general faster but it requires an
-integration one extra dimension  ( in the poi in addition to the nuisance parameters), therefore in some case it can be
-less robust.   
-</p>
-The class can also return the posterior function (method <tt>GetPosteriorFunction</tt>) or if needed the normalized
-posterior function (the posterior pdf) (method <tt>GetPosteriorPdf</tt>). A posterior plot is also obtained using 
-the <tt>GetPosteriorPlot</tt> method.
-<p>
-The class allows to use different integration methods for integrating in the nuisances and in the poi. All the numerical 
-integration methods of ROOT can be used via the method <tt>SetIntegrationType</tt> (see more in the documentation of
-this method).
-
-END_HTML
-*/
-//_________________________________________________
+/// BayesianCalculator implementation 
+///////////////////////////////////////////////////////////////////////////
 
 
 // include other header files

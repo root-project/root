@@ -1,5 +1,12 @@
-//Create and Draw a TMultiGraph
-//Author:: Rene Brun
+/// \file
+/// \ingroup tutorial_graphs
+/// Create and Draw a TMultiGraph.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 {
    gStyle->SetOptFit();
    TCanvas *c1 = new TCanvas("c1","multigraph",700,500);

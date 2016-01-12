@@ -26,13 +26,18 @@
 
 ClassImp(TH3)
 
-/// \class TH3C \brief tomato 3-D histogram with a bype per channel (see TH1 documentation)
-/// \class TH3S \brief tomato 3-D histogram with a short per channel (see TH1 documentation)
-/// \class TH3I \brief tomato 3-D histogram with a int per channel (see TH1 documentation)}
-/// \class TH3F \brief tomato 3-D histogram with a float per channel (see TH1 documentation)}
-/// \class TH3D \brief tomato 3-D histogram with a double per channel (see TH1 documentation)}
+/** \addtogroup Hist
+@{
+\class TH3C \brief tomato 3-D histogram with a bype per channel (see TH1 documentation)
+\class TH3S \brief tomato 3-D histogram with a short per channel (see TH1 documentation)
+\class TH3I \brief tomato 3-D histogram with a int per channel (see TH1 documentation)}
+\class TH3F \brief tomato 3-D histogram with a float per channel (see TH1 documentation)}
+\class TH3D \brief tomato 3-D histogram with a double per channel (see TH1 documentation)}
+@} 
+*/
 
-/** \class TH3
+/** \class TH3 
+    \ingroup Hist
 The 3-D histogram classes derived from the 1-D histogram classes.
 All operations are supported (fill, fit).
 Drawing is currently restricted to one single option.

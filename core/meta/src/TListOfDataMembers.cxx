@@ -9,17 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TListOfDataMembers                                                   //
-//                                                                      //
-// A collection of TDataMember objects designed for fast access given a //
-// DeclId_t and for keep track of TDataMember that were described       //
-// unloaded data member.                                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TListOfDataMembers
+A collection of TDataMember objects designed for fast access given a
+DeclId_t and for keep track of TDataMember that were described
+unloaded data member.
+*/
 
 #include "TListOfDataMembers.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TClassRef.h"
 #include "TExMap.h"
@@ -277,7 +274,7 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
 /// Return (after creating it if necessary) the TDataMember
 /// describing the data member corresponding to the Decl 'id'.
 /// The skipChecks flag controls the consistency checks performed inspecting
-/// the AST. In some cases, we explicitely alter the datamembers in the
+/// the AST. In some cases, we explicitly alter the datamembers in the
 /// typesystem with respect to the AST and therefore we must not enforce
 /// consistency.
 
@@ -404,7 +401,7 @@ TObject* TListOfDataMembers::Remove(TObjLink *lnk)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Load all the DataMembers known to the intepreter for the scope 'fClass'
+/// Load all the DataMembers known to the interpreter for the scope 'fClass'
 /// into this collection.
 
 void TListOfDataMembers::Load()

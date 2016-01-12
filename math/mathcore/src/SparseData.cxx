@@ -23,6 +23,7 @@
 #include <limits>
 
 // #include "TMath.h"
+#include "Fit/BinData.h"
 #include "Fit/SparseData.h"
 
 using namespace std;

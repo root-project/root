@@ -33,6 +33,7 @@
 
 #include <set>
 #include <unordered_set>
+#include <unordered_map>
 #include <map>
 #include <vector>
 
@@ -79,6 +80,7 @@ extern "C" {
    void TCling__UpdateListsOnCommitted(const cling::Transaction&,
                                        cling::Interpreter*);
    void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
+   void TCling__TransactionRollback(const cling::Transaction&);
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
    const clang::Decl* TCling__GetObjectDecl(TObject *obj);
    void TCling__LibraryLoaded(const void* dyLibHandle,
@@ -105,6 +107,7 @@ private: // Data Members
    TString         fRootmapLoadPath;  // Dynamic load path for rootmap files.
    TEnv*           fMapfile;          // Association of classes to libraries.
    std::map<size_t,std::vector<const char*>> fClassesHeadersMap; // Map of classes hashes and headers associated
+   std::map<const cling::Transaction*,size_t> fTransactionHeadersMap; // Map which transaction contains which autoparse.
    std::set<size_t> fLookedUpClasses; // Set of classes for which headers were looked up already
    std::set<size_t> fPayloads; // Set of payloads
    std::set<const char*> fParsedPayloadsAddresses; // Set of payloads which were parsed
@@ -135,17 +138,19 @@ private: // Data Members
    ULong64_t fTransactionCount; // Cling counter for commited or unloaded transactions which changed the AST.
    std::vector<const char*> fCurExecutingMacros;
 
+   typedef void* SpecialObjectLookupCtx_t;
+   typedef std::unordered_map<std::string, TObject*> SpecialObjectMap_t;
+   std::map<SpecialObjectLookupCtx_t, SpecialObjectMap_t> fSpecialObjectMaps;
+
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
 
    Bool_t fHeaderParsingOnDemand;
    Bool_t fIsAutoParsingSuspended;
 
+   UInt_t AutoParseImplRecurse(const char *cls, bool topLevel);
+
 protected:
-   Bool_t SetSuspendAutoParsing(Bool_t value) {
-      Bool_t old = fIsAutoParsingSuspended;
-      fIsAutoParsingSuspended = value;
-      return old;
-   }
+   Bool_t SetSuspendAutoParsing(Bool_t value);
 
 public: // Public Interface
 
@@ -305,6 +310,8 @@ public: // Public Interface
    void               RegisterTemporary(const TInterpreterValue& value);
    void               RegisterTemporary(const cling::Value& value);
    const ROOT::TMetaUtils::TNormalizedCtxt& GetNormalizedContext() const {return *fNormalizedCtxt;};
+   TObject* GetObjectAddress(const char *Name, void *&LookupCtx);
+
 
    // core/meta helper functions.
    virtual EReturnType MethodCallReturnType(TFunction *func) const;
@@ -500,6 +507,7 @@ public: // Public Interface
    void HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*>& modifiedClasses);
    void UpdateListsOnCommitted(const cling::Transaction &T);
    void UpdateListsOnUnloaded(const cling::Transaction &T);
+   void TransactionRollback(const cling::Transaction &T);
    void LibraryLoaded(const void* dyLibHandle, const char* canonicalName);
    void LibraryUnloaded(const void* dyLibHandle, const char* canonicalName);
 

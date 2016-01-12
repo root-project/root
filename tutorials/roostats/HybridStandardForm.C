@@ -1,80 +1,79 @@
-// A hypothesis testing example based on number counting  with background uncertainty.
-
-
-/*
-HybridStandardForm
-
-Authors: Kyle Cranmer, Wouter Verkerke, and Sven Kreiss
-date  May 2010 Part 1-3
-date  Dec 2010 Part 4-6
-
-A hypothesis testing example based on number counting
-with background uncertainty.
-
-NOTE: This example is like HybridInstructional, but the model is more clearly
-generalizable to an analysis with shapes.  There is a lot of flexability
-for how one models a problem in RooFit/RooStats.  Models come in a few
-common forms:
-  - standard form: extended PDF of some discriminating variable m:
-  eg: P(m) ~ S*fs(m) + B*fb(m), with S+B events expected
-  in this case the dataset has N rows corresponding to N events
-  and the extended term is Pois(N|S+B)
-
-  - fractional form: non-extended PDF of some discriminating variable m:
-  eg: P(m) ~ s*fs(m) + (1-s)*fb(m), where s is a signal fraction
-  in this case the dataset has N rows corresponding to N events
-  and there is no extended term
-
-  - number counting form: in which there is no discriminating variable
-  and the counts are modeled directly (see HybridInstructional)
-  eg: P(N) = Pois(N|S+B)
-  in this case the dataset has 1 row corresponding to N events
-  and the extended term is the PDF itself.
-
-Here we convert the number counting form into the standard form by
-introducing a dummy discriminating variable m with a uniform distribution.
-
-This example:
- - demonstrates the usage of the HybridCalcultor (Part 4-6)
- - demonstrates the numerical integration of RooFit (Part 2)
- - validates the RooStats against an example with a known analytic answer
- - demonstrates usage of different test statistics
- - explains subtle choices in the prior used for hybrid methods
- - demonstrates usage of different priors for the nuisance parameters
- - demonstrates usage of PROOF
-
-The basic setup here is that a main measurement has observed x events with an
-expectation of s+b.  One can choose an ad hoc prior for the uncertainty on b,
-or try to base it on an auxiliary measurement.  In this case, the auxiliary
-measurement (aka control measurement, sideband) is another counting experiment
-with measurement y and expectation tau*b.  With an 'original prior' on b,
-called \eta(b) then one can obtain a posterior from the auxiliary measurement
-\pi(b) = \eta(b) * Pois(y|tau*b).  This is a principled choice for a prior
-on b in the main measurement of x, which can then be treated in a hybrid
-Bayesian/Frequentist way.  Additionally, one can try to treat the two
-measurements simultaneously, which is detailed in Part 6 of the tutorial.
-
-This tutorial is related to the FourBin.C tutorial in the modeling, but
-focuses on hypothesis testing instead of interval estimation.
-
-More background on this 'prototype problem' can be found in the
-following papers:
-
-Evaluation of three methods for calculating statistical significance
-when incorporating a systematic uncertainty into a test of the
-background-only hypothesis for a Poisson process
-Authors: Robert D. Cousins, James T. Linnemann, Jordan Tucker
-http://arxiv.org/abs/physics/0702156
-NIM  A 595 (2008) 480--501
-
-Statistical Challenges for Searches for New Physics at the LHC
-Authors: Kyle Cranmer
-http://arxiv.org/abs/physics/0511028
-
- Measures of Significance in HEP and Astrophysics
- Authors: J. T. Linnemann
- http://arxiv.org/abs/physics/0312059
-*/
+/// \file
+/// \ingroup tutorial_roostats
+/// A hypothesis testing example based on number counting  with background uncertainty.
+///
+/// A hypothesis testing example based on number counting
+/// with background uncertainty.
+///
+/// NOTE: This example is like HybridInstructional, but the model is more clearly
+/// generalizable to an analysis with shapes.  There is a lot of flexability
+/// for how one models a problem in RooFit/RooStats.  Models come in a few
+/// common forms:
+///   - standard form: extended PDF of some discriminating variable m:
+///   eg: P(m) ~ S*fs(m) + B*fb(m), with S+B events expected
+///   in this case the dataset has N rows corresponding to N events
+///   and the extended term is Pois(N|S+B)
+///
+///   - fractional form: non-extended PDF of some discriminating variable m:
+///   eg: P(m) ~ s*fs(m) + (1-s)*fb(m), where s is a signal fraction
+///   in this case the dataset has N rows corresponding to N events
+///   and there is no extended term
+///
+///   - number counting form: in which there is no discriminating variable
+///   and the counts are modeled directly (see HybridInstructional)
+///   eg: P(N) = Pois(N|S+B)
+///   in this case the dataset has 1 row corresponding to N events
+///   and the extended term is the PDF itself.
+///
+/// Here we convert the number counting form into the standard form by
+/// introducing a dummy discriminating variable m with a uniform distribution.
+///
+/// This example:
+///  - demonstrates the usage of the HybridCalcultor (Part 4-6)
+///  - demonstrates the numerical integration of RooFit (Part 2)
+///  - validates the RooStats against an example with a known analytic answer
+///  - demonstrates usage of different test statistics
+///  - explains subtle choices in the prior used for hybrid methods
+///  - demonstrates usage of different priors for the nuisance parameters
+///  - demonstrates usage of PROOF
+///
+/// The basic setup here is that a main measurement has observed x events with an
+/// expectation of s+b.  One can choose an ad hoc prior for the uncertainty on b,
+/// or try to base it on an auxiliary measurement.  In this case, the auxiliary
+/// measurement (aka control measurement, sideband) is another counting experiment
+/// with measurement y and expectation tau*b.  With an 'original prior' on b,
+/// called \f$ \eta(b) \f$ then one can obtain a posterior from the auxiliary measurement
+/// \f$ \pi(b) = \eta(b) * Pois(y|tau*b) \f$.  This is a principled choice for a prior
+/// on b in the main measurement of x, which can then be treated in a hybrid
+/// Bayesian/Frequentist way.  Additionally, one can try to treat the two
+/// measurements simultaneously, which is detailed in Part 6 of the tutorial.
+///
+/// This tutorial is related to the FourBin.C tutorial in the modeling, but
+/// focuses on hypothesis testing instead of interval estimation.
+///
+/// More background on this 'prototype problem' can be found in the
+/// following papers:
+///
+/// Evaluation of three methods for calculating statistical significance
+/// when incorporating a systematic uncertainty into a test of the
+/// background-only hypothesis for a Poisson process
+/// Authors: Robert D. Cousins, James T. Linnemann, Jordan Tucker
+/// http://arxiv.org/abs/physics/0702156
+/// NIM  A 595 (2008) 480--501
+///
+/// Statistical Challenges for Searches for New Physics at the LHC
+/// Authors: Kyle Cranmer
+/// http://arxiv.org/abs/physics/0511028
+///
+///  Measures of Significance in HEP and Astrophysics
+///  Authors: J. T. Linnemann
+///  http://arxiv.org/abs/physics/0312059
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \authors Kyle Cranmer, Wouter Verkerke, and Sven Kreiss
 
 #include "RooGlobalFunc.h"
 #include "RooRealVar.h"
@@ -438,6 +437,4 @@ Real time 0:02:22, CP time 0.990
   // From the value of the profile likelihood ratio (5.0338)
   // The significance can be estimated using Wilks's theorem
   // significance = sqrt(2*profileLR) = 3.1729 sigma
-
-
 }

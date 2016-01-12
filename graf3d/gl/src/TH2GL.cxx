@@ -27,10 +27,11 @@
 
 #include "TGLIncludes.h"
 
-//______________________________________________________________________________
-//
-// Rendering of TH2 and derived classes.
-// Interface to plot-painters also used for gl-in-pad.
+/** \class TH2GL
+\ingroup opengl
+Rendering of TH2 and derived classes.
+Interface to plot-painters also used for gl-in-pad.
+*/
 
 ClassImp(TH2GL);
 

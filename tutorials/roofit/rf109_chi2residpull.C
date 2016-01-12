@@ -1,15 +1,15 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #109
-// 
-// Calculating chi^2 from histograms and curves in RooPlots, 
-// making histogram of residual and pull distributions
-//
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'BASIC FUNCTIONALITY' RooFit tutorial macro #109
+///
+///  Calculating chi^2 from histograms and curves in RooPlots,
+///  making histogram of residual and pull distributions
+///
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

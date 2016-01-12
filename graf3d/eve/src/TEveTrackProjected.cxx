@@ -14,14 +14,10 @@
 #include "TEveProjectionManager.h"
 #include "TEveTrans.h"
 
-//==============================================================================
-//==============================================================================
-// TEveTrackProjected
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Projected copy of a TEveTrack.
+/** \class TEveTrackProjected
+\ingroup TEve
+Projected copy of a TEveTrack.
+*/
 
 ClassImp(TEveTrackProjected);
 
@@ -33,8 +29,6 @@ TEveTrackProjected::TEveTrackProjected() :
    fOrigPnts (0)
 {
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This is virtual method from base-class TEveProjected.
@@ -48,8 +42,6 @@ void TEveTrackProjected::SetProjection(TEveProjectionManager* mng, TEveProjectab
    SetTrackParams(*otrack);
    SetLockPoints(otrack->GetLockPoints());
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set depth (z-coordinate) of the projected points.
@@ -80,7 +72,7 @@ void TEveTrackProjected::UpdateProjection()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Findex index of the last point that lies within the same
+/// Find index of the last point that lies within the same
 /// segment of projected space.
 /// For example, rho-z projection separates upper and lower hemisphere
 /// and tracks break into two lines when crossing the y=0 plane.
@@ -112,8 +104,6 @@ Int_t TEveTrackProjected::GetBreakPointIdx(Int_t start)
    }
    return val;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the points of the track for drawing.
@@ -220,8 +210,6 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
    }
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Print line segments info.
 
@@ -247,8 +235,6 @@ void TEveTrackProjected::PrintLineSegments()
    }
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual method from from base-class TEveTrack.
 
@@ -260,14 +246,10 @@ void TEveTrackProjected::SecSelected(TEveTrack* /*track*/)
 }
 
 
-//==============================================================================
-//==============================================================================
-// TEveTrackListProjected
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Specialization of TEveTrackList for holding TEveTrackProjected objects.
+/** \class TEveTrackListProjected
+\ingroup TEve
+Specialization of TEveTrackList for holding TEveTrackProjected objects.
+*/
 
 ClassImp(TEveTrackListProjected);
 
@@ -279,8 +261,6 @@ TEveTrackListProjected::TEveTrackListProjected() :
    TEveProjected ()
 {
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This is virtual method from base-class TEveProjected.

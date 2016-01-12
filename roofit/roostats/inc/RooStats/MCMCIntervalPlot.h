@@ -39,13 +39,32 @@
 
 namespace RooStats {
 
+   /**
+
+
+      \ingroup Roostats
+
+      This class provides simple and straightforward utilities to plot a MCMCInterval
+      object.  Basic use only requires a few lines once you have an MCMCInterval*:
+
+      ````
+      MCMCIntervalPlot plot(*interval);
+      plot.Draw();
+      ````
+
+      The standard Draw() function will currently draw the confidence interval
+      range with bars if 1-D and a contour if 2-D.  The MCMC posterior will also be
+      plotted for the 1-D case.
+
+*/
+
    class MCMCIntervalPlot : public TNamed, public RooPrintable {
 
    public:
       MCMCIntervalPlot();
       MCMCIntervalPlot(MCMCInterval& interval);
 
-      // Destructor of SamplingDistribution
+      /// Destructor of SamplingDistribution
       virtual ~MCMCIntervalPlot();
 
       void SetMCMCInterval(MCMCInterval& interval);
@@ -97,7 +116,7 @@ namespace RooStats {
       void DrawKeysPdfInterval(const Option_t* options = NULL);
       void DrawTailFractionInterval(const Option_t* options = NULL);
 
-      ClassDef(MCMCIntervalPlot,1)  // Class containing the results of the MCMCCalculator
+      ClassDef(MCMCIntervalPlot,1)  /// Class containing the results of the MCMCCalculator
    };
 }
 

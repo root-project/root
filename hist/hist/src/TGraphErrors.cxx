@@ -34,6 +34,7 @@ ClassImp(TGraphErrors)
 ////////////////////////////////////////////////////////////////////////////////
 
 /** \class TGraphErrors
+    \ingroup Hist 
 A TGraphErrors is a TGraph with error bars.
 
 The TGraphErrors painting is performed thanks to the TGraphPainter

@@ -12,11 +12,10 @@
 #include "TGLLockable.h"
 #include <TError.h>
 
-//______________________________________________________________________
-// TGLLockable
-//
-// Simple locking interface used by viewer and scene.
-
+/** \class TGLLockable
+\ingroup opengl
+Simple locking interface used by viewer and scene.
+*/
 
 ClassImp(TGLLockable);
 

@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMakeProject                                                         //
-//                                                                      //
-// Helper class implementing the TFile::MakeProject.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/*
+\class TMakeProject TMakeProject.cxx
+\ingroup IO
+
+Helper class implementing the TFile::MakeProject.
+**/
 
 #include <ctype.h>
 #include "TMakeProject.h"
@@ -79,7 +78,7 @@ void TMakeProject::ChopFileName(TString &name, Int_t limit)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Return the header name containing the description of name
+/// Return the header name containing the description of name.
 
 TString TMakeProject::GetHeaderName(const char *in_name, const TList *extrainfos, Bool_t includeNested)
 {
@@ -120,8 +119,19 @@ TString TMakeProject::GetHeaderName(const char *in_name, const TList *extrainfos
                   ChopFileName(result,255);
                   return result;
                }
+#ifndef WIN32
             }
             result.Append('_');
+#else
+            }
+            if (name[i+1] == '/') {
+               // don't replace the colon ':' in the case it's part of the drive name in a Windows path
+               // e.g. don't convert from "c:/root/..." to "c_/root/..."
+               result.Append(name[i]);
+            } else {
+               result.Append('_');
+            }
+#endif
             break;
          case ',':
          case '*':
@@ -144,7 +154,7 @@ TString TMakeProject::GetHeaderName(const char *in_name, const TList *extrainfos
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the start of the class (forward) declaration.
-/// if 'implementEmptyClass' is 3 then never add a #pragma
+/// If 'implementEmptyClass' is 3 then never add a #pragma
 
 UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t top, TString &protoname,
       UInt_t *numberOfClasses, Int_t implementEmptyClass, Bool_t needGenericTemplate)
@@ -296,7 +306,9 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate an empty StreamerInfo for the given type (no recursion) if it is not
-/// not known in the list of class.   If the type itself is a template,
+/// not known in the list of class. 
+///
+/// If the type itself is a template,
 /// we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
 
 void TMakeProject::GenerateMissingStreamerInfo(TList *extrainfos, const char *clname, Bool_t iscope)
@@ -341,8 +353,10 @@ void TMakeProject::GenerateMissingStreamerInfo(TList *extrainfos, const char *cl
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate an empty StreamerInfo for types that are used in templates parameters
-/// but are not known in the list of class.   If the type itself is a template,
-/// we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
+/// but are not known in the list of class.
+///
+/// If the type itself is a template, we mark it with version 1 (a class)
+/// otherwise we mark it as version -3 (an enum).
 
 void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, const char *clname)
 {
@@ -387,7 +401,9 @@ void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, const char *c
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate an empty StreamerInfo for types that are used in templates parameters
-/// but are not known in the list of class.   If the type itself is a template,
+/// but are not known in the list of class.
+///
+/// If the type itself is a template,
 /// we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
 
 void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, TStreamerElement *element)

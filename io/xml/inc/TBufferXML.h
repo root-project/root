@@ -185,7 +185,7 @@ public:
    virtual void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
    virtual Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
 
-   virtual void     StreamObject(void *obj, const type_info &typeinfo, const TClass* onFileClass = 0);
+   virtual void     StreamObject(void *obj, const std::type_info &typeinfo, const TClass* onFileClass = 0);
    virtual void     StreamObject(void *obj, const char *className, const TClass* onFileClass = 0 );
    virtual void     StreamObject(void *obj, const TClass *cl, const TClass* onFileClass = 0 );
    virtual void     StreamObject(TObject *obj);
@@ -337,13 +337,13 @@ protected:
 
    Int_t            fErrorFlag;            //!
 
-   Bool_t           fCanUseCompact;        //!   flag indicate that basic type (like Int_t) can be placed in the same tag
-   Bool_t           fExpectedChain;        //!   flag to resolve situation when several elements of same basic type stored as FastArray
-   TClass*          fExpectedBaseClass;    //!   pointer to class, which should be stored as parent of current
-   Int_t            fCompressLevel;        //!   compression level and algorithm
-   Int_t            fIOVersion;            //!   indicates format of ROOT xml file
+   Bool_t           fCanUseCompact;        ///<!   Flag indicate that basic type (like Int_t) can be placed in the same tag
+   Bool_t           fExpectedChain;        ///<!   Flag to resolve situation when several elements of same basic type stored as FastArray
+   TClass*          fExpectedBaseClass;    ///<!   Pointer to class, which should be stored as parent of current
+   Int_t            fCompressLevel;        ///<!   Compression level and algorithm
+   Int_t            fIOVersion;            ///<!   Indicates format of ROOT xml file
 
-   static std::string fgFloatFmt;          //!  printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
+   static std::string fgFloatFmt;          ///<!   Printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
 
 ClassDef(TBufferXML,2) //a specialized TBuffer to read/write to XML files
 };

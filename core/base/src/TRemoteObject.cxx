@@ -9,21 +9,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRemoteObject                                                        //
-//                                                                      //
-// The TRemoteObject class provides protocol for browsing ROOT objects  //
-// from a remote ROOT session.                                          //
-// It contains information on the real remote object as:               //
-//  - Object Properties (i.e. file stat if the object is a TSystemFile) //
-//  - Object Name                                                       //
-//  - Class Name                                                        //
-//  - TKey Object Name (if the remote object is a TKey)                 //
-//  - TKey Class Name (if the remote object is a TKey)                  //
-//  - Remote object address                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRemoteObject
+
+The TRemoteObject class provides protocol for browsing ROOT objects
+from a remote ROOT session.
+
+It contains information on the real remote object as:
+
+  - Object Properties (i.e. file stat if the object is a TSystemFile)
+  - Object Name
+  - Class Name
+  - TKey Object Name (if the remote object is a TKey)
+  - TKey Class Name (if the remote object is a TKey)
+  - Remote object address
+*/
 
 #include "TApplication.h"
 #include "TROOT.h"
@@ -135,7 +134,7 @@ void TRemoteObject::Browse(TBrowser *b)
 TList *TRemoteObject::Browse()
 {
    // Collections to keep track of all browser objects that have been
-   // generated. It's main goal is to prevent the contineous
+   // generated. It's main goal is to prevent the continuous
    // allocations of new objects with the same names during browsing.
    TList *objects  = new TList;
 

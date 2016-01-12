@@ -4,32 +4,20 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       // AMD. Register as an anonymous module.
-      define( ['jquery','jquery-ui', 'd3', 'JSRootPainter', 'THREE', 'jquery.mousewheel'], factory );
+      define( ['jquery', 'jquery-ui', 'd3', 'JSRootPainter', 'THREE', 'three.extra', 'THREE_ALL', 'JSRootPainter.jquery'], factory );
    } else {
 
-      if (typeof JSROOT == 'undefined') {
-         var e1 = new Error('JSROOT is not defined');
-         e1.source = 'JSRoot3DPainter.js';
-         throw e1;
-      }
+      if (typeof JSROOT == 'undefined')
+         throw new Error('JSROOT is not defined', 'JSRoot3DPainter.js');
 
-      if (typeof d3 != 'object') {
-         var e1 = new Error('This extension requires d3.v3.js');
-         e1.source = 'JSRoot3DPainter.js';
-         throw e1;
-      }
+      if (typeof d3 != 'object')
+         throw new Error('This extension requires d3.v3.js', 'JSRoot3DPainter.js');
 
-      if (typeof JSROOT.Painter != 'object') {
-         var e1 = new Error('JSROOT.Painter is not defined');
-         e1.source = 'JSRoot3DPainter.js';
-         throw e1;
-      }
+      if (typeof JSROOT.Painter != 'object')
+         throw new Error('JSROOT.Painter is not defined', 'JSRoot3DPainter.js');
 
-      if (typeof THREE == 'undefined') {
-         var e1 = new Error('THREE is not defined');
-         e1.source = 'JSRoot3DPainter.js';
-         throw e1;
-      }
+      if (typeof THREE == 'undefined')
+         throw new Error('THREE is not defined', 'JSRoot3DPainter.js');
 
       factory(jQuery, jQuery.ui, d3, JSROOT);
    }
@@ -124,7 +112,7 @@
 
       var radius = 100;
       var theta = 0;
-      var projector = new THREE.Projector();
+      var raycaster = new THREE.Raycaster();
       function findIntersection() {
          // find intersections
          if (mouseDowned) {
@@ -137,10 +125,7 @@
                tooltip.hide();
             return;
          }
-         var vector = new THREE.Vector3(mouse.x, mouse.y, 1);
-         projector.unprojectVector(vector, camera);
-         var raycaster = new THREE.Raycaster(camera.position, vector.sub(
-               camera.position).normalize());
+         raycaster.setFromCamera( mouse, camera );
          var intersects = raycaster.intersectObjects(scene.children, true);
          if (intersects.length > 0) {
             var pick = null;
@@ -265,7 +250,7 @@
       });
    }
 
-   JSROOT.Painter.real_drawHistogram2D = function(painter) {
+   JSROOT.Painter.real_drawHistogram2D = function(painter, opt) {
 
       var w = painter.pad_width(), h = painter.pad_height(), size = 100;
 
@@ -496,10 +481,7 @@
 
          // create a new mesh with cube geometry
          bin = new THREE.Mesh(new THREE.BoxGeometry(2 * size / painter.nbinsx, wei, 2 * size / painter.nbinsy),
-                               new THREE.MeshLambertMaterial({ color : fillcolor.getHex(), shading : THREE.NoShading }));
-         helper = new THREE.BoxHelper(bin);
-         helper.material.color.set(0x000000);
-         helper.material.linewidth = 1.0;
+                               new THREE.MeshLambertMaterial({ color : fillcolor.getHex() /*, shading : THREE.NoShading */ }));
 
          bin.position.x = tx(hh.x);
          bin.position.y = wei / 2;
@@ -508,7 +490,11 @@
          if (JSROOT.gStyle.Tooltip)
             bin.name = hh.tip;
          toplevel.add(bin);
-         scene.add(helper);
+
+         helper = new THREE.BoxHelper(bin);
+         helper.material.color.set(0x000000);
+         helper.material.linewidth = 1.0;
+         toplevel.add(helper);
       }
 
       delete local_bins;
@@ -548,21 +534,22 @@
       JSROOT.Painter.add3DInteraction(renderer, scene, camera, toplevel, painter);
    }
 
-   JSROOT.Painter.drawHistogram3D = function(divid, histo, opt, painter) {
+   JSROOT.Painter.drawHistogram3D = function(divid, histo, opt) {
+      // when called, *this* set to painter instance
 
       var logx = false, logy = false, logz = false, gridx = false, gridy = false, gridz = false;
 
-      painter.SetDivId(divid, -1);
-      var pad = painter.root_pad();
+      this.SetDivId(divid, -1);
+      var pad = this.root_pad();
 
       var render_to;
-      if (!painter.svg_pad().empty())
-         render_to = $(painter.svg_pad().node()).hide().parent();
+      if (!this.svg_pad().empty())
+         render_to = $(this.svg_pad().node()).hide().parent();
       else
          render_to = $("#" + divid);
 
-      var opt = histo['fOption'].toLowerCase();
-      // if (opt=="") opt = "colz";
+      if (typeof opt == 'undefined' || opt == "") opt = histo['fOption'];
+      opt = opt.toLowerCase();
 
       if (pad) {
          logx = pad['fLogx'];
@@ -814,16 +801,11 @@
          wei = (optFlag ? maxbin : bins[i].n);
          if (opt.indexOf('box1') != -1) {
             bin = new THREE.Mesh(new THREE.SphereGeometry(0.5 * wei * constx /*, 16, 16 */),
-                  new THREE.MeshPhongMaterial({ color : fillcolor.getHex(), specular : 0x4f4f4f /*, shading: THREE.NoShading */}));
+                  new THREE.MeshPhongMaterial({ color : fillcolor.getHex(), specular : 0x4f4f4f /*, shading: THREE.FlatShading */}));
          } else {
             // create a new mesh with cube geometry
             bin = new THREE.Mesh(new THREE.BoxGeometry(wei * constx, wei * constz, wei * consty),
-                                 new THREE.MeshLambertMaterial({ color : fillcolor.getHex(),
-                                                                 shading : THREE.NoShading }));
-            helper = new THREE.BoxHelper(bin);
-            helper.material.color.set(0x000000);
-            helper.material.linewidth = 1.0;
-            scene.add(helper);
+                                 new THREE.MeshLambertMaterial({ color : fillcolor.getHex() /*, shading : THREE.FlatShading */ }));
          }
          bin.position.x = tx(bins[i].x - (scalex / 2));
          bin.position.y = tz(bins[i].z - (scalez / 2));
@@ -836,6 +818,13 @@
                    + (bins[i].z + scalez).toPrecision(4) + "]<br/>"
                    + "entries: " + bins[i].n.toFixed();
          toplevel.add(bin);
+
+         if (opt.indexOf('box1') == -1) {
+            helper = new THREE.BoxHelper(bin);
+            helper.material.color.set(0x000000);
+            helper.material.linewidth = 1.0;
+            toplevel.add(helper);
+         }
       }
 
       var camera = new THREE.PerspectiveCamera(45, w / h, 1, 4000);
@@ -876,7 +865,7 @@
 
       JSROOT.Painter.add3DInteraction(renderer, scene, camera, toplevel, null);
 
-      return painter.DrawingReady();
+      return this.DrawingReady();
    }
 
    return JSROOT.Painter;

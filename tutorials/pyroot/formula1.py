@@ -1,10 +1,14 @@
-#
-# To see the graphics output of this macro, click begin_html <a href="gif/formula1.gif">here</a>. end_html
-#
+## \file
+## \ingroup tutorial_pyroot
+## TF1 example.
+##
+## \macro_image
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TFormula, TF1
 from ROOT import gROOT, gObjectTable
-
 
 c1 = TCanvas( 'c1', 'Example with Formula', 200, 10, 700, 500 )
 

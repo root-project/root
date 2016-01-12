@@ -9,34 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TDSet                                                                //
-//                                                                      //
-// This class implements a data set to be used for PROOF processing.    //
-// The TDSet defines the class of which objects will be processed,      //
-// the directory in the file where the objects of that type can be      //
-// found and the list of files to be processed. The files can be        //
-// specified as logical file names (LFN's) or as physical file names    //
-// (PFN's). In case of LFN's the resolution to PFN's will be done       //
-// according to the currently active GRID interface.                    //
-// Examples:                                                            //
-//   TDSet treeset("TTree", "AOD");                                     //
-//   treeset.Add("lfn:/alien.cern.ch/alice/prod2002/file1");            //
-//   ...                                                                //
-//   treeset.AddFriend(friendset);                                      //
-//                                                                      //
-// or                                                                   //
-//                                                                      //
-//   TDSet objset("MyEvent", "*", "/events");                           //
-//   objset.Add("root://cms.cern.ch/user/prod2002/hprod_1.root");       //
-//   ...                                                                //
-//   objset.Add(set2003);                                               //
-//                                                                      //
-// Validity of file names will only be checked at processing time       //
-// (typically on the PROOF master server), not at creation time.        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TDSetElement
+\ingroup proofkernel
+Manages an element of a TDSet.
+
+See TDSet.
+*/
 
 #include "TDSet.h"
 
@@ -669,6 +647,35 @@ TObject *TDSetElement::GetAssocObj(Long64_t i, Bool_t isentry)
    return fAssocObjList->At(pos);
 }
 
+
+/** \class TDSet
+\ingroup proofkernel
+
+This class implements a data set to be used for PROOF processing.
+The TDSet defines the class of which objects will be processed,
+the directory in the file where the objects of that type can be
+found and the list of files to be processed. The files can be
+specified as logical file names (LFN's) or as physical file names
+(PFN's). In case of LFN's the resolution to PFN's will be done
+according to the currently active GRID interface.
+Examples:
+  TDSet treeset("TTree", "AOD");
+  treeset.Add("lfn:/alien.cern.ch/alice/prod2002/file1");
+  ...
+  treeset.AddFriend(friendset);
+
+or
+
+  TDSet objset("MyEvent", "*", "/events");
+  objset.Add("root://cms.cern.ch/user/prod2002/hprod_1.root");
+  ...
+  objset.Add(set2003);
+
+Validity of file names will only be checked at processing time
+(typically on the PROOF master server), not at creation time.
+
+*/
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
 
@@ -827,7 +834,7 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
          msd = "";
       }
       Long64_t nent = (elem->GetEntries() > 0 &&
-                       elem->GetEntries() != TChain::kBigNumber) ? elem->GetEntries() : -1;
+                       elem->GetEntries() != TTree::kMaxEntries) ? elem->GetEntries() : -1;
       if (Add(file, tree, dir, 0, nent, ((msd.IsNull()) ? 0 : msd.Data()))) {
          if (elem->HasBeenLookedUp()) {
             // Save lookup information, if any

@@ -104,6 +104,13 @@ if ($?old_rootsys) then
                                  -e "s;$old_rootsys/man:;;g"   \
                                  -e "s;$old_rootsys/man;;g"`
    endif
+   if ($?CMAKE_PREFIX_PATH) then
+      setenv CMAKE_PREFIX_PATH `echo $CMAKE_PREFIX_PATH | \
+                             sed -e "s;:${old_rootsys}:;:;g" \
+                                 -e "s;:${old_rootsys};;g"   \
+                                 -e "s;${old_rootsys}:;;g"   \
+                                 -e "s;${old_rootsys};;g"`
+   endif
 endif
 
 
@@ -154,6 +161,12 @@ if ($?MANPATH) then
    setenv MANPATH `dirname @mandir@`:$MANPATH
 else
    setenv MANPATH `dirname @mandir@`:$default_manpath
+endif
+
+if ($?CMAKE_PREFIX_PATH) then
+   setenv CMAKE_PREFIX_PATH ${ROOTSYS}:$CMAKE_PREFIX_PATH
+else
+   setenv CMAKE_PREFIX_PATH ${ROOTSYS}
 endif
 
 endif # if ("$thisroot" != "")

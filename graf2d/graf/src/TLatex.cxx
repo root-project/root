@@ -22,10 +22,10 @@ const Double_t kPI = TMath::Pi();
 
 ClassImp(TLatex)
 
+/** \class TLatex
+\ingroup BasicGraphics
 
-////////////////////////////////////////////////////////////////////////////////
-/*! \class TLatex
-\brief To draw Mathematical Formula.
+To draw Mathematical Formula.
 
 TLatex's purpose is to write mathematical equations. The syntax is very similar
 to the Latex's one. It provides several functionalities:
@@ -55,7 +55,7 @@ superscript expressions. You may adjust the display of subscripts and
 superscripts by using the two functions `SetIndiceSize(Double_t)`,
 which set relative size of subscripts and superscripts, and
 `SetLimitIndiceSize(Int_t)`, which set limits for text resizing of
-subscipts and superscripts.
+subscripts and superscripts.
 
 Examples:
 
@@ -73,7 +73,7 @@ Begin_Macro(source)
 }
 End_Macro
 
-The best way to put the subscipts and superscripts before the character and not
+The best way to put the subscripts and superscripts before the character and not
 after, is to use an empty character:
 
 Begin_Macro(source)
@@ -157,7 +157,7 @@ as `+` and `>` , are produced by typing the corresponding
 keyboard character. Others are obtained with the commands in the following
 table:
 
-Begin_Macro(source)
+Begin_Macro
 mathsymbols.C
 End_Macro
 
@@ -177,7 +177,7 @@ capitalize the first letter of the command name. Some letters have two
 representations. The name of the second one (the "variation") starts with "var".
 The following table gives the complete list:
 
-Begin_Macro(source)
+Begin_Macro
 greekletters.C
 End_Macro
 
@@ -236,9 +236,9 @@ End_Macro
 The `TText` alignment rules apply to the `TLatex` objects with one exception
 concerning the vertical alignment:
 
-- if the vertical alignment = 1 , subscripts are not taken into account </li>
+- if the vertical alignment = 1 , subscripts are not taken into account
 - if the vertical alignment = 0 , the text is aligned to the box surrounding
-                                  the full text with sub and superscripts</li>
+                                  the full text with sub and superscripts
 
 This is illustrated by the following example:
 
@@ -283,6 +283,7 @@ End_Macro
 
 
 ## <a name="L11"></a> Character Adjustment
+
 The two commands `#kern` and `#lower` enable a better control
 over character placement. The command `#kern[(Float_t)dx]{text}` moves
 the output string horizontally by the fraction `dx` of its length.
@@ -366,14 +367,13 @@ End_Macro
 
 
 ## <a name="L14"></a> Interface to TMathText
+
 The class `TMathText` is a TeX math formulae interpreter. It uses plain
 TeX syntax and uses "\" as control instead of "#". If a piece of text containing
 "\" is given to `TLatex` then `TMathText` is automatically invoked.
 Therefore, as histograms' titles, axis titles, labels etc ... are drawn using
 `TLatex`, the `TMathText` syntax can be used for them also.
-
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -392,7 +392,6 @@ TLatex::TLatex()
    fLimitFactorSize = 3;
    SetLineWidth(2);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor.
@@ -413,14 +412,12 @@ TLatex::TLatex(Double_t x, Double_t y, const char *text)
    SetLineWidth(2);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TLatex::~TLatex()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
@@ -481,7 +478,6 @@ void TLatex::Copy(TObject &obj) const
    TAttLine::Copy(((TAttLine&)obj));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Analyse function.
 
@@ -489,7 +485,6 @@ TLatex::TLatexFormSize TLatex::Anal1(TextSpec_t spec, const Char_t* t, Int_t len
 {
    return Analyse(0,0,spec,t,length);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Analyse and paint the TLatex formula
@@ -503,16 +498,18 @@ TLatex::TLatexFormSize TLatex::Anal1(TextSpec_t spec, const Char_t* t, Int_t len
 ///  for example : if the operator #frac{arg1}{arg2} is found :
 ///  Analyse(arg1) return the size of arg1 (width, up, down)
 ///  Analyse(arg2) return the size of arg2
-///  now, we know the size of #frac{arg1}{arg2}  :
+///  now, we know the size of #frac{arg1}{arg2}:
+/// ~~~ {.cpp}
 ///  width = max(width_arg1, width_arg2)
 ///  up = up_arg1 + down_arg1
 ///  down = up_arg2 + down_arg2
+/// ~~~
 ///  so, when the user wants to paint a fraction at position (x,y),
 ///  the rect used for the formula is : (x,y-up,x+width,y+down)
 ///
 /// return size of zone occupied by the text/formula
-/// t : chain to be analyzed
-/// length : number of chars in t.
+///  - t : chain to be analyzed
+///  - length : number of chars in t.
 
 TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* t, Int_t length)
 {
@@ -592,7 +589,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
    Double_t indiceSize = spec.fSize/fFactorSize;
    if(indiceSize<fOriginSize/TMath::Exp(fLimitFactorSize*TMath::Log(fFactorSize))-0.001f)
       indiceSize = spec.fSize;
-   // substract 0.001 because of rounding errors
+   // subtract 0.001 because of rounding errors
    TextSpec_t specNewSize = spec;
    specNewSize.fSize       = indiceSize;
 
@@ -1895,7 +1892,6 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
    return result;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a copy of this object with the new parameters
 /// And copy object attributes
@@ -1910,7 +1906,6 @@ TLatex *TLatex::DrawLatex(Double_t x, Double_t y, const char *text)
    return newtext;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this TLatex with new coordinates in NDC.
 
@@ -1920,7 +1915,6 @@ TLatex *TLatex::DrawLatexNDC(Double_t x, Double_t y, const char *text)
    newtext->SetNDC();
    return newtext;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a line in a Latex formula
@@ -1941,7 +1935,6 @@ void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSp
    TAttLine::Modify();
    gPad->PaintLine(xx,yy,xx2,yy2);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw an arc of ellipse in a Latex formula (right or left parenthesis)
@@ -1971,7 +1964,6 @@ void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
    }
    gPad->PaintPolyLine(np+1,x,y);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw an arc of ellipse in a Latex formula (right or left parenthesis)
@@ -2004,7 +1996,6 @@ void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
    gPad->PaintPolyLine(np+1,x,y);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint.
 
@@ -2022,7 +2013,6 @@ void TLatex::Paint(Option_t *)
    fX = xsave;
    fY = ysave;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Main drawing function
@@ -2116,7 +2106,6 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
    if (!gPad->IsBatch()) PaintLatex1( x, y, angle, size, text1);
    if (saveps) gVirtualPS = saveps;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Drawing function
@@ -2223,7 +2212,6 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    return 1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if the Latex syntax is correct
 
@@ -2261,8 +2249,8 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    Int_t error = 0  ;
    Bool_t quote1 = kFALSE , quote2 = kFALSE;
 
-   // first find and replace all occurences of "kLeft1" keyword by "kLeft2" keyword,
-   // and all occurences of "kRight" keyword by "}".
+   // first find and replace all occurrences of "kLeft1" keyword by "kLeft2" keyword,
+   // and all occurrences of "kRight" keyword by "}".
    i = 0 ;
    while (i < length) {
       // The string in 'buf' does not need to be null terminated,
@@ -2428,7 +2416,6 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    return error ;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// First parsing of the analyse sequence
 
@@ -2473,7 +2460,6 @@ TLatex::TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const C
    return fs;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return height of current pad in pixels
 
@@ -2486,7 +2472,6 @@ Double_t TLatex::GetHeight() const
    else
       return h;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return size of the formula along X in pad coordinates
@@ -2518,7 +2503,6 @@ Double_t TLatex::GetXsize()
    delete[] fTabSize;
    return TMath::Abs(gPad->AbsPixeltoX(Int_t(fs.Width())) - gPad->AbsPixeltoX(0));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return text size in pixels
@@ -2576,7 +2560,6 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return size of the formula along Y in pad coordinates
 
@@ -2608,7 +2591,6 @@ Double_t TLatex::GetYsize()
    return TMath::Abs(gPad->AbsPixeltoY(Int_t(fs.Height())) - gPad->AbsPixeltoY(0));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read fs in fTabSize
 
@@ -2618,7 +2600,6 @@ TLatex::TLatexFormSize TLatex::Readfs()
    TLatexFormSize result(fTabSize[fPos].fWidth,fTabSize[fPos].fOver,fTabSize[fPos].fUnder);
    return result;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save fs values in array fTabSize
@@ -2641,7 +2622,6 @@ void TLatex::Savefs(TLatex::TLatexFormSize *fs)
       fTabSize = temp;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
@@ -2669,7 +2649,6 @@ void TLatex::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   tex->Draw();"<<std::endl;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set relative size of subscripts and superscripts
 
@@ -2678,9 +2657,8 @@ void TLatex::SetIndiceSize(Double_t factorSize)
    fFactorSize = factorSize;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Set limit for text resizing of subscipts and superscripts
+/// Set limit for text resizing of subscripts and superscripts
 
 void TLatex::SetLimitIndiceSize(Int_t limitFactorSize)
 {

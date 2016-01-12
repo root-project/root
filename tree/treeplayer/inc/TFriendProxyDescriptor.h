@@ -21,6 +21,7 @@
 
 
 namespace ROOT {
+namespace Internal {
 
    class TFriendProxyDescriptor : public TNamed {
 
@@ -48,6 +49,7 @@ namespace ROOT {
 
       ClassDef(TFriendProxyDescriptor,0); // Describe a branch from a TTreeFriend.
    };
+}
 }
 
 #endif

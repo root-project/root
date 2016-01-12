@@ -91,5 +91,11 @@ void fitNormSum()
       if (!TMath::AreEqualAbs(pref[i], f_sum->GetParameter(i), f_sum->GetParError(i)*10.) )
          Error("testFitNormSum","Difference found in fitted %s - difference is %g sigma",f_sum->GetParName(i), (f_sum->GetParameter(i)-pref[i])/f_sum->GetParError(i));
    }
-   
+
+   gStyle->SetOptStat(0);
+   // add parameters
+   auto t1 = new TLatex(-2.5, 300000, TString::Format("%s = %8.0f #pm %4.0f", "NSignal",f_sum->GetParameter(0), f_sum->GetParError(0) ) );
+   auto t2 = new TLatex(-2.5, 270000, TString::Format("%s = %8.0f #pm %4.0f", "Nbackgr",f_sum->GetParameter(1), f_sum->GetParError(1) ) );
+   t1->Draw();
+   t2->Draw();
 }

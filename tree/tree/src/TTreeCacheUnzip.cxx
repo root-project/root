@@ -45,6 +45,7 @@ where bufferSize must be passed in bytes.
 #include "TBranch.h"
 #include "TFile.h"
 #include "TEventList.h"
+#include "TMutex.h"
 #include "TVirtualMutex.h"
 #include "TThread.h"
 #include "TCondition.h"

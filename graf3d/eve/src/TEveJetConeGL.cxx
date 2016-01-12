@@ -18,13 +18,10 @@
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
-//==============================================================================
-// TEveJetConeGL
-//==============================================================================
-
-//______________________________________________________________________________
-// OpenGL renderer class for TEveJetCone.
-//
+/** \class TEveJetConeGL
+\ingroup TEve
+OpenGL renderer class for TEveJetCone.
+*/
 
 ClassImp(TEveJetConeGL);
 
@@ -172,14 +169,10 @@ void TEveJetConeGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
    glPopAttrib();
 }
 
-
-//==============================================================================
-// TEveJetConeProjectedGL
-//==============================================================================
-
-//______________________________________________________________________________
-// OpenGL renderer class for TEveJetConeProjected.
-//
+/** \class TEveJetConeProjectedGL
+\ingroup TEve
+OpenGL renderer class for TEveJetConeProjected.
+*/
 
 ClassImp(TEveJetConeProjectedGL);
 
@@ -335,7 +328,6 @@ void TEveJetConeProjectedGL::Draw(TGLRnrCtx& rnrCtx) const
       TGLObject::Draw(rnrCtx);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Render with OpenGL.

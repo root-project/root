@@ -12,58 +12,6 @@
 #ifndef ROOT_TGFALFile
 #define ROOT_TGFALFile
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFALFile                                                            //
-//                                                                      //
-// A TGFALFile is like a normal TFile except that it reads and writes   //
-// its data via the underlaying Grid access mechanism.                  //
-// TGFALFile file names are either a logical file name, a guid, an      //
-// SURL or a TURL, like:                                                //
-//                                                                      //
-//    gfal:/lfn/user/r/rdm/galice.root                                  //
-//                                                                      //
-// Grid storage interactions today require using several existing       //
-// software components:                                                 //
-//  - The replica catalog services to locate valid replicas of          //
-//    files.                                                            //
-//  - The SRM software to ensure:                                       //
-//     - files  exist on disk (they are recalled from mass              //
-//       storage if necessary) or                                       //
-//     - space is allocated on disk for new files (they are possibly    //
-//       migrated to mass storage later)                                //
-//  - A file access mechanism to access files from the storage          //
-//    system on the worker node.                                        //
-//                                                                      //
-// The GFAL library hides these interactions and presents a Posix       //
-// interface for the I/O operations. The currently supported protocols  //
-// are: file for local access, dcap, gsidcap and kdcap (dCache access   //
-// protocol) and rfio (CASTOR access protocol).                         //
-//                                                                      //
-// File naming convention:                                              //
-// A file name can be a Logical File Name (LFN), a Grid Unique          //
-// IDentifier (GUID), a file replica (SURL) or a Transport file         //
-// name (TURL):                                                         //
-//                                                                      //
-//     an LFN starts with lfn:                                          //
-//        for example lfn:baud/testgfal15                               //
-//                                                                      //
-//     a GUID starts with guid:                                         //
-//        for example guid:2cd59291-7ae7-4778-af6d-b1f423719441         //
-//                                                                      //
-//     an SURL starts with srm://                                       //
-//         for example srm://wacdr002d.cern.ch:8443/castor/             //
-//                    cern.ch/user/b/baud/testgfal15                    //
-//                                                                      //
-//      a TURL starts with a protocol name:                             //
-//          for example rfio:////castor/cern.ch/user/b/baud/testgfal15  //
-//                                                                      //
-// Note that for the TGFALFile plugin to work, all these pathnames      //
-// should be prepended by gfal:.                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TFile
 #include "TFile.h"
 #endif
@@ -75,8 +23,8 @@
 class TGFALFile : public TFile {
 
 private:
-   Bool_t        fStatCached;  //! (transient) is file status cached?
-   struct stat64 fStatBuffer;  //! (transient) Cached file status buffer (for performance)
+   Bool_t        fStatCached;  ///<! (transient) is file status cached?
+   struct stat64 fStatBuffer;  ///<! (transient) Cached file status buffer (for performance)
 
    TGFALFile() : fStatCached(kFALSE) { }
 

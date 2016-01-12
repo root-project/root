@@ -9,17 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//________________________________________________________________________
-//
-//  This is hierarhical structure, which is created when data is written
-//  by TBufferSQL2. It contains data all structurual information such:
-//  version of written class, data memeber types of that class, value for
-//  each data memeber and so on.
-//  Such structure in some sense similar to XML node and subnodes structure
-//  Once it created, it converted to SQL statements, which are submitted
-//  to database server.
-//
-//________________________________________________________________________
+/**
+\class TSQLStructure
+\ingroup IO
+This is hierarhical structure, which is created when data is written
+by TBufferSQL2. It contains data all structurual information such:
+version of written class, data memeber types of that class, value for
+each data memeber and so on.
+Such structure in some sense similar to XML node and subnodes structure
+Once it created, it converted to SQL statements, which are submitted
+to database server.
+*/
 
 #include "TSQLStructure.h"
 
@@ -156,6 +156,10 @@ Long64_t sqlio::atol64(const char* value)
    return res;
 }
 
+/**
+\class TSQLColumnData
+\ingroup IO
+*/
 
 ClassImp(TSQLColumnData)
 

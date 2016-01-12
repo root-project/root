@@ -21,8 +21,9 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
- 
+
 #include "TMVA/TNeuronInputAbs.h"
 
-ClassImp(TMVA::TNeuronInputAbs)
+#include "Rtypes.h"
 
+ClassImp(TMVA::TNeuronInputAbs)

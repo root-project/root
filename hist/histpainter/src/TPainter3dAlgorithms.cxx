@@ -13,6 +13,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 /*! \class TPainter3dAlgorithms
+\ingroup Histpainter
 \brief The Legos and Surfaces painter class.
 
 

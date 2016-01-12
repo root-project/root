@@ -15,6 +15,6 @@ include_directories(${FREETYPE_INCLUDE_DIRS})
 ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx LIBRARIES ${FREETYPE_LIBRARIES} ${ZLIB_LIBRARY} mathtext DEPENDENCIES Hist Matrix MathCore RIO)
 
 if(builtin_freetype)
-  add_dependencies(${libname} FREETYPE)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(${libname} FREETYPE)
 endif()
 ROOT_INSTALL_HEADERS()

@@ -9,14 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Global variables class (global variables are obtained from CINT).    //
-// This class describes the attributes of a global variable.            //
-// The TROOT class contains a list of all currently defined global      //
-// variables (accessible via TROOT::GetListOfGlobals()).                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGlobal
+Global variables class (global variables are obtained from CINT).
+This class describes the attributes of a global variable.
+The TROOT class contains a list of all currently defined global
+variables (accessible via TROOT::GetListOfGlobals()).
+*/
 
 #include "TGlobal.h"
 #include "TInterpreter.h"
@@ -172,7 +170,7 @@ Bool_t TGlobal::Update(DataMemberInfo_t *info)
 
 TList& TGlobalMappedFunction::GetEarlyRegisteredGlobals()
 {
-   // Used to storeTGlobalMappedFunctions from other libs, before gROOT was inistialized
+   // Used to storeTGlobalMappedFunctions from other libs, before gROOT was initialized
    static TList fEarlyRegisteredGlobals;
    return fEarlyRegisteredGlobals;
 }

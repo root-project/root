@@ -151,8 +151,46 @@ namespace PyROOT {
       Py_ssize_t fArraySize;
    };
 
+// smart pointer executors
+   class TCppObjectBySmartPtrExecutor : public TExecutor {
+   public:
+      TCppObjectBySmartPtrExecutor( Cppyy::TCppType_t klass, Cppyy::TCppType_t rawPtrType,
+         Cppyy::TCppMethod_t deref ) : fClass( klass ), fRawPtrType( rawPtrType ), fDereferencer( deref ) {}
+
+      virtual PyObject* Execute(
+         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* );
+
+   protected:
+      Cppyy::TCppType_t   fClass;
+      Cppyy::TCppType_t   fRawPtrType;
+      Cppyy::TCppMethod_t fDereferencer;
+   };
+
+   class TCppObjectBySmartPtrPtrExecutor : public TCppObjectBySmartPtrExecutor {
+   public:
+      using TCppObjectBySmartPtrExecutor::TCppObjectBySmartPtrExecutor;
+
+      virtual PyObject* Execute(
+         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* );
+   };
+
+   class TCppObjectBySmartPtrRefExecutor : public TRefExecutor {
+   public:
+     TCppObjectBySmartPtrRefExecutor( Cppyy::TCppType_t klass, Cppyy::TCppType_t rawPtrType,
+        Cppyy::TCppMethod_t deref ) : fClass( klass ), fRawPtrType( rawPtrType ), fDereferencer( deref ) {}
+
+      virtual PyObject* Execute(
+         Cppyy::TCppMethod_t, Cppyy::TCppObject_t,TCallContext* );
+
+   protected:
+      Cppyy::TCppType_t fClass;
+      Cppyy::TCppType_t fRawPtrType;
+      Cppyy::TCppMethod_t fDereferencer;
+   };
+
 // create executor from fully qualified type
-   TExecutor* CreateExecutor( const std::string& fullType );
+   TExecutor* CreateExecutor( const std::string& fullType,
+                              Bool_t manage_smart_ptr = kTRUE );
 
 } // namespace PyROOT
 

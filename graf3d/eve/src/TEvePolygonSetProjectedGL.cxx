@@ -18,14 +18,10 @@
 #include "TGLPhysicalShape.h"
 #include "TGLIncludes.h"
 
-//==============================================================================
-//==============================================================================
-// TEvePolygonSetProjectedGL
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// GL-renderer for TEvePolygonSetProjected class.
+/** \class TEvePolygonSetProjectedGL
+\ingroup TEve
+GL-renderer for TEvePolygonSetProjected class.
+*/
 
 ClassImp(TEvePolygonSetProjectedGL);
 
@@ -37,8 +33,6 @@ TEvePolygonSetProjectedGL::TEvePolygonSetProjectedGL() : TGLObject()
    // fDLCache = kFALSE; // Disable DL.
    fMultiColor = kTRUE; // Potentially false, reset in DirectDraw().
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
@@ -56,8 +50,6 @@ void TEvePolygonSetProjectedGL::SetBBox()
 {
    SetAxisAlignedBBox(fM->AssertBBox());
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw function for TEvePolygonSetProjectedGL.

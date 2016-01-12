@@ -54,7 +54,8 @@ if(NOT ROOT_minuit2_FOUND)
                    fit/minuit2FitBench2D.C fit/minuit2FitBench.C
                    fit/minuit2FitBench.C fit/minuit2GausFit.C
                    fit/minuit2GausFit.C fit/NumericalMinimization.C
-                   fit/combinedFit.C fit/TestBinomial.C)
+                   fit/combinedFit.C fit/TestBinomial.C
+                   fit/fitNormSum.C)
 endif()
 
 if(NOT ROOT_roofit_FOUND)
@@ -118,7 +119,7 @@ endif()
 #---These ones requires a display to run-----------------------------
 set(gui_veto fit/fitpanel_playback.C
              cocoa/*.C
-             geom/*.C
+             geom/building.C geom/cheongwadae.C geom/geom*.C geom/lego.C geom/robot.C geom/south_gate.C geom/station*.C geom/tank.C
              gl/*.C
              gui/*.C
              hist/exec1.C
@@ -162,6 +163,7 @@ set(extra_veto
   r/rootlogon.C)
 
 set(all_veto hsimple.C
+             geom/geometry.C
              ${extra_veto}
              ${gui_veto}
              ${minuit2_veto}
@@ -230,9 +232,13 @@ set(benchmarks-depends tutorial-hsimple
                        tutorial-hist-h1draw
                        tutorial-geom-na49view
                        tutorial-tree-ntuple1
+                       tutorial-tree-spider
                        tutorial-io-hadd
                        tutorial-io-loopdir
                        tutorial-io-copyFiles)
+set(geom-na49view-depends tutorial-geom-geometry)
+set(multicore-mt102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mt101_fillNtuples)
+set(multicore-mp102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mp101_fillNtuples)
 
 #--many roostats tutorials depending on having creating the file first with histfactory
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
@@ -282,7 +288,7 @@ foreach(t ${tutorials})
 
   ROOT_ADD_TEST(tutorial-${tname}
                 COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
-                PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
+                PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${tname}-depends}
                 ENVIRONMENT ${ROOT_environ}
@@ -331,7 +337,7 @@ if(ROOT_python_FOUND)
 
     ROOT_ADD_TEST(tutorial-${tname}
                 COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t} -b
-                PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
+                PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS tutorial
                 DEPENDS ${${tname}-depends}
                 ENVIRONMENT ${ROOT_environ})

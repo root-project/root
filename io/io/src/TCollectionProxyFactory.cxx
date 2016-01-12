@@ -9,23 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGenCollectionProxy
-//
-// Proxy around an arbitrary container, which implements basic
-// functionality and iteration. The purpose of this implementation
-// is to shield any generated dictionary implementation from the
-// underlying streamer/proxy implementation and only expose
-// the creation functions.
-//
-// In particular this is used to implement splitting and abstract
-// element access of any container. Access to compiled code is necessary
-// to implement the abstract iteration sequence and functionality like
-// size(), clear(), resize(). resize() may be a void operation.
-//
-//////////////////////////////////////////////////////////////////////////
-
 #include "TError.h"
 #include "TClassEdit.h"
 #include "TCollectionProxyFactory.h"

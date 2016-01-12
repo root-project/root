@@ -9,9 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-//
-// Utility class used internally by TDatabasePDG
+/** \class  TParticleClassPDG
+    \ingroup eg
+
+Utility class used internally by TDatabasePDG
+*/
 
 #include "TDecayChannel.h"
 #include "TParticlePDG.h"

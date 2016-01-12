@@ -22,5 +22,6 @@
 
 #include "TMVA/TActivation.h"
 
-ClassImp(TMVA::TActivation)
+#include "Rtypes.h"
 
+ClassImp(TMVA::TActivation)

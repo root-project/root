@@ -16,6 +16,7 @@
 ClassImp(TF12)
 
 /** \class TF12
+    \ingroup Hist
  A projection of a TF2 along X or Y
 
 It has the same behaviour as a TF1

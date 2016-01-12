@@ -9,37 +9,38 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THDFSFile                                                            //
-//                                                                      //
-// A THDFSFile is like a normal TFile except that it reads and writes   //
-// its data via the HDFS protocols.  For more information on HDFS, see  //
-// http://hadoop.apache.org/hdfs/.                                      //
-// This implementation interfaces with libhdfs, which is a JNI-based    //
-// library (i.e., it will start a Java JVM internally the first time    //
-// it is called).  At a minimum, you will need your environment's       //
-// $CLASSPATH variable set up properly to use.  Here's an example of    //
-// one way to properly set your classpath, assuming you use the OSG     //
-// distribution of Hadoop:                                              //
-//    $ source $HADOOP_CONF_DIR/hadoop-env.sh                           //
-//    $ export CLASSPATH=$HADOOP_CLASSPATH                              //
-// Additionally, you will need a valid libjvm in your $LD_LIBRARY_PATH  //
-// This is usually found in either:                                     //
-//    $JAVA_HOME/jre/lib/i386/server                                    //
-// or                                                                   //
-//    $JAVA_HOME/jre/lib/amd64/server                                   //
-// This file can only be used if hdfs support is compiled into ROOT.    //
-//                                                                      //
-// The HDFS URLs should be of the form:                                 //
-//    hdfs:///path/to/file/in/HDFS.root                                 //
-// Any host or port information will be ignored; this is taken from the //
-// node's HDFS configuration files.                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class THDFSFile
+\ingroup IO
+
+Reads and writes its data via the HDFS protocols
+
+A THDFSFile is like a normal TFile except that it reads and writes
+its data via the HDFS protocols. For more information on HDFS, see
+http://hadoop.apache.org/hdfs/.
+This implementation interfaces with libhdfs, which is a JNI-based
+library (i.e., it will start a Java JVM internally the first time
+it is called). At a minimum, you will need your environment's
+$CLASSPATH variable set up properly to use. Here's an example of
+one way to properly set your classpath, assuming you use the OSG
+distribution of Hadoop:
+    $ source $HADOOP_CONF_DIR/hadoop-env.sh
+    $ export CLASSPATH=$HADOOP_CLASSPATH
+Additionally, you will need a valid libjvm in your $LD_LIBRARY_PATH
+This is usually found in either:
+    $JAVA_HOME/jre/lib/i386/server
+or
+    $JAVA_HOME/jre/lib/amd64/server
+This file can only be used if hdfs support is compiled into ROOT.
+The HDFS URLs should be of the form:
+    hdfs:///path/to/file/in/HDFS.root
+Any host or port information will be ignored; this is taken from the
+node's HDFS configuration files.
+*/
 
 #include "syslog.h"
 #include "assert.h"
+#include "stdlib.h"
 
 #include "THDFSFile.h"
 #include "TError.h"
@@ -93,8 +94,7 @@ THDFSFile::THDFSFile(const char *path, Option_t *option,
    if (has_authn) {
       UserGroup_t *ugi = gSystem->GetUserInfo(0);
       const char *user = (ugi->fUser).Data();
-      const char * groups[1] = {(ugi->fGroup.Data())};
-      fFS = hdfsConnectAsUser("default", 0, user, groups, 1);
+      fFS = hdfsConnectAsUser("default", 0, user);
       delete ugi;
    } else {
       fFS = hdfsConnect("default", 0);
@@ -167,7 +167,7 @@ THDFSFile::~THDFSFile()
 Int_t THDFSFile::SysRead(Int_t, void *buf, Int_t len)
 {
    TRACE("READ")
-   tSize num_read = hdfsPread(fFS, (hdfsFile)fHdfsFH, fSysOffset, buf, len);
+   tSize num_read = hdfsPread((hdfsFS)fFS, (hdfsFile)fHdfsFH, fSysOffset, buf, len);
    fSysOffset += len;
    if (num_read < 0) {
       gSystem->SetErrorStr(strerror(errno));
@@ -192,7 +192,7 @@ Long64_t THDFSFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
          return -1;
       }
       if (fSize == -1) {
-         hdfsFileInfo *info = hdfsGetPathInfo(fFS, fPath);
+         hdfsFileInfo *info = hdfsGetPathInfo((hdfsFS)fFS, fPath);
          if (info != 0) {
             fSize = info->mSize;
             free(info);
@@ -224,7 +224,7 @@ Int_t THDFSFile::SysOpen(const char * pathname, Int_t flags, UInt_t)
       SysError("THDFSFile", "Unable to allocate memory for path.");
    }
    strlcpy(fPath, file,path_size+1);
-   if ((fHdfsFH = hdfsOpenFile(fFS, fPath, flags, 0, 0, 0)) == 0) {
+   if ((fHdfsFH = hdfsOpenFile((hdfsFS)fFS, fPath, flags, 0, 0, 0)) == 0) {
       SysError("THDFSFile", "Unable to open file %s in HDFS", pathname);
       return -1;
    }
@@ -236,7 +236,7 @@ Int_t THDFSFile::SysOpen(const char * pathname, Int_t flags, UInt_t)
 
 Int_t THDFSFile::SysClose(Int_t)
 {
-   int result = hdfsCloseFile(fFS, (hdfsFile)fHdfsFH);
+   int result = hdfsCloseFile((hdfsFS)fFS, (hdfsFile)fHdfsFH);
    fFS = 0;
    fHdfsFH = 0;
    return result;
@@ -258,7 +258,7 @@ Int_t THDFSFile::SysStat(Int_t, Long_t* id, Long64_t* size, Long_t* flags, Long_
 {
    *id = ::Hash(fPath);
 
-   hdfsFileInfo *info = hdfsGetPathInfo(fFS, fPath);
+   hdfsFileInfo *info = hdfsGetPathInfo((hdfsFS)fFS, fPath);
    if (info != 0) {
       fSize = info->mSize;
       *size = fSize;
@@ -293,6 +293,14 @@ void THDFSFile::ResetErrno() const
 }
 
 
+/**
+\class THDFSSystem
+\ingroup IO
+
+Directory handler for HDFS (THDFSFile).
+*/
+
+
 ClassImp(THDFSSystem)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -306,8 +314,7 @@ THDFSSystem::THDFSSystem() : TSystem("-hdfs", "HDFS Helper System")
    if (has_authn) {
       UserGroup_t *ugi = gSystem->GetUserInfo(0);
       const char *user = (ugi->fUser).Data();
-      const char * groups[1] = {(ugi->fGroup.Data())};
-      fFH = hdfsConnectAsUser("default", 0, user, groups, 1);
+      fFH = hdfsConnectAsUser("default", 0, user);
       delete ugi;
    } else {
       fFH = hdfsConnect("default", 0);
@@ -340,7 +347,7 @@ Int_t THDFSSystem::MakeDirectory(const char * path)
    }
 
    if (R__HDFS_ALLOW_CHANGES == kTRUE) {
-      return hdfsCreateDirectory(fFH, path);
+      return hdfsCreateDirectory((hdfsFS)fFH, path);
    } else {
       return -1;
    }
@@ -367,14 +374,14 @@ void *THDFSSystem::OpenDirectory(const char * path)
 */
 
    hdfsFileInfo * dir = 0;
-   if ((dir = hdfsGetPathInfo(fFH, path)) == 0) {
+   if ((dir = hdfsGetPathInfo((hdfsFS)fFH, path)) == 0) {
       return 0;
    }
    if (dir->mKind != kObjectKindDirectory) {
       return 0;
    }
 
-   fDirp = (void *)hdfsListDirectory(fFH, path, &fDirEntries);
+   fDirp = (void *)hdfsListDirectory((hdfsFS)fFH, path, &fDirEntries);
    fDirCtr = 0;
 
    fUrlp = new TUrl[fDirEntries];
@@ -450,7 +457,7 @@ Int_t THDFSSystem::GetPathInfo(const char *path, FileStat_t &buf)
       Error("GetPathInfo", "No filesystem handle (should never happen)");
       return 1;
    }
-   hdfsFileInfo *fileInfo = hdfsGetPathInfo(fFH, path);
+   hdfsFileInfo *fileInfo = hdfsGetPathInfo((hdfsFS)fFH, path);
 
    if (fileInfo == 0)
       return 1;
@@ -482,7 +489,7 @@ Bool_t THDFSSystem::AccessPathName(const char *path, EAccessMode mode)
       return kTRUE;
    }
 
-   if (hdfsExists(fFH, path) == 0)
+   if (hdfsExists((hdfsFS)fFH, path) == 0)
       return kFALSE;
    else
       return kTRUE;
@@ -500,7 +507,7 @@ Int_t THDFSSystem::Unlink(const char * path)
    }
 
    if (R__HDFS_ALLOW_CHANGES == kTRUE) {
-      return hdfsDelete(fFH, path);
+      return hdfsDelete((hdfsFS)fFH, path, 1);
    } else {
       return -1;
    }

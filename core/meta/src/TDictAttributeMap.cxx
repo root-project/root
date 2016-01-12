@@ -9,14 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  The ROOT oject has a list of properties which are stored and        //
-//  retrieved using TDictAttributeMap.                                  //
-//  TDictAttributeMap maps the property keys of the object to their     //
-//  values.                                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TDictAttributeMap
+The ROOT object has a list of properties which are stored and
+retrieved using TDictAttributeMap.
+TDictAttributeMap maps the property keys of the object to their
+values.
+*/
 
 #include "TDictAttributeMap.h"
 #include "THashTable.h"

@@ -9,22 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofPlayer                                                         //
-//                                                                      //
-// This internal class and its subclasses steer the processing in PROOF.//
-// Instances of the TProofPlayer class are created on the worker nodes  //
-// per session and do the processing.                                   //
-// Instances of its subclass - TProofPlayerRemote are created per each  //
-// query on the master(s) and on the client. On the master(s),          //
-// TProofPlayerRemote coordinate processing, check the dataset, create  //
-// the packetizer and take care of merging the results of the workers.  //
-// The instance on the client collects information on the input         //
-// (dataset and selector), it invokes the Begin() method and finalizes  //
-// the query by calling Terminate().                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofPlayer
+\ingroup proofkernel
+
+Internal class steering processing in PROOF.
+Instances of the TProofPlayer class are created on the worker nodes
+per session and do the processing.
+Instances of its subclass - TProofPlayerRemote are created per each
+query on the master(s) and on the client. On the master(s),
+TProofPlayerRemote coordinate processing, check the dataset, create
+the packetizer and take care of merging the results of the workers.
+The instance on the client collects information on the input
+(dataset and selector), it invokes the Begin() method and finalizes
+the query by calling Terminate().
+
+*/
 
 #include "TProofDraw.h"
 #include "TProofPlayer.h"
@@ -71,7 +70,6 @@
 #include "TMD5.h"
 #include "TMethodCall.h"
 #include "TObjArray.h"
-#include "TMutex.h"
 #include "TH1.h"
 #include "TVirtualMonitoring.h"
 #include "TParameter.h"
@@ -232,7 +230,7 @@ TProofPlayer::TProofPlayer(TProof *)
      fEvIter(0), fSelStatus(0),
      fTotalEvents(0), fReadBytesRun(0), fReadCallsRun(0), fProcessedRun(0),
      fQueryResults(0), fQuery(0), fPreviousQuery(0), fDrawQueries(0),
-     fMaxDrawQueries(1), fStopTimer(0), fStopTimerMtx(0), fDispatchTimer(0),
+     fMaxDrawQueries(1), fStopTimer(0), fDispatchTimer(0),
      fProcTimeTimer(0), fProcTime(0),
      fOutputFile(0),
      fSaveMemThreshold(-1), fSavePartialResults(kFALSE), fSaveResultsPerPacket(kFALSE)
@@ -325,8 +323,7 @@ void TProofPlayer::SetDispatchTimer(Bool_t on)
 
 void TProofPlayer::SetStopTimer(Bool_t on, Bool_t abort, Int_t timeout)
 {
-   fStopTimerMtx = (fStopTimerMtx) ? fStopTimerMtx : new TMutex(kTRUE);
-   R__LOCKGUARD(fStopTimerMtx);
+   std::lock_guard<std::mutex> lock(fStopTimerMtx);
 
    // Clean-up the timer
    SafeDelete(fStopTimer);
@@ -971,23 +968,24 @@ Int_t TProofPlayer::AssertSelector(const char *selector_file)
 {
    if (selector_file && strlen(selector_file)) {
       if (fCreateSelObj) SafeDelete(fSelector);
+
       // Get selector files from cache
       if (gProofServ) {
          gProofServ->GetCacheLock()->Lock();
-         gProofServ->CopyFromCache(selector_file, 1);
+         TString ocwd = gSystem->WorkingDirectory();
+         gSystem->ChangeDirectory(gProofServ->GetCacheDir());
+
+         fSelector = TSelector::GetSelector(selector_file);
+
+         gSystem->ChangeDirectory(ocwd);
+         gProofServ->GetCacheLock()->Unlock();
+
+         if (!fSelector) {
+            Error("AssertSelector", "cannot load: %s", selector_file );
+           return -1;
+         }
       }
 
-      if (!(fSelector = TSelector::GetSelector(selector_file))) {
-         Error("AssertSelector", "cannot load: %s", selector_file );
-         gProofServ->GetCacheLock()->Unlock();
-         return -1;
-      }
-
-      // Save binaries to cache, if any
-      if (gProofServ) {
-         gProofServ->CopyToCache(selector_file, 1);
-         gProofServ->GetCacheLock()->Unlock();
-      }
       fCreateSelObj = kTRUE;
       Info("AssertSelector", "Processing via filename");
    } else if (!fSelector) {

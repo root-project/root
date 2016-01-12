@@ -49,11 +49,11 @@
 
 TEveManager* gEve = 0;
 
-//______________________________________________________________________________
-// TEveManager
-//
-// Central aplication manager for Eve.
-// Manages elements, GUI, GL scenes and GL viewers.
+/** \class TEveManager
+\ingroup TEve
+Central application manager for Eve.
+Manages elements, GUI, GL scenes and GL viewers.
+*/
 
 ClassImp(TEveManager);
 
@@ -184,9 +184,6 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
       EditElement(GetDefaultViewer());
    }
 
-   /**************************************************************************/
-   /**************************************************************************/
-
    gSystem->ProcessEvents();
 }
 
@@ -249,8 +246,6 @@ void TEveManager::ClearOrphanage()
    fUseOrphanage = old_state;
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the main window, i.e. EVE-browser.
 
@@ -291,8 +286,6 @@ TGStatusBar* TEveManager::GetStatusBar() const
 {
    return fBrowser->GetStatusBar();
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a new canvas tab.
@@ -350,10 +343,6 @@ TEveScene* TEveManager::SpawnNewScene(const char* name, const char* title)
    return s;
 }
 
-/******************************************************************************/
-// Macro management
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find macro in fMacroFolder by name.
 
@@ -361,10 +350,6 @@ TMacro* TEveManager::GetMacro(const char* name) const
 {
    return dynamic_cast<TMacro*>(fMacroFolder->FindObject(name));
 }
-
-/******************************************************************************/
-// Editor
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Show element in default editor.
@@ -375,10 +360,6 @@ void TEveManager::EditElement(TEveElement* element)
 
    GetEditor()->DisplayElement(element);
 }
-
-/******************************************************************************/
-// 3D TEvePad management
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register a request for 3D redraw.
@@ -452,8 +433,6 @@ void TEveManager::FullRedraw3D(Bool_t resetCameras, Bool_t dropLogicals)
    fViewers->RepaintAllViewers(resetCameras, dropLogicals);
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Element was changed, perform framework side action.
 /// Called from TEveElement::ElementChanged().
@@ -497,11 +476,6 @@ void TEveManager::ElementStamped(TEveElement* element)
    }
 }
 
-
-/******************************************************************************/
-// GUI interface
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get default list-tree widget.
 
@@ -535,8 +509,6 @@ void TEveManager::RemoveFromListTree(TEveElement* element,
 
    element->RemoveFromListTree(lt, 0);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a new event and make it the current event.
@@ -579,8 +551,6 @@ void TEveManager::AddGlobalElement(TEveElement* element, TEveElement* parent)
    parent->AddElement(element);
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove element from parent.
 
@@ -612,8 +582,6 @@ void TEveManager::PreDeleteElement(TEveElement* element)
       fHighlight->RemoveImpliedSelected(element);
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Select an element.
 /// Now it only calls EditElement() - should also update selection state.
@@ -638,21 +606,16 @@ Bool_t TEveManager::ElementPaste(TEveElement* element)
    return kFALSE;
 }
 
-
-//==============================================================================
-// VizDB interface
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Insert a new visualization-parameter database entry. Returns
 /// true if the element is inserted successfully.
 /// If entry with the same key already exists the behaviour depends on the
 /// 'replace' flag:
-///   true  - The old model is deleted and new one is inserted (default).
-///           Clients of the old model are transferred to the new one and
-///           if 'update' flag is true (default), the new model's parameters
-///           are assigned to all clients.
-///   false - The old model is kept, false is returned.
+///  - true  - The old model is deleted and new one is inserted (default).
+///            Clients of the old model are transferred to the new one and
+///            if 'update' flag is true (default), the new model's parameters
+///            are assigned to all clients.
+///  - false - The old model is kept, false is returned.
 ///
 /// If insert is successful, the ownership of the model-element is
 /// transferred to the manager.
@@ -793,10 +756,6 @@ void TEveManager::SaveVizDB(const TString& filename)
    out.close();
 }
 
-//==============================================================================
-// GeoManager, geometry-alias registration
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get geometry with given filename.
 /// This is cached internally so the second time this function is
@@ -892,8 +851,6 @@ void TEveManager::RegisterGeometryAlias(const TString& alias, const TString& fil
    fGeometryAliases->Add(new TObjString(alias), new TObjString(filename));
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the text in the right side of browser's status bar.
 
@@ -930,11 +887,6 @@ void TEveManager::CloseEveWindow()
       gApplication->Terminate();
    }
 }
-
-
-/******************************************************************************/
-// Static initialization.
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If global TEveManager* gEve is not set initialize it.
@@ -981,14 +933,10 @@ void TEveManager::Terminate()
    gEve = 0;
 }
 
-//==============================================================================
-//==============================================================================
-// TEveManager::TExceptionHandler
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Exception handler for Eve exceptions.
+/** \class TEveManager::TExceptionHandler
+\ingroup TEve
+Exception handler for Eve exceptions.
+*/
 
 ClassImp(TEveManager::TExceptionHandler);
 
