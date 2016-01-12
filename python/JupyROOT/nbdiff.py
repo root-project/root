@@ -34,32 +34,18 @@ def compareNotebooks(inNBName,outNBName):
     if areDifferent: print "\n"
     return areDifferent
 
-class tmpDirCreator:
-    def __init__(self,nbName):
-       tmpDirName = nbName.replace(nbExtension,"") + "_profileDir"
-       self.dirname = tmpDirName
-    def __enter__(self):
-       if not os.path.exists(self.dirname):
-           print "[tmpDirCreator] Creating tmp directory %s" %self.dirname
-           os.makedirs(self.dirname)
-       return self
-    def __exit__(self, type, value, traceback):
-       if os.path.exists(self.dirname):
-           shutil.rmtree(self.dirname)
-           print "[tmpDirCreator] Deleting tmp directory %s" %self.dirname
-
 def addEtcToEnvironment(inNBDirName):
     """Add the etc directory of root to the environment under the name of
     JUPYTER_PATH in order to pick up the kernel specs.
     """
-    os.environ["JUPYTER_PATH"] =  os.path.join(inNBDirName, "notebook")
+    os.environ["JUPYTER_PATH"] =  os.path.join(inNBDirName, "ipythondir/kernels")
+    os.environ["IPYTHONDIR"] = os.path.join(inNBDirName, "ipythondir")
 
 def canReproduceNotebook(inNBName):
     addEtcToEnvironment(os.path.dirname(inNBName))
     outNBName = inNBName.replace(nbExtension,"_out"+nbExtension)
     convCmd = convCmdTmpl %(inNBName,outNBName)
-    with tmpDirCreator(inNBName) as creator:
-        subprocess.check_output(convCmd.split(), env = dict(os.environ, IPYTHONDIR=creator.dirname))
+    subprocess.check_output(convCmd.split(), env = os.environ)
     return compareNotebooks(inNBName,outNBName)
 
 def isInputNotebookFileName(filename):
