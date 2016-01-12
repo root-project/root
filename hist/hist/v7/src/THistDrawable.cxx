@@ -14,8 +14,8 @@
 
 #include "ROOT/THistDrawable.h"
 
-using namespace ROOT::v7;
-using namespace ROOT::v7::Internal;
+using namespace ROOT::Experimental;
+using namespace ROOT::Experimental::Internal;
 
 template <int DIMENSION>
 THistPainterBase<DIMENSION>::~THistPainterBase() { fgPainter = nullptr; }
@@ -24,7 +24,7 @@ template <int DIMENSION>
 THistPainterBase<DIMENSION>* THistPainterBase<DIMENSION>::fgPainter = nullptr;
 
 namespace ROOT {
-namespace v7 {
+namespace Experimental {
 namespace Internal {
 template class THistPainterBase<1>;
 template class THistPainterBase<2>;

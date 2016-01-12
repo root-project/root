@@ -15,4 +15,4 @@
 #include "ROOT/TDrawable.h"
 
 // pin vtable
-ROOT::v7::Internal::TDrawable::~TDrawable() { }
+ROOT::Experimental::Internal::TDrawable::~TDrawable() { }

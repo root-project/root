@@ -22,25 +22,25 @@ void simple() {
 
   // Create a 2D histogram with an X axis with equidistant bins, and a y axis
   // with irregular binning.
-  v7::TAxisConfig xAxis(100, 0., 1.);
-  v7::TAxisConfig yAxis({0., 1., 2., 3.,10.});
-  v7::TH2D histFromVars(xAxis, yAxis);
+  experimental::TAxisConfig xAxis(100, 0., 1.);
+  experimental::TAxisConfig yAxis({0., 1., 2., 3.,10.});
+  experimental::TH2D histFromVars(xAxis, yAxis);
 
   // Or the short in-place version:
   // Create a 2D histogram with an X axis with equidistant bins, and a y axis
   // with irregular binning.
-  v7::TH2D hist({100, 0., 1.}, {{0., 1., 2., 3.,10.}});
+  experimental::TH2D hist({100, 0., 1.}, {{0., 1., 2., 3.,10.}});
 
   // Fill weight 1. at the coordinate 0.01, 1.02.
   hist.Fill({0.01, 1.02});
 
   // Fit the histogram.
-  v7::TFunction<2> func([](const std::array<double,2>& x,
+  experimental::TFunction<2> func([](const std::array<double,2>& x,
                              const std::array_view<double>& par)
                           { return par[0]*x[0]*x[0] + (par[1]-x[1])*x[1]; });
 
-  v7::TFitResult fitResult = v7::FitTo(hist, func, {{0., 1.}});
+  experimental::TFitResult fitResult = experimental::FitTo(hist, func, {{0., 1.}});
 
-  v7::TFilePtr file = v7::TFile::Recreate("hist.root");
+  experimental::TFilePtr file = experimental::TFile::Recreate("hist.root");
   file->Write("TheHist", &hist);
 }

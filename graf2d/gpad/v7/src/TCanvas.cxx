@@ -17,7 +17,9 @@
 
 #include "ROOT/TDrawable.h"
 
-void ROOT::v7::TCanvas::Paint() {
+#include <memory>
+
+void ROOT::Experimental::TCanvas::Paint() {
   for (auto&& drw: fPrimitives) {
     drw->Paint();
   }
@@ -25,21 +27,21 @@ void ROOT::v7::TCanvas::Paint() {
 
 namespace {
 static
-std::vector<ROOT::v7::TCoopPtr<ROOT::v7::TCanvas>>& GetHeldCanvases() {
-  static std::vector<ROOT::v7::TCoopPtr<ROOT::v7::TCanvas>> sCanvases;
+std::vector<std::weak_ptr<ROOT::Experimental::TCanvas>>& GetHeldCanvases() {
+  static std::vector<std::weak_ptr<ROOT::Experimental::TCanvas>> sCanvases;
   return sCanvases;
 }
 };
 
-const std::vector<ROOT::v7::TCoopPtr<ROOT::v7::TCanvas>> &
-ROOT::v7::TCanvas::GetCanvases() {
+const std::vector<std::weak_ptr<ROOT::Experimental::TCanvas>> &
+ROOT::Experimental::TCanvas::GetCanvases() {
   return GetHeldCanvases();
 }
 
-ROOT::v7::TCoopPtr<ROOT::v7::TCanvas> ROOT::v7::TCanvas::Create(
-   std::experimental::string_view name) {
+std::weak_ptr<ROOT::Experimental::TCanvas> ROOT::Experimental::TCanvas::Create(
+   std::experimental::string_view /*name*/) {
   // TODO: name registration (TDirectory?)
-  auto pCanvas = TCoopPtr<TCanvas>(new TCanvas());
+  auto pCanvas = std::shared_ptr<TCanvas>(new TCanvas());
   GetHeldCanvases().emplace_back(pCanvas);
   return pCanvas;
 }

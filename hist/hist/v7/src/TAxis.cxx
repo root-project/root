@@ -16,12 +16,12 @@
 
 #include <cmath>
 
-constexpr const int ROOT::v7::TAxisBase::kNOverflowBins[4];
+constexpr const int ROOT::Experimental::TAxisBase::kNOverflowBins[4];
 
 /// If the coordinate `x` is a bin low edge (within 1E-6 of the coordinate),
 /// return the bin for which this is a low edge. If it's not a bin edge, return
 /// -1.
-int ROOT::v7::TAxisEquidistant::GetBinIndexForLowEdge(double x) const noexcept {
+int ROOT::Experimental::TAxisEquidistant::GetBinIndexForLowEdge(double x) const noexcept {
   // fracBinIdx is the fractional bin index of x in this axis. It's (close to)
   // an integer if it's an axis border.
   double fracBinIdx = (x - GetMinimum()) * fInvBinWidth;
@@ -45,8 +45,8 @@ int ROOT::v7::TAxisEquidistant::GetBinIndexForLowEdge(double x) const noexcept {
 }
 
 /// Whether (and how) the source axis can be merged into the target axis.
-ROOT::v7::EAxisCompatibility
-ROOT::v7::CanMap(TAxisEquidistant& target, TAxisEquidistant& source) noexcept {
+ROOT::Experimental::EAxisCompatibility
+ROOT::Experimental::CanMap(TAxisEquidistant& target, TAxisEquidistant& source) noexcept {
   if (source == target)
     return EAxisCompatibility::kIdentical;
 

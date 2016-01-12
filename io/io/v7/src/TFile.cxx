@@ -17,7 +17,7 @@
 
 #include <mutex>
 
-ROOT::v7::TDirectory& ROOT::v7::TDirectory::Heap() {
+ROOT::Experimental::TDirectory& ROOT::Experimental::TDirectory::Heap() {
   static TDirectory heapDir;
   return heapDir;
 }
@@ -28,14 +28,16 @@ namespace {
 /// the TFile unclosed and data corrupted / not written. Instead, keep a
 /// collection of all opened writable TFiles and close them at destruction time,
 /// explicitly.
-static void AddFilesToClose(ROOT::v7::TCoopPtr<ROOT::v7::Internal::TFileImplBase> pFile) {
+static void AddFilesToClose(std::weak_ptr<ROOT::Experimental::Internal::TFileImplBase> pFile) {
   struct CloseFiles_t {
-    std::vector<ROOT::v7::TCoopPtr<ROOT::v7::Internal::TFileImplBase>> fFiles;
+    std::vector<std::weak_ptr<ROOT::Experimental::Internal::TFileImplBase>> fFiles;
     std::mutex fMutex;
     ~CloseFiles_t() {
-      for (auto& pFile: fFiles)
-        if (pFile)
-          pFile->Flush(); // or Close()? but what if there's still a Write()?
+      for (auto& pFile: fFiles) {
+        if (auto spFile = pFile.lock()) {
+          spFile->Flush(); // or Close()? but what if there's still a Write()?
+        }
+      }
     }
   };
   static CloseFiles_t closer;
@@ -47,7 +49,7 @@ static void AddFilesToClose(ROOT::v7::TCoopPtr<ROOT::v7::Internal::TFileImplBase
 /** \class TFSFile
  TFileImplBase for a file-system (POSIX) style TFile.
  */
-class TFileSystemFile: public ROOT::v7::Internal::TFileImplBase {
+class TFileSystemFile: public ROOT::Experimental::Internal::TFileImplBase {
   ::TFile* fOldFile;
 
 public:
@@ -65,26 +67,26 @@ public:
 };
 }
 
-ROOT::v7::TFilePtr::TFilePtr(ROOT::v7::TCoopPtr<ROOT::v7::Internal::TFileImplBase> impl):
-fImpl(impl)
+ROOT::Experimental::TFilePtr::TFilePtr(std::unique_ptr<ROOT::Experimental::Internal::TFileImplBase>&& impl):
+fImpl(std::move(impl))
 {
-  AddFilesToClose(impl);
+  AddFilesToClose(fImpl);
 }
 
 
-ROOT::v7::TFilePtr ROOT::v7::TFilePtr::OpenForRead(std::string_view name) {
+ROOT::Experimental::TFilePtr ROOT::Experimental::TFilePtr::OpenForRead(std::string_view name) {
   // will become delegation to TFileSystemFile, TWebFile etc.
-  return TFilePtr(MakeCoop<TFileSystemFile>(name.to_string(), "READ"));
+  return TFilePtr(std::make_unique<TFileSystemFile>(name.to_string(), "READ"));
 }
-ROOT::v7::TFilePtr ROOT::v7::TFilePtr::Create(std::string_view name) {
+ROOT::Experimental::TFilePtr ROOT::Experimental::TFilePtr::Create(std::string_view name) {
   // will become delegation to TFileSystemFile, TWebFile etc.
-  return TFilePtr(MakeCoop<TFileSystemFile>(name.to_string(), "CREATE"));
+  return TFilePtr(std::make_unique<TFileSystemFile>(name.to_string(), "CREATE"));
 }
-ROOT::v7::TFilePtr ROOT::v7::TFilePtr::Recreate(std::string_view name) {
+ROOT::Experimental::TFilePtr ROOT::Experimental::TFilePtr::Recreate(std::string_view name) {
   // will become delegation to TFileSystemFile, TWebFile etc.
-  return TFilePtr(MakeCoop<TFileSystemFile>(name.to_string(), "RECREATE"));
+  return TFilePtr(std::make_unique<TFileSystemFile>(name.to_string(), "RECREATE"));
 }
-ROOT::v7::TFilePtr ROOT::v7::TFilePtr::OpenForUpdate(std::string_view name) {
+ROOT::Experimental::TFilePtr ROOT::Experimental::TFilePtr::OpenForUpdate(std::string_view name) {
   // will become delegation to TFileSystemFile, TWebFile etc.
-  return TFilePtr(MakeCoop<TFileSystemFile>(name.to_string(), "UPDATE"));
+  return TFilePtr(std::make_unique<TFileSystemFile>(name.to_string(), "UPDATE"));
 }

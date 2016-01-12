@@ -22,7 +22,7 @@
 #include "ROOT/TAxis.h"
 
 namespace ROOT {
-namespace v7 {
+namespace Experimental {
 
 namespace Hist {
 /// Iterator over n dimensional axes - an array of n axis iterators.
@@ -481,7 +481,7 @@ public:
 
 } // namespace Detail
 
-} // namespace v7
+} // namespace Experimental
 } // namespace ROOT
 
 #endif

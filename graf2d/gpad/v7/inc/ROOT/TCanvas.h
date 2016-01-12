@@ -16,13 +16,13 @@
 #define ROOT7_TCanvas
 
 #include <experimental/string_view>
+#include <memory>
 #include <vector>
 
-#include "ROOT/TCoopPtr.h"
 #include "ROOT/TDrawable.h"
 
 namespace ROOT {
-namespace v7 {
+namespace Experimental {
 
 /** \class TCanvas
   Graphic container for `TDrawable`-s.
@@ -35,29 +35,29 @@ class TCanvas {
   TCanvas() = default;
 
 public:
-  static TCoopPtr<TCanvas> Create();
-  static TCoopPtr<TCanvas> Create(std::experimental::string_view name);
+  static std::weak_ptr<TCanvas> Create();
+  static std::weak_ptr<TCanvas> Create(std::experimental::string_view name);
 
   /// Add a something to be painted. The pad claims shared ownership.
   template <class T>
-  void Draw(TCoopPtr<T> what) {
+  void Draw(std::shared_ptr<T> what) {
     // Requires GetDrawable(what, options) to be known!
     fPrimitives.emplace_back(GetDrawable(what));
   }
 
   /// Add a something to be painted, with options. The pad claims shared ownership.
   template <class T, class OPTIONS>
-  void Draw(TCoopPtr<T> what, const OPTIONS& options) {
+  void Draw(std::shared_ptr<T> what, const OPTIONS& options) {
     // Requires GetDrawable(what, options) to be known!
     fPrimitives.emplace_back(GetDrawable(what, options));
   }
 
   void Paint();
 
-  static const std::vector<TCoopPtr<TCanvas>>& GetCanvases();
+  static const std::vector<std::weak_ptr<TCanvas>>& GetCanvases();
 };
 
-} // namespace v7
+} // namespace Experimental
 } // namespace ROOT
 
 #endif

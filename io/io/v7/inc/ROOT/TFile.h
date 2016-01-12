@@ -21,7 +21,7 @@
 #include <experimental/string_view>
 
 namespace ROOT {
-namespace v7 {
+namespace Experimental {
 
 namespace Internal {
 /** \class TFileImplBase
@@ -61,7 +61,7 @@ public:
  */
 
 class TFilePtr {
-TCoopPtr<Internal::TFileImplBase> fImpl;
+std::shared_ptr<Internal::TFileImplBase> fImpl;
 
 public:
   ///\name Generator functions
@@ -85,20 +85,20 @@ public:
   ///\}
 
   /// Dereference the file pointer, giving access to the TFileImplBase object.
-  Internal::TFileImplBase* operator ->() { return fImpl.Get(); }
+  Internal::TFileImplBase* operator ->() { return fImpl.get(); }
 
   /// Dereference the file pointer, giving access to the TFileImplBase object.
   /// const overload.
-  const Internal::TFileImplBase* operator ->() const { return fImpl.Get(); }
+  const Internal::TFileImplBase* operator ->() const { return fImpl.get(); }
 
   /// Check the validity of the file pointer.
-  operator bool() const { return fImpl; }
+  operator bool() const { return fImpl.get(); }
 
 private:
-  /// Constructed by
-  TFilePtr(TCoopPtr<Internal::TFileImplBase>);
+  /// Constructed by Open etc.
+  TFilePtr(std::unique_ptr<Internal::TFileImplBase>&&);
 };
 
-} // namespace v7
+} // namespace Experimental
 } // namespace ROOT
 #endif

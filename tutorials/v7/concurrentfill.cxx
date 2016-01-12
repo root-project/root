@@ -19,7 +19,7 @@
 #include <future>
 #include <random>
 
-using namespace v7;
+using namespace Experimental;
 
 double wasteCPUTime(std::mt19937& gen) {
   // Simulate number crunching through gen and ridiculous num bits
@@ -30,7 +30,7 @@ double wasteCPUTime(std::mt19937& gen) {
      + std::generate_canonical<double, 100>(gen);
 }
 
-using Filler_t = v7::THistConcurrentFiller<v7::TH2D, 1024>;
+using Filler_t = experimental::THistConcurrentFiller<experimental::TH2D, 1024>;
 
 /// This function is called within each thread: it spends some CPU time and then
 /// fills a number into the histogram, through the Filler_t. This is repeated
@@ -43,14 +43,14 @@ void theTask(Filler_t filler) {
 }
 
 /// This example fills a histogram concurrently, from several threads.
-void concurrentHistFill(v7::TH2D& hist) {
+void concurrentHistFill(experimental::TH2D& hist) {
   // THistConcurrentFillManager allows multiple threads to fill the histogram
   // concurrently.
   //
   // Details: each thread's Fill() calls are buffered. once the buffer is full,
   // the THistConcurrentFillManager locks and flushes the buffer into the
   // histogram.
-  v7::THistConcurrentFillManager<v7::TH2D> fillMgr(hist);
+  experimental::THistConcurrentFillManager<experimental::TH2D> fillMgr(hist);
 
   std::array<std::thread, 8> threads;
 
@@ -68,7 +68,7 @@ void concurrentHistFill(v7::TH2D& hist) {
 
 void concurrentfill() {
   // This histogram will be filled from several threads.
-  v7::TH2D hist{{100, 0., 1.}, {{0., 1., 2., 3.,10.}}};
+  experimental::TH2D hist{{100, 0., 1.}, {{0., 1., 2., 3.,10.}}};
 
   concurrentHistFill(hist);
 

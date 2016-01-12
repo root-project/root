@@ -28,9 +28,9 @@ void example() {
                                           TAxisConfig{{0., 1., 2., 3.,10.}});
 
   pHist->Fill({0.01, 1.02});
-  v7::TDirectory::Heap().Add("hist", pHist);
+  experimental::TDirectory::Heap().Add("hist", pHist);
 
-  auto canvas = v7::TCanvas::Create("MyCanvas");
+  auto canvas = experimental::TCanvas::Create("MyCanvas");
   canvas->Draw(pHist);
 }
 
@@ -38,6 +38,6 @@ void draw() {
   example();
 
   // And the event loop (?) will call
-  for (auto&& canv: v7::TCanvas::GetCanvases())
+  for (auto&& canv: experimental::TCanvas::GetCanvases())
     canv->Paint();
 }

@@ -16,7 +16,7 @@
 #define ROOT7_THistDrawOptions
 
 namespace ROOT {
-namespace v7 {
+namespace Experimental {
 
 namespace Internal {
 
@@ -71,7 +71,7 @@ static constexpr const THistDrawOptions<2> box(Internal::THistDrawOptionsEnum<2>
 static constexpr const THistDrawOptions<2> text(Internal::THistDrawOptionsEnum<2>::kText);
 }
 
-} // namespace v7
+} // namespace Experimental
 } // namespace ROOT
 
 

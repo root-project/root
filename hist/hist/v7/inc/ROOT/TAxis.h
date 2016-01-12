@@ -23,7 +23,7 @@
 #include "ROOT/TLogger.h"
 
 namespace ROOT {
-namespace v7 {
+namespace Experimental {
 
 /**
  \class TAxisBase ROOT7
@@ -783,7 +783,7 @@ EAxisCompatibility CanMap(TAxisEquidistant &target,
 
 
 
-} // namespace v7
+} // namespace Experimental
 } // namespace ROOT
 
 #endif

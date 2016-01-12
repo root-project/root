@@ -23,21 +23,21 @@
 long createNew(int count) {
   long ret = 1;
   for (int i = 0; i < count; ++i) {
-    v7::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
+    experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
     ret ^= (long)&hist;
   }
   return ret;
 }
 
 long fillNew(int count) {
-  v7::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
+  experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
   for (int i = 0; i < count; ++i)
     hist.Fill({0.611, 0.611});
   return hist.GetNDim();
 }
 
 long fillN(int count) {
-  v7::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
+  experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
   std::vector<std::array<double,2>> v(count);
   for (int i = 0; i < count; ++i)
     v[i] = {0.611, 0.611};
@@ -46,8 +46,8 @@ long fillN(int count) {
 }
 
 long fillBufferedNew(int count) {
-  v7::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
-  v7::THistBufferedFill<v7::TH2D> filler(hist);
+  experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
+  experimental::THistBufferedFill<experimental::TH2D> filler(hist);
   for (int i = 0; i < count; ++i)
     filler.Fill({0.611, 0.611});
   return hist.GetNDim();

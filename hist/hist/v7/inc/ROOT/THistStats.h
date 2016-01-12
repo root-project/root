@@ -19,7 +19,7 @@
 #include "ROOT/RArrayView.h"
 
 namespace ROOT {
-namespace v7 {
+namespace Experimental {
 
 namespace Detail {
 template <int DIMENSIONS, class PRECISION> class THistImplBase;
@@ -115,6 +115,6 @@ public:
   }
 };
 
-} // namespace v7
+} // namespace Experimental
 } // namespace ROOT
 #endif

@@ -26,7 +26,7 @@
 #include <initializer_list>
 
 namespace ROOT {
-namespace v7 {
+namespace Experimental {
 
 // fwd declare for fwd declare for friend declaration in THist...
 template<int DIMENSIONS, class PRECISION>
@@ -359,7 +359,7 @@ GetDrawable(TCoopPtr <THist<DIMENSION, PRECISION>> hist,
                                                                          opts);
 }
 
-} // namespace v7
+} // namespace Experimental
 } // namespace ROOT
 
 #endif

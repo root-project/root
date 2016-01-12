@@ -15,15 +15,15 @@
 #ifndef ROOT7_TDirectory
 #define ROOT7_TDirectory
 
-#include "ROOT/TCoopPtr.h"
 #include "ROOT/TLogger.h"
-#include "ROOT/TKey.h"
+#include "ROOT/TDirectoryEntry.h"
 
+#include <memory>
 #include <unordered_map>
 #include <experimental/string_view>
 
 namespace ROOT {
-namespace v7 {
+namespace Experimental {
 
 /**
  Key/value store of objects.
@@ -41,16 +41,11 @@ namespace v7 {
 
  */
 class TDirectory {
-  // Don't keep a unique_ptr as value in a map.
-  /// The values referenced by a TDirectory are type erased `TCoopPtr`s: they
-  /// can be of any type; the actual type is determined through the virtual
-  /// interface of Internal::TCoopPtrTypeErasedBase.
-  using Value_t = std::shared_ptr<Internal::TCoopPtrTypeErasedBase>;
-
-  /// The directory content is a hashed map of `TKey` => `Value_t`.
-  /// TODO: really? Or just std::string => Value_t - that should be enough!
-  /// Rather add some info (time stamp etc) to the Value_t.
-  using ContentMap_t = std::unordered_map<TKey, Value_t>;
+  /// The directory content is a hashed map of
+  /// name => `Internal::TDirectoryEntryPtr`.
+  using ContentMap_t
+    = std::unordered_map<std::string,
+                         std::unique_ptr<Internal::TDirectoryEntryPtrBase>>;
 
   /// The `TDirectory`'s content.
   ContentMap_t fContent;
@@ -58,44 +53,34 @@ class TDirectory {
 public:
 
   /// Create an object of type `T` (passing some arguments to its constructor).
-  /// The `TDirectory` will register the object.
+  /// The `TDirectory` will have shared ownership of the object.
   ///
   /// \param name  - Key of the object.
   /// \param args  - arguments to be passed to the constructor of `T`
   template <class T, class... ARGS>
-  TCoopPtr<T> Create(const std::string& name, ARGS... args) {
-    TCoopPtr<T> ptr(new T(args...));
-    Add(name, ptr);
-    return ptr;
+  std::weak_ptr<T> Create(const std::string& name, ARGS... args) {
+    return Add(name, std::make_shared<T>(std::forward<ARGS...>(args...)));
   }
 
-  // TODO: The key should probably be a simple std::string. Do we need the TKey
-  // at all? Even for TFile, the key should stay a std::string, and the value
-  // should have an additional meta payload (timestamp). Think of object store.
-  const TKey* FindKey(const std::string& name) const {
+  /// FIXME: this should return an iterator of some sort.
+  const Internal::TDirectoryEntryPtrBase* FindKey(const std::string& name) const {
     auto idx = fContent.find(name);
     if (idx == fContent.end())
       return nullptr;
-    return &idx->first;
+    return idx->second.get();
   }
 
-  /// Add an existing object (rather a `TCoopPtr` to it) to the TDirectory. The
-  /// TDirectory will not delete the object but it will need to be notified once
-  /// the object is deleted.
+  /// Add an existing object (rather a `shared_ptr` to it) to the TDirectory.
+  /// The TDirectory will have shared ownership.
   template <class T>
-  const TKey& Add(const std::string& name, TCoopPtr<T> ptr) {
+  void Add(const std::string& name, const std::shared_ptr<T>& ptr) {
     ContentMap_t::iterator idx = fContent.find(name);
     if (idx != fContent.end()) {
       R__LOG_HERE(ELogLevel::kWarning, "CORE")
         << "Replacing object with name " << name;
-      idx->second = std::make_unique<Internal::TCoopPtrTypeErased<T>>(ptr);
-      // The cast is fine: we do not change the key's value (hash)
-      const_cast<TKey&>(idx->first).SetChanged();
-      return idx->first;
+      idx->second.swap(std::make_unique<Internal::TDirectoryEntryPtr<T>>(ptr));
     }
-    return fContent.insert({name,
-                            std::make_shared<Internal::TCoopPtrTypeErased<T>>(ptr)})
-       .first->first;
+    fContent.insert({name, ptr});
   }
 
   /// Dedicated, process-wide TDirectory.
@@ -109,7 +94,7 @@ public:
   static TDirectory& Heap();
 };
 
-} // namespace v7
+} // namespace Experimental
 } // namespace ROOT
 
 #endif
