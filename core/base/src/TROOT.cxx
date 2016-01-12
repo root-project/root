@@ -369,6 +369,19 @@ namespace Internal {
 
    static GetROOTFun_t gGetROOT = &GetROOT1;
 
+   static Func_t GetSymInLibThread(const char *funcname)
+   {
+      const static bool loadSuccess = 0 <= gSystem->Load("libThread");
+      if (loadSuccess) {
+         if (auto sym = gSystem->DynFindSymbol(nullptr, funcname)) {
+            return sym;
+         } else {
+            Error("GetSymInLibThread", "Cannot get symbol %s.", funcname);
+         }
+      }
+      return nullptr;
+   }
+
 } // end of Internal sub namespace
 // back to ROOT namespace
 
@@ -383,23 +396,63 @@ namespace Internal {
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Enables the global mutex to make ROOT thread safe/aware.
-   void EnableMT()
+   void EnableThreadSafety()
    {
-      static void (*tthreadInitialize)() = nullptr;
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TThread_Initialize");
+      if (sym)
+         sym();
+   }
 
-      if (!tthreadInitialize) {
-         const static auto loadSuccess = -1 != gSystem->Load("libThread");
-         if (loadSuccess) {
-            if (auto sym = dlsym(RTLD_DEFAULT,"ROOT_TThread_Initialize")) {
-               tthreadInitialize = (void(*)()) sym;
-               tthreadInitialize();
-            } else {
-               Error("EnableMT","Cannot initialize multithreading support.");
-            }
-         } else {
-            Error("EnableMT","Cannot load Thread library.");
-         }
-      }
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Globally enables the implicit multi-threading in ROOT, activating the
+   /// parallel execution of those methods in ROOT that provide an internal
+   /// parallelisation.
+   /// The 'numthreads' parameter allows to control the number of threads to
+   /// be used by the implicit multi-threading. However, this parameter is just
+   /// a hint for ROOT, which will try to satisfy the request if the execution
+   /// scenario allows it. For example, if ROOT is configured to use an external
+   /// scheduler, setting a value for 'numthreads' might not have any effect.
+   /// @param[in] numthreads Number of threads to use. If not specified or
+   ///                       set to zero, the number of threads is automatically
+   ///                       decided by the implementation. Any other value is
+   ///                       used as a hint.
+   void EnableImplicitMT(UInt_t numthreads)
+   {
+#ifdef R__USE_IMT
+      static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableImplicitMT");
+      if (sym)
+         sym(numthreads);
+#else
+      ::Warning("EnableImplicitMT", "Cannot enable implicit multi-threading with %d threads, please build ROOT with -Dimt=ON", numthreads);
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Disables the implicit multi-threading in ROOT.
+   void DisableImplicitMT()
+   {
+#ifdef R__USE_IMT
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableImplicitMT");
+      if (sym)
+         sym();
+#else
+      ::Warning("DisableImplicitMT", "Cannot disable implicit multi-threading, please build ROOT with -Dimt=ON");
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Returns true if the implicit multi-threading in ROOT is enabled.
+   Bool_t IsImplicitMTEnabled()
+   {
+#ifdef R__USE_IMT
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsImplicitMTEnabled");
+      if (sym)
+         return sym();
+      else
+         return kFALSE;
+#else
+      return kFALSE;
+#endif
    }
 
 }
@@ -1204,7 +1257,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load, Bool_t silent) const
 /// Return pointer to class from its name. Obsolete, use TClass::GetClass directly
 /// See TClass::GetClass
 
-TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load, Bool_t silent) const
+TClass *TROOT::GetClass(const std::type_info& typeinfo, Bool_t load, Bool_t silent) const
 {
    return TClass::GetClass(typeinfo,load,silent);
 }
@@ -1692,8 +1745,8 @@ void TROOT::InitSystem()
 
 void TROOT::InitThreads()
 {
-   if (gEnv->GetValue("Root.UseThreads", 0) || gEnv->GetValue("Root.EnableMT", 0)) {
-      ROOT::EnableMT();
+   if (gEnv->GetValue("Root.UseThreads", 0) || gEnv->GetValue("Root.EnableThreadSafety", 0)) {
+      ROOT::EnableThreadSafety();
    }
 }
 

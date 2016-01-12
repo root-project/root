@@ -1,5 +1,10 @@
-#   Before executing this macro, the file makegeometry.C must have been executed
-#
+## \file
+## \ingroup tutorial_pyroot
+## Before executing this macro, the file makegeometry.C must have been executed
+##
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 import ROOT
 
@@ -10,5 +15,4 @@ n49.Write()
 na.Write()
 na.Close()
 ROOT.gBenchmark.Show( 'geometry' )
-#gROOT.Reset();
 

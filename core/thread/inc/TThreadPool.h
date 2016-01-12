@@ -29,6 +29,7 @@
 #ifndef ROOT_TCondition
 #include "TCondition.h"
 #endif
+#include "TThread.h"
 // STD
 #include <queue>
 #include <vector>

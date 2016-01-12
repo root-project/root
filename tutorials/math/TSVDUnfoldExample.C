@@ -1,16 +1,17 @@
-//  Data unfolding using Singular Value Decomposition
-//
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSVDUnfold example                                                   //
-//                                                                      //
-// Data unfolding using Singular Value Decomposition (hep-ph/9509307)   //
-// Authors: Kerstin Tackmann, Andreas Hoecker, Heiko Lacker             //
-//                                                                      //
-// Example distribution and smearing model from Tim Adye (RAL)          //
-//                                                                      //
-// Nov 23, 2010                                                         //
-//////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_math
+///  Data unfolding using Singular Value Decomposition
+///
+/// TSVDUnfold example
+///
+/// Data unfolding using Singular Value Decomposition (hep-ph/9509307)
+///
+/// Example distribution and smearing model from Tim Adye (RAL)
+///
+/// \macro_image
+/// \macro_code
+///
+/// \authors Kerstin Tackmann, Andreas Hoecker, Heiko Lacker
 
 #include <iostream>
 
@@ -158,7 +159,7 @@ void TSVDUnfoldExample()
    leg->AddEntry(data,"Reconstructed Data","l");
    leg->AddEntry(xini,"True MC","l");
 
-   TCanvas *c1 = new TCanvas( "c1", "Unfolding toy example with TSVDUnfold", 900, 800 );
+   TCanvas *c1 = new TCanvas( "c1", "Unfolding toy example with TSVDUnfold", 800, 700 );
 
    // --- Style settings -----------------------------------------
    Int_t c_Canvas    = TColor::GetColor( "#f0f0f0" );

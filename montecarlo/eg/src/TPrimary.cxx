@@ -9,10 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-//
-// old version of a  dynamic particle class created by event generators.
-// This class is now obsolete. Use TParticle instead.
+/** \class  TPrimary
+    \ingroup eg
+
+Old version of a  dynamic particle class created by event generators.
+
+This class is now obsolete. Use TParticle instead.
+*/
 
 #include "TObject.h"
 #include "Rtypes.h"
@@ -89,13 +92,12 @@ TPrimary::~TPrimary()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Compute distance from point px,py to a primary track*-*-*-*
-///*-*            ====================================================
-///*-*
-///*-*  Compute the closest distance of approach from point px,py to each segment
-///*-*  of a track.
-///*-*  The distance is computed in pixels units.
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Compute distance from point px,py to a primary track
+///
+/// Compute the closest distance of approach from point px,py to each segment
+/// of a track.
+/// The distance is computed in pixels units.
+///
 
 Int_t TPrimary::DistancetoPrimitive(Int_t px, Int_t py)
 {
@@ -128,8 +130,8 @@ Int_t TPrimary::DistancetoPrimitive(Int_t px, Int_t py)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-///*-*                  =========================================
+/// Execute action corresponding to one event
+///
 
 void TPrimary::ExecuteEvent(Int_t, Int_t, Int_t)
 {
@@ -137,7 +139,7 @@ void TPrimary::ExecuteEvent(Int_t, Int_t, Int_t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///return name of primary particle
+/// Return name of primary particle
 
 const char *TPrimary::GetName() const
 {
@@ -149,7 +151,7 @@ const char *TPrimary::GetName() const
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-///  returning a pointer to the particle attributes
+/// Returning a pointer to the particle attributes
 ///
 
 const TAttParticle *TPrimary::GetParticle() const
@@ -159,7 +161,7 @@ const TAttParticle *TPrimary::GetParticle() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///return title of primary particle
+/// Return title of primary particle
 
 const char *TPrimary::GetTitle() const
 {
@@ -216,8 +218,8 @@ void TPrimary::Print(Option_t *) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Return total X3D size of this primary*-*-*-*-*-*-*
-///*-*        =====================================
+/// Return total X3D size of this primary
+///
 
 void TPrimary::Sizeof3D() const
 {

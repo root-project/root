@@ -36,9 +36,9 @@ exactly one point and every point in a given polygon is closer to its
 central point than to any other. A Voronoi diagram is sometimes also known
 as a Dirichlet tessellation.
 
-\image html tgraph2d_delaunay.gif
+\image html tgraph2d_delaunay.png
 
-[This applet](http://www.cs.cornell.edu/Info/People/chew/Delaunay.html) gives a nice 
+[This applet](http://www.cs.cornell.edu/Info/People/chew/Delaunay.html) gives a nice
 practical view of Delaunay triangulation and Voronoi diagram.
 */
 
@@ -513,7 +513,7 @@ Bool_t TGraphDelaunay::InHull(Int_t e, Int_t x) const
             u = (dx2*dy3-dx3*dy2)/dd1;
             v = (dx1*dy3-dx3*dy1)/dd2;
             if ((u<0) || (v<0)) {
-               // No, it cannot - point m does not lie inbetween n1 and n2 as
+               // No, it cannot - point m does not lie in-between n1 and n2 as
                // viewed from e. Replace either n1 or n2 to increase the
                // n1-e-n2 angle. The one to replace is the one which makes the
                // smallest angle with e->m
@@ -789,7 +789,7 @@ L1:
 
                   if ((u>=0) && (v>=0)) {
                      // vector (dx3,dy3) is expressible as a sum of the other two vectors
-                     // with positive coefficents -> i.e. it lies between the other two vectors
+                     // with positive coefficients -> i.e. it lies between the other two vectors
                      if (l == 1) {
                         f  = m;
                         o1 = p;

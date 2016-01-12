@@ -1,11 +1,16 @@
-//
-// Author: Ilka Antcheva   1/12/2006
+/// \file
+/// \ingroup tutorial_gui
+/// This macro gives an example of how to create a list box and how to set and use its multiple selection feature.
+/// To run it do either:
+/// ~~~ 
+/// .x listBox.C
+/// .x listBox.C++
+/// ~~~ 
+///
+/// \macro_code
+///
+/// \author Ilka Antcheva   1/12/2006
 
-// This macro gives an example of how to create a list box
-// and how to set and use its multiple selection feature.
-// To run it do either:
-// .x listBox.C
-// .x listBox.C++
 
 #include <TApplication.h>
 #include <TGClient.h>

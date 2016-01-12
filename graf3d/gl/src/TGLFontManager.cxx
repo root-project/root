@@ -22,7 +22,7 @@
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
 
-// Direct inclussion of FTGL headers is deprecated in ftgl-2.1.3 while
+// Direct inclusion of FTGL headers is deprecated in ftgl-2.1.3 while
 // ftgl-2.1.2 shipped with ROOT requires manual inclusion.
 #ifndef BUILTIN_FTGL
 # include <FTGL/ftgl.h>

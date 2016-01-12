@@ -1,5 +1,10 @@
-//How to customize a context menu for a class
-//Author: Ilka antcheva
+/// \file
+/// \ingroup tutorial_gui
+/// Example showing how to customize a context menu for a class
+///
+/// \macro_code
+///
+/// \author Ilka antcheva
 
 {
    cl = gROOT->GetClass("TH1F");

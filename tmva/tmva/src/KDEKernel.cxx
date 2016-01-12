@@ -39,6 +39,7 @@
 
 #include "TMVA/KDEKernel.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
 
 ClassImp(TMVA::KDEKernel)
 

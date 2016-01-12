@@ -9,6 +9,7 @@
  **********************************************************************/
 
 #include "Math/RichardsonDerivator.h"
+#include "Math/IFunctionfwd.h"
 #include <cmath>
 #include <limits>
 

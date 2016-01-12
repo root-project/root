@@ -26,9 +26,6 @@
 #ifndef ROOT_TVirtualMutex
 #include "TVirtualMutex.h"
 #endif
-#ifndef ROOT_TThread
-#include "TThread.h"
-#endif
 #ifndef ROOT_TMutexImp
 #include "TMutexImp.h"
 #endif

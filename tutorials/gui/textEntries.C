@@ -1,10 +1,15 @@
-// Author: Valeriy Onuchin   25/08/2007
-//
-// This macro gives an example of how to set/change text entry attributes.
-//
-// To run it do either:
-// .x textEntries.C
-// .x textEntries.C++
+/// \file
+/// \ingroup tutorial_gui
+/// This macro gives an example of how to set/change text entry attributes.
+/// To run it do either:
+/// ~~~
+/// .x textEntries.C
+/// .x textEntries.C++
+/// ~~~
+///
+/// \macro_code
+///
+/// \author Valeriy Onuchin   25/08/2007
 
 #include <TGTextEntry.h>
 #include <TGButtonGroup.h>

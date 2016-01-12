@@ -1008,7 +1008,8 @@ Bool_t PyROOT::TRefCppObjectConverter::SetArg(
 ////////////////////////////////////////////////////////////////////////////////
 /// convert <pyobject> to C++ instance**, set arg for call
 
-Bool_t PyROOT::TCppObjectPtrConverter::SetArg(
+template <bool ISREFERENCE>
+Bool_t PyROOT::TCppObjectPtrConverter<ISREFERENCE>::SetArg(
       PyObject* pyobject, TParameter& para, TCallContext* ctxt )
 {
    if ( ! ObjectProxy_Check( pyobject ) )
@@ -1021,7 +1022,7 @@ Bool_t PyROOT::TCppObjectPtrConverter::SetArg(
 
    // set pointer (may be null) and declare success
       para.fValue.fVoidp = &((ObjectProxy*)pyobject)->fObject;
-      para.fTypeCode = 'p';
+      para.fTypeCode = ISREFERENCE ? 'V' : 'p';
       return kTRUE;
    }
 
@@ -1031,7 +1032,8 @@ Bool_t PyROOT::TCppObjectPtrConverter::SetArg(
 ////////////////////////////////////////////////////////////////////////////////
 /// construct python object from C++ instance* read at <address>
 
-PyObject* PyROOT::TCppObjectPtrConverter::FromMemory( void* address )
+template <bool ISREFERENCE>
+PyObject* PyROOT::TCppObjectPtrConverter<ISREFERENCE>::FromMemory( void* address )
 {
    return BindCppObject( address, fClass, kTRUE );
 }
@@ -1039,7 +1041,8 @@ PyObject* PyROOT::TCppObjectPtrConverter::FromMemory( void* address )
 ////////////////////////////////////////////////////////////////////////////////
 /// convert <value> to C++ instance*, write it at <address>
 
-Bool_t PyROOT::TCppObjectPtrConverter::ToMemory( PyObject* value, void* address )
+template <bool ISREFERENCE>
+Bool_t PyROOT::TCppObjectPtrConverter<ISREFERENCE>::ToMemory( PyObject* value, void* address )
 {
    if ( ! ObjectProxy_Check( value ) )
       return kFALSE;              // not a PyROOT object (TODO: handle SWIG etc.)
@@ -1055,6 +1058,15 @@ Bool_t PyROOT::TCppObjectPtrConverter::ToMemory( PyObject* value, void* address 
    }
 
    return kFALSE;
+}
+
+
+namespace PyROOT {
+////////////////////////////////////////////////////////////////////////////////
+/// Instantiate the templates
+
+template class TCppObjectPtrConverter<true>;
+template class TCppObjectPtrConverter<false>;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1371,8 +1383,10 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
           result = new TSTLIteratorConverter();
         else
           // -- CLING WORKAROUND
-        if ( cpd == "**" || cpd == "*&" || cpd == "&*" )
-          result = new TCppObjectPtrConverter( klass, control );
+        if ( cpd == "**" || cpd == "&*" )
+          result = new TCppObjectPtrConverter<false>( klass, control);
+        else if ( cpd == "*&" )
+          result = new TCppObjectPtrConverter<true>( klass, control);
         else if ( cpd == "*" && size <= 0 )
           result = new TCppObjectConverter( klass, control );
         else if ( cpd == "&" )

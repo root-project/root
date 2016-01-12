@@ -10,8 +10,9 @@
  *************************************************************************/
 
 /** \class TClonesArray
-An array of clone (identical) objects. Memory for the objects        //
-// stored in the array is allocated only once in the lifetime of the
+\ingroup Containers
+An array of clone (identical) objects. Memory for the objects
+stored in the array is allocated only once in the lifetime of the
 clones array. All objects must be of the same class. For the rest
 this class has the same properties as TObjArray.
 
@@ -663,7 +664,7 @@ void TClonesArray::RemoveRange(Int_t idx1, Int_t idx2)
 /// Create an array of clone objects of class cl. The class must inherit from
 /// TObject. If the class defines an own operator delete(), make sure that
 /// it looks like this:
-///  ~~~ {.cpp}
+/// ~~~ {.cpp}
 ///    void MyClass::operator delete(void *vp)
 ///    {
 ///       if ((Long_t) vp != TObject::GetDtorOnly())

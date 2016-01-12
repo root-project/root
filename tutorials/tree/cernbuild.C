@@ -1,6 +1,10 @@
-// Read data (CERN staff) from an ascii file and create a root file with a Tree.
-// see also a variant in staff.C
-// Author: Rene Brun
+/// \file
+/// \ingroup tutorial_tree
+///
+/// Read data (CERN staff) from an ascii file and create a root file with a Tree.
+/// See also a variant in staff.C
+/// \macro_code
+/// \author Rene Brun
 
 TFile *cernbuild(Int_t get=0, Int_t print=1) {
 

@@ -64,13 +64,15 @@ namespace TMVA {
       Long64_t GetSize()                  const { return fMvaValues.size(); }
       virtual const std::vector< Float_t >&  operator [] ( Int_t ievt ) const { fRet[0] = fMvaValues[ievt]; return  fRet; }
       std::vector<Float_t>* GetValueVector()    { return &fMvaValues; }
-
+      std::vector<Bool_t>*  GetValueVectorTypes()    { return &fMvaValuesTypes; }
+      
       Types::EAnalysisType  GetAnalysisType() { return Types::kClassification; }
 
 
    private:
 
       std::vector< Float_t >  fMvaValues;   //! mva values (Results)
+      std::vector< Bool_t>    fMvaValuesTypes;//! mva values type(sig/bkg) (Results)
       mutable std::vector< Float_t >  fRet;         //! return val
       mutable MsgLogger*      fLogger;      //! message logger
       MsgLogger& Log() const { return *fLogger; }

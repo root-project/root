@@ -11,7 +11,7 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON)
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF)
 if(cxx14)
-  set(LLVM_ENABLE_CXX1Y ON)
+  set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "")
 endif()
 
 set(CMAKE_REQUIRED_QUIET 1)  # Make the configuration of LLVM quiet
@@ -45,6 +45,12 @@ string(REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
+
+#--- FIXME: Do not build LLVM/Clang with modules until next LLVM upgrade----------------------------
+if(cxxmodules)
+  string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+endif(cxxmodules)
 
 #---Build type--------------------------------------------------------------------------------------
 if(NOT DEFINED LLVM_BUILD_TYPE)

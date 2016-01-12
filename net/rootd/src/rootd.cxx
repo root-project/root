@@ -314,11 +314,6 @@ extern "C" {
 
 #include "rootdp.h"
 
-extern "C" {
-#include "rsadef.h"
-#include "rsalib.h"
-}
-
 // Debug flag
 int gDebug  = 0;
 

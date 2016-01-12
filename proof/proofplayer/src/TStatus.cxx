@@ -9,19 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TStatus                                                              //
-//                                                                      //
-// This class holds the status of an ongoing operation and collects     //
-// error messages. It provides a Merge() operation allowing it to       //
-// be used in PROOF to monitor status in the slaves.                    //
-// No messages indicates success.                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TStatus
+\ingroup proofkernel
+
+This class holds the status of an ongoing operation and collects
+error messages. It provides a Merge() operation allowing it to
+be used in PROOF to monitor status in the slaves.
+No messages indicates success.
+
+*/
 
 #include "TStatus.h"
 #include "Riostream.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TProofDebug.h"
 

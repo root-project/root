@@ -62,6 +62,10 @@ while ! [ "x$1" = "x" -o "x$1" = "x--" ]; do
     shift
 done
 
+# Add ad hoc headers which are not in dictionaries and are not stl
+echo '#include "ROOT/TSeq.h"' >> $allheaders
+
+
 if [ "x$1" = "x--" ]; then
     shift
 fi
@@ -127,7 +131,7 @@ EOF
 done
 
 # E.g. core's LinkDef includes clib/LinkDef, so just copy all LinkDefs.
-for f in `cd $srcdir; find . -name '*LinkDef*.h'`; do
+for f in `cd $srcdir; find . -path ./etc -prune -or -name '*LinkDef*.h' -print`; do
     mkdir -p $outdir/`dirname $f`
     cp $srcdir/$f $outdir/$f
 done

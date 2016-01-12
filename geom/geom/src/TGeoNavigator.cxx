@@ -600,6 +600,15 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
    Double_t trmax = 1.+TMath::Abs(tr[0])+TMath::Abs(tr[1])+TMath::Abs(tr[2]);
    Double_t extra = 100.*(trmax+fStep)*gTolerance;
    const Int_t idebug = TGeoManager::GetVerboseLevel();
+   TGeoNode *crtstate[10];
+   Int_t level = fLevel+1;
+   Bool_t samepath = kFALSE;
+   if (!downwards) {
+     for (Int_t i=0; i<fLevel; ++i) {
+       crtstate[i] = GetMother(i);
+       if (i==9) break;
+     }
+   }
    fPoint[0] += extra*fDirection[0];
    fPoint[1] += extra*fDirection[1];
    fPoint[2] += extra*fDirection[2];
@@ -621,8 +630,21 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
       }   
       return current;   
    }   
-     
-   if ((skipnode && current == skipnode) || current->GetVolume()->IsAssembly()) {
+
+   if (skipnode) {
+      if ((current == skipnode) && (level == fLevel) ) {
+         samepath = kTRUE;
+         level = TMath::Min(level, 10);
+         for (Int_t i=1; i<level; i++) {
+            if (crtstate[i-1] != GetMother(i)) {
+               samepath = kFALSE;
+               break;
+            }
+         }
+      }
+   }
+
+   if (samepath || current->GetVolume()->IsAssembly()) {
       if (!fLevel) {
          fIsOutside = kTRUE;
          if (idebug>4) {

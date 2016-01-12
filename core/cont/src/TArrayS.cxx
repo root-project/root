@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TArrayS
+\ingroup Containers
 Array of shorts (16 bits per element).
 */
 

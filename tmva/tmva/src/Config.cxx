@@ -29,6 +29,9 @@
 #include "TMVA/Config.h"
 #include "TMVA/MsgLogger.h"
 
+#include "Rtypes.h"
+#include "TString.h"
+
 ClassImp(TMVA::Config)
 
 #if __cplusplus > 199711L

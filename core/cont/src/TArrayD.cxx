@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TArrayD
+\ingroup Containers
 Array of doubles (64 bits per element).
 */
 

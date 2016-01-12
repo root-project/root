@@ -817,7 +817,7 @@ while test $# -gt 0; do
       echo "  --version             Print the ROOT version"
       echo "  --git-revision        Print the ROOT git revision number"
       echo "  --python-version      Print the Python version used by ROOT"
-      echo "  --npcu                Print number of available (hyperthreaded) cores"
+      echo "  --ncpu                Print number of available (hyperthreaded) cores"
       echo "  --cc                  Print alternative C compiler specified when ROOT was built"
       echo "  --cxx                 Print alternative C++ compiler specified when ROOT was built"
       echo "  --f77                 Print alternative Fortran compiler specified when ROOT was built"

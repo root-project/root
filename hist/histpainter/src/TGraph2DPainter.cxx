@@ -34,7 +34,7 @@ ClassImp(TGraph2DPainter)
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! \class TGraph2DPainter
-    \ingroup hist
+    \ingroup Histpainter
     \brief The TGraphDelaunay painting class.
 
 TGraph2DPainter paints a TGraphDelaunay using triangles or clouds of points.

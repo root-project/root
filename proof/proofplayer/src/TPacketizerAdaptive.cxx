@@ -9,28 +9,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPacketizerAdaptive                                                  //
-//                                                                      //
-// This packetizer is based on TPacketizer but uses different           //
-// load-balancing algorithms and data structures.                       //
-// Two main improvements in the load-balancing strategy:                //
-// - First one was to change the order in which the files are assigned  //
-//   to the computing nodes in such a way that network transfers are    //
-//   evenly distributed in the query time. Transfer of the remote files //
-//   was often becoming a bottleneck at the end of a query.             //
-// - The other improvement is the use of time-based packet size. We     //
-//   measure the processing rate of all the nodes and calculate the     //
-//   packet size, so that it takes certain amount of time. In this way  //
-//   packetizer prevents the situation where the query can't finish     //
-//   because of one slow node.                                          //
-//                                                                      //
-// The data structures: TFileStat, TFileNode and TSlaveStat are         //
-// enriched + changed and TFileNode::Compare method is changed.         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TPacketizerAdaptive
+\ingroup proofkernel
 
+This packetizer is based on TPacketizer but uses different
+load-balancing algorithms and data structures.
+Two main improvements in the load-balancing strategy:
+   - First one was to change the order in which the files are assigned
+     to the computing nodes in such a way that network transfers are
+     evenly distributed in the query time. Transfer of the remote files
+     was often becoming a bottleneck at the end of a query.
+   - The other improvement is the use of time-based packet size. We
+     measure the processing rate of all the nodes and calculate the
+     packet size, so that it takes certain amount of time. In this way
+     packetizer prevents the situation where the query can't finish
+     because of one slow node.
+
+The data structures: TFileStat, TFileNode and TSlaveStat are
+enriched + changed and TFileNode::Compare method is changed.
+
+*/
 
 #include "TPacketizerAdaptive.h"
 

@@ -185,6 +185,17 @@ public:
    ClassDef(TVectorT,4)  // Template of Vector class
 };
 
+#ifndef __CINT__
+// When building with -fmodules, it instantiates all pending instantiations,
+// instead of delaying them until the end of the translation unit.
+// We 'got away with' probably because the use and the definition of the
+// explicit specialization do not occur in the same TU.
+//
+// In case we are building with -fmodules, we need to forward declare the
+// specialization in order to compile the dictionary G__Matrix.cxx.
+template <> TClass *TVectorT<double>::Class();
+#endif // __CINT__
+
 template<class Element> inline       TVectorT<Element> &TVectorT<Element>::Use     (Int_t n,Element *data) { return Use(0,n-1,data); }
 template<class Element> inline const TVectorT<Element> &TVectorT<Element>::Use     (Int_t n,const Element *data) const { return Use(0,n-1,data); }
 template<class Element> inline       TVectorT<Element> &TVectorT<Element>::Use     (TVectorT &v)

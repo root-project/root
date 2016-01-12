@@ -1,14 +1,16 @@
-// ------------------------------------------------------------------------
-//
-// kdTreeBinning tutorial: bin the data in cells of equal content using a kd-tree
-//
-// Using TKDTree wrapper class as a data binning structure
-//  Plot the 2D data using the TH2Poly class
-//
-//
-// Author:   Bartolomeu Rabacal    11/2010
-//
-// ------------------------------------------------------------------------
+/// \file
+/// \ingroup tutorial_math
+///
+/// kdTreeBinning tutorial: bin the data in cells of equal content using a kd-tree
+///
+/// Using TKDTree wrapper class as a data binning structure
+///  Plot the 2D data using the TH2Poly class
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Bartolomeu Rabacal
 
 #include <math.h>
 
@@ -73,7 +75,7 @@ void kdTreeBinning() {
    std::cout << "Bin with minimum density: " << kdBins->GetBinMinDensity() << std::endl;
    std::cout << "Bin with maximum density: " << kdBins->GetBinMaxDensity() << std::endl;
 
-   TCanvas* c1 = new TCanvas("glc1", "TH2Poly from a kdTree",0,0,600,1000);
+   TCanvas* c1 = new TCanvas("glc1", "TH2Poly from a kdTree",0,0,600,800);
    c1->Divide(1,3);
    c1->cd(1);
    h1->Draw("lego");
@@ -94,16 +96,13 @@ void kdTreeBinning() {
    gStyle->SetPalette(1);
    g->SetMarkerStyle(20);
 
-
    c1->cd(3);
    g->Draw("pcol");
    c1->Update();
 
-
    // ---------------------------------------------------------
    // make a new TH2Poly where bins are ordered by the density
    // ---------------------------------------------------------
-
 
    TH2Poly* h2polrebin = new TH2Poly("h2PolyBinTest", "KDTree binning", kdBins->GetDataMin(0), kdBins->GetDataMax(0), kdBins->GetDataMin(1), kdBins->GetDataMax(1));
    h2polrebin->SetFloat();
@@ -138,7 +137,7 @@ void kdTreeBinning() {
    // The new TH2Poly has to be same as old one and the TGraph2D should be similar to
    // the previous one. It is now made using as z value the bin number
 
-   TCanvas* c4 = new TCanvas("glc4", "TH2Poly from a kdTree (Ordered)",50,50,1050,1050);
+   TCanvas* c4 = new TCanvas("glc4", "TH2Poly from a kdTree (Ordered)",50,50,800,800);
 
    c4->Divide(2,2);
    c4->cd(1);
@@ -148,7 +147,6 @@ void kdTreeBinning() {
    g2->Draw("pcol");
 
    c4->Update();
-
 
    // make also the 1D binned histograms
 
@@ -173,5 +171,4 @@ void kdTreeBinning() {
   hX->Draw();
   c4->cd(4);
   hY->Draw();
-
 }

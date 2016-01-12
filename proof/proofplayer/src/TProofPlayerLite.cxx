@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofPlayerLite                                                     //
-//                                                                      //
-// This version of TProofPlayerRemote merges the functionality needed   //
-// by clients and masters. It is used in optmized local sessions.       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofPlayerLite
+\ingroup proofkernel
+
+Version of TProofPlayerRemote merges the functionality needed by clients
+and masters. It is used in optmized local sessions.
+
+*/
 
 #include "TProofPlayerLite.h"
 

@@ -11,10 +11,19 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "RooStats/MetropolisHastings.h"
 
+#ifndef ROOSTATS_MarkovChain
+#include "RooStats/MarkovChain.h"
+#endif
+#ifndef RooStats_MCMCInterval
+#include "RooStats/MCMCInterval.h"
+#endif
 #ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
 #endif
+#include "RooStats/ProposalFunction.h"
+
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
@@ -50,15 +59,6 @@
 #endif
 #ifndef ROOT_TFile
 #include "TFile.h"
-#endif
-#ifndef ROOSTATS_MetropolisHastings
-#include "RooStats/MetropolisHastings.h"
-#endif
-#ifndef ROOSTATS_MarkovChain
-#include "RooStats/MarkovChain.h"
-#endif
-#ifndef RooStats_MCMCInterval
-#include "RooStats/MCMCInterval.h"
 #endif
 
 ClassImp(RooStats::MetropolisHastings);

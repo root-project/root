@@ -44,7 +44,7 @@ include/%.h:    $(TREEDIRI)/%.h
 $(TREELIB):     $(TREEO) $(TREEDO) $(ORDER_) $(MAINLIBS) $(TREELIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libTree.$(SOEXT) $@ "$(TREEO) $(TREEDO)" \
-		   "$(TREELIBEXTRA)"
+		   "$(TREELIBEXTRA) $(TBBLIBDIR) $(TBBLIB)"
 
 $(call pcmrule,TREE)
 	$(noop)
@@ -72,3 +72,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
+ifeq ($(BUILDTBB),yes)
+$(TREEO): CXXFLAGS += $(TBBINCDIR:%=-I%)
+endif

@@ -54,7 +54,7 @@ int   const KSUSY2  =  2000000;
 int   const KEXCIT  =  4000000;
 int   const KNDCAY  =  8000; //should be 4000 for pythia61
 
-
+/// Pythia6 common block Pyjets
 struct Pyjets_t {
   int    N;
   int    NPAD;
@@ -63,6 +63,7 @@ struct Pyjets_t {
   double V[5][4000];
 };
 
+/// Pythia6 common block Pydat1
 struct Pydat1_t {
   int    MSTU[200];
   double PARU[200];
@@ -70,6 +71,7 @@ struct Pydat1_t {
   double PARJ[200];
 };
 
+/// Pythia6 common block Pydat2
 struct Pydat2_t {
   int    KCHG[4][500];
   double PMAS[4][500];
@@ -77,6 +79,7 @@ struct Pydat2_t {
   double VCKM[4][4];
 };
 
+/// Pythia6 common block Pydat3
 struct Pydat3_t {
   int    MDCY[3][500];
   int    MDME[2][KNDCAY];
@@ -84,15 +87,18 @@ struct Pydat3_t {
   int    KFDP[5][KNDCAY];
 };
 
+/// Pythia6 common block Pydat4
 struct Pydat4_t {
   char  CHAF[2][500][16]; // here I needed manual intervention
 };
 
+/// Pythia6 common block Pydatr
 struct Pydatr_t {
   int    MRPY[6];
   double RRPY[100];
 };
 
+/// Pythia6 common block Pysubs
 struct Pysubs_t {
   int    MSEL;
   int    MSELPD;
@@ -101,6 +107,7 @@ struct Pysubs_t {
   double CKIN[200];
 };
 
+/// Pythia6 common block Pypars
 struct Pypars_t {
   int    MSTP[200];
   double PARP[200];
@@ -108,11 +115,13 @@ struct Pypars_t {
   double PARI[200];
 };
 
+/// Pythia6 common block Pyint1
 struct Pyint1_t {
   int    MINT[400];
   double VINT[400];
 };
 
+/// Pythia6 common block Pyint2
 struct Pyint2_t {
   int    ISET[500];
   int    KFPR[2][500];
@@ -120,31 +129,37 @@ struct Pyint2_t {
   int    ICOL[2][4][40];
 };
 
+/// Pythia6 common block Pyint3
 struct Pyint3_t {
   double XSFX[81][2];  //
   int    ISIG[3][1000];
   double SIGH[1000];
 };
 
+/// Pythia6 common block Pyint4
 struct Pyint4_t {
   int    MWID[500];
   double WIDS[5][500];
 };
 
+/// Pythia6 common block Pyint5
 struct Pyint5_t {
   int    NGENPD;
   int    NGEN[3][501];
   double XSEC[3][501];
 };
 
+/// Pythia6 common block Pyint6
 struct Pyint6_t {
   char PROC[501][28];
 };
 
+/// Pythia6 common block Pyint7
 struct Pyint7_t {
   double SIGT[6][7][7];
 };
 
+/// Pythia6 common block Pyint8
 struct Pyint8_t {
   double XPVMD[13];
   double XPANL[13];
@@ -153,6 +168,7 @@ struct Pyint8_t {
   double XPDIR[13];
 };
 
+/// Pythia6 common block Pyint9
 struct Pyint9_t {
   double VXPVMD[13];
   double VXPANL[13];
@@ -160,11 +176,13 @@ struct Pyint9_t {
   double VXPDGM[13];
 };
 
+/// Pythia6 common block Pymssm
 struct Pymssm_t {
   int    IMSS[100];
   double RMSS[100];
 };
 
+/// Pythia6 common block Pyssmt
 struct Pyssmt_t {
   double ZMIX[4][4];
   double UMIX[2][2];
@@ -177,10 +195,12 @@ struct Pyssmt_t {
   double VMIXI[2][2];
 };
 
+/// Pythia6 common block Pyints
 struct Pyints_t {
   double XXM[20];
 };
 
+/// Pythia6 common block Pybins
 struct Pybins_t {
   int    IHIST[4];
   int    INDX[1000];

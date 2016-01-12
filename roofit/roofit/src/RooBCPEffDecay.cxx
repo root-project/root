@@ -15,7 +15,7 @@
  *****************************************************************************/
 
 /** \class RooBCPEffDecay
-    \ingroup Roofitpdf
+    \ingroup Roofit
 
 PDF describing decay time distribution of B meson including effects of standard model CP violation.
 This function can be analytically convolved with any RooResolutionModel implementation.

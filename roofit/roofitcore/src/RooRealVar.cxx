@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooRealVar represents a fundamental (non-derived) real valued object
-// 
-// This class also holds an (asymmetic) error, a default range and
-// a optionally series of alternate named ranges.
-// END_HTML
-//
+/**
+\file RooRealVar.cxx
+\class RooRealVar
+\ingroup Roofitcore
+
+RooRealVar represents a fundamental (non-derived) real valued object
+
+This class also holds an (asymmetic) error, a default range and
+a optionally series of alternate named ranges.
+**/
 
 
 #include "RooFit.h"
@@ -146,8 +147,10 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
   _asymErrHi(other._asymErrHi)
 {
   _sharedProp =  (RooRealVarSharedProperties*) _sharedPropList.registerProperties(other.sharedProp()) ;
-  _binning = other._binning->clone() ;
-  _binning->insertHook(*this) ;
+  if (other._binning) { 
+     _binning = other._binning->clone() ;
+     _binning->insertHook(*this) ;
+  }
   _fast = kTRUE ;
 
   //cout << "RooRealVar::cctor(this = " << this << " name = " << GetName() << ", other = " << &other << ")" << endl ;

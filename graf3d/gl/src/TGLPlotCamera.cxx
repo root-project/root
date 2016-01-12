@@ -13,9 +13,10 @@
 #include "TVirtualGL.h"
 #include "TGLUtil.h"
 
-//______________________________________________________________________________
-//
-// Camera for TGLPlotPainter and sub-classes.
+/** \class TGLPlotCamera
+\ingroup opengl
+Camera for TGLPlotPainter and sub-classes.
+*/
 
 ClassImp(TGLPlotCamera);
 

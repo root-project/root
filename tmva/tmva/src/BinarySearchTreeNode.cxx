@@ -45,6 +45,7 @@
 #include "TMVA/BinarySearchTreeNode.h"
 #include "TMVA/Event.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/Node.h"
 #include "TMVA/Tools.h"
 
 ClassImp(TMVA::BinarySearchTreeNode)

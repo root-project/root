@@ -1092,7 +1092,7 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
 
    for (RConstructorTypes::const_iterator ctorTypeIt = ctorTypes.begin();
         ctorTypeIt!=ctorTypes.end(); ++ctorTypeIt) {
-     
+
       auto ioCtorCat = ROOT::TMetaUtils::CheckConstructor(cl, *ctorTypeIt);
 
       if (EIOCtorCategory::kAbsent == ioCtorCat)

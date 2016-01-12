@@ -18,7 +18,9 @@
 #ifndef ROOSTATS_MCMCIntervalPlot
 #include "RooStats/MCMCIntervalPlot.h"
 #endif
-#include <iostream>
+#include "RooStats/MCMCInterval.h"
+#include "RooStats/MarkovChain.h"
+
 #ifndef ROOT_TROOT
 #include "TROOT.h"
 #endif
@@ -61,6 +63,8 @@
 #ifndef ROO_GLOBAL_FUNC
 #include "RooGlobalFunc.h"
 #endif
+
+#include <iostream>
 
 // Extra draw commands
 //static const char* POSTERIOR_HIST = "posterior_hist";

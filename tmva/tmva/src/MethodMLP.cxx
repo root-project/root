@@ -40,9 +40,12 @@
 // Multilayer Perceptron class built off of MethodANNBase
 //_______________________________________________________________________
 
-#include "TString.h"
+#include "TMVA/MethodMLP.h"
+
 #include <vector>
 #include <cmath>
+
+#include "TString.h"
 #include "TTree.h"
 #include "Riostream.h"
 #include "TFitter.h"
@@ -50,16 +53,20 @@
 #include "TMath.h"
 #include "TFile.h"
 
+#include "TMVA/Config.h"
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/FitterBase.h"
+#include "TMVA/GeneticFitter.h"
 #include "TMVA/Interval.h"
-#include "TMVA/MethodMLP.h"
+#include "TMVA/MethodANNBase.h"
+#include "TMVA/MsgLogger.h"
 #include "TMVA/TNeuron.h"
 #include "TMVA/TSynapse.h"
 #include "TMVA/Timer.h"
-#include "TMVA/Types.h"
 #include "TMVA/Tools.h"
-#include "TMVA/GeneticFitter.h"
-#include "TMVA/Config.h"
+#include "TMVA/Types.h"
 
 #ifdef MethodMLP_UseMinuit__
 TMVA::MethodMLP* TMVA::MethodMLP::fgThis = 0;

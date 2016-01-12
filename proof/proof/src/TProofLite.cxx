@@ -9,16 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofLite                                                           //
-//                                                                      //
-// This class starts a PROOF session on the local machine: no daemons,  //
-// client and master merged, communications via UNIX-like sockets.      //
-// By default the number of workers started is NumberOfCores+1; a       //
-// different number can be forced on construction.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofLite
+\ingroup proofkernel
+
+This class starts a PROOF session on the local machine: no daemons,
+client and master merged, communications via UNIX-like sockets.
+By default the number of workers started is NumberOfCores+1; a
+different number can be forced on construction.
+
+*/
 
 #include "TProofLite.h"
 

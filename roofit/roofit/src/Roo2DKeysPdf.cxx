@@ -15,7 +15,7 @@
  *****************************************************************************/
 
 /** \class Roo2DKeysPdf
-    \ingroup Roofitpdf
+    \ingroup Roofit
 
 Two-dimensional kernel estimation PDF.
 

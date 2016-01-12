@@ -124,6 +124,7 @@ private :
    Int_t                *fNodeIdArray;      //! array of node id's
    Int_t                 fNLevel;           // maximum accepted level in geometry
    TGeoVolume           *fPaintVolume;      //! volume currently painted
+   TGeoVolume           *fUserPaintVolume;  //!
    THashList            *fHashVolumes;      //! hash list of volumes providing fast search
    THashList            *fHashGVolumes;     //! hash list of group volumes providing fast search
    THashList            *fHashPNE;          //-> hash list of phisical node entries
@@ -197,6 +198,7 @@ public:
    Bool_t                 GetTminTmax(Double_t &tmin, Double_t &tmax) const;
    Double_t               GetTmax() const {return fTmax;}
    TGeoVolume            *GetPaintVolume() const {return fPaintVolume;}
+   TGeoVolume            *GetUserPaintVolume() const {return fUserPaintVolume;}
    Double_t               GetVisDensity() const  {return fVisDensity;}
    Int_t                  GetVisLevel() const;
    Int_t                  GetVisOption() const;
@@ -214,6 +216,7 @@ public:
    Bool_t                 SetCurrentNavigator(Int_t index);
    void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3, Double_t bombr=1.3); // *MENU*
    void                   SetPaintVolume(TGeoVolume *vol) {fPaintVolume = vol;}
+   void                   SetUserPaintVolume(TGeoVolume *vol) {fUserPaintVolume = vol;}
    void                   SetTopVisible(Bool_t vis=kTRUE);
    void                   SetTminTmax(Double_t tmin=0, Double_t tmax=999);
    void                   SetDrawExtraPaths(Bool_t flag=kTRUE) {fDrawExtra=flag;}

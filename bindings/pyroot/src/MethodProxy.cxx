@@ -141,11 +141,22 @@ namespace {
       return left->GetPriority() > right->GetPriority();
    }
 
+// return helper
+   inline void ResetCallState( ObjectProxy*& selfnew, ObjectProxy* selfold, Bool_t clear ) {
+      if ( selfnew != selfold ) {
+         Py_XDECREF( selfnew );
+         selfnew = selfold;
+      }
+
+      if ( clear )
+         PyErr_Clear();
+   }
+
 // helper to factor out return logic of mp_call
    inline PyObject* HandleReturn( MethodProxy* pymeth, ObjectProxy* oldSelf, PyObject* result ) {
 
    // special case for python exceptions, propagated through C++ layer
-      if ( result != (PyObject*)TPyExceptionMagic && result != (PyObject*)TPyCPPExceptionMagic ) {
+      if ( result ) {
 
       // if this method creates new objects, always take ownership
          if ( IsCreator( pymeth->fMethodInfo->fFlags ) ) {
@@ -169,15 +180,10 @@ namespace {
                   PyErr_Clear();     // ignored
             }
          }
-      } else { // result is TPyExceptionMagic or TPyCPPExceptionMagic
-         result = nullptr;         // exception info was already set
       }
 
    // reset self as necessary to allow re-use of the MethodProxy
-      if ( pymeth->fSelf != oldSelf ) {
-         Py_XDECREF( pymeth->fSelf );
-         pymeth->fSelf = oldSelf;
-      }
+      ResetCallState( pymeth->fSelf, oldSelf, kFALSE );
 
       return result;
    }
@@ -599,7 +605,7 @@ namespace {
             return result;
 
       // fall through: python is dynamic, and so, the hashing isn't infallible
-         PyErr_Clear();
+         ResetCallState( pymeth->fSelf, oldSelf, kTRUE );
       }
 
    // ... otherwise loop over all methods and find the one that does not fail
@@ -611,16 +617,6 @@ namespace {
       std::vector< PyError_t > errors;
       for ( Int_t i = 0; i < nMethods; ++i ) {
          PyObject* result = methods[i]->Call( pymeth->fSelf, args, kwds, &ctxt );
-
-         if ( result == (PyObject*)TPyCPPExceptionMagic ) {
-            std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
-            return 0;               // only interested in this exception!
-         }
-
-         if ( result == (PyObject*)TPyExceptionMagic ) {
-            std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
-            return 0;              // exception info was already set
-         }
 
          if ( result != 0 ) {
          // success: update the dispatch map for subsequent calls
@@ -640,6 +636,7 @@ namespace {
          PyError_t e;
          PyErr_Fetch( &e.fType, &e.fValue, &e.fTrace );
          errors.push_back( e );
+         ResetCallState( pymeth->fSelf, oldSelf, kFALSE );
       }
 
    // first summarize, then add details

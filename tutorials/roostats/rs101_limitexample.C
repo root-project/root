@@ -1,16 +1,16 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'Limit Example' RooStats tutorial macro #101
-// author: Kyle Cranmer
-// date June. 2009
-//
-// This tutorial shows an example of creating a simple
-// model for a number counting experiment with uncertainty
-// on both the background rate and signal efficeincy. We then
-// use a Confidence Interval Calculator to set a limit on the signal.
-//
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roostats
+/// 'Limit Example' RooStats tutorial macro #101
+/// This tutorial shows an example of creating a simple
+/// model for a number counting experiment with uncertainty
+/// on both the background rate and signal efficiency. We then
+/// use a Confidence Interval Calculator to set a limit on the signal.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"
@@ -78,7 +78,7 @@ void rs101_limitexample()
   RooRealVar* s = wspace->var("s"); // get the signal we care about
   RooRealVar* b = wspace->var("b"); // get the background and set it to a constant.  Uncertainty included in ratioBkgEff
   b->setConstant();
-  
+
   RooRealVar* ratioSigEff = wspace->var("ratioSigEff"); // get uncertaint parameter to constrain
   RooRealVar* ratioBkgEff = wspace->var("ratioBkgEff"); // get uncertaint parameter to constrain
   RooArgSet constrainedParams(*ratioSigEff, *ratioBkgEff); // need to constrain these in the fit (should change default behavior)
@@ -109,10 +109,10 @@ void rs101_limitexample()
   modelConfig.SetGlobalObservables( RooArgSet(*gSigEff,*gSigBkg));
   modelConfig.SetName("ModelConfig");
   wspace->import(modelConfig);
-  wspace->import(*data); 
+  wspace->import(*data);
   wspace->SetName("w");
   wspace->writeToFile("rs101_ws.root");
-  
+
 
 
   // First, let's use a Calculator based on the Profile Likelihood Ratio
@@ -227,7 +227,7 @@ void rs101_limitexample()
   gr->SetMarkerStyle(24);
   gr->Draw("P SAME");
 
-  
+
   delete wspace;
   delete lrint;
   delete mcInt;

@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TArrayL64
+\ingroup Containers
 Array of long64s (64 bits per element).
 */
 

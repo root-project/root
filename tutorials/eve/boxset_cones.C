@@ -1,7 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Alja Mrak-Tadel
-
-// Demonstrates usage of 'cone' mode in TEveBoxSet class.
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates usage of 'cone' mode in TEveBoxSet class.
+///
+/// \image html eve_boxset_cones.png
+/// \macro_code
+///
+/// \author Alja Mrak-Tadel
 
 TEveBoxSet* boxset_cones(Float_t x=0, Float_t y=0, Float_t z=0,
                          Int_t num=100, Bool_t register=kTRUE)

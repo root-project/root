@@ -9,28 +9,31 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMatrixTCramerInv                                                    //
-//                                                                      //
-// Encapsulate templates of Cramer Inversion routines.                  //
-//                                                                      //
-// The 4x4, 5x5 and 6x6 are adapted from routines written by            //
-// Mark Fischler and Steven Haywood as part of the CLHEP package        //
-//                                                                      //
-// Although for sizes <= 6x6 the Cramer Inversion has a gain in speed   //
-// compared to factorization schemes (like LU) , one pays a price in    //
-// accuracy  .                                                          //
-//                                                                      //
-// For Example:                                                         //
-//  H * H^-1 = U, where H is a 5x5 Hilbert matrix                       //
-//                      U is a 5x5 Unity matrix                         //
-//                                                                      //
-// LU    : |U_jk| < 10e-13 for  j!=k                                    //
-// Cramer: |U_jk| < 10e-7  for  j!=k                                    //
-//                                                                      //
-//  however Cramer algorithm is about 10 (!) times faster               //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMatrixTCramerInv
+    \ingroup Matrix
+
+TMatrixTCramerInv
+
+Encapsulate templates of Cramer Inversion routines.
+
+The 4x4, 5x5 and 6x6 are adapted from routines written by
+Mark Fischler and Steven Haywood as part of the CLHEP package
+
+Although for sizes <= 6x6 the Cramer Inversion has a gain in speed
+compared to factorization schemes (like LU) , one pays a price in
+accuracy  .
+
+For Example:
+~~~
+  H * H^-1 = U, where H is a 5x5 Hilbert matrix
+                      U is a 5x5 Unity matrix
+
+ LU    : |U_jk| < 10e-13 for  j!=k
+ Cramer: |U_jk| < 10e-7  for  j!=k
+~~~
+
+however Cramer algorithm is about 10 (!) times faster
+*/
 
 #include "TMatrixTCramerInv.h"
 

@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofBenchRun                                                       //
-//                                                                      //
-// Abstract base class for PROOF benchmark run.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofBenchRun
+\ingroup proofbench
+
+Abstract base class for PROOF benchmark runs
+
+*/
 
 #include "TProofBenchRun.h"
 #include "TList.h"

@@ -1,10 +1,19 @@
-// Getting Contours From TH2D
-// Author: Josh de Bever
-//         CSI Medical Physics Group
-//         The University of Western Ontario
-//         London, Ontario, Canada
-//   Date: Oct. 22, 2004
-//   Modified by O.Couet (Nov. 26, 2004)
+/// \file
+/// \ingroup tutorial_hist
+/// Getting Contours From TH2D.
+///
+/// #### Image produced by `.x ContourList.C`
+/// The contours values are drawn next to each contour.
+/// \macro_image
+///
+/// #### Output produced by `.x ContourList.C`
+/// It shows that 6 contours and 12 graphs were found.
+/// \macro_output
+///
+/// #### `ContourList.C`
+/// \macro_code
+///
+/// \authors Josh de Bever (CSI Medical Physics Group, The University of Western Ontario, London, Ontario, Canada), Olivier Couet
 
 Double_t SawTooth(Double_t x, Double_t WaveLen);
 

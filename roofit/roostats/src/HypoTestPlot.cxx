@@ -8,9 +8,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
-
 #include "RooStats/HypoTestPlot.h"
+#include "RooStats/HypoTestResult.h"
+#include "RooStats/SamplingDistribution.h"
+
 #include "TStyle.h"
 
 ClassImp(RooStats::HypoTestPlot)

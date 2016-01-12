@@ -14,6 +14,7 @@
 #include "THnBase.h"
 
 #include "Fit/Fitter.h"
+#include "Fit/FitConfig.h"
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Fit/Chi2FCN.h"

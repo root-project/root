@@ -1,5 +1,5 @@
 // @(#)root/thread:$Id$
-// Author: Fons Rademakers   02/07/97
+// Author: Fons Rademakers   02/07/97 (Revised: G Ganis, Nov 2015)
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -12,7 +12,6 @@
 #ifndef ROOT_TSemaphore
 #define ROOT_TSemaphore
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TSemaphore                                                           //
@@ -22,36 +21,34 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <mutex>
+#include <condition_variable>
+
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
-#ifndef ROOT_TMutex
-#include "TMutex.h"
-#endif
-#ifndef ROOT_TCondition
-#include "TCondition.h"
-#endif
-
 
 class TSemaphore : public TObject {
 
 private:
-   TMutex       fMutex;   // semaphare mutex
-   TCondition   fCond;    // semaphore condition variable
-   Int_t        fValue;   // counter
+   std::mutex              fMutex;   // semaphore mutex
+   std::condition_variable fCond;    // semaphore condition variable
+   Int_t                   fValue;   // semaphore value
+   UInt_t                  fWakeups; // wakeups
 
-   TSemaphore(const TSemaphore &s);             // not implemented
-   TSemaphore& operator=(const TSemaphore &s);  // not implemented
+   TSemaphore(const TSemaphore &s) = delete;             // not implemented
+   TSemaphore& operator=(const TSemaphore &s) = delete;  // not implemented
 
 public:
-   TSemaphore(UInt_t initial = 1);
+   TSemaphore(Int_t initial = 1);
    virtual ~TSemaphore() { }
 
-   Int_t  Wait(Int_t millisec = 0);
+   Int_t  Wait();
+   Int_t  Wait(Int_t millisec);
    Int_t  TryWait();
    Int_t  Post();
 
-   ClassDef(TSemaphore,0)  // Counting semaphore class
+   ClassDef(TSemaphore, 0)  // Counting semaphore
 };
 
 #endif

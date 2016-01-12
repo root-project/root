@@ -1,10 +1,15 @@
-# To see the output of this macro, click begin_html <a href="gif/tornado.gif" >here</a> end_html
+## \file
+## \ingroup tutorial_pyroot
+## Tornado example.
+##
+## \macro_image
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TView, TPolyMarker3D, TPaveText
 from ROOT import gROOT, gBenchmark
 from math import cos, sin, pi
-
-
 
 gBenchmark.Start( 'tornado' )
 

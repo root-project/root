@@ -9,6 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class TVector2
+    \ingroup Physics
+
+TVector2 is a general two vector class, which can be used for
+the description of different vectors in 2D.
+*/
+
 #include "TROOT.h"
 #include "TVector2.h"
 #include "TClass.h"
@@ -20,7 +27,7 @@ Double_t const  kTWOPI     = 2.*kPI;
 ClassImp(TVector2)
 
 ////////////////////////////////////////////////////////////////////////////////
-///constructor
+/// Constructor
 
 TVector2::TVector2()
 {
@@ -29,7 +36,7 @@ TVector2::TVector2()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///constructor
+/// Constructor
 
 TVector2::TVector2(Double_t *v)
 {
@@ -38,7 +45,7 @@ TVector2::TVector2(Double_t *v)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///constructor
+/// Constructor
 
 TVector2::TVector2(Double_t x0, Double_t y0)
 {
@@ -53,7 +60,7 @@ TVector2::~TVector2()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return modulo of this vector
+/// Return modulo of this vector
 
 Double_t TVector2::Mod() const
 {
@@ -61,7 +68,7 @@ Double_t TVector2::Mod() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return module normalized to 1
+/// Return module normalized to 1
 
 TVector2 TVector2::Unit() const
 {
@@ -69,7 +76,7 @@ TVector2 TVector2::Unit() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return vector phi
+/// Return vector phi
 
 Double_t TVector2::Phi() const
 {
@@ -77,7 +84,7 @@ Double_t TVector2::Phi() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// (static function) returns phi angle in the interval [0,2*PI)
+/// Returns phi angle in the interval [0,2*PI)
 
 Double_t TVector2::Phi_0_2pi(Double_t x) {
    if(TMath::IsNaN(x)){
@@ -90,7 +97,7 @@ Double_t TVector2::Phi_0_2pi(Double_t x) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// (static function) returns phi angle in the interval [-PI,PI)
+/// Returns phi angle in the interval [-PI,PI)
 
 Double_t TVector2::Phi_mpi_pi(Double_t x) {
    if(TMath::IsNaN(x)){
@@ -103,7 +110,7 @@ Double_t TVector2::Phi_mpi_pi(Double_t x) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///rotation by phi
+/// Rotation by phi
 
 TVector2 TVector2::Rotate (Double_t phi) const
 {
@@ -111,7 +118,7 @@ TVector2 TVector2::Rotate (Double_t phi) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///set vector using mag and phi
+/// Set vector using mag and phi
 
 void TVector2::SetMagPhi(Double_t mag, Double_t phi)
 {
@@ -149,4 +156,3 @@ void TVector2::Print(Option_t*)const
    Printf("%s %s (x,y)=(%f,%f) (rho,phi)=(%f,%f)",GetName(),GetTitle(),X(),Y(),
                                           Mod(),Phi()*TMath::RadToDeg());
 }
-

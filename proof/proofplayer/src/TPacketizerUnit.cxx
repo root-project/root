@@ -10,18 +10,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPacketizerUnit                                                      //
-//                                                                      //
-// This packetizer generates packets of generic units, representing the //
-// number of times an operation cycle has to be repeated by the worker  //
-// node, e.g. the number of Monte carlo events to be generated.         //
-// Packets sizes are generated taking into account the performance of   //
-// worker nodes, based on the time needed to process previous packets,  //
-// with the goal of having all workers ending at the same time.         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TPacketizerUnit
+\ingroup proofkernel
+
+This packetizer generates packets of generic units, representing the
+number of times an operation cycle has to be repeated by the worker
+node, e.g. the number of Monte carlo events to be generated.
+Packets sizes are generated taking into account the performance of
+worker nodes, based on the time needed to process previous packets,
+with the goal of having all workers ending at the same time.
+
+*/
 
 
 #include "TPacketizerUnit.h"

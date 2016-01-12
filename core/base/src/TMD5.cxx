@@ -28,6 +28,7 @@ array with the  digest.
 */
 
 #include "TMD5.h"
+#include "TBuffer.h"
 #include "TError.h"
 #include "TSystem.h"
 #include "Bytes.h"

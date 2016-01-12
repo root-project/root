@@ -25,28 +25,29 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include <iomanip>
-#include <algorithm>
-#include <exception>
-#include <stdexcept>
-#include <set>
-#include <cassert>
+#include "TMVA/VariableTransformBase.h"
+
+#include "TMVA/Config.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Ranking.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableInfo.h"
+#include "TMVA/Version.h"
 
 #include "TMath.h"
-#include "TVectorD.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TProfile.h"
+#include "TVectorD.h"
 
-#include "TMVA/VariableTransformBase.h"
-#include "TMVA/Ranking.h"
-#include "TMVA/Config.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Version.h"
-
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
+#include <algorithm>
+#include <cassert>
+#include <exception>
+#include <iomanip>
+#include <stdexcept>
+#include <set>
 
 ClassImp(TMVA::VariableTransformBase)
 

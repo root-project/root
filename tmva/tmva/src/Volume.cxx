@@ -25,14 +25,13 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include <stdexcept>
-
 #include "TMVA/Volume.h"
-#include "TMVA/Tools.h"
 
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+
+#include <stdexcept>
 
 //_______________________________________________________________________
 //                                                                      

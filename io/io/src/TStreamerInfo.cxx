@@ -676,9 +676,13 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
       }
 
   } else {
-     if (fClass->GetCollectionType() > ROOT::kNotSTL) {
-         SetBit(kCanDelete);
-         return;
+      if (fClass->GetCollectionType() > ROOT::kNotSTL) {
+         if (TClassEdit::IsSTLCont(fClass->GetName())) {
+            // We have a collection that is indeed an STL collection,
+            // we know we don't need its streamerInfo.
+            SetBit(kCanDelete);
+            return;
+         }
       }
       const TObjArray *array = fClass->GetStreamerInfos();
       TStreamerInfo* info = 0;
@@ -792,7 +796,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
       }
 
       if (!searchOnChecksum) {
-         if (fClassVersion < array->GetEntriesFast()) {
+         if (fClassVersion < (array->GetEntriesFast() - 1)) {
             info = (TStreamerInfo*) array->At(fClassVersion);
          }
       } else {

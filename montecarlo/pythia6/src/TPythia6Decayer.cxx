@@ -10,16 +10,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-// TPythia6Decayer                                                           //
-//                                                                           //
-// This implements the TVirtualMCDecayer interface.  The TPythia6            //
-// singleton object is used to decay particles.  Note, that since this       //
-// class modifies common blocks (global variables) it is defined as a        //
-// singleton.                                                                //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
+/** \class TPythia6Decayer
+    \ingroup pythia6
+
+This class implements the TVirtualMCDecayer interface.  
+
+The TPythia6 singleton object is used to decay particles.  Note, that since
+this class modifies common blocks (global variables) it is defined as a
+singleton.
+*/
 
 #include "TPythia6.h"
 #include "TPythia6Decayer.h"
@@ -419,19 +418,19 @@ void MakeDecayList()
 ///
 /// The file syntax is
 ///
-///    particle_list : partcle_data
-///                  | particle_list particle_data
+///     particle_list : partcle_data
+///                   | particle_list particle_data
 ///                  ;
-///    particle_data : particle_info
-///                  | particle_info '\n' decay_list
-///                  ;
-///    particle_info : See below
-///                  ;
-///    decay_list    : decay_entry
-///                  | decay_list decay_entry
-///                  ;
-///    decay_entry   : See below
-///
+///     particle_data : particle_info
+///                   | particle_info '\n' decay_list
+///                   ;
+///     particle_info : See below
+///                   ;
+///     decay_list    : decay_entry
+///                   | decay_list decay_entry
+///                   ;
+///     decay_entry   : See below
+/// 
 /// The particle_info consists of 13 fields:
 ///
 ///     PDG code             int
@@ -453,7 +452,7 @@ void MakeDecayList()
 ///
 /// The format to write these entries in are
 ///
-///    " %9  %-16s  %-16s%3d%3d%3d%12.5f%12.5f%12.5f%13.gf%3d%d\n"
+///     " %9  %-16s  %-16s%3d%3d%3d%12.5f%12.5f%12.5f%13.gf%3d%d\n"
 ///
 /// The decay_entry consists of 8 fields:
 ///

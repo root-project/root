@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TArrayI
+\ingroup Containers
 Array of integers (32 bits per element).
 */
 

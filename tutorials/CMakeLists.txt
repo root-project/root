@@ -232,10 +232,13 @@ set(benchmarks-depends tutorial-hsimple
                        tutorial-hist-h1draw
                        tutorial-geom-na49view
                        tutorial-tree-ntuple1
+                       tutorial-tree-spider
                        tutorial-io-hadd
                        tutorial-io-loopdir
                        tutorial-io-copyFiles)
 set(geom-na49view-depends tutorial-geom-geometry)
+set(multicore-mt102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mt101_fillNtuples)
+set(multicore-mp102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mp101_fillNtuples)
 
 #--many roostats tutorials depending on having creating the file first with histfactory
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo

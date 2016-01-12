@@ -26,10 +26,17 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include "TMVA/ClassifierFactory.h"
 #include "TMVA/MethodHMatrix.h"
-#include "TMVA/Tools.h"
+
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MsgLogger.h"
 #include "TMatrix.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+
 #include "Riostream.h"
 #include <algorithm>
 

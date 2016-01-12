@@ -26,17 +26,25 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include <algorithm>
-#include <list>
-#include <cstdlib>
-#include <iomanip>
+#include "TMVA/RuleEnsemble.h"
+
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/DecisionTree.h"
+#include "TMVA/Event.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MethodRuleFit.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/RuleFit.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
 
 #include "TRandom3.h"
 #include "TH1F.h"
-#include "TMVA/RuleEnsemble.h"
-#include "TMVA/RuleFit.h"
-#include "TMVA/MethodRuleFit.h"
-#include "TMVA/Tools.h"
+
+#include <algorithm>
+#include <cstdlib>
+#include <iomanip>
+#include <list>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

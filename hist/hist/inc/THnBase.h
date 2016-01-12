@@ -90,7 +90,6 @@ private:
       }
    }
 
-   virtual void FillBin(Long64_t bin, Double_t w) = 0;
    void FillBinBase(Double_t w) {
       // Increment the statistics due to filled weight "w",
       fEntries += 1;
@@ -162,6 +161,9 @@ private:
       FillBin(bin, w);
       return bin;
    }
+
+   virtual void FillBin(Long64_t bin, Double_t w) = 0;
+
    void SetBinEdges(Int_t idim, const Double_t* bins);
    Bool_t IsInRange(Int_t *coord) const;
    Double_t GetBinError(const Int_t *idx) const { return GetBinError(GetBin(idx)); }

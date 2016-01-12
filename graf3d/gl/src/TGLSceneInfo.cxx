@@ -14,24 +14,22 @@
 #include "TGLSceneBase.h"
 #include "TGLViewerBase.h"
 
-//______________________________________________________________________
-// TGLSceneInfo
-//
-// Base class for extended scene context.
-//
-// Scenes can be shared among several viewers and each scene needs to
-// cache some viewer/camera/clipping specific state => this is a
-// storage class for this data.
-//
-// Sub-classes of TGLSceneBase can override the virtual
-// CreateSceneInfo() method and in it instantiate a sub-class of
-// TGLSceneInfo containing the needed information. See TGLScene and
-// inner class SceneInfo; note that some casting is needed in actual
-// methods as TGLRnrCtx holds the base-class pointer.
-//
+/** \class TGLSceneInfo
+\ingroup opengl
+Base class for extended scene context.
+
+Scenes can be shared among several viewers and each scene needs to
+cache some viewer/camera/clipping specific state => this is a
+storage class for this data.
+
+Sub-classes of TGLSceneBase can override the virtual
+CreateSceneInfo() method and in it instantiate a sub-class of
+TGLSceneInfo containing the needed information. See TGLScene and
+inner class SceneInfo; note that some casting is needed in actual
+methods as TGLRnrCtx holds the base-class pointer.
+*/
 
 ClassImp(TGLSceneInfo)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

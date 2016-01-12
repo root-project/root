@@ -14,6 +14,8 @@ add_cling_library(clingUtils
   clangBasic
   )
 
+add_dependencies(clingUtils clangBasic clangCodeGen)
+
 if ( MSVC )
   set_target_properties(clingUtils PROPERTIES
   COMPILE_FLAGS "/D_HAS_EXCEPTIONS=0")

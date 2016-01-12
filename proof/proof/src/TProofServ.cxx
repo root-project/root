@@ -9,16 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofServ                                                           //
-//                                                                      //
-// TProofServ is the PROOF server. It can act either as the master      //
-// server or as a slave server, depending on its startup arguments. It  //
-// receives and handles message coming from the client or from the      //
-// master server.                                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofServ
+\ingroup proofkernel
+
+Class providing the PROOF server. It can act either as the master
+server or as a slave server, depending on its startup arguments. It
+receives and handles message coming from the client or from the
+master server.
+
+*/
 
 #include "RConfigure.h"
 #include "RConfig.h"
@@ -90,7 +89,6 @@ using namespace std;
 #include "TProofResourcesStatic.h"
 #include "TProofNodeInfo.h"
 #include "TFileInfo.h"
-#include "TMutex.h"
 #include "TClass.h"
 #include "TSQLServer.h"
 #include "TSQLResult.h"
@@ -671,7 +669,6 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fQueryLock       = 0;
 
    fQMgr            = 0;
-   fQMtx            = new TMutex(kTRUE);
    fWaitingQueries  = new TList;
    fIdle            = kTRUE;
    fQuerySeqNum     = -1;
@@ -1006,7 +1003,6 @@ Int_t TProofServ::CreateServer()
 TProofServ::~TProofServ()
 {
    SafeDelete(fWaitingQueries);
-   SafeDelete(fQMtx);
    SafeDelete(fEnabledPackages);
    SafeDelete(fSocket);
    SafeDelete(fPackageLock);
@@ -7242,7 +7238,7 @@ void TProofServ::ResolveKeywords(TString &fname, const char *path)
 
 Int_t TProofServ::GetSessionStatus()
 {
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    Int_t st = (fIdle) ? 0 : 1;
    if (fIdle && fWaitingQueries->GetSize() > 0) st = 3;
    return st;
@@ -7274,7 +7270,7 @@ Int_t TProofServ::UpdateSessionStatus(Int_t xst)
 
 Bool_t TProofServ::IsIdle()
 {
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    return fIdle;
 }
 
@@ -7283,7 +7279,7 @@ Bool_t TProofServ::IsIdle()
 
 void TProofServ::SetIdle(Bool_t st)
 {
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    fIdle = st;
 }
 
@@ -7292,7 +7288,7 @@ void TProofServ::SetIdle(Bool_t st)
 
 Bool_t TProofServ::IsWaiting()
 {
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    if (fIdle && fWaitingQueries->GetSize() > 0) return kTRUE;
    return kFALSE;
 }
@@ -7302,7 +7298,7 @@ Bool_t TProofServ::IsWaiting()
 
 Int_t TProofServ::WaitingQueries()
 {
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    return fWaitingQueries->GetSize();
 }
 
@@ -7312,7 +7308,7 @@ Int_t TProofServ::WaitingQueries()
 
 Int_t TProofServ::QueueQuery(TProofQueryResult *pq)
 {
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    fWaitingQueries->Add(pq);
    return fWaitingQueries->GetSize();
 }
@@ -7323,7 +7319,7 @@ Int_t TProofServ::QueueQuery(TProofQueryResult *pq)
 
 TProofQueryResult *TProofServ::NextQuery()
 {
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    TProofQueryResult *pq = (TProofQueryResult *) fWaitingQueries->First();
    fWaitingQueries->Remove(pq);
    return pq;
@@ -7336,7 +7332,7 @@ TProofQueryResult *TProofServ::NextQuery()
 
 Int_t TProofServ::CleanupWaitingQueries(Bool_t del, TList *qls)
 {
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    Int_t ncq = 0;
    if (qls) {
       TIter nxq(qls);

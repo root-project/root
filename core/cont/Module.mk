@@ -16,6 +16,7 @@ CONTDIRI     := $(CONTDIR)/inc
 CONTL        := $(MODDIRI)/LinkDef.h
 
 CONTH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+CONTH        += $(wildcard $(MODDIRI)/ROOT/*.h)
 CONTS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 CONTO        := $(call stripsrc,$(CONTS:.cxx=.o))
 
@@ -31,6 +32,9 @@ INCLUDEFILES += $(CONTDEP)
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(CONTDIRI)/%.h
+		@(if [ ! -d "include/ROOT" ]; then     \
+		   mkdir -p include/ROOT;              \
+		fi)
 		cp $< $@
 
 all-$(MODNAME): $(CONTO)

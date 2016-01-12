@@ -27,6 +27,7 @@
 #define ROOT_TMVA_NodekNN
 
 // C++
+#include <cassert>
 #include <list>
 #include <string>
 #include <iostream>

@@ -29,6 +29,7 @@
 #include "TApplication.h"
 #include "TVirtualPad.h"
 #include "TMethodCall.h"
+#include "TMutex.h"
 #include "TTimeStamp.h"
 #include "TInterpreter.h"
 #include "TError.h"

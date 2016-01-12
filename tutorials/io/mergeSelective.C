@@ -1,38 +1,49 @@
+/// \file
+/// \ingroup tutorial_io
+/// Merge only part of the content of a set of files.
+/// This macro demonstrates how to merge only a part of the content of a set
+/// of input files, specified via the interface.
+/// ~~~{.cpp}
+///     TFileMerger::AddObjectNames(const char *names)
+/// ~~~
+/// The method can be called several times to add object names, or using a single
+/// string with names separated by a blank. Directory names contained in the files
+/// to be merged are accepted.
+///
+/// Two modes are supported:
+/// 1. kOnlyListed: via <tt>TFileMerger::PartialMerge(kOnlyListed)</tt>
+///    This will merge only the objects in the files having the names in the
+///    specified list. If a folder is specified, its whole content will be merged
+///
+/// 2. kSkipListed: via <tt>TFileMerger::PartialMerge(kSkipListed)</tt>
+///    This will skip merging of specified objects. If a folder is specified, its
+///    whole content will be skipped.
+///
+/// Important note: the kOnlyListed and kSkipListed flags have to be bitwise OR-ed
+/// on top of the merging defaults: kAll | kIncremental (as in the example)
+///
+/// The files to be merged have the following structure:
+/// - hpx          (TH1F)
+/// - hpxpy        (TH2F)
+/// - hprof        (TProfile)
+/// - ntuple       (TNtuple)
+/// - folder       (TDirectory)
+///      - hpx1    (TH1F)
+///
+/// The example first merges exclusively hprof and the content of "folder",
+/// producing the file exclusive.root, then merges all content but skipping
+/// hprof and the content of "folder". The result can be inspected in the
+/// browser.
+///
+/// \macro_code
+///
+/// \author The Root Team
+
+
 void CreateFile(const char *);
 
 void mergeSelective(Int_t nfiles=5)
 {
-// This macro demonstrates how to merge only a part of the content of a set
-// of input files, specified via the interface:
-//      TFileMerger::AddObjectNames(const char *names)
-// The method can be called several times to add object names, or using a single
-// strings with names separated by a blank. Directory names contained in the files
-// to be merged are accepted.
-//
-// Two modes are supported:
-// == kOnlyListed: via TFileMerger::PartialMerge(kOnlyListed)
-//    This will merge only the objects in the files having the names in the
-//    specified list. If a folder is specified, it whole content will be merged
-//
-// == kSkipListed: via TFileMerger::PartialMerge(kSkipListed)
-//    This will skip merging of specified objects. If a folder is specified, its
-//    whole content will be skipped.
-//
-// Important note: the kOnlyListed and kSkipListed flags have to be bitwise OR-ed
-// on top of the merging defaults: kAll | kIncremental (as in the example)
-//
-// The files to be merged have the following structure:
-// - hpx          (TH1F)
-// - hpxpy        (TH2F)
-// - hprof        (TProfile)
-// - ntuple       (TNtuple)
-// = folder       (TDirectory)
-//      - hpx1    (TH1F)
-//
-// The example first merges exclusively hprof and the content of "folder",
-// producing the file exclusive.root, then merges all content but skipping
-// hprof and the content of "folder". The result can be inspected in the
-// browser.
 
    // Create the files to be merged
    TStopwatch timer;

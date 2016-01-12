@@ -2,9 +2,6 @@
 # CMakeLists.txt file for building ROOT (global) core package
 ############################################################################
 
-if(builtin_pcre)
-  add_subdirectory(pcre)
-endif()
 add_subdirectory(rint)
 add_subdirectory(thread)
 add_subdirectory(multiproc)
@@ -106,7 +103,7 @@ if(cling)
   add_dependencies(Core CLING)
 endif()
 if(builtin_pcre)
-  add_dependencies(Core PCRE)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(Core PCRE)
 endif()
 if(builtin_lzma)
   ROOT_ADD_BUILTIN_DEPENDENCIES(Core LZMA)

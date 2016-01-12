@@ -156,7 +156,7 @@ public:
 
    //----- operators
    void    *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }
-   void    *operator new[](size_t sz) { return TStorage::ObjectAlloc(sz); }
+   void    *operator new[](size_t sz) { return TStorage::ObjectAllocArray(sz); }
    void    *operator new(size_t sz, void *vp) { return TStorage::ObjectAlloc(sz, vp); }
    void    *operator new[](size_t sz, void *vp) { return TStorage::ObjectAlloc(sz, vp); }
    void     operator delete(void *ptr);
@@ -233,9 +233,5 @@ enum EObjBits {
 namespace cling {
    std::string printValue(TObject *val);
 }
-
-#ifndef ROOT_TBuffer
-#include "TBuffer.h"
-#endif
 
 #endif

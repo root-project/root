@@ -28,8 +28,13 @@
 
 
 #include "TMVA/ClassifierFactory.h"
+
+#include "RtypesCore.h"
+
 #include <assert.h>
 #include <iostream>
+
+class TString;
 
 ///
 /// Initialize static singleton pointer

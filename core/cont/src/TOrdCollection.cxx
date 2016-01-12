@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TOrdCollection
+\ingroup Containers
 Ordered collection. An ordered collection has TList insertion
 semantics but is implemented using an array of TObject*'s. It uses
 less space than a TList (since there is no need for the prev and

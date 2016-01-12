@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TArrayF
+\ingroup Containers
 Array of floats (32 bits per element).
 */
 

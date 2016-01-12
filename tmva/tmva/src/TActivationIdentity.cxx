@@ -21,9 +21,13 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+#include "TMVA/TActivationIdentity.h"
+
+#include "Rtypes.h"
+
 #include <iostream>
 
-#include "TMVA/TActivationIdentity.h"
+class TString;
 
 ClassImp(TMVA::TActivationIdentity)
 

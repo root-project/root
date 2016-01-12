@@ -43,14 +43,15 @@
 */
 //End_Html
 
-#include "Riostream.h"
+#include "TGeoPcon.h"
 
+#include "Riostream.h"
+#include "TBuffer.h"
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoTube.h"
 #include "TGeoCone.h"
-#include "TGeoPcon.h"
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
@@ -1129,6 +1130,7 @@ Double_t TGeoPcon::Safety(const Double_t *point, Bool_t in) const
       // check increasing iplanes
       iplane = ipl+1;
       saftmp = 0.;
+/*
       while ((iplane<fNz-1) && saftmp<1E10) {
          saftmp = TMath::Abs(SafetyToSegment(point,iplane,kFALSE,safmin));
          if (saftmp<safmin) safmin=saftmp;
@@ -1142,6 +1144,7 @@ Double_t TGeoPcon::Safety(const Double_t *point, Bool_t in) const
          if (saftmp<safmin) safmin=saftmp;
          iplane--;
       }
+*/
       return safmin;
    }
    //---> point is outside pcon

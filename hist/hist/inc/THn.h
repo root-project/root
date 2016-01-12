@@ -51,16 +51,6 @@ private:
    THn& operator=(const THn&); // Not implemented
 
 protected:
-   void FillBin(Long64_t bin, Double_t w) {
-      // Increment the bin content of "bin" by "w",
-      // return the bin index.
-      GetArray().AddAt(bin, w);
-      if (GetCalculateErrors()) {
-         fSumw2.AddAt(bin, w * w);
-      }
-      FillBinBase(w);
-   }
-
    void AllocCoordBuf() const;
    void InitStorage(Int_t* nbins, Int_t chunkSize);
 
@@ -107,6 +97,16 @@ public:
    }
    Long64_t GetBin(const char* name[], Bool_t /*allocate*/ = kTRUE) {
       return const_cast<const THn*>(this)->GetBin(name);
+   }
+
+   void FillBin(Long64_t bin, Double_t w) {
+      // Increment the bin content of "bin" by "w",
+      // return the bin index.
+      GetArray().AddAt(bin, w);
+      if (GetCalculateErrors()) {
+         fSumw2.AddAt(bin, w * w);
+      }
+      FillBinBase(w);
    }
 
    void SetBinContent(const Int_t* idx, Double_t v) {

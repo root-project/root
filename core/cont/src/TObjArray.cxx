@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TObjArray
+\ingroup Containers
 An array of TObjects. The array expands automatically when
 objects are added (shrinking can be done by hand using Expand(),
 how nice to have meaningful names -:)).

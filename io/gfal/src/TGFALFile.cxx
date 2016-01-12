@@ -52,7 +52,7 @@ extern "C" {
 }
 
 // GFAL2 doesn't use special names for 64 bit versions
-#ifdef _GFAL2_API_
+#if defined(_GFAL2_API_) || defined(GFAL2_API_H_)
 #define gfal_lseek64   gfal_lseek
 #define gfal_open64    gfal_open
 #define gfal_readdir64 gfal_readdir

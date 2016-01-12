@@ -193,6 +193,11 @@ get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
 
 
 string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS})
+if(cxxmodules)
+  # rootcling doesn't know what to do with these flags.
+  # FIXME: Disable until until somebody teaches it.
+  string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
+endif(cxxmodules)
 add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                           etc/dictpch/allHeaders.h
                           etc/dictpch/allCppflags.txt
@@ -211,6 +216,14 @@ set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
 add_dependencies(onepcm ${__allTargets})
 install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+
+#---CXX MODULES-----------------------------------------------------------------------------------
+if(cxxmodules)
+  add_custom_target(copymodulemap ALL DEPENDS build/unix/module.modulemap)
+  add_custom_command(TARGET copymodulemap PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
+  )
+endif(cxxmodules)
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall

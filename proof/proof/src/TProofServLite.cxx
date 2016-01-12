@@ -9,6 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class TProofServLite
+\ingroup proofkernel
+
+Version of the PROOF worker server for local running. The client starts
+directly the desired number of these workers; the master and daemons are
+eliminated, optimizing the number of messages exchanged and created / destroyed.
+
+*/
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TProofServLite                                                       //

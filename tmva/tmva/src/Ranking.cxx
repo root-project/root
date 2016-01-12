@@ -29,12 +29,14 @@
 // Ranking for variables in method (implementation)
 //_______________________________________________________________________
 
-#include <iomanip>
+#include "TMVA/Ranking.h"
+
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
 
 #include "TString.h"
 
-#include "TMVA/Ranking.h"
-#include "TMVA/MsgLogger.h"
+#include <iomanip>
 
 ClassImp(TMVA::Ranking)
 

@@ -1,12 +1,15 @@
-//
-// Author: Ilka Antcheva   1/12/2006
-
-// This macro gives an example of how to create a number entry
-// and how to update a label according to the changed value of
-// this number entry.
-// To run it do either:
-// .x numberEntry.C
-// .x numberEntry.C++
+/// \file
+/// \ingroup tutorial_gui
+/// This macro gives an example of how to create a number entry and how to update a label according to the changed value of this number entry.
+/// To run it do either:
+/// ~~~ 
+/// .x numberEntry.C
+/// .x numberEntry.C++
+/// ~~~ 
+///
+/// \macro_code
+///
+/// \author Ilka Antcheva   1/12/2006
 
 #include <TApplication.h>
 #include <TGClient.h>

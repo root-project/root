@@ -811,10 +811,7 @@ INPUT                  = . \
                          ../../math/ \
                          ../../misc/memstat/ \
                          ../../misc/table/ \
-                         ../../montecarlo/eg/ \
-                         ../../montecarlo/pythia8/ \
-                         ../../montecarlo/pythia6/ \
-                         ../../montecarlo/vmc/ \
+                         ../../montecarlo/ \
                          ../../net/alien/ \
                          ../../net/auth/ \
                          ../../net/bonjour/ \
@@ -831,7 +828,8 @@ INPUT                  = . \
                          ../../tmva/ \
                          ../../roofit/ \
                          ../../tree/ \
-                         ../../sql/
+                         ../../sql/ \
+                         ../../tutorials/
 #                         ../../core/clib/
 #                         ../../core/lzma/
 #                         ../../core/newdelete/
@@ -936,7 +934,7 @@ EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       =  */G__* \
                           */src/unuran-* \
                           */libAfterImage/* \
-                          */doc/v6* */doc/v5* \
+                          */doc/v6* */doc/v5* v7 \
                           */win32gdk/gdk/* \
                           makeimage.C filter.cxx
 
@@ -1287,7 +1285,7 @@ HTML_TIMESTAMP         = YES
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_DYNAMIC_SECTIONS  = YES
+HTML_DYNAMIC_SECTIONS  = NO
 
 # With HTML_INDEX_NUM_ENTRIES one can control the preferred number of entries
 # shown in the various tree structured indices initially; the user can expand
@@ -2378,7 +2376,7 @@ DOT_IMAGE_FORMAT       = svg
 # The default value is: NO.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-INTERACTIVE_SVG        = YES
+INTERACTIVE_SVG        = NO
 
 # The DOT_PATH tag can be used to specify the path where the dot tool can be
 # found. If left blank, it is assumed the dot tool can be found in the path.

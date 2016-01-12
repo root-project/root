@@ -10,6 +10,8 @@
  *************************************************************************/
 
 #include "TMixture.h"
+
+#include "TBuffer.h"
 #include "TMath.h"
 
 ClassImp(TMixture)

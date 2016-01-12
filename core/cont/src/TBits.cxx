@@ -4,6 +4,7 @@
 //    Feb  6 2001: Changed all int to unsigned int.
 
 /** \class TBits
+\ingroup Containers
 Container of bits.
 
 This class provides a simple container of bits.

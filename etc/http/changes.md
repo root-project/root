@@ -1,7 +1,56 @@
 # JSROOT changelog
 
+## Changes in 4.0
+1. New TGeo classes support:
+   - browsing  through volumes hieararchy
+   - changing visibility flags
+   - drawing of selected volumes
+2. New 'flex' layout:
+   - create frames like in Multi Document Interface
+   - one could move/resize/minimize/maximize such frames
+3. Significant (factor 4) I/O performance improvement:
+   - use ArrayBuffer class in HTTP requests instead of String
+   - use native arrays (like Int32Array) for array data members
+   - highly optimize streamer infos handling 
+4. TH2 drawing optimization:
+   - if there are too many non-empty bins, combine them together
+   - when zoom-in, all original bins will be displayed separately
+   - let draw big TH2 histogram faster than in 1 sec
+   - optimization can be disabled by providing '&optimize=0' in URL             
+5. TF1 drawing optimization:
+   - function 'compiled' only once
+6. Reorganize scripts structure:
+   - move all math functions to JSRootMath.js
+   - TH2, TF1, THStack and TMultiGraph painters moved into JSRootPainter.more.js script
+   - reduce size of scripts required for default functionality
+7. Update all basic libraries:
+    - d3.js - v3.5.9, 
+    - jquery.js - v2.1.4, 
+    - jquery-ui.js - v1.11.4, 
+    - three.js - r73  
+8. Implement ROOT6-like color palettes:
+    - all palettes in range 51...112 are implemented 
+    - by default palette 57 is used
+    - one could change default palette with '&palette=111' in URL
+    - or palette can be specified in draw option like '&opt=colz,pal77'
+
+
+## Changes in 3.9
+1. Support non-equidistant bins for TH1/TH2 objects.
+2. Display entries count from histo.fEntries member, only when not set use computed value  
+3. Support italic and bold text when used with MathJax
+4. Improve TF1 drawing - support exp function in TFormula, fix errors with logx scale, enable zoom-in, (re)calculate function points when zooming
+5. Support several columns in TLegend
+6. Introduce context menus for x/y axis, add some items similar to native ROOT menus
+7. Introduce context menu for TPaveStats, let switch single elements in the box   
+8. Enable usage of all context menus on touch devices 
+9. Implement JSROOT.Math.Prob function, provides probability value in stat box 
+10. Introduce context menu for color palette (z axis)
+11. Implement col0 and col0z draw option for TH2 histograms, similar to ROOT6
+
+
 ## Changes in 3.8
-1.  Let use HTML element pointer in JSROOT.draw function like:
+1. Let use HTML element pointer in JSROOT.draw function like:
        JSROOT.draw(document.getElementsByTagName("div")[0], obj, "hist");
    Normally unique identifier was used before, which is not required any longer.
    Of course, old functionality with element identifier will work as well. 

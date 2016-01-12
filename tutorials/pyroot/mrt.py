@@ -1,8 +1,13 @@
-"""
-   Build ROOT Ntuple from other source.   
-   This program reads the `aptuple.txt' file row by row, then creates
-   the Ntuple by adding row by row.
-"""
+## \file
+## \ingroup tutorial_pyroot
+## Build ROOT Ntuple from other source.
+## This program reads the `aptuple.txt' file row by row, then creates
+## the Ntuple by adding row by row.
+##
+## \macro_output
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 import sys, string
 from ROOT import TFile, TNtuple
@@ -25,7 +30,7 @@ for line in lines[2:]:
     words = string.split( line )
     row = map( float, words )
     apply( ntuple.Fill, row )
-    
+
 outfile.Write()
 
 print 'done'

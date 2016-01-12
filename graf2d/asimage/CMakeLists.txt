@@ -3,17 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-#---Build afterimage library------------------------------------------------
-if(builtin_afterimage)
-  include(BuildAfterImage.cmake)
-  set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/graf2d/asimage/libAfterImage)
-  if(WIN32)
-    set(AFTERIMAGE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libAfterImage.lib)
-  else()
-    set(AFTERIMAGE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libAfterImage.a)
-  endif()
-endif()
-
 if(cocoa)  # Not needed to locate PNG, JPG, TIFF libraries
   set(ASEXTRA_LIBRARIES)
 endif()
@@ -29,10 +18,10 @@ ROOT_LINKER_LIBRARY(ASImage TASImage.cxx TASPluginGS.cxx  G__ASImage.cxx
                     LIBRARIES Core ${AFTERIMAGE_LIBRARIES} ${FREETYPE_LIBRARIES} ${ASEXTRA_LIBRARIES} ${X11_LIBRARIES}
                     ${ZLIB_LIBRARY} DEPENDENCIES Graf)
 if(builtin_afterimage)
-  add_dependencies(ASImage AFTERIMAGE)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(ASImage AFTERIMAGE)
 endif()
 if(builtin_freetype)
-  add_dependencies(ASImage FREETYPE)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(ASImage FREETYPE)
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__ASImageGui TASPaletteEditor.h MODULE ASImageGui LINKDEF LinkDefGui.h OPTIONS "-writeEmptyRootPCM")

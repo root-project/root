@@ -2,12 +2,13 @@
 
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooJeffreysPrior 
-// END_HTML
-//
+/**
+\file RooJeffreysPrior.cxx
+\class RooJeffreysPrior
+\ingroup Roofit
+
+RooJeffreysPrior 
+**/
 
 
 #include "RooFit.h"

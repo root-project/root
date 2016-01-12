@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TNtuple.h"
+#include "TBuffer.h"
 #include "TTree.h"
 #include "TBranch.h"
 #include "TLeaf.h"

@@ -1,29 +1,31 @@
-// Standard demo of the ProfileInspector class
-/*
-StandardProfileInspectorDemo
-
-Author: Kyle Cranmer
-date: Dec. 2010
-
-This is a standard demo that can be used with any ROOT file
-prepared in the standard way.  You specify:
- - name for input ROOT file
- - name of workspace inside ROOT file that holds model and data
- - name of ModelConfig that specifies details for calculator tools
- - name of dataset
-
-With default parameters the macro will attempt to run the
-standard hist2workspace example and read the ROOT file
-that it produces.
-
-The actual heart of the demo is only about 10 lines long.
-
-The ProfileInspector plots the conditional maximum likelihood estimate
-of each nuisance parameter in the model vs. the parameter of interest.
-(aka. profiled value of nuisance parameter vs. parameter of interest)
-(aka. best fit nuisance parameter with p.o.i fixed vs. parameter of interest)
-
-*/
+/// \file
+/// \ingroup tutorial_roostats
+/// Standard demo of the ProfileInspector class
+/// StandardProfileInspectorDemo
+///
+/// This is a standard demo that can be used with any ROOT file
+/// prepared in the standard way.  You specify:
+///  - name for input ROOT file
+///  - name of workspace inside ROOT file that holds model and data
+///  - name of ModelConfig that specifies details for calculator tools
+///  - name of dataset
+///
+/// With default parameters the macro will attempt to run the
+/// standard hist2workspace example and read the ROOT file
+/// that it produces.
+///
+/// The actual heart of the demo is only about 10 lines long.
+///
+/// The ProfileInspector plots the conditional maximum likelihood estimate
+/// of each nuisance parameter in the model vs. the parameter of interest.
+/// (aka. profiled value of nuisance parameter vs. parameter of interest)
+/// (aka. best fit nuisance parameter with p.o.i fixed vs. parameter of interest)
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer
 
 #include "TFile.h"
 #include "TROOT.h"

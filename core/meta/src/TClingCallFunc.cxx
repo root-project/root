@@ -1374,13 +1374,13 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
    buf << "else {\n";
    ++indent_level;
    indent(buf, indent_level);
-   buf << "for (unsigned long i = nary - 1; i > -1; --i) {\n";
+   buf << "do {\n";
    ++indent_level;
    indent(buf, indent_level);
-   buf << "(((Nm*)obj)+i)->~Nm();\n";
+   buf << "(((Nm*)obj)+(--nary))->~Nm();\n";
    --indent_level;
    indent(buf, indent_level);
-   buf << "}\n";
+   buf << "} while (nary);\n";
    --indent_level;
    indent(buf, indent_level);
    buf << "}\n";

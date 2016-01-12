@@ -1,13 +1,13 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'VALIDATION AND MC STUDIES' RooFit tutorial macro #804
-// 
-// Using RooMCStudy on models with constrains
-//
-// 
-// 07/2008 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'VALIDATION AND MC STUDIES' RooFit tutorial macro #804
+///
+///  Using RooMCStudy on models with constrains
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

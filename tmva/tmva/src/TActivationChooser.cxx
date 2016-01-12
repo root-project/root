@@ -56,6 +56,7 @@
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
 #endif
+#include "TMVA/Types.h"
 
 
 TMVA::TActivationChooser::TActivationChooser() :

@@ -22,22 +22,17 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+#include "TMVA/VariableRearrangeTransform.h"
+
+#include "TMVA/DataSet.h"
+#include "TMVA/Event.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
-
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMVA_VariableRearrangeTransform
-#include "TMVA/VariableRearrangeTransform.h"
-#endif
-#ifndef ROOT_TMVA_Tools
-#include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
-#include "TMVA/DataSet.h"
-#endif
 
 ClassImp(TMVA::VariableRearrangeTransform)
 

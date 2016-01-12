@@ -25,6 +25,8 @@
 #include "TMVA/GeneticGenes.h"
 #include "TMVA/GeneticPopulation.h"
 
+#include "Rtypes.h"
+#include "RtypesCore.h"
 //_______________________________________________________________________
 //                                                                      
 // Cut optimisation interface class for genetic algorithm               //

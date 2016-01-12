@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TExMap
+
 This class stores a (key,value) pair using an external hash.
 The (key,value) are Long64_t's and therefore can contain object
 pointers or any longs. The map uses an open addressing hashing
@@ -17,6 +18,7 @@ method (linear probing).
 */
 
 #include "TExMap.h"
+#include "TBuffer.h"
 #include "TError.h"
 #include "TMathBase.h"
 #include <string.h>

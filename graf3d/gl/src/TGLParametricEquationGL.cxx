@@ -20,10 +20,11 @@
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
-//______________________________________________________________________
-//
-// GL-renderer wrapper for TGLParametricEquation.
-// This allows rendering of parametric-equations in standard GL viewer.
+/** \class TGLParametricEquationGL
+\ingroup opengl
+GL-renderer wrapper for TGLParametricEquation.
+This allows rendering of parametric-equations in standard GL viewer.
+*/
 
 ClassImp(TGLParametricEquationGL);
 

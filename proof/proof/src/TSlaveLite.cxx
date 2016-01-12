@@ -9,6 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class TSlaveLite
+\ingroup proofkernel
+
+Version of TSlave for local worker servers.
+See TSlave for details.
+
+*/
+
+
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TSlaveLite                                                           //

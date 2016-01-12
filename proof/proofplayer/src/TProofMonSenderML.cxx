@@ -10,13 +10,12 @@
  *************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofMonSenderML                                                    //
-//                                                                      //
-// TProofMonSender implementation for the ML writer.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofMonSenderML
+\ingroup proofkernel
+
+TProofMonSender implementation for the ML writer
+
+*/
 
 #include "TProofMonSenderML.h"
 

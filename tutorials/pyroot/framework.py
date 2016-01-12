@@ -1,7 +1,14 @@
+## \file
+## \ingroup tutorial_pyroot
+## The ROOT Framework
+##
+## \macro_image
+## \macro_code
+##
+## \author Wim Lavrijsen
+
 from ROOT import TCanvas, TPavesText
 from ROOT import gROOT
-
-
 
 c1 = TCanvas("c1","The ROOT Framework",200,10,700,500)
 c1.Range(0,0,19,12)

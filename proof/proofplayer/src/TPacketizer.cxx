@@ -9,20 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPacketizer                                                          //
-//                                                                      //
-// This class generates packets to be processed on PROOF worker servers.//
-// A packet is an event range (begin entry and number of entries) or    //
-// object range (first object and number of objects) in a TTree         //
-// (entries) or a directory (objects) in a file.                        //
-// Packets are generated taking into account the performance of the     //
-// remote machine, the time it took to process a previous packet on     //
-// the remote machine, the locality of the database files, etc.         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TPacketizer
+\ingroup proofkernel
 
+This class generates packets to be processed on PROOF worker servers.
+A packet is an event range (begin entry and number of entries) or
+object range (first object and number of objects) in a TTree
+(entries) or a directory (objects) in a file.
+Packets are generated taking into account the performance of the
+remote machine, the time it took to process a previous packet on
+the remote machine, the locality of the database files, etc.
+
+*/
 
 #include "TPacketizer.h"
 

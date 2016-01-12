@@ -12,6 +12,7 @@
 #pragma link C++ class TMVA::Event+;
 #pragma link C++ class TMVA::kNN::Event+;
 #pragma link C++ class TMVA::Factory+;
+#pragma link C++ class TMVA::DataLoader+;
 
 // the classifiers
 #pragma link C++ class TMVA::MethodBase+;

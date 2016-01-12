@@ -9,19 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXUnixSocket                                                         //
-//                                                                      //
-// Implementation of TXSocket using PF_UNIX sockets.                    //
-// Used for the internal connection between coordinator and proofserv.  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TXUnixSocket
+\ingroup proofx
+
+Implementation of TXSocket using PF_UNIX sockets.
+Used for the internal connection between coordinator and TXProofServ.
+
+*/
 
 #include "XpdSysPthread.h"
 
 #include "TXUnixSocket.h"
 #include "TEnv.h"
+#include "TSystem.h"
 #include "XrdProofPhyConn.h"
 
 ClassImp(TXUnixSocket)

@@ -7,6 +7,7 @@ sets and multisets) while storing them in split mode.
 */
 
 #include "TBranchSTL.h"
+#include "TBuffer.h"
 #include "TList.h"
 #include "TBranchElement.h"
 #include "TBasket.h"

@@ -29,11 +29,14 @@
 #include <fstream>
 #include <string>
 
-#define IPYTHON_CMD     "ipython"
-#define NB_OPT          "notebook"
-#define IPYTHON_DIR_VAR "IPYTHONDIR"
-#define NB_CONF_DIR     "notebook"
-
+#define JUPYTER_CMD        "jupyter"
+#define NB_OPT             "notebook"
+#define JUPYTER_CONF_DIR_V "JUPYTER_CONFIG_DIR"
+#define JUPYTER_PATH_V     "JUPYTER_PATH"
+#define NB_CONF_DIR        "notebook"
+#define ROOTNB_DIR         ".rootnb"
+#define COMMIT_FILE        ".rootcommit"
+#define JUPYTER_CONFIG     "jupyter_notebook_config.py"
 
 using namespace std;
 
@@ -42,9 +45,6 @@ static string pathsep("\\");
 #else
 static string pathsep("/");
 #endif
-static string rootnbdir(".rootnb" + pathsep);
-static string ipyconfigpath("profile_default" + pathsep + "ipython_notebook_config.py");
-static string commitfile(".rootcomit");
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Checks whether ROOT notebook files are installed and they are
@@ -53,7 +53,7 @@ static string commitfile(".rootcomit");
 static int CheckNbInstallation(string dir)
 {
    string commit(gROOT->GetGitCommit());
-   string inputfname(dir + pathsep + rootnbdir + commitfile);
+   string inputfname(dir + pathsep + ROOTNB_DIR + pathsep + COMMIT_FILE);
    ifstream in(inputfname);
    if (in.is_open()) {
       string line;
@@ -108,7 +108,7 @@ static bool InstallNbFiles(string source, string dest)
                return false;
             }
          }
-         else if (fname.compare(".") && fname.compare("..")) {
+         else if (fname.compare(".") && fname.compare("..") && fname.compare("html")) {
             if (!InstallNbFiles(sourcefile, destfile))
                return false;
          }
@@ -119,13 +119,13 @@ static bool InstallNbFiles(string source, string dest)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates the IPython notebook configuration file that sets the
+/// Creates the Jupyter notebook configuration file that sets the
 /// necessary environment.
 
-static bool CreateIPythonConfig(string dest, string rootbin, string rootlib)
+static bool CreateJupyterConfig(string dest, string rootbin, string rootlib)
 {
-   string ipyconfig = dest + pathsep + ipyconfigpath;
-   ofstream out(ipyconfig, ios::trunc);
+   string jupyconfig = dest + pathsep + JUPYTER_CONFIG;
+   ofstream out(jupyconfig, ios::trunc);
    if (out.is_open()) {
       out << "import os" << endl;
       out << "rootbin = '" << rootbin << "'" << endl;
@@ -144,7 +144,7 @@ static bool CreateIPythonConfig(string dest, string rootbin, string rootlib)
    else { 
       fprintf(stderr,
               "Error installing notebook configuration files -- cannot create IPython config file at %s\n",
-              ipyconfig.c_str());
+              jupyconfig.c_str());
       return false;
    }
 }
@@ -154,7 +154,7 @@ static bool CreateIPythonConfig(string dest, string rootbin, string rootlib)
 
 static bool CreateStamp(string dest)
 {
-   ofstream out(dest + pathsep + commitfile, ios::trunc);
+   ofstream out(dest + pathsep + COMMIT_FILE, ios::trunc);
    if (out.is_open()) {
       out << gROOT->GetGitCommit();
       out.close();
@@ -163,7 +163,7 @@ static bool CreateStamp(string dest)
    else {
       fprintf(stderr,
               "Error installing notebook configuration files -- cannot create %s\n",
-              commitfile.c_str());
+              COMMIT_FILE);
       return false;
    }
 }
@@ -193,24 +193,27 @@ int main()
    if (inst == -1) {
       // The etc directory contains the ROOT notebook files to install
       string source(rootetc + pathsep + NB_CONF_DIR);
-      string dest(homedir + pathsep + rootnbdir);
+      string dest(homedir + pathsep + ROOTNB_DIR);
       bool res = InstallNbFiles(source, dest) &&
-                 CreateIPythonConfig(dest, rootbin, rootlib) &&
+                 CreateJupyterConfig(dest, rootbin, rootlib) &&
                  CreateStamp(dest);
       if (!res) return 1;
    }
    else if (inst == -2) return 1;
 
    // Set IPython directory for the ROOT notebook flavour
-   string ipydir(IPYTHON_DIR_VAR + ("=" + homedir + pathsep + rootnbdir));
-   putenv((char *)ipydir.c_str());
+   string rootnbpath = homedir + pathsep + ROOTNB_DIR;
+   string jupyconfdir(JUPYTER_CONF_DIR_V + ("=" + rootnbpath));
+   string jupypathdir(JUPYTER_PATH_V + ("=" + rootnbpath));
+   putenv((char *)jupyconfdir.c_str());
+   putenv((char *)jupypathdir.c_str());
 
    // Execute IPython notebook
-   execlp(IPYTHON_CMD, IPYTHON_CMD, NB_OPT, NULL);
+   execlp(JUPYTER_CMD, JUPYTER_CMD, NB_OPT, NULL);
 
    // Exec failed
    fprintf(stderr,
-           "Error starting ROOT notebook -- please check that IPython notebook is installed\n");
+           "Error starting ROOT notebook -- please check that Jupyter is installed\n");
 
    return 1;
 }

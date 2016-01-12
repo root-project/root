@@ -1,14 +1,14 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #507
-// 
-//   RooFit memory tracing debug tool
-//
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #507
+///
+///    RooFit memory tracing debug tool
+///
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

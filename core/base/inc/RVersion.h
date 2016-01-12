@@ -14,10 +14,10 @@
  *
 */
 
-#define ROOT_RELEASE "6.05/03"
-#define ROOT_RELEASE_DATE "Sep 14 2015"
-#define ROOT_RELEASE_TIME "09:48:07"
+#define ROOT_RELEASE "6.07/03"
+#define ROOT_RELEASE_DATE "Dec 18 2015"
+#define ROOT_RELEASE_TIME "11:28:24"
 #define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
-#define ROOT_VERSION_CODE ROOT_VERSION(6,5,3) /* 394499 */
+#define ROOT_VERSION_CODE ROOT_VERSION(6,7,3) /* 395011 */
 
 #endif

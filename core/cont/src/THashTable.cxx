@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class THashTable
+\ingroup Containers
 THashTable implements a hash table to store TObject's. The hash
 value is calculated using the value returned by the TObject's
 Hash() function. Each class inheriting from TObject can override

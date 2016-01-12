@@ -11,6 +11,7 @@
 
 #include "Riostream.h"
 #include "TAttAxis.h"
+#include "TBuffer.h"
 #include "TStyle.h"
 #include "TVirtualPad.h"
 #include "TColor.h"

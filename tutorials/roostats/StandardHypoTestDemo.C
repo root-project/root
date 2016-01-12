@@ -1,26 +1,30 @@
-// Standard tutorial macro for hypothesis test (for computing the discovery significance) using all
-// RooStats hypotheiss tests calculators and test statistics
-//
-//
-//Author:  L. Moneta
-//
-// Usage:
-//
-// root>.L StandardHypoTestDemo.C
-// root> StandardHypoTestDemo("fileName","workspace name","S+B modelconfig name","B model name","data set name",calculator type, test statistic type, //                             number of toys)
-//
-//
-// type = 0 Freq calculator
-// type = 1 Hybrid calculator
-// type = 2 Asymptotic calculator
-// type = 3 Asymptotic calculator using nominal Asimov data sets (not using fitted parameter values but nominal ones)
-//
-// testStatType = 0 LEP
-//              = 1 Tevatron
-//              = 2 Profile Likelihood
-//              = 3 Profile Likelihood one sided (i.e. = 0 if mu_hat < 0)
-//
-
+/// \file
+/// \ingroup tutorial_roostats
+/// Standard tutorial macro for hypothesis test (for computing the discovery significance) using all
+/// RooStats hypotheiss tests calculators and test statistics.
+///
+/// Usage:
+///
+/// ~~~ {.cpp}
+/// root>.L StandardHypoTestDemo.C
+/// root> StandardHypoTestDemo("fileName","workspace name","S+B modelconfig name","B model name","data set name",calculator type, test statistic type, number of toys)
+///
+///  type = 0 Freq calculator
+///  type = 1 Hybrid calculator
+///  type = 2 Asymptotic calculator
+///  type = 3 Asymptotic calculator using nominal Asimov data sets (not using fitted parameter values but nominal ones)
+///
+/// testStatType = 0 LEP
+///              = 1 Tevatron
+///              = 2 Profile Likelihood
+///              = 3 Profile Likelihood one sided (i.e. = 0 if mu_hat < 0)
+/// ~~~
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 #include "TFile.h"
 #include "RooWorkspace.h"
@@ -355,7 +359,7 @@ void StandardHypoTestDemo(const char* infile = "",
    HypoTestResult *  htr = hypoCalc->GetHypoTest();
    htr->SetPValueIsRightTail(true);
    htr->SetBackgroundAsAlt(false);
-   htr->Print(); // how to get meaningfull CLs at this point?
+   htr->Print(); // how to get meaningful CLs at this point?
 
    delete sampler;
    delete slrts;

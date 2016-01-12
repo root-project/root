@@ -1,11 +1,12 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// Demonstraite Z_Bi = Z_Gamma
-// author: Kyle Cranmer & Wouter Verkerke
-// date May 2010
-//
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roostats
+/// Demonstrate Z_Bi = Z_Gamma
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Kyle Cranmer & Wouter Verkerke
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"
@@ -62,6 +63,4 @@ void Zbi_Zgamma() {
   // Hybrid p-value = 0.999058
   // Z_Gamma Significance  = 3.10804
   // Z_Bi significance estimation: 3.10804
-
-
 }

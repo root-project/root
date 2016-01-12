@@ -11,6 +11,7 @@
 
 #include "v5/TF1Data.h"
 
+#include "TBuffer.h"
 #include "TH1.h"
 
 ClassImp(ROOT::v5::TF1Data)

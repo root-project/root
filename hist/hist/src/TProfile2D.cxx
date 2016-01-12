@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TProfile2D.h"
+#include "TBuffer.h"
 #include "TMath.h"
 #include "THLimitsFinder.h"
 #include "Riostream.h"

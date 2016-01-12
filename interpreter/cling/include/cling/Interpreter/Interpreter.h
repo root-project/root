@@ -17,9 +17,7 @@
 #include <cstdlib>
 #include <memory>
 #include <string>
-
-// FIXME: workaround until JIT supports exceptions
-#include <setjmp.h>
+#include <unordered_map>
 
 namespace llvm {
   class raw_ostream;
@@ -43,6 +41,7 @@ namespace clang {
   class NamedDecl;
   class Parser;
   class QualType;
+  class RecordDecl;
   class Sema;
   class SourceLocation;
   class SourceManager;
@@ -150,6 +149,9 @@ namespace cling {
     ///
     std::unique_ptr<LookupHelper> m_LookupHelper;
 
+    ///\brief Cache of compiled destructors wrappers.
+    std::unordered_map<const clang::RecordDecl*, void*> m_DtorWrappers;
+
     ///\brief Counter used when we need unique names.
     ///
     unsigned long long m_UniqueCounter;
@@ -181,9 +183,6 @@ namespace cling {
     ///\brief Information about the last stored states through .storeState
     ///
     mutable std::vector<ClangInternalState*> m_StoredStates;
-
-    ///\brief: FIXME: workaround until JIT supports exceptions
-    static jmp_buf* m_JumpBuf;
 
     ///\brief Processes the invocation options.
     ///
@@ -598,6 +597,10 @@ namespace cling {
     void* compileFunction(llvm::StringRef name, llvm::StringRef code,
                           bool ifUniq = true, bool withAccessControl = true);
 
+    ///\brief Compile (and cache) destructor calls for a record decl. Used by ~Value.
+    /// They are of type extern "C" void()(void* pObj).
+    void* compileDtorCallFor(const clang::RecordDecl* RD);
+
     ///\brief Gets the address of an existing global and whether it was JITted.
     ///
     /// JIT symbols might not be immediately convertible to e.g. a function
@@ -638,8 +641,6 @@ namespace cling {
                         llvm::raw_ostream* logs = 0) const;
 
     friend class runtime::internal::LifetimeHandler;
-    // FIXME: workaround until JIT supports exceptions
-    static jmp_buf*& getNullDerefJump() { return m_JumpBuf; }
   };
 
   namespace internal {

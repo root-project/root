@@ -1,15 +1,15 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'NUMERIC ALGORITHM TUNING' RooFit tutorial macro #901 
-// 
-// Configuration and customization of how numeric (partial) integrals
-// are executed
-//
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'NUMERIC ALGORITHM TUNING' RooFit tutorial macro #901
+///
+///  Configuration and customization of how numeric (partial) integrals
+///  are executed
+///
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

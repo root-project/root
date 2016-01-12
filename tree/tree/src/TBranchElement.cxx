@@ -2224,11 +2224,17 @@ TClass* TBranchElement::GetCurrentClass()
          if (newInfo != brInfo) {
             TStreamerElement* newElems = (TStreamerElement*) newInfo->GetElements()->FindObject(currentStreamerElement->GetName());
             if (newElems) {
-               newType = newElems->GetClassPointer()->GetName();
+               if (newElems->GetClassPointer())
+                  newType = newElems->GetClassPointer()->GetName();
+               else
+                  newType = newElems->GetTypeName();
             }
          }
          if (newType.Length()==0) {
-            newType = currentStreamerElement->GetClassPointer()->GetName();
+            if (currentStreamerElement->GetClassPointer())
+               newType = currentStreamerElement->GetClassPointer()->GetName();
+            else
+               newType = currentStreamerElement->GetTypeName();
          }
       }
    } else {
@@ -2265,6 +2271,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
    // proper branch.
    TBranchRef* bref = fTree->GetBranchRef();
    if (R__unlikely(bref)) {
+      R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
       fBranchID = bref->SetParent(this, fBranchID);
       bref->SetRequestedEntry(entry);
    }
@@ -2276,6 +2283,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       SetAddress(fAddress);
    } else {
       if (R__unlikely(!fAddress && !fTree->GetMakeClass())) {
+         R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
          SetupAddressesImpl();
       }
    }

@@ -28,17 +28,22 @@
 // J Friedman's RuleFit method
 //_______________________________________________________________________
 
-#include <algorithm>
+#include "TMVA/RuleFitAPI.h"
+
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/MethodRuleFit.h"
+#include "TMVA/RuleFit.h"
+#include "TMVA/Timer.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableInfo.h"
 
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TMath.h"
 
-#include "TMVA/MethodRuleFit.h"
-#include "TMVA/RuleFitAPI.h"
-#include "TMVA/RuleFit.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Timer.h"
+#include <algorithm>
 
 ClassImp(TMVA::RuleFitAPI)
 

@@ -1,14 +1,14 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #608
-// 
-// Representing the parabolic approximation of the fit as
-// a multi-variate Gaussian on the parameters of the fitted p.d.f.
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #608
+///
+///  Representing the parabolic approximation of the fit as
+///  a multi-variate Gaussian on the parameters of the fitted p.d.f.
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

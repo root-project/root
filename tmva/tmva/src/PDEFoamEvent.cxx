@@ -39,9 +39,18 @@
 //
 //_____________________________________________________________________
 
-#ifndef ROOT_TMVA_PDEFoamEvent
 #include "TMVA/PDEFoamEvent.h"
-#endif
+
+#include "TMVA/Event.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+
+#include "Rtypes.h"
+
+namespace TMVA {
+   class PDEFoamCell;
+}
+class TString;
 
 ClassImp(TMVA::PDEFoamEvent)
 
