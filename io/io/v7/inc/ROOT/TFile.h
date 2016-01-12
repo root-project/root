@@ -31,13 +31,11 @@ namespace Internal {
  object for which ROOT I/O is available (generally: an object which has a
  dictionary), and it stores the object's data under a key name.
 
- A `TFileImplBase` stores whatever was added to it as a `TDirectory`, when the
- `TFileImplBase` object is destructed. It can store non-lifetime managed objects
- by passing them to `Save()`.
-
  */
 class TFileImplBase: public TDirectory {
 public:
+  /// Must not call Write() of all attached objects:
+  /// some might not be needed to be written; require explicit Write().
   ~TFileImplBase() = default;
 
   /// Save all objects associated with this directory to the storage medium.
@@ -46,8 +44,12 @@ public:
   /// Flush() and make the file non-writable: close it.
   virtual void Close() = 0;
 
+  /// Write an object that is not lifetime managed by this TFileImplBase.
   template <class T>
-  void Write(const std::string& /*name*/, const T& /*ptr*/) {}
+  void Write(const std::string& /*name*/, const T& /*obj*/) {}
+
+  /// Write an object that is lifetime managed by this TFileImplBase.
+  void Write(const std::string& /*name*/) {}
 
 };
 }
