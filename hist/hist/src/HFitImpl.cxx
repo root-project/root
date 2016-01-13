@@ -408,26 +408,29 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 
 
       // store result in the backward compatible VirtualFitter
-      TVirtualFitter * lastFitter = TVirtualFitter::GetFitter();
-      TBackCompFitter * bcfitter = new TBackCompFitter(fitter, fitdata);
-      bcfitter->SetFitOption(fitOption);
-      bcfitter->SetObjectFit(h1);
-      bcfitter->SetUserFunc(f1);
-      bcfitter->SetBit(TBackCompFitter::kCanDeleteLast);
-      if (userFcn) {
-         bcfitter->SetFCN(userFcn);
-         // for interpreted FCN functions
-         if (lastFitter->GetMethodCall() ) bcfitter->SetMethodCall(lastFitter->GetMethodCall() );
+      // in case multi-thread is not enabled
+      if (!gGlobalMutex) { 
+         TVirtualFitter * lastFitter = TVirtualFitter::GetFitter();
+         TBackCompFitter * bcfitter = new TBackCompFitter(fitter, fitdata);
+         bcfitter->SetFitOption(fitOption);
+         bcfitter->SetObjectFit(h1);
+         bcfitter->SetUserFunc(f1);
+         bcfitter->SetBit(TBackCompFitter::kCanDeleteLast);
+         if (userFcn) {
+            bcfitter->SetFCN(userFcn);
+            // for interpreted FCN functions
+            if (lastFitter->GetMethodCall() ) bcfitter->SetMethodCall(lastFitter->GetMethodCall() );
+         }
+         
+         // delete last fitter if it has been created here before
+         if (lastFitter) {
+            TBackCompFitter * lastBCFitter = dynamic_cast<TBackCompFitter *> (lastFitter);
+            if (lastBCFitter && lastBCFitter->TestBit(TBackCompFitter::kCanDeleteLast) )
+               delete lastBCFitter;
+         }
+         //N.B=  this might create a memory leak if user does not delete the fitter they create
+         TVirtualFitter::SetFitter( bcfitter );
       }
-
-      // delete last fitter if it has been created here before
-      if (lastFitter) {
-         TBackCompFitter * lastBCFitter = dynamic_cast<TBackCompFitter *> (lastFitter);
-         if (lastBCFitter && lastBCFitter->TestBit(TBackCompFitter::kCanDeleteLast) )
-            delete lastBCFitter;
-      }
-      //N.B=  this might create a memory leak if user does not delete the fitter they create
-      TVirtualFitter::SetFitter( bcfitter );
 
       // use old-style for printing the results
       // if (fitOption.Verbose) bcfitter->PrintResults(2,0.);
@@ -896,25 +899,28 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * data, TF1 * fitfunc, Fo
    }
 
    // store result in the backward compatible VirtualFitter
-   TVirtualFitter * lastFitter = TVirtualFitter::GetFitter();
-   // pass ownership of Fitter and Fitdata to TBackCompFitter (fitter pointer cannot be used afterwards)
-   TBackCompFitter * bcfitter = new TBackCompFitter(fitter, fitdata);
- // cannot use anymore now fitdata (given away ownership)
-   fitdata = 0;
-   bcfitter->SetFitOption(fitOption);
-   //bcfitter->SetObjectFit(fTree);
-   bcfitter->SetUserFunc(fitfunc);
+   // in case not running in a multi-thread enabled mode
+   if (gGlobalMutex) { 
+      TVirtualFitter * lastFitter = TVirtualFitter::GetFitter();
+      // pass ownership of Fitter and Fitdata to TBackCompFitter (fitter pointer cannot be used afterwards)
+      TBackCompFitter * bcfitter = new TBackCompFitter(fitter, fitdata);
+      // cannot use anymore now fitdata (given away ownership)
+      fitdata = 0;
+      bcfitter->SetFitOption(fitOption);
+      //bcfitter->SetObjectFit(fTree);
+      bcfitter->SetUserFunc(fitfunc);
+      
+      if (lastFitter) delete lastFitter;
+      TVirtualFitter::SetFitter( bcfitter );
+      
+      // use old-style for printing the results
+      // if (fitOption.Verbose) bcfitter->PrintResults(2,0.);
+      // else if (!fitOption.Quiet) bcfitter->PrintResults(1,0.);
 
-   if (lastFitter) delete lastFitter;
-   TVirtualFitter::SetFitter( bcfitter );
-
+   }
    // print results
-//       if (!fitOption.Quiet) fitResult.Print(std::cout);
-//       if (fitOption.Verbose) fitResult.PrintCovMatrix(std::cout);
-
-   // use old-style for printing the results
-   if (fitOption.Verbose) bcfitter->PrintResults(2,0.);
-   else if (!fitOption.Quiet) bcfitter->PrintResults(1,0.);
+   if (fitOption.Verbose) fitResult.PrintCovMatrix(std::cout);
+   else if (!fitOption.Quiet) fitResult.Print(std::cout);
 
    if (fitOption.StoreResult)
    {
