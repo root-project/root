@@ -397,7 +397,7 @@ Double_t TVector3::PseudoRapidity() const {
    double cosTheta = CosTheta();
    if (cosTheta*cosTheta < 1) return -0.5* TMath::Log( (1.0-cosTheta)/(1.0+cosTheta) );
    if (fZ == 0) return 0;
-   Warning("PseudoRapidity","transvers momentum = 0! return +/- 10e10");
+   //Warning("PseudoRapidity","transvers momentum = 0! return +/- 10e10");
    if (fZ > 0) return 10e10;
    else        return -10e10;
 }
