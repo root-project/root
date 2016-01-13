@@ -82,7 +82,12 @@ namespace ROOT {
 
          /// set the number we want to use to skip generation
          /// higher value means higher luxury but slower
-         static void SetSkipNumber(int nskip); 
+         static void SetSkipNumber(int nskip);
+
+         /// set initial number to be used in the vector.
+         /// The previous elements are skipped and not returned.
+         static void SetFirstReturnElement(int index);
+
 
       private:
 

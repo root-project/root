@@ -36,10 +36,16 @@ namespace Math {
    //    seed_uniquestream(fRngState, clusterID,  machineID,  runID,   streamID);
    // }
 
-   // set decimation number
+   /// set decimation number
    void MixMaxEngine::SetSkipNumber(int nskip) {
       set_skip_number(nskip);
    }
+   
+   /// set initial number to be used in the vector (the previous elements are skipped and not returned)
+   void MixMaxEngine::SetFirstReturnElement(int index)  {
+      set_first_return_element(index); 
+   }
+
    
    void MixMaxEngine::SetSeed(unsigned int seed) { 
       seed_spbox(fRngState, seed);
