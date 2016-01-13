@@ -46,6 +46,32 @@ public:
   /// Flush() and make the file non-writable: close it.
   virtual void Close() = 0;
 
+  /// Read the object for a key. `T` must be the object's type.
+  /// This will re-read the object for each call, returning a new copy; whether
+  /// the `TDirectory` is managing an object attached to this key or not.
+  /// \returns a `unique_ptr` to the object.
+  /// \throws TDirectoryUnknownKey if no object is stored under this name.
+  /// \throws TDirectoryTypeMismatch if the object stored under this name is of
+  ///   a type different from `T`.
+  template <class T>
+  std::unique_ptr<T> Read(const std::string& name) {
+    // FIXME: need separate collections for a TDirectory's key/value and registered objects. Here, we want to emit a read and must look through the key/values without attaching an object to the TDirectory.
+    if (const Internal::TDirectoryEntryPtrBase* dep = Find(name)) {
+      // FIXME: implement upcast!
+      // FIXME: do not register read object in TDirectory
+      // FIXME: implement actual read
+      if (auto depT = dynamic_cast<const Internal::TDirectoryEntryPtr<T>*>(dep)) {
+        //FIXME: for now, copy out of whatever the TDirectory manages.
+        return std::make_unique<T>(*depT->GetPointer());
+      }
+      // FIXME: add expected versus actual type name as c'tor args
+      throw TDirectoryTypeMismatch(name);
+    }
+    throw TDirectoryUnknownKey(name);
+    return std::shared_ptr<T>(); // never happens
+  }
+
+
   /// Write an object that is not lifetime managed by this TFileImplBase.
   template <class T>
   void Write(const std::string& /*name*/, const T& /*obj*/) {}

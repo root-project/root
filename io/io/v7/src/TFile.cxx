@@ -33,9 +33,9 @@ static void AddFilesToClose(std::weak_ptr<ROOT::Experimental::Internal::TFileImp
     std::vector<std::weak_ptr<ROOT::Experimental::Internal::TFileImplBase>> fFiles;
     std::mutex fMutex;
     ~CloseFiles_t() {
-      for (auto& pFile: fFiles) {
-        if (auto spFile = pFile.lock()) {
-          spFile->Flush(); // or Close()? but what if there's still a Write()?
+      for (auto& wFile: fFiles) {
+        if (auto sFile = wFile.lock()) {
+          sFile->Flush(); // or Close()? but what if there's still a Write()?
         }
       }
     }
