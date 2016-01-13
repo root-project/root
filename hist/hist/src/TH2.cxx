@@ -2196,6 +2196,11 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
 ///   NOTE that the default under- / overflow behavior differs from what ProjectionX
 ///   does! Profiles take the bin center into account, so here the under- and overflow
 ///   bins are ignored by default.
+///
+///   NOTE that the return profile histogram is computed using the Y bin center values instead of
+///   the real Y values which are used to fill the 2d histogram. Therefore the obtained profile is just an approximation of the
+///   correct profile histogram that would be obtained when filling it directly with the original data (see ROOT-7770)
+
 
 TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Option_t *option) const
 {
@@ -2241,6 +2246,11 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 ///   NOTE that the default under- / overflow behavior differs from what ProjectionX
 ///   does! Profiles take the bin center into account, so here the under- and overflow
 ///   bins are ignored by default.
+///
+///   NOTE that the return profile histogram is computed using the X bin center values instead of
+///   the real X values which are used to fill the 2d histogram. Therefore the obtained profile is just an approximation of the
+///   correct profile histogram that would be obtained when filling it directly with the original data (see ROOT-7770)
+
 
 TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Option_t *option) const
 {
