@@ -402,7 +402,7 @@ public:
    /**
       Default constructor
    */
-   Functor ()  : fImpl(0) {}
+   Functor ()  {}
 
 
    /**
@@ -436,8 +436,8 @@ public:
    Functor(const Functor & rhs) :
       ImplBase()
    {
-      if (rhs.fImpl.get() != 0)
-         fImpl = std::auto_ptr<Impl>( (rhs.fImpl)->Copy() );
+      if (rhs.fImpl)
+         fImpl = std::unique_ptr<Impl>( (rhs.fImpl)->Copy() );
    }
    // need a specialization in order to call base classes and use  clone
 
@@ -447,10 +447,12 @@ public:
    */
    Functor & operator = (const Functor & rhs)  {
       Functor copy(rhs);
-      // swap auto_ptr by hand
-      Impl * p = fImpl.release();
-      fImpl.reset(copy.fImpl.release());
-      copy.fImpl.reset(p);
+      // swap the poiter 
+      fImpl.swap( copy.fImpl);
+      // // swap unique_ptr by hand
+      // Impl * p = fImpl.release();
+      // fImpl.reset(copy.fImpl.release());
+      // copy.fImpl.reset(p);
       return *this;
    }
 
@@ -469,7 +471,7 @@ private :
    }
 
 
-   std::auto_ptr<Impl> fImpl;   // pointer to base functor handler
+   std::unique_ptr<Impl> fImpl;   // pointer to base functor handler
 
 
 };
@@ -500,7 +502,7 @@ public:
    /**
       Default constructor
    */
-   Functor1D ()  : fImpl(0) {}
+   Functor1D ()   {}
 
    /**
       construct from a callable object with the right signature
@@ -534,8 +536,8 @@ public:
       // strange that this is required eventhough ImplBase is an abstract class
       ImplBase()
    {
-      if (rhs.fImpl.get() != 0)
-         fImpl = std::auto_ptr<Impl>( (rhs.fImpl)->Copy() );
+      if (rhs.fImpl)
+         fImpl = std::unique_ptr<Impl>( (rhs.fImpl)->Copy() );
    }
 
 
@@ -544,10 +546,11 @@ public:
    */
    Functor1D & operator = (const Functor1D & rhs)  {
       Functor1D copy(rhs);
+      fImpl.swap( copy.fImpl);
       // swap auto_ptr by hand
-      Impl * p = fImpl.release();
-      fImpl.reset(copy.fImpl.release());
-      copy.fImpl.reset(p);
+      // Impl * p = fImpl.release();
+      // fImpl.reset(copy.fImpl.release());
+      // copy.fImpl.reset(p);
       return *this;
    }
 
@@ -563,7 +566,7 @@ private :
    }
 
 
-   std::auto_ptr<Impl> fImpl;   // pointer to base functor handler
+   std::unique_ptr<Impl> fImpl;   // pointer to base functor handler
 
 
 };
@@ -599,7 +602,7 @@ public:
    /**
       Default constructor
    */
-   GradFunctor ()  : fImpl(0) {}
+   GradFunctor ()   {}
 
    /**
       construct from a callable object of multi-dimension
@@ -642,8 +645,8 @@ public:
    GradFunctor(const GradFunctor & rhs) :
       ImplBase()
    {
-      if (rhs.fImpl.get() != 0)
-         fImpl = std::auto_ptr<Impl>( rhs.fImpl->Copy() );
+      if (rhs.fImpl)
+         fImpl = std::unique_ptr<Impl>( rhs.fImpl->Copy() );
    }
 
    /**
@@ -651,10 +654,11 @@ public:
    */
    GradFunctor & operator = (const GradFunctor & rhs)  {
       GradFunctor copy(rhs);
-      // swap auto_ptr by hand
-      Impl * p = fImpl.release();
-      fImpl.reset(copy.fImpl.release());
-      copy.fImpl.reset(p);
+      fImpl.swap(copy.fImpl);
+      // swap auto_ptr by hand      
+      // Impl * p = fImpl.release();
+      // fImpl.reset(copy.fImpl.release());
+      // copy.fImpl.reset(p);
       return *this;
    }
 
@@ -677,7 +681,7 @@ private :
       return fImpl->Derivative(x,icoord);
    }
 
-   std::auto_ptr<Impl> fImpl;    // pointer to base grad functor handler
+   std::unique_ptr<Impl> fImpl;    // pointer to base grad functor handler
 
 
 };
@@ -714,7 +718,7 @@ public:
    /**
       Default constructor
    */
-   GradFunctor1D ()  : fImpl(0) {}
+   GradFunctor1D ()   {}
 
 
    /**
@@ -760,8 +764,8 @@ public:
       // strange that this is required eventhough Impl is an abstract class
       ImplBase()
    {
-      if (rhs.fImpl.get() != 0)
-         fImpl = std::auto_ptr<Impl>( rhs.fImpl->Copy()  );
+      if (rhs.fImpl)
+         fImpl = std::unique_ptr<Impl>( rhs.fImpl->Copy()  );
    }
 
 
@@ -770,10 +774,11 @@ public:
    */
    GradFunctor1D & operator = (const GradFunctor1D & rhs)  {
       GradFunctor1D copy(rhs);
+      fImpl.swap(copy.fImpl);
       // swap auto_ptr by hand
-      Impl * p = fImpl.release();
-      fImpl.reset(copy.fImpl.release());
-      copy.fImpl.reset(p);
+      // Impl * p = fImpl.release();
+      // fImpl.reset(copy.fImpl.release());
+      // copy.fImpl.reset(p);
       return *this;
    }
 
@@ -794,7 +799,7 @@ private :
       return fImpl->Derivative(x);
    }
 
-   std::auto_ptr<Impl> fImpl;    // pointer to base gradient functor handler
+   std::unique_ptr<Impl> fImpl;    // pointer to base gradient functor handler
 
 };
 
