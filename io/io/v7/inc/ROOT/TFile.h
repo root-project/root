@@ -35,10 +35,12 @@ namespace Internal {
 class TFileImplBase: public TDirectory {
 public:
   /// Must not call Write() of all attached objects:
-  /// some might not be needed to be written; require explicit Write().
+  /// some might not be needed to be written or writing might be aborted due to
+  /// an exception; require explicit Write().
   ~TFileImplBase() = default;
 
-  /// Save all objects associated with this directory to the storage medium.
+  /// Save all objects associated with this directory (including file header) to
+  /// the storage medium.
   virtual void Flush() = 0;
 
   /// Flush() and make the file non-writable: close it.
