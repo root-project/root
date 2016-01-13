@@ -776,6 +776,7 @@ if(builtin_xrootd)
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
+  string(REPLACE "-Wshadow" "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings  
   ExternalProject_Add(
     XROOTD
     # http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
