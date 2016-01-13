@@ -233,11 +233,11 @@ if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall
     add_custom_command(OUTPUT tutorials/hsimple.root
                        COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} && 
                                $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
-                       WORKING_DIRECTORY tutorials DEPENDS root.exe Cling)
+                       WORKING_DIRECTORY tutorials DEPENDS root.exe Cling Hist Tree Gpad Graf)
   else()
     add_custom_command(OUTPUT tutorials/hsimple.root
                        COMMAND $<TARGET_FILE:root> -l -q -b -n -x hsimple.C -e return
-                       WORKING_DIRECTORY tutorials DEPENDS root Cling)
+                       WORKING_DIRECTORY tutorials DEPENDS root Cling Hist Tree Gpad Graf)
   endif()
   install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 endif()
