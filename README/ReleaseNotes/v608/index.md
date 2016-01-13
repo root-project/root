@@ -100,7 +100,8 @@ Custom streamers need to #include TBuffer.h explicitly (see
 ## 2D Graphics Libraries
 
 * In `TColor::SetPalette`, make sure the high quality palettes are defined
-  only ones.
+  only ones taking care of transparency. Also `CreateGradientColorTable` has been
+  simplified.
 
 ## 3D Graphics Libraries
 

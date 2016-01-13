@@ -13,6 +13,8 @@
 #include "TROOT.h"
 #include "TColor.h"
 #include "TObjArray.h"
+#include "TArrayI.h"
+#include "TArrayD.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TError.h"
@@ -31,8 +33,8 @@ namespace {
       static TArrayI globalPalette(0);
       return globalPalette;
    }
-   static TArrayI& TColor__PalettesList() {
-      static TArrayI globalPalettesList(0);
+   static TArrayD& TColor__PalettesList() {
+      static TArrayD globalPalettesList(0);
       return globalPalettesList;
    }
 }
@@ -836,8 +838,8 @@ void TColor::HSV2RGB(Float_t hue, Float_t satur, Float_t value,
 
 void TColor::ls(Option_t *) const
 {
-   printf("Color:%d  Red=%f Green=%f Blue=%f Name=%s\n",
-          fNumber, fRed, fGreen, fBlue, GetName());
+   printf("Color:%d  Red=%f Green=%f Blue=%f Alpha=%f Name=%s\n",
+          fNumber, fRed, fGreen, fBlue, fAlpha, GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1486,18 +1488,15 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
    // Now create the colors and add them to the default palette:
 
    // For each defined gradient...
-   TColor *hi;
    for (g = 1; g < Number; g++) {
       // create the colors...
       nColorsGradient = (Int_t) (floor(NColors*Stops[g]) - floor(NColors*Stops[g-1]));
       for (c = 0; c < nColorsGradient; c++) {
          new TColor(highestIndex,
-                    Red[g-1] + c * (Red[g] - Red[g-1])/ nColorsGradient,
+                    Red[g-1]   + c * (Red[g]   - Red[g-1])  / nColorsGradient,
                     Green[g-1] + c * (Green[g] - Green[g-1])/ nColorsGradient,
-                    Blue[g-1] + c * (Blue[g] - Blue[g-1])/ nColorsGradient,
-                    "  ");
-         hi = gROOT->GetColor(highestIndex);
-         if (hi) hi->SetAlpha(alpha);
+                    Blue[g-1]  + c * (Blue[g]  - Blue[g-1]) / nColorsGradient,
+                    "  ", alpha);
          palette[nPalette] = highestIndex;
          nPalette++;
          highestIndex++;
@@ -1676,16 +1675,27 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    // High quality palettes (255 levels)
    if (colors == 0 && ncolors>50) {
 
-      // The current palette is already this one.
-      if (paletteType == ncolors) return;
+      if (!fgPalettesList.fN) fgPalettesList.Set(62);        // Right now 62 high quality palettes
+      Int_t Idx = (Int_t)fgPalettesList.fArray[ncolors-51];  // High quality palettes indices start at 51
 
       // This high quality palette has already been created. Reuse it.
-      if (!fgPalettesList.fN) fgPalettesList.Set(62); // right now 62 high quality palettes
-      Int_t Idx = fgPalettesList.fArray[ncolors-51];  // High quality palettes indices start at 51
       if (Idx > 0) {
+         Double_t alphas = 10*(fgPalettesList.fArray[ncolors-51]-Idx);
+         Bool_t same_alpha = TMath::Abs(alpha-alphas) < 0.0001;
+         if (paletteType == ncolors && same_alpha) return; // The current palette is already this one.
          fgPalette.Set(255); // High quality palettes have 255 entries
          for (i=0;i<255;i++) fgPalette.fArray[i] = Idx+i;
          paletteType = ncolors;
+
+         // restore the palette transparency if needed
+          if (alphas>0 && !same_alpha) {
+             TColor *ca;
+             for (i=0;i<255;i++) {
+                ca = gROOT->GetColor(Idx+i);
+                ca->SetAlpha(alpha);
+             }
+             fgPalettesList.fArray[paletteType-51] = (Double_t)Idx+alpha/10.;
+          }
          return;
       }
 
@@ -2318,8 +2328,9 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
          return;
       }
       paletteType = ncolors;
-      if (Idx>0) fgPalettesList.fArray[paletteType-51] = Idx;
-      else       fgPalettesList.fArray[paletteType-51] = 0;
+      if (Idx>0) fgPalettesList.fArray[paletteType-51] = (Double_t)Idx;
+      else       fgPalettesList.fArray[paletteType-51] = 0.;
+      if (alpha > 0.) fgPalettesList.fArray[paletteType-51] += alpha/10.;
       return;
    }
 
