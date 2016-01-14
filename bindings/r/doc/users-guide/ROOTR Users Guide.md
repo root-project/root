@@ -52,10 +52,17 @@ install.packages(c('Rcpp','RInside'))
 ~~~
 select a mirror and install.
 
+Install the next additional packages for R TMVA interface
+
+~~~{.sh}
+install.packages(c('C50','RSNNS','e1071','xgboost'))
+~~~
+
+
 Download code from git repo
 
 ~~~{.sh}
-git clone -b master-root-R  https://github.com/lmoneta/root.git
+git clone http://root.cern.ch/git/root.git
 ~~~
 
 To compile ROOTR lets to create a compilation directory and to activate it use cmake -Dr=ON ..
@@ -86,10 +93,17 @@ Install needed R packages, open R and in the prompt type
 install.packages(c('Rcpp','RInside'))
 ~~~
 select a mirror and install.
+
+Install the next additional packages for R TMVA interface
+
+~~~{.sh}
+install.packages(c('C50','RSNNS','e1071','xgboost'))
+~~~
+
 Download code from git repo
 
 ~~~{.sh}
-git clone -b master-root-R  https://github.com/lmoneta/root.git
+git clone http://root.cern.ch/git/root.git
 ~~~
 
 To compile ROOTR lets to create a compilation directory and to activate it use cmake -Dr=ON ..
