@@ -183,7 +183,7 @@ inline 	myuint GET_BY_MACRO(rng_state_t* X) {
         X->counter++;
         return X->V[i];
     }else{
-       int niter = get_skip_number();
+       int niter = get_skip_number() +1;
        for (int iter = 0; iter < niter; ++iter) {
           X->sumtot = iterate_raw_vec(X->V, X->sumtot);
        }
