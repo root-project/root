@@ -6,6 +6,14 @@ set(repository_tarfiles http://service-spi.web.cern.ch/service-spi/external/tarF
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
 
+#---Guess under which lib directory the external packages will install the libraires
+set(_LIBDIR_DEFAULT "lib")
+if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT CMAKE_CROSSCOMPILING AND NOT EXISTS "/etc/debian_version")
+  if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+    set(_LIBDIR_DEFAULT "lib64")
+  endif()
+endif()
+
 #---Check for Cocoa/Quartz graphics backend (MacOS X only)
 if(cocoa)
   if(APPLE)
@@ -793,12 +801,6 @@ if(builtin_xrootd)
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
   )
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
-  set(_LIBDIR_DEFAULT "lib")
-  if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT CMAKE_CROSSCOMPILING AND NOT EXISTS "/etc/debian_version")
-    if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
-      set(_LIBDIR_DEFAULT "lib64")
-    endif()
-  endif()
   set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd ${CMAKE_BINARY_DIR}/include/xrootd/private)
   set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
@@ -1006,16 +1008,11 @@ if(davix OR builtin_davix)
       LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
     )
     ExternalProject_Get_Property(DAVIX INSTALL_DIR)
-    if(${SYSCTL_OUTPUT} MATCHES x86_64)
-      set(_LIBDIR "lib64")
-    else()
-      set(_LIBDIR "lib")
-    endif()
     set(DAVIX_INCLUDE_DIR ${INSTALL_DIR}/include/davix)
-    set(DAVIX_LIBRARY ${INSTALL_DIR}/${_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DAVIX_LIBRARY ${INSTALL_DIR}/${_LIBDIR_DEFAULT}/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIR})
     foreach(l davix neon boost_static_internal)
-      list(APPEND DAVIX_LIBRARIES ${INSTALL_DIR}/${_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+      list(APPEND DAVIX_LIBRARIES ${INSTALL_DIR}/${_LIBDIR_DEFAULT}/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
     endforeach()
     if(builtin_openssl)
       add_dependencies(DAVIX OPENSSL)  # Build first OpenSSL
