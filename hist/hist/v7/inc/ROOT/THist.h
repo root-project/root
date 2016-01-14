@@ -22,7 +22,6 @@
 #include "ROOT/THistDrawable.h"
 #include "ROOT/THistImpl.h"
 #include "ROOT/THistStats.h"
-#include "ROOT/TCoopPtr.h"
 #include <initializer_list>
 
 namespace ROOT {
@@ -205,19 +204,6 @@ void swap(THist<DIMENSIONS, PRECISION> &a,
 };
 
 
-/// Create a TCoopPtr of a THist.
-//
-// As make_xyz cannot deal with initializer_lists, we need to expose THist's
-// constructor arguments and take THist's template arguments.
-template<int DIMENSIONS, class PRECISION, class STATISTICS = THistStatUncertainty <DIMENSIONS, PRECISION>>
-TCoopPtr <THist<DIMENSIONS, PRECISION>>
-MakeCoOwnedHist(std::array <TAxisConfig, DIMENSIONS> axes,
-                STATISTICS statConfig = STATISTICS()) {
-  THist<DIMENSIONS, PRECISION> hist(axes, statConfig);
-  return MakeCoop(std::move(hist));
-};
-
-
 /// Adopt an external, stand-alone THistImpl. The THist will take ownership.
 template<int DIMENSIONS, class PRECISION>
 THist<DIMENSIONS, PRECISION>
@@ -353,7 +339,15 @@ void Add(THist<DIMENSION, PRECISIONA> &to, THist<DIMENSION, PRECISIONB> &from) {
 
 template<int DIMENSION, class PRECISION>
 std::unique_ptr <Internal::TDrawable>
-GetDrawable(TCoopPtr <THist<DIMENSION, PRECISION>> hist,
+GetDrawable(std::shared_ptr<THist<DIMENSION, PRECISION>> hist,
+            THistDrawOptions <DIMENSION> opts = {}) {
+  return std::make_unique<Internal::THistDrawable<DIMENSION, PRECISION>>(hist,
+                                                                         opts);
+}
+
+template<int DIMENSION, class PRECISION>
+std::unique_ptr <Internal::TDrawable>
+GetDrawable(std::unique_ptr<THist<DIMENSION, PRECISION>> hist,
             THistDrawOptions <DIMENSION> opts = {}) {
   return std::make_unique<Internal::THistDrawable<DIMENSION, PRECISION>>(hist,
                                                                          opts);

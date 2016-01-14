@@ -54,20 +54,20 @@ public:
  Key/value store of objects.
 
  Given a name, a `TDirectory` can store and retrieve an object. It will manage
- ownership through a `TCoopPtr`: if you delete the object, the object will be
- gone from the `TDirectory`. Once the `TDirectory `is destructed, the objects
- it contains are destructed (unless other `TCoopPtr`s reference the same
- object).
+ shared ownership through a `shared_ptr`.
 
  Example:
-  TDirectory dirBackgrounds;
-  TDirectory dirQCD;
+  TDirectory dirMC;
   TDirectory dirHiggs;
 
+  dirMC.Add("higgs", histHiggsMC);
+  dirHiggs.Add("mc", histHiggsMC);
+
  */
+
 class TDirectory {
-  /// The directory content is a hashed map of
-  /// name => `Internal::TDirectoryEntryPtr`.
+  /// The directory content is a hashed map of name =>
+  /// `Internal::TDirectoryEntryPtr`.
   using ContentMap_t
     = std::unordered_map<std::string,
                          std::unique_ptr<Internal::TDirectoryEntryPtrBase>>;
