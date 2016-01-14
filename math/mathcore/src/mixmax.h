@@ -48,13 +48,14 @@ extern "C" {
 #define N _N
 #endif
 
-#ifndef __LP64__
+   //LM: I dont think this ifdef LP64 is needed
 typedef uint64_t myuint;
-//#warning but no problem,  'myuint' is 'uint64_t'
-#else
-typedef unsigned long long int myuint;
-//#warning but no problem,  'myuint' is 'unsigned long long int'
-#endif
+// #ifndef __LP64__
+// // //#warning but no problem,  'myuint' is 'uint64_t'
+// #else
+// typedef unsigned long long int myuint;
+// //#warning but no problem,  'myuint' is 'unsigned long long int'
+// #endif
 
 struct rng_state_st
 {
