@@ -856,6 +856,5 @@ void Integration()
 
 ## Users Guide Sites
 - http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide
-- https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface
 
 
