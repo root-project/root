@@ -88,7 +88,16 @@ namespace ROOT {
          void SetCounter(int val);
 
          // /// set the special number 
-         // static void SetSpecialNumber(uint64_t val); 
+         // static void SetSpecialNumber(uint64_t val);
+         
+         /// set the number we want to use to skip generation
+         /// higher value means higher luxury but slower
+         static void SetSkipNumber(int nskip) { nskip=0; } // not implemented
+
+         /// set initial number to be used in the vector.
+         /// The previous elements are skipped and not returned.
+         static void SetFirstReturnElement(int index) { index=0; } // not implemented
+
 
 
          // generate a random number (virtual interface)
