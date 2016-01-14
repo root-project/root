@@ -457,7 +457,7 @@ Bool_t TFormula::InitLambdaExpression(const char * formula) {
    
    // set the cling name using hash of the static formulae map
    auto hasher = gClingFunctions.hash_function();
-   TString lambdaName = TString::Format("lambda__id%zu",(unsigned long) hasher(lambdaExpression) );
+   TString lambdaName = TString::Format("lambda__id%zu", hasher(lambdaExpression) );
    
    //lambdaExpression = TString::Format("[&](double * x, double *){ return %s ;}",formula);
    //TString lambdaName = TString::Format("mylambda_%s",GetName() );
@@ -1811,7 +1811,7 @@ void TFormula::ProcessFormula(TString &formula)
 
          // set the cling name using hash of the static formulae map
          auto hasher = gClingFunctions.hash_function();
-         fClingName = TString::Format("%s__id%zu",gNamePrefix.Data(),(unsigned long) hasher(inputFormula) );
+         fClingName = TString::Format("%s__id%zu",gNamePrefix.Data(), hasher(inputFormula) );
 
          fClingInput = TString::Format("Double_t %s(%s){ return %s ; }", fClingName.Data(),argumentsPrototype.Data(),inputFormula.c_str());
 
@@ -2675,7 +2675,7 @@ void TFormula::Print(Option_t *option) const
       if (fNpar > 0) {
          printf("List of  Parameters: \n");
          if ( int(fClingParameters.size()) < fNpar)
-            Error("Print","Number of stored parameters in vector %lu in map %lu is different than fNpar %d",fClingParameters.size(), fParams.size(), fNpar);
+            Error("Print","Number of stored parameters in vector %zu in map %zu is different than fNpar %d",fClingParameters.size(), fParams.size(), fNpar);
          assert(int(fClingParameters.size()) >= fNpar);
          // print with order passed to Cling function
          for ( int ipar = 0; ipar < fNpar ; ++ipar) {
@@ -2799,7 +2799,7 @@ void TFormula::Streamer(TBuffer &b)
          std::copy( parValues.begin(), parValues.end(), fClingParameters.begin() );
          // restore parameter names and order
          if (fParams.size() != paramMap.size() ) {
-            Warning("Streamer","number of parameters list found (%lu) is not same as the stored one (%lu) - use re-created list",fParams.size(),paramMap.size()) ;
+            Warning("Streamer","number of parameters list found (%zu) is not same as the stored one (%zu) - use re-created list",fParams.size(),paramMap.size()) ;
             //Print("v");
          }
          else
