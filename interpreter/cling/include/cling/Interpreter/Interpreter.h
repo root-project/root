@@ -274,6 +274,13 @@ namespace cling {
     ///
     void IncludeCRuntime();
 
+    ///\brier The target constructor to be called from both the
+    /// delegating constructors.
+    ///
+    Interpreter(int argc, const char* const *argv,
+                const char* llvmdir /*= 0*/, bool noRuntime,
+                bool isChildInterp);
+
   public:
     ///\brief Constructor for Interpreter.
     ///
@@ -281,7 +288,21 @@ namespace cling {
     ///\param[in] argv - arguments passed when driver is invoked.
     ///\param[in] llvmdir - ???
     ///\param[in] noRuntime - flag to control the presence of runtime universe
-    Interpreter(int argc, const char* const *argv, const char* llvmdir = 0, bool noRuntime = false);
+    ///
+    Interpreter(int argc, const char* const *argv, const char* llvmdir = 0,
+                bool noRuntime = false) :
+      Interpreter(argc, argv, llvmdir, noRuntime, false) { }
+
+    ///\brief Constructor for child Interpreter.
+    ///\param[in] parentInterpreter - the  parent interpreter of this interpreter
+    ///\param[in] argc - no. of args.
+    ///\param[in] argv - arguments passed when driver is invoked.
+    ///\param[in] llvmdir - ???
+    ///\param[in] noRuntime - flag to control the presence of runtime universe
+    ///
+    Interpreter(Interpreter &parentInterpreter,int argc, const char* const *argv,
+                const char* llvmdir = 0, bool noRuntime = true);
+
     virtual ~Interpreter();
 
     const InvocationOptions& getOptions() const { return m_Opts; }
