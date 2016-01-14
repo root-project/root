@@ -67,13 +67,13 @@ namespace Math {
       fill_array(fRngState, n,  array);
    }
 
-   void MixMaxEngine::SetState(const std::vector<uint64_t> & state, bool warmup) {
+   void MixMaxEngine::SetState(const std::vector<StateInt_t> & state, bool warmup) {
       if (fRngState) rng_free(fRngState);
-      fRngState = rng_copy(const_cast<uint64_t*>(state.data()) );
+      fRngState = rng_copy(const_cast<StateInt_t*>(state.data()) );
       if (warmup) iterate(fRngState); 
    }
 
-   void MixMaxEngine::GetState(std::vector<uint64_t> & state) const {
+   void MixMaxEngine::GetState(std::vector<StateInt_t> & state) const {
       int n =  rng_get_N(); 
       state.resize(n);
       for (int i = 0; i < n; ++i)
