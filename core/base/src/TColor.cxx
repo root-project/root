@@ -39,6 +39,8 @@ namespace {
    }
 }
 
+static Int_t gHighestColorIndex = 0;
+
 #define fgGrayscaleMode TColor__GrayScaleMode()
 #define fgPalette TColor__Palette()
 #define fgPalettesList TColor__PalettesList()
@@ -111,12 +113,12 @@ Colors are grouped by hue, the aspect most important in human perception.
 Touching color chips have the same hue, but with different brightness and
 vividness.
 
-Colors of slightly different hues <b>clash</b>. If you intend to display
+Colors of slightly different hues clash. If you intend to display
 colors of the same hue together, you should pick them from the same group.
 
 Each color chip is identified by a mnemonic (e.g. kYellow) and a number.
 The keywords, kRed, kBlue, kYellow, kPink, etc are defined in the header file
-<b>Rtypes.h</b> that is included in all ROOT other header files. It is better
+Rtypes.h that is included in all ROOT other header files. It is better
 to use these keywords in user code instead of hardcoded color numbers, e.g.:
 ~~~ {.cpp}
    myObject.SetFillColor(kRed);
@@ -331,6 +333,8 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
 
    fNumber = color;
 
+   if (fNumber > gHighestColorIndex) gHighestColorIndex = fNumber;
+
    char aname[32];
    if (!name || !*name) {
       snprintf(aname,32, "Color%d", color);
@@ -344,6 +348,25 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
    // fill color structure
    SetRGB(r, g, b);
    fAlpha = a;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fast TColor constructor. It creates a color with an index just above the
+/// current highest one. It does not name the color.
+/// This is useful to create palettes.
+
+TColor::TColor(Float_t r, Float_t g, Float_t b, Float_t a): TNamed("","")
+{
+   gHighestColorIndex++;
+   fNumber = gHighestColorIndex;
+   fRed    = r;
+   fGreen  = g;
+   fBlue   = b;
+   fAlpha  = a;
+
+   // enter in the list of colors
+   TObjArray *lcolors = (TObjArray*)gROOT->GetListOfColors();
+   lcolors->AddAtAndExpand(this, fNumber);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1444,8 +1467,6 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
    UInt_t nPalette = 0;
    Int_t *palette = new Int_t[NColors+1];
    UInt_t nColorsGradient;
-   TColor *color;
-   Int_t highestIndex = 0;
 
    if(Number < 2 || NColors < 1){
       delete [] palette;
@@ -1470,21 +1491,6 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
       }
    }
 
-   // Search for the highest color index not used in ROOT:
-   // We do not want to overwrite some colors...
-   TSeqCollection *colorTable = gROOT->GetListOfColors();
-   if ((color = (TColor *) colorTable->Last()) != 0) {
-      if (color->GetNumber() > highestIndex) {
-         highestIndex = color->GetNumber();
-      }
-      while ((color = (TColor *) (colorTable->Before(color))) != 0) {
-         if (color->GetNumber() > highestIndex) {
-            highestIndex = color->GetNumber();
-         }
-      }
-   }
-   highestIndex++;
-
    // Now create the colors and add them to the default palette:
 
    // For each defined gradient...
@@ -1492,21 +1498,18 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
       // create the colors...
       nColorsGradient = (Int_t) (floor(NColors*Stops[g]) - floor(NColors*Stops[g-1]));
       for (c = 0; c < nColorsGradient; c++) {
-         new TColor(highestIndex,
-                    Red[g-1]   + c * (Red[g]   - Red[g-1])  / nColorsGradient,
-                    Green[g-1] + c * (Green[g] - Green[g-1])/ nColorsGradient,
-                    Blue[g-1]  + c * (Blue[g]  - Blue[g-1]) / nColorsGradient,
-                    "  ", alpha);
-         palette[nPalette] = highestIndex;
+         new TColor( Float_t(Red[g-1]   + c * (Red[g]   - Red[g-1])  / nColorsGradient),
+                     Float_t(Green[g-1] + c * (Green[g] - Green[g-1])/ nColorsGradient),
+                     Float_t(Blue[g-1]  + c * (Blue[g]  - Blue[g-1]) / nColorsGradient),
+                     alpha);
+         palette[nPalette] = gHighestColorIndex;
          nPalette++;
-         highestIndex++;
       }
    }
 
    TColor::SetPalette(nPalette, palette);
    delete [] palette;
-
-   return highestIndex - NColors;
+   return gHighestColorIndex + 1 - NColors;
 }
 
 

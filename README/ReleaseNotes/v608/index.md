@@ -102,6 +102,11 @@ Custom streamers need to #include TBuffer.h explicitly (see
 * In `TColor::SetPalette`, make sure the high quality palettes are defined
   only ones taking care of transparency. Also `CreateGradientColorTable` has been
   simplified.
+* New fast constructor for `TColor` avoiding to call `gROOT->GetColor()`. The
+  normal constructor generated a big slow down when creating a Palette with
+  `CreateGradientColorTable`.
+* In `CreateGradientColorTable` we do not need anymore to compute the highest
+  color index.
 
 ## 3D Graphics Libraries
 
