@@ -107,6 +107,9 @@ if(ROOT_python_FOUND)
   find_package(PythonLibs)
 endif()
 
+# Find OpenGL 
+find_library(OPENGL_gl_LIBRARY NAMES GL)
+
 # Setup standard includes / links.
 include_directories(${ROOT_INCLUDE_DIRS} ${ROOT_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 link_directories(${ROOT_LIBRARY_DIR})

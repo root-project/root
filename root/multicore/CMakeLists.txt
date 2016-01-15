@@ -113,7 +113,7 @@ ROOTTEST_ADD_TEST(semaphore
                  OUTREF tSemaphore.ref)
 
 if(ROOTTEST_OS_ID MATCHES Scientific OR ROOTTEST_OS_ID MATCHES CentOS)
-  set(ROOTTEST_ENV_EXTRA LD_PRELOAD=/usr/lib64/libGL.so)
+  set(ROOTTEST_ENV_EXTRA LD_PRELOAD=${OPENGL_gl_LIBRARY})
 endif()
 
 ROOTTEST_ADD_TEST(fork
