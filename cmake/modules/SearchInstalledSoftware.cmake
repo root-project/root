@@ -6,6 +6,14 @@ set(repository_tarfiles http://service-spi.web.cern.ch/service-spi/external/tarF
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
 
+#---Guess under which lib directory the external packages will install the libraires
+set(_LIBDIR_DEFAULT "lib")
+if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT CMAKE_CROSSCOMPILING AND NOT EXISTS "/etc/debian_version")
+  if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+    set(_LIBDIR_DEFAULT "lib64")
+  endif()
+endif()
+
 #---Check for Cocoa/Quartz graphics backend (MacOS X only)
 if(cocoa)
   if(APPLE)
@@ -109,21 +117,26 @@ if(builtin_pcre)
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ${CMAKE_COMMAND} nmake -nologo -f Makefile.msc 
                                      CFG=${pcrebuild} NMCXXFLAGS=${CMAKE_CC_FLAGS}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different libpcre-8.37.lib .libs/pcre.lib
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different libpcre-8.37.lib  <INSTALL_DIR>/lib/pcre.lib
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre.h  <INSTALL_DIR>/include
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre_scanner.h  <INSTALL_DIR>/include
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre_stringpiece.h  <INSTALL_DIR>/include
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcrecpp.h  <INSTALL_DIR>/include
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcrecpparg.h  <INSTALL_DIR>/include
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcreposix.h  <INSTALL_DIR>/include              
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
   else()
     set(_pcre_cflags -O)
     ExternalProject_Add(
       PCRE
       URL ${CMAKE_SOURCE_DIR}/core/pcre/src/pcre-${pcre_version}.tar.gz
-      CONFIGURE_COMMAND ./configure --with-pic --disable-shared
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic --disable-shared
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_pcre_cflags}
-      INSTALL_COMMAND ""     
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
   endif()
-  ExternalProject_Get_Property(PCRE SOURCE_DIR)
-  set(PCRE_INCLUDE_DIR ${SOURCE_DIR})
-  set(PCRE_LIBRARY ${SOURCE_DIR}/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}pcre${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set(PCRE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+  set(PCRE_LIBRARY ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pcre${CMAKE_STATIC_LIBRARY_SUFFIX})
   set(PCRE_LIBRARIES ${PCRE_LIBRARY})
 endif()
 
@@ -771,6 +784,7 @@ if(builtin_xrootd)
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
+  string(REPLACE "-Wshadow" "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings  
   ExternalProject_Add(
     XROOTD
     # http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
@@ -787,12 +801,6 @@ if(builtin_xrootd)
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
   )
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
-  set(_LIBDIR_DEFAULT "lib")
-  if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT CMAKE_CROSSCOMPILING AND NOT EXISTS "/etc/debian_version")
-    if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
-      set(_LIBDIR_DEFAULT "lib64")
-    endif()
-  endif()
   set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd ${CMAKE_BINARY_DIR}/include/xrootd/private)
   set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
@@ -830,7 +838,7 @@ if(cling)
   if(MSVC)
     set(CLING_CXXFLAGS "-D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNOMINMAX -D_XKEYCHECK_H")
   else()
-    set(CLING_CXXFLAGS "-fvisibility-inlines-hidden -fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wno-long-long -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS")
+    set(CLING_CXXFLAGS "-fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wno-long-long -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS")
   endif()
   if (CMAKE_COMPILER_IS_GNUCXX)
     set(CLING_CXXFLAGS "${CLING_CXXFLAGS} -Wno-missing-field-initializers")
@@ -1000,16 +1008,11 @@ if(davix OR builtin_davix)
       LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
     )
     ExternalProject_Get_Property(DAVIX INSTALL_DIR)
-    if(${SYSCTL_OUTPUT} MATCHES x86_64)
-      set(_LIBDIR "lib64")
-    else()
-      set(_LIBDIR "lib")
-    endif()
     set(DAVIX_INCLUDE_DIR ${INSTALL_DIR}/include/davix)
-    set(DAVIX_LIBRARY ${INSTALL_DIR}/${_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DAVIX_LIBRARY ${INSTALL_DIR}/${_LIBDIR_DEFAULT}/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIR})
     foreach(l davix neon boost_static_internal)
-      list(APPEND DAVIX_LIBRARIES ${INSTALL_DIR}/${_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+      list(APPEND DAVIX_LIBRARIES ${INSTALL_DIR}/${_LIBDIR_DEFAULT}/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
     endforeach()
     if(builtin_openssl)
       add_dependencies(DAVIX OPENSSL)  # Build first OpenSSL

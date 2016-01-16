@@ -105,7 +105,7 @@ private:
           ConstructLoc(), OrderedRegion(false), InnerTeamsRegionLoc() {}
   };
 
-  typedef SmallVector<SharingMapTy, 64> StackTy;
+  typedef SmallVector<SharingMapTy, 4> StackTy;
 
   /// \brief Stack of used declaration and their data-sharing attributes.
   StackTy Stack;

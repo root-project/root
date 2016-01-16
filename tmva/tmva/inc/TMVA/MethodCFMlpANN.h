@@ -134,7 +134,8 @@ namespace TMVA {
       Int_t    GetClass( Int_t ivar             ) const { return (*fClass)[ivar]; }
 
       // static pointer to this object (required for external functions
-      static MethodCFMlpANN* This( void );
+      //NOTE: removed static value for new design
+      MethodCFMlpANN* This( void );
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }
@@ -161,7 +162,7 @@ namespace TMVA {
       void DeclareOptions();
       void ProcessOptions();
       
-      static MethodCFMlpANN* fgThis; // this carrier
+      MethodCFMlpANN* fgThis; // this carrier
 
       // LUTs
       TMatrixF       *fData;     // the (data,var) string

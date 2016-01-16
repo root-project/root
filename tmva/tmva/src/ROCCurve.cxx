@@ -37,18 +37,21 @@
 #endif
 
 #include<vector>
+#include <cassert>
 
 using namespace std;
 
 
-TMVA::ROCCurve::ROCCurve(std::vector<Float_t> mva,std::vector<Bool_t> mvat) :
+TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> & mva, const std::vector<Bool_t> & mvat) :
    fLogger ( new TMVA::MsgLogger("ROCCurve") )
 {
-  for(UInt_t i=0;i<mva.size();i++)
-  {
-    if(mvat[i]) mvaS.push_back(mva[i]);
-    else mvaB.push_back(mva[i]);
-  }
+   assert(mva.size() == mvat.size() );
+   for(UInt_t i=0;i<mva.size();i++)
+   {
+      if(mvat[i] ) fMvaS.push_back(mva[i]);
+      else fMvaB.push_back(mva[i]);
+   }
+
 }
 
 
@@ -66,7 +69,7 @@ TMVA::ROCCurve::~ROCCurve() {
 Double_t TMVA::ROCCurve::GetROCIntegral(){
   
   Float_t integral=0;
-  int ndivisions = 20;
+  int ndivisions = 40;
   std::vector<Float_t> vec_epsilon_s(1);
   vec_epsilon_s.push_back(0);
   
@@ -83,12 +86,12 @@ Double_t TMVA::ROCCurve::GetROCIntegral(){
       Float_t ccounter = 0.0;
       Float_t dcounter = 0.0;
       
-      for(UInt_t j=0;j<mvaS.size();j++)
+      for(UInt_t j=0;j<fMvaS.size();j++)
       {
-        if(mvaS[j] > i) acounter++;
+        if(fMvaS[j] > i) acounter++;
         else            bcounter++;
 	
-        if(mvaB[j] > i) ccounter++;
+        if(fMvaB[j] > i) ccounter++;
         else            dcounter++;
       }
       

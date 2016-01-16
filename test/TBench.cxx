@@ -10,7 +10,7 @@
 #include "TBench.h"
 #include "Riostream.h"
 
-THit hit;
+THit s_hit;
 #ifdef R__HPUX
 namespace std {
    using ::make_pair;
@@ -164,8 +164,8 @@ void TSTLhit::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.push_back(hit);
+      s_hit.Set(j);
+      fList1.push_back(s_hit);
    }
 }
 
@@ -238,8 +238,8 @@ void TSTLhitList::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.push_back(hit);
+      s_hit.Set(j);
+      fList1.push_back(s_hit);
    }
 }
 
@@ -311,8 +311,8 @@ void TSTLhitDeque::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.push_back(hit);
+      s_hit.Set(j);
+      fList1.push_back(s_hit);
    }
 }
 
@@ -385,8 +385,8 @@ void TSTLhitSet::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.insert(hit);
+      s_hit.Set(j);
+      fList1.insert(s_hit);
    }
 }
 
@@ -459,8 +459,8 @@ void TSTLhitMultiset::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.insert(hit);
+      s_hit.Set(j);
+      fList1.insert(s_hit);
    }
 }
 
@@ -533,8 +533,8 @@ void TSTLhitMap::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.insert(std::pair<const Int_t ,THit> (j,hit));
+      s_hit.Set(j);
+      fList1.insert(std::pair<const Int_t ,THit> (j,s_hit));
    }
 }
 
@@ -607,8 +607,8 @@ void TSTLhitMultiMap::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      std::pair <const int, THit> temp(j,hit);
+      s_hit.Set(j);
+      std::pair <const int, THit> temp(j,s_hit);
       fList1.insert(temp);
    }
 }
@@ -682,8 +682,8 @@ void TSTLhitHashSet::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.insert(hit);
+      s_hit.Set(j);
+      fList1.insert(s_hit);
    }
 }
 
@@ -756,8 +756,8 @@ void TSTLhitHashMultiSet::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.insert(hit);
+      s_hit.Set(j);
+      fList1.insert(s_hit);
    }
 }
 

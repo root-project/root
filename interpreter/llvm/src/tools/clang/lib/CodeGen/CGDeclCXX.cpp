@@ -294,7 +294,7 @@ CodeGenModule::EmitCXXGlobalVarDeclInitFunc(const VarDecl *D,
   // Create a variable initialization function.
   llvm::Function *Fn =
       CreateGlobalInitOrDestructFunction(FTy,
-                                         llvm::Twine(FnName)+moduleName.str(),
+                                         llvm::Twine(FnName)+moduleName.str()+"_",
                                          D->getLocation());
 
   auto *ISA = D->getAttr<InitSegAttr>();

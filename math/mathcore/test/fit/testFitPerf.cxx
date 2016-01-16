@@ -507,9 +507,9 @@ int  FitUsingRooFit(TH1 * hist, TF1 * func) {
       if (fname == "gaussian") {
          double val,pmin,pmax;
          val = func->GetParameter(1); //func->GetParLimits(1,-100,100);
-         RooRealVar * mean = new RooRealVar("mean","Mean of Gaussian",val) ;
+         mean = new RooRealVar("mean","Mean of Gaussian",val) ;
          val = func->GetParameter(2); func->GetParLimits(1,pmin,pmax);
-         RooRealVar * sigma = new RooRealVar("sigma","Width of Gaussian",val) ;
+         sigma = new RooRealVar("sigma","Width of Gaussian",val) ;
 
          pdf = new RooGaussian("gauss","gauss(x,mean,sigma)",x,*mean,*sigma) ;
       }

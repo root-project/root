@@ -47,7 +47,7 @@ with a command such as:
     myps.Close();
 ~~~
 You can set the default paper size with:
- ~~~ {.cpp}
+~~~ {.cpp}
     gStyle->SetPaperSize(xsize,ysize);
 ~~~
 You can resume writing again in this file with `myps.Open();`.
@@ -2412,7 +2412,7 @@ void TPostScript::SetLineColor( Color_t cindex )
 /// \image html postscript_1.png
 ///
 /// To change the line join behaviour just do:
-/// ~~~ {cpp}
+/// ~~~ {.cpp}
 /// TPostScript::SetLineJoin(2); // Set the PS line join to bevel.
 /// ~~~
 

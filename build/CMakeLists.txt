@@ -5,7 +5,7 @@
 
 file(GLOB rmkdepend_srcs ${CMAKE_CURRENT_SOURCE_DIR}/rmkdepend/*.cxx ${CMAKE_CURRENT_SOURCE_DIR}/rmkdepend/*.c )
 set_source_files_properties(${rmkdepend_srcs} PROPERTIES 
-                                              COMPILE_DEFINITIONS "INCLUDEDIR=\"/usr/include\";OBJSUFFIX=\".o\"")
+                                              COMPILE_DEFINITIONS "INCLUDEDIR=\"/usr/include\";OBJSUFFIX=\".o\";USE_CHMOD")
 
 ROOT_EXECUTABLE(rmkdepend ${rmkdepend_srcs})
 

@@ -1,20 +1,29 @@
+# -*- coding:utf-8 -*-
+
+#-----------------------------------------------------------------------------
+#  Author: Danilo Piparo <Danilo.Piparo@cern.ch> CERN
+#  Author: Enric Tejedor <enric.tejedor.saavedra@cern.ch> CERN
+#-----------------------------------------------------------------------------
+
 import utils
 import ROOT
-
-def rreplace(s, old, new, occurrence):
-  li = s.rsplit(old, occurrence)
-  return new.join(li)
 
 # Jit a wrapper for the ttabcom
 _TTabComHookCode = """
 std::vector<std::string> _TTabComHook(const char* pattern){
-  static auto ttc = new TTabCom;
-  int pLoc = strlen(pattern);
-  std::ostringstream oss;
-  ttc->Hook((char* )pattern, &pLoc, oss);
-  std::stringstream ss(oss.str());
-  std::istream_iterator<std::string> vbegin(ss), vend;
-  return std::vector<std::string> (vbegin, vend);
+   static auto ttc = new TTabCom;
+   int pLoc = strlen(pattern);
+   std::ostringstream oss;
+   ttc->Hook((char* )pattern, &pLoc, oss);
+   auto completions = oss.str();
+   vector<string> completions_v;
+   istringstream f(completions);
+   string s;
+   while (getline(f, s, '\\n')) {
+      //cout << "**" << s << "**" << endl;
+      completions_v.push_back(s);
+   }
+   return completions_v;
 }
 """
 
@@ -52,6 +61,13 @@ class CppCompleter(object):
     h->GetAsymmetry
     h->GetAt
     h->GetAxisColor
+    >>> garbage = ROOT.gInterpreter.ProcessLine("TH1F aa")
+    >>> for suggestion in comp._completeImpl("aa.Add("):
+    ...     print suggestion.replace("\\t"," ")
+    <BLANKLINE>
+    Bool_t Add(TF1* h1, Double_t c1 = 1, Option_t* option = "")
+    Bool_t Add(const TH1* h, const TH1* h2, Double_t c1 = 1, Double_t c2 = 1)  // *MENU*
+    Bool_t Add(const TH1* h1, Double_t c1 = 1)
     >>> for suggestion in comp._completeImpl("TROOT::Is"):
     ...     print suggestion
     IsA
@@ -111,8 +127,13 @@ class CppCompleter(object):
         suggestions = self._getSuggestions(line)
         if not suggestions: return []
         accessorPos = self._getLastAccessorPos(line)
+        suggestions = filter(lambda s: len(s.strip()) != 0, suggestions)
         suggestions = sorted(suggestions)
-        if accessorPos > 0:
+        # Look for spaces since these mark function signatures
+        are_signatures = "(" in "".join(suggestions)
+        if are_signatures:
+            suggestions = [" "] + suggestions
+        elif accessorPos > 0:
             suggestions = [line[:accessorPos]+sugg for sugg in suggestions]
         return suggestions
 

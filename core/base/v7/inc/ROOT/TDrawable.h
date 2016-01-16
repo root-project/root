@@ -16,6 +16,7 @@
 #define ROOT7_TDrawable
 
 namespace ROOT {
+namespace Experimental {
 namespace Internal {
 
 /** \class TDrawable
@@ -31,6 +32,7 @@ public:
 };
 
 } // namespace Internal
+} // namespace Experimental
 } // namespace ROOT
 
 #endif
