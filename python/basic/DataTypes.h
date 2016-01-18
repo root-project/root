@@ -14,6 +14,8 @@ struct CppyyTestPod {
 enum EFruit { kApple=78, kBanana=29, kCitrus=34 };
 
 
+std::vector<EFruit> vecFruits { kCitrus, kApple };
+
 //===========================================================================
 namespace EnumSpace {
    enum E { E1 = 1, E2 };

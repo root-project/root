@@ -634,6 +634,9 @@ class TestClassDATATYPES:
         assert gbl.EnumSpace.E1 == 1
         assert gbl.EnumSpace.E2 == 2
 
+        # vectors of enums [ROOT-7916]
+        gbl.vecFruits.data()
+
     def test12_string_passing(self):
         """Passing/returning of a const char*"""
 
