@@ -110,6 +110,8 @@ Custom streamers need to #include TBuffer.h explicitly (see
 
 ## 3D Graphics Libraries
 
+* When painting a `TH3` as 3D boxes, `TMarker3DBox` ignored the max and min values
+  specified by `SetMaximum()` and `SetMinimum()`.
 
 ## Geometry Libraries
 
