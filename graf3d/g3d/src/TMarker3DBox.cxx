@@ -311,6 +311,9 @@ void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
       }
    }
 
+   if (wmin < h->GetMinimum()) wmin = h->GetMinimum();
+   if (wmax > h->GetMaximum()) wmax = h->GetMaximum();
+
    //Create or modify 3-d view object
    TView *view = gPad->GetView();
    if (!view) {
@@ -345,7 +348,8 @@ void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
             zmax = zmin + h->GetZaxis()->GetBinWidth(iz);
             bin = h->GetBin(ix,iy,iz);
             w = h->GetBinContent(bin);
-            if (w == 0) continue;
+            if (w < wmin) continue;
+            if (w > wmax) w = wmax;
             scale = (w-wmin)/(wmax-wmin);
             m3.SetPosition(0.5*(xmin+xmax),0.5*(ymin+ymax),0.5*(zmin+zmax));
             m3.SetSize(scale*(xmax-xmin),scale*(ymax-ymin),scale*(zmax-zmin));
