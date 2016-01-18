@@ -551,7 +551,12 @@ Changes will be part of the future 6.04/14
 
 - Protect access to TROOT::GetListOfGlobalFunctions in TFormula
 
+### Interpreter
+
+- Ignore access check when evaluating [ROOT-7426]
+
 ### PyROOT
 
 - Fix case where c++ exception in a constructor were not propagated to python [ROOT-7864]
 - Fix case where PyROOT was unable to call copy constructo [ROOT-7783]
+- Fix handling of `vector<enums>` [ROOT-7916]
