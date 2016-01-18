@@ -842,6 +842,7 @@ namespace {
       NFp_t( "unsigned short*",    &CreateUShortArrayExecutor         ),
       NFp_t( "int*",               &CreateIntArrayExecutor            ),
       NFp_t( "unsigned int*",      &CreateUIntArrayExecutor           ),
+      NFp_t( "UInt_t*", /* enum */ &CreateUIntArrayExecutor           ),
       NFp_t( "long*",              &CreateLongArrayExecutor           ),
       NFp_t( "unsigned long*",     &CreateULongArrayExecutor          ),
       NFp_t( "float*",             &CreateFloatArrayExecutor          ),
