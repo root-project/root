@@ -162,13 +162,8 @@
       if ((img1.length==0) && isroot)
          hitem['_icon'] = img1 = "img_base";
 
-      if (hitem['_more']) {
+      if (hitem['_more'] || ('_expand' in hitem) || ('_player' in hitem))
          can_click = true;
-      }
-
-      if ('_player' in hitem) {
-         can_click = true;
-      }
 
       if (img2.length==0) img2 = img1;
       if (img1.length==0) img1 = (has_childs || hitem['_more']) ? "img_folder" : "img_page";
@@ -212,13 +207,16 @@
 
       // make node icons
 
-      var icon_name = hitem._isopen ? img2 : img1;
+      if (this.with_icons) {
+         var icon_name = hitem._isopen ? img2 : img1;
 
-      if (icon_name.indexOf("img_")==0) {
-         if ('_icon_click' in hitem) icon_name+= " icon_click";
-         this['html'] += '<div class="' + icon_name + '" title="' + hitem._kind + '"/>';
-      } else
-         this['html'] += '<img src="' + icon_name + '" alt="" style="vertical-align:top;width:18px;height:18px" title="' + hitem._kind +'"/>';
+         if (icon_name.indexOf("img_")==0) {
+            if ('_icon_click' in hitem) icon_name+= " icon_click";
+            this['html'] += '<div class="' + icon_name + '" title="' + hitem._kind + '"/>';
+         } else {
+           this['html'] += '<img src="' + icon_name + '" alt="" style="vertical-align:top;width:18px;height:18px" title="' + hitem._kind +'"/>';
+         }
+      }
 
       this['html'] += '<a';
       if (can_click || has_childs) this['html'] +=' class="h_item"';
@@ -237,7 +235,14 @@
       if (element_title.length == 0) element_title = element_name;
 
       this['html'] += ' title="' + element_title + '"';
-      this['html'] += '>' + element_name + '</a>';
+      this['html'] += '>' + element_name + ('_value' in hitem ? ":" : "") + '</a>';
+      if ('_value' in hitem) {
+         this['html'] += "<p";
+         if ('_vclass' in hitem) this['html'] += " class='" + hitem._vclass + "'";
+         this['html'] += ">";
+         if (!hitem['_isopen']) this['html'] += hitem._value;
+         this['html'] += "</p>";
+      }
 
       if (has_childs && (isroot || hitem._isopen)) {
          this['html'] += '<div class="h_childs">';
@@ -251,14 +256,14 @@
 
    JSROOT.HierarchyPainter.prototype.RefreshHtml = function(callback) {
 
-      if (this.frameid == null) return JSROOT.CallBack(callback);
-      var elem = $("#" + this.frameid);
-      if ((this.h == null) || (elem.length == 0)) {
-         elem.html("");
+      if (this.divid == null) return JSROOT.CallBack(callback);
+      var d3elem = this.select_main();
+      if ((this.h == null) || d3elem.empty()) {
+         d3elem.html("");
          return JSROOT.CallBack(callback);
       }
 
-      var d3elem = d3.select("#" + this.frameid);
+      var elem = $(d3elem.node());
 
       var factcmds = [], status_item = null;
       this.ForEach(function(item) {
@@ -266,7 +271,11 @@
          if (('_status' in item) && (status_item==null)) status_item = item;
       });
 
-      this['html'] = "";
+      this['html'] = "<div style='overflow:auto; width:100%; height:100%;"
+      if (this.background) this['html']+="background-color:"+this.background + ";";
+      if (this.with_icons) this['html']+="font-size:12px;";
+                      else this['html']+="font-size:15px;";
+      this['html']+="'>";
       if (factcmds.length>0) {
          for (var n in factcmds)
             this['html'] += "<button class='fast_command'> </button>";
@@ -288,6 +297,7 @@
 
       this['html'] += '<div class="h_tree">';
       this.addItemHtml(this.h, null);
+      this['html'] += '</div>';
       this['html'] += '</div>';
 
       var h = this;
@@ -336,7 +346,10 @@
 
    JSROOT.HierarchyPainter.prototype.UpdateTreeNode = function(hitem, node, set_attr) {
       if (node==null) {
-         node = $("#" + this.frameid).find("[item='" + this.itemFullName(hitem) + "']");
+         var name = this.itemFullName(hitem);
+         node = $(this.select_main().node()).find("[item='" + name + "']");
+         if ((node.length == 0) && ('_cycle' in hitem))
+            node = $(this.select_main().node()).find("[item='" + name + ";" + hitem._cycle + "']");
          if (node.length == 0) return;
       }
 
@@ -358,18 +371,24 @@
       if (img1.length==0) img1 = (has_childs || hitem['_more']) ? "img_folder" : "img_page";
       if (img2.length==0) img2 = (has_childs || hitem['_more']) ? "img_folderopen" : "img_page";
 
-      var newname = hitem._isopen ? img2 : img1;
+      var a_node = node.find("a").first();
 
-      var img = node.find("a").first().prev();
-
-      if (newname.indexOf("img_")==0) {
-         if ('_icon_click' in hitem) newname += " icon_click";
-         img.attr("class", newname);
-      } else {
-         img.attr("src", newname);
+      if ('_value' in hitem) {
+         var p_node = a_node.next().html(hitem._isopen ? "" : hitem._value);
       }
 
-      img = img.prev();
+      var img = a_node.prev();
+
+      if (this.with_icons) {
+         var newname = hitem._isopen ? img2 : img1;
+         if (newname.indexOf("img_")==0) {
+            if ('_icon_click' in hitem) newname += " icon_click";
+            img.attr("class", newname);
+         } else {
+            img.attr("src", newname);
+         }
+         img = img.prev();
+      }
 
       var h = this;
 
@@ -553,11 +572,8 @@
                });
             }
 
-            if (!('_childs' in hitem) && (hitem['_more'] || !('_more' in hitem))) {
-               var handle = JSROOT.getDrawHandle(hitem._kind);
-               if (handle && ('expand' in handle))
-                  menu.add("Expand", function() { this.expand(itemname); });
-            }
+            if (!('_childs' in hitem) && (hitem['_more'] || !('_more' in hitem)))
+               menu.add("Expand", function() { painter.expand(itemname); });
          }
 
          if (('_menu' in hitem) && (typeof hitem['_menu'] == 'function'))
@@ -829,7 +845,7 @@
 
       var entry ='<div id="' + subid + '" class="flex_frame" style="position:absolute">' +
                   '<div class="ui-widget-header flex_header">'+
-                    '<h3 style="float:left; padding-left:5px">'+title+'</h3>' +
+                    '<p>'+title+'</p>' +
                     '<button type="button" style="float:right; width:1.4em"/>' +
                     '<button type="button" style="float:right; width:1.4em"/>' +
                     '<button type="button" style="float:right; width:1.4em"/>' +
@@ -869,11 +885,11 @@
                break;
             case "maximal" :
                main.height("100%").width("100%").css('left','').css('top','');
-               main.find(".flex_draw").css("display","table-row");
+               main.find(".flex_draw").css("display","");
                main.find(".ui-resizable-handle").css("display","none");
                break;
             default:
-               main.find(".flex_draw").css("display","table-row");
+               main.find(".flex_draw").css("display","");
                main.find(".ui-resizable-handle").css("display","");
                main.height(main.prop('original_height'))
                    .width(main.prop('original_width'));
@@ -889,8 +905,8 @@
       $("#" + subid)
          .css('left', parseInt(w * (this.cnt % 5)/10))
          .css('top', parseInt(h * (this.cnt % 5)/10))
-         .css('width', parseInt(w * 0.58))
-         .css('height', parseInt(h * 0.58))
+         .width(Math.round(w * 0.58))
+         .height(Math.round(h * 0.58))
          .resizable({
             helper: "jsroot-resizable-helper",
             start: function(event, ui) {
@@ -899,9 +915,7 @@
             },
             stop: function(event, ui) {
                var rect = { width : ui.size.width-1, height : ui.size.height - $(this).find(".flex_header").height()-1 };
-               var draw = $(this).find(".flex_draw");
-               draw.width(rect.width).height(rect.height);
-               JSROOT.CheckElementResize(draw.get(0), rect);
+               JSROOT.CheckElementResize($(this).find(".flex_draw").get(0), rect);
             }
           })
           .draggable({
@@ -944,6 +958,9 @@
       // set default z-index to avoid overlap of these special elements
       $("#" + subid).find(".ui-resizable-handle").css('z-index', '');
 
+      //var draw_w = $("#" + subid).width() - 1;
+      //var draw_h = $("#" + subid).height() - $("#" + subid).find(".flex_header").height()-1;
+      //$("#" + subid).find(".flex_draw").width(draw_w).height(draw_h);
       this.cnt++;
 
       return $("#" + subid + "_cont").prop('title', title).get(0);
