@@ -28,6 +28,7 @@
             'touch-punch'          : dir+'touch-punch.min',
             'rawinflate'           : dir+'rawinflate'+ext,
             'MathJax'              : 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG&amp;delayStartupUntil=configured',
+            'saveSvgAsPng'         : dir+'saveSvgAsPng'+ext,
             'THREE'                : dir+'three'+ext,
             'three.extra'          : dir+'three.extra'+ext,
             'THREE_ALL'            : dir+'jquery.mousewheel'+ext,
@@ -85,22 +86,25 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "4.0 16/12/2015";
+   JSROOT.version = "4.1 13/01/2016";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
 
    JSROOT.id_counter = 0;
 
-   JSROOT.touches = ('ontouchend' in document); // identify if touch events are supported
+   JSROOT.touches = false;
+   JSROOT.browser = { isOpera:false, isFirefox:true, isSafari:false, isChrome:false, isIE:false };
 
-   JSROOT.browser = {};
+   if ((typeof document !== "undefined") && (typeof window !== "undefined")) {
+      JSROOT.touches = ('ontouchend' in document); // identify if touch events are supported
+      JSROOT.browser.isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+      JSROOT.browser.isFirefox = typeof InstallTrigger !== 'undefined';
+      JSROOT.browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
+      JSROOT.browser.isChrome = !!window.chrome && !JSROOT.browser.isOpera;
+      JSROOT.browser.isIE = false || !!document.documentMode;
+   }
 
-   JSROOT.browser.isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
-   JSROOT.browser.isFirefox = typeof InstallTrigger !== 'undefined';
-   JSROOT.browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
-   JSROOT.browser.isChrome = !!window.chrome && !JSROOT.browser.isOpera;
-   JSROOT.browser.isIE = false || !!document.documentMode;
    JSROOT.browser.isWebKit = JSROOT.browser.isChrome || JSROOT.browser.isSafari;
 
    // default draw styles, can be changed after loading of JSRootCore.js
@@ -125,7 +129,8 @@
          Palette : 57,
          MathJax : 0,  // 0 - never, 1 - only for complex cases, 2 - always
          Interpolate : "basis", // d3.js interpolate methods, used in TGraph and TF1 painters
-         ProgressBox : true  // show progress box
+         ProgressBox : true,  // show progress box
+         Embed3DinSVG : 2  // 0 - no embed, 1 - overlay over SVG (IE), 2 - embed into SVG (works only with Firefox and Chrome)
       };
 
    JSROOT.BIT = function(n) { return 1 << (n); }
@@ -222,9 +227,11 @@
    // This should be similar to the jQuery.extend method
    // Just copy (not clone) all fields from source to the target object
    JSROOT.extend = function(tgt, src, map, deep_copy) {
-      if ((src == null) || (typeof src != 'object')) return src;
+      if ((src === null) || (typeof src !== 'object')) return src;
 
-      if (deep_copy) {
+      if (typeof deep_copy === "undefined") deep_copy = 0;
+
+      if (deep_copy > 0) {
          if (!map) map = { obj:[], clones:[] };
          var i = map.obj.indexOf(src);
          if (i>=0) return map.clones[i];
@@ -259,22 +266,33 @@
             map.clones.push(tgt);
          }
       } else {
-         if ((tgt==null) || (typeof tgt != 'object')) tgt = {};
+         if ((tgt===null) || (typeof tgt !== 'object')) tgt = {};
       }
 
       for (var k in src)
-         if (deep_copy)
-            tgt[k] = JSROOT.extend(tgt[k], src[k], map, true);
-         else
-            tgt[k] = src[k];
+         switch (deep_copy) {
+            case 0:
+               tgt[k] = src[k];
+               break;
+            case 1:
+               tgt[k] = JSROOT.extend(tgt[k], src[k], map, deep_copy);
+               break;
+            case 2:
+               if (typeof(src[k]) !== 'function')
+                  tgt[k] = JSROOT.extend(tgt[k], src[k], map, deep_copy);
+               break;
+
+            default:
+               tgt[k] = src[k];
+         }
 
       return tgt;
    }
 
    // Instead of jquery use JSROOT.extend function
    // Make deep_copy of the object, including all sub-objects
-   JSROOT.clone = function(obj) {
-      return JSROOT.extend(null, obj, null, true);
+   JSROOT.clone = function(obj, nofunc) {
+      return JSROOT.extend(null, obj, null, nofunc ? 2 : 1);
    }
 
    JSROOT.parse = function(arg) {
@@ -290,6 +308,7 @@
       // In case of opt1 empty string will be returned, in case of opt2 '3'
       // If option not found, null is returned (or provided default value)
 
+      if (arguments.length < 3) dflt = null;
       if ((opt==null) || (typeof opt != 'string') || (opt.length==0)) return dflt;
 
       if (!url) url = document.URL;
@@ -387,9 +406,9 @@
       // { obj: object_pointer, func: name of method to call }
       // arg1, arg2 are optional arguments of the callback
 
-      if (func == null) return;
-
       if (typeof func == 'string') func = JSROOT.findFunction(func);
+
+      if (func == null) return;
 
       if (typeof func == 'function') return func(arg1,arg2);
 
@@ -678,6 +697,11 @@
          extrafiles += '$$$style/JSRootPainter' + ext + '.css;';
       }
 
+      if (kind.indexOf('savepng;')>=0) {
+         modules.push('saveSvgAsPng');
+         mainfiles += '$$$scripts/saveSvgAsPng' + ext + ".js;";
+      }
+
       if (kind.indexOf('jq;')>=0) need_jquery = true;
 
       if (kind.indexOf('math;')>=0)  {
@@ -789,6 +813,12 @@
    JSROOT.draw = function(divid, obj, opt) {
       JSROOT.AssertPrerequisites("2d", function() {
          JSROOT.draw(divid, obj, opt);
+      });
+   }
+
+   JSROOT.redraw = function(divid, obj, opt) {
+      JSROOT.AssertPrerequisites("2d", function() {
+         JSROOT.redraw(divid, obj, opt);
       });
    }
 
@@ -912,7 +942,7 @@
       } else
       if (typename == 'TH1I' || typename == 'TH1F' || typename == 'TH1D' || typename == 'TH1S' || typename == 'TH1C') {
          JSROOT.Create("TH1", obj);
-         JSROOT.extend(obj, { fArray: [] });
+         obj.fArray = [];
       } else
       if (typename == 'TH2') {
          JSROOT.Create("TH1", obj);
@@ -920,15 +950,20 @@
       } else
       if (typename == 'TH2I' || typename == 'TH2F' || typename == 'TH2D' || typename == 'TH2S' || typename == 'TH2C') {
          JSROOT.Create("TH2", obj);
-         JSROOT.extend(obj, { fArray: [] });
+         obj.fArray = [];
       } else
       if (typename == 'TGraph') {
          JSROOT.Create("TNamed", obj);
          JSROOT.Create("TAttLine", obj);
          JSROOT.Create("TAttFill", obj);
          JSROOT.Create("TAttMarker", obj);
-         JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fHistogram: JSROOT.CreateTH1(),
-                              fMaxSize: 0, fMaximum:0, fMinimum:0, fNpoints: 0, fX: [], fY: [] });
+         JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fHistogram: null,
+                              fMaxSize: 0, fMaximum:-1111, fMinimum:-1111, fNpoints: 0, fX: [], fY: [] });
+      } else
+      if (typename == 'TMultiGraph') {
+         JSROOT.Create("TNamed", obj);
+         JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fGraphs: JSROOT.Create("TList"),
+                              fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
       }
 
       JSROOT.addMethods(obj, typename);
@@ -964,28 +999,31 @@
       return histo;
    }
 
-   JSROOT.CreateTGraph = function(npoints) {
+   JSROOT.CreateTGraph = function(npoints, xpts, ypts) {
       var graph = JSROOT.Create("TGraph");
       JSROOT.extend(graph, { fBits: 0x3000408, fName: "dummy_graph_" + this.id_counter++, fTitle: "dummytitle" });
 
       if (npoints>0) {
          graph['fMaxSize'] = graph['fNpoints'] = npoints;
+
+         var usex = (typeof xpts == 'object') && (xpts.length === npoints);
+         var usey = (typeof ypts == 'object') && (ypts.length === npoints);
+
          for (var i=0;i<npoints;++i) {
-            graph['fX'].push(i/npoints);
-            graph['fY'].push(i/npoints);
+            graph['fX'].push(usex ? xpts[i] : i/npoints);
+            graph['fY'].push(usey ? ypts[i] : i/npoints);
          }
-
-         graph['fHistogram'] = JSROOT.CreateTH1(npoints);
-         graph['fHistogram'].fTitle = graph.fTitle;
-
-         graph['fHistogram']['fXaxis']['fXmin'] = 0;
-         graph['fHistogram']['fXaxis']['fXmax'] = 1;
-         graph['fHistogram']['fYaxis']['fXmin'] = 0;
-         graph['fHistogram']['fYaxis']['fXmax'] = 1;
       }
 
       return graph;
    }
+
+   JSROOT.CreateTMultiGraph = function() {
+      var mgraph = JSROOT.Create("TMultiGraph");
+      for(var i=0; i<arguments.length; ++i)
+          mgraph.fGraphs.Add(arguments[i], "");
+      return mgraph;
+    }
 
    JSROOT.addMethods = function(obj, obj_typename) {
       // check object type and add methods if needed
@@ -998,12 +1036,6 @@
          if (!('_typename' in obj)) return;
          obj_typename = obj['_typename'];
       }
-
-      var EBinErrorOpt = {
-          kNormal : 0,    // errors with Normal (Wald) approximation: errorUp=errorLow= sqrt(N)
-          kPoisson : 1,   // errors from Poisson interval at 68.3% (1 sigma)
-          kPoisson2 : 2   // errors from Poisson interval at 95% CL (~ 2 sigma)
-       };
 
       var EErrorType = {
           kERRORMEAN : 0,
@@ -1077,7 +1109,6 @@
               _func = _func.replace(/\b(tan)\b/gi, 'Math.tan');
               _func = _func.replace(/\b(exp)\b/gi, 'Math.exp');
 
-              // use regex to replace ONLY the x variable (i.e. not 'x' in Math.exp...)
                this['_func'] = new Function("x", "return " + _func).bind(this);
                this['_title'] = this['fTitle'];
             }
@@ -1291,6 +1322,12 @@
 
    JSROOT.Initialize = function() {
 
+      if (typeof document === "undefined") {
+         JSROOT.source_dir = "";
+         JSROOT.source_min = false;
+         return this;
+      }
+
       function window_on_load(func) {
          if (func!=null) {
             if (document.attachEvent ? document.readyState === 'complete' : document.readyState !== 'loading')
@@ -1317,7 +1354,7 @@
 
          JSROOT.console("Set JSROOT.source_dir to " + JSROOT.source_dir);
 
-         if (JSROOT.GetUrlOption('gui', src)!=null)
+         if (JSROOT.GetUrlOption('gui', src) !== null)
             return window_on_load( function() { JSROOT.BuildSimpleGUI(); } );
 
          if ( typeof define === "function" && define.amd )

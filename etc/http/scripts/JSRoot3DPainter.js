@@ -23,8 +23,10 @@
    }
 } (function($, myui, d3, JSROOT) {
 
-   JSROOT.Painter.add3DInteraction = function(renderer, scene, camera, toplevel, painter) {
+   JSROOT.Painter.add3DInteraction = function() {
       // add 3D mouse interactive functions
+
+      var painter = this;
       var mouseX, mouseY, mouseDowned = false;
       var mouse = {  x : 0, y : 0 }, INTERSECTED;
 
@@ -118,15 +120,15 @@
          if (mouseDowned) {
             if (INTERSECTED) {
                INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-               renderer.render(scene, camera);
+               painter.Render3D(0);
             }
             INTERSECTED = null;
             if (JSROOT.gStyle.Tooltip)
                tooltip.hide();
             return;
          }
-         raycaster.setFromCamera( mouse, camera );
-         var intersects = raycaster.intersectObjects(scene.children, true);
+         raycaster.setFromCamera( mouse, painter.camera );
+         var intersects = raycaster.intersectObjects(painter.scene.children, true);
          if (intersects.length > 0) {
             var pick = null;
             for (var i = 0; i < intersects.length; ++i) {
@@ -141,7 +143,7 @@
                INTERSECTED = pick.object;
                INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
                INTERSECTED.material.emissive.setHex(0x5f5f5f);
-               renderer.render(scene, camera);
+               painter.Render3D(0);
                if (JSROOT.gStyle.Tooltip)
                   tooltip.show(INTERSECTED.name.length > 0 ? INTERSECTED.name
                         : INTERSECTED.parent.name, 200);
@@ -149,16 +151,15 @@
          } else {
             if (INTERSECTED) {
                INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-               renderer.render(scene, camera);
+               painter.Render3D(0);
             }
             INTERSECTED = null;
             if (JSROOT.gStyle.Tooltip)
                tooltip.hide();
          }
-      }
-      ;
+      };
 
-      $(renderer.domElement).on('touchstart mousedown', function(e) {
+      $(painter.renderer.domElement).on('touchstart mousedown', function(e) {
          // var touch = e.changedTouches[0] || {};
          if (JSROOT.gStyle.Tooltip)
             tooltip.hide();
@@ -178,7 +179,7 @@
          mouseY = touch.pageY;
          mouseDowned = true;
       });
-      $(renderer.domElement).on('touchmove mousemove',  function(e) {
+      $(painter.renderer.domElement).on('touchmove mousemove',  function(e) {
          if (mouseDowned) {
             var touch = e;
             if ('changedTouches' in e)
@@ -194,319 +195,90 @@
             var moveX = touch.pageX - mouseX;
             var moveY = touch.pageY - mouseY;
             // limited X rotate in -45 to 135 deg
-            if ((moveY > 0 && toplevel.rotation.x < Math.PI * 3 / 4)
-                  || (moveY < 0 && toplevel.rotation.x > -Math.PI / 4)) {
-               toplevel.rotation.x += moveY * 0.02;
+            if ((moveY > 0 && painter.toplevel.rotation.x < Math.PI * 3 / 4)
+                  || (moveY < 0 && painter.toplevel.rotation.x > -Math.PI / 4)) {
+               painter.toplevel.rotation.x += moveY * 0.02;
             }
-            toplevel.rotation.y += moveX * 0.02;
-            renderer.render(scene, camera);
+            painter.toplevel.rotation.y += moveX * 0.02;
+            painter.Render3D(0);
             mouseX = touch.pageX;
             mouseY = touch.pageY;
          } else {
             e.preventDefault();
             var mouse_x = 'offsetX' in e.originalEvent ? e.originalEvent.offsetX : e.originalEvent.layerX;
             var mouse_y = 'offsetY' in e.originalEvent ? e.originalEvent.offsetY : e.originalEvent.layerY;
-            mouse.x = (mouse_x / renderer.domElement.width) * 2 - 1;
-            mouse.y = -(mouse_y / renderer.domElement.height) * 2 + 1;
+            mouse.x = (mouse_x / painter.renderer.domElement.width) * 2 - 1;
+            mouse.y = -(mouse_y / painter.renderer.domElement.height) * 2 + 1;
             // enable picking once tootips are available...
             findIntersection();
          }
       });
-      $(renderer.domElement).on('touchend mouseup', function(e) {
+      $(painter.renderer.domElement).on('touchend mouseup', function(e) {
          mouseDowned = false;
       });
 
-      $(renderer.domElement).on('mousewheel', function(e, d) {
+      $(painter.renderer.domElement).on('mousewheel', function(e, d) {
          e.preventDefault();
-         camera.position.z += d * 20;
-         renderer.render(scene, camera);
+         painter.camera.position.z += d * 20;
+         painter.Render3D(0);
       });
 
-      $(renderer.domElement).on('contextmenu', function(e) {
+      $(painter.renderer.domElement).on('contextmenu', function(e) {
          e.preventDefault();
 
          if (JSROOT.gStyle.Tooltip) tooltip.hide();
 
-         JSROOT.Painter.createMenu(function(menu) {
-            if (painter)
-               menu.add("header:"+ painter.histo['fName']);
-
-            menu.add(JSROOT.gStyle.Tooltip ? "Disable tooltip" : "Enable tooltip", function() {
-               JSROOT.gStyle.Tooltip = !JSROOT.gStyle.Tooltip;
-               tooltip.hide();
-            });
-
-            if (painter)
-               menu.add("Switch to 2D", function() {
-                  $(painter.svg_pad().node()).show().parent().find(renderer.domElement).remove();
-                  tooltip.hide();
-                  painter.Draw2D();
-               });
-            menu.add("Close");
-
-            menu.show(e.originalEvent);
-         });
-
+         return painter.ShowContextMenu("hist", e.originalEvent);
       });
    }
 
-   JSROOT.Painter.real_drawHistogram2D = function(painter, opt) {
+   JSROOT.Painter.HPainter_Create3DScene = function(arg) {
 
-      var w = painter.pad_width(), h = painter.pad_height(), size = 100;
-
-      var xmin = painter.xmin, xmax = painter.xmax;
-      if (painter.zoom_xmin != painter.zoom_xmax) {
-         xmin = painter.zoom_xmin;
-         xmax = painter.zoom_xmax;
-      }
-      var ymin = painter.ymin, ymax = painter.ymax;
-      if (painter.zoom_ymin != painter.zoom_ymax) {
-         ymin = painter.zoom_ymin;
-         ymax = painter.zoom_ymax;
+      if ((arg!=null) && (arg<0)) {
+         this.clear_3d_canvas();
+         delete this.size3d;
+         delete this.scene;
+         delete this.toplevel;
+         delete this.camera;
+         delete this.renderer;
+         return;
       }
 
-      var tx, utx, ty, uty, tz, utz;
+      if ('toplevel' in this) {
+         // it is indication that all 3D object created, just replace it with empty
 
-      if (painter.options.Logx) {
-         tx = d3.scale.log().domain([ xmin, xmax ]).range([ -size, size ]);
-         utx = d3.scale.log().domain([ -size, size ]).range([ xmin, xmax ]);
-      } else {
-         tx = d3.scale.linear().domain([ xmin, xmax ]).range([ -size, size ]);
-         utx = d3.scale.linear().domain([ -size, size ]).range([ xmin, xmax ]);
-      }
-      if (painter.options.Logy) {
-         ty = d3.scale.log().domain([ ymin, ymax ]).range([ -size, size ]);
-         uty = d3.scale.log().domain([ size, -size ]).range([ ymin, ymax ]);
-      } else {
-         ty = d3.scale.linear().domain([ ymin, ymax ]).range([ -size, size ]);
-         uty = d3.scale.linear().domain([ size, -size ]).range([ ymin, ymax ]);
-      }
-      if (painter.options.Logz) {
-         tz = d3.scale.log().domain([ painter.gminbin, Math.ceil(painter.gmaxbin / 100) * 105 ]).range([ 0, size * 2 ]);
-         utz = d3.scale.log().domain([ 0, size * 2 ]).range([ painter.gminbin, Math.ceil(painter.gmaxbin / 100) * 105 ]);
-      } else {
-         tz = d3.scale.linear().domain([ painter.gminbin, Math.ceil(painter.gmaxbin / 100) * 105 ]).range( [ 0, size * 2 ]);
-         utz = d3.scale.linear().domain([ 0, size * 2 ]).range( [ painter.gminbin, Math.ceil(painter.gmaxbin / 100) * 105 ]);
+         var newtop = new THREE.Object3D();
+
+         newtop.rotation.x = this.toplevel.rotation.x;
+         newtop.rotation.y = this.toplevel.rotation.y;
+
+         this.scene.remove(this.toplevel);
+
+         this.scene.add(newtop);
+
+         this.toplevel = newtop;
+         return;
       }
 
-      var constx = (size * 2 / painter.nbinsx) / painter.gmaxbin;
-      var consty = (size * 2 / painter.nbinsy) / painter.gmaxbin;
+      var size = this.size_for_3d();
 
-      var colorFlag = (painter.options.Color > 0);
-      var fcolor = d3.rgb(JSROOT.Painter.root_colors[painter.histo['fFillColor']]);
-
-      var local_bins = painter.CreateDrawBins(100, 100, 2, (JSROOT.gStyle.Tooltip ? 1 : 0));
+      this.size3d = 100;
 
       // three.js 3D drawing
-      var scene = new THREE.Scene();
+      this.scene = new THREE.Scene();
       //scene.fog = new THREE.Fog(0xffffff, 500, 3000);
 
-      var toplevel = new THREE.Object3D();
-      toplevel.rotation.x = 30 * Math.PI / 180;
-      toplevel.rotation.y = 30 * Math.PI / 180;
-      scene.add(toplevel);
+      this.toplevel = new THREE.Object3D();
+      this.toplevel.rotation.x = 30 * Math.PI / 180;
+      this.toplevel.rotation.y = 30 * Math.PI / 180;
+      this.scene.add(this.toplevel);
 
-      var wireMaterial = new THREE.MeshBasicMaterial({
-         color : 0x000000,
-         wireframe : true,
-         wireframeLinewidth : 0.5,
-         side : THREE.DoubleSide
-      });
-
-      // create a new mesh with cube geometry
-      var cube = new THREE.Mesh(new THREE.BoxGeometry(size * 2, size * 2, size * 2), wireMaterial);
-      //cube.position.y = size;
-
-      var helper = new THREE.BoxHelper(cube);
-      helper.material.color.set(0x000000);
-
-      var box = new THREE.Object3D();
-      box.add(helper);
-      box.position.y = size;
-
-      // add the cube to the scene
-      toplevel.add(box);
-
-      var textMaterial = new THREE.MeshBasicMaterial({ color : 0x000000 });
-      var lineMaterial = new THREE.LineBasicMaterial({ color : 0x000000 });
-
-      // add the calibration vectors and texts
-      var geometry;
-      var ticks = new Array();
-      var imax, istep, len = 3, plen, sin45 = Math.sin(45);
-      var text3d, text;
-      var xmajors = tx.ticks(8);
-      var xminors = tx.ticks(50);
-      for (var i = -size, j = 0, k = 0; i < size; ++i) {
-         var is_major = (utx(i) <= xmajors[j] && utx(i + 1) > xmajors[j]) ? true : false;
-         var is_minor = (utx(i) <= xminors[k] && utx(i + 1) > xminors[k]) ? true : false;
-         plen = (is_major ? len + 2 : len) * sin45;
-         if (is_major) {
-            text3d = new THREE.TextGeometry(xmajors[j], { size : 7, height : 0, curveSegments : 10 });
-            ++j;
-
-            text3d.computeBoundingBox();
-            var centerOffset = 0.5 * (text3d.boundingBox.max.x - text3d.boundingBox.min.x);
-
-            text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(i - centerOffset, -13, size + plen);
-            toplevel.add(text);
-
-            text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(i + centerOffset, -13, -size - plen);
-            text.rotation.y = Math.PI;
-            toplevel.add(text);
-         }
-         if (is_major || is_minor) {
-            ++k;
-            geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(i, 0, size));
-            geometry.vertices.push(new THREE.Vector3(i, -plen, size + plen));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
-            ticks.push(geometry);
-            geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(i, 0, -size));
-            geometry.vertices.push(new THREE.Vector3(i, -plen, -size - plen));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
-            ticks.push(geometry);
-         }
-      }
-      var ymajors = ty.ticks(8);
-      var yminors = ty.ticks(50);
-      for (var i = size, j = 0, k = 0; i > -size; --i) {
-         var is_major = (uty(i) <= ymajors[j] && uty(i - 1) > ymajors[j]) ? true : false;
-         var is_minor = (uty(i) <= yminors[k] && uty(i - 1) > yminors[k]) ? true : false;
-         plen = (is_major ? len + 2 : len) * sin45;
-         if (is_major) {
-            text3d = new THREE.TextGeometry(ymajors[j], { size : 7, height : 0, curveSegments : 10 });
-            ++j;
-
-            text3d.computeBoundingBox();
-            var centerOffset = 0.5 * (text3d.boundingBox.max.x - text3d.boundingBox.min.x);
-
-            text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(size + plen, -13, i + centerOffset);
-            text.rotation.y = Math.PI / 2;
-            toplevel.add(text);
-
-            text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(-size - plen, -13, i - centerOffset);
-            text.rotation.y = -Math.PI / 2;
-            toplevel.add(text);
-         }
-         if (is_major || is_minor) {
-            ++k;
-            geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(size, 0, i));
-            geometry.vertices.push(new THREE.Vector3(size + plen, -plen, i));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
-            ticks.push(geometry);
-            geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(-size, 0, i));
-            geometry.vertices.push(new THREE.Vector3(-size - plen, -plen, i));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
-            ticks.push(geometry);
-         }
-      }
-      var zmajors = tz.ticks(8);
-      var zminors = tz.ticks(50);
-      for (var i = 0, j = 0, k = 0; i < (size * 2); ++i) {
-         var is_major = (utz(i) <= zmajors[j] && utz(i + 1) > zmajors[j]) ? true : false;
-         var is_minor = (utz(i) <= zminors[k] && utz(i + 1) > zminors[k]) ? true : false;
-         plen = (is_major ? len + 2 : len) * sin45;
-         if (is_major) {
-            text3d = new THREE.TextGeometry(zmajors[j], { size : 7, height : 0, curveSegments : 10 });
-            ++j;
-
-            text3d.computeBoundingBox();
-            var offset = 0.8 * (text3d.boundingBox.max.x - text3d.boundingBox.min.x);
-
-            text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(size + offset + 5, i - 2.5, size + offset + 5);
-            text.rotation.y = Math.PI * 3 / 4;
-            toplevel.add(text);
-
-            text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(size + offset + 5, i - 2.5, -size - offset - 5);
-            text.rotation.y = -Math.PI * 3 / 4;
-            toplevel.add(text);
-
-            text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(-size - offset - 5, i - 2.5, size + offset + 5);
-            text.rotation.y = Math.PI / 4;
-            toplevel.add(text);
-
-            text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(-size - offset - 5, i - 2.5, -size - offset - 5);
-            text.rotation.y = -Math.PI / 4;
-            toplevel.add(text);
-         }
-         if (is_major || is_minor) {
-            ++k;
-            geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(size, i, size));
-            geometry.vertices.push(new THREE.Vector3(size + plen, i, size + plen));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
-            ticks.push(geometry);
-            geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(size, i, -size));
-            geometry.vertices.push(new THREE.Vector3(size + plen, i, -size - plen));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
-            ticks.push(geometry);
-            geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(-size, i, size));
-            geometry.vertices.push(new THREE.Vector3(-size - plen, i, size + plen));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
-            ticks.push(geometry);
-            geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(-size, i, -size));
-            geometry.vertices.push(new THREE.Vector3(-size - plen, i, -size - plen));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
-            ticks.push(geometry);
-         }
-      }
-      var t = 0;
-      while (ticks[t]) {
-         ticks[t].dispose();
-         t++;
-      }
-      // create the bin cubes
-      var fillcolor = new THREE.Color(0xDDDDDD);
-      fillcolor.setRGB(fcolor.r / 255, fcolor.g / 255, fcolor.b / 255);
-      var bin, mesh, wei, hh;
-
-      for (var i = 0; i < local_bins.length; ++i) {
-         hh = local_bins[i];
-         wei = tz(hh.z);
-
-         // create a new mesh with cube geometry
-         bin = new THREE.Mesh(new THREE.BoxGeometry(2 * size / painter.nbinsx, wei, 2 * size / painter.nbinsy),
-                               new THREE.MeshLambertMaterial({ color : fillcolor.getHex() /*, shading : THREE.NoShading */ }));
-
-         bin.position.x = tx(hh.x);
-         bin.position.y = wei / 2;
-         bin.position.z = -(ty(hh.y));
-
-         if (JSROOT.gStyle.Tooltip)
-            bin.name = hh.tip;
-         toplevel.add(bin);
-
-         helper = new THREE.BoxHelper(bin);
-         helper.material.color.set(0x000000);
-         helper.material.linewidth = 1.0;
-         toplevel.add(helper);
-      }
-
-      delete local_bins;
-      local_bins = null;
-
-      var camera = new THREE.PerspectiveCamera(45, w / h, 1, 4000);
+      this.camera = new THREE.PerspectiveCamera(45, size.width / size.height, 1, 4000);
       var pointLight = new THREE.PointLight(0xcfcfcf);
-      camera.add( pointLight );
+      this.camera.add( pointLight );
       pointLight.position.set( 10, 10, 10 );
-      camera.position.set(0, size / 2, 500);
-      camera.lookat = cube;
-      scene.add( camera );
+      this.camera.position.set(0, this.size3d / 2, 500);
+      this.scene.add( this.camera );
 
       /**
        * @author alteredq / http://alteredqualia.com/
@@ -524,139 +296,82 @@
             fileapi : window.File && window.FileReader && window.FileList && window.Blob
       };
 
-      var renderer = Detector.webgl ? new THREE.WebGLRenderer({ antialias : true }) :
-                                      new THREE.CanvasRenderer({ antialias : true });
-      renderer.setClearColor(0xffffff, 1);
-      renderer.setSize(w, h);
-      $(painter.svg_pad().node()).hide().parent().append(renderer.domElement);
-      renderer.render(scene, camera);
+      this.renderer = Detector.webgl ? new THREE.WebGLRenderer({ antialias : true, alpha: true }) :
+                                       new THREE.CanvasRenderer({ antialias : true, alpha: true  });
+      //renderer.setClearColor(0xffffff, 1);
+      // renderer.setClearColor(0x0, 0);
+      this.renderer.setSize(size.width, size.height);
 
-      JSROOT.Painter.add3DInteraction(renderer, scene, camera, toplevel, painter);
+      this.add_3d_canvas(this.renderer.domElement);
+
+      this['CreateXYZ'] = JSROOT.Painter.HPainter_CreateXYZ;
+      this['DrawXYZ'] = JSROOT.Painter.HPainter_DrawXYZ;
+      this['Add3DInteraction'] = JSROOT.Painter.add3DInteraction;
+      this['Render3D'] =JSROOT.Painter.Render3D;
+
+      this.Add3DInteraction();
    }
 
-   JSROOT.Painter.drawHistogram3D = function(divid, histo, opt) {
-      // when called, *this* set to painter instance
+   JSROOT.Painter.HPainter_CreateXYZ = function() {
 
-      var logx = false, logy = false, logz = false, gridx = false, gridy = false, gridz = false;
-
-      this.SetDivId(divid, -1);
-      var pad = this.root_pad();
-
-      var render_to;
-      if (!this.svg_pad().empty())
-         render_to = $(this.svg_pad().node()).hide().parent();
-      else
-         render_to = $("#" + divid);
-
-      if (typeof opt == 'undefined' || opt == "") opt = histo['fOption'];
-      opt = opt.toLowerCase();
-
-      if (pad) {
-         logx = pad['fLogx'];
-         logy = pad['fLogy'];
-         logz = pad['fLogz'];
-         gridx = pad['fGridx'];
-         gridy = pad['fGridy'];
-         gridz = pad['fGridz'];
-      }
-
-      var fillcolor = JSROOT.Painter.root_colors[histo['fFillColor']];
-      var linecolor = JSROOT.Painter.root_colors[histo['fLineColor']];
-      if (histo['fFillColor'] == 0) {
-         fillcolor = '#4572A7';
-      }
-      if (histo['fLineColor'] == 0) {
-         linecolor = '#4572A7';
-      }
-      var nbinsx = histo['fXaxis']['fNbins'];
-      var nbinsy = histo['fYaxis']['fNbins'];
-      var nbinsz = histo['fZaxis']['fNbins'];
-      var scalex = (histo['fXaxis']['fXmax'] - histo['fXaxis']['fXmin']) / histo['fXaxis']['fNbins'];
-      var scaley = (histo['fYaxis']['fXmax'] - histo['fYaxis']['fXmin']) / histo['fYaxis']['fNbins'];
-      var scalez = (histo['fZaxis']['fXmax'] - histo['fZaxis']['fXmin']) / histo['fZaxis']['fNbins'];
-      var maxbin = -1e32, minbin = 1e32;
-      maxbin = d3.max(histo['fArray']);
-      minbin = d3.min(histo['fArray']);
-      var bins = new Array();
-      for (var i = 0; i <= nbinsx + 2; ++i) {
-         for (var j = 0; j < nbinsy + 2; ++j) {
-            for (var k = 0; k < nbinsz + 2; ++k) {
-               var bin_content = histo.getBinContent(i, j, k);
-               if (bin_content > minbin) {
-                  var point = {
-                        x : histo['fXaxis']['fXmin'] + (i * scalex),
-                        y : histo['fYaxis']['fXmin'] + (j * scaley),
-                        z : histo['fZaxis']['fXmin'] + (k * scalez),
-                        n : bin_content
-                  };
-                  bins.push(point);
-               }
-            }
-         }
-      }
-      var w = render_to.width(), h = render_to.height(), size = 100;
-      if (h<10) { render_to.height(0.66*w); h = render_to.height(); }
-
-      if (logx) {
-         var tx = d3.scale.log().domain([ histo['fXaxis']['fXmin'],  histo['fXaxis']['fXmax'] ]).range( [ -size, size ]);
-         var utx = d3.scale.log().domain([ -size, size ]).range([ histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax'] ]);
+      var xmin = this.xmin, xmax = this.xmax;
+      //if (this.zoom_xmin != this.zoom_xmax) {
+      //   xmin = this.zoom_xmin;
+      //   xmax = this.zoom_xmax;
+      //}
+      var ymin = this.ymin, ymax = this.ymax;
+      //if (this.zoom_ymin != this.zoom_ymax) {
+      //   ymin = this.zoom_ymin;
+      //   ymax = this.zoom_ymax;
+      //}
+      var zmin = this.gminbin, zmax = this.gmaxbin;
+      if (('zmin' in this) && ('zmax' in this) && (this.Dimension()==3)) {
+         zmin = this.zmin;
+         zmax = this.zmax;
       } else {
-         var tx = d3.scale.linear().domain( [ histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax'] ]).range( [ -size, size ]);
-         var utx = d3.scale.linear().domain([ -size, size ]).range([ histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax'] ]);
+         zmax = Math.ceil(zmax / 100) * 105; // not very nice
       }
-      if (logy) {
-         var ty = d3.scale.log().domain([ histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax'] ]).range( [ -size, size ]);
-         var uty = d3.scale.log().domain([ size, -size ]).range([ histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax'] ]);
+
+      if (this.options.Logx) {
+         if (xmin <= 0) xmin = 1e-6*xmax;
+         this.tx = d3.scale.log().domain([ xmin, xmax ]).range([ -this.size3d, this.size3d ]);
+         this.utx = d3.scale.log().domain([ -this.size3d, this.size3d ]).range([ xmin, xmax ]);
       } else {
-         var ty = d3.scale.linear().domain( [ histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax'] ]).range([ -size, size ]);
-         var uty = d3.scale.linear().domain([ size, -size ]).range([ histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax'] ]);
+         this.tx = d3.scale.linear().domain([ xmin, xmax ]).range([ -this.size3d, this.size3d ]);
+         this.utx = d3.scale.linear().domain([ -this.size3d, this.size3d ]).range([ xmin, xmax ]);
       }
-      if (logz) {
-         var tz = d3.scale.log().domain([ histo['fZaxis']['fXmin'], histo['fZaxis']['fXmax'] ]).range([ -size, size ]);
-         var utz = d3.scale.log().domain([ -size, size ]).range([ histo['fZaxis']['fXmin'], histo['fZaxis']['fXmax'] ]);
+      if (this.options.Logy) {
+         if (ymin <= 0) ymin = 1e-6*ymax;
+         this.ty = d3.scale.log().domain([ ymin, ymax ]).range([ -this.size3d, this.size3d ]);
+         this.uty = d3.scale.log().domain([ this.size3d, -this.size3d ]).range([ ymin, ymax ]);
       } else {
-         var tz = d3.scale.linear().domain([ histo['fZaxis']['fXmin'], histo['fZaxis']['fXmax'] ]).range([ -size, size ]);
-         var utz = d3.scale.linear().domain([ -size, size ]).range([ histo['fZaxis']['fXmin'], histo['fZaxis']['fXmax'] ]);
+         this.ty = d3.scale.linear().domain([ ymin, ymax ]).range([ -this.size3d, this.size3d ]);
+         this.uty = d3.scale.linear().domain([ this.size3d, -this.size3d ]).range([ ymin, ymax ]);
       }
+      if (this.options.Logz) {
+         if (zmin <= 0) zmin = 1e-6*zmax;
+         this.tz = d3.scale.log().domain([ zmin, zmax]).range([ 0, this.size3d * 2 ]);
+         this.utz = d3.scale.log().domain([ 0, this.size3d * 2 ]).range([ zmin, zmax ]);
+      } else {
+         this.tz = d3.scale.linear().domain([ zmin, zmax ]).range( [ 0, this.size3d * 2 ]);
+         this.utz = d3.scale.linear().domain([ 0, this.size3d * 2 ]).range( [ zmin, zmax ]);
+      }
+   }
 
-      // three.js 3D drawing
-      var scene = new THREE.Scene();
-      //scene.fog = new THREE.Fog(0xffffff, 500, 3000);
-
-      var toplevel = new THREE.Object3D();
-      toplevel.rotation.x = 30 * Math.PI / 180;
-      toplevel.rotation.y = 30 * Math.PI / 180;
-      scene.add(toplevel);
-
-      var wireMaterial = new THREE.MeshBasicMaterial({
-         color : 0x000000,
-         wireframe : true,
-         wireframeLinewidth : 0.5,
-         side : THREE.DoubleSide
-      });
-
-      // create a new mesh with cube geometry
-      var cube = new THREE.Mesh(new THREE.BoxGeometry(size * 2, size * 2, size * 2), wireMaterial);
-
-      var helper = new THREE.BoxHelper(cube);
-      helper.material.color.set(0x000000);
-
-      // add the cube to the scene
-      toplevel.add(helper);
+   JSROOT.Painter.HPainter_DrawXYZ = function() {
+      // add the calibration vectors and texts
 
       var textMaterial = new THREE.MeshBasicMaterial({ color : 0x000000 });
       var lineMaterial = new THREE.LineBasicMaterial({ color : 0x000000 });
 
-      // add the calibration vectors and texts
-      var geometry;
       var ticks = new Array();
       var imax, istep, len = 3, plen, sin45 = Math.sin(45);
       var text3d, text;
-      var xmajors = tx.ticks(5);
-      var xminors = tx.ticks(25);
-      for (var i = -size, j = 0, k = 0; i <= size; ++i) {
-         var is_major = (utx(i) <= xmajors[j] && utx(i + 1) > xmajors[j]) ? true : false;
-         var is_minor = (utx(i) <= xminors[k] && utx(i + 1) > xminors[k]) ? true : false;
+      var xmajors = this.tx.ticks(8);
+      var xminors = this.tx.ticks(50);
+      for (var i = -this.size3d, j = 0, k = 0; i < this.size3d; ++i) {
+         var is_major = (this.utx(i) <= xmajors[j] && this.utx(i + 1) > xmajors[j]) ? true : false;
+         var is_minor = (this.utx(i) <= xminors[k] && this.utx(i + 1) > xminors[k]) ? true : false;
          plen = (is_major ? len + 2 : len) * sin45;
          if (is_major) {
             text3d = new THREE.TextGeometry(xmajors[j], { size : 7, height : 0, curveSegments : 10 });
@@ -666,33 +381,33 @@
             var centerOffset = 0.5 * (text3d.boundingBox.max.x - text3d.boundingBox.min.x);
 
             text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(i - centerOffset, -size - 13, size + plen);
-            toplevel.add(text);
+            text.position.set(i - centerOffset, -13, this.size3d + plen);
+            this.toplevel.add(text);
 
             text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(i + centerOffset, -size - 13, -size - plen);
+            text.position.set(i + centerOffset, -13, -this.size3d - plen);
             text.rotation.y = Math.PI;
-            toplevel.add(text);
+            this.toplevel.add(text);
          }
          if (is_major || is_minor) {
             ++k;
-            geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(i, -size, size));
-            geometry.vertices.push(new THREE.Vector3(i, -size - plen, size + plen));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(i, 0, this.size3d));
+            geometry.vertices.push(new THREE.Vector3(i, -plen, this.size3d + plen));
+            this.toplevel.add(new THREE.Line(geometry, lineMaterial));
             ticks.push(geometry);
             geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(i, -size, -size));
-            geometry.vertices.push(new THREE.Vector3(i, -size - plen, -size - plen));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            geometry.vertices.push(new THREE.Vector3(i, 0, -this.size3d));
+            geometry.vertices.push(new THREE.Vector3(i, -plen, -this.size3d - plen));
+            this.toplevel.add(new THREE.Line(geometry, lineMaterial));
             ticks.push(geometry);
          }
       }
-      var ymajors = ty.ticks(5);
-      var yminors = ty.ticks(25);
-      for (var i = size, j = 0, k = 0; i > -size; --i) {
-         var is_major = (uty(i) <= ymajors[j] && uty(i - 1) > ymajors[j]) ? true : false;
-         var is_minor = (uty(i) <= yminors[k] && uty(i - 1) > yminors[k]) ? true : false;
+      var ymajors = this.ty.ticks(8);
+      var yminors = this.ty.ticks(50);
+      for (var i = this.size3d, j = 0, k = 0; i > -this.size3d; --i) {
+         var is_major = (this.uty(i) <= ymajors[j] && this.uty(i - 1) > ymajors[j]) ? true : false;
+         var is_minor = (this.uty(i) <= yminors[k] && this.uty(i - 1) > yminors[k]) ? true : false;
          plen = (is_major ? len + 2 : len) * sin45;
          if (is_major) {
             text3d = new THREE.TextGeometry(ymajors[j], { size : 7, height : 0, curveSegments : 10 });
@@ -702,168 +417,477 @@
             var centerOffset = 0.5 * (text3d.boundingBox.max.x - text3d.boundingBox.min.x);
 
             text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(size + plen, -size - 13, i + centerOffset);
+            text.position.set(this.size3d + plen, -13, i + centerOffset);
             text.rotation.y = Math.PI / 2;
-            toplevel.add(text);
+            this.toplevel.add(text);
 
             text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(-size - plen, -size - 13, i - centerOffset);
+            text.position.set(-this.size3d - plen, -13, i - centerOffset);
             text.rotation.y = -Math.PI / 2;
-            toplevel.add(text);
+            this.toplevel.add(text);
          }
          if (is_major || is_minor) {
             ++k;
-            geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(size, -size, i));
-            geometry.vertices.push(new THREE.Vector3(size + plen, -size - plen, i));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(this.size3d, 0, i));
+            geometry.vertices.push(new THREE.Vector3(this.size3d + plen, -plen, i));
+            this.toplevel.add(new THREE.Line(geometry, lineMaterial));
             ticks.push(geometry);
             geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(-size, -size, i));
-            geometry.vertices.push(new THREE.Vector3(-size - plen, -size - plen, i));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            geometry.vertices.push(new THREE.Vector3(-this.size3d, 0, i));
+            geometry.vertices.push(new THREE.Vector3(-this.size3d - plen, -plen, i));
+            this.toplevel.add(new THREE.Line(geometry, lineMaterial));
             ticks.push(geometry);
          }
       }
-      var zmajors = tz.ticks(5);
-      var zminors = tz.ticks(25);
-      for (var i = -size, j = 0, k = 0; i <= size; ++i) {
-         var is_major = (utz(i) <= zmajors[j] && utz(i + 1) > zmajors[j]) ? true : false;
-         var is_minor = (utz(i) <= zminors[k] && utz(i + 1) > zminors[k]) ? true : false;
+      var zmajors = this.tz.ticks(8);
+      var zminors = this.tz.ticks(50);
+      for (var i = 0, j = 0, k = 0; i < 2*this.size3d; ++i) {
+         var is_major = (this.utz(i) <= zmajors[j] && this.utz(i + 1) > zmajors[j]) ? true : false;
+         var is_minor = (this.utz(i) <= zminors[k] && this.utz(i + 1) > zminors[k]) ? true : false;
          plen = (is_major ? len + 2 : len) * sin45;
          if (is_major) {
             text3d = new THREE.TextGeometry(zmajors[j], { size : 7, height : 0, curveSegments : 10 });
             ++j;
 
             text3d.computeBoundingBox();
-            var offset = 0.6 * (text3d.boundingBox.max.x - text3d.boundingBox.min.x);
+            var offset = 0.8 * (text3d.boundingBox.max.x - text3d.boundingBox.min.x);
 
             text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(size + offset + 7, i - 2.5, size + offset + 7);
+            text.position.set(this.size3d + offset + 5, i - 2.5, this.size3d + offset + 5);
             text.rotation.y = Math.PI * 3 / 4;
-            toplevel.add(text);
+            this.toplevel.add(text);
 
             text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(size + offset + 7, i - 2.5, -size - offset - 7);
+            text.position.set(this.size3d + offset + 5, i - 2.5, -this.size3d - offset - 5);
             text.rotation.y = -Math.PI * 3 / 4;
-            toplevel.add(text);
+            this.toplevel.add(text);
 
             text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(-size - offset - 7, i - 2.5, size + offset + 7);
+            text.position.set(-this.size3d - offset - 5, i - 2.5, this.size3d + offset + 5);
             text.rotation.y = Math.PI / 4;
-            toplevel.add(text);
+            this.toplevel.add(text);
 
             text = new THREE.Mesh(text3d, textMaterial);
-            text.position.set(-size - offset - 7, i - 2.5, -size - offset - 7);
+            text.position.set(-this.size3d - offset - 5, i - 2.5, -this.size3d - offset - 5);
             text.rotation.y = -Math.PI / 4;
-            toplevel.add(text);
+            this.toplevel.add(text);
          }
          if (is_major || is_minor) {
             ++k;
-            geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(size, i, size));
-            geometry.vertices.push(new THREE.Vector3(size + plen, i, size + plen));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(this.size3d, i, this.size3d));
+            geometry.vertices.push(new THREE.Vector3(this.size3d + plen, i, this.size3d + plen));
+            this.toplevel.add(new THREE.Line(geometry, lineMaterial));
             ticks.push(geometry);
             geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(size, i, -size));
-            geometry.vertices.push(new THREE.Vector3(size + plen, i, -size - plen));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            geometry.vertices.push(new THREE.Vector3(this.size3d, i, -this.size3d));
+            geometry.vertices.push(new THREE.Vector3(this.size3d + plen, i, -this.size3d - plen));
+            this.toplevel.add(new THREE.Line(geometry, lineMaterial));
             ticks.push(geometry);
             geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(-size, i, size));
-            geometry.vertices.push(new THREE.Vector3(-size - plen, i, size + plen));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            geometry.vertices.push(new THREE.Vector3(-this.size3d, i, this.size3d));
+            geometry.vertices.push(new THREE.Vector3(-this.size3d - plen, i, this.size3d + plen));
+            this.toplevel.add(new THREE.Line(geometry, lineMaterial));
             ticks.push(geometry);
             geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(-size, i, -size));
-            geometry.vertices.push(new THREE.Vector3(-size - plen, i, -size - plen));
-            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            geometry.vertices.push(new THREE.Vector3(-this.size3d, i, -this.size3d));
+            geometry.vertices.push(new THREE.Vector3(-this.size3d - plen, i, -this.size3d - plen));
+            this.toplevel.add(new THREE.Line(geometry, lineMaterial));
             ticks.push(geometry);
          }
       }
-      var t = 0;
-      while (ticks[t]) {
-         ticks[t].dispose();
-         t++;
-      }
-      // create the bin cubes
-      var constx = (size * 2 / histo['fXaxis']['fNbins']) / maxbin;
-      var consty = (size * 2 / histo['fYaxis']['fNbins']) / maxbin;
-      var constz = (size * 2 / histo['fZaxis']['fNbins']) / maxbin;
 
-      var optFlag = (opt.indexOf('colz') != -1 || opt.indexOf('col') != -1);
-      var fcolor = d3.rgb(JSROOT.Painter.root_colors[histo['fFillColor']]);
+      for (var t=0; t < ticks.length; ++t)
+         ticks[t].dispose();
+
+      var wireMaterial = new THREE.MeshBasicMaterial({
+         color : 0x000000,
+         wireframe : true,
+         wireframeLinewidth : 0.5,
+         side : THREE.DoubleSide
+      });
+
+      // create a new mesh with cube geometry
+      var cube = new THREE.Mesh(new THREE.BoxGeometry(this.size3d * 2, this.size3d * 2, this.size3d * 2), wireMaterial);
+      //cube.position.y = size;
+
+      var helper = new THREE.BoxHelper(cube);
+      helper.material.color.set(0x000000);
+
+      var box = new THREE.Object3D();
+      box.add(helper);
+      box.position.y = this.size3d;
+
+      // add the cube to the scene
+      this.toplevel.add(box);
+
+      this.camera.lookat = cube;
+   }
+
+   JSROOT.Painter.TH2Painter_Draw3DBins = function() {
+      var constx = (this.size3d * 2 / this.nbinsx) / this.gmaxbin;
+      var consty = (this.size3d * 2 / this.nbinsy) / this.gmaxbin;
+
+      var fcolor = d3.rgb(JSROOT.Painter.root_colors[this.histo['fFillColor']]);
+
+      var local_bins = this.CreateDrawBins(100, 100, 2, (JSROOT.gStyle.Tooltip ? 1 : 0));
+
+      // create the bin cubes
+      var fillcolor = new THREE.Color(0xDDDDDD);
+      fillcolor.setRGB(fcolor.r / 255, fcolor.g / 255, fcolor.b / 255);
+
+      for (var i = 0; i < local_bins.length; ++i) {
+         var hh = local_bins[i];
+         var wei = this.tz(hh.z);
+
+         // create a new mesh with cube geometry
+         var bin = new THREE.Mesh(new THREE.BoxGeometry(2 * this.size3d / this.nbinsx, wei, 2 * this.size3d / this.nbinsy),
+                                  new THREE.MeshLambertMaterial({ color : fillcolor.getHex() }));
+
+         bin.position.x = this.tx(hh.x);
+         bin.position.y = wei / 2;
+         bin.position.z = -(this.ty(hh.y));
+
+         if (JSROOT.gStyle.Tooltip && ('tip' in hh))
+            bin.name = hh.tip.replace(/(?:\r\n|\r|\n)/g, '<br/>');
+         this.toplevel.add(bin);
+
+         var helper = new THREE.BoxHelper(bin);
+         helper.material.color.set(0x000000);
+         helper.material.linewidth = 1.0;
+         this.toplevel.add(helper);
+      }
+
+      delete local_bins;
+      local_bins = null;
+   }
+
+   JSROOT.Painter.Render3D = function(tmout) {
+      if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
+
+      if (tmout <= 0) {
+         if ('render_tmout' in this)
+            clearTimeout(this['render_tmout']);
+
+         // do rendering, most consuming time
+         this.renderer.render(this.scene, this.camera);
+
+         delete this['render_tmout'];
+
+         return;
+      }
+
+      // no need to shoot rendering once again
+      if ('render_tmout' in this) return;
+
+      this['render_tmout'] = setTimeout(this.Render3D.bind(this,0), tmout);
+   }
+
+   JSROOT.Painter.TH2Painter_Draw3D = function(call_back) {
+
+      // function called with this as painter
+
+      this.Create3DScene();
+
+      this.CreateXYZ();
+
+      this.DrawXYZ();
+
+      this.Draw3DBins();
+
+      this.Render3D();
+
+      JSROOT.CallBack(call_back);
+   }
+
+   // ==============================================================================
+
+
+   JSROOT.TH3Painter = function(histo) {
+      JSROOT.THistPainter.call(this, histo);
+
+      this['Create3DScene'] = JSROOT.Painter.HPainter_Create3DScene;
+   }
+
+   JSROOT.TH3Painter.prototype = Object.create(JSROOT.THistPainter.prototype);
+
+   JSROOT.TH3Painter.prototype.ScanContent = function() {
+      this.nbinsx = this.histo['fXaxis']['fNbins'];
+      this.nbinsy = this.histo['fYaxis']['fNbins'];
+      this.nbinsz = this.histo['fZaxis']['fNbins'];
+
+      this.xmin = this.histo['fXaxis']['fXmin'];
+      this.xmax = this.histo['fXaxis']['fXmax'];
+
+      this.ymin = this.histo['fYaxis']['fXmin'];
+      this.ymax = this.histo['fYaxis']['fXmax'];
+
+      this.zmin = this.histo['fZaxis']['fXmin'];
+      this.zmax = this.histo['fZaxis']['fXmax'];
+
+      // global min/max, used at the moment in 3D drawing
+
+      this.gminbin = this.gmaxbin = this.histo.getBinContent(1, 1, 1);
+      for (var i = 0; i < this.nbinsx; ++i)
+         for (var j = 0; j < this.nbinsy; ++j)
+            for (var k = 0; k < this.nbinsz; ++k) {
+               var bin_content = this.histo.getBinContent(i + 1, j + 1, k + 1);
+               if (bin_content < this.gminbin) this.gminbin = bin_content; else
+               if (bin_content > this.gmaxbin) this.gmaxbin = bin_content;
+            }
+
+      this.draw_content = this.gmaxbin > 0;
+   }
+
+   JSROOT.TH3Painter.prototype.CountStat = function() {
+      var stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0, stat_sumz1 = 0, stat_sumx2 = 0, stat_sumy2 = 0, stat_sumz2 = 0;
+
+      var res = { entries: 0, integral: 0, meanx: 0, meany: 0, meanz: 0, rmsx: 0, rmsy: 0, rmsz: 0 };
+
+      for (var xi = 0; xi < this.nbinsx+2; ++xi) {
+
+         var xx = this.xmin + (xi - 0.5) / this.nbinsx * (this.xmax - this.xmin);
+         var xside = (xi === 0) ? 0 : (xi === this.nbinsx+1 ? 2 : 1);
+
+         for (var yi = 0; yi < this.nbinsy+2; ++yi) {
+
+            var yy = this.ymin + (yi - 0.5) / this.nbinsy * (this.ymax - this.ymin);
+            var yside = (yi === 0) ? 0 : (yi === this.nbinsy+1 ? 2 : 1);
+
+            for (var zi = 0; zi < this.nbinsz+2; ++zi) {
+
+               var zz = this.zmin + (zi - 0.5) / this.nbinsz * (this.zmax - this.zmin);
+               var zside = (zi === 0) ? 0 : (zi === this.nbinsz+1 ? 2 : 1);
+
+               var cont = this.histo.getBinContent(xi, yi, zi);
+               res.entries += cont;
+
+               if ((xside==1) && (yside==1) && (zside==1)) {
+                  stat_sum0 += cont;
+                  stat_sumx1 += xx * cont;
+                  stat_sumy1 += yy * cont;
+                  stat_sumz1 += zz * cont;
+                  stat_sumx2 += xx * xx * cont;
+                  stat_sumy2 += yy * yy * cont;
+                  stat_sumz2 += zz * zz * cont;
+               }
+            }
+         }
+      }
+
+      if (this.histo.fTsumw>0) {
+         stat_sum0 = this.histo.fTsumw;
+         stat_sumx1 = this.histo.fTsumwx;
+         stat_sumx2 = this.histo.fTsumwx2;
+         stat_sumy1 = this.histo.fTsumwy;
+         stat_sumy2 = this.histo.fTsumwy2;
+         stat_sumz1 = this.histo.fTsumwz;
+         stat_sumz2 = this.histo.fTsumwz2;
+      }
+
+      if (stat_sum0 > 0) {
+         res.meanx = stat_sumx1 / stat_sum0;
+         res.meany = stat_sumy1 / stat_sum0;
+         res.meanz = stat_sumz1 / stat_sum0;
+         res.rmsx = Math.sqrt(stat_sumx2 / stat_sum0 - res.meanx * res.meanx);
+         res.rmsy = Math.sqrt(stat_sumy2 / stat_sum0 - res.meany * res.meany);
+         res.rmsz = Math.sqrt(stat_sumz2 / stat_sum0 - res.meanz * res.meanz);
+      }
+
+      res.integral = stat_sum0;
+
+      if (this.histo.fEntries > 1) res.entries = this.histo.fEntries;
+
+      return res;
+   }
+
+   JSROOT.TH3Painter.prototype.FillStatistic = function(stat, dostat, dofit) {
+      if (!this.histo) return false;
+
+      var data = this.CountStat();
+
+      var print_name = dostat % 10;
+      var print_entries = Math.floor(dostat / 10) % 10;
+      var print_mean = Math.floor(dostat / 100) % 10;
+      var print_rms = Math.floor(dostat / 1000) % 10;
+      var print_under = Math.floor(dostat / 10000) % 10;
+      var print_over = Math.floor(dostat / 100000) % 10;
+      var print_integral = Math.floor(dostat / 1000000) % 10;
+      //var print_skew = Math.floor(dostat / 10000000) % 10;
+      //var print_kurt = Math.floor(dostat / 100000000) % 10;
+
+      if (print_name > 0)
+         stat.AddLine(this.histo['fName']);
+
+      if (print_entries > 0)
+         stat.AddLine("Entries = " + stat.Format(data.entries,"entries"));
+
+      if (print_mean > 0) {
+         stat.AddLine("Mean x = " + stat.Format(data.meanx));
+         stat.AddLine("Mean y = " + stat.Format(data.meany));
+         stat.AddLine("Mean z = " + stat.Format(data.meanz));
+      }
+
+      if (print_rms > 0) {
+         stat.AddLine("Std Dev x = " + stat.Format(data.rmsx));
+         stat.AddLine("Std Dev y = " + stat.Format(data.rmsy));
+         stat.AddLine("Std Dev z = " + stat.Format(data.rmsz));
+      }
+
+      if (print_integral > 0) {
+         stat.AddLine("Integral = " + stat.Format(data.integral,"entries"));
+      }
+
+      // adjust the size of the stats box with the number of lines
+      var nlines = stat.pavetext['fLines'].arr.length;
+      var stath = nlines * JSROOT.gStyle.StatFontSize;
+      if (stath <= 0 || 3 == (JSROOT.gStyle.StatFont % 10)) {
+         stath = 0.25 * nlines * JSROOT.gStyle.StatH;
+         stat.pavetext['fY1NDC'] = 0.93 - stath;
+         stat.pavetext['fY2NDC'] = 0.93;
+      }
+
+      return true;
+   }
+
+   JSROOT.TH3Painter.prototype.CreateBins = function() {
+      var bins = [];
+
+      var name = this.GetItemName();
+      if ((name==null) || (name=="")) name = this.histo.fName;
+      if (name.length > 0) name += "<br/>";
+
+      for (var i = 0; i < this.nbinsx; ++i)
+         for (var j = 0; j < this.nbinsy; ++j)
+            for (var k = 0; k < this.nbinsz; ++k) {
+               var bin_content = this.histo.getBinContent(i + 1, j + 1, k + 1);
+               if (bin_content <= this.gminbin) continue;
+
+               var bin = {
+                     x : this.xmin + (i + 0.5) / this.nbinsx * (this.xmax - this.xmin),
+                     y : this.ymin + (j + 0.5) / this.nbinsy * (this.ymax - this.ymin),
+                     z : this.zmin + (k + 0.5) / this.nbinsz * (this.zmax - this.zmin),
+                     n : bin_content
+                  };
+
+               if (JSROOT.gStyle.Tooltip)
+                  bin.tip = name + 'x=' + JSROOT.FFormat(bin.x,"6.4g") + ' bin=' + (i+1) + '<br/>'
+                                 + 'y=' + JSROOT.FFormat(bin.y,"6.4g") + ' bin=' + (j+1) + '<br/>'
+                                 + 'z=' + JSROOT.FFormat(bin.z,"6.4g") + ' bin=' + (k+1) + '<br/>'
+                                 + 'entries=' + JSROOT.FFormat(bin.n, "7.0g");
+
+               bins.push(bin);
+            }
+
+      return bins;
+   }
+
+   JSROOT.TH3Painter.prototype.Draw3DBins = function() {
+      if (!this.draw_content) return;
+
+      var bins = this.CreateBins();
+
+      // create the bin cubes
+      var constx = (this.size3d * 2 / this.nbinsx) / this.gmaxbin;
+      var consty = (this.size3d * 2 / this.nbinsy) / this.gmaxbin;
+      var constz = (this.size3d * 2 / this.nbinsz) / this.gmaxbin;
+
+      var fcolor = d3.rgb(JSROOT.Painter.root_colors[this.histo['fFillColor']]);
       var fillcolor = new THREE.Color(0xDDDDDD);
       fillcolor.setRGB(fcolor.r / 255, fcolor.g / 255,  fcolor.b / 255);
-      var bin, mesh, wei;
+      var bin, wei;
       for (var i = 0; i < bins.length; ++i) {
-         wei = (optFlag ? maxbin : bins[i].n);
-         if (opt.indexOf('box1') != -1) {
-            bin = new THREE.Mesh(new THREE.SphereGeometry(0.5 * wei * constx /*, 16, 16 */),
-                  new THREE.MeshPhongMaterial({ color : fillcolor.getHex(), specular : 0x4f4f4f /*, shading: THREE.FlatShading */}));
+         wei = (this.options.Color > 0 ? this.gmaxbin : bins[i].n);
+         if (this.options.Box == 11) {
+            bin = new THREE.Mesh(new THREE.SphereGeometry(0.5 * wei * constx),
+                                 new THREE.MeshPhongMaterial({ color : fillcolor.getHex(), specular : 0x4f4f4f }));
          } else {
-            // create a new mesh with cube geometry
             bin = new THREE.Mesh(new THREE.BoxGeometry(wei * constx, wei * constz, wei * consty),
-                                 new THREE.MeshLambertMaterial({ color : fillcolor.getHex() /*, shading : THREE.FlatShading */ }));
+                                 new THREE.MeshLambertMaterial({ color : fillcolor.getHex() }));
          }
-         bin.position.x = tx(bins[i].x - (scalex / 2));
-         bin.position.y = tz(bins[i].z - (scalez / 2));
-         bin.position.z = -(ty(bins[i].y - (scaley / 2)));
-         bin.name = "x: [" + bins[i].x.toPrecision(4) + ", "
-                   + (bins[i].x + scalex).toPrecision(4) + "]<br/>"
-                   + "y: [" + bins[i].y.toPrecision(4) + ", "
-                   + (bins[i].y + scaley).toPrecision(4) + "]<br/>"
-                   + "z: [" + bins[i].z.toPrecision(4) + ", "
-                   + (bins[i].z + scalez).toPrecision(4) + "]<br/>"
-                   + "entries: " + bins[i].n.toFixed();
-         toplevel.add(bin);
+         bin.position.x = this.tx(bins[i].x);
+         bin.position.y = this.tz(bins[i].z);
+         bin.position.z = -(this.ty(bins[i].y));
+         if ('tip' in bins[i])
+           bin.name = bins[i].tip;
 
-         if (opt.indexOf('box1') == -1) {
-            helper = new THREE.BoxHelper(bin);
+         this.toplevel.add(bin);
+
+         if (this.options.Box != 11) {
+            var helper = new THREE.BoxHelper(bin);
             helper.material.color.set(0x000000);
             helper.material.linewidth = 1.0;
-            toplevel.add(helper);
+            this.toplevel.add(helper);
          }
       }
+   }
 
-      var camera = new THREE.PerspectiveCamera(45, w / h, 1, 4000);
-      var pointLight = new THREE.PointLight(0xefefef);
-      camera.add( pointLight );
-      pointLight.position.set( 10, 10, 10 );
-      camera.position.set(0, 0, 500);
-      camera.lookat = cube;
-      scene.add( camera );
+   JSROOT.TH3Painter.prototype.Redraw = function() {
+      this.Create3DScene();
+      this.CreateXYZ();
+      this.DrawXYZ();
+      this.Draw3DBins();
+      this.Render3D();
+   }
 
-      /**
-       * @author alteredq / http://alteredqualia.com/
-       * @author mr.doob / http://mrdoob.com/
-       */
-      var Detector = {
-            canvas : !!window.CanvasRenderingContext2D,
-            webgl : (function() {
-               try {
-                  return !!window.WebGLRenderingContext
-                  && !!document.createElement('canvas')
-                  .getContext('experimental-webgl');
-               } catch (e) {
-                  return false;
-               }
-            })(),
-            workers : !!window.Worker,
-            fileapi : window.File && window.FileReader
-            && window.FileList && window.Blob
-      };
+   JSROOT.Painter.drawHistogram3D = function(divid, histo, opt) {
+      // when called, *this* set to painter instance
 
-      var renderer = Detector.webgl ?
-                       new THREE.WebGLRenderer({ antialias : true }) :
-                       new THREE.CanvasRenderer({antialias : true });
-      renderer.setClearColor(0xffffff, 1);
-      renderer.setSize(w, h);
-      render_to.append(renderer.domElement);
-      renderer.render(scene, camera);
+      // create painter and add it to canvas
+      JSROOT.extend(this, new JSROOT.TH3Painter(histo));
 
-      JSROOT.Painter.add3DInteraction(renderer, scene, camera, toplevel, null);
+      this.SetDivId(divid, 4);
+
+      this.options = this.DecodeOptions(opt);
+
+      this.CheckPadOptions();
+
+      this.ScanContent();
+
+      this.Redraw();
+
+      if (this.create_canvas) this.DrawTitle();
+
+      if (JSROOT.gStyle.AutoStat && this.create_canvas) {
+         var stats = this.CreateStat();
+         if (stats) JSROOT.draw(this.divid, stats, "");
+      }
+
+      return this.DrawingReady();
+   }
+
+   JSROOT.Painter.drawPolyMarker3D = function(divid, poly, opt) {
+      // when called, *this* set to painter instance
+
+      this.SetDivId(divid);
+
+      var main = this.main_painter();
+
+      if ((main == null) || !('renderer' in main)) return this.DrawingReady();
+
+      var cnt = poly.fP.length;
+      var step = 3;
+
+      if ((JSROOT.gStyle.OptimizeDraw > 0) && (cnt > 300*3)) {
+         step = Math.floor(cnt / 300 / 3) * 3;
+         if (step <= 6) step = 6;
+      }
+
+      var fcolor = d3.rgb(JSROOT.Painter.root_colors[poly.fMarkerColor]);
+      var fillcolor = new THREE.Color(0xDDDDDD);
+      fillcolor.setRGB(fcolor.r / 255, fcolor.g / 255,  fcolor.b / 255);
+
+      for (var n=0; n<cnt; n+=step) {
+         var bin = new THREE.Mesh(new THREE.SphereGeometry(1),
+                                  new THREE.MeshPhongMaterial({ color : fillcolor.getHex(), specular : 0x4f4f4f}));
+         bin.position.x = main.tx(poly.fP[n]);
+         bin.position.y = main.tz(poly.fP[n+2]);
+         bin.position.z = -main.ty(poly.fP[n+1]);
+         main.toplevel.add(bin);
+      }
+
+      main.Render3D();
 
       return this.DrawingReady();
    }
