@@ -1,5 +1,11 @@
-// This macro demonstrates how to use "glcol" option for TH3.
-// Author: Timur Pocheptsov
+/// \file
+/// \ingroup tutorial_gl
+/// This macro demonstrates how to use "glcol" option for TH3.
+///
+/// \macro_image(nobatch)
+/// \macro_code
+///
+/// \author  Timur Pocheptsov
 
 void glvox1()
 {
