@@ -33,13 +33,13 @@ class THist;
 
 // fwd declare for friend declaration in THist.
 template<int DIMENSIONS, class PRECISION>
-class ROOT::THist<DIMENSIONS, PRECISION>
+class THist<DIMENSIONS, PRECISION>
   HistFromImpl(
-  std::unique_ptr<typename ROOT::THist<DIMENSIONS, PRECISION>::ImplBase_t> pHistImpl);
+  std::unique_ptr<typename THist<DIMENSIONS, PRECISION>::ImplBase_t> pHistImpl);
 
 template<int DIMENSIONS, class PRECISION>
-void swap(ROOT::THist<DIMENSIONS, PRECISION> &a,
-          ROOT::THist<DIMENSIONS, PRECISION> &b) noexcept;
+void swap(THist<DIMENSIONS, PRECISION> &a,
+          THist<DIMENSIONS, PRECISION> &b) noexcept;
 
 
 /**
