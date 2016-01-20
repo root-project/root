@@ -145,6 +145,7 @@ namespace std {} using namespace std;
 #include "TUrl.h"
 #else
 #include "TUnixSystem.h"
+#include "TUnixSigHandling.h"
 #endif
 #elif defined(R__WIN32)
 #include "TWinNTSystem.h"
@@ -1852,6 +1853,7 @@ void TROOT::InitSystem()
       gSystem = new TMacOSXSystem;
 #else
       gSystem = new TUnixSystem;
+      gSigHandling = new TUnixSigHandling;
 #endif
 #elif defined(R__WIN32)
       gSystem = new TWinNTSystem;
