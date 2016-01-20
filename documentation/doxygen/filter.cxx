@@ -253,7 +253,8 @@ void FilterTutorial()
 
       // \macro_image found
       if (gLineString.find("\\macro_image") != string::npos) {
-         bool nobatch = (gLineString.find("nobatch") != string::npos);
+         bool nobatch = (gLineString.find("(nobatch)") != string::npos);
+         ReplaceAll(gLineString,"(nobatch)","");
          if (gPython) {
             if (nobatch) {
                ExecuteCommand(StringFormat("root -l -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,true)\"",
