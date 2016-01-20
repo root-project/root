@@ -131,6 +131,7 @@
 #pragma link C++ class TStringToken;
 #pragma link C++ class TSubString;
 #pragma link C++ class TSysEvtHandler;
+#pragma link C++ class TSigHandling+;
 #pragma link C++ class TSystem+;
 #pragma link C++ class TSystemFile+;
 #pragma link C++ class TSystemDirectory+;
