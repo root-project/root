@@ -54,12 +54,6 @@ protected:
    static int          UnixSetitimer(Long_t ms);
    static int          UnixSelect(Int_t nfds, TFdSet *readready, TFdSet *writeready,
                                   Long_t timeout);
-   static void         UnixSignal(ESignals sig, SigHandler_t h);
-   static const char  *UnixSigname(ESignals sig);
-   static void         UnixSigAlarmInterruptsSyscalls(Bool_t set);
-   static void         UnixResetSignal(ESignals sig);
-   static void         UnixResetSignals();
-   static void         UnixIgnoreSignal(ESignals sig, Bool_t ignore);
    static int          UnixFilestat(const char *path, FileStat_t &buf);
    static int          UnixFSstat(const char *path, Long_t *id, Long_t *bsize,
                                   Long_t *blocks, Long_t *bfree);
@@ -94,6 +88,7 @@ public:
    //---- Handling of system events ----------------------------
    void              CheckChilds();
    Bool_t            CheckSignals(Bool_t sync);
+   Bool_t            HaveTrappedSignal(Bool_t pendingOnly);
    Bool_t            CheckDescriptors();
    void              DispatchSignals(ESignals sig);
    void              AddSignalHandler(TSignalHandler *sh);
@@ -101,6 +96,7 @@ public:
    void              ResetSignal(ESignals sig, Bool_t reset = kTRUE);
    void              ResetSignals();
    void              IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
+   TSeqCollection   *GetListOfSignalHandlers();
    void              SigAlarmInterruptsSyscalls(Bool_t set);
    void              AddFileHandler(TFileHandler *fh);
    TFileHandler     *RemoveFileHandler(TFileHandler *fh);

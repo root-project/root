@@ -4,7 +4,7 @@
 
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 
-set(Unix_dict_headers  ${CMAKE_CURRENT_SOURCE_DIR}/inc/TUnixSystem.h PARENT_SCOPE)
+set(Unix_dict_headers  ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h PARENT_SCOPE)
 
 include_directories(${CMAKE_SOURCE_DIR}/net/net/inc)
 ROOT_OBJECT_LIBRARY(Unix ${sources})

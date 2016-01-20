@@ -48,6 +48,7 @@ allows a simple partial implementation for new OS'es.
 #include "TPluginManager.h"
 #include "TUrl.h"
 #include "TVirtualMutex.h"
+#include "TSigHandling.h"
 #include "compiledata.h"
 #include "RConfigure.h"
 
@@ -108,7 +109,6 @@ TSystem::TSystem(const char *name, const char *title) : TNamed(name, title), fAc
       Error("TSystem", "only one instance of TSystem allowed");
 
    fOnExitList          = 0;
-   fSignalHandler       = 0;
    fFileHandler         = 0;
    fStdExceptionHandler = 0;
    fTimers              = 0;
@@ -121,7 +121,6 @@ TSystem::TSystem(const char *name, const char *title) : TNamed(name, title), fAc
    fWritemask           = 0;
    fReadready           = 0;
    fWriteready          = 0;
-   fSignals             = 0;
    fDone                = kFALSE;
    fAclicMode           = kDefault;
    fInControl           = kFALSE;
@@ -129,12 +128,12 @@ TSystem::TSystem(const char *name, const char *title) : TNamed(name, title), fAc
    fMaxrfd              = -1;
    fMaxwfd              = -1;
    fNfd                 = 0;
-   fSigcnt              = 0;
 
    if (!gLibraryVersion) {
       gLibraryVersion = new Int_t [gLibraryVersionMax];
       memset(gLibraryVersion, 0, gLibraryVersionMax*sizeof(Int_t));
    }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,11 +144,6 @@ TSystem::~TSystem()
    if (fOnExitList) {
       fOnExitList->Delete();
       SafeDelete(fOnExitList);
-   }
-
-   if (fSignalHandler) {
-      fSignalHandler->Delete();
-      SafeDelete(fSignalHandler);
    }
 
    if (fFileHandler) {
@@ -190,10 +184,8 @@ Bool_t TSystem::Init()
    fMaxrfd = -1;
    fMaxwfd = -1;
 
-   fSigcnt = 0;
    fLevel  = 0;
 
-   fSignalHandler       = new TOrdCollection;
    fFileHandler         = new TOrdCollection;
    fStdExceptionHandler = new TOrdCollection;
    fTimers              = new TOrdCollection;
@@ -536,8 +528,7 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
 
 void TSystem::AddSignalHandler(TSignalHandler *h)
 {
-   if (h && fSignalHandler && (fSignalHandler->FindObject(h) == 0))
-      fSignalHandler->Add(h);
+   gSigHandling->AddSignalHandler(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -546,10 +537,7 @@ void TSystem::AddSignalHandler(TSignalHandler *h)
 
 TSignalHandler *TSystem::RemoveSignalHandler(TSignalHandler *h)
 {
-   if (fSignalHandler)
-      return (TSignalHandler *)fSignalHandler->Remove(h);
-
-   return 0;
+   return (TSignalHandler *)gSigHandling->RemoveSignalHandler(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -607,6 +595,17 @@ void TSystem::IgnoreSignal(ESignals /*sig*/, Bool_t /*ignore*/)
 void TSystem::IgnoreInterrupt(Bool_t ignore)
 {
    IgnoreSignal(kSigInterrupt, ignore);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Obtain the current signal handlers
+TSeqCollection *TSystem::GetListOfSignalHandlers()
+{
+   AbstractMethod("GetListOfSignalHandlers");
+   return 0;
+//   TSeqCollection *handler;
+//   handler = (TSeqCollection *)gSigHandling->GetListOfSignalHandlers();
+//   return handler;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
