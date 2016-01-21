@@ -276,7 +276,7 @@ namespace TMVA
 /** \brief action to be done after the computation of a test sample (e.g. update some monitoring output)
  *
  */
-        void ClassificationSettings::testSample (double output, double target, double weight)
+    void ClassificationSettings::testSample (double error, double output, double target, double weight)
         {
             m_output.push_back (output);
             m_targets.push_back (target);
