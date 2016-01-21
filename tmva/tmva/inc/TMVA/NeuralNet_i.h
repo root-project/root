@@ -2,6 +2,11 @@
 #define TMVA_NEURAL_NET_I
 #pragma once
 
+
+#include <tuple>
+#include <future>
+
+
 namespace TMVA
 {
     namespace NN
@@ -807,32 +812,79 @@ namespace TMVA
                     }
 
                     testError = 0;
-                    double weightSum = 0;
+                    //double weightSum = 0;
                     settings.startTestCycle ();
-                    std::vector<double> output;
-                    for (auto it = begin (testPattern), itEnd = end (testPattern); it != itEnd; ++it)
+                    if (settings.useMultithreading ())
                     {
-                        const Pattern& p = (*it);
-                        double weight = p.weight ();
-                        Batch batch (it, it+1);
-                        output.clear ();
-                        std::tuple<Settings&, Batch&, DropContainer&> passThrough (settings, batch, dropContainerTest);
-                        double testPatternError = (*this) (passThrough, weights, ModeOutput::FETCH, output);
-                        size_t outSize = this->outputSize ();
-                        if (outSize == 1)
+                        size_t numThreads = std::thread::hardware_concurrency ();
+                        size_t patternPerThread = testPattern.size () / numThreads;
+                        std::vector<Batch> batches;
+                        auto itPat = testPattern.begin ();
+                        auto itPatEnd = testPattern.end ();
+                        for (size_t idxThread = 0; idxThread < numThreads-1; ++idxThread)
                         {
-                            for (size_t i = 0, iEnd = batch.size (); i < iEnd; ++i)
+                            batches.push_back (Batch (itPat, itPat + patternPerThread));
+                            itPat += patternPerThread;
+                        }
+                        batches.insert (batches.end (), Batch (itPat, itPatEnd));
+
+                        std::vector<std::future<std::tuple<double,std::vector<double>>>> futures;
+                        for (auto& batch : batches)
+                        {
+                            // -------------------- execute each of the batch ranges on a different thread -------------------------------
+                            futures.push_back (
+                                std::async (std::launch::async, [&]() 
+                                            {
+                                                std::vector<double> localOutput;
+                                                std::tuple<Settings&, Batch&, DropContainer&> passThrough (settings, batch, dropContainerTest);
+                                                double testBatchError = (*this) (passThrough, weights, ModeOutput::FETCH, localOutput);
+                                                return std::make_tuple (testBatchError, localOutput);
+                                            })
+                                );
+                        }
+
+                        for (auto& f : futures)
+                        {
+                            std::tuple<double,std::vector<double>> result = f.get ();
+                            testError += std::get<0>(result) / batches.size ();
+                            std::vector<double> output = std::get<1>(result);
+                            if (output.size () == testPattern.size ())
                             {
-                                const Pattern& currPattern = (*(batch.begin () + i));
-                                settings.testSample (output.at (i * outSize), currPattern.output ().at (0), currPattern.weight ());
+                                auto it = begin (testPattern);
+                                for (double out : output)
+                                {
+                                    settings.testSample (0, out, (*it).output ().at (0), (*it).weight ());
+                                    ++it;
+                                }
                             }
                         }
-                        weightSum += fabs (weight);
-                        testError += testPatternError; //*weight;
+                    
+                    }
+                    else
+                    {
+                        std::vector<double> output;
+                        for (auto it = begin (testPattern), itEnd = end (testPattern); it != itEnd; ++it)
+                        {
+                            const Pattern& p = (*it);
+                            double weight = p.weight ();
+                            Batch batch (it, it+1);
+                            output.clear ();
+                            std::tuple<Settings&, Batch&, DropContainer&> passThrough (settings, batch, dropContainerTest);
+                            double testPatternError = (*this) (passThrough, weights, ModeOutput::FETCH, output);
+                            if (output.size () == 1)
+                            {
+                                /* std::vector<double> out = (*this).compute (p.input (), weights); */
+                                /* assert (output.at (0) == out.at (0)); */
+                                settings.testSample (testPatternError, output.at (0), p.output ().at (0), weight);
+                            }
+                            //weightSum += fabs (weight);
+                            //testError += testPatternError*weight;
+                            testError += testPatternError;
+                        }
+                        testError /= testPattern.size ();
                     }
                     settings.endTestCycle ();
 //                    testError /= weightSum;
-                    testError /= testPattern.size ();
 
                     settings.computeResult (*this, weights);
 
@@ -1293,7 +1345,7 @@ namespace TMVA
                                               _pattern.weight (), settings.factorWeightDecay (),
                                               settings.regularization ());
                 sumWeights += fabs (_pattern.weight ());
-                sumError += error * _pattern.weight ();
+                sumError += error;
             }
             
             if (doTraining) // training
