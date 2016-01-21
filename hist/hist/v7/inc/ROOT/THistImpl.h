@@ -113,6 +113,9 @@ public:
  */
 template<int DIMENSIONS, class PRECISION>
 class THistImplBase: public THistImplPrecisionAgnosticBase<DIMENSIONS> {
+private:
+  std::vector<PRECISION> fContent; ///< The histogram's bin content
+
 public:
   /// Type of a coordinate: an array of `DIMENSIONS` doubles.
   using Coord_t = typename THistImplPrecisionAgnosticBase<DIMENSIONS>::Coord_t;
@@ -120,6 +123,10 @@ public:
   using Weight_t = PRECISION;
   /// Type of the Fill(x, w) function
   using FillFunc_t = void (THistImplBase::*)(const Coord_t& x, Weight_t w);
+
+  THistImplBase(size_t numBins): fContent(numBins) {}
+  THistImplBase(const THistImplBase&) = default;
+  THistImplBase(THistImplBase&&) = default;
 
   /// Interface function to fill a vector or array of coordinates with
   /// corresponding weights.
@@ -135,13 +142,29 @@ public:
 
 
   /// Get the bin content (sum of weights) for bin index `binidx`.
-  virtual PRECISION GetBinContent(int binidx) const = 0;
+  virtual PRECISION GetBinContent(int binidx) const final {
+    return fContent[binidx];
+  }
 
   /// Get the bin content (sum of weights) for bin index `binidx`, cast to
   /// double.
   double GetBinContentAsDouble(int binidx) const final {
     return (double) GetBinContent(binidx);
   }
+
+  /// Add `w` to the bin at index `bin`.
+  void AddBinContent(int bin, Weight_t w) {
+    fContent[bin] += w;
+  }
+
+  /// Minimal iterator interface.
+  const_iterator begin() const { return const_iterator(*fImpl); }
+  const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBins()); }
+
+
+
+  std::array_view<PRECISION> GetContent() const noexcept { return fContent; }
+
 };
 } // namespace Detail
 
@@ -313,13 +336,7 @@ private:
        decltype(fAxes)>()(fAxes);
   }
 
-  /// Add `w` to the bin at index `bin`.
-  void AddBinContent(int bin, Weight_t w) {
-    fContent[bin] += w;
-  }
-
   std::tuple<AXISCONFIG...> fAxes; ///< The histogram's axes
-  std::vector<PRECISION> fContent; ///< The histogram's bin content
 
 public:
   THistImpl(STATISTICS statConfig, AXISCONFIG... axisArgs);
@@ -437,11 +454,6 @@ public:
   }
 
 
-  /// Get the content of the bin at bin index `binidx`.
-  PRECISION GetBinContent(int binidx) const final {
-    return fContent[binidx];
-  }
-
   /// Get the begin() and end() for each axis.
   ///
   ///\param[in] withOverUnder - Whether the begin and end should contain over-
@@ -466,7 +478,7 @@ public:
 
 template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
 THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::THistImpl(STATISTICS statConfig, AXISCONFIG... axisArgs):
-  STATISTICS(statConfig), fAxes{axisArgs...}, fContent(GetNBins())
+  STATISTICS(statConfig), fAxes{axisArgs...}, THistImplBase(GetNBins())
 {}
 
 #if 0
