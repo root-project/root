@@ -764,7 +764,8 @@ namespace TMVA
 
 
 
-            virtual void testSample (double /*output*/, double /*target*/, double /*weight*/) {} ///< virtual function to be used for monitoring (callback)
+
+    virtual void testSample (double /*error*/, double /*output*/, double /*target*/, double /*weight*/) {} ///< virtual function to be used for monitoring (callback)
             virtual void startTrainCycle () ///< callback for monitoring and logging
             {
                 m_convergenceCount = 0;
@@ -972,7 +973,7 @@ namespace TMVA
             /*     fMonitoring->ProcessEvents (); */
             /* } */
 
-            void testSample (double output, double target, double weight);
+            void testSample (double error, double output, double target, double weight);
 
             virtual void startTestCycle ();
             virtual void endTestCycle ();
