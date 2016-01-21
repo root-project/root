@@ -11,12 +11,13 @@
  *                                                                                *
  **********************************************************************************/
 
-#include<TMVA/PyMethodBase.h>
-#include<TApplication.h>
-
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wunused-function"
 #include <Python.h>
+
+#include<TMVA/PyMethodBase.h>
+#include<TApplication.h>
+
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 

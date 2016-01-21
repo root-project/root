@@ -58,7 +58,7 @@ namespace TMVA {
       void     SetValue( Float_t value, Int_t ievt );
 
       void     Resize( Int_t entries )   { fMvaValues.resize( entries ); }
-      void     Clear()                   { fMvaValues.clear(); }
+      void     Clear()                   { fMvaValues.clear(); fMvaValuesTypes.clear(); }
 
       // getters
       Long64_t GetSize()                  const { return fMvaValues.size(); }

@@ -706,6 +706,7 @@
    JSROOT.TGeoPainter.prototype.drawNode = function(scene, toplevel, node, visible) {
       var container = toplevel;
       var volume = node['fVolume'];
+      if (visible==0) return; // cut all volumes below 0 level
 
       var translation_matrix = [0, 0, 0];
       var rotation_matrix = null;//[1, 0, 0, 0, 1, 0, 0, 0, 1];
@@ -770,7 +771,7 @@
 
       var _transparent = true, _helper = false, _opacity = 0.0, _isdrawn = false;
       if (this._debug) _helper = true;
-      if (JSROOT.TestGeoAttBit(volume, JSROOT.BIT(7)) || (visible>0)) {
+      if (JSROOT.TestGeoAttBit(volume, JSROOT.BIT(7)) || (visible > 0 && JSROOT.TestGeoAttBit(volume, JSROOT.BIT(2)))) {
          _transparent = false;
          _opacity = 1.0;
          _isdrawn = true;
@@ -926,7 +927,35 @@
       return bbox;
    }
 
+   JSROOT.TGeoPainter.prototype.CountVolumes = function(obj, lvl, mmm) {
+      var res = 0;
+
+      if ((obj === undefined) || (obj===null) || (typeof obj !== 'object')) return 0;
+
+      if ((obj['_typename'] == 'TGeoVolume') || (obj['_typename'] == 'TGeoVolumeAssembly'))
+         return this.CountVolumes({ _typename:"TGeoNode", fVolume: obj, fName:"TopLevel" }, lvl, mmm);
+
+      res += 1;
+      if (mmm!=null) mmm[lvl] += 1;
+
+      if (('fVolume' in obj) && (obj.fVolume!=null) && (obj.fVolume.fNodes!=null)) {
+        var arr = obj.fVolume['fNodes']['arr'];
+        for (var i = 0; i < arr.length; ++i)
+           res += this.CountVolumes(arr[i], lvl+1, mmm);
+      }
+
+      if (('fElements' in obj) && (obj.fElements != null)) {
+        var arr = obj['fElements']['arr'];
+        for (var i = 0; i < arr.length; ++i)
+           res += this.CountVolumes(arr[i], lvl+1, mmm);
+      }
+
+      return res;
+   }
+
    JSROOT.TGeoPainter.prototype.drawGeometry = function(opt) {
+      if (typeof opt != 'string') opt = "";
+
       var rect = this.select_main().node().getBoundingClientRect();
 
       var w = rect.width, h = rect.height, size = 100;
@@ -934,6 +963,38 @@
       if (h < 10) { h = parseInt(0.66*w); this.select_main().style('height', h +"px"); }
 
       var dom = this.select_main().node();
+
+      var maxlvl = -1; // use only visible flag, set in ROOT when geometry is displayed
+
+      if (opt=="all") maxlvl = 9999; else
+      if (opt.indexOf("maxlvl")==0) maxlvl = parseInt(opt.substr(6)); else
+      if ((opt == 'count') || (opt == 'limit')) {
+         var arr = [];
+         for (var lvl=0;lvl<100;++lvl) arr.push(0);
+
+         var cnt = this.CountVolumes(this._geometry, 0, arr);
+
+         if (opt == 'count') {
+            var res = 'Total number: ' + cnt + '<br/>';
+            for (var lvl=0;lvl<arr.length;++lvl) {
+               if (arr[lvl] !== 0)
+                  res += ('  lvl' + lvl + ': ' + arr[lvl] + '<br/>');
+            }
+
+            dom.innerHTML = res;
+            return this.DrawingReady();
+         }
+
+         maxlvl = 9999;
+         var sum = 0;
+         for (var lvl=1;lvl<arr.length;++lvl) {
+            sum += arr[lvl];
+            if (sum > 10000) {
+               maxlvl = lvl - 1;
+               break;
+            }
+         }
+      }
 
       // three.js 3D drawing
       this._scene = new THREE.Scene();
@@ -991,7 +1052,7 @@
                   visible: false, transparent: true, opacity: 0.0 } ) );
          toplevel.add(cube);
 
-         this.drawNode(this._scene, cube, { _typename:"TGeoNode", fVolume:this._geometry, fName:"TopLevel" }, opt=="all" ? 9999 : 0);
+         this.drawNode(this._scene, cube, { _typename:"TGeoNode", fVolume:this._geometry, fName:"TopLevel" }, maxlvl);
 
          top.computeBoundingBox();
          var overall_size = 3 * Math.max( Math.max(Math.abs(top.boundingBox.max.x), Math.abs(top.boundingBox.max.y)),
@@ -1275,10 +1336,9 @@
          _title : volume.fTitle,
          _parent : parent,
          _volume : volume, // keep direct reference
-         _more : (typeof volume['fNodes'] != 'undefined') && (volume['fNodes']!=null),
+         _more : (volume['fNodes'] !== undefined) && (volume['fNodes'] !== null),
          _menu : JSROOT.provideGeoMenu,
          _icon_click : JSROOT.geoIconClick,
-         // this is special case of expand of geo volume
          _get : function(item, itemname, callback) {
             if ((item!=null) && (item._volume != null))
                return JSROOT.CallBack(callback, item, item._volume);
@@ -1357,9 +1417,7 @@
    }
 
    JSROOT.expandGeoManagerHierarchy = function(hitem, obj) {
-      if ((hitem==null) || (obj==null)) {
-         return false;
-      }
+      if ((hitem==null) || (obj==null)) return false;
 
       hitem['_childs'] = [];
 
@@ -1380,7 +1438,7 @@
       return true;
    }
 
-   JSROOT.addDrawFunc({ name: "TGeoVolumeAssembly", icon: 'img_geoassembly', func: JSROOT.Painter.drawGeometry, expand: "JSROOT.expandGeoVolume", painter_kind : "base" });
+   JSROOT.addDrawFunc({ name: "TGeoVolumeAssembly", icon: 'img_geoassembly', func: JSROOT.Painter.drawGeometry, expand: "JSROOT.expandGeoVolume", painter_kind : "base", opt : "all;count;limit;maxlvl2" });
 
 
    return JSROOT.Painter;

@@ -97,9 +97,9 @@ void testPoisson( R & r,double mu,TH1D & h) {
   w.Start();
   r.SetSeed(0);
   for (int i = 0; i < n; ++i) {
-    int n = r.Poisson(mu );
+    int nn = r.Poisson(mu );
     if (fillHist)
-      h.Fill( double(n) );
+      h.Fill( double(nn) );
   }
   w.Stop();
   if (fillHist) { fillHist=false; return; }
@@ -226,9 +226,9 @@ void testPoisson2( R & r,double mu,TH1D & h) {
   r.SetSeed(0);
   for (int i = 0; i < n; ++i) {
     //    int n = genPoisson2(r,mu);
-    int n = r.PoissonD(mu);
+    int nn = r.PoissonD(mu);
     if (fillHist)
-      h.Fill( double(n) );
+      h.Fill( double(nn) );
   }
   w.Stop();
   if (fillHist) { fillHist=false; return; }

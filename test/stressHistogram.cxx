@@ -6673,7 +6673,6 @@ bool testH1Extend() {
 
 bool testH2Extend() {
 
-   TRandom2 r; // sometime test fails is using gRandom t.b.i.
    TH2D * h1 = new TH2D("h1","h1",10,0,10,10,0,10);
    TH2D * h2 = new TH2D("h2","h0",10,0,10,10,0,20);
    h1->SetCanExtend(TH1::kYaxis);
@@ -6711,7 +6710,6 @@ bool testProfileExtend() {
 
 bool testProfile2Extend() {
 
-   TRandom2 r; // sometime test fails is using gRandom t.b.i.
    TProfile2D::Approximate(true);
    TProfile2D * h1 = new TProfile2D("h1","h1",10,0,10,10,0,10);
    TProfile2D * h2 = new TProfile2D("h2","h0",10,0,10,10,0,20);

@@ -878,7 +878,7 @@
       this['DrawBins'] = function() {
          var w = this.frame_width(), h = this.frame_height();
 
-         this.RecreateDrawG(false, ".main_layer", false);
+         this.RecreateDrawG(false, ".main_layer");
 
          // recalculate drawing bins when necessary
          if ((this['bins']==null) || (this.tf1['fSave'].length==0)) this.CreateBins();
@@ -1191,10 +1191,12 @@
       // function call with bind(painter)
 
       this.mgraph = mgraph;
+
       this.firstpainter = null;
+      this.autorange = false;
       this.painters = new Array; // keep painters to be able update objects
 
-      this.SetDivId(divid);
+      this.SetDivId(divid, -1); // it may be no element to set divid
 
       this['GetObject'] = function() {
          return this.mgraph;
@@ -1204,16 +1206,20 @@
 
          if ((obj==null) || (obj['_typename'] != 'TMultiGraph')) return false;
 
-         var histo = obj['fHistogram'];
+         this.mgraph.fTitle = obj.fTitle;
          var graphs = obj['fGraphs'];
 
          var isany = false;
-         if (this.firstpainter && histo)
+         if (this.firstpainter) {
+            var histo = obj['fHistogram'];
+            if (this.autorange && (histo == null))
+               histo = this.ScanGraphsRange(graphs);
             if (this.firstpainter.UpdateObject(histo)) isany = true;
+         }
 
          for (var i = 0; i <  graphs.arr.length; ++i) {
-            if (i>=this.painters.length) break;
-            if (this.painters[i].UpdateObject(graphs.arr[i])) isany = true;
+            if (i<this.painters.length)
+               if (this.painters[i].UpdateObject(graphs.arr[i])) isany = true;
          }
 
          return isany;
@@ -1228,10 +1234,10 @@
             res.first = false;
          }
          for (var i=0; i < gr.fNpoints; ++i) {
-            if (gr.fX[i] < res.xmin) res.xmin = gr.fX[i];
-            if (gr.fX[i] > res.xmax) res.xmax = gr.fX[i];
-            if (gr.fY[i] < res.ymin) res.ymin = gr.fY[i];
-            if (gr.fY[i] > res.ymax) res.ymax = gr.fY[i];
+            res.xmin = Math.min(res.xmin, gr.fX[i]);
+            res.xmax = Math.max(res.xmax, gr.fX[i]);
+            res.ymin = Math.min(res.ymin, gr.fY[i]);
+            res.ymax = Math.max(res.ymax, gr.fY[i]);
          }
          return res;
       }
@@ -1243,26 +1249,20 @@
          return x;
       }
 
-      this['DrawAxis'] = function() {
-         // draw special histogram
+      this['ScanGraphsRange'] = function(graphs, histo, pad) {
          var maximum, minimum, dx, dy;
-
-         var rw = {  xmin: 0, xmax: 0, ymin: 0, ymax: 0, first: true };
          var uxmin = 0, uxmax = 0;
-         var scalex = 1, scaley = 1, logx = false, logy = false;
-         var histo = this.mgraph['fHistogram'];
-         var graphs = this.mgraph['fGraphs'];
-
-         var pad = this.root_pad();
+         var logx = false, logy = false;
+         var rw = {  xmin: 0, xmax: 0, ymin: 0, ymax: 0, first: true };
 
          if (pad!=null) {
+            logx = pad['fLogx'];
+            logy = pad['fLogy'];
             rw.xmin = pad.fUxmin;
             rw.xmax = pad.fUxmax;
             rw.ymin = pad.fUymin;
             rw.ymax = pad.fUymax;
             rw.first = false;
-            logx = pad['fLogx'];
-            logy = pad['fLogy'];
          }
          if (histo!=null) {
             minimum = histo['fYaxis']['fXmin'];
@@ -1272,6 +1272,8 @@
                uxmax = this.padtoX(pad, rw.xmax);
             }
          } else {
+            this.autorange = true;
+
             for (var i = 0; i < graphs.arr.length; ++i)
                this.ComputeGraphRange(rw, graphs.arr[i]);
 
@@ -1294,17 +1296,21 @@
             if (maximum > 0 && rw.ymax <= 0)
                maximum = 0;
          }
+
+         if (uxmin < 0 && rw.xmin >= 0) {
+            if (logx) uxmin = 0.9 * rw.xmin;
+                 else uxmin = 0;
+         }
+         if (uxmax > 0 && rw.xmax <= 0) {
+            if (logx) uxmax = 1.1 * rw.xmax;
+                 else uxmax = 0;
+         }
+
          if (this.mgraph['fMinimum'] != -1111)
             rw.ymin = minimum = this.mgraph['fMinimum'];
          if (this.mgraph['fMaximum'] != -1111)
             rw.ymax = maximum = this.mgraph['fMaximum'];
-         if (uxmin < 0 && rw.xmin >= 0) {
-            if (logx) uxmin = 0.9 * rw.xmin;
-            // else uxmin = 0;
-         }
-         if (uxmax > 0 && rw.xmax <= 0) {
-            if (logx) uxmax = 1.1 * rw.xmax;
-         }
+
          if (minimum < 0 && rw.ymin >= 0) {
             if (logy) minimum = 0.9 * rw.ymin;
          }
@@ -1319,22 +1325,25 @@
             else
                uxmin = 0.001 * uxmax;
          }
-         rw.ymin = minimum;
-         rw.ymax = maximum;
-         if (histo!=null) {
-            histo['fYaxis']['fXmin'] = rw.ymin;
-            histo['fYaxis']['fXmax'] = rw.ymax;
-         }
 
          // Create a temporary histogram to draw the axis (if necessary)
          if (!histo) {
             histo = JSROOT.Create("TH1I");
             histo['fTitle'] = this.mgraph['fTitle'];
-            histo['fXaxis']['fXmin'] = rw.xmin;
-            histo['fXaxis']['fXmax'] = rw.xmax;
-            histo['fYaxis']['fXmin'] = rw.ymin;
-            histo['fYaxis']['fXmax'] = rw.ymax;
+            histo['fXaxis']['fXmin'] = uxmin;
+            histo['fXaxis']['fXmax'] = uxmax;
          }
+
+         histo['fYaxis']['fXmin'] = minimum;
+         histo['fYaxis']['fXmax'] = maximum;
+
+         return histo;
+      }
+
+      this['DrawAxis'] = function() {
+         // draw special histogram
+
+         var histo = this.ScanGraphsRange(this.mgraph.fGraphs, this.mgraph.fHistogram, this.root_pad());
 
          // histogram painter will be first in the pad, will define axis and
          // interactive actions
@@ -1372,13 +1381,11 @@
       if (opt == null) opt = "";
       opt = opt.toUpperCase().replace("3D","").replace("FB",""); // no 3D supported, FB not clear
 
-      if (opt.indexOf("A") < 0) {
-         if (this.main_painter()==null)
-            JSROOT.console('Most probably, drawing of multigraph will fail')
-      } else {
+      if ((opt.indexOf("A") >= 0) || (this.main_painter()==null)) {
          opt = opt.replace("A","");
          this.DrawAxis();
       }
+      this.SetDivId(divid);
 
       this.DrawNextGraph(0, opt);
 
@@ -1502,7 +1509,7 @@
             // Draw Polymarker
             if (lopt.indexOf('p') != -1) {
                var marker = JSROOT.Painter.createAttMarker(attmarker);
-               this.draw_g.append("svg:path")
+               this.draw_g.append(marker.kind)
                    .attr("transform", function(d) { return "translate(" + (x0 + tpos_x)/2 + "," + mid_y + ")"; })
                    .call(marker.func);
             }
@@ -1790,18 +1797,21 @@
 
    JSROOT.TH2Painter.prototype.FillContextMenu = function(menu) {
       JSROOT.THistPainter.prototype.FillContextMenu.call(this, menu);
-      menu.add("Auto zoom-in", this.AutoZoom.bind(this));
-      menu.add("Draw in 3D", this.Draw3D.bind(this));
-      menu.add("Toggle col", function() {
-         if (this.options.Color == 0)
-            this.options.Color = JSROOT.gStyle.DefaultCol;
-         else
-            this.options.Color = - this.options.Color;
-         this.RedrawPad();
-      });
-
-      if (this.options.Color > 0)
-         menu.add("Toggle colz", this.ToggleColz.bind(this));
+      if (this.options.Lego > 0) {
+         menu.add("Draw in 2D", function() { this.options.Lego = 0; this.Redraw(); });
+      } else {
+         menu.add("Auto zoom-in", function() { this.AutoZoom(); });
+         menu.add("Draw in 3D", function() { this.options.Lego = 1; this.Redraw(); });
+         menu.add("Toggle col", function() {
+            if (this.options.Color == 0)
+               this.options.Color = JSROOT.gStyle.DefaultCol;
+            else
+               this.options.Color = - this.options.Color;
+            this.RedrawPad();
+         });
+         if (this.options.Color > 0)
+            menu.add("Toggle colz", this.ToggleColz.bind(this));
+      }
    }
 
    JSROOT.TH2Painter.prototype.FindPalette = function(remove) {
@@ -1990,8 +2000,8 @@
 
       this.CreateAxisFuncs(true);
 
-      this.gmaxbin = this.histo.getBinContent(1, 1);
-      this.gminbin = this.gmaxbin; // global min/max, used at the moment in 3D drawing
+      // global min/max, used at the moment in 3D drawing
+      this.gminbin = this.gmaxbin = this.histo.getBinContent(1, 1);
       for (var i = 0; i < this.nbinsx; ++i) {
          for (var j = 0; j < this.nbinsy; ++j) {
             var bin_content = this.histo.getBinContent(i + 1, j + 1);
@@ -2020,7 +2030,7 @@
          var xside = (xi <= xleft) ? 0 : (xi > xright ? 2 : 1);
          var xx = this.GetBinX(xi - 0.5);
 
-         for (var yi = 0; yi <= this.nbinsx + 1; ++yi) {
+         for (var yi = 0; yi <= this.nbinsy + 1; ++yi) {
             var yside = (yi <= yleft) ? 0 : (yi > yright ? 2 : 1);
             var yy = this.ymin + this.GetBinY(yi - 0.5);
 
@@ -2464,7 +2474,7 @@
       var dx = i2-i1, dy = j2-j1;
 
       var fo = this.draw_g.append("foreignObject").attr("width", w).attr("height", h);
-      this.SetForeignObjectPosition(fo, 0, 0);
+      this.SetForeignObjectPosition(fo);
 
       var canvas = fo.append("xhtml:canvas")
                      .attr("width", dx).attr("height", dy)
@@ -2495,7 +2505,7 @@
       var local_bins = this.CreateDrawBins(w, h, 0, 0);
 
       var fo = this.draw_g.append("foreignObject").attr("width", w).attr("height", h);
-      this.SetForeignObjectPosition(fo, 0, 0);
+      this.SetForeignObjectPosition(fo);
 
       var canvas = fo.append("xhtml:canvas").attr("width", w).attr("height", h);
 
@@ -2512,7 +2522,7 @@
 
    JSROOT.TH2Painter.prototype.DrawBins = function() {
 
-      this.RecreateDrawG(false, ".main_layer", false);
+      this.RecreateDrawG(false, ".main_layer");
 
       var w = this.frame_width(), h = this.frame_height();
 
@@ -2540,7 +2550,7 @@
          var markers =
             this.draw_g.selectAll(".marker")
                   .data(local_bins)
-                  .enter().append("svg:path")
+                  .enter().append(marker.kind)
                   .attr("class", "marker")
                   .attr("transform", function(d) { return "translate(" + d.x.toFixed(1) + "," + d.y.toFixed(1) + ")" })
                   .call(marker.func);
@@ -2589,28 +2599,9 @@
       return false;
    }
 
-   JSROOT.TH2Painter.prototype.Draw2D = function() {
-
-      if (this.options.Lego>0) this.options.Lego = 0;
-
-      if (this['done2d']) return;
-
-      // check if we need to create palette
-      if ((this.FindPalette() == null) && this.create_canvas && (this.options.Zscale > 0)) {
-         // create pallette
-
-         var shrink = this.CreatePalette(0.04);
-         this.svg_frame().property('frame_painter').Shrink(0, shrink);
-         this.svg_frame().property('frame_painter').Redraw();
-         this.CreateXY();
-      } else if (this.options.Zscale == 0) {
-         // delete palette - it may appear there due to previous draw options
-         this.FindPalette(true);
-      }
-
-      // check if we need to create statbox
-      if (JSROOT.gStyle.AutoStat && this.create_canvas)
-         this.CreateStat();
+   JSROOT.TH2Painter.prototype.Draw2D = function(call_back) {
+      if (typeof this['Create3DScene'] == 'function')
+         this.Create3DScene(-1);
 
       this.DrawAxes();
 
@@ -2618,29 +2609,28 @@
 
       this.DrawBins();
 
-      if (this.create_canvas) this.DrawTitle();
+      this.AddInteractive();
 
-      this.DrawNextFunction(0, function() {
-         this.AddInteractive();
-         if (this.options.AutoZoom) this.AutoZoom();
-         this['done2d'] = true; // indicate that 2d drawing was once done
-         this.DrawingReady();
-      }.bind(this));
-
-      return this;
+      JSROOT.CallBack(call_back);
    }
 
-   JSROOT.TH2Painter.prototype.Draw3D = function(opt) {
-
-      if (this.options.Lego<=0) this.options.Lego = 1;
-      var painter = this;
-
+   JSROOT.TH2Painter.prototype.Draw3D = function(call_back) {
       JSROOT.AssertPrerequisites('3d', function() {
-         JSROOT.Painter.real_drawHistogram2D(painter, opt);
-         painter.DrawingReady();
-      });
+         this['Create3DScene'] = JSROOT.Painter.HPainter_Create3DScene;
+         this['Draw3DBins'] = JSROOT.Painter.TH2Painter_Draw3DBins;
+         this['Draw3D'] = JSROOT.Painter.TH2Painter_Draw3D;
+         this['Draw3D'](call_back);
+      }.bind(this));
+   }
 
-      return painter;
+   JSROOT.TH2Painter.prototype.Redraw = function() {
+      this.CreateXY();
+
+      var func_name = this.options.Lego > 0 ? "Draw3D" : "Draw2D";
+
+      this[func_name](function() {
+         if (this.create_canvas) this.DrawTitle();
+      }.bind(this));
    }
 
    JSROOT.Painter.drawHistogram2D = function(divid, histo, opt) {
@@ -2659,10 +2649,38 @@
 
       this.CreateXY();
 
-      if (this.options.Lego > 0)
-         return this.Draw3D(opt);
+      // check if we need to create palette
+      if ((this.FindPalette() == null) && this.create_canvas && (this.options.Zscale > 0)) {
+         // create pallette
 
-      return this.Draw2D();
+         var shrink = this.CreatePalette(0.04);
+         this.svg_frame().property('frame_painter').Shrink(0, shrink);
+         this.svg_frame().property('frame_painter').Redraw();
+         this.CreateXY();
+      } else if (this.options.Zscale == 0) {
+         // delete palette - it may appear there due to previous draw options
+         this.FindPalette(true);
+      }
+
+      // check if we need to create statbox
+      if (JSROOT.gStyle.AutoStat && this.create_canvas)
+         this.CreateStat();
+
+      var func_name = this.options.Lego > 0 ? "Draw3D" : "Draw2D";
+
+      this[func_name](function() {
+         if (this.create_canvas) this.DrawTitle();
+
+         this.DrawNextFunction(0, function() {
+            if (this.options.Lego == 0) {
+               if (this.options.AutoZoom) this.AutoZoom();
+            }
+            this.DrawingReady();
+         }.bind(this));
+
+      }.bind(this));
+
+      return this;
    }
 
 

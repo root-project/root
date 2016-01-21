@@ -15,7 +15,6 @@
 #ifndef ROOT7_THistDrawable
 #define ROOT7_THistDrawable
 
-#include "ROOT/TCoopPtr.h"
 #include "ROOT/TDrawable.h"
 #include "ROOT/THistDrawOptions.h"
 #include "ROOT/TLogger.h"
@@ -25,6 +24,7 @@
 #include <memory>
 
 namespace ROOT {
+namespace Experimental {
 
 template<int DIMENSIONS, class PRECISION> class THist;
 
@@ -56,11 +56,11 @@ extern template class THistPainterBase<3>;
 template <int DIMENSION, class PRECISION>
 class THistDrawable final: public TDrawable {
 private:
-  TCoopPtr<THist<DIMENSION, PRECISION>> fHist;
+  std::weak_ptr<THist<DIMENSION, PRECISION>> fHist;
   THistDrawOptions<DIMENSION> fOpts;
 
 public:
-  THistDrawable(TCoopPtr<THist<DIMENSION, PRECISION>> hist,
+  THistDrawable(std::weak_ptr<THist<DIMENSION, PRECISION>> hist,
                 THistDrawOptions<DIMENSION> opts): fHist(hist), fOpts(opts) {}
 
   ~THistDrawable() = default;
@@ -72,6 +72,7 @@ public:
 };
 
 } // namespace Internal
+} // namespace Experimental
 } // namespace ROOT
 
 #endif

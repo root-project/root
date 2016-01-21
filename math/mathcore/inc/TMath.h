@@ -600,11 +600,7 @@ namespace detailsForFastMath {
    inline int IsNaN(double x)
    {
       UInt_t hx, lx;
-      ieee_double_shape_type ew_u;
-      ew_u.value = (x);
-      hx = ew_u.parts.msw;
-      lx = ew_u.parts.lsw;
-
+      
       EXTRACT_WORDS(hx, lx, x);
 
       lx |= hx & 0xfffff;

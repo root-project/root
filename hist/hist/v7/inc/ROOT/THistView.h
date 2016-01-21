@@ -18,6 +18,7 @@
 #include "ROOT/THist.h"
 
 namespace ROOT {
+namespace Experimental {
 
 /*
  * Need THist::iterator for full range, takes a predicate for "in range?"
@@ -87,8 +88,7 @@ private:
 };
 
 
-
-
+} // namespace Experimental
 } // namespace ROOT
 
 #endif

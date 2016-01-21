@@ -21,6 +21,8 @@
 #include "ROOT/RArrayView.h"
 
 namespace ROOT {
+namespace Experimental {
+
 class TFitResult {
 
 };
@@ -41,6 +43,7 @@ TFitResult FitTo(const THist<DIMENSION, PRECISION>& hist,
   return TFitResult();
 }
 
-}
+} // namespace Experimental
+} // namespace ROOT
 
 #endif

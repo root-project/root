@@ -1,9 +1,14 @@
-//Author: Timur Pocheptsov, 19/03/2014.
-//This macro demonstrates semi-transparent pads.
-//Requires OpenGL.
+/// \file
+/// \ingroup tutorial_gl
+/// This macro demonstrates semi-transparent pads.
+/// Requires OpenGL.
+///
+/// \macro_image(nobatch)
+/// \macro_code
+///
+/// \author Timur Pocheptsov
 
 //Includes for ACLiC (cling does not need them).
-
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TError.h"

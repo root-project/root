@@ -19,6 +19,7 @@
 #include <iterator>
 
 namespace ROOT {
+namespace Experimental {
 namespace Internal {
 
 class THistBinIterBase: public std::iterator<std::random_access_iterator_tag,
@@ -158,6 +159,7 @@ public:
   }
 };
 } // namespace Internal
+} // namespace Experimental
 } // namespace ROOT
 
 #endif

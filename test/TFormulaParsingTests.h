@@ -604,8 +604,8 @@ int runTests(bool debug = false) {
    else {
       Error("TFORMULA Tests","%d tests failed ",int(failedTests.size()) );
       std::cout << "failed tests are : ";
-      for (auto & itest : failedTests) { 
-         std::cout << itest << "   ";
+      for (auto & ittest : failedTests) { 
+         std::cout << ittest << "   ";
       }
       std::cout << std::endl;
    }

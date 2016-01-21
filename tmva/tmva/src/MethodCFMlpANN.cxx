@@ -95,7 +95,6 @@ namespace TMVA {
    Int_t MethodCFMlpANN_nsel = 0;
 }
 
-TMVA::MethodCFMlpANN* TMVA::MethodCFMlpANN::fgThis = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
@@ -140,7 +139,7 @@ TMVA::MethodCFMlpANN::MethodCFMlpANN( const TString& jobName,
    fYNN(0)
 {
    MethodCFMlpANN_Utils::SetLogger(&Log());
-
+   fgThis = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +156,7 @@ TMVA::MethodCFMlpANN::MethodCFMlpANN( DataSetInfo& theData,
    fNodes(0),
    fYNN(0)
 {
+   fgThis = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

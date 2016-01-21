@@ -1,4 +1,11 @@
-//This demo shows how to use transparency.
+/// \file
+/// \ingroup tutorial_gl
+/// This demo shows how to use transparency.
+///
+/// \macro_image(nobatch)
+/// \macro_code
+///
+/// \author Timur Pocheptsov
 
 //Includes for ACLiC (cling does not need them).
 #include "TCanvas.h"

@@ -1,9 +1,16 @@
-// Render a TF2 looking like a rose.
-// Author: Timur Pocheptsov
+/// \file
+/// \ingroup tutorial_gl
+/// Render a TF2 looking like a rose.
+///
+/// It defines and set a user's palette, and use polar system.
+///
+/// \macro_image(nobatch)
+/// \macro_code
+///
+/// \author  Timur Pocheptsov
+
 void glrose()
 {
-  //Define and set user's palette,
-   //use polar system.
    const Int_t paletteSize = 10;
    Float_t rgb[paletteSize * 3] =
       {0.80f, 0.55f, 0.40f,

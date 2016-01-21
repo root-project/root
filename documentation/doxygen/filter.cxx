@@ -253,12 +253,24 @@ void FilterTutorial()
 
       // \macro_image found
       if (gLineString.find("\\macro_image") != string::npos) {
+         bool nobatch = (gLineString.find("(nobatch)") != string::npos);
+         ReplaceAll(gLineString,"(nobatch)","");
          if (gPython) {
-            ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,true)\"",
-                                         gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+            if (nobatch) {
+               ExecuteCommand(StringFormat("root -l -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,true)\"",
+                                          gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+            } else {
+               ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,true)\"",
+                                          gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+            }
          } else {
-            ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                         gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+            if (nobatch) {
+               ExecuteCommand(StringFormat("root -l -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                                            gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+            } else {
+               ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                                            gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+            }
          }
          ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName));
          remove(gOutputName.c_str());

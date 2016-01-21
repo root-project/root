@@ -16,22 +16,22 @@
 #include <iostream>
 
 // pin vtable
-ROOT::TLogHandler::~TLogHandler() {}
+ROOT::Experimental::TLogHandler::~TLogHandler() {}
 
 namespace {
-class TLogHandlerDefault: public ROOT::TLogHandler {
+class TLogHandlerDefault: public ROOT::Experimental::TLogHandler {
 public:
   // Returns false if further emission of this log entry should be suppressed.
-  bool Emit(const ROOT::TLogEntry &entry) override;
+  bool Emit(const ROOT::Experimental::TLogEntry &entry) override;
 };
 
-bool TLogHandlerDefault::Emit(const ROOT::TLogEntry &entry) {
+bool TLogHandlerDefault::Emit(const ROOT::Experimental::TLogEntry &entry) {
   constexpr static std::array<const char *, 5> sTag{
-     "Debug",
+    {"Debug",
      "Info",
      "Warning",
      "Log",
-     "FATAL"
+     "FATAL"}
   };
   std::cerr << "ROOT ";
   if (!entry.fGroup.empty())
@@ -47,7 +47,7 @@ bool TLogHandlerDefault::Emit(const ROOT::TLogEntry &entry) {
 }
 } // unnamed namespace
 
-ROOT::TLogManager& ROOT::TLogManager::Get() {
+ROOT::Experimental::TLogManager& ROOT::Experimental::TLogManager::Get() {
   static TLogManager instance(std::move(std::make_unique<TLogHandlerDefault>()));
   return instance;
 }

@@ -11,13 +11,9 @@
 
 #include <vector>
 
-class MyClass {
-public:
-  MyClass() {}
-};
+class MyClass;
 
 std::vector<MyClass*> vect(3);
-for (el: vect) void* ptr = *it;
-
+for (auto it = vect.begin(); it != vect.end(); ++it) MyClass* ptr = *it;
+ // expected-no-diagnostics
 .q
-

@@ -100,10 +100,24 @@ Custom streamers need to #include TBuffer.h explicitly (see
 ## 2D Graphics Libraries
 
 * In `TColor::SetPalette`, make sure the high quality palettes are defined
-  only ones.
+  only ones taking care of transparency. Also `CreateGradientColorTable` has been
+  simplified.
+* New fast constructor for `TColor` avoiding to call `gROOT->GetColor()`. The
+  normal constructor generated a big slow down when creating a Palette with
+  `CreateGradientColorTable`.
+* In `CreateGradientColorTable` we do not need anymore to compute the highest
+  color index.
+* In `TGraphPainter`, when graphs are painted with lines, they are split into
+  chunks of length `fgMaxPointsPerLine`. This allows to paint line with an "infinite"
+  number of points. In some case this "chunks painting" technic may create artefacts
+  at the chunk's boundaries. For instance when zooming deeply in a PDF file. To avoid
+  this effect it might be necessary to increase the chunks' size using the new function:
+  `TGraphPainter::SetMaxPointsPerLine(20000)`.
 
 ## 3D Graphics Libraries
 
+* When painting a `TH3` as 3D boxes, `TMarker3DBox` ignored the max and min values
+  specified by `SetMaximum()` and `SetMinimum()`.
 
 ## Geometry Libraries
 

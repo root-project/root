@@ -279,7 +279,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   #---Set the library output directory-----------------------
-  if(DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+  if(DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY AND NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY STREQUAL "")
     set(library_output_dir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
   else()
     set(library_output_dir ${CMAKE_CURRENT_BINARY_DIR})
