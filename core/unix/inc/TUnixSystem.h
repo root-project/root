@@ -33,6 +33,31 @@
 
 typedef void (*SigHandler_t)(ESignals);
 
+//------------------- Unix TFdSet ----------------------------------------------
+#ifndef HOWMANY
+#   define HOWMANY(x, y)   (((x)+((y)-1))/(y))
+#endif
+
+const Int_t kNFDBITS = (sizeof(Long_t) * 8);  // 8 bits per byte
+#ifdef FD_SETSIZE
+const Int_t kFDSETSIZE = FD_SETSIZE;          // Linux = 1024 file descriptors
+#else
+const Int_t kFDSETSIZE = 256;                 // upto 256 file descriptors
+#endif
+
+class TFdSet {
+private:
+   ULong_t fds_bits[HOWMANY(kFDSETSIZE, kNFDBITS)];
+public:
+   TFdSet();
+   TFdSet(const TFdSet &org);
+   TFdSet &operator=(const TFdSet &rhs) { if (this != &rhs) { memcpy(fds_bits, rhs.fds_bits, sizeof(rhs.fds_bits));} return *this; }
+   void   Zero();
+   void   Set(Int_t n);
+   void   Clr(Int_t n);
+   Int_t  IsSet(Int_t n);
+   ULong_t *GetBits();
+};
 
 class TUnixSystem : public TSystem {
 
