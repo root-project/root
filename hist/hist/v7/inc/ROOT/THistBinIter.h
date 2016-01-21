@@ -16,149 +16,86 @@
 #ifndef ROOT7_THistBinIter
 #define ROOT7_THistBinIter
 
-#include <iterator>
+#include <ROOT/TIndexIter.h>
 
 namespace ROOT {
 namespace Experimental {
-namespace Internal {
 
-class THistBinIterBase: public std::iterator<std::random_access_iterator_tag,
-   int /*value*/, int /*distance*/, const int* /*pointer*/, const int& /*ref*/> {
+template <class PRECISION> class THistBinIter;
 
-protected:
-  /*
-   TODO: How can I prevent splicing and still make it available?
-  ///\{ no splicing
-  THistBinIterBase(const THistBinIterBase &) = default;
-  THistBinIterBase(THistBinIterBase &&) = default;
-  THistBinIterBase &operator=(const THistBinIterBase &) = default;
-  THistBinIterBase &operator=(THistBinIterBase &&) = default;
+/**
+ \class THistBin
+ Represents a bin. Value of the bin iteration.
+ */
+
+template <int DIMENSION, class PRECISION>
+class THistBin {
+  size_t fIndex = 0; ///< Bin index
+  Detail::THistImplBase<DIMENSION, PRECISION>& fHist; ///< The bin's histogram.
+  std::array_view<PRECISION> fBinContent; ///< Histogram's bin content
+
+public:
+  using Coord_t = typename Detail::THistImplBase<DIMENSION, PRECISION>::Coord_t;
+
+  /// Construct from a histogram.
+  THistBin(Detail::THistImpl& hist):
+    fHist(hist), fBinContent(hist.GetContent()) {}
+
+  /// Get the bin content.
+  PRECISION Get() const { return fBinContent[fIndex]; }
+
+  /// Get the bin center as an array over all dimensions.
+  Coord_t GetCenter() const { return fHist.GetBinCenter(fIndex); }
+
+  /// Get the bin lower edge as an array over all dimensions.
+  Coord_t GetFrom() const { return fHist.GetBinFrom(fIndex); }
+
+  /// Get the bin upper edge as an array over all dimensions.
+  Coord_t GetTo() const { return fHist.GetBinTo(fIndex); }
+
+  friend class THistBinIter<PRECISION>;
+};
+
+
+
+/**
+ \class THistBinIter
+ Iterates over the bins of a THist or THistImpl.
+ */
+
+template <int DIMENSION, class PRECISION>
+class THistBinIter:
+  public Internal::TIndexIter<THistBin<DIMENSION, PRECISION>,
+    THistBin<DIMENSION, PRECISION>> {
+public:
+  using Value_t = THistBin<DIMENSION, PRECISION>;
+
+private:
+  Value_t fCurrentBin; ///< Current iteration's bin
+
+  /// Get the current index.
+  size_t& GetIndex() noexcept { return fCurrentBin.fIndex; }
+  /// Get the current index.
+  const size_t GetIndex() const noexcept { return fCurrentBin.fIndex; }
+
+public:
+  /// Construct a THistBinIter from a histogram.
+  THistBinIter(Detail::THistImpl& hist):
+    fCurrentBin(hist) {}
+
+  /// Construct a THistBinIter from a histogram, setting the current index.
+  THistBinIter(Detail::THistImpl& hist, size_t idx):
+    fCurrentBin(hist), fIndex(idx) {}
+
+  ///\{
+  ///\name Value access
+  Value_t& operator*() const noexcept { return fCurrentBin; }
+  Value_t* operator->() const noexcept { return &fCurrentBin; }
   ///\}
-  */
-
-public:
-  THistBinIterBase() = default;
-
-  explicit THistBinIterBase(int idx): fCursor(idx) {}
-
-  const int* operator*() const noexcept { return &fCursor; }
-  int operator->() const noexcept { return fCursor; }
-
-  friend bool operator<(THistBinIterBase lhs, THistBinIterBase rhs) noexcept;
-  friend bool operator>(THistBinIterBase lhs, THistBinIterBase rhs) noexcept;
-  friend bool operator<=(THistBinIterBase lhs, THistBinIterBase rhs) noexcept;
-  friend bool operator>=(THistBinIterBase lhs, THistBinIterBase rhs) noexcept;
-  friend bool operator==(THistBinIterBase lhs, THistBinIterBase rhs) noexcept;
-  friend bool operator!=(THistBinIterBase lhs, THistBinIterBase rhs) noexcept;
-
-  int fCursor;
 };
 
+// FIXME: implement STATISTICS access!
 
-bool operator<(THistBinIterBase lhs, THistBinIterBase rhs) noexcept {
-  return lhs.fCursor < rhs.fCursor;
-}
-
-bool operator>(THistBinIterBase lhs, THistBinIterBase rhs) noexcept {
-  return lhs.fCursor > rhs.fCursor;
-}
-
-bool operator<=(THistBinIterBase lhs, THistBinIterBase rhs) noexcept {
-  return lhs.fCursor <= rhs.fCursor;
-}
-
-inline bool operator>=(THistBinIterBase lhs, THistBinIterBase rhs) noexcept {
-  return lhs.fCursor >= rhs.fCursor;
-}
-
-inline bool operator==(THistBinIterBase lhs, THistBinIterBase rhs) noexcept {
-  return lhs.fCursor == rhs.fCursor;
-}
-
-inline bool operator!=(THistBinIterBase lhs, THistBinIterBase rhs) noexcept {
-  return lhs.fCursor != rhs.fCursor;
-}
-
-
-/// A predicate for THistBinIterBase to accept all bins.
-struct HistIterFullRange_t {
-  bool operator()(int) const { return true; }
-};
-
-/// A bin iterator taking a predicate whether it should skip a bin.
-template <class OUTOFRANGE>
-class THistBinIter: public THistBinIterBase,
-                    private OUTOFRANGE {
-  using OutOfRange_t = OUTOFRANGE;
-  const OutOfRange_t& GetOutOfRange() const { return *this; }
-public:
-  THistBinIter() = default;
-  THistBinIter(const THistBinIter&) = default;
-  THistBinIter(THistBinIter&&) = default;
-  explicit THistBinIter(int idx, const OUTOFRANGE& oor = OUTOFRANGE()):
-     THistBinIterBase(idx), OutOfRange_t(oor) {}
-
-  /// ++i
-  THistBinIter &operator++() noexcept {
-    // Could check whether fCursor < fEnd - but what for?
-    do {
-      ++fCursor;
-    } while (GetOutOfRange()(fCursor));
-    return *this;
-  }
-
-  /// --i
-  THistBinIter &operator--() noexcept {
-    // Could check whether fCursor > fBegin - but what for?
-    do {
-      --fCursor;
-    } while (GetOutOfRange()(fCursor));
-    return *this;
-  }
-
-  /// i++
-  THistBinIter operator++(int) noexcept {
-    THistBinIter old(*this);
-    ++(*this);
-    return old;
-  }
-
-  // i--
-  THistBinIter operator--(int) noexcept {
-    THistBinIter old(*this);
-    --(*this);
-    return old;
-  }
-
-  THistBinIter &operator+=(int d) noexcept {
-    do {
-      ++(*this);
-      --d;
-    } while (d > 0);
-    return *this;
-  }
-
-  THistBinIter &operator-=(int d) noexcept {
-    do {
-      --(*this);
-      --d;
-    } while (d > 0);
-    return *this;
-  }
-
-  THistBinIter operator+(int d) noexcept {
-    THistBinIter ret(*this);
-    ret += d;
-    return ret;
-  }
-
-  THistBinIter operator-(int d) noexcept {
-    THistBinIter ret(*this);
-    ret -= d;
-    return ret;
-  }
-};
-} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

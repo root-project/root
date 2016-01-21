@@ -33,13 +33,13 @@ class THist;
 
 // fwd declare for friend declaration in THist.
 template<int DIMENSIONS, class PRECISION>
-class ROOT::THist<DIMENSIONS, PRECISION>
+class THist<DIMENSIONS, PRECISION>
   HistFromImpl(
-  std::unique_ptr<typename ROOT::THist<DIMENSIONS, PRECISION>::ImplBase_t> pHistImpl);
+  std::unique_ptr<typename THist<DIMENSIONS, PRECISION>::ImplBase_t> pHistImpl);
 
 template<int DIMENSIONS, class PRECISION>
-void swap(ROOT::THist<DIMENSIONS, PRECISION> &a,
-          ROOT::THist<DIMENSIONS, PRECISION> &b) noexcept;
+void swap(THist<DIMENSIONS, PRECISION> &a,
+          THist<DIMENSIONS, PRECISION> &b) noexcept;
 
 
 /**
@@ -65,7 +65,7 @@ public:
   /// Pointer type to `HistImpl_t::Fill`, for faster access.
   using FillFunc_t = typename ImplBase_t::FillFunc_t;
 
-  using const_iterator = Internal::THistBinIter<Internal::HistIterFullRange_t>;
+  using const_iterator = THistBinIter<DIMENSIONS, PRECISION>;
 
   THist() = default;
 
@@ -177,9 +177,9 @@ public:
   /// Get the number of entries this histogram was filled with.
   int64_t GetEntries() const noexcept { return fImpl->GetStat().GetEntries(); }
 
-  const_iterator begin() const { return const_iterator(0); }
+  const_iterator begin() const { return const_iterator(*fImpl); }
 
-  const_iterator end() const { return const_iterator(fImpl->GetNBins()); }
+  const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBins()); }
 
 private:
   FillFunc_t fFillFunc = nullptr; ///< Pinter to THistImpl::Fill() member function
