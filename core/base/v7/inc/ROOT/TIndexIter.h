@@ -18,7 +18,7 @@
 #include <iterator>
 
 namespace ROOT {
-namespace experimental {
+namespace Experimental {
 namespace Internal {
 
 /**
