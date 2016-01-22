@@ -20,6 +20,7 @@ static const int qflag = 0;
 #include "zlib.h"
 #include "RConfigure.h"
 #include "ZipLZMA.h"
+#include "ZipLZ4.h"
 
 
 /* inflate.c -- put in the public domain by Mark Adler
@@ -1130,8 +1131,9 @@ int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
   /*   C H E C K   H E A D E R   */
   if (!(src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED) &&
       !(src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED) &&
-      !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0)) {
-    fprintf(stderr, "Error R__unzip_header: error in header\n");
+      !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0) &&
+      !(src[0] == 'L' && src[1] == '4')) {
+    fprintf(stderr, "Error R__unzip_header: error in header.  Values: %c%c\n", src[0], src[1]);
     return 1;
   }
 
@@ -1159,7 +1161,8 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   /*   C H E C K   H E A D E R   */
   if (!(src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED) &&
       !(src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED) &&
-      !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0)) {
+      !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0) &&
+      !(src[0] == 'L' && src[1] == '4')) {
     fprintf(stderr,"Error R__unzip: error in header\n");
     return;
   }
@@ -1215,6 +1218,10 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   }
   else if (src[0] == 'X' && src[1] == 'Z') {
     R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
+    return;
+  }
+  else if (src[0] == 'L' && src[1] == '4') {
+    R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
     return;
   }
 

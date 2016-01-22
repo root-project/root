@@ -88,6 +88,7 @@
 #include "TNetFile.h"
 #include "TRandom.h"
 #include "TTree.h"
+#include "TTreePerfStats.h"
 #include "TBranch.h"
 #include "TClonesArray.h"
 #include "TStopwatch.h"
@@ -108,6 +109,7 @@ int main(int argc, char **argv)
    Int_t read   = 0;
    Int_t arg4   = 1;
    Int_t arg5   = 600;     //default number of tracks per event
+   Int_t compAlg = 1;
    Int_t netf   = 0;
    Int_t punzip = 0;
 
@@ -116,6 +118,7 @@ int main(int argc, char **argv)
    if (argc > 3)  split  = atoi(argv[3]);
    if (argc > 4)  arg4   = atoi(argv[4]);
    if (argc > 5)  arg5   = atoi(argv[5]);
+   if (argc > 6)  compAlg= atoi(argv[6]);
    if (arg4 ==  0) { write = 0; hfill = 0; read = 1;}
    if (arg4 ==  1) { write = 1; hfill = 0;}
    if (arg4 ==  2) { write = 0; hfill = 0;}
@@ -133,6 +136,7 @@ int main(int argc, char **argv)
 
    TFile *hfile;
    TTree *tree;
+   TTreePerfStats *ioperf = NULL;
    Event *event = 0;
 
    // Fill event, header and tracks with some random numbers
@@ -161,6 +165,7 @@ int main(int argc, char **argv)
       nevent = TMath::Min(nevent,nentries);
       if (read == 1) {  //read sequential
          //by setting the read cache to -1 we set it to the AutoFlush value when writing
+         ioperf = new TTreePerfStats("Perf Stats", tree);
          Int_t cachesize = -1;
          if (punzip) tree->SetParallelUnzip();
          tree->SetCacheSize(cachesize);
@@ -176,6 +181,7 @@ int main(int argc, char **argv)
             }
             nb += tree->GetEntry(ev);        //read complete event in memory
          }
+         ioperf->Finish();
       } else {    //read random
          Int_t evrandom;
          for (ev = 0; ev < nevent; ev++) {
@@ -195,6 +201,7 @@ int main(int argc, char **argv)
       } else
          hfile = new TFile("Event.root","RECREATE","TTree benchmark ROOT file");
       hfile->SetCompressionLevel(comp);
+      hfile->SetCompressionAlgorithm(compAlg);
 
      // Create histogram to show write_time in function of time
      Float_t curtime = -0.5;
@@ -255,10 +262,11 @@ int main(int argc, char **argv)
    printf("RealTime=%f seconds, CpuTime=%f seconds\n",rtime,ctime);
    if (read) {
       tree->PrintCacheStats();
+      if (ioperf) {ioperf->Print();}
       printf("You read %f Mbytes/Realtime seconds\n",mbytes/rtime);
       printf("You read %f Mbytes/Cputime seconds\n",mbytes/ctime);
    } else {
-      printf("compression level=%d, split=%d, arg4=%d\n",comp,split,arg4);
+      printf("compression level=%d, split=%d, arg4=%d, compression algorithm=%d\n",comp,split,arg4,compAlg);
       printf("You write %f Mbytes/Realtime seconds\n",mbytes/rtime);
       printf("You write %f Mbytes/Cputime seconds\n",mbytes/ctime);
       //printf("file compression factor = %f\n",hfile.GetCompressionFactor());
