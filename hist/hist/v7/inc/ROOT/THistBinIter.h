@@ -22,7 +22,7 @@
 namespace ROOT {
 namespace Experimental {
 
-template <class PRECISION> class THistBinIter;
+template <int DIMENSION, class PRECISION> class THistBinIter;
 
 /**
  \class THistBin
@@ -39,8 +39,12 @@ public:
   using Coord_t = typename Detail::THistImplBase<DIMENSION, PRECISION>::Coord_t;
 
   /// Construct from a histogram.
-  THistBin(Detail::THistImpl& hist):
+  THistBin(Detail::THistImplBase<DIMENSION, PRECISION>& hist):
     fHist(hist), fBinContent(hist.GetContent()) {}
+
+  /// Construct from a histogram.
+  THistBin(Detail::THistImplBase<DIMENSION, PRECISION>& hist, size_t idx):
+    fIndex(idx), fHist(hist), fBinContent(hist.GetContent()) {}
 
   /// Get the bin content.
   PRECISION Get() const { return fBinContent[fIndex]; }
@@ -54,7 +58,7 @@ public:
   /// Get the bin upper edge as an array over all dimensions.
   Coord_t GetTo() const { return fHist.GetBinTo(fIndex); }
 
-  friend class THistBinIter<PRECISION>;
+  friend class THistBinIter<DIMENSION, PRECISION>;
 };
 
 
@@ -77,16 +81,16 @@ private:
   /// Get the current index.
   size_t& GetIndex() noexcept { return fCurrentBin.fIndex; }
   /// Get the current index.
-  const size_t GetIndex() const noexcept { return fCurrentBin.fIndex; }
+  size_t GetIndex() const noexcept { return fCurrentBin.fIndex; }
 
 public:
   /// Construct a THistBinIter from a histogram.
-  THistBinIter(Detail::THistImpl& hist):
+  THistBinIter(Detail::THistImplBase<DIMENSION, PRECISION>& hist):
     fCurrentBin(hist) {}
 
   /// Construct a THistBinIter from a histogram, setting the current index.
-  THistBinIter(Detail::THistImpl& hist, size_t idx):
-    fCurrentBin(hist), fIndex(idx) {}
+  THistBinIter(Detail::THistImplBase<DIMENSION, PRECISION>& hist, size_t idx):
+    fCurrentBin(hist, idx) {}
 
   ///\{
   ///\name Value access
