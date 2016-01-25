@@ -22,3 +22,7 @@ ROOTTEST_ADD_TEST(runf02
                   OUTCNVCMD sed -e s,input_line_[0-9]*,input_line_FILTERED,g
                   OUTREF f02.ref
                   LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(reread
+                  MACRO reread.C
+                  LABELS roottest regression cling)
