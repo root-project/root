@@ -24,6 +24,9 @@
 namespace ROOT {
 namespace Experimental {
 
+template <int DIMENSION, class PRECISION>
+class THistBinIter;
+
 namespace Hist {
 /// Iterator over n dimensional axes - an array of n axis iterators.
 template<int NDIM> using AxisIter_t = std::array<TAxisBase::const_iterator, NDIM>;
@@ -124,6 +127,10 @@ public:
   /// Type of the Fill(x, w) function
   using FillFunc_t = void (THistImplBase::*)(const Coord_t& x, Weight_t w);
 
+  /// Iterator support
+  using const_iterator = ROOT::Experimental::THistBinIter<DIMENSIONS, PRECISION>;
+
+
   THistImplBase(size_t numBins): fContent(numBins) {}
   THistImplBase(const THistImplBase&) = default;
   THistImplBase(THistImplBase&&) = default;
@@ -157,9 +164,15 @@ public:
     fContent[bin] += w;
   }
 
-  /// Minimal iterator interface.
-  const_iterator begin() const { return const_iterator(*fImpl); }
-  const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBins()); }
+  /// Minimal iterator interface over all bins.
+  const_iterator begin() const noexcept {
+    return const_iterator(*this);
+  }
+
+  /// Minimal iterator interface over all bins.
+  const_iterator end() const noexcept {
+    return const_iterator(*this, fContent.size());
+  }
 
 
 
@@ -478,7 +491,8 @@ public:
 
 template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
 THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::THistImpl(STATISTICS statConfig, AXISCONFIG... axisArgs):
-  STATISTICS(statConfig), fAxes{axisArgs...}, THistImplBase(GetNBins())
+  STATISTICS(statConfig), fAxes{axisArgs...},
+  THistImplBase<DIMENSIONS, PRECISION>(GetNBins())
 {}
 
 #if 0

@@ -113,6 +113,10 @@ Custom streamers need to #include TBuffer.h explicitly (see
   at the chunk's boundaries. For instance when zooming deeply in a PDF file. To avoid
   this effect it might be necessary to increase the chunks' size using the new function:
   `TGraphPainter::SetMaxPointsPerLine(20000)`.
+* When using line styles different from 1 (continuous line), the behavior of TArrow
+  was suboptimal. The problem was that the line style is also applied to the arrow
+  head, which is usually not what one wants.
+  The arrow tip is now drawn using a continuous line.
 
 ## 3D Graphics Libraries
 

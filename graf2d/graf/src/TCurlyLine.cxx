@@ -121,7 +121,7 @@ void TCurlyLine::Build()
    Int_t nperiods = (Int_t)((lengthPix - lengthcycle) / len2pi);
    Double_t restlength = 0.5 * (lengthPix - nperiods * len2pi - lengthcycle);
    fNsteps = (Int_t)(anglestep * nperiods + anglestep / 2 + 4);
-   if (fNsteps < 1) fNsteps = 1;
+   if (fNsteps < 2) fNsteps = 2;
    SetPolyLine(fNsteps);
    Double_t *xv = GetX();
    Double_t *yv = GetY();

@@ -18,7 +18,7 @@
 #include <iterator>
 
 namespace ROOT {
-namespace experimental {
+namespace Experimental {
 namespace Internal {
 
 /**
@@ -106,27 +106,33 @@ public:
 
 ///\{
 ///\name Relational operators.
-bool operator<(TIndexIter lhs, TIndexIter rhs) noexcept {
+template <class DERIVED, class VALUE>
+bool operator<(TIndexIter<DERIVED, VALUE> lhs, TIndexIter<DERIVED, VALUE> rhs) noexcept {
   return lhs.GetDerived().GetIndex() < rhs.GetDerived().GetIndex();
 }
 
-bool operator>(TIndexIter lhs, TIndexIter rhs) noexcept {
+template <class DERIVED, class VALUE>
+bool operator>(TIndexIter<DERIVED, VALUE> lhs, TIndexIter<DERIVED, VALUE> rhs) noexcept {
   return lhs.GetDerived().GetIndex() > rhs.GetDerived().GetIndex();
 }
 
-bool operator<=(TIndexIter lhs, TIndexIter rhs) noexcept {
+template <class DERIVED, class VALUE>
+bool operator<=(TIndexIter<DERIVED, VALUE> lhs, TIndexIter<DERIVED, VALUE> rhs) noexcept {
   return lhs.GetDerived().GetIndex() <= rhs.GetDerived().GetIndex();
 }
 
-inline bool operator>=(TIndexIter lhs, TIndexIter rhs) noexcept {
+template <class DERIVED, class VALUE>
+inline bool operator>=(TIndexIter<DERIVED, VALUE> lhs, TIndexIter<DERIVED, VALUE> rhs) noexcept {
   return lhs.GetDerived().GetIndex() >= rhs.GetDerived().GetIndex();
 }
 
-inline bool operator==(TIndexIter lhs, TIndexIter rhs) noexcept {
+template <class DERIVED, class VALUE>
+inline bool operator==(TIndexIter<DERIVED, VALUE> lhs, TIndexIter<DERIVED, VALUE> rhs) noexcept {
   return lhs.GetDerived().GetIndex() == rhs.GetDerived().GetIndex();
 }
 
-inline bool operator!=(TIndexIter lhs, TIndexIter rhs) noexcept {
+template <class DERIVED, class VALUE>
+inline bool operator!=(TIndexIter<DERIVED, VALUE> lhs, TIndexIter<DERIVED, VALUE> rhs) noexcept {
   return lhs.GetDerived().GetIndex() != rhs.GetDerived().GetIndex();
 }
 ///\}
