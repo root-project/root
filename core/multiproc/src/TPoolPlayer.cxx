@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "TPoolPlayer.h"
 #include "PoolUtils.h"
 #include "MPCode.h"
@@ -6,9 +8,6 @@
 
 void TPoolPlayer::Init(int fd, unsigned nWorkers) {
    TMPWorker::Init(fd, nWorkers);
-
-   fSelector.Init(&fTree);
-   fSelector.Notify();
 }
 
 void TPoolPlayer::HandleInput(MPCodeBufPair& msg)
@@ -27,7 +26,7 @@ void TPoolPlayer::HandleInput(MPCodeBufPair& msg)
    }
 }
 
-void TPoolPlayer::ProcTree(unsigned code, MPCodeBufPair& msg)
+void TPoolPlayer::ProcDataSet(unsigned int code, MPCodeBufPair& msg)
 {
    //evaluate the index of the file to process in fFileNames
    //(we actually don't need the parameter if code == kProcTree)
@@ -108,6 +107,14 @@ void TPoolPlayer::ProcTree(unsigned code, MPCodeBufPair& msg)
 
 void TPoolPlayer::ProcTree(MPCodeBufPair& msg)
 {
+
+   // The tree must be defined at this level
+   if(fTree == nullptr) {
+      std::cout << "tree undefined!\n" ; 
+      //errors are handled inside RetrieveTree
+      return;
+   }
+
    //evaluate the index of the file to process in fFileNames
    //(we actually don't need the parameter if code == kProcTree)
    unsigned nProcessed = 0;
@@ -119,7 +126,7 @@ void TPoolPlayer::ProcTree(MPCodeBufPair& msg)
    Long64_t finish = 0;
    //example: for 21 entries, 4 workers we want ranges 0-5, 5-10, 10-15, 15-21
    //and this worker must take the rangeN-th range
-   unsigned nEntries = fTree.GetEntries();
+   unsigned nEntries = fTree->GetEntries();
    unsigned nBunch = nEntries / fNWorkers;
    unsigned rangeN = nProcessed % fNWorkers;
    start = rangeN*nBunch + 1;
@@ -135,12 +142,12 @@ void TPoolPlayer::ProcTree(MPCodeBufPair& msg)
          finish = start + fMaxNEntries - fProcessedEntries;
 
    //process tree
-   TTree *tree = &fTree;
+   TTree *tree = fTree;
    TFile *f = 0;
-   if (fTree.GetCurrentFile()) {
+   if (fTree->GetCurrentFile()) {
       // We need to reopen the file locally (TODO: to understand and fix this)
-      TFile *f = TFile::Open(fTree.GetCurrentFile()->GetName());
-      tree = (TTree *) f->Get(fTree.GetName());
+      f = TFile::Open(fTree->GetCurrentFile()->GetName());
+      tree = (TTree *) f->Get(fTree->GetName());
    }
    fSelector.SlaveBegin(nullptr);
    fSelector.Init(tree);
@@ -160,7 +167,6 @@ void TPoolPlayer::ProcTree(MPCodeBufPair& msg)
       f->Close();
       delete f;
       f = 0;
-      tree->Delete();
    }
 
    return;

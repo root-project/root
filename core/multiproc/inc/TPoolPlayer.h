@@ -19,14 +19,14 @@
 
 class TPoolPlayer : public TMPWorker {
    public:
-   TPoolPlayer(TSelector &selector, TTree &tree, unsigned nWorkers, ULong64_t maxEntries) :
+   TPoolPlayer(TSelector &selector, TTree *tree, unsigned nWorkers, ULong64_t maxEntries) :
       TMPWorker(), fSelector(selector), fFileNames(), fTreeName(), fTree(tree),
       fNWorkers(nWorkers), fMaxNEntries(maxEntries),
       fProcessedEntries(0)
    {}
    TPoolPlayer(TSelector &selector, const std::vector<std::string>& fileNames,
                const std::string& treeName, unsigned nWorkers, ULong64_t maxEntries) :
-      TMPWorker(), fSelector(selector), fFileNames(fileNames), fTreeName(treeName), fTree(),
+      TMPWorker(), fSelector(selector), fFileNames(fileNames), fTreeName(treeName), fTree(nullptr),
       fNWorkers(nWorkers), fMaxNEntries(maxEntries),
       fProcessedEntries(0)
    {}
@@ -38,12 +38,12 @@ class TPoolPlayer : public TMPWorker {
 
    private:
    void ProcTree(MPCodeBufPair& msg); ///< Run fSelector->Process over the tree entries, send back result
-   void ProcDataSet(unsigned code, MPCodeBufPair& msg); ///< Run fSelector->Process over a data set
+   void ProcDataSet(unsigned int code, MPCodeBufPair& msg); ///< Run fSelector->Process over a data set
 
    TSelector &fSelector; ///< pointer to the selector to be used to process the tree. It is null if we are not using a TSelector.
    std::vector<std::string> fFileNames; ///< the files to be processed by all workers
    std::string fTreeName; ///< the name of the tree to be processed
-   TTree &fTree; ///< tree to be processed. It is only used if the tree is directly passed to TProcPool::Process as argument
+   TTree *fTree; ///< tree to be processed. It is only used if the tree is directly passed to TProcPool::Process as argument
    unsigned fNWorkers; ///< the number of workers spawned
    ULong64_t fMaxNEntries; ///< the maximum number of entries to be processed by this worker
    ULong64_t fProcessedEntries; ///< the number of entries processed by this worker so far

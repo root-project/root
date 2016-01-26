@@ -4,7 +4,7 @@
 
 set(headers TMPClient.h MPSendRecv.h TProcPool.h TMPWorker.h TPoolWorker.h TPoolProcessor.h TPoolPlayer.h MPCode.h PoolUtils.h)
 
-set(sources TMPClient.cxx MPSendRecv.cxx TProcPool.cxx TMPWorker.cxx TPoolPlayer.cxx PoolUtils.cxx)
+set(sources TMPClient.cxx MPSendRecv.cxx TProcPool.cxx TMPWorker.cxx TPoolPlayer.cxx)
 
 ROOT_GENERATE_DICTIONARY(G__MultiProc ${headers} MODULE MultiProc LINKDEF LinkDef.h)
 

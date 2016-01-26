@@ -79,36 +79,38 @@ public:
 
 private:
    void Process(unsigned code, MPCodeBufPair& msg);
+#if 0
    TFile *OpenFile(const std::string& fileName);
    TTree *RetrieveTree(TFile *fp);
+#endif
    ULong64_t EvalMaxEntries(ULong64_t maxEntries);
 
    F fProcFunc; ///< the function to be executed
+#if 0
    std::vector<std::string> fFileNames; ///< the files to be processed by all workers
    std::string fTreeName; ///< the name of the tree to be processed
    TTree *fTree; ///< pointer to the tree to be processed. It is only used if the tree is directly passed to TProcPool::Process as argument
    unsigned fNWorkers; ///< the number of workers spawned
    ULong64_t fMaxNEntries; ///< the maximum number of entries to be processed by this worker
    ULong64_t fProcessedEntries; ///< the number of entries processed by this worker so far
+#endif
    typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type fReducedResult; ///< the results of the executions of fProcFunc merged together
    bool fCanReduce; ///< true if fReducedResult can be reduced with a new result, false until we have produced one result
 };
 
 
 template<class F>
-TPoolProcessor<F>::TPoolProcessor(F procFunc, const std::vector<std::string>& fileNames, const std::string& treeName, unsigned nWorkers, ULong64_t maxEntries) : TMPWorker(), fProcFunc(procFunc),
-   fFileNames(fileNames), fTreeName(treeName), fTree(nullptr),
-   fNWorkers(nWorkers), fMaxNEntries(maxEntries),
-   fProcessedEntries(0), fReducedResult(), fCanReduce(false)
+TPoolProcessor<F>::TPoolProcessor(F procFunc, const std::vector<std::string>& fileNames,
+                                  const std::string& treeName, unsigned nWorkers, ULong64_t maxEntries)
+                  : TMPWorker(fileNames, treeName, nWorkers, maxEntries),
+                    fProcFunc(procFunc), fReducedResult(), fCanReduce(false)
 {}
 
 
 template<class F>
-TPoolProcessor<F>::TPoolProcessor(F procFunc, TTree *tree, unsigned nWorkers, ULong64_t maxEntries) :
-   TMPWorker(), fProcFunc(procFunc),
-   fFileNames(), fTreeName(), fTree(tree),
-   fNWorkers(nWorkers), fMaxNEntries(maxEntries),
-   fProcessedEntries(0), fReducedResult(), fCanReduce(false)
+TPoolProcessor<F>::TPoolProcessor(F procFunc, TTree *tree, unsigned nWorkers, ULong64_t maxEntries)
+                  : TMPWorker(tree, nWorkers, maxEntries),
+                    fProcFunc(procFunc), fReducedResult(), fCanReduce(false)
 {}
 
 
@@ -253,7 +255,7 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
       MPSend(GetSocket(), PoolCode::kIdling);
 }
 
-
+#if 0
 template<class F>
 TFile *TPoolProcessor<F>::OpenFile(const std::string& fileName)
 {
@@ -301,7 +303,7 @@ TTree *TPoolProcessor<F>::RetrieveTree(TFile *fp)
 
    return tree;
 }
-
+#endif
 
 template<class F>
 ULong64_t TPoolProcessor<F>::EvalMaxEntries(ULong64_t maxEntries)

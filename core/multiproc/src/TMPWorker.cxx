@@ -43,14 +43,33 @@
 
 
 //////////////////////////////////////////////////////////////////////////
-/// Class constructor.
+/// Class constructors.
 /// Note that this does not set variables like fPid or fS (worker's socket).\n
 /// These operations are handled by the Init method, which is called after
 /// forking.\n
 /// This separation is in place because the instantiation of a worker
 /// must be done once _before_ forking, while the initialization of the
 /// members must be done _after_ forking by each of the children processes.
-TMPWorker::TMPWorker() : fS(), fPid(0), fNWorker(0)
+TMPWorker::TMPWorker()
+          : fFileNames(), fTreeName(), fTree(nullptr),
+            fNWorkers(0), fMaxNEntries(0),
+            fProcessedEntries(0), fS(), fPid(0), fNWorker(0)
+{
+}
+
+TMPWorker::TMPWorker(const std::vector<std::string>& fileNames,
+                     const std::string& treeName,
+                     unsigned nWorkers, ULong64_t maxEntries)
+          : fFileNames(fileNames), fTreeName(treeName), fTree(nullptr),
+            fNWorkers(nWorkers), fMaxNEntries(maxEntries),
+            fProcessedEntries(0), fS(), fPid(0), fNWorker(0)
+{
+}
+
+TMPWorker::TMPWorker(TTree *tree, unsigned nWorkers, ULong64_t maxEntries)
+          : fFileNames(), fTreeName(), fTree(tree),
+            fNWorkers(nWorkers), fMaxNEntries(maxEntries),
+            fProcessedEntries(0), fS(), fPid(0), fNWorker(0)
 {
 }
 
@@ -117,4 +136,56 @@ void TMPWorker::HandleInput(MPCodeBufPair &msg)
       reply += ": unknown code received. code=" + std::to_string(code);
       MPSend(fS.get(), MPCode::kError, reply.data());
    }
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// Handle file opening.
+
+TFile *TMPWorker::OpenFile(const std::string& fileName)
+{
+
+   TFile *fp = TFile::Open(fileName.c_str());
+   if (fp == nullptr || fp->IsZombie()) {
+      std::string reply = "S" + std::to_string(GetNWorker());
+      reply.append(": could not open file ");
+      reply.append(fileName);
+      MPSend(GetSocket(), PoolCode::kProcError, reply.data());
+      return nullptr;
+   }
+
+   return fp;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+/// Retrieve a tree from an open file.
+
+TTree *TMPWorker::RetrieveTree(TFile *fp)
+{
+   //retrieve the TTree with the specified name from file
+   //we are not the owner of the TTree object, the file is!
+   TTree *tree = nullptr;
+   if(fTreeName == "") {
+      // retrieve the first TTree
+      // (re-adapted from TEventIter.cxx)
+      if (fp->GetListOfKeys()) {
+         for(auto k : *fp->GetListOfKeys()) {
+            TKey *key = static_cast<TKey*>(k);
+            if (!strcmp(key->GetClassName(), "TTree") || !strcmp(key->GetClassName(), "TNtuple"))
+               tree = static_cast<TTree*>(fp->Get(key->GetName()));
+         }
+      }    
+   } else {
+      tree = static_cast<TTree*>(fp->Get(fTreeName.c_str()));
+   }
+   if (tree == nullptr) {
+      std::string reply = "S" + std::to_string(GetNWorker());
+      std::stringstream ss;
+      ss << ": cannot find tree with name " << fTreeName << " in file " << fp->GetName();
+      reply.append(ss.str());
+      MPSend(GetSocket(), PoolCode::kProcError, reply.data());
+      return nullptr;
+   }
+
+   return tree;
 }

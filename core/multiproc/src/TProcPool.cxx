@@ -101,7 +101,7 @@ TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProces
    unsigned nWorkers = GetNWorkers();
 
    //fork
-   TPoolPlayer worker(selector, tree, nWorkers, nToProcess/nWorkers);
+   TPoolPlayer worker(selector, &tree, nWorkers, nToProcess/nWorkers);
    bool ok = Fork(worker);
    if(!ok) {
       std::cerr << "[E][C] Could not fork. Aborting operation\n";
@@ -109,7 +109,7 @@ TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProces
    }
 
    //divide entries equally between workers
-   fTask = ETask::kProcByRange;
+   fTaskType = ETask::kProcByRange;
 
    //tell workers to start processing entries
    fNToProcess = nWorkers; //this is the total number of ranges that will be processed by all workers cumulatively
@@ -123,9 +123,8 @@ TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProces
    std::vector<TObject*> outLists;
    Collect(outLists);
 
-   //merge (here we need to allow for duplicate names)
-   ((TCollection *)outLists[0])->SetAllowDuplicates(kTRUE);
-   auto outList = static_cast<TList*>(PoolUtils::ReduceObjects(outLists));
+   PoolUtils::ReduceObjects<TObject *> redfunc;
+   auto outList = static_cast<TList*>(redfunc(outLists));
    
    TList *selList = selector.GetOutputList();
    for(auto obj : *outList) {
@@ -138,7 +137,7 @@ TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProces
 
    //clean-up and return
    ReapWorkers();
-   fTask = ETask::kNoTask;
+   fTaskType = ETask::kNoTask;
    return outList;
 }
 
@@ -160,7 +159,7 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
 
    if(fileNames.size() < nWorkers) {
       //TTree entry granularity. For each file, we divide entries equally between workers
-      fTask = ETask::kProcByRange;
+      fTaskType = ETask::kProcByRange;
       //Tell workers to start processing entries
       fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
       std::vector<unsigned> args(nWorkers);
@@ -170,7 +169,7 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
          std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
    } else {
       //file granularity. each worker processes one whole file as a single task
-      fTask = ETask::kProcByFile;
+      fTaskType = ETask::kProcByFile;
       fNToProcess = fileNames.size();
       std::vector<unsigned> args(nWorkers);
       std::iota(args.begin(), args.end(), 0);
@@ -179,17 +178,26 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
          std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
    }
 
-   //collect results, distribute new tasks
-   std::vector<TObject*> reslist;
-   Collect(reslist);
+   // collect results, distribute new tasks
+   std::vector<TObject*> outLists;
+   Collect(outLists);
 
-   //merge
-   TObject* res = PoolUtils::ReduceObjects(reslist);
+   PoolUtils::ReduceObjects<TObject *> redfunc;
+   auto outList = static_cast<TList*>(redfunc(outLists));
+   
+   TList *selList = selector.GetOutputList();
+   for(auto obj : *outList) {
+      selList->Add(obj);
+   }
+   outList->SetOwner(false);
+   delete outList;
+
+   selector.Terminate();
 
    //clean-up and return
    ReapWorkers();
-   fTask = ETask::kNoTask;
-   return static_cast<retType>(res);
+   fTaskType = ETask::kNoTask;
+   return outList;
 }
 
 //////////////////////////////////////////////////////////////////////////
