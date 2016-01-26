@@ -139,8 +139,8 @@ ROOT::Experimental::TFilePtr::Recreate(std::string_view name,
 }
 
 ROOT::Experimental::TFilePtr
-ROOT::Experimental::TFilePtr::Update(std::string_view name,
-                                     const Options_t& opts /*= Options_t()*/) {
+ROOT::Experimental::TFilePtr::OpenForUpdate(std::string_view name,
+                                            const Options_t& opts /*= Options_t()*/) {
   // will become delegation to TFileSystemFile, TWebFile etc.
   return OpenV6TFile(name, "UPDATE", opts);
 }

@@ -122,7 +122,7 @@ public:
 
   /// Open an existing file with `name` for reading and writing. If a file with
   /// that name does not exist, an invalid TFilePtr will be returned.
-  static TFilePtr Update(std::string_view name, const Options_t& opts = Options_t());
+  static TFilePtr OpenForUpdate(std::string_view name, const Options_t& opts = Options_t());
 
   /// Open a file with `name` for reading and writing. Fail (return an invalid
   /// `TFilePtr`) if a file with this name already exists.
