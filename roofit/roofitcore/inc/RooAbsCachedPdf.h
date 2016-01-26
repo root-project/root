@@ -59,7 +59,6 @@ public:
   virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const ; 
   virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
 
-protected:
 
   class PdfCacheElem : public RooAbsCacheElement {
   public:
@@ -85,6 +84,8 @@ protected:
 
   } ;
 
+  protected:
+   
   PdfCacheElem* getCache(const RooArgSet* nset, Bool_t recalculate=kTRUE) const ;
   void clearCacheObject(PdfCacheElem& cache) const ;
 

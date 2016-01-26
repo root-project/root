@@ -79,7 +79,7 @@ public:
     RooBrentRootFinder* _rf2 ; // ROOT finder of CDF2 ;
 
     std::vector<Double_t> _yatX ; //
-    std::vector<double> _calcX; //
+    std::vector<Double_t> _calcX; //
     Int_t _yatXmin, _yatXmax ;
     Int_t _ccounter ;
 
