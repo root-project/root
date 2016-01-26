@@ -30,20 +30,23 @@ template <int DIMENSION, class PRECISION> class THistBinIter;
  */
 
 template <int DIMENSION, class PRECISION>
-class THistBin {
+class THistBinRef {
+public:
+  using Coord_t = typename Detail::THistImplBase<DIMENSION, PRECISION>::Coord_t;
+  using HistImpl_t = Detail::THistImplBase<DIMENSION, PRECISION>;
+
+private:
   size_t fIndex = 0; ///< Bin index
-  Detail::THistImplBase<DIMENSION, PRECISION>& fHist; ///< The bin's histogram.
+  HistImpl_t& fHist; ///< The bin's histogram.
   std::array_view<PRECISION> fBinContent; ///< Histogram's bin content
 
 public:
-  using Coord_t = typename Detail::THistImplBase<DIMENSION, PRECISION>::Coord_t;
-
   /// Construct from a histogram.
-  THistBin(Detail::THistImplBase<DIMENSION, PRECISION>& hist):
+  THistBinRef(HistImpl_t& hist):
     fHist(hist), fBinContent(hist.GetContent()) {}
 
   /// Construct from a histogram.
-  THistBin(Detail::THistImplBase<DIMENSION, PRECISION>& hist, size_t idx):
+  THistBinRef(HistImpl_t& hist, size_t idx):
     fIndex(idx), fHist(hist), fBinContent(hist.GetContent()) {}
 
   /// Get the bin content.
@@ -61,6 +64,14 @@ public:
   friend class THistBinIter<DIMENSION, PRECISION>;
 };
 
+template <int DIMENSION, class PRECISION>
+class THistBinPtr {
+  THistBinRef<DIMENSION, PRECISION> fRef;
+public:
+  const THistBinRef<DIMENSION, PRECISION>& operator->() const noexcept {
+    return fRef;
+  }
+};
 
 
 /**
@@ -70,32 +81,35 @@ public:
 
 template <int DIMENSION, class PRECISION>
 class THistBinIter:
-  public Internal::TIndexIter<THistBin<DIMENSION, PRECISION>,
-    THistBin<DIMENSION, PRECISION>> {
+  public Internal::TIndexIter<THistBinRef<DIMENSION, PRECISION>,
+                              THistBinPtr<DIMENSION, PRECISION>> {
 public:
-  using Value_t = THistBin<DIMENSION, PRECISION>;
+  using HistImpl_t = Detail::THistImplBase<DIMENSION, PRECISION>;
+  using Ref_t = THistBinRef<DIMENSION, PRECISION>;
+  using Ptr_t = THistBinPtr<DIMENSION, PRECISION>;
 
 private:
-  Value_t fCurrentBin; ///< Current iteration's bin
-
-  /// Get the current index.
-  size_t& GetIndex() noexcept { return fCurrentBin.fIndex; }
-  /// Get the current index.
-  size_t GetIndex() const noexcept { return fCurrentBin.fIndex; }
+  size_t fIndex = 0; ///< Bin index
+  HistImpl_t& fHist; ///< The histogram we iterate over.
+  std::array_view<PRECISION> fBinContent; ///< Histogram's bin content
 
 public:
   /// Construct a THistBinIter from a histogram.
-  THistBinIter(Detail::THistImplBase<DIMENSION, PRECISION>& hist):
-    fCurrentBin(hist) {}
+  THistBinIter(HistImpl_t& hist):
+    fHist(hist), fBinContent(fHist->GetBinContent()) {}
 
   /// Construct a THistBinIter from a histogram, setting the current index.
-  THistBinIter(Detail::THistImplBase<DIMENSION, PRECISION>& hist, size_t idx):
-    fCurrentBin(hist, idx) {}
+  THistBinIter(HistImpl_t& hist, size_t idx):
+    fIndex(idx), fHist(hist), fBinContent(fHist->GetBinContent()) {}
 
   ///\{
   ///\name Value access
-  Value_t& operator*() const noexcept { return fCurrentBin; }
-  Value_t* operator->() const noexcept { return &fCurrentBin; }
+  Ref_t operator*() const noexcept {
+    return Ref_t{fIndex, fHist, fBinContent};
+  }
+  Ptr_t operator->() const noexcept {
+    return Ptr_t{{fIndex, fHist, fBinContent}};
+  }
   ///\}
 };
 

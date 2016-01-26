@@ -23,19 +23,19 @@ namespace Internal {
 
 /**
  \class TIndexIter
- Iterates over an index; the value is defined by the VALUE template parameter.
+ Iterates over an index; the REFERENCE is defined by the REFERENCE template parameter.
 
- Derived classes need to implement `const VALUE& operator*()` and
- `const VALUE* operator->()`. DERIVED must provide a member size_t& GetIndex().
+ Derived classes are expected to implement `const REFERENCE& operator*()` and
+ `const POINTER operator->()`.
  */
 
-template <class DERIVED, class VALUE>
+template <class REFERENCE,
+  class POINTER = typename std::add_pointer<typename std::remove_reference<REFERENCE>::type>::type>
 class TIndexIter:
-public std::iterator<std::random_access_iterator_tag, VALUE> {
+public std::iterator<std::random_access_iterator_tag, REFERENCE, POINTER> {
+  size_t fIndex;
 protected:
-  size_t GetIndex() const noexcept { return GetDerived().GetIndex(); }
-  DERIVED& GetDerived() noexcept { return *(DERIVED*)this; }
-  const DERIVED& GetDerived() const noexcept { return *(DERIVED*)this; }
+  size_t GetIndex() const noexcept { return fIndex; }
   static constexpr size_t fgEndIndex = (size_t) -1;
 
 public:
@@ -43,14 +43,14 @@ public:
   ///\name Index modifiers
   /// ++i
   TIndexIter &operator++() noexcept {
-    ++GetDerived().GetIndex();
+    ++fIndex;
     return *this;
   }
 
   /// --i
   TIndexIter &operator--() noexcept {
-    if (GetDerived().GetIndex() != fgEndIndex)
-      --GetDerived().GetIndex();
+    if (fIndex != fgEndIndex)
+      --fIndex;
     return *this;
   }
 
@@ -69,15 +69,15 @@ public:
   }
 
   TIndexIter &operator+=(int d) noexcept {
-    GetDerived().GetIndex() += d;
+    fIndex += d;
     return *this;
   }
 
   TIndexIter &operator-=(int d) noexcept {
-    if (d > GetDerived().GetIndex()) {
-      GetDerived().GetIndex() = fgEndIndex;
+    if (d > fIndex) {
+      fIndex = fgEndIndex;
     } else {
-      GetDerived().GetIndex() -= d;
+      fIndex -= d;
     }
     return *this;
   }
@@ -106,34 +106,34 @@ public:
 
 ///\{
 ///\name Relational operators.
-template <class DERIVED, class VALUE>
-bool operator<(TIndexIter<DERIVED, VALUE> lhs, TIndexIter<DERIVED, VALUE> rhs) noexcept {
-  return lhs.GetDerived().GetIndex() < rhs.GetDerived().GetIndex();
+template <class REFERENCE>
+bool operator<(TIndexIter<REFERENCE> lhs, TIndexIter<REFERENCE> rhs) noexcept {
+  return lhs.fIndex < rhs.fIndex;
 }
 
-template <class DERIVED, class VALUE>
-bool operator>(TIndexIter<DERIVED, VALUE> lhs, TIndexIter<DERIVED, VALUE> rhs) noexcept {
-  return lhs.GetDerived().GetIndex() > rhs.GetDerived().GetIndex();
+template <class REFERENCE>
+bool operator>(TIndexIter<REFERENCE> lhs, TIndexIter<REFERENCE> rhs) noexcept {
+  return lhs.fIndex > rhs.fIndex;
 }
 
-template <class DERIVED, class VALUE>
-bool operator<=(TIndexIter<DERIVED, VALUE> lhs, TIndexIter<DERIVED, VALUE> rhs) noexcept {
-  return lhs.GetDerived().GetIndex() <= rhs.GetDerived().GetIndex();
+template <class REFERENCE>
+bool operator<=(TIndexIter<REFERENCE> lhs, TIndexIter<REFERENCE> rhs) noexcept {
+  return lhs.fIndex <= rhs.fIndex;
 }
 
-template <class DERIVED, class VALUE>
-inline bool operator>=(TIndexIter<DERIVED, VALUE> lhs, TIndexIter<DERIVED, VALUE> rhs) noexcept {
-  return lhs.GetDerived().GetIndex() >= rhs.GetDerived().GetIndex();
+template <class REFERENCE>
+inline bool operator>=(TIndexIter<REFERENCE> lhs, TIndexIter<REFERENCE> rhs) noexcept {
+  return lhs.fIndex >= rhs.fIndex;
 }
 
-template <class DERIVED, class VALUE>
-inline bool operator==(TIndexIter<DERIVED, VALUE> lhs, TIndexIter<DERIVED, VALUE> rhs) noexcept {
-  return lhs.GetDerived().GetIndex() == rhs.GetDerived().GetIndex();
+template <class REFERENCE>
+inline bool operator==(TIndexIter<REFERENCE> lhs, TIndexIter<REFERENCE> rhs) noexcept {
+  return lhs.fIndex == rhs.fIndex;
 }
 
-template <class DERIVED, class VALUE>
-inline bool operator!=(TIndexIter<DERIVED, VALUE> lhs, TIndexIter<DERIVED, VALUE> rhs) noexcept {
-  return lhs.GetDerived().GetIndex() != rhs.GetDerived().GetIndex();
+template <class REFERENCE>
+inline bool operator!=(TIndexIter<REFERENCE> lhs, TIndexIter<REFERENCE> rhs) noexcept {
+  return lhs.fIndex != rhs.fIndex;
 }
 ///\}
 
