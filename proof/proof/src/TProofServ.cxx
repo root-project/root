@@ -3374,12 +3374,12 @@ Int_t TProofServ::SetupCommon()
                   // Parse (k, m, g)
                   tok.ToLower();
                   const char *s[3] = {"k", "m", "g"};
-                  Int_t i = 0, k = 1024;
+                  Int_t i = 0, ki = 1024;
                   while (fact < 0) {
-                     if (tok.EndsWith(s[i]))
-                        fact = k;
+                     if (tok.EndsWith(s[i++]))
+                        fact = ki;
                      else
-                        k *= 1024;
+                        ki *= 1024;
                   }
                   tok.Remove(tok.Length()-1);
                }
