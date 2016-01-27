@@ -117,6 +117,8 @@ Custom streamers need to #include TBuffer.h explicitly (see
   was suboptimal. The problem was that the line style is also applied to the arrow
   head, which is usually not what one wants.
   The arrow tip is now drawn using a continuous line.
+* It is now possible to select an histogram on a canvas by clicking on the vertical
+  lines of the bins boundaries. This problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-6649?).
 
 ## 3D Graphics Libraries
 
