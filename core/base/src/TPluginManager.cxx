@@ -184,7 +184,7 @@ Bool_t TPluginHandler::CanHandle(const char *base, const char *uri)
 
 void TPluginHandler::SetupCallEnv()
 {
-   int result = -1;
+   int setCanCall = -1;
 
    // Use a exit_scope guard, to insure that fCanCall is set (to the value of
    // result) as the last action of this function before returning.
@@ -194,7 +194,7 @@ void TPluginHandler::SetupCallEnv()
    //    auto guard = make_exit_scope( [...]() { ... } );
    using exit_scope = std::shared_ptr<void*>;
    exit_scope guard(nullptr,
-                    [this,&result](void *) { this->fCanCall = result; } );
+                    [this,&setCanCall](void *) { this->fCanCall = setCanCall; } );
 
    // check if class exists
    TClass *cl = TClass::GetClass(fClass);
@@ -232,7 +232,7 @@ void TPluginHandler::SetupCallEnv()
    fCallEnv = new TMethodCall;
    fCallEnv->Init(fMethod);
 
-   result = 1;
+   setCanCall = 1;
 
    return;
 }
