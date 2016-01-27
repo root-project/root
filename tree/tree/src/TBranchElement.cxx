@@ -5107,8 +5107,19 @@ void TBranchElement::SetReadLeavesPtr()
       fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesClonesMember;
    } else if (fType < 0) {
       fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesCustomStreamer;
-   } else if (fType <=2) {
-      // split-class branch, base class branch, data member branch, or top-level branch.
+   } else if (fType == 0 && fID == -1) {
+      // top-level branch.
+      Bool_t hasCustomStreamer = !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != 0 || fBranchClass.GetClass()->TestBit(TClass::kHasCustomStreamerMember));
+      if (hasCustomStreamer) {
+         // We are in the case where the object did *not* have a custom
+         // Streamer when the TTree was written but now *does* have a custom
+         // Streamer thus we must use it.
+         fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesCustomStreamer;
+      } else {
+         fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesMember;
+      }
+   } else if (fType <= 2) {
+      // split-class branch, base class branch or data member branch.
       if (fBranchCount) {
          fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesMemberBranchCount;
       } else if (fStreamerType == TVirtualStreamerInfo::kCounter) {

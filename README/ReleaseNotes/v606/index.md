@@ -223,6 +223,10 @@ In a ROOT session, you can do:
   root > T->Process("myselect.C")
 ```
 
+### Other improvements.
+
+We fixed the handling of the case when an object, stored in a TTree, used to have a defaulted Streamer and when the TTree is being read, the object now has a custom Streamer that we must use.
+
 ## Histogram Libraries
 
 ### TH1
