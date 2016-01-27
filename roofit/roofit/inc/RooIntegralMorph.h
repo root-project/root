@@ -23,7 +23,7 @@ class TH1D ;
  
 class RooIntegralMorph : public RooAbsCachedPdf {
 public:
-  RooIntegralMorph() {
+   RooIntegralMorph() :  _cache(nullptr)  {
     // coverity[UNINIT_CTOR]
   } ; 
   RooIntegralMorph(const char *name, const char *title,
