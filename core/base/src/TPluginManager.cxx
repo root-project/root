@@ -183,8 +183,6 @@ Bool_t TPluginHandler::CanHandle(const char *base, const char *uri)
 
 void TPluginHandler::SetupCallEnv()
 {
-   fCanCall = -1;
-
    // check if class exists
    TClass *cl = TClass::GetClass(fClass);
    if (!cl && !fIsGlobal) {
@@ -265,8 +263,14 @@ Bool_t TPluginHandler::CheckForExecPlugin(Int_t nargs)
       return kFALSE;
    }
 
-   if (!fCallEnv && !fCanCall)
-      SetupCallEnv();
+   if (fCanCall == 0) {
+      // Not initialized yet.
+      R__LOCKGUARD2(gPluginManagerMutex);
+
+      // Now check if another thread did not already do the work.
+      if (fCanCall == 0)
+         SetupCallEnv();
+   }
 
    if (fCanCall == -1)
       return kFALSE;
