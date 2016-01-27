@@ -303,8 +303,7 @@ auto TProcPool::MapReduce(F func, T &args, R redfunc) -> decltype(++(args.begin(
       std::make_move_iterator(std::begin(args)),
       std::make_move_iterator(std::end(args))
    );
-   const auto &reslist = MapReduce(func, vargs, redfunc);
-   return reslist;
+   return MapReduce(func, vargs, redfunc);
 }
 
 /// \cond doxygen should ignore these methods
@@ -330,8 +329,7 @@ template<class F, class T, class R>
 auto TProcPool::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> decltype(func(*args.begin()))
 {
    std::vector<T> vargs(std::move(args));
-   const auto &reslist = MapReduce(func, vargs, redfunc);
-   return reslist;
+   return MapReduce(func, vargs, redfunc);
 }
 
 
