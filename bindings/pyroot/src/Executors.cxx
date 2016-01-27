@@ -63,7 +63,7 @@ static inline rtype GILCall##tcode(                                           \
 PYROOT_IMPL_GILCALL( void,         V )
 PYROOT_IMPL_GILCALL( UChar_t,      B )
 PYROOT_IMPL_GILCALL( Char_t,       C )
-PYROOT_IMPL_GILCALL( Short_t,      H )
+//PYROOT_IMPL_GILCALL( Short_t,      H )
 PYROOT_IMPL_GILCALL( Int_t,        I )
 PYROOT_IMPL_GILCALL( Long_t,       L )
 PYROOT_IMPL_GILCALL( Long64_t,     LL )
