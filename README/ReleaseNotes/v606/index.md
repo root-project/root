@@ -546,6 +546,7 @@ Changes will be part of the future 6.04/14
 ### Core
 
 - Make TListOfFunctions::Get thread-safe
+- Make TPluginManager thread-safe [ROOT-7927]
 
 ### Histogram Libraries
 
