@@ -100,6 +100,7 @@ TFile, TSQLServer, TGrid, etc. functionality.
 #include "TObjString.h"
 #include "ThreadLocalStorage.h"
 
+#include <memory>
 
 TPluginManager *gPluginMgr;   // main plugin manager created in TROOT
 
@@ -183,6 +184,18 @@ Bool_t TPluginHandler::CanHandle(const char *base, const char *uri)
 
 void TPluginHandler::SetupCallEnv()
 {
+   int result = -1;
+
+   // Use a exit_scope guard, to insure that fCanCall is set (to the value of
+   // result) as the last action of this function before returning.
+
+   // When the standard supports it, we should use std::exit_code
+   // See N4189 for example.
+   //    auto guard = make_exit_scope( [...]() { ... } );
+   using exit_scope = std::shared_ptr<void*>;
+   exit_scope guard(nullptr,
+                    [this,&result](void *) { this->fCanCall = result; } );
+
    // check if class exists
    TClass *cl = TClass::GetClass(fClass);
    if (!cl && !fIsGlobal) {
@@ -219,7 +232,7 @@ void TPluginHandler::SetupCallEnv()
    fCallEnv = new TMethodCall;
    fCallEnv->Init(fMethod);
 
-   fCanCall = 1;
+   result = 1;
 
    return;
 }
