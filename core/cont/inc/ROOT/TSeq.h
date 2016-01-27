@@ -102,6 +102,12 @@ namespace ROOT {
          T operator-(int v) {
             return fCounter - v;
          }
+         T operator+(const iterator &other) {
+            return fCounter + other.fCounter;
+         }
+         T operator-(const iterator &other) {
+            return fCounter - other.fCounter;
+         }
          iterator &operator--() {
             fCounter -= fStep;
             return *this;
