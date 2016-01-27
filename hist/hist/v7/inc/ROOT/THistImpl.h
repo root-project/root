@@ -24,8 +24,7 @@
 namespace ROOT {
 namespace Experimental {
 
-template <int DIMENSION, class PRECISION>
-class THistBinIter;
+template <class HISTIMPL> class THistBinIter;
 
 namespace Hist {
 /// Iterator over n dimensional axes - an array of n axis iterators.
@@ -63,6 +62,10 @@ public:
   /// Type of the coordinate: a DIMENSIONS-dimensional array of doubles.
   using Coord_t = std::array<double, DIMENSIONS>;
 
+  THistImplPrecisionAgnosticBase() = default;
+  THistImplPrecisionAgnosticBase(const THistImplPrecisionAgnosticBase&) = default;
+  THistImplPrecisionAgnosticBase(THistImplPrecisionAgnosticBase&&) = default;
+  THistImplPrecisionAgnosticBase(std::string_view title): fTitle(title) {}
   virtual ~THistImplPrecisionAgnosticBase() {}
 
   /// Number of dimensions of this histogram.
@@ -103,6 +106,9 @@ public:
   /// overflow should be included in the returned range.
   virtual Hist::AxisIterRange_t<DIMENSIONS>
     GetRange(const std::array<Hist::EOverflow, DIMENSIONS>& withOverUnder) const = 0;
+
+private:
+  std::string fTitle; ///< Histogram title.
 };
 
 
@@ -114,8 +120,9 @@ public:
  through THist, THistImpl inherits from THistImplBase, exposing only dimension
  (`DIMENSION`) and bin type (`PRECISION`).
  */
-template<int DIMENSIONS, class PRECISION>
-class THistImplBase: public THistImplPrecisionAgnosticBase<DIMENSIONS> {
+template<int DIMENSIONS, class PRECISION, class STATISTICS>
+class THistImplBase: public THistImplPrecisionAgnosticBase<DIMENSIONS>,
+                     public STATISTICS {
 private:
   std::vector<PRECISION> fContent; ///< The histogram's bin content
 
@@ -128,10 +135,13 @@ public:
   using FillFunc_t = void (THistImplBase::*)(const Coord_t& x, Weight_t w);
 
   /// Iterator support
-  using const_iterator = ROOT::Experimental::THistBinIter<DIMENSIONS, PRECISION>;
+  using const_iterator = ROOT::Experimental::THistBinIter<const THistImplBase>;
+  using iterator = ROOT::Experimental::THistBinIter<THistImplBase>;
 
 
   THistImplBase(size_t numBins): fContent(numBins) {}
+  THistImplBase(std::string_view title, size_t numBins):
+    THistImplPrecisionAgnosticBase<DIMENSIONS>(title), fContent(numBins) {}
   THistImplBase(const THistImplBase&) = default;
   THistImplBase(THistImplBase&&) = default;
 
@@ -149,9 +159,15 @@ public:
 
 
   /// Get the bin content (sum of weights) for bin index `binidx`.
-  virtual PRECISION GetBinContent(int binidx) const final {
+  PRECISION GetBinContent(int binidx) const final {
     return fContent[binidx];
   }
+
+  /// Const access to statistics.
+  const STATISTICS& GetStat() const noexcept { return *this; }
+
+  /// Non-const access to statistics.
+  STATISTICS& GetStat() noexcept { return *this; }
 
   /// Get the bin content (sum of weights) for bin index `binidx`, cast to
   /// double.
@@ -165,18 +181,17 @@ public:
   }
 
   /// Minimal iterator interface over all bins.
-  const_iterator begin() const noexcept {
-    return const_iterator(*this);
-  }
+  const_iterator begin() const noexcept { return const_iterator(*this); }
+  iterator begin() noexcept { return iterator(*this); }
 
   /// Minimal iterator interface over all bins.
   const_iterator end() const noexcept {
     return const_iterator(*this, fContent.size());
   }
-
-
+  iterator end() noexcept { return iterator(*this, fContent.size()); }
 
   std::array_view<PRECISION> GetContent() const noexcept { return fContent; }
+  std::vector<PRECISION>& GetContent() noexcept { return fContent; }
 
 };
 } // namespace Detail
@@ -322,19 +337,18 @@ GetAxisView(const AXISCONFIG&...axes) noexcept {
 } // namespace Internal
 
 
-template <int DIMENSIONS, class PRECISION> class THist;
+template <int DIMENSIONS, class PRECISION, class STATISTICS> class THist;
 
 namespace Detail {
 
 template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
-class THistImpl final: public THistImplBase<DIMENSIONS, PRECISION>,
-   STATISTICS {
+class THistImpl final: public THistImplBase<DIMENSIONS, PRECISION, STATISTICS> {
   static_assert(sizeof...(AXISCONFIG) == DIMENSIONS,
                 "Number of axes must equal histogram dimension");
-  friend class THist<DIMENSIONS, PRECISION>;
+  friend class THist<DIMENSIONS, PRECISION, STATISTICS>;
 
 public:
-  using ImplBase_t = THistImplBase<DIMENSIONS, PRECISION>;
+  using ImplBase_t = THistImplBase<DIMENSIONS, PRECISION, STATISTICS>;
   using Coord_t = typename ImplBase_t::Coord_t;
   using Weight_t = typename ImplBase_t::Weight_t;
   using typename ImplBase_t::FillFunc_t;
@@ -353,6 +367,7 @@ private:
 
 public:
   THistImpl(STATISTICS statConfig, AXISCONFIG... axisArgs);
+  THistImpl(std::string_view title, STATISTICS statConfig, AXISCONFIG... axisArgs);
 
   /// Retrieve the fill function for this histogram implementation, to prevent
   /// the virtual function call for high-frequency fills.
@@ -490,9 +505,17 @@ public:
 
 
 template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
-THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::THistImpl(STATISTICS statConfig, AXISCONFIG... axisArgs):
+THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::
+THistImpl(STATISTICS statConfig, AXISCONFIG... axisArgs):
   STATISTICS(statConfig), fAxes{axisArgs...},
-  THistImplBase<DIMENSIONS, PRECISION>(GetNBins())
+  THistImplBase<DIMENSIONS, PRECISION, STATISTICS>(GetNBins())
+{}
+
+template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
+THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::
+THistImpl(std::string_view title, STATISTICS statConfig, AXISCONFIG... axisArgs):
+  STATISTICS(statConfig), fAxes{axisArgs...},
+  THistImplBase<DIMENSIONS, PRECISION, STATISTICS>(title, GetNBins())
 {}
 
 #if 0
