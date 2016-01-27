@@ -99,6 +99,9 @@ std::shared_ptr<Internal::TFileImplBase> fImpl;
 public:
   /// Options for TFilePtr construction.
   struct Options_t {
+    /// Default constructor needed for member inits.
+    Options_t() {}
+
     /// Whether the file should be opened asynchronously, if available.
     bool fAsynchronousOpen = false;
 
