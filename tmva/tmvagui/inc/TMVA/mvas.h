@@ -15,6 +15,6 @@ namespace TMVA{
 
    // input: - Input file (result from TMVA);
    //        - use of TMVA plotting TStyle
-   void mvas( TString fin = "TMVA.root", HistType htype = kMVAType, Bool_t useTMVAStyle = kTRUE );
+   void mvas( TString fin = "TMVA.root", TString fDatasetName = "dataset", HistType htype = kMVAType, Bool_t useTMVAStyle = kTRUE );
 }
 #endif

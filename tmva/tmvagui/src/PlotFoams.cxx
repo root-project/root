@@ -14,16 +14,19 @@
 
 #include "TMVA/PDEFoam.h"
 
-void TMVA::PlotFoams( TString fileName,
+void TMVA::PlotFoams( TString fileName, TString fDatasetName,
                 bool useTMVAStyle )
 {
    cout << "read file: " << fileName << endl;
    cout << "kValue = " << kValue << endl;
    TFile *file = TFile::Open(fileName);
-
+   file->cd (fDatasetName);
+   
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
 
+   gDirectory->cd (fDatasetName);
+   
    // create control bar
    TControlBar* cbar = new TControlBar( "vertical", "Choose cell value for plot:", 50, 50 );
    if ((gDirectory->Get("SignalFoam") && gDirectory->Get("BgFoam")) ||

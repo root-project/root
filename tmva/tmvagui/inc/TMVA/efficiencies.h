@@ -8,6 +8,6 @@
 namespace TMVA{
 
    void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir=0);
-   void efficiencies( TString fin = "TMVA.root", Int_t type = 2, Bool_t useTMVAStyle = kTRUE );
+   void efficiencies( TString fin = "TMVA.root", TString fDatasetName = "dataset", Int_t type = 2, Bool_t useTMVAStyle = kTRUE );
 }
 #endif

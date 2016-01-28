@@ -211,7 +211,7 @@ void TMVA::plot_efficiencies( TFile* /*file*/, Int_t type , TDirectory* BinDir)
    return;
 }
 
-void TMVA::efficiencies( TString fin , Int_t type , Bool_t useTMVAStyle )
+void TMVA::efficiencies( TString fin , TString fDatasetName, Int_t type , Bool_t useTMVAStyle )
 {
    // argument: type = 1 --> plot efficiency(B) versus eff(S)
    //           type = 2 --> plot rejection (B) versus efficiency (S)
@@ -225,6 +225,7 @@ void TMVA::efficiencies( TString fin , Int_t type , Bool_t useTMVAStyle )
          file = new TFile(fin);
    }
 
+   gDirectory->cd (fDatasetName);
    plot_efficiencies( file, type, gDirectory );
 
    return;

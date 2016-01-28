@@ -37,7 +37,7 @@ using std::endl;
 
 // input: - Input file (result from TMVA)
 //        - use of TMVA plotting TStyle
-void TMVA::probas( TString fin , Bool_t useTMVAStyle  )
+void TMVA::probas( TString fin , TString fDatasetName, Bool_t useTMVAStyle  )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
@@ -49,7 +49,8 @@ void TMVA::probas( TString fin , Bool_t useTMVAStyle  )
    // checks if file with name "fin" is already open, and if not opens one
    //TFile* file =
    TMVAGlob::OpenFile( fin );  
-
+   gDirectory->cd (fDatasetName);
+   
    const Int_t width = 600;   // size of canvas
 
    // this defines how many canvases we need

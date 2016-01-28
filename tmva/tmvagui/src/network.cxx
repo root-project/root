@@ -415,13 +415,15 @@ void TMVA::draw_synapse(Double_t cx1, Double_t cy1, Double_t cx2, Double_t cy2,
 
 // input: - Input file (result from TMVA),
 //        - use of TMVA plotting TStyle
-void TMVA::network( TString fin , Bool_t useTMVAStyle )
+void TMVA::network( TString fin , TString fDatasetName, Bool_t useTMVAStyle )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
 
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
+   TFile* file = TMVAGlob::OpenFile( fin );
+   file->cd (fDatasetName);
+   
    TIter next(file->GetListOfKeys());
    TKey *key(0);
    while( (key = (TKey*)next()) ) {      

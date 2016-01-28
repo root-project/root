@@ -9,19 +9,21 @@
 // input: - Input file (result from TMVA),
 //        - use of TMVA plotting TStyle
 
-void TMVA::BDTControlPlots( TString fin , Bool_t useTMVAStyle  )
+void TMVA::BDTControlPlots( TString fin , TString fDatasetName, Bool_t useTMVAStyle  )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
   
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file;
-   file = TMVAGlob::OpenFile( fin );  
+   file = TMVAGlob::OpenFile( fin );
    if (file == NULL) {
       cout << "Problems with input file, tried to open " << fin << " but somehow did not succeed .." << endl;
       return;
    }
 
+   file->cd (fDatasetName);
+   
    // get all titles of the method BDT
    TList titles;
    TString methodName = "Method_BDT";

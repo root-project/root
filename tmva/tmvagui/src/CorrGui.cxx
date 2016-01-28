@@ -11,7 +11,7 @@
 
 //static TControlBar* CorrGui_Global__cbar = 0;
 
-void TMVA::CorrGui(  TString fin, TString dirName , TString title ,
+void TMVA::CorrGui(  TString fin, TString fDatasetName, TString dirName , TString title ,
                Bool_t isRegression  )
 {
    // Use this script in order to run the various individual macros
@@ -40,7 +40,8 @@ void TMVA::CorrGui(  TString fin, TString dirName , TString title ,
    if (!file || !file->IsOpen()) {
          file = new TFile(fin);
    }
-   
+
+   gDirectory->cd (fDatasetName);
    gDirectory->pwd();
    TDirectory* dir = (TDirectory*)gDirectory->Get( dirName );
    if (!dir) {
@@ -55,6 +56,7 @@ void TMVA::CorrGui(  TString fin, TString dirName , TString title ,
       }
    }
    dir->cd();
+   dir->cd (fDatasetName);
 
    // how many variables  are in the directory?
    Int_t noVar = TMVAGlob::GetNumberOfInputVariables(dir);
