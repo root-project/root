@@ -12,7 +12,7 @@ namespace TMVA{
    //        - use of TMVA plotting TStyle
    void bdtcontrolplots(TDirectory *);
 
-   void BDTControlPlots( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE );
+   void BDTControlPlots( TString fin = "TMVA.root", TString fDatasetName = "dataset", Bool_t useTMVAStyle = kTRUE );
    void bdtcontrolplots( TDirectory *bdtdir ); 
   
   

@@ -14,6 +14,6 @@ namespace TMVA{
 
    void annconvergencetest( TDirectory *lhdir );
 
-   void annconvergencetest( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE );
+   void annconvergencetest( TString fin = "TMVA.root", TString fDatasetName = "dataset", Bool_t useTMVAStyle = kTRUE );
 }
 #endif

@@ -16,7 +16,7 @@
 #include "TMVA/PDEFoam.h"
 namespace TMVA{
 
-   void PlotFoams( TString fileName = "weights/TMVAClassification_PDEFoam.weights_foams.root",
+   void PlotFoams( TString fileName = "weights/TMVAClassification_PDEFoam.weights_foams.root", TString fDatasetName = "dataset",
                    bool useTMVAStyle = kTRUE );
    // foam plotting macro
    void Plot(TString fileName, TMVA::ECellValue cv, TString cv_long, bool useTMVAStyle = kTRUE);
