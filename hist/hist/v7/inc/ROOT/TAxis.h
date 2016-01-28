@@ -63,7 +63,7 @@ protected:
   /// \return Returns the bin number adjusted for potential over- and underflow
   /// bins. Returns kIgnoreBin if the axis cannot handle the over- / underflow,
   /// in which case `status` will tell how to deal with this overflow.
-  constexpr int AdjustOverflowBinNumber(int rawbin) const {
+  int AdjustOverflowBinNumber(int rawbin) const {
     if (rawbin < 0) return 0;
     // Take underflow into account.
     ++rawbin;
@@ -182,31 +182,31 @@ public:
   TAxisBase(std::string_view title, int nbins) noexcept:
     fNBinsNoOver(nbins), fTitle(title) { }
 
-  constexpr const std::string& GetTitle() const { return fTitle; }
+  const std::string& GetTitle() const { return fTitle; }
 
   /// Get the number of bins, excluding under- and overflow.
-  constexpr int GetNBinsNoOver() const noexcept {
+  int GetNBinsNoOver() const noexcept {
     return fNBinsNoOver;
   }
 
   /// Get the number of bins, including under- and overflow.
-  constexpr int GetNBins() const noexcept {
+  int GetNBins() const noexcept {
     return fNBinsNoOver + 2;
   }
 
   /// Get the bin index for the underflow bin.
-  constexpr int GetUnderflowBin() const noexcept { return 0; }
+  int GetUnderflowBin() const noexcept { return 0; }
 
   /// Get the bin index for the underflow bin.
-  constexpr int GetOverflowBin() const noexcept { return GetNBinsNoOver() + 1; }
+  int GetOverflowBin() const noexcept { return GetNBinsNoOver() + 1; }
 
   /// Whether the bin index is referencing a bin lower than the axis range.
-  constexpr bool IsUnderflowBin(int bin) const noexcept {
+  bool IsUnderflowBin(int bin) const noexcept {
     return bin <= GetUnderflowBin();
   }
 
   /// Whether the bin index is referencing a bin higher than the axis range.
-  constexpr bool IsOverflowBin(int bin) const noexcept {
+  bool IsOverflowBin(int bin) const noexcept {
     return bin >= GetOverflowBin();
   }
 
@@ -320,13 +320,13 @@ public:
   /// Find the bin index for the given coordinate.
   /// \note Passing a bin border coordinates can either return the bin above or
   /// below the bin border. I.e. don't do that for reliable results!
-  constexpr int FindBin(double x) const noexcept {
+  int FindBin(double x) const noexcept {
     int rawbin = (x - fLow) * fInvBinWidth;
     return AdjustOverflowBinNumber(rawbin);
   }
 
   /// This axis cannot grow.
-  constexpr static bool CanGrow() noexcept { return false; }
+  static bool CanGrow() noexcept { return false; }
 
   /// Get the low end of the axis range.
   double GetMinimum() const noexcept { return fLow; }
@@ -429,7 +429,7 @@ public:
   int Grow(int toBin);
 
   /// This axis kind can increase its range.
-  constexpr bool CanGrow() const { return false; }
+  bool CanGrow() const { return false; }
 };
 
 
@@ -550,7 +550,7 @@ public:
   }
 
   /// This axis cannot be extended.
-  constexpr static bool CanGrow() noexcept { return false; }
+  static bool CanGrow() noexcept { return false; }
 
   /// Access to the bin borders used by this axis.
   const std::vector<double> &GetBinBorders() const noexcept { return fBinBorders; }
