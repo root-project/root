@@ -780,7 +780,7 @@ template<>
 struct AxisConfigToType<TAxisConfig::kEquidistant> {
   using Axis_t = TAxisEquidistant;
 
-  Axis_t operator()(TAxisConfig cfg) noexcept {
+  Axis_t operator()(const TAxisConfig& cfg) noexcept {
     return TAxisEquidistant(cfg.GetNBinsNoOver(),
                             cfg.GetBinBorders()[0], cfg.GetBinBorders()[1]);
   }
@@ -790,7 +790,7 @@ template<>
 struct AxisConfigToType<TAxisConfig::kGrow> {
   using Axis_t = TAxisGrow;
 
-  Axis_t operator()(TAxisConfig cfg) noexcept {
+  Axis_t operator()(const TAxisConfig& cfg) noexcept {
     return TAxisGrow(cfg.GetNBinsNoOver(),
                      cfg.GetBinBorders()[0], cfg.GetBinBorders()[1]);
   }
@@ -799,7 +799,7 @@ template<>
 struct AxisConfigToType<TAxisConfig::kIrregular> {
   using Axis_t = TAxisIrregular;
 
-  Axis_t operator()(TAxisConfig cfg) {
+  Axis_t operator()(const TAxisConfig& cfg) {
     return TAxisIrregular(cfg.GetBinBorders());
   }
 };
@@ -808,7 +808,7 @@ template<>
 struct AxisConfigToType<TAxisConfig::kLabels> {
   using Axis_t = TAxisLabels;
 
-  Axis_t operator()(TAxisConfig cfg) {
+  Axis_t operator()(const TAxisConfig& cfg) {
     return TAxisLabels(cfg.GetBinLabels());
   }
 };
