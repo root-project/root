@@ -89,7 +89,7 @@ public:
 
   /// The bin's uncertainty. size() of the vector is a multiple of 2:
   /// several kinds of uncertainty, same number of entries for lower and upper.
-  virtual std::vector<double> GetBinUncertainties(int binidx) const = 0;
+  virtual double GetBinUncertainty(int binidx) const = 0;
 
   /// The bin content, cast to double.
   virtual double GetBinContentAsDouble(int binidx) const = 0;
