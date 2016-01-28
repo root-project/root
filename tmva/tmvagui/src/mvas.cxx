@@ -35,7 +35,7 @@ void TMVA::mvas( TString fin, TString fDatasetName, HistType htype, Bool_t useTM
    Int_t countCanvas = 0;
 
    // search for the right histograms in full list of keys
-   TIter next(file->GetListOfKeys());
+   TIter next(gDirectory->GetListOfKeys());
    TKey *key(0);   
    while ((key = (TKey*)next())) {
 
