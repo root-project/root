@@ -3,12 +3,12 @@
 #include "TH1.h"
 #include "ROOT/THist.h"
 
-// Tests the number of bins
-TEST(AxisTest, NumBins) {
+// Test "x + 0 = x"
+TEST(HistAddTest, AddEmptyHist) {
   EXPECT_EQ(0, 0);
 }
 
-// Tests the axis range
-TEST(AxisTest, RangeFromTo) {
+// Test addition of a hist range
+TEST(HistAddTest, AddView) {
   EXPECT_EQ(1, 1);
 }
