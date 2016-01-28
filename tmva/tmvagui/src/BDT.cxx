@@ -368,7 +368,7 @@ void TMVA::StatDialogBDT::DrawTree( Int_t itree )
 
 
 // intermediate GUI
-void TMVA::BDT( const TString& fin  )
+void TMVA::BDT( const TString& fin, TString fDatasetName  )
 {
    // --- read the available BDT weight files
 
@@ -377,7 +377,8 @@ void TMVA::BDT( const TString& fin  )
 
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
-
+   file->cd (fDatasetName);
+   
    TDirectory* dir = file->GetDirectory( "Method_BDT" );
    if (!dir) {
       cout << "*** Error in macro \"BDT.C\": cannot find directory \"Method_BDT\" in file: " << fin << endl;

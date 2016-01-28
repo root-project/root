@@ -11,7 +11,7 @@ namespace TMVA{
    // input: - Input file (result from TMVA),
    //        - use of TMVA plotting TStyle
    // this macro is based on BDTControlPlots.C
-   void BoostControlPlots( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE );
+   void BoostControlPlots( TString fin = "TMVA.root", TString fDatasetName = "dataset", Bool_t useTMVAStyle = kTRUE );
 
    void boostcontrolplots( TDirectory *boostdir ); 
 

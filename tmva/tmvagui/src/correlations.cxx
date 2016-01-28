@@ -13,7 +13,7 @@
 // input: - Input file (result from TMVA),
 //        - use of colors or grey scale
 //        - use of TMVA plotting TStyle
-void TMVA::correlations( TString fin , Bool_t isRegression , 
+void TMVA::correlations( TString fin , TString fDatasetName, Bool_t isRegression , 
                          Bool_t /* greyScale */ , Bool_t useTMVAStyle  )
 {
 
@@ -22,17 +22,18 @@ void TMVA::correlations( TString fin , Bool_t isRegression ,
 
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
-
+   
    // signal and background or regression problem
    Int_t ncls = (isRegression ? 1 : 2 );
    TString hName[2] = { "CorrelationMatrixS", "CorrelationMatrixB" };
+   TString slash ("/");
    if (isRegression) hName[0]= "CorrelationMatrix";
    const Int_t width = 600;
    for (Int_t ic=0; ic<ncls; ic++) {
 
-      TH2* h2 = dynamic_cast<TH2*> (file->Get( hName[ic] ));
+      TH2* h2 = dynamic_cast<TH2*> (file->Get( fDatasetName + slash + hName[ic] ));
       if(!h2) {
-         cout << "Did not find histogram " << hName[ic] << " in " << fin << endl;
+         cout << "Did not find histogram " << (fDatasetName + slash + hName[ic]) << " in " << fin << endl;
          continue;
       }
 

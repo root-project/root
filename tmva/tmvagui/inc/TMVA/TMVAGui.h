@@ -11,6 +11,7 @@
 #include "TObjString.h"
 #include "TClass.h"
 
+
 #include "tmvaglob.h"
 namespace TMVA{
 
@@ -23,11 +24,12 @@ namespace TMVA{
                       const TString& buttonType, TString requiredKey = ""); 
 
    // main GUI
-   void TMVAGui( const char* fName = "TMVA.root" );
+   void TMVAGui( const char* fName = "TMVA.root", const char* datasetName = "dataset" );
 
+   
    struct  TMVAGUI {
-      TMVAGUI(TString name = "TMVA.root" ) {
-         TMVA::TMVAGui(name.Data());
+       TMVAGUI(TString name = "TMVA.root", TString datsetName = "datset" ) {
+           TMVA::TMVAGui(name.Data(), datsetName.Data ());
       }
    };
    

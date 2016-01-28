@@ -12,6 +12,6 @@ namespace TMVA{
 
    // plot parallel coordinates
 
-   void paracoor( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE );
+   void paracoor( TString fin = "TMVA.root", TString fDatasetName = "dataset", Bool_t useTMVAStyle = kTRUE );
 }
 #endif
