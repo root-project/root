@@ -26,9 +26,9 @@ public:
    Int_t    fInt2;
    void Print() {
       fprintf(stdout,"The %s object has:\n",Class()->GetName());
-      fprintf(stdout,"  fVec1.size() : %ld\n", fVec1.size());
-      fprintf(stdout,"  fVec2.size() : %ld\n", fVec2.size());
-      fprintf(stdout,"  fVec3.size() : %ld\n", fVec3.size());
+      fprintf(stdout,"  fVec1.size() : %ld\n", (long)fVec1.size());
+      fprintf(stdout,"  fVec2.size() : %ld\n", (long)fVec2.size());
+      fprintf(stdout,"  fVec3.size() : %ld\n", (long)fVec3.size());
       fprintf(stdout,"  fInt1        : %ld\n", fInt1);
       fprintf(stdout,"  fInt2        : %d\n", fInt2);
    }
