@@ -37,7 +37,7 @@ public:
   using Coord_t = typename HISTIMPL::Coord_t;
   using Weight_t = typename HISTIMPL::Weight_t;
   /// Type of the statistics
-  using BinStat_t = typename HISTIMPL::Stat_t::BinStat_t;
+  using BinStat_t = typename HISTIMPL::Stat_t::template BinStat_t<HISTIMPL>;
 
   /// Construct from a histogram.
   THistBinRef(HistImpl_t& hist): fHist(hist) {}
@@ -99,25 +99,26 @@ public:
   using Ptr_t = THistBinPtr<HISTIMPL>;
 
 private:
-  size_t fIndex = 0; ///< Bin index
+  using IndexIter_t = Internal::TIndexIter<THistBinRef<HISTIMPL>, THistBinPtr<HISTIMPL>>;
+
   HISTIMPL& fHist; ///< The histogram we iterate over.
 
 public:
   /// Construct a THistBinIter from a histogram.
   THistBinIter(HISTIMPL& hist):
-    fHist(hist) {}
+    IndexIter_t(0), fHist(hist) {}
 
   /// Construct a THistBinIter from a histogram, setting the current index.
   THistBinIter(HISTIMPL& hist, size_t idx):
-    fIndex(idx), fHist(hist) {}
+    IndexIter_t(idx), fHist(hist) {}
 
   ///\{
   ///\name Value access
   Ref_t operator*() const noexcept {
-    return Ref_t{fIndex, fHist};
+    return Ref_t{fHist, IndexIter_t::GetIndex()};
   }
   Ptr_t operator->() const noexcept {
-    return Ptr_t{{fIndex, fHist}};
+    return Ptr_t{*this};
   }
   ///\}
 };
