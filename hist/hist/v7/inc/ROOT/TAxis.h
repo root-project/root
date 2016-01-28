@@ -301,8 +301,8 @@ public:
   /// \param high - the high axis range. Any coordinate above that is considered
   ///   as overflow. The last bin's higher edge is at this value.
   TAxisEquidistant(int nbins, double low, double high) noexcept:
-    TAxisBase(nbins), fLow(low),
-    fInvBinWidth(nbins / (high - low)) { }
+    TAxisBase(nbins), fLow(std::min(low, high)),
+    fInvBinWidth(nbins / std::fabs(high - low)) { }
 
   /// Initialize a TAxisEquidistant.
   /// \param[in] title - axis title used for graphics and text representation.
