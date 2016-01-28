@@ -381,7 +381,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    ((THashList*)target->GetListOfKeys())->Rehash(nguess);
 
    TFileMergeInfo info(target);
-
+   info.fOptions = fMergeOptions;
    if ((fFastMethod && !fCompressionChange)) {
       info.fOptions.Append(" fast");
    }
