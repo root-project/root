@@ -72,7 +72,7 @@ public:
   constexpr int GetNDim() const { return DIMENSIONS; }
   /// Number of bins of this histogram, including all overflow and underflow
   /// bins. Simply the product of all axes' number of bins.
-  virtual int GetNBins() const = 0;
+  virtual int GetNBins() const noexcept = 0;
 
   /// Given the coordinate `x`, determine the index of the bin.
   virtual int GetBinIndex(const Coord_t& x) const = 0;
@@ -157,6 +157,9 @@ public:
   /// Retrieve the pointer to the overridden Fill(x, w) function.
   virtual FillFunc_t GetFillFunc() const = 0;
 
+  /// Get the number of bins in this histogram, including possible under- and
+  /// overflow bins.
+  int GetNBins() const noexcept final { return fContent.size(); }
 
   /// Get the bin content (sum of weights) for bin index `binidx`.
   PRECISION GetBinContent(int binidx) const final {
@@ -221,6 +224,13 @@ struct TGetBinCount {
     return std::get<I>(axes).GetNBins() * TGetBinCount<I - 1, AXES>()(axes);
   }
 };
+
+
+template<class... AXISCONFIG>
+int GetNBinsFromAxes(AXISCONFIG... axisArgs) {
+  using axesTuple = std::tuple<AXISCONFIG...>;
+  return TGetBinCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...});
+}
 
 
 template <int IDX, class HISTIMPL, class AXES, bool GROW>
@@ -356,18 +366,11 @@ public:
     = typename Hist::AxisIterRange_t<NDIM>;
 
 private:
-  /// Get the number of bins in this histograms, including possible under- and
-  /// overflow bins.
-  int GetNBins() const final {
-    return Internal::TGetBinCount<sizeof...(AXISCONFIG) - 1,
-       decltype(fAxes)>()(fAxes);
-  }
-
   std::tuple<AXISCONFIG...> fAxes; ///< The histogram's axes
 
 public:
-  THistImpl(STATISTICS statConfig, AXISCONFIG... axisArgs);
-  THistImpl(std::string_view title, STATISTICS statConfig, AXISCONFIG... axisArgs);
+  THistImpl(AXISCONFIG... axisArgs);
+  THistImpl(std::string_view title, AXISCONFIG... axisArgs);
 
   /// Retrieve the fill function for this histogram implementation, to prevent
   /// the virtual function call for high-frequency fills.
@@ -506,16 +509,16 @@ public:
 
 template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
 THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::
-THistImpl(STATISTICS statConfig, AXISCONFIG... axisArgs):
-  STATISTICS(statConfig), fAxes{axisArgs...},
-  THistImplBase<DIMENSIONS, PRECISION, STATISTICS>(GetNBins())
+THistImpl(AXISCONFIG... axisArgs):
+  ImplBase_t(Internal::GetNBinsFromAxes(axisArgs...)),
+  fAxes{axisArgs...}
 {}
 
 template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
 THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::
-THistImpl(std::string_view title, STATISTICS statConfig, AXISCONFIG... axisArgs):
-  STATISTICS(statConfig), fAxes{axisArgs...},
-  THistImplBase<DIMENSIONS, PRECISION, STATISTICS>(title, GetNBins())
+THistImpl(std::string_view title, AXISCONFIG... axisArgs):
+  ImplBase_t(title, Internal::GetNBinsFromAxes(axisArgs...)),
+  fAxes{axisArgs...}
 {}
 
 #if 0
