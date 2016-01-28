@@ -163,9 +163,7 @@ public:
   int GetNBins() const noexcept final { return fContent.size(); }
 
   /// Get the bin content (sum of weights) for bin index `binidx`.
-  PRECISION GetBinContent(int binidx) const final {
-    return fContent[binidx];
-  }
+  PRECISION GetBinContent(int binidx) const { return fContent[binidx]; }
 
   /// Const access to statistics.
   const STATISTICS& GetStat() const noexcept { return *this; }
