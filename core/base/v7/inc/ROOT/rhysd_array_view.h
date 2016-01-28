@@ -296,12 +296,12 @@ public:
    */
   // slice with indices {{{
   // check bound {{{
-  constexpr array_view<T> slice(check_bound_t, size_type const pos, size_type const length) const
+  constexpr array_view<T> slice(check_bound_t, size_type const pos, size_type const slicelen) const
   {
-    if (pos >= length_ || pos + length >= length_) {
+    if (pos >= length_ || pos + slicelen >= length_) {
       throw std::out_of_range("array_view::slice()");
     }
-    return array_view<T>{begin() + pos, begin() + pos + length};
+    return array_view<T>{begin() + pos, begin() + pos + slicelen};
   }
   constexpr array_view<T> slice_before(check_bound_t, size_type const pos) const
   {
@@ -319,9 +319,9 @@ public:
   }
   // }}}
   // not check bound {{{
-  constexpr array_view<T> slice(size_type const pos, size_type const length) const
+  constexpr array_view<T> slice(size_type const pos, size_type const slicelen) const
   {
-    return array_view<T>{begin() + pos, begin() + pos + length};
+    return array_view<T>{begin() + pos, begin() + pos + slicelen};
   }
   constexpr array_view<T> slice_before(size_type const pos) const
   {
