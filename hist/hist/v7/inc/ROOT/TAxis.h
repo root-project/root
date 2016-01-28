@@ -333,7 +333,7 @@ public:
 
   /// Get the high end of the axis range.
   double GetMaximum() const noexcept {
-    return fLow + fInvBinWidth * GetNBinsNoOver();
+    return fLow + GetNBinsNoOver()/ fInvBinWidth;
   }
 
   /// Get the width of the bins
