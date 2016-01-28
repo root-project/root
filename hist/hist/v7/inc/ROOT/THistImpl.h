@@ -131,6 +131,7 @@ public:
   using Coord_t = typename THistImplPrecisionAgnosticBase<DIMENSIONS>::Coord_t;
   /// Type of the bin content (and thus weights).
   using Weight_t = PRECISION;
+  using Stat_t = STATISTICS;
   /// Type of the Fill(x, w) function
   using FillFunc_t = void (THistImplBase::*)(const Coord_t& x, Weight_t w);
 
@@ -447,9 +448,8 @@ public:
     }
 #endif
 
-    for (int i = 0; i < xN.size(); ++i) {
+    for (size_t i = 0; i < xN.size(); ++i) {
       Fill(xN[i], weightN[i]);
-      STATISTICS::Fill(xN[i], weightN[i]);
     }
   }
 
@@ -457,23 +457,22 @@ public:
   /// For each element `i`, the weight `weightN[i]` will be added to the bin
   /// at the coordinate `xN[i]`
   void FillN(const std::array_view<Coord_t> xN) final {
-    for (int i = 0; i < xN.size(); ++i) {
-      Fill(xN[i]);
-      STATISTICS::Fill(xN[i]);
+    for (auto&& x: xN) {
+      Fill(x);
     }
   }
 
   /// Return the uncertainties for the given bin.
-  std::vector<double> GetBinUncertainties(int binidx) const final {
-    return STATISTICS::GetBinUncertainties(binidx, *this);
+  double GetBinUncertainty(int binidx) const final {
+    return STATISTICS::GetBinUncertainty(binidx, *this);
   }
 
   /// Add a single weight `w` to the bin at coordinate `x`.
   void Fill(const Coord_t& x, Weight_t w = 1.) {
     int bin = GetBinIndexAndGrow(x);
     if (bin >= 0)
-      AddBinContent(bin, w);
-    STATISTICS::Fill(x, w);
+      ImplBase_t::AddBinContent(bin, w);
+    STATISTICS::Fill(x, bin, w);
   }
 
   /// Get the content of the bin at position `x`.
