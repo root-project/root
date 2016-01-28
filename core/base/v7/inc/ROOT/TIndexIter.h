@@ -94,46 +94,44 @@ public:
     return ret;
   }
   ///\}
-
-  friend bool operator<(TIndexIter lhs, TIndexIter rhs) noexcept;
-  friend bool operator>(TIndexIter lhs, TIndexIter rhs) noexcept;
-  friend bool operator<=(TIndexIter lhs, TIndexIter rhs) noexcept;
-  friend bool operator>=(TIndexIter lhs, TIndexIter rhs) noexcept;
-  friend bool operator==(TIndexIter lhs, TIndexIter rhs) noexcept;
-  friend bool operator!=(TIndexIter lhs, TIndexIter rhs) noexcept;
-
 };
 
 ///\{
 ///\name Relational operators.
-template <class REFERENCE>
-bool operator<(TIndexIter<REFERENCE> lhs, TIndexIter<REFERENCE> rhs) noexcept {
-  return lhs.fIndex < rhs.fIndex;
+template <class REFERENCE, class POINTER>
+bool operator<(TIndexIter<REFERENCE, POINTER> lhs,
+               TIndexIter<REFERENCE, POINTER> rhs) noexcept {
+  return lhs.GetIndex() < rhs.GetIndex();
 }
 
-template <class REFERENCE>
-bool operator>(TIndexIter<REFERENCE> lhs, TIndexIter<REFERENCE> rhs) noexcept {
-  return lhs.fIndex > rhs.fIndex;
+template <class REFERENCE, class POINTER>
+bool operator>(TIndexIter<REFERENCE, POINTER> lhs,
+               TIndexIter<REFERENCE, POINTER> rhs) noexcept {
+  return lhs.GetIndex() > rhs.GetIndex();
 }
 
-template <class REFERENCE>
-bool operator<=(TIndexIter<REFERENCE> lhs, TIndexIter<REFERENCE> rhs) noexcept {
-  return lhs.fIndex <= rhs.fIndex;
+template <class REFERENCE, class POINTER>
+bool operator<=(TIndexIter<REFERENCE, POINTER> lhs,
+                TIndexIter<REFERENCE, POINTER> rhs) noexcept {
+  return lhs.GetIndex() <= rhs.GetIndex();
 }
 
-template <class REFERENCE>
-inline bool operator>=(TIndexIter<REFERENCE> lhs, TIndexIter<REFERENCE> rhs) noexcept {
-  return lhs.fIndex >= rhs.fIndex;
+template <class REFERENCE, class POINTER>
+inline bool operator>=(TIndexIter<REFERENCE, POINTER> lhs,
+                       TIndexIter<REFERENCE, POINTER> rhs) noexcept {
+  return lhs.GetIndex() >= rhs.GetIndex();
 }
 
-template <class REFERENCE>
-inline bool operator==(TIndexIter<REFERENCE> lhs, TIndexIter<REFERENCE> rhs) noexcept {
-  return lhs.fIndex == rhs.fIndex;
+template <class REFERENCE, class POINTER>
+inline bool operator==(TIndexIter<REFERENCE, POINTER> lhs,
+                       TIndexIter<REFERENCE, POINTER> rhs) noexcept {
+  return lhs.GetIndex() == rhs.GetIndex();
 }
 
-template <class REFERENCE>
-inline bool operator!=(TIndexIter<REFERENCE> lhs, TIndexIter<REFERENCE> rhs) noexcept {
-  return lhs.fIndex != rhs.fIndex;
+template <class REFERENCE, class POINTER>
+inline bool operator!=(TIndexIter<REFERENCE, POINTER> lhs,
+                       TIndexIter<REFERENCE, POINTER> rhs) noexcept {
+  return lhs.GetIndex() != rhs.GetIndex();
 }
 ///\}
 
