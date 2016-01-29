@@ -1,4 +1,10 @@
-// Simple TStructViewer tutorial
+/// \file
+/// \ingroup tutorial_gl
+/// Simple `TStructViewer` tutorial
+///
+/// \macro_code
+///
+/// \author  Timur Pocheptsov
 
 #include <TRandom.h>
 #include <TList.h>

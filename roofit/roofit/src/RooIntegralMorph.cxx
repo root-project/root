@@ -280,8 +280,8 @@ RooIntegralMorph::MorphCacheElem::MorphCacheElem(RooIntegralMorph& self, const R
   _rf2->setTol(1e-12) ;
   _ycutoff = 1e-7 ;
   
-  _yatX = 0 ;
-  _calcX = 0 ;
+  // _yatX = 0 ;
+  // _calcX = 0 ;
 
   // Must do this here too: fillCache() may not be called if cache contents is retrieved from EOcache
   pdf()->setUnitNorm(kTRUE) ;
@@ -298,8 +298,8 @@ RooIntegralMorph::MorphCacheElem::~MorphCacheElem()
 {
   delete _rf1 ;
   delete _rf2 ;
-  delete[] _yatX ;
-  delete[] _calcX ;
+  // delete[] _yatX ;
+  // delete[] _calcX ;
 }
 
 
@@ -348,10 +348,13 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
 {
   Double_t xsave = _self->x ;
 
-  if (!_yatX) {
-    _yatX = new Double_t[_x->numBins("cache")+1] ;
-    _calcX = new Double_t[_x->numBins("cache")+1] ;
-  }
+  // if (!_yatX) {
+  //   _yatX = new Double_t[_x->numBins("cache")+1] ;
+  //   _calcX = new Double_t[_x->numBins("cache")+1] ;
+  // }
+
+ _yatX.resize(_x->numBins("cache")+1);
+ _calcX.resize(_x->numBins("cache")+1);
 
   RooArgSet nsetTmp(*_x) ;
   _ccounter = 0 ;

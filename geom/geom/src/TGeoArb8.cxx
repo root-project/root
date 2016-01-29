@@ -20,86 +20,135 @@
 
 ClassImp(TGeoArb8)
 
-//________________________________________________________________________
-// TGeoArb8 - a arbitrary trapezoid with less than 8 vertices standing on
-//   two paralel planes perpendicular to Z axis. Parameters :
-//            - dz - half length in Z;
-//            - xy[8][2] - vector of (x,y) coordinates of vertices
-//               - first four points (xy[i][j], i<4, j<2) are the (x,y)
-//                 coordinates of the vertices sitting on the -dz plane;
-//               - last four points (xy[i][j], i>=4, j<2) are the (x,y)
-//                 coordinates of the vertices sitting on the +dz plane;
-//   The order of defining the vertices of an arb8 is the following :
-//      - point 0 is connected with points 1,3,4
-//      - point 1 is connected with points 0,2,5
-//      - point 2 is connected with points 1,3,6
-//      - point 3 is connected with points 0,2,7
-//      - point 4 is connected with points 0,5,7
-//      - point 5 is connected with points 1,4,6
-//      - point 6 is connected with points 2,5,7
-//      - point 7 is connected with points 3,4,6
-//   Points can be identical in order to create shapes with less than
-//   8 vertices.
-//
+/** \class TGeoArb8 -
+\ingroup Geometry_classes
 
-//Begin_Html
-/*
-<img src="gif/t_arb8.gif">
-*/
-//End_Html
+An arbitrary trapezoid with less than 8 vertices standing on.
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoTrap                                                               //
-//                                                                        //
-// TRAP is a general trapezoid, i.e. one for which the faces perpendicular//
-// to z are trapezia and their centres are not the same x, y. It has 11   //
-// parameters: the half length in z, the polar angles from the centre of  //
-// the face at low z to that at high z, H1 the half length in y at low z, //
-// LB1 the half length in x at low z and y low edge, LB2 the half length  //
-// in x at low z and y high edge, TH1 the angle w.r.t. the y axis from the//
-// centre of low y edge to the centre of the high y edge, and H2, LB2,    //
-// LH2, TH2, the corresponding quantities at high z.                      //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/t_trap.gif">
-*/
-//End_Html
-//
-//Begin_Html
-/*
-<img src="gif/t_trapdivZ.gif">
-*/
-//End_Html
+two paralel planes perpendicular to Z axis. Parameters :
+  - dz - half length in Z;
+  - xy[8][2] - vector of (x,y) coordinates of vertices
+     - first four points (xy[i][j], i<4, j<2) are the (x,y)
+       coordinates of the vertices sitting on the -dz plane;
+     - last four points (xy[i][j], i>=4, j<2) are the (x,y)
+       coordinates of the vertices sitting on the +dz plane;
+The order of defining the vertices of an arb8 is the following :
+  - point 0 is connected with points 1,3,4
+  - point 1 is connected with points 0,2,5
+  - point 2 is connected with points 1,3,6
+  - point 3 is connected with points 0,2,7
+  - point 4 is connected with points 0,5,7
+  - point 5 is connected with points 1,4,6
+  - point 6 is connected with points 2,5,7
+  - point 7 is connected with points 3,4,6
+Points can be identical in order to create shapes with less than
+8 vertices.
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoGtra                                                               //
-//                                                                        //
-// Gtra is a twisted trapezoid, i.e. one for which the faces perpendicular//
-// to z are trapezia and their centres are not the same x, y. It has 12   //
-// parameters: the half length in z, the polar angles from the centre of  //
-// the face at low z to that at high z, twist, H1 the half length in y at low z, //
-// LB1 the half length in x at low z and y low edge, LB2 the half length  //
-// in x at low z and y high edge, TH1 the angle w.r.t. the y axis from the//
-// centre of low y edge to the centre of the high y edge, and H2, LB2,    //
-// LH2, TH2, the corresponding quantities at high z.                      //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/t_gtra.gif">
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("arb8", "poza12");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoArb8 *arb = new TGeoArb8(20);
+   arb->SetVertex(0,-30,-25);
+   arb->SetVertex(1,-25,25);
+   arb->SetVertex(2,5,25);
+   arb->SetVertex(3,25,-25);
+   arb->SetVertex(4,-28,-23);
+   arb->SetVertex(5,-23,27);
+   arb->SetVertex(6,-23,27);
+   arb->SetVertex(7,13,-27);
+   TGeoVolume *vol = new TGeoVolume("ARB8",arb,med);
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
 */
-//End_Html
-//
-//Begin_Html
-/*
-<img src="gif/t_gtradivstepZ.gif">
-*/
-//End_Html
 
+/** \class TGeoGtra
+\ingroup Geometry_classes
+
+Gtra is a twisted trapezoid.
+i.e. one for which the faces perpendicular
+to z are trapezia and their centres are not the same x, y. It has 12
+parameters: the half length in z, the polar angles from the centre of
+the face at low z to that at high z, twist, H1 the half length in y at low z,
+LB1 the half length in x at low z and y low edge, LB2 the half length
+in x at low z and y high edge, TH1 the angle w.r.t. the y axis from the
+centre of low y edge to the centre of the high y edge, and H2, LB2,
+LH2, TH2, the corresponding quantities at high z.
+
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("gtra", "poza11");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeGtra("Gtra",med, 30,15,30,30,20,10,15,0,20,10,15,0);
+   vol->SetLineColor(randomColor());
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   if (iaxis) {
+      TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
+      if (!slice) return;
+      slice->SetLineColor(randomColor());
+   }
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
+*/
+
+/** \class TGeoTrap
+\ingroup Geometry_classes
+
+TRAP is a general trapezoid, i.e. one for which the faces perpendicular
+to z are trapezia and their centres are not the same x, y. It has 11
+parameters: the half length in z, the polar angles from the centre of
+the face at low z to that at high z, H1 the half length in y at low z,
+LB1 the half length in x at low z and y low edge, LB2 the half length
+in x at low z and y high edge, TH1 the angle w.r.t. the y axis from the
+centre of low y edge to the centre of the high y edge, and H2, LB2,
+LH2, TH2, the corresponding quantities at high z.
+
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("trap", "poza10");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeTrap("Trap",med, 30,15,30,20,10,15,0,20,10,15,0);
+   vol->SetLineColor(randomColor());
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   if (iaxis) {
+      TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
+      if (!slice) return;
+      slice->SetLineColor(randomColor());
+   }
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -505,10 +554,10 @@ Bool_t TGeoArb8::Contains(const Double_t *point) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes distance to plane ipl :
-/// ipl=0 : points 0,4,1,5
-/// ipl=1 : points 1,5,2,6
-/// ipl=2 : points 2,6,3,7
-/// ipl=3 : points 3,7,0,4
+///  - ipl=0 : points 0,4,1,5
+///  - ipl=1 : points 1,5,2,6
+///  - ipl=2 : points 2,6,3,7
+///  - ipl=3 : points 3,7,0,4
 
 Double_t TGeoArb8::DistToPlane(const Double_t *point, const Double_t *dir, Int_t ipl, Bool_t in) const
 {
@@ -830,7 +879,7 @@ void TGeoArb8::GetBoundingCylinder(Double_t *param) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fills real parameters of a positioned box inside this arb8. Returns 0 if successfull.
+/// Fills real parameters of a positioned box inside this arb8. Returns 0 if successful.
 
 Int_t TGeoArb8::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const
 {
@@ -914,8 +963,8 @@ void TGeoArb8::GetPlaneNormal(Double_t *p1, Double_t *p2, Double_t *p3, Double_t
 /// The output array must be provided with a length of minimum 3*npoints. Returns
 /// true if operation succeeded.
 /// Possible index values:
-///    0 - all facets togeather
-///    1 to 6 - facet index from bottom to top Z
+///  - 0 - all facets together
+///  - 1 to 6 - facet index from bottom to top Z
 
 Bool_t TGeoArb8::GetPointsOnFacet(Int_t /*index*/, Int_t /*npoints*/, Double_t * /* array */) const
 {
@@ -1263,7 +1312,7 @@ void TGeoArb8::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoArb8::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -1271,7 +1320,7 @@ void TGeoArb8::DistFromInside_v(const Double_t *points, const Double_t *dirs, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoArb8::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -1414,7 +1463,7 @@ Double_t TGeoTrap::DistFromInside(const Double_t *point, const Double_t *dir, In
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
-   // compute distance to get ouside this shape
+   // compute distance to get outside this shape
 //   return TGeoArb8::DistFromInside(point, dir, iact, step, safe);
 
 // compute distance to plane ipl :
@@ -1470,7 +1519,7 @@ Double_t TGeoTrap::DistFromOutside(const Double_t *point, const Double_t *dir, I
 // Check if the bounding box is crossed within the requested distance
    Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
    if (sdist>=step) return TGeoShape::Big();
-   // compute distance to get ouside this shape
+   // compute distance to get outside this shape
    Bool_t in = kTRUE;
    Double_t pts[8];
    Double_t snxt;
@@ -1741,17 +1790,17 @@ void TGeoTrap::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set all arb8 params in one step.
-/// param[0] = dz
-/// param[1] = theta
-/// param[2] = phi
-/// param[3] = h1
-/// param[4] = bl1
-/// param[5] = tl1
-/// param[6] = alpha1
-/// param[7] = h2
-/// param[8] = bl2
-/// param[9] = tl2
-/// param[10] = alpha2
+///  - param[0] = dz
+///  - param[1] = theta
+///  - param[2] = phi
+///  - param[3] = h1
+///  - param[4] = bl1
+///  - param[5] = tl1
+///  - param[6] = alpha1
+///  - param[7] = h2
+///  - param[8] = bl2
+///  - param[9] = tl2
+///  - param[10] = alpha2
 
 void TGeoTrap::SetDimensions(Double_t *param)
 {
@@ -1787,7 +1836,7 @@ void TGeoTrap::SetDimensions(Double_t *param)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoTrap::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -1795,7 +1844,7 @@ void TGeoTrap::DistFromInside_v(const Double_t *points, const Double_t *dirs, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoTrap::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -1919,7 +1968,7 @@ Double_t TGeoGtra::DistFromInside(const Double_t *point, const Double_t *dir, In
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
-   // compute distance to get ouside this shape
+   // compute distance to get outside this shape
    return TGeoArb8::DistFromInside(point, dir, iact, step, safe);
 }
 
@@ -1934,7 +1983,7 @@ Double_t TGeoGtra::DistFromOutside(const Double_t *point, const Double_t *dir, I
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
-   // compute distance to get ouside this shape
+   // compute distance to get outside this shape
    return TGeoArb8::DistFromOutside(point, dir, iact, step, safe);
 }
 
@@ -2012,18 +2061,18 @@ void TGeoGtra::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set all arb8 params in one step.
-/// param[0] = dz
-/// param[1] = theta
-/// param[2] = phi
-/// param[3] = h1
-/// param[4] = bl1
-/// param[5] = tl1
-/// param[6] = alpha1
-/// param[7] = h2
-/// param[8] = bl2
-/// param[9] = tl2
-/// param[10] = alpha2
-/// param[11] = twist
+///  - param[0] = dz
+///  - param[1] = theta
+///  - param[2] = phi
+///  - param[3] = h1
+///  - param[4] = bl1
+///  - param[5] = tl1
+///  - param[6] = alpha1
+///  - param[7] = h2
+///  - param[8] = bl2
+///  - param[9] = tl2
+///  - param[10] = alpha2
+///  - param[11] = twist
 
 void TGeoGtra::SetDimensions(Double_t *param)
 {
@@ -2061,7 +2110,7 @@ void TGeoGtra::SetDimensions(Double_t *param)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoGtra::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -2069,7 +2118,7 @@ void TGeoGtra::DistFromInside_v(const Double_t *points, const Double_t *dirs, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoGtra::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

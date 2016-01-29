@@ -20,14 +20,6 @@
 #include "TGeoMatrix.h"
 #endif
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoBranchArray - An array of daughter indices making a geometry path. //
-//   Can be used to backup/restore a state. Allocated contiguously in     //
-//   memory.                                                              //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-
 class TGeoNavigator;
 class TGeoNode;
 
@@ -46,7 +38,7 @@ private:
 public:
    enum EGeoBATypes {
       kBASelfAlloc =  BIT(14)             // does self allocation or not
-   };   
+   };
    // This replaces the dummy constructor to make sure that I/O can be
    // performed while the user is only allowed to use the static maker
    TGeoBranchArray(TRootIOCtor*) : TObject(), fLevel(0), fMaxLevel(0), fMatrix(), fArray(0) {}
@@ -71,7 +63,7 @@ public:
 
    // Fast copy based on memcpy to destination array
    void                    CopyTo(TGeoBranchArray *dest);
-   
+
    // Equivalent of sizeof function
    static size_t SizeOf(size_t maxlevel)
       { return (sizeof(TGeoBranchArray)+sizeof(TGeoBranchArray*)*(maxlevel)); }
@@ -82,7 +74,7 @@ public:
 
    inline size_t SizeOf() const
       { return (sizeof(TGeoBranchArray)+sizeof(TGeoBranchArray*)*(fMaxLevel)); }
-   
+
    // The data start should point to the address of the first data member,
    // after the virtual table
    void       *DataStart() const {return (void*)&fLevel;}
@@ -111,7 +103,7 @@ public:
    TGeoNode        **GetArray() const    {return fArray;}
    size_t            GetLevel() const    {return fLevel;}
    size_t            GetMaxLevel() const {return fMaxLevel;}
-   const TGeoHMatrix  
+   const TGeoHMatrix
                     *GetMatrix() const  {return &fMatrix;}
    TGeoNode         *GetNode(Int_t level) const {return fArray[level];}
    TGeoNode         *GetCurrentNode() const {return fArray[fLevel];}
@@ -123,7 +115,7 @@ public:
    virtual void      Print(Option_t *option="") const;
    static void       Sort(Int_t n, TGeoBranchArray **array, Int_t *index, Bool_t down=kTRUE);
    void              UpdateNavigator(TGeoNavigator *nav) const;
-   
+
    ClassDef(TGeoBranchArray, 4)
 };
 

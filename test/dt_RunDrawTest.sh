@@ -3,7 +3,7 @@
 # Previous step is to do something like
 # root -l -q 'MakeRef.C("Event.old.split.root");'
 
-ClassWarning='Warning in <TClass::TClass>: no dictionary for class'
+ClassWarning='Warning in <TClass::Init>: no dictionary for class'
 RootPrompt='root \[0\]'
 EmptyLine='^$'
 Streamer="Event::Streamer not available,"

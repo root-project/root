@@ -33,6 +33,7 @@
 #include "TVirtualPadEditor.h"
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
+Int_t TGraphPainter::fgMaxPointsPerLine = 50;
 
 ClassImp(TGraphPainter);
 
@@ -1326,7 +1327,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                                   const Double_t *y, Option_t *chopt)
 {
 
-   const char *where = "PaintGraphHist";
+   const char *where = "PaintGrapHist";
 
    Int_t optionLine , optionAxis , optionCurve, optionStar, optionMark;
    Int_t optionBar  , optionRot  , optionOne  , optionOff ;
@@ -1721,9 +1722,9 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                npt      = 1;
                continue;
             }
-            if (npt >= 50) {
-               ComputeLogs(50, optionZ);
-               Smooth(theGraph, 50,gxworkl,gyworkl,drawtype);
+            if (npt >= fgMaxPointsPerLine) {
+               ComputeLogs(fgMaxPointsPerLine, optionZ);
+               Smooth(theGraph, fgMaxPointsPerLine,gxworkl,gyworkl,drawtype);
                gxwork[0] = gxwork[npt-1];
                gywork[0] = gywork[npt-1];
                npt      = 1;
@@ -1761,9 +1762,9 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                npt      = 1;
                continue;
             }
-            if (npt >= 50) {
-               ComputeLogs(50, optionZ);
-               Smooth(theGraph, 50,gxworkl,gyworkl,drawtype);
+            if (npt >= fgMaxPointsPerLine) {
+               ComputeLogs(fgMaxPointsPerLine, optionZ);
+               Smooth(theGraph, fgMaxPointsPerLine,gxworkl,gyworkl,drawtype);
                gxwork[0] = gxwork[npt-1];
                gywork[0] = gywork[npt-1];
                npt      = 1;
@@ -1825,19 +1826,19 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                continue;
             }
 
-            if (npt >= 50) {
+            if (npt >= fgMaxPointsPerLine) {
                if (optionMarker) {
-                  ComputeLogs(50, optionZ);
-                  gPad->PaintPolyMarker(50,gxworkl,gyworkl);
+                  ComputeLogs(fgMaxPointsPerLine, optionZ);
+                  gPad->PaintPolyMarker(fgMaxPointsPerLine,gxworkl,gyworkl);
                }
                if (optionLine) {
-                  if (!optionMarker) ComputeLogs(50, optionZ);
+                  if (!optionMarker) ComputeLogs(fgMaxPointsPerLine, optionZ);
                   if (optionFill2) {
                      gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
                      gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
-                     gPad->PaintFillArea(52,gxworkl,gyworkl);
+                     gPad->PaintFillArea(fgMaxPointsPerLine+2,gxworkl,gyworkl);
                   }
-                  gPad->PaintPolyLine(50,gxworkl,gyworkl);
+                  gPad->PaintPolyLine(fgMaxPointsPerLine,gxworkl,gyworkl);
                }
                gxwork[0] = gxwork[npt-1];
                gywork[0] = gywork[npt-1];
@@ -1889,14 +1890,14 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                npt      = 1;
                continue;
             }
-            if (npt >= 50) {
+            if (npt >= fgMaxPointsPerLine) {
                if (optionMarker) {
-                  ComputeLogs(50, optionZ);
-                  gPad->PaintPolyMarker(50,gxworkl,gyworkl);
+                  ComputeLogs(fgMaxPointsPerLine, optionZ);
+                  gPad->PaintPolyMarker(fgMaxPointsPerLine,gxworkl,gyworkl);
                }
                if (optionLine) {
-                  if (!optionMarker) ComputeLogs(50, optionZ);
-                  gPad->PaintPolyLine(50,gxworkl,gyworkl);
+                  if (!optionMarker) ComputeLogs(fgMaxPointsPerLine, optionZ);
+                  gPad->PaintPolyLine(fgMaxPointsPerLine,gxworkl,gyworkl);
                }
                gxwork[0] = gxwork[npt-1];
                gywork[0] = gywork[npt-1];
@@ -3932,4 +3933,19 @@ L390:
 
    delete [] qlx;
    delete [] qly;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set `fgMaxPointsPerLine` for graph painting. When graphs
+/// are painted with lines, they are split into chunks of length `fgMaxPointsPerLine`.
+/// This allows to paint line with an "infinite" number of points. In some case
+/// this "chunks painting" technic may create artefacts at the chunk's boundaries.
+/// For instance when zooming deeply in a PDF file. To avoid this effect it might
+/// be necessary to increase the chunks' size using this function:
+/// `TGraphPainter::SetMaxPointsPerLine(20000)`.
+
+void TGraphPainter::SetMaxPointsPerLine(Int_t maxp)
+{
+   fgMaxPointsPerLine = maxp;
+   if (maxp < 50) fgMaxPointsPerLine = 50;
 }

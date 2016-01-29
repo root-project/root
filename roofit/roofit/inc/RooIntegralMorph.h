@@ -23,7 +23,7 @@ class TH1D ;
  
 class RooIntegralMorph : public RooAbsCachedPdf {
 public:
-  RooIntegralMorph() {
+   RooIntegralMorph() :  _cache(nullptr)  {
     // coverity[UNINIT_CTOR]
   } ; 
   RooIntegralMorph(const char *name, const char *title,
@@ -50,7 +50,7 @@ public:
 
   virtual void preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const ;
 
-  class MorphCacheElem : public PdfCacheElem {
+  class MorphCacheElem : public RooAbsCachedPdf::PdfCacheElem {
   public:
     MorphCacheElem(RooIntegralMorph& self, const RooArgSet* nset) ;
     ~MorphCacheElem() ;
@@ -78,8 +78,8 @@ public:
     RooBrentRootFinder* _rf1 ; // ROOT finder on CDF1
     RooBrentRootFinder* _rf2 ; // ROOT finder of CDF2 ;
 
-    Double_t* _yatX ; //
-    Double_t* _calcX; //
+    std::vector<Double_t> _yatX ; //
+    std::vector<Double_t> _calcX; //
     Int_t _yatXmin, _yatXmax ;
     Int_t _ccounter ;
 

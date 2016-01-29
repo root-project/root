@@ -61,6 +61,9 @@ Other improvements, which may cause compilation errors in third party code:
   * If you get std::type_info from Rtypeinfo.h, type_info should be spelled
     std::type_info.
 
+Also:
+  * TPluginManager was made thread-safe [ROOT-7927].
+
 ### Containers
 A pseudo-container (generator) was created, ROOT::TSeq<T>. This template is
 inspired by the xrange built-in function of Python. See the example
@@ -84,8 +87,10 @@ Custom streamers need to #include TBuffer.h explicitly (see
 
 ## TTree Libraries
 
+* Update TChain::LoadTree so that the user call back routine is actually called for each input file even those containing TTree objects with no entries.
 * Repair setting the branch address of a leaflist style branch taking directly the address of the struct.  (Note that leaflist is nonetheless still deprecated and declaring the struct to the interpreter and passing the object directly to create the branch is much better).
 * Provide an implicitly parallel implementation of TTree::GetEntry. The approach is based on creating a task per top-level branch in order to do the reading, unzipping and deserialisation in parallel. In addition, a getter and a setter methods are provided to check the status and enable/disable implicit multi-threading for that tree (see Parallelisation section for more information about implicit multi-threading).
+* Properly support std::cin (and other stream that can not be rewound) in TTree::ReadStream. This fixes [ROOT-7588].
 
 ## Histogram Libraries
 
@@ -107,9 +112,23 @@ Custom streamers need to #include TBuffer.h explicitly (see
   `CreateGradientColorTable`.
 * In `CreateGradientColorTable` we do not need anymore to compute the highest
   color index.
+* In `TGraphPainter`, when graphs are painted with lines, they are split into
+  chunks of length `fgMaxPointsPerLine`. This allows to paint line with an "infinite"
+  number of points. In some case this "chunks painting" technic may create artefacts
+  at the chunk's boundaries. For instance when zooming deeply in a PDF file. To avoid
+  this effect it might be necessary to increase the chunks' size using the new function:
+  `TGraphPainter::SetMaxPointsPerLine(20000)`.
+* When using line styles different from 1 (continuous line), the behavior of TArrow
+  was suboptimal. The problem was that the line style is also applied to the arrow
+  head, which is usually not what one wants.
+  The arrow tip is now drawn using a continuous line.
+* It is now possible to select an histogram on a canvas by clicking on the vertical
+  lines of the bins boundaries. This problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-6649?).
 
 ## 3D Graphics Libraries
 
+* When painting a `TH3` as 3D boxes, `TMarker3DBox` ignored the max and min values
+  specified by `SetMaximum()` and `SetMinimum()`.
 
 ## Geometry Libraries
 

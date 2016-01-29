@@ -252,9 +252,9 @@ Begin_Macro(source)
 End_Macro
 
 ## <a name="C06"></a> High quality predefined palettes
-
+\since **6.04:**
 62 high quality palettes are predefined with 255 colors each.
-These palettes can be accessed "by name" with gStyle->SetPalette(num).
+These palettes can be accessed "by name" with `gStyle->SetPalette(num)`.
 `num` can be taken within the following enum:
 
 ~~~ {.cpp}
@@ -905,7 +905,7 @@ itself remains fully opaque.
    histo->SetFillColorAlpha(kBlue, 0.35);
 ~~~
 
-The transparency is available on all platforms when the `flagOpenGL.CanvasPreferGL` is set to `1`
+The transparency is available on all platforms when the flag `OpenGL.CanvasPreferGL` is set to `1`
 in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
 it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
  */

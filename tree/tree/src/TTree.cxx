@@ -384,6 +384,7 @@ End_Macro
 
 #include <chrono>
 #include <cstddef>
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -3943,62 +3944,61 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// ~~~ {.cpp}
 ///     tree.Draw("myvar","Entry$%2==0");
 /// ~~~
-/// - `Entry$`      : return the current entry number (`== TTree::GetReadEntry()`)
-/// - `LocalEntry$` : return the current entry number in the current tree of a
-///   chain (`== GetTree()->GetReadEntry()`)
-/// - `Entries$`    : return the total number of entries (== TTree::GetEntries())
-/// - `Length$`     : return the total number of element of this formula for this
-///   entry (`==TTreeFormula::GetNdata()`)
-/// - `Iteration$`  : return the current iteration over this formula for this
-///   entry (i.e. varies from 0 to `Length$`).
-/// - `Length$(formula )`  : return the total number of element of the formula
-///   given as a parameter.
-/// - `Sum$(formula )`  : return the sum of the value of the elements of the
-///   formula given as a parameter.  For example the mean for all the elements in
-///   one entry can be calculated with:
-///   `Sum$(formula )/Length$(formula )`
-/// - `Min$(formula )` : return the minimun (within one TTree entry) of the value of the
-///    elements of the formula given as a parameter.
-/// - `Max$(formula )` : return the maximum (within one TTree entry) of the value of the
-///   elements of the formula given as a parameter.
-/// - `MinIf$(formula,condition)`
-/// - `MaxIf$(formula,condition)` : return the minimum (maximum) (within one TTree entry)
-///   of the value of the elements of the formula given as a parameter
-///   if they match the condition. If no element matches the condition,
-///   the result is zero.  To avoid the resulting peak at zero, use the
-///   pattern:
+/// -  `Entry$`      : return the current entry number (`== TTree::GetReadEntry()`)
+/// -  `LocalEntry$` : return the current entry number in the current tree of a
+///     chain (`== GetTree()->GetReadEntry()`)
+/// -  `Entries$`    : return the total number of entries (== TTree::GetEntries())
+/// -  `Length$`     : return the total number of element of this formula for this
+///     entry (`==TTreeFormula::GetNdata()`)
+/// -  `Iteration$`  : return the current iteration over this formula for this
+///     entry (i.e. varies from 0 to `Length$`).
+/// -  `Length$(formula )`  : return the total number of element of the formula
+///     given as a parameter.
+/// -  `Sum$(formula )`  : return the sum of the value of the elements of the
+///     formula given as a parameter.  For example the mean for all the elements in
+///     one entry can be calculated with: `Sum$(formula )/Length$(formula )`
+/// -  `Min$(formula )` : return the minimun (within one TTree entry) of the value of the
+///     elements of the formula given as a parameter.
+/// -  `Max$(formula )` : return the maximum (within one TTree entry) of the value of the
+///     elements of the formula given as a parameter.
+/// -  `MinIf$(formula,condition)`
+/// -  `MaxIf$(formula,condition)` : return the minimum (maximum) (within one TTree entry)
+///     of the value of the elements of the formula given as a parameter
+///     if they match the condition. If no element matches the condition,
+///     the result is zero.  To avoid the resulting peak at zero, use the
+///     pattern:
 /// ~~~ {.cpp}
 ///        tree->Draw("MinIf$(formula,condition)","condition");
 /// ~~~
-///   which will avoid calculation `MinIf$` for the entries that have no match
-///   for the condition.
-/// - `Alt$(primary,alternate)` : return the value of "primary" if it is available
-///   for the current iteration otherwise return the value of "alternate".
-///   For example, with arr1[3] and arr2[2]
+///     which will avoid calculation `MinIf$` for the entries that have no match
+///     for the condition.
+/// -  `Alt$(primary,alternate)` : return the value of "primary" if it is available
+///     for the current iteration otherwise return the value of "alternate".
+///     For example, with arr1[3] and arr2[2]
 /// ~~~ {.cpp}
 ///        tree->Draw("arr1+Alt$(arr2,0)");
 /// ~~~
-///   will draw arr1[0]+arr2[0] ; arr1[1]+arr2[1] and arr1[2]+0
-///   Or with a variable size array arr3
+///     will draw arr1[0]+arr2[0] ; arr1[1]+arr2[1] and arr1[2]+0
+///     Or with a variable size array arr3
 /// ~~~ {.cpp}
 ///        tree->Draw("Alt$(arr3[0],0)+Alt$(arr3[1],0)+Alt$(arr3[2],0)");
 /// ~~~
-///   will draw the sum arr3 for the index 0 to min(2,actual_size_of_arr3-1)
-///   As a comparison
+///     will draw the sum arr3 for the index 0 to min(2,actual_size_of_arr3-1)
+///     As a comparison
 /// ~~~ {.cpp}
 ///        tree->Draw("arr3[0]+arr3[1]+arr3[2]");
 /// ~~~
-///   will draw the sum arr3 for the index 0 to 2 only if the
-///   actual_size_of_arr3 is greater or equal to 3.
-///   Note that the array in 'primary' is flattened/linearized thus using
-///   Alt$ with multi-dimensional arrays of different dimensions in unlikely
-///   to yield the expected results.  To visualize a bit more what elements
-///   would be matched by TTree::Draw, TTree::Scan can be used:
+///     will draw the sum arr3 for the index 0 to 2 only if the
+///     actual_size_of_arr3 is greater or equal to 3.
+///     Note that the array in 'primary' is flattened/linearized thus using
+///     `Alt$` with multi-dimensional arrays of different dimensions in unlikely
+///     to yield the expected results.  To visualize a bit more what elements
+///     would be matched by TTree::Draw, TTree::Scan can be used:
 /// ~~~ {.cpp}
 ///        tree->Scan("arr1:Alt$(arr2,0)");
 /// ~~~
-///   will print on one line the value of arr1 and (arr2,0) that will be
-///   matched by
+///     will print on one line the value of arr1 and (arr2,0) that will be
+///     matched by
 /// ~~~ {.cpp}
 ///        tree->Draw("arr1-Alt$(arr2,0)");
 /// ~~~
@@ -4007,6 +4007,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// ~~~ {.cpp}
 ///     tree->Draw("(var2<20)*99+(var2>=20)*var1","");
 /// ~~~
+///
 /// ## Drawing a user function accessing the TTree data directly
 ///
 /// If the formula contains  a file name, TTree::MakeProxy will be used
@@ -6989,8 +6990,23 @@ char TTree::GetNewlineValue(std::istream &inputStream)
 
 Long64_t TTree::ReadStream(std::istream& inputStream, const char *branchDescriptor, char delimiter)
 {
-   char newline = GetNewlineValue(inputStream);
-   std::istream& in = inputStream;
+   char newline = 0;
+   std::stringstream ss;
+   std::istream *inTemp;
+   Long_t inPos = inputStream.tellg();
+   if (!inputStream.good()) {
+      Error("ReadStream","Error reading stream");
+      return 0;
+   }
+   if (inPos == -1) {
+      ss << std::cin.rdbuf();
+      newline = GetNewlineValue(ss);
+      inTemp = &ss;
+   } else {
+      newline = GetNewlineValue(inputStream);
+      inTemp = &inputStream;
+   }
+   std::istream& in = *inTemp;
    Long64_t nlines = 0;
 
    TBranch *branch = 0;

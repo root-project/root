@@ -24,7 +24,8 @@ Spotlight will then, in the background, index all *.root files.
 
 To build from source, get it from svn using:
 
-   svn co http://root.cern.ch/svn/root/trunk/misc/rootsl rootsl
+   git clone http://root.cern.ch/git/root.git root
+   cd root/misc/rootsl
 
 Open the ROOTSL project in Xcode and click on "Build" (make sure the Active
 Build Configuration is set to "Release"). A command line short cut to open

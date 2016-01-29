@@ -934,7 +934,7 @@ EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       =  */G__* \
                           */src/unuran-* \
                           */libAfterImage/* \
-                          */doc/v6* */doc/v5* v7 \
+                          */doc/v6* */doc/v5* \
                           */win32gdk/gdk/* \
                           makeimage.C filter.cxx
 
