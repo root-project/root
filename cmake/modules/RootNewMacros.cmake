@@ -298,7 +298,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   else()
     set(library_name ${libprefix}${deduced_arg_module}${libsuffix})
-    set(pcm_name ${dictionary}_rdict.pcm)
+    set(pcm_name ${library_output_dir}/${libprefix}${deduced_arg_module}_rdict.pcm)
     set(rootmap_name ${library_output_dir}/${libprefix}${deduced_arg_module}.rootmap)
   endif()
 
