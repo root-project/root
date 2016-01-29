@@ -6998,7 +6998,7 @@ Long64_t TTree::ReadStream(std::istream& inputStream, const char *branchDescript
       Error("ReadStream","Error reading stream");
       return 0;
    }
-   if(inPos == -1){
+   if (inPos == -1) {
       ss << std::cin.rdbuf();
       newline = GetNewlineValue(ss);
       inTemp = &ss;
