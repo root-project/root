@@ -237,7 +237,7 @@ if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall
   else()
     add_custom_command(OUTPUT tutorials/hsimple.root
                        COMMAND $<TARGET_FILE:root> -l -q -b -n -x hsimple.C -e return
-                       WORKING_DIRECTORY tutorials DEPENDS root Cling Hist Tree Gpad Graf HistPainter)
+                       WORKING_DIRECTORY tutorials DEPENDS root root.exe Cling Hist Tree Gpad Graf HistPainter)
   endif()
   install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 endif()
