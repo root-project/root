@@ -17,9 +17,9 @@ int execEmpty() {
   CallBack callback(mychain);
   mychain->SetNotify(&callback);
   mychain->AddFile("n_empty.root");
-  mychain->AddFile("n1.root");
+  mychain->AddFile("n_full.root");
   mychain->AddFile("n_empty.root");
-  mychain->AddFile("n2.root");
+  mychain->AddFile("n_full.root");
   mychain->AddFile("n_empty.root");
   for(Long64_t e = 0; ; ++e) {
     if (0 > mychain->LoadTree(e)) break;
