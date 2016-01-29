@@ -22,45 +22,68 @@
 namespace ROOT {
 namespace Experimental {
 
-template <int DIMENSION, class PRECISION> class THistBinIter;
-
 /**
- \class THistBin
- Represents a bin. Value of the bin iteration.
+ \class THistBinRef
+ Represents a bin reference. Value of the bin iteration.
+
+ Provides access to bin content, bin geometry (from, to, center), and statistics
+ (for instance higher moments) associated to the bin.
  */
 
-template <int DIMENSION, class PRECISION>
-class THistBin {
-  size_t fIndex = 0; ///< Bin index
-  Detail::THistImplBase<DIMENSION, PRECISION>& fHist; ///< The bin's histogram.
-  std::array_view<PRECISION> fBinContent; ///< Histogram's bin content
-
+template <class HISTIMPL>
+class THistBinRef {
 public:
-  using Coord_t = typename Detail::THistImplBase<DIMENSION, PRECISION>::Coord_t;
+  using HistImpl_t = HISTIMPL;
+  using Coord_t = typename HISTIMPL::Coord_t;
+  using Weight_t = typename HISTIMPL::Weight_t;
+  /// Type of the statistics
+  using BinStat_t = typename HISTIMPL::Stat_t::template BinStat_t<HISTIMPL>;
 
   /// Construct from a histogram.
-  THistBin(Detail::THistImplBase<DIMENSION, PRECISION>& hist):
-    fHist(hist), fBinContent(hist.GetContent()) {}
+  THistBinRef(HistImpl_t& hist): fHist(hist) {}
 
   /// Construct from a histogram.
-  THistBin(Detail::THistImplBase<DIMENSION, PRECISION>& hist, size_t idx):
-    fIndex(idx), fHist(hist), fBinContent(hist.GetContent()) {}
+  THistBinRef(HistImpl_t& hist, size_t idx): fIndex(idx), fHist(hist) {}
 
-  /// Get the bin content.
-  PRECISION Get() const { return fBinContent[fIndex]; }
+  /// Get the bin content (or reference to it, for non-const HistImpl_t).
+  auto Get() { return fHist.GetBinContent(fIndex); }
+
+  /// Get the bin uncertainty (or reference to it, for non-const HistImpl_t).
+  auto GetUncertainty() const { return GetStat().GetUncertainty(); }
 
   /// Get the bin center as an array over all dimensions.
   Coord_t GetCenter() const { return fHist.GetBinCenter(fIndex); }
 
   /// Get the bin lower edge as an array over all dimensions.
-  Coord_t GetFrom() const { return fHist.GetBinFrom(fIndex); }
+  Coord_t  GetFrom() const { return fHist.GetBinFrom(fIndex); }
 
   /// Get the bin upper edge as an array over all dimensions.
-  Coord_t GetTo() const { return fHist.GetBinTo(fIndex); }
+  Coord_t  GetTo() const { return fHist.GetBinTo(fIndex); }
 
-  friend class THistBinIter<DIMENSION, PRECISION>;
+  /// Get the bin statistics (uncertainty etc, as provided by STATISTICS),
+  /// or reference to it, for non-const HistImpl_t.
+  BinStat_t GetStat() const { return BinStat_t(fHist, fIndex); }
+
+private:
+  size_t fIndex = 0; ///< Bin index
+  HistImpl_t& fHist; ///< The bin's histogram.
 };
 
+
+/**
+ \class THistBinPtr
+ Points to a histogram bin (or actually a `THistBinRef`).
+ */
+template <class HISTIMPL>
+class THistBinPtr {
+public:
+  using Ref_t = THistBinRef<HISTIMPL>;
+  const Ref_t& operator->() const noexcept {
+    return fRef;
+  }
+private:
+  Ref_t fRef; ///< Underlying bin reference
+};
 
 
 /**
@@ -68,38 +91,37 @@ public:
  Iterates over the bins of a THist or THistImpl.
  */
 
-template <int DIMENSION, class PRECISION>
+template <class HISTIMPL>
 class THistBinIter:
-  public Internal::TIndexIter<THistBin<DIMENSION, PRECISION>,
-    THistBin<DIMENSION, PRECISION>> {
+  public Internal::TIndexIter<THistBinRef<HISTIMPL>, THistBinPtr<HISTIMPL>> {
 public:
-  using Value_t = THistBin<DIMENSION, PRECISION>;
+  using Ref_t = THistBinRef<HISTIMPL>;
+  using Ptr_t = THistBinPtr<HISTIMPL>;
 
 private:
-  Value_t fCurrentBin; ///< Current iteration's bin
+  using IndexIter_t = Internal::TIndexIter<THistBinRef<HISTIMPL>, THistBinPtr<HISTIMPL>>;
 
-  /// Get the current index.
-  size_t& GetIndex() noexcept { return fCurrentBin.fIndex; }
-  /// Get the current index.
-  size_t GetIndex() const noexcept { return fCurrentBin.fIndex; }
+  HISTIMPL& fHist; ///< The histogram we iterate over.
 
 public:
   /// Construct a THistBinIter from a histogram.
-  THistBinIter(Detail::THistImplBase<DIMENSION, PRECISION>& hist):
-    fCurrentBin(hist) {}
+  THistBinIter(HISTIMPL& hist):
+    IndexIter_t(0), fHist(hist) {}
 
   /// Construct a THistBinIter from a histogram, setting the current index.
-  THistBinIter(Detail::THistImplBase<DIMENSION, PRECISION>& hist, size_t idx):
-    fCurrentBin(hist, idx) {}
+  THistBinIter(HISTIMPL& hist, size_t idx):
+    IndexIter_t(idx), fHist(hist) {}
 
   ///\{
   ///\name Value access
-  Value_t& operator*() const noexcept { return fCurrentBin; }
-  Value_t* operator->() const noexcept { return &fCurrentBin; }
+  Ref_t operator*() const noexcept {
+    return Ref_t{fHist, IndexIter_t::GetIndex()};
+  }
+  Ptr_t operator->() const noexcept {
+    return Ptr_t{*this};
+  }
   ///\}
 };
-
-// FIXME: implement STATISTICS access!
 
 } // namespace Experimental
 } // namespace ROOT
