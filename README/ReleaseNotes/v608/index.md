@@ -89,6 +89,7 @@ Custom streamers need to #include TBuffer.h explicitly (see
 
 * Repair setting the branch address of a leaflist style branch taking directly the address of the struct.  (Note that leaflist is nonetheless still deprecated and declaring the struct to the interpreter and passing the object directly to create the branch is much better).
 * Provide an implicitly parallel implementation of TTree::GetEntry. The approach is based on creating a task per top-level branch in order to do the reading, unzipping and deserialisation in parallel. In addition, a getter and a setter methods are provided to check the status and enable/disable implicit multi-threading for that tree (see Parallelisation section for more information about implicit multi-threading).
+* Properly support std::cin (and other stream that can not be rewound) in TTree::ReadStream. This fixes [ROOT-7588].
 
 ## Histogram Libraries
 
