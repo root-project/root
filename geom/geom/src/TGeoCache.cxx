@@ -9,18 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-// Physical tree description.
-//
-//
-//
-//
-//Begin_Html
-/*
-<img src=".gif">
-*/
-//End_Html
-
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 #include "TGeoVolume.h"
