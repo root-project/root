@@ -784,6 +784,11 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
          pos[i] += fArchiveOffset;
    }
 
+   Long64_t expected_nr = 0;
+   for (Int_t i = 0; i < nbuf; i++) {
+      expected_nr += len[i];
+   }
+
    // A null buffer means that we want to use the async stuff
    //  hence we have to sync the cache size in XrdClient with the supposed
    //  size in TFile.
@@ -799,7 +804,7 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    if (gDebug > 1)
       Info("ReadBuffers", "response from ReadV(%d) nr: %lld", nbuf, nr);
 
-   if (nr > 0) {
+   if (nr == expected_nr) {
 
       if (gDebug > 1)
          Info("ReadBuffers", "%lld bytes of data read from a list of %d buffers",
