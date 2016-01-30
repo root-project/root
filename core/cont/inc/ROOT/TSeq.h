@@ -1,3 +1,6 @@
+/* @(#)root/core/cont:$Id$ */
+// Author: Danilo Piparo November 2015
+
 #ifndef ROOT_TSeq
 #define ROOT_TSeq
 
