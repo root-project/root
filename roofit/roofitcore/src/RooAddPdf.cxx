@@ -15,37 +15,46 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-// 
-// RooAddPdf is an efficient implementation of a sum of PDFs of the form 
-//
-//  c_1*PDF_1 + c_2*PDF_2 + ... c_n*PDF_n 
-//
-// or 
-//
-//  c_1*PDF_1 + c_2*PDF_2 + ... (1-sum(c_1...c_n-1))*PDF_n 
-//
-// The first form is for extended likelihood fits, where the
-// expected number of events is Sum(i) c_i. The coefficients c_i
-// can either be explicitly provided, or, if all components support
-// extended likelihood fits, they can be calculated the contribution
-// of each PDF to the total number of expected events.
-//
-// In the second form, the sum of the coefficients is enforced to be one,
-// and the coefficient of the last PDF is calculated from that condition.
-//
-// It is also possible to parameterize the coefficients recursively
-// 
-// c1*PDF_1 + (1-c1)(c2*PDF_2 + (1-c2)*(c3*PDF_3 + ....))
-//
-// In this form the sum of the coefficients is always less than 1.0
-// for all possible values of the individual coefficients between 0 and 1.
-// 
-// RooAddPdf relies on each component PDF to be normalized and will perform 
-// no normalization other than calculating the proper last coefficient c_n, if requested.
-// An (enforced) condition for this assuption is that each PDF_i is independent
-// of each coefficient_i.
-//
-// 
+/** \class RooAddPdf
+    \ingroup Roofitcore
+
+
+RooAddPdf is an efficient implementation of a sum of PDFs of the form 
+
+\f[
+ c_1*PDF_1 + c_2*PDF_2 + ... c_n*PDF_n 
+\f]
+
+or 
+\f[
+ c_1*PDF_1 + c_2*PDF_2 + ... (1-sum(c_1...c_n-1))*PDF_n 
+\f]
+
+The first form is for extended likelihood fits, where the
+expected number of events is \f$ \sum_i c_i \f$. The coefficients c_i
+can either be explicitly provided, or, if all components support
+extended likelihood fits, they can be calculated the contribution
+of each PDF to the total number of expected events.
+
+In the second form, the sum of the coefficients is enforced to be one,
+and the coefficient of the last PDF is calculated from that condition.
+
+It is also possible to parameterize the coefficients recursively
+
+\f[
+c1*PDF_1 + (1-c1)(c2*PDF_2 + (1-c2)*(c3*PDF_3 + ....))
+\f]
+
+In this form the sum of the coefficients is always less than 1.0
+for all possible values of the individual coefficients between 0 and 1.
+
+RooAddPdf relies on each component PDF to be normalized and will perform 
+no normalization other than calculating the proper last coefficient c_n, if requested.
+An (enforced) condition for this assuption is that each PDF_i is independent
+of each coefficient_i.
+
+*/
+
 
 #include "RooFit.h"
 #include "RooMsgService.h"

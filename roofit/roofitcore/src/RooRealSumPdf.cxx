@@ -15,18 +15,24 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-//
-// Class RooRealSumPdf implements a PDF constructed from a sum of
-// functions:
-//
-//                 Sum(i=1,n-1) coef_i * func_i(x) + [ 1 - (Sum(i=1,n-1) coef_i ] * func_n(x)
-//   pdf(x) =    ------------------------------------------------------------------------------
-//             Sum(i=1,n-1) coef_i * Int(func_i)dx + [ 1 - (Sum(i=1,n-1) coef_i ] * Int(func_n)dx
-//
-//
-// where coef_i and func_i are RooAbsReal objects, and x is the collection of dependents. 
-// In the present version coef_i may not depend on x, but this limitation may be removed in the future
-//
+/** \class RooRealSumPdf
+    \ingroup Roofitcore
+
+
+Class RooRealSumPdf implements a PDF constructed from a sum of
+functions:
+
+\f[
+
+                
+  pdf(x) = \frac{ \sum_{i=1}^{n-1} coef_i * func_i(x) + [ 1 - \sum_{i=1}^{n-1} coef_i ] * func_n(x) } 
+            {\sum_{i=1}^{n-1} coef_i * \int func_i(x)dx  + [ 1 - \sum_{i=1}^{n-1} coef_i ] * \int func_n(x) dx }
+\f]
+
+where \f$coef_i\f$ and \f$func_i\f$ are RooAbsReal objects, and x is the collection of dependents. 
+In the present version \f$coef_i\f$ may not depend on x, but this limitation may be removed in the future
+
+*/
 
 #include "RooFit.h"
 #include "Riostream.h"
