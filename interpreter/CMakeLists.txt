@@ -1,15 +1,14 @@
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
-
 set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
-set(LLVM_INCLUDE_EXAMPLES OFF)
-set(LLVM_BUILD_TOOLS OFF)
-set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON)
+set(LLVM_INCLUDE_EXAMPLES OFF CACHE BOOL "")
+set(LLVM_BUILD_TOOLS OFF CACHE BOOL "")
+set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 # We only use llvm/clang through TCling which is (with the help of core/meta) already taking a lock
 # to serialize access to llvm.  We can later review how to make this finer grained by using llvm's own locking
 # mechanism.
-set(LLVM_ENABLE_THREADS OFF)
+set(LLVM_ENABLE_THREADS OFF CACHE BOOL "")
 if(cxx14)
   set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "")
 endif()
