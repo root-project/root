@@ -38,6 +38,7 @@
 #include <random>
 #include <thread>
 #include <future>
+#include <type_traits>
 
 #include "Pattern.h"
 #include "Monitoring.h"
@@ -52,7 +53,10 @@
 #include <fenv.h> // turn on or off exceptions for NaN and other numeric exceptions
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 74077749ca854c663c453f9f0cd47198965baa65
 namespace TMVA
 {
 
@@ -169,23 +173,23 @@ namespace TMVA
 
         inline ModeOutputValues operator| (ModeOutputValues lhs, ModeOutputValues rhs)
         {
-            return (ModeOutputValues)(static_cast<std::underlying_type_t<ModeOutputValues>>(lhs) | static_cast<std::underlying_type_t<ModeOutputValues>>(rhs));
+            return (ModeOutputValues)(static_cast<std::underlying_type<ModeOutputValues>::type>(lhs) | static_cast<std::underlying_type<ModeOutputValues>::type>(rhs));
         }
 
         inline ModeOutputValues operator|= (ModeOutputValues& lhs, ModeOutputValues rhs)
         {
-            lhs = (ModeOutputValues)(static_cast<std::underlying_type_t<ModeOutputValues>>(lhs) | static_cast<std::underlying_type_t<ModeOutputValues>>(rhs));
+            lhs = (ModeOutputValues)(static_cast<std::underlying_type<ModeOutputValues>::type>(lhs) | static_cast<std::underlying_type<ModeOutputValues>::type>(rhs));
             return lhs;
         }
 
         inline ModeOutputValues operator& (ModeOutputValues lhs, ModeOutputValues rhs)
         {
-            return (ModeOutputValues)(static_cast<std::underlying_type_t<ModeOutputValues>>(lhs) & static_cast<std::underlying_type_t<ModeOutputValues>>(rhs));
+            return (ModeOutputValues)(static_cast<std::underlying_type<ModeOutputValues>::type>(lhs) & static_cast<std::underlying_type<ModeOutputValues>::type>(rhs));
         }
 
         inline ModeOutputValues operator&= (ModeOutputValues& lhs, ModeOutputValues rhs)
         {
-            lhs = (ModeOutputValues)(static_cast<std::underlying_type_t<ModeOutputValues>>(lhs) & static_cast<std::underlying_type_t<ModeOutputValues>>(rhs));
+            lhs = (ModeOutputValues)(static_cast<std::underlying_type<ModeOutputValues>::type>(lhs) & static_cast<std::underlying_type<ModeOutputValues>::type>(rhs));
             return lhs;
         }
 
