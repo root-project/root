@@ -195,6 +195,11 @@ RooCmdArg Integrate(Bool_t flag) ;
 RooCmdArg Minimizer(const char* type, const char* alg=0) ;
 RooCmdArg Offset(Bool_t flag=kTRUE) ;
 
+// RooAbsPdf::fitTo new arguments
+RooCmdArg SetEpsilon(Double_t eps);   
+RooCmdArg SetMaxIter(Int_t maxiter);  
+RooCmdArg SetMaxCalls(Int_t maxcalls);
+
 // RooAbsPdf::paramOn arguments
 RooCmdArg Label(const char* str) ;
 RooCmdArg Layout(Double_t xmin, Double_t xmax=0.99, Double_t ymin=0.95) ;

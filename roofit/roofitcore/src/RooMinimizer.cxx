@@ -12,29 +12,32 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-/**
-\file RooMinimizer.cxx
-\class RooMinimizer
-\ingroup Roofitcore
-
-RooMinimizer is a wrapper class around ROOT::Fit:Fitter that
-provides a seamless interface between the minimizer functionality
-and the native RooFit interface.
-By default the Minimizer is MINUIT.
-RooMinimizer can minimize any RooAbsReal function with respect to
-its parameters. Usual choices for minimization are RooNLLVar
-and RooChi2Var
-RooMinimizer has methods corresponding to MINUIT functions like
-hesse(), migrad(), minos() etc. In each of these function calls
-the state of the MINUIT engine is synchronized with the state
-of the RooFit variables: any change in variables, change
-in the constant status etc is forwarded to MINUIT prior to
-execution of the MINUIT call. Afterwards the RooFit objects
-are resynchronized with the output state of MINUIT: changes
-parameter values, errors are propagated.
-Various methods are available to control verbosity, profiling,
-automatic PDF optimization.
-**/
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// RooMinimizer is a wrapper class around ROOT::Fit:Fitter that
+// provides a seamless interface between the minimizer functionality
+// and the native RooFit interface.
+// <p>
+// By default the Minimizer is MINUIT.
+// <p>
+// RooMinimizer can minimize any RooAbsReal function with respect to
+// its parameters. Usual choices for minimization are RooNLLVar
+// and RooChi2Var
+// <p>
+// RooMinimizer has methods corresponding to MINUIT functions like
+// hesse(), migrad(), minos() etc. In each of these function calls
+// the state of the MINUIT engine is synchronized with the state
+// of the RooFit variables: any change in variables, change
+// in the constant status etc is forwarded to MINUIT prior to
+// execution of the MINUIT call. Afterwards the RooFit objects
+// are resynchronized with the output state of MINUIT: changes
+// parameter values, errors are propagated.
+// <p>
+// Various methods are available to control verbosity, profiling,
+// automatic PDF optimization.
+// END_HTML
+//
 
 #ifndef __ROOFIT_NOROOMINIMIZER
 
@@ -50,7 +53,6 @@ automatic PDF optimization.
 #include "TH2.h"
 #include "TMarker.h"
 #include "TGraph.h"
-#include "Fit/FitConfig.h"
 #include "TStopwatch.h"
 #include "TDirectory.h"
 #include "TMatrixDSym.h"
@@ -84,12 +86,11 @@ ROOT::Fit::Fitter *RooMinimizer::_theFitter = 0 ;
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Cleanup method called by atexit handler installed by RooSentinel
-/// to delete all global heap objects when the program is terminated
-
+//_____________________________________________________________________________
 void RooMinimizer::cleanup()
 {
+  // Cleanup method called by atexit handler installed by RooSentinel
+  // to delete all global heap objects when the program is terminated
   if (_theFitter) {
     delete _theFitter ;
     _theFitter =0 ;
@@ -98,20 +99,20 @@ void RooMinimizer::cleanup()
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Construct MINUIT interface to given function. Function can be anything,
-/// but is typically a -log(likelihood) implemented by RooNLLVar or a chi^2
-/// (implemented by RooChi2Var). Other frequent use cases are a RooAddition
-/// of a RooNLLVar plus a penalty or constraint term. This class propagates
-/// all RooFit information (floating parameters, their values and errors)
-/// to MINUIT before each MINUIT call and propagates all MINUIT information
-/// back to the RooFit object at the end of each call (updated parameter
-/// values, their (asymmetric errors) etc. The default MINUIT error level
-/// for HESSE and MINOS error analysis is taken from the defaultErrorLevel()
-/// value of the input function.
-
+//_____________________________________________________________________________
 RooMinimizer::RooMinimizer(RooAbsReal& function)
 {
+  // Construct MINUIT interface to given function. Function can be anything,
+  // but is typically a -log(likelihood) implemented by RooNLLVar or a chi^2
+  // (implemented by RooChi2Var). Other frequent use cases are a RooAddition
+  // of a RooNLLVar plus a penalty or constraint term. This class propagates
+  // all RooFit information (floating parameters, their values and errors)
+  // to MINUIT before each MINUIT call and propagates all MINUIT information
+  // back to the RooFit object at the end of each call (updated parameter
+  // values, their (asymmetric errors) etc. The default MINUIT error level
+  // for HESSE and MINOS error analysis is taken from the defaultErrorLevel()
+  // value of the input function.
+
   RooSentinel::activate() ;
 
   // Store function reference
@@ -153,11 +154,11 @@ RooMinimizer::RooMinimizer(RooAbsReal& function)
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
+//_____________________________________________________________________________
 RooMinimizer::~RooMinimizer()
 {
+  // Destructor
+
   if (_extV) {
     delete _extV ;
   }
@@ -170,122 +171,116 @@ RooMinimizer::~RooMinimizer()
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Change MINUIT strategy to istrat. Accepted codes
-/// are 0,1,2 and represent MINUIT strategies for dealing
-/// most efficiently with fast FCNs (0), expensive FCNs (2)
-/// and 'intermediate' FCNs (1)
-
+//_____________________________________________________________________________
 void RooMinimizer::setStrategy(Int_t istrat)
 {
+  // Change MINUIT strategy to istrat. Accepted codes
+  // are 0,1,2 and represent MINUIT strategies for dealing
+  // most efficiently with fast FCNs (0), expensive FCNs (2)
+  // and 'intermediate' FCNs (1)
+
   _theFitter->Config().MinimizerOptions().SetStrategy(istrat);
 
 }
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Change maximum number of MINUIT iterations 
-/// (RooMinimizer default 500 * #parameters)
-
+//_____________________________________________________________________________
 void RooMinimizer::setMaxIterations(Int_t n) 
 {
+  // Change maximum number of MINUIT iterations 
+  // (RooMinimizer default 500 * #parameters)
   _theFitter->Config().MinimizerOptions().SetMaxIterations(n);
 }
 
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Change maximum number of likelihood function calss from MINUIT
-/// (RooMinimizer default 500 * #parameters)
-
+//_____________________________________________________________________________
 void RooMinimizer::setMaxFunctionCalls(Int_t n) 
 {
+  // Change maximum number of likelihood function calss from MINUIT
+  // (RooMinimizer default 500 * #parameters)
   _theFitter->Config().MinimizerOptions().SetMaxFunctionCalls(n);
 }
 
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Set the level for MINUIT error analysis to the given
-/// value. This function overrides the default value
-/// that is taken in the RooMinimizer constructor from
-/// the defaultErrorLevel() method of the input function
-
+//_____________________________________________________________________________
 void RooMinimizer::setErrorLevel(Double_t level)
 {
+  // Set the level for MINUIT error analysis to the given
+  // value. This function overrides the default value
+  // that is taken in the RooMinimizer constructor from
+  // the defaultErrorLevel() method of the input function
+
   _theFitter->Config().MinimizerOptions().SetErrorDef(level);
 
 }
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Change MINUIT epsilon
-
+//_____________________________________________________________________________
 void RooMinimizer::setEps(Double_t eps)
 {
+  // Change MINUIT epsilon
+
   _theFitter->Config().MinimizerOptions().SetTolerance(eps);
 
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Enable internal likelihood offsetting for enhanced numeric precision
-
+//_____________________________________________________________________________
 void RooMinimizer::setOffsetting(Bool_t flag) 
 {
+  // Enable internal likelihood offsetting for enhanced numeric precision
   _func->enableOffsetting(flag) ; 
 }
 
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Choose the minimzer algorithm.
-
+//_____________________________________________________________________________
 void RooMinimizer::setMinimizerType(const char* type)
 {
+  // Choose the minimzer algorithm.
   _minimizerType = type;
 }
 
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Return underlying ROOT fitter object 
-
+//_____________________________________________________________________________
 ROOT::Fit::Fitter* RooMinimizer::fitter()
 {
+  // Return underlying ROOT fitter object 
   return _theFitter ;
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Return underlying ROOT fitter object 
-
+//_____________________________________________________________________________
 const ROOT::Fit::Fitter* RooMinimizer::fitter() const 
 {
+  // Return underlying ROOT fitter object 
   return _theFitter ;
 }
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Parse traditional RooAbsPdf::fitTo driver options
-///
-///  m - Run Migrad only
-///  h - Run Hesse to estimate errors
-///  v - Verbose mode
-///  l - Log parameters after each Minuit steps to file
-///  t - Activate profile timer
-///  r - Save fit result
-///  0 - Run Migrad with strategy 0
-
+//_____________________________________________________________________________
 RooFitResult* RooMinimizer::fit(const char* options)
 {
+  // Parse traditional RooAbsPdf::fitTo driver options
+  //
+  //  m - Run Migrad only
+  //  h - Run Hesse to estimate errors
+  //  v - Verbose mode
+  //  l - Log parameters after each Minuit steps to file
+  //  t - Activate profile timer
+  //  r - Save fit result
+  //  0 - Run Migrad with strategy 0
+
   TString opts(options) ;
   opts.ToLower() ;
 
@@ -308,8 +303,7 @@ RooFitResult* RooMinimizer::fit(const char* options)
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-
+//_____________________________________________________________________________
 Int_t RooMinimizer::minimize(const char* type, const char* alg)
 {
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
@@ -335,14 +329,14 @@ Int_t RooMinimizer::minimize(const char* type, const char* alg)
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Execute MIGRAD. Changes in parameter values
-/// and calculated errors are automatically
-/// propagated back the RooRealVars representing
-/// the floating parameters in the MINUIT operation
-
+//_____________________________________________________________________________
 Int_t RooMinimizer::migrad()
 {
+  // Execute MIGRAD. Changes in parameter values
+  // and calculated errors are automatically
+  // propagated back the RooRealVars representing
+  // the floating parameters in the MINUIT operation
+
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
 		    _optConst,_verbose) ;
   profileStart() ;
@@ -364,14 +358,14 @@ Int_t RooMinimizer::migrad()
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Execute HESSE. Changes in parameter values
-/// and calculated errors are automatically
-/// propagated back the RooRealVars representing
-/// the floating parameters in the MINUIT operation
-
+//_____________________________________________________________________________
 Int_t RooMinimizer::hesse()
 {
+  // Execute HESSE. Changes in parameter values
+  // and calculated errors are automatically
+  // propagated back the RooRealVars representing
+  // the floating parameters in the MINUIT operation
+
   if (_theFitter->GetMinimizer()==0) {
     coutW(Minimization) << "RooMinimizer::hesse: Error, run Migrad before Hesse!"
 			<< endl ;
@@ -401,14 +395,14 @@ Int_t RooMinimizer::hesse()
 
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Execute MINOS. Changes in parameter values
-/// and calculated errors are automatically
-/// propagated back the RooRealVars representing
-/// the floating parameters in the MINUIT operation
-
+//_____________________________________________________________________________
 Int_t RooMinimizer::minos()
 {
+  // Execute MINOS. Changes in parameter values
+  // and calculated errors are automatically
+  // propagated back the RooRealVars representing
+  // the floating parameters in the MINUIT operation
+
   if (_theFitter->GetMinimizer()==0) {
     coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!"
 			<< endl ;
@@ -439,14 +433,14 @@ Int_t RooMinimizer::minos()
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Execute MINOS for given list of parameters. Changes in parameter values
-/// and calculated errors are automatically
-/// propagated back the RooRealVars representing
-/// the floating parameters in the MINUIT operation
-
+//_____________________________________________________________________________
 Int_t RooMinimizer::minos(const RooArgSet& minosParamList)
 {
+  // Execute MINOS for given list of parameters. Changes in parameter values
+  // and calculated errors are automatically
+  // propagated back the RooRealVars representing
+  // the floating parameters in the MINUIT operation
+
   if (_theFitter->GetMinimizer()==0) {
     coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!"
 			<< endl ;
@@ -498,14 +492,14 @@ Int_t RooMinimizer::minos(const RooArgSet& minosParamList)
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Execute SEEK. Changes in parameter values
-/// and calculated errors are automatically
-/// propagated back the RooRealVars representing
-/// the floating parameters in the MINUIT operation
-
+//_____________________________________________________________________________
 Int_t RooMinimizer::seek()
 {
+  // Execute SEEK. Changes in parameter values
+  // and calculated errors are automatically
+  // propagated back the RooRealVars representing
+  // the floating parameters in the MINUIT operation
+
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
 		    _optConst,_verbose) ;
   profileStart() ;
@@ -527,14 +521,14 @@ Int_t RooMinimizer::seek()
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Execute SIMPLEX. Changes in parameter values
-/// and calculated errors are automatically
-/// propagated back the RooRealVars representing
-/// the floating parameters in the MINUIT operation
-
+//_____________________________________________________________________________
 Int_t RooMinimizer::simplex()
 {
+  // Execute SIMPLEX. Changes in parameter values
+  // and calculated errors are automatically
+  // propagated back the RooRealVars representing
+  // the floating parameters in the MINUIT operation
+
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
 		    _optConst,_verbose) ;
   profileStart() ;
@@ -556,14 +550,14 @@ Int_t RooMinimizer::simplex()
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Execute IMPROVE. Changes in parameter values
-/// and calculated errors are automatically
-/// propagated back the RooRealVars representing
-/// the floating parameters in the MINUIT operation
-
+//_____________________________________________________________________________
 Int_t RooMinimizer::improve()
 {
+  // Execute IMPROVE. Changes in parameter values
+  // and calculated errors are automatically
+  // propagated back the RooRealVars representing
+  // the floating parameters in the MINUIT operation
+
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
 		    _optConst,_verbose) ;
   profileStart() ;
@@ -585,23 +579,23 @@ Int_t RooMinimizer::improve()
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Change the MINUIT internal printing level
-
+//_____________________________________________________________________________
 Int_t RooMinimizer::setPrintLevel(Int_t newLevel)
 {
+  // Change the MINUIT internal printing level
+
   Int_t ret = _printLevel ;
   _theFitter->Config().MinimizerOptions().SetPrintLevel(newLevel+1);
   _printLevel = newLevel+1 ;
   return ret ;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// If flag is true, perform constant term optimization on
-/// function being minimized.
-
+//_____________________________________________________________________________
 void RooMinimizer::optimizeConst(Int_t flag)
 {
+  // If flag is true, perform constant term optimization on
+  // function being minimized.
+
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
 
   if (_optConst && !flag){
@@ -624,16 +618,16 @@ void RooMinimizer::optimizeConst(Int_t flag)
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Save and return a RooFitResult snaphot of current minimizer status.
-/// This snapshot contains the values of all constant parameters,
-/// the value of all floating parameters at RooMinimizer construction and
-/// after the last MINUIT operation, the MINUIT status, variance quality,
-/// EDM setting, number of calls with evaluation problems, the minimized
-/// function value and the full correlation matrix
-
+//_____________________________________________________________________________
 RooFitResult* RooMinimizer::save(const char* userName, const char* userTitle)
 {
+  // Save and return a RooFitResult snaphot of current minimizer status.
+  // This snapshot contains the values of all constant parameters,
+  // the value of all floating parameters at RooMinimizer construction and
+  // after the last MINUIT operation, the MINUIT status, variance quality,
+  // EDM setting, number of calls with evaluation problems, the minimized
+  // function value and the full correlation matrix
+
   if (_theFitter->GetMinimizer()==0) {
     coutW(Minimization) << "RooMinimizer::save: Error, run minimization before!"
 			<< endl ;
@@ -691,15 +685,13 @@ RooFitResult* RooMinimizer::save(const char* userName, const char* userTitle)
 
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Create and draw a TH2 with the error contours in parameters var1 and v2 at up to 6 'sigma' settings
-/// where 'sigma' is calculated as n*n*errorLevel
-
+//_____________________________________________________________________________
 RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
 			       Double_t n1, Double_t n2, Double_t n3,
 			       Double_t n4, Double_t n5, Double_t n6)
 {
-
+  // Create and draw a TH2 with the error contours in parameters var1 and v2 at up to 6 'sigma' settings
+  // where 'sigma' is calculated as n*n*errorLevel
 
   RooArgList* params = _fcn->GetFloatParamList() ;
   RooArgList* paramSave = (RooArgList*) params->snapshot() ;
@@ -730,17 +722,8 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
   TMarker *point= new TMarker(var1.getVal(), var2.getVal(), 8);
   frame->addObject(point) ;
 
-  // check first if a inimizer is available. If not means
-  // the minimization is not done , so do it 
-  if (_theFitter->GetMinimizer()==0) {
-     coutW(Minimization) << "RooMinimizer::contour: Error, run Migrad before contours!"
-                         << endl ;
-     return frame;
-  }
-
-  
-  // remember our original value of ERRDEF  
-  Double_t errdef= _theFitter->GetMinimizer()->ErrorDef();
+  // remember our original value of ERRDEF
+  Double_t errdef= _theFitter->Config().MinimizerOptions().ErrorDef();
 
   Double_t n[6] ;
   n[0] = n1 ; n[1] = n2 ; n[2] = n3 ; n[3] = n4 ; n[4] = n5 ; n[5] = n6 ;
@@ -748,9 +731,8 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
 
   for (Int_t ic = 0 ; ic<6 ; ic++) {
     if(n[ic] > 0) {
-
-       // set the value corresponding to an n1-sigma contour
-       _theFitter->GetMinimizer()->SetErrorDef(n[ic]*n[ic]*errdef);
+      // set the value corresponding to an n1-sigma contour
+      _theFitter->Config().MinimizerOptions().SetErrorDef(n[ic]*n[ic]*errdef);
 
       // calculate and draw the contour
       Double_t *xcoor = new Double_t[npoints+1];
@@ -792,11 +774,10 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Start profiling timer
-
+//_____________________________________________________________________________
 void RooMinimizer::profileStart()
 {
+  // Start profiling timer
   if (_profile) {
     _timer.Start() ;
     _cumulTimer.Start(_profileStart?kFALSE:kTRUE) ;
@@ -805,11 +786,10 @@ void RooMinimizer::profileStart()
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Stop profiling timer and report results of last session
-
+//_____________________________________________________________________________
 void RooMinimizer::profileStop()
 {
+  // Stop profiling timer and report results of last session
   if (_profile) {
     _timer.Stop() ;
     _cumulTimer.Stop() ;
@@ -822,13 +802,13 @@ void RooMinimizer::profileStop()
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Apply results of given external covariance matrix. i.e. propagate its errors
-/// to all RRV parameter representations and give this matrix instead of the
-/// HESSE matrix at the next save() call
-
+//_____________________________________________________________________________
 void RooMinimizer::applyCovarianceMatrix(TMatrixDSym& V)
 {
+  // Apply results of given external covariance matrix. i.e. propagate its errors
+  // to all RRV parameter representations and give this matrix instead of the
+  // HESSE matrix at the next save() call
+
   _extV = (TMatrixDSym*) V.Clone() ;
   _fcn->ApplyCovarianceMatrix(*_extV);
 

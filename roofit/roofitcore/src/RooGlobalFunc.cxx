@@ -72,8 +72,13 @@ namespace RooFit {
   // RooAbsPdf::plotOn arguments
   RooCmdArg Components(const RooArgSet& compSet) { return RooCmdArg("SelectCompSet",0,0,0,0,0,0,&compSet,0) ; }
   RooCmdArg Components(const char* compSpec) { return RooCmdArg("SelectCompSpec",0,0,0,0,compSpec,0,0,0) ; }
-  RooCmdArg Normalization(Double_t scaleFactor, Int_t scaleType) 
-                                                   { return RooCmdArg("Normalization",scaleType,0,scaleFactor,0,0,0,0,0) ; }
+  RooCmdArg Normalization(Double_t scaleFactor, Int_t scaleType) { return RooCmdArg("Normalization",scaleType,0,scaleFactor,0,0,0,0,0) ; } 
+  
+  // New RooAbsPdf::plotOn arguments
+  RooCmdArg SetEpsilon(Double_t eps) {return RooCmdArg("SetEpsilon",0,0,eps,0,0,0,0,0) ; };		 //Modify the convergence criterion (according to the minimizer)
+  RooCmdArg SetMaxIter(Int_t maxiter) {return RooCmdArg("SetMaxIter",maxiter,0,0,0,0,0,0,0) ; };	 //Modify max of iterations
+  RooCmdArg SetMaxCalls(Int_t maxcalls) {return RooCmdArg("SetMaxCalls",maxcalls,0,0,0,0,0,0,0) ; };	 //Modify max calls
+  						       
   
   // RooAbsData::plotOn arguments
   RooCmdArg Cut(const char* cutSpec)              { return RooCmdArg("CutSpec",0,0,0,0,cutSpec,0,0,0) ; }
