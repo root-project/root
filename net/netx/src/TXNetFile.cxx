@@ -647,8 +647,11 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
    // Read from the remote xrootd
    Int_t nr = fClient->Read(buffer, fOffset, bufferLength);
 
-   if (!nr)
+   if (nr != bufferLength) {
+      Error("ReadBuffer", "error reading all requested bytes, got %d of %d",
+            nr, bufferLength);
       return kTRUE;
+   }
 
    if (gDebug > 1)
       Info("ReadBuffer", "%d bytes of data read from offset"
