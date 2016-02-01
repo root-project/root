@@ -81,8 +81,9 @@ Exceptions are now caught in the interactive ROOT session, instead of terminatin
 Three methods have been added to manage implicit multi-threading in ROOT: ROOT::EnableImplicitMT(numthreads), ROOT::DisableImplicitMT and ROOT::IsImplicitMTEnabled. They can be used to enable, disable and check the status of the global implicit multi-threading in ROOT, respectively.
 
 ## I/O Libraries
-Custom streamers need to #include TBuffer.h explicitly (see
+* Custom streamers need to #include TBuffer.h explicitly (see
 [section Core Libraries](#core-libs))
+* Check and flag short reads as errors in the xroot plugins. This fixes [ROOT-3341].
 
 
 ## TTree Libraries
