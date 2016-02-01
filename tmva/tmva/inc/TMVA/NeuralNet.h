@@ -53,10 +53,6 @@
 #include <fenv.h> // turn on or off exceptions for NaN and other numeric exceptions
 
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 74077749ca854c663c453f9f0cd47198965baa65
 namespace TMVA
 {
 
