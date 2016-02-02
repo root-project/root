@@ -28,10 +28,12 @@ Int_t mp201_parallelHistoFill(UInt_t poolSize = 4)
 {
    TH1::AddDirectory(false);
    TProcPool pool(poolSize);
-   auto fillRandomHisto = [](int i = 0) {
-      gRandom->SetSeed(i);
+   auto fillRandomHisto = [](int seed = 0) {
+      TRandom3 rndm(seed);
       auto h = new TH1F("myHist", "Filled in parallel", 128, -8, 8);
-      h->FillRandom("gaus", 1000000);
+      for (auto i : ROOT::TSeqI(1000000)) {
+         h->Fill(rndm.Gaus(0,1));
+      }
       return h;
    };
 
