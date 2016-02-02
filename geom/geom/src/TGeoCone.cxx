@@ -27,7 +27,6 @@ Begin_Macro(source)
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
    TGeoVolume *vol = gGeoManager->MakeCone("CONE",med, 40,10,20,35,45);
-   vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
@@ -57,7 +56,6 @@ Begin_Macro(source)
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
    TGeoVolume *vol = gGeoManager->MakeCons("CONESEG",med, 40,30,40,10,20,-30,250);
-   vol->SetLineColor(randomColor());
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(30);

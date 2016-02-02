@@ -95,14 +95,8 @@ Begin_Macro(source)
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
    TGeoVolume *vol = gGeoManager->MakeGtra("Gtra",med, 30,15,30,30,20,10,15,0,20,10,15,0);
-   vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
-      TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
-      if (!slice) return;
-      slice->SetLineColor(randomColor());
-   }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
    top->Draw();
@@ -133,14 +127,8 @@ Begin_Macro(source)
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
    TGeoVolume *vol = gGeoManager->MakeTrap("Trap",med, 30,15,30,20,10,15,0,20,10,15,0);
-   vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
-      TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
-      if (!slice) return;
-      slice->SetLineColor(randomColor());
-   }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
    top->Draw();

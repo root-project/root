@@ -26,7 +26,6 @@ Begin_Macro(source)
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
    TGeoVolume *vol = gGeoManager->MakeEltu("ELTU",med, 30,10,40);
-   vol->SetLineColor(randomColor());
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(50);
