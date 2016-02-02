@@ -435,12 +435,12 @@ int TMVAClassification( TString myMethodList = "" )
 //       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|30,SOFTSIGN|20,SOFTSIGN|10,LINEAR");
 //       TString layoutString ("Layout=TANH|50,TANH|30,TANH|20,TANH|10,LINEAR");
 //       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|20,LINEAR");
-       TString layoutString ("Layout=TANH|100,TANH|50,TANH|10,LINEAR");
+       TString layoutString ("Layout=TANH|100,TANH|50,LINEAR");
 
-       TString training0 ("LearningRate=1e-1,Momentum=0.0,Repetitions=1,ConvergenceSteps=300,BatchSize=20,TestRepetitions=15,WeightDecay=0.001,Regularization=NONE,DropConfig=0.0+0.5+0.5+0.5,DropRepetitions=1,Multithreading=True");
-       TString training1 ("LearningRate=1e-2,Momentum=0.5,Repetitions=1,ConvergenceSteps=300,BatchSize=30,TestRepetitions=7,WeightDecay=0.001,Regularization=L2,Multithreading=True,DropConfig=0.0+0.1+0.1+0.1,DropRepetitions=1");
-       TString training2 ("LearningRate=1e-2,Momentum=0.3,Repetitions=1,ConvergenceSteps=300,BatchSize=40,TestRepetitions=7,WeightDecay=0.0001,Regularization=L2,Multithreading=True");
-       TString training3 ("LearningRate=1e-3,Momentum=0.1,Repetitions=1,ConvergenceSteps=200,BatchSize=70,TestRepetitions=7,WeightDecay=0.0001,Regularization=NONE,Multithreading=True");
+       TString training0 ("LearningRate=1e-2,Momentum=0.3,Repetitions=1,ConvergenceSteps=50,BatchSize=20,TestRepetitions=15,WeightDecay=0.001,Regularization=NONE,DropConfig=0.0+0.5+0.5+0.5,DropRepetitions=1,Multithreading=True");
+       TString training1 ("LearningRate=1e-3,Momentum=0.5,Repetitions=1,ConvergenceSteps=50,BatchSize=30,TestRepetitions=7,WeightDecay=0.001,Regularization=L2,Multithreading=True,DropConfig=0.0+0.1+0.1+0.1,DropRepetitions=1");
+       TString training2 ("LearningRate=1e-4,Momentum=0.3,Repetitions=1,ConvergenceSteps=50,BatchSize=40,TestRepetitions=7,WeightDecay=0.0001,Regularization=L2,Multithreading=True");
+       TString training3 ("LearningRate=1e-5,Momentum=0.1,Repetitions=1,ConvergenceSteps=50,BatchSize=70,TestRepetitions=7,WeightDecay=0.0001,Regularization=NONE,Multithreading=True");
 
        TString trainingStrategyString ("TrainingStrategy=");
        trainingStrategyString += training0 + "|" + training1 + "|" + training2 + "|" + training3;
@@ -452,11 +452,11 @@ int TMVAClassification( TString myMethodList = "" )
        nnOptions.Append (":"); nnOptions.Append (layoutString);
        nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
 
-       factory->BookMethod( TMVA::Types::kNN, "NN", nnOptions ); // NN
+       factory->BookMethod( dataloader, TMVA::Types::kNN, "NN", nnOptions ); // NN
    }
 
 
-   
+
    // CF(Clermont-Ferrand)ANN
    if (Use["CFMlpANN"])
       factory->BookMethod( dataloader, TMVA::Types::kCFMlpANN, "CFMlpANN", "!H:!V:NCycles=2000:HiddenLayers=N+1,N"  ); // n_cycles:#nodes:#nodes:...  
