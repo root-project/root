@@ -19,6 +19,7 @@ __all__ = [
    'Basic3PythonLanguageTestCase',
    'Basic4ArgumentPassingTestCase',
    'Basic5PythonizationTestCase',
+   'Basic6ReturnValueTestCase',
 ]
 
 
@@ -384,6 +385,20 @@ class Basic5PythonizationTestCase( MyTestCase ):
 
       a = TH1D("asd", "asd", 10, 0, 1)
       self.assert_( hash(a) )
+
+### basic C++ return integer types  ============
+class Basic6ReturnValueTestCase( MyTestCase ):
+   def test1ReturnIntegers( self ):
+      """Test returning all sort of interger types"""
+
+      gROOT.LoadMacro( 'ReturnValues.C' )
+      
+      tests = ROOT.testIntegerResults()
+      for type in ["short", "int", "long", "longlong"]:
+        for name, value in [("PlusOne", 1), ("MinusOne", -1)]:
+          member = "%s%s" % (type, name)
+          result = getattr(tests, member)()
+          self.assertEqual(result, value , '%s() == %s, should be %s' % (member, result, value))
 
 
 ## actual test run

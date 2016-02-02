@@ -184,9 +184,9 @@ class TestClassDATATYPES:
         raises(ValueError, 'c.set_char(500)')
         raises(TypeError,  'c.set_uchar("string")')
         raises(ValueError, 'c.set_uchar(-1)')
-        c.set_char_cr( -128); assert c.get_char()  == -128      # int type
-        assert c.get_char_r() == -128; assert c.get_char_cr()  == -128
-        c.set_char_cr(   -1); assert c.get_char()  ==   -1      # int type
+        c.set_char_cr(-128); assert c.get_char()  == chr(0x80)
+        assert c.get_char_r() == chr(0x80); assert c.get_char_cr()  == chr(0x80)
+        c.set_char_cr(   -1); assert c.get_char()  ==  chr(0xFF)
         c.set_char_cr(    0); assert c.get_char()  == chr(  0)
         assert c.get_char_r() == chr(0); assert c.get_char_cr() == chr(0)
         c.set_char(chr(  0)); assert c.get_char()  == chr(  0)

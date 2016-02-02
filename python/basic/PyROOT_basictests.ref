@@ -22,4 +22,5 @@
 . PyROOT_basictests.py::Basic5PythonizationTestCase::test3TVector
 . PyROOT_basictests.py::Basic5PythonizationTestCase::test4TObjArray
 . PyROOT_basictests.py::Basic5PythonizationTestCase::test5Hashing
+. PyROOT_basictests.py::Basic6ReturnValueTestCase::test1ReturnIntegers
 
