@@ -73,7 +73,7 @@ TGeoHelix::TGeoHelix()
    fQ    = 0;
    fMatrix = 0;
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
-   TObject::SetBit(kHelixstraight, kFALSE);
+   TObject::SetBit(kHelixStraigth, kFALSE);
    TObject::SetBit(kHelixCircle, kFALSE);
 }
 
@@ -95,7 +95,7 @@ TGeoHelix::TGeoHelix(Double_t curvature, Double_t hstep, Int_t charge)
    fB[0] = fB[1] = fB[2] = 0.;
    fMatrix    = new TGeoHMatrix();
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
-   TObject::SetBit(kHelixstraight, kFALSE);
+   TObject::SetBit(kHelixStraigth, kFALSE);
    TObject::SetBit(kHelixCircle, kFALSE);
 }
 
@@ -113,7 +113,7 @@ TGeoHelix::~TGeoHelix()
 
 Double_t TGeoHelix::ComputeSafeStep(Double_t epsil) const
 {
-   if (TestBit(kHelixstraight) || TMath::Abs(fC)<TGeoShape::Tolerance()) return 1.E30;
+   if (TestBit(kHelixStraigth) || TMath::Abs(fC)<TGeoShape::Tolerance()) return 1.E30;
    Double_t c = GetTotalCurvature();
    Double_t step = TMath::Sqrt(2.*epsil/c);
    return step;
@@ -182,7 +182,7 @@ void TGeoHelix::SetXYcurvature(Double_t curvature)
    }
    if (TMath::Abs(fC) < TGeoShape::Tolerance()) {
       Warning("SetXYcurvature", "Curvature is zero. Helix is a straight line.");
-      TObject::SetBit(kHelixstraight, kTRUE);
+      TObject::SetBit(kHelixStraigth, kTRUE);
    }
 }
 
@@ -254,7 +254,7 @@ void TGeoHelix::Step(Double_t step)
 {
    Int_t i;
    fStep += step;
-   if (TObject::TestBit(kHelixstraight)) {
+   if (TObject::TestBit(kHelixStraigth)) {
       for (i=0; i<3; i++) {
          fPoint[i] = fPointInit[i]+fStep*fDirInit[i];
          fDir[i] = fDirInit[i];
@@ -294,7 +294,7 @@ Double_t TGeoHelix::StepToPlane(Double_t *point, Double_t *norm)
    dz = point[2] - fPoint[2];
    pdn = dx*norm[0]+dy*norm[1]+dz*norm[2];
    ddn = fDir[0]*norm[0]+fDir[1]*norm[1]+fDir[2]*norm[2];
-   if (TObject::TestBit(kHelixstraight)) {
+   if (TObject::TestBit(kHelixStraigth)) {
       // propagate straight line to plane
       if ((pdn*ddn) <= 0) return snext;
       snext = pdn/ddn;
@@ -347,7 +347,7 @@ void TGeoHelix::UpdateHelix()
    Double_t ddb = fDirInit[0]*fB[0]+fDirInit[1]*fB[1]+fDirInit[2]*fB[2];
    if ((1.-TMath::Abs(ddb))<TGeoShape::Tolerance() || TMath::Abs(fC)<TGeoShape::Tolerance()) {
       // helix is just a straight line
-      TObject::SetBit(kHelixstraight, kTRUE);
+      TObject::SetBit(kHelixStraigth, kTRUE);
       fMatrix->Clear();
       return;
    }
