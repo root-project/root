@@ -39,7 +39,7 @@ private :
 public:
    enum EGeoHelixTypes {
       kHelixNeedUpdate =   BIT(16),
-      kHelixStraigth   =   BIT(17),
+      kHelixStraight   =   BIT(17),
       kHelixCircle     =   BIT(18)
    };
    // constructors
