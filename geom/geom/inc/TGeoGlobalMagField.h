@@ -19,14 +19,6 @@
 #include "TVirtualMagField.h"
 #endif
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoGlobalMagField - Global magnetic field manager. A field derived    //
-//   from TVirtualMagField becomes global if registered via SetField      //
-//   method.
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-
 class TGeoGlobalMagField : public TObject
 {
 private:
