@@ -9,268 +9,230 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-// General architecture
-// --------------------
-//
-//   The new ROOT geometry package is a tool designed for building, browsing,
-// tracking and visualizing a detector geometry. The code is independent from
-// other external MC for simulation, therefore it does not contain any
-// constraints related to physics. However, the package defines a number of
-// hooks for tracking, such as media, materials, magnetic field or track state flags,
-// in order to allow interfacing to tracking MC's. The final goal is to be
-// able to use the same geometry for several purposes, such as tracking,
-// reconstruction or visualization, taking advantage of the ROOT features
-// related to bookkeeping, I/O, histograming, browsing and GUI's.
-//
-//   The geometrical modeler is the most important component of the package and
-// it provides answers to the basic questions like "Where am I ?" or "How far
-// from the next boundary ?", but also to more complex ones like "How far from
-// the closest surface ?" or "Which is the next crossing along a helix ?".
-//
-//   The architecture of the modeler is a combination between a GEANT-like
-// containment scheme and a normal CSG binary tree at the level of shapes. An
-// important common feature of all detector geometry descriptions is the
-// mother-daughter concept. This is the most natural approach when tracking
-// is concerned and imposes a set of constraints to the way geometry is defined.
-// Constructive solid geometry composition is used only in order to create more
-// complex shapes from an existing set of primitives through boolean operations.
-// This feature is not implemented yet but in future full definition of boolean
-// expressions will be supported.
-//
-//   Practically every geometry defined in GEANT style can be mapped by the modeler.
-// The basic components used for building the logical hierarchy of the geometry
-// are called "volumes" and "nodes". Volumes (sometimes called "solids") are fully
-// defined geometrical objects having a given shape and medium and possibly
-// containing a list of nodes. Nodes represent just positioned instances of volumes
-// inside a container volume and they are not directly defined by user. They are
-// automatically created as a result of adding one volume inside other or dividing
-// a volume. The geometrical transformation hold by nodes is always defined with
-// respect to their mother (relative positioning). Reflection matrices are allowed.
-// All volumes have to be fully aware of their containees when the geometry is
-// closed. They will build aditional structures (voxels) in order to fasten-up
-// the search algorithms. Finally, nodes can be regarded as bidirectional links
-// between containers and containees objects.
-//
-//   The structure defined in this way is a graph structure since volumes are
-// replicable (same volume can become daughter node of several other volumes),
-// every volume becoming a branch in this graph. Any volume in the logical graph
-// can become the actual top volume at run time (see TGeoManager::SetTopVolume()).
-// All functionalities of the modeler will behave in this case as if only the
-// corresponding branch starting from this volume is the registered geometry.
-//
-//Begin_Html
-/*
-<img src="gif/t_graf.jpg">
+/** \class TGeoManager -
+\ingroup Geometry_classes
+
+The manager class for any TGeo geometry. Provides user
+interface for geometry creation, navigation, state querying,
+visualization, IO, geometry checking and other utilities.
+
+## General architecture
+
+  The ROOT geometry package is a tool designed for building, browsing,
+tracking and visualizing a detector geometry. The code is independent from
+other external MC for simulation, therefore it does not contain any
+constraints related to physics. However, the package defines a number of
+hooks for tracking, such as media, materials, magnetic field or track state flags,
+in order to allow interfacing to tracking MC's. The final goal is to be
+able to use the same geometry for several purposes, such as tracking,
+reconstruction or visualization, taking advantage of the ROOT features
+related to bookkeeping, I/O, histograming, browsing and GUI's.
+
+  The geometrical modeler is the most important component of the package and
+it provides answers to the basic questions like "Where am I ?" or "How far
+from the next boundary ?", but also to more complex ones like "How far from
+the closest surface ?" or "Which is the next crossing along a helix ?".
+
+  The architecture of the modeler is a combination between a GEANT-like
+containment scheme and a normal CSG binary tree at the level of shapes. An
+important common feature of all detector geometry descriptions is the
+mother-daughter concept. This is the most natural approach when tracking
+is concerned and imposes a set of constraints to the way geometry is defined.
+Constructive solid geometry composition is used only in order to create more
+complex shapes from an existing set of primitives through boolean operations.
+This feature is not implemented yet but in future full definition of boolean
+expressions will be supported.
+
+  Practically every geometry defined in GEANT style can be mapped by the modeler.
+The basic components used for building the logical hierarchy of the geometry
+are called "volumes" and "nodes". Volumes (sometimes called "solids") are fully
+defined geometrical objects having a given shape and medium and possibly
+containing a list of nodes. Nodes represent just positioned instances of volumes
+inside a container volume and they are not directly defined by user. They are
+automatically created as a result of adding one volume inside other or dividing
+a volume. The geometrical transformation hold by nodes is always defined with
+respect to their mother (relative positioning). Reflection matrices are allowed.
+All volumes have to be fully aware of their containees when the geometry is
+closed. They will build additional structures (voxels) in order to fasten-up
+the search algorithms. Finally, nodes can be regarded as bidirectional links
+between containers and containees objects.
+
+  The structure defined in this way is a graph structure since volumes are
+replicable (same volume can become daughter node of several other volumes),
+every volume becoming a branch in this graph. Any volume in the logical graph
+can become the actual top volume at run time (see TGeoManager::SetTopVolume()).
+All functionalities of the modeler will behave in this case as if only the
+corresponding branch starting from this volume is the registered geometry.
+
+\image html geom_graf.jpg
+
+  A given volume can be positioned several times in the geometry. A volume
+can be divided according default or user-defined patterns, creating automatically
+the list of division nodes inside. The elementary volumes created during the
+dividing process follow the same scheme as usual volumes, therefore it is possible
+to position further geometrical structures inside or to divide them further more
+(see TGeoVolume::Divide()).
+
+  The primitive shapes supported by the package are basically the GEANT3
+shapes (see class TGeoShape), arbitrary wedges with eight vertices on two parallel
+planes. All basic primitives inherits from class TGeoBBox since the bounding box
+of a solid is essential for the tracking algorithms. They also implement the
+virtual methods defined in the virtual class TGeoShape (point and segment
+classification). User-defined primitives can be directly plugged into the modeler
+provided that they override these methods. Composite shapes will be soon supported
+by the modeler. In order to build a TGeoCompositeShape, one will have to define
+first the primitive components. The object that handle boolean
+operations among components is called TGeoBoolCombinator and it has to be
+constructed providing a string boolean expression between the components names.
+
+
+## Example for building a simple geometry
+
+Begin_Macro(source)
+../../../tutorials/geom/rootgeom.C
+End_Macro
+
+## TGeoManager - the manager class for the geometry package.
+
+  TGeoManager class is embedding all the API needed for building and tracking
+a geometry. It defines a global pointer (gGeoManager) in order to be fully
+accessible from external code. The mechanism of handling multiple geometries
+at the same time will be soon implemented.
+
+  TGeoManager is the owner of all geometry objects defined in a session,
+therefore users must not try to control their deletion. It contains lists of
+media, materials, transformations, shapes and volumes. Logical nodes (positioned
+volumes) are created and destroyed by the TGeoVolume class. Physical
+nodes and their global transformations are subjected to a caching mechanism
+due to the sometimes very large memory requirements of logical graph expansion.
+The caching mechanism is triggered by the total number of physical instances
+of volumes and the cache manager is a client of TGeoManager. The manager class
+also controls the painter client. This is linked with ROOT graphical libraries
+loaded on demand in order to control visualization actions.
+
+## Rules for building a valid geometry
+
+  A given geometry can be built in various ways, but there are mandatory steps
+that have to be followed in order to be validated by the modeler. There are
+general rules : volumes needs media and shapes in order to be created,
+both container an containee volumes must be created before linking them together,
+and the relative transformation matrix must be provided. All branches must
+have an upper link point otherwise they will not be considered as part of the
+geometry. Visibility or tracking properties of volumes can be provided both
+at build time or after geometry is closed, but global visualization settings
+(see TGeoPainter class) should not be provided at build time, otherwise the
+drawing package will be loaded. There is also a list of specific rules :
+positioned daughters should not extrude their mother or intersect with sisters
+unless this is specified (see TGeoVolume::AddNodeOverlap()), the top volume
+(containing all geometry tree) must be specified before closing the geometry
+and must not be positioned - it represents the global reference frame. After
+building the full geometry tree, the geometry must be closed
+(see TGeoManager::CloseGeometry()). Voxelization can be redone per volume after
+this process.
+
+
+  Below is the general scheme of the manager class.
+
+\image html geom_mgr.jpg
+
+## An interactive session
+
+  Provided that a geometry was successfully built and closed (for instance the
+previous example $ROOTSYS/tutorials/geom/rootgeom.C ), the manager class will register
+itself to ROOT and the logical/physical structures will become immediately browsable.
+The ROOT browser will display starting from the geometry folder : the list of
+transformations and media, the top volume and the top logical node. These last
+two can be fully expanded, any intermediate volume/node in the browser being subject
+of direct access context menu operations (right mouse button click). All user
+utilities of classes TGeoManager, TGeoVolume and TGeoNode can be called via the
+context menu.
+
+\image html geom_browser.jpg
+
+### Drawing the geometry
+
+  Any logical volume can be drawn via TGeoVolume::Draw() member function.
+This can be directly accessed from the context menu of the volume object
+directly from the browser.
+  There are several drawing options that can be set with
+TGeoManager::SetVisOption(Int_t opt) method :
+
+#### opt=0
+   only the content of the volume is drawn, N levels down (default N=3).
+   This is the default behavior. The number of levels to be drawn can be changed
+   via TGeoManager::SetVisLevel(Int_t level) method.
+
+\image html geom_frame0.jpg
+
+#### opt=1
+   the final leaves (e.g. daughters with no containment) of the branch
+   starting from volume are drawn down to the current number of levels.
+                                    WARNING : This mode is memory consuming
+   depending of the size of geometry, so drawing from top level within this mode
+   should be handled with care for expensive geometries. In future there will be
+   a limitation on the maximum number of nodes to be visualized.
+
+\image html geom_frame1.jpg
+
+#### opt=2
+   only the clicked volume is visualized. This is automatically set by
+   TGeoVolume::DrawOnly() method
+
+#### opt=3 - only a given path is visualized. This is automatically set by
+   TGeoVolume::DrawPath(const char *path) method
+
+   The current view can be exploded in cartesian, cylindrical or spherical
+coordinates :
+  TGeoManager::SetExplodedView(Int_t opt). Options may be :
+- 0  - default (no bombing)
+- 1  - cartesian coordinates. The bomb factor on each axis can be set with
+       TGeoManager::SetBombX(Double_t bomb) and corresponding Y and Z.
+- 2  - bomb in cylindrical coordinates. Only the bomb factors on Z and R
+       are considered
+      \image html geom_frameexp.jpg
+
+- 3  - bomb in radial spherical coordinate : TGeoManager::SetBombR()
+
+Volumes themselves support different visualization settings :
+   - TGeoVolume::SetVisibility() : set volume visibility.
+   - TGeoVolume::VisibleDaughters() : set daughters visibility.
+All these actions automatically updates the current view if any.
+
+### Checking the geometry
+
+ Several checking methods are accessible from the volume context menu. They
+generally apply only to the visible parts of the drawn geometry in order to
+ease geometry checking, and their implementation is in the TGeoChecker class
+from the painting package.
+
+#### Checking a given point.
+  Can be called from TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z).
+This method is drawing the daughters of the volume containing the point one
+level down, printing the path to the deepest physical node holding this point.
+It also computes the closest distance to any boundary. The point will be drawn
+in red.
+
+\image html geom_checkpoint.jpg
+
+#### Shooting random points.
+  Can be called from TGeoVolume::RandomPoints() (context menu function) and
+it will draw this volume with current visualization settings. Random points
+are generated in the bounding box of the top drawn volume. The points are
+classified and drawn with the color of their deepest container. Only points
+in visible nodes will be drawn.
+
+\image html geom_random1.jpg
+
+
+#### Raytracing.
+  Can be called from TGeoVolume::RandomRays() (context menu of volumes) and
+will shoot rays from a given point in the local reference frame with random
+directions. The intersections with displayed nodes will appear as segments
+having the color of the touched node. Drawn geometry will be then made invisible
+in order to enhance rays.
+
+\image html geom_random2.jpg
 */
-//End_Html
-//
-//   A given volume can be positioned several times in the geometry. A volume
-// can be divided according default or user-defined patterns, creating automatically
-// the list of division nodes inside. The elementary volumes created during the
-// dividing process follow the same scheme as usual volumes, therefore it is possible
-// to position further geometrical structures inside or to divide them further more
-// (see TGeoVolume::Divide()).
-//
-//   The primitive shapes supported by the package are basically the GEANT3
-// shapes (see class TGeoShape), arbitrary wedges with eight vertices on two parallel
-// planes. All basic primitives inherits from class TGeoBBox since the bounding box
-// of a solid is essential for the tracking algorithms. They also implement the
-// virtual methods defined in the virtual class TGeoShape (point and segment
-// classification). User-defined primitives can be direcly plugged into the modeler
-// provided that they override these methods. Composite shapes will be soon supported
-// by the modeler. In order to build a TGeoCompositeShape, one will have to define
-// first the primitive components. The object that handle boolean
-// operations among components is called TGeoBoolCombinator and it has to be
-// constructed providing a string boolean expression between the components names.
-//
-//
-// Example for building a simple geometry :
-//-----------------------------------------
-//
-// Begin_Html <a href=http://root.cern.ch/root/html/tutorials/geom/rootgeom.C.html>rootgeom.C</a> //
-// End_Html                                                             //
-//______________________________________________________________________________
-//
-//
-//Begin_Html
-/*
-<img src="gif/t_root.jpg">
-*/
-//End_Html
-//
-//
-// TGeoManager - the manager class for the geometry package.
-// ---------------------------------------------------------
-//
-//   TGeoManager class is embedding all the API needed for building and tracking
-// a geometry. It defines a global pointer (gGeoManager) in order to be fully
-// accessible from external code. The mechanism of handling multiple geometries
-// at the same time will be soon implemented.
-//
-//   TGeoManager is the owner of all geometry objects defined in a session,
-// therefore users must not try to control their deletion. It contains lists of
-// media, materials, transformations, shapes and volumes. Logical nodes (positioned
-// volumes) are created and destroyed by the TGeoVolume class. Physical
-// nodes and their global transformations are subjected to a caching mechanism
-// due to the sometimes very large memory requirements of logical graph expansion.
-// The caching mechanism is triggered by the total number of physical instances
-// of volumes and the cache manager is a client of TGeoManager. The manager class
-// also controls the painter client. This is linked with ROOT graphical libraries
-// loaded on demand in order to control visualization actions.
-//
-// Rules for building a valid geometry
-// -----------------------------------
-//
-//   A given geometry can be built in various ways, but there are mandatory steps
-// that have to be followed in order to be validated by the modeler. There are
-// general rules : volumes needs media and shapes in order to be created,
-// both container an containee volumes must be created before linking them together,
-// and the relative transformation matrix must be provided. All branches must
-// have an upper link point otherwise they will not be considered as part of the
-// geometry. Visibility or tracking properties of volumes can be provided both
-// at build time or after geometry is closed, but global visualization settings
-// (see TGeoPainter class) should not be provided at build time, otherwise the
-// drawing package will be loaded. There is also a list of specific rules :
-// positioned daughters should not extrude their mother or intersect with sisters
-// unless this is specified (see TGeoVolume::AddNodeOverlap()), the top volume
-// (containing all geometry tree) must be specified before closing the geometry
-// and must not be positioned - it represents the global reference frame. After
-// building the full geometry tree, the geometry must be closed
-// (see TGeoManager::CloseGeometry()). Voxelization can be redone per volume after
-// this process.
-//
-//
-//   Below is the general scheme of the manager class.
-//
-//Begin_Html
-/*
-<img src="gif/t_mgr.jpg">
-*/
-//End_Html
-//
-//  An interactive session
-// ------------------------
-//
-//   Provided that a geometry was successfully built and closed (for instance the
-// previous example $ROOTSYS/tutorials/geom/rootgeom.C ), the manager class will register
-// itself to ROOT and the logical/physical structures will become immediately browsable.
-// The ROOT browser will display starting from the geometry folder : the list of
-// transformations and media, the top volume and the top logical node. These last
-// two can be fully expanded, any intermediate volume/node in the browser being subject
-// of direct access context menu operations (right mouse button click). All user
-// utilities of classes TGeoManager, TGeoVolume and TGeoNode can be called via the
-// context menu.
-//
-//Begin_Html
-/*
-<img src="gif/t_browser.jpg">
-*/
-//End_Html
-//
-//  --- Drawing the geometry
-//
-//   Any logical volume can be drawn via TGeoVolume::Draw() member function.
-// This can be direcly accessed from the context menu of the volume object
-// directly from the browser.
-//   There are several drawing options that can be set with
-// TGeoManager::SetVisOption(Int_t opt) method :
-// opt=0 - only the content of the volume is drawn, N levels down (default N=3).
-//    This is the default behavior. The number of levels to be drawn can be changed
-//    via TGeoManager::SetVisLevel(Int_t level) method.
-//
-//Begin_Html
-/*
-<img src="gif/t_frame0.jpg">
-*/
-//End_Html
-//
-// opt=1 - the final leaves (e.g. daughters with no containment) of the branch
-//    starting from volume are drawn down to the current number of levels.
-//                                     WARNING : This mode is memory consuming
-//    depending of the size of geometry, so drawing from top level within this mode
-//    should be handled with care for expensive geometries. In future there will be
-//    a limitation on the maximum number of nodes to be visualized.
-//
-//Begin_Html
-/*
-<img src="gif/t_frame1.jpg">
-*/
-//End_Html
-//
-// opt=2 - only the clicked volume is visualized. This is automatically set by
-//    TGeoVolume::DrawOnly() method
-// opt=3 - only a given path is visualized. This is automatically set by
-//    TGeoVolume::DrawPath(const char *path) method
-//
-//    The current view can be exploded in cartesian, cylindrical or spherical
-// coordinates :
-//   TGeoManager::SetExplodedView(Int_t opt). Options may be :
-// - 0  - default (no bombing)
-// - 1  - cartesian coordinates. The bomb factor on each axis can be set with
-//        TGeoManager::SetBombX(Double_t bomb) and corresponding Y and Z.
-// - 2  - bomb in cylindrical coordinates. Only the bomb factors on Z and R
-//        are considered
-//
-//Begin_Html
-/*
-<img src="gif/t_frameexp.jpg">
-*/
-//End_Html
-//
-// - 3  - bomb in radial spherical coordinate : TGeoManager::SetBombR()
-//
-// Volumes themselves support different visualization settings :
-//    - TGeoVolume::SetVisibility() : set volume visibility.
-//    - TGeoVolume::VisibleDaughters() : set daughters visibility.
-// All these actions automatically updates the current view if any.
-//
-//  --- Checking the geometry
-//
-//  Several checking methods are accessible from the volume context menu. They
-// generally apply only to the visible parts of the drawn geometry in order to
-// ease geometry checking, and their implementation is in the TGeoChecker class
-// from the painting package.
-//
-// 1. Checking a given point.
-//   Can be called from TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z).
-// This method is drawing the daughters of the volume containing the point one
-// level down, printing the path to the deepest physical node holding this point.
-// It also computes the closest distance to any boundary. The point will be drawn
-// in red.
-//
-//Begin_Html
-/*
-<img src="gif/t_checkpoint.jpg">
-*/
-//End_Html
-//
-//  2. Shooting random points.
-//   Can be called from TGeoVolume::RandomPoints() (context menu function) and
-// it will draw this volume with current visualization settings. Random points
-// are generated in the bounding box of the top drawn volume. The points are
-// classified and drawn with the color of their deepest container. Only points
-// in visible nodes will be drawn.
-//
-//Begin_Html
-/*
-<img src="gif/t_random1.jpg">
-*/
-//End_Html
-//
-//
-//  3. Raytracing.
-//   Can be called from TGeoVolume::RandomRays() (context menu of volumes) and
-// will shoot rays from a given point in the local reference frame with random
-// directions. The intersections with displayed nodes will appear as segments
-// having the color of the touched node. Drawn geometry will be then made invisible
-// in order to enhance rays.
-//
-//Begin_Html
-/*
-<img src="gif/t_random2.jpg">
-*/
-//End_Html
 
 #include <stdlib.h>
 
@@ -1026,9 +988,7 @@ void TGeoManager::ClearThreadsMap()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Translates the current thread id to an ordinal number. This can be used to
-/// manage data which is pspecific for a given thread.
-///   static __thread Int_t tid = -1;
-///   if (tid > -1) return tid;
+/// manage data which is specific for a given thread.
 
 Int_t TGeoManager::ThreadId()
 {
@@ -1135,9 +1095,9 @@ void TGeoManager::RegisterMatrix(const TGeoMatrix *matrix)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replaces all occurences of VORIG with VNEW in the geometry tree. The volume VORIG
+/// Replaces all occurrences of VORIG with VNEW in the geometry tree. The volume VORIG
 /// is not replaced from the list of volumes, but all node referencing it will reference
-/// VNEW instead. Returns number of occurences changed.
+/// VNEW instead. Returns number of occurrences changed.
 
 Int_t TGeoManager::ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew)
 {
@@ -1200,7 +1160,7 @@ Int_t TGeoManager::ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew)
          }
       }
    }
-   if (ierr) Warning("ReplaceVolume", "Volumes should not be replaced with assemblies if they are positioned in containers having a different medium ID.\n %i occurences for assembly replacing volume %s",
+   if (ierr) Warning("ReplaceVolume", "Volumes should not be replaced with assemblies if they are positioned in containers having a different medium ID.\n %i occurrences for assembly replacing volume %s",
                      ierr, vorig->GetName());
    return nref;
 }
@@ -1252,12 +1212,13 @@ Int_t TGeoManager::TransformVolumeToAssembly(const char *vname)
 /// and having size STEP. The created volumes will have tracking
 /// media ID=NUMED (if NUMED=0 -> same media as MOTHER)
 ///    The behavior of the division operation can be triggered using OPTION :
+///
 /// OPTION (case insensitive) :
-///  N  - divide all range in NDIV cells (same effect as STEP<=0) (GSDVN in G3)
-///  NX - divide range starting with START in NDIV cells          (GSDVN2 in G3)
-///  S  - divide all range with given STEP. NDIV is computed and divisions will be centered
-///         in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
-///  SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
+///  - N  - divide all range in NDIV cells (same effect as STEP<=0) (GSDVN in G3)
+///  - NX - divide range starting with START in NDIV cells          (GSDVN2 in G3)
+///  - S  - divide all range with given STEP. NDIV is computed and divisions will be centered
+///           in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
+///  - SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
 
 TGeoVolume *TGeoManager::Division(const char *name, const char *mother, Int_t iaxis,
                                   Int_t ndiv, Double_t start, Double_t step, Int_t numed, Option_t *option)
@@ -1268,13 +1229,13 @@ TGeoVolume *TGeoManager::Division(const char *name, const char *mother, Int_t ia
 ////////////////////////////////////////////////////////////////////////////////
 /// Create rotation matrix named 'mat<index>'.
 ///
-///  index    rotation matrix number
-///  theta1   polar angle for axis X
-///  phi1     azimuthal angle for axis X
-///  theta2   polar angle for axis Y
-///  phi2     azimuthal angle for axis Y
-///  theta3   polar angle for axis Z
-///  phi3     azimuthal angle for axis Z
+///  - index    rotation matrix number
+///  - theta1   polar angle for axis X
+///  - phi1     azimuthal angle for axis X
+///  - theta2   polar angle for axis Y
+///  - phi2     azimuthal angle for axis Y
+///  - theta3   polar angle for axis Z
+///  - phi3     azimuthal angle for axis Z
 ///
 
 void TGeoManager::Matrix(Int_t index, Double_t theta1, Double_t phi1,
@@ -1316,21 +1277,21 @@ TGeoMaterial *TGeoManager::Mixture(const char *name, Double_t *a, Double_t *z, D
 ////////////////////////////////////////////////////////////////////////////////
 /// Create tracking medium
 ///
-///  numed      tracking medium number assigned
-///  name      tracking medium name
-///  nmat      material number
-///  isvol     sensitive volume flag
-///  ifield    magnetic field
-///  fieldm    max. field value (kilogauss)
-///  tmaxfd    max. angle due to field (deg/step)
-///  stemax    max. step allowed
-///  deemax    max. fraction of energy lost in a step
-///  epsil     tracking precision (cm)
-///  stmin     min. step due to continuous processes (cm)
+///  - numed      tracking medium number assigned
+///  - name      tracking medium name
+///  - nmat      material number
+///  - isvol     sensitive volume flag
+///  - ifield    magnetic field
+///  - fieldm    max. field value (kilogauss)
+///  - tmaxfd    max. angle due to field (deg/step)
+///  - stemax    max. step allowed
+///  - deemax    max. fraction of energy lost in a step
+///  - epsil     tracking precision (cm)
+///  - stmin     min. step due to continuous processes (cm)
 ///
-///  ifield = 0 if no magnetic field; ifield = -1 if user decision in guswim;
-///  ifield = 1 if tracking performed with g3rkuta; ifield = 2 if tracking
-///  performed with g3helix; ifield = 3 if tracking performed with g3helx3.
+///  - ifield = 0 if no magnetic field; ifield = -1 if user decision in guswim;
+///  - ifield = 1 if tracking performed with g3rkuta; ifield = 2 if tracking
+///     performed with g3helix; ifield = 3 if tracking performed with g3helx3.
 ///
 
 TGeoMedium *TGeoManager::Medium(const char *name, Int_t numed, Int_t nmat, Int_t isvol,
@@ -1347,14 +1308,14 @@ TGeoMedium *TGeoManager::Medium(const char *name, Int_t numed, Int_t nmat, Int_t
 /// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
 /// In case npar>0, create the volume to be positioned in mother, according
 /// its actual parameters (gsposp).
-///  NAME   Volume name
-///  NUMBER Copy number of the volume
-///  MOTHER Mother volume name
-///  X      X coord. of the volume in mother ref. sys.
-///  Y      Y coord. of the volume in mother ref. sys.
-///  Z      Z coord. of the volume in mother ref. sys.
-///  IROT   Rotation matrix number w.r.t. mother ref. sys.
-///  ISONLY ONLY/MANY flag
+///  - NAME   Volume name
+///  - NUMBER Copy number of the volume
+///  - MOTHER Mother volume name
+///  - X      X coord. of the volume in mother ref. sys.
+///  - Y      Y coord. of the volume in mother ref. sys.
+///  - Z      Z coord. of the volume in mother ref. sys.
+///  - IROT   Rotation matrix number w.r.t. mother ref. sys.
+///  - ISONLY ONLY/MANY flag
 
 void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
                        Double_t x, Double_t y, Double_t z, Int_t irot,
@@ -1369,14 +1330,14 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
 /// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
 /// In case npar>0, create the volume to be positioned in mother, according
 /// its actual parameters (gsposp).
-///  NAME   Volume name
-///  NUMBER Copy number of the volume
-///  MOTHER Mother volume name
-///  X      X coord. of the volume in mother ref. sys.
-///  Y      Y coord. of the volume in mother ref. sys.
-///  Z      Z coord. of the volume in mother ref. sys.
-///  IROT   Rotation matrix number w.r.t. mother ref. sys.
-///  ISONLY ONLY/MANY flag
+///  - NAME   Volume name
+///  - NUMBER Copy number of the volume
+///  - MOTHER Mother volume name
+///  - X      X coord. of the volume in mother ref. sys.
+///  - Y      Y coord. of the volume in mother ref. sys.
+///  - Z      Z coord. of the volume in mother ref. sys.
+///  - IROT   Rotation matrix number w.r.t. mother ref. sys.
+///  - ISONLY ONLY/MANY flag
 
 void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
                        Double_t x, Double_t y, Double_t z, Int_t irot,
@@ -1388,11 +1349,11 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a volume in GEANT3 style.
-///  NAME   Volume name
-///  SHAPE  Volume type
-///  NMED   Tracking medium number
-///  NPAR   Number of shape parameters
-///  UPAR   Vector containing shape parameters
+///  - NAME   Volume name
+///  - SHAPE  Volume type
+///  - NMED   Tracking medium number
+///  - NPAR   Number of shape parameters
+///  - UPAR   Vector containing shape parameters
 
 TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
                                 Float_t *upar, Int_t npar)
@@ -1402,11 +1363,11 @@ TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a volume in GEANT3 style.
-///  NAME   Volume name
-///  SHAPE  Volume type
-///  NMED   Tracking medium number
-///  NPAR   Number of shape parameters
-///  UPAR   Vector containing shape parameters
+///  - NAME   Volume name
+///  - SHAPE  Volume type
+///  - NMED   Tracking medium number
+///  - NPAR   Number of shape parameters
+///  - UPAR   Vector containing shape parameters
 
 TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
                                 Double_t *upar, Int_t npar)
@@ -1481,7 +1442,7 @@ void TGeoManager::ClearAttributes()
 /// Closing geometry implies checking the geometry validity, fixing shapes
 /// with negative parameters (run-time shapes)building the cache manager,
 /// voxelizing all volumes, counting the total number of physical nodes and
-/// registring the manager class to the browser.
+/// registering the manager class to the browser.
 
 void TGeoManager::CloseGeometry(Option_t *option)
 {
@@ -1598,6 +1559,7 @@ void TGeoManager::ClearShape(const TGeoShape *shape)
    if (fShapes->FindObject(shape)) fShapes->Remove((TGeoShape*)shape);
    delete shape;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Clean temporary volumes and shapes from garbage collection.
 
@@ -1657,6 +1619,7 @@ void TGeoManager::CdUp()
 {
    GetCurrentNavigator()->CdUp();
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a daughter of current node current. Can be called only with a valid
 /// daughter index (no check). Updates cache accordingly.
@@ -1883,6 +1846,7 @@ void TGeoManager::DrawPath(const char *path, Option_t *option)
    fTopVolume->SetVisBranch();
    GetGeomPainter()->DrawPath(path, option);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw random points in the bounding box of a volume.
 
@@ -1890,6 +1854,7 @@ void TGeoManager::RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *o
 {
    GetGeomPainter()->RandomPoints((TGeoVolume*)vol, npoints, option);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Check time of finding "Where am I" for n points.
 
@@ -1897,6 +1862,7 @@ void TGeoManager::Test(Int_t npoints, Option_t *option)
 {
    GetGeomPainter()->Test(npoints, option);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Geometry overlap checker based on sampling.
 
@@ -1904,6 +1870,7 @@ void TGeoManager::TestOverlaps(const char* path)
 {
    GetGeomPainter()->TestOverlaps(path);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill volume names of current branch into an array.
 
@@ -1911,6 +1878,7 @@ void TGeoManager::GetBranchNames(Int_t *names) const
 {
    GetCurrentNavigator()->GetBranchNames(names);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Get name for given pdg code;
 
@@ -2037,6 +2005,7 @@ Int_t TGeoManager::GetVirtualLevel()
 {
    return GetCurrentNavigator()->GetVirtualLevel();
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Search the track hierarchy to find the track with the
 /// given id
@@ -2102,7 +2071,7 @@ Int_t TGeoManager::GetTrackIndex(Int_t id) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Go upwards the tree until a non-overlaping node
+/// Go upwards the tree until a non-overlapping node
 
 Bool_t TGeoManager::GotoSafeLevel()
 {
@@ -2110,7 +2079,7 @@ Bool_t TGeoManager::GotoSafeLevel()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Go upwards the tree until a non-overlaping node
+/// Go upwards the tree until a non-overlapping node
 
 Int_t TGeoManager::GetSafeLevel() const
 {
@@ -2198,6 +2167,7 @@ void TGeoManager::SetVolumeAttribute(const char *name, const char *att, Int_t va
       Warning("SetVolumeAttribute","volume: %s does not exist",name);
    }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set factors that will "bomb" all translations in cartesian and cylindrical coordinates.
 
@@ -2241,11 +2211,12 @@ void TGeoManager::SetTopVisible(Bool_t vis) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assign a given node to be checked for ovelaps. Any other overlaps will be ignored.
+/// Assign a given node to be checked for overlaps. Any other overlaps will be ignored.
 
 void TGeoManager::SetCheckedNode(TGeoNode *node) {
    GetGeomPainter()->SetCheckedNode(node);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the number of points to be generated on the shape outline when checking
 /// for overlaps.
@@ -2257,10 +2228,10 @@ void TGeoManager::SetNmeshPoints(Int_t npoints)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// set drawing mode :
-/// option=0 (default) all nodes drawn down to vislevel
-/// option=1           leaves and nodes at vislevel drawn
-/// option=2           path is drawn
-/// option=4           visibility changed
+///  - option=0 (default) all nodes drawn down to vislevel
+///  - option=1           leaves and nodes at vislevel drawn
+///  - option=2           path is drawn
+///  - option=4           visibility changed
 
 void TGeoManager::SetVisOption(Int_t option) {
    if ((option>=0) && (option<3)) fVisOption=option;
@@ -2357,14 +2328,14 @@ void TGeoManager::OptimizeVoxels(const char *filename)
 /// Parse a string boolean expression and do a syntax check. Find top
 /// level boolean operator and returns its type. Fill the two
 /// substrings to which this operator applies. The returned integer is :
-/// -1 : parse error
-///  0 : no boolean operator
-///  1 : union - represented as '+' in expression
-///  2 : difference (subtraction) - represented as '-' in expression
-///  3 : intersection - represented as '*' in expression.
-/// Paranthesys should be used to avoid ambiguites. For instance :
-///    A+B-C will be interpreted as (A+B)-C which is not the same as A+(B-C)
-/// eliminate not needed paranthesys
+///  - -1 : parse error
+///  - 0 : no boolean operator
+///  - 1 : union - represented as '+' in expression
+///  - 2 : difference (subtraction) - represented as '-' in expression
+///  - 3 : intersection - represented as '*' in expression.
+/// Parentheses should be used to avoid ambiguities. For instance :
+///  - A+B-C will be interpreted as (A+B)-C which is not the same as A+(B-C)
+/// eliminate not needed parentheses
 
 Int_t TGeoManager::Parse(const char *expr, TString &expr1, TString &expr2, TString &expr3)
 {
@@ -2387,7 +2358,7 @@ Int_t TGeoManager::Parse(const char *expr, TString &expr1, TString &expr2, TStri
    Int_t lastdp = 0;
    Int_t lastpp = 0;
    Bool_t foundmat = kFALSE;
-   // check/eliminate paranthesys
+   // check/eliminate parentheses
    while (iloop==1) {
       iloop = 0;
       lastop = 0;
@@ -2419,11 +2390,11 @@ Int_t TGeoManager::Parse(const char *expr, TString &expr1, TString &expr2, TStri
          }
       }
       if (level!=0) {
-         if (gGeoManager) gGeoManager->Error("Parse","paranthesys does not match");
+         if (gGeoManager) gGeoManager->Error("Parse","parentheses does not match");
          return -1;
       }
       if (iloop==1 && (e0(0)=='(') && (e0(len-1)==')')) {
-         // eliminate extra paranthesys
+         // eliminate extra parentheses
          e0=e0(1, len-2);
          continue;
       }
@@ -2436,7 +2407,7 @@ Int_t TGeoManager::Parse(const char *expr, TString &expr1, TString &expr2, TStri
          continue;
       } else break;
    }
-   // loop expression and search paranthesys/operators
+   // loop expression and search parentheses/operators
    levmin = 999;
    for (i=0; i<len; i++) {
       if (e0(i)=='(') {
@@ -2516,7 +2487,7 @@ void TGeoManager::SaveAttributes(const char *filename)
    Double_t bombx, bomby, bombz, bombr;
    GetBombFactors(bombx, bomby, bombz, bombr);
    out << "   gGeoManager->SetBombFactors("<<bombx<<","<<bomby<<","<<bombz<<","<<bombr<<");"<<std::endl;
-   out << "   // iterate volumes coontainer and set new attributes"<<std::endl;
+   out << "   // iterate volumes container and set new attributes"<<std::endl;
 //   out << "   TIter next(gGeoManager->GetListOfVolumes());"<<std::endl;
    TGeoVolume *vol = 0;
    fTopNode->SaveAttributes(out);
@@ -2531,6 +2502,7 @@ void TGeoManager::SaveAttributes(const char *filename)
    out << "}" << std::endl;
    out.close();
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the deepest node containing fPoint, which must be set a priori.
 
@@ -2568,6 +2540,7 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
 /// answer to the question : "Is STEPMAX a safe step ?" returning a NULL node and filling
 /// fStep with a big number.
 /// In case frombdr=kTRUE, the isotropic safety is set to zero.
+///
 /// Note : safety distance for the current point is computed ONLY in case STEPMAX is
 ///        specified, otherwise users have to call explicitly TGeoManager::Safety() if
 ///        they want this computed for the current point.
@@ -2720,6 +2693,7 @@ Int_t TGeoManager::GetByteCount(Option_t * /*option*/)
    if (fgVerboseLevel>0) Info("GetByteCount","Total size of logical tree : %i bytes", count);
    return count;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a default painter if none present. Returns pointer to it.
 
@@ -2739,6 +2713,7 @@ TVirtualGeoPainter *TGeoManager::GetGeomPainter()
    }
    return fPainter;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Search for a named volume. All trailing blanks stripped.
 
@@ -2773,7 +2748,7 @@ TGeoVolume *TGeoManager::FindVolumeFast(const char *name, Bool_t multi)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retreive unique id for a volume name. Return -1 if name not found.
+/// Retrieve unique id for a volume name. Return -1 if name not found.
 
 Int_t TGeoManager::GetUID(const char *volname) const
 {
@@ -2844,6 +2819,7 @@ TGeoMaterial *TGeoManager::GetMaterial(Int_t id) const
    TGeoMaterial *mat = (TGeoMaterial*)fMaterials->At(id);
    return mat;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return index of named material.
 
@@ -2861,6 +2837,7 @@ Int_t TGeoManager::GetMaterialIndex(const char *matname) const
    }
    return -1;  // fail
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Randomly shoot nrays and plot intersections with surfaces for current
 /// top node.
@@ -2898,6 +2875,7 @@ void TGeoManager::RestoreMasterVolume()
    if (fTopVolume == fMasterVolume) return;
    if (fMasterVolume) SetTopVolume(fMasterVolume);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Voxelize all non-divided volumes.
 
@@ -2916,6 +2894,7 @@ void TGeoManager::Voxelize(Option_t *option)
       if (!fIsGeomReading) vol->FindOverlaps();
    }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Send "Modified" signal to painter.
 
@@ -2924,6 +2903,7 @@ void TGeoManager::ModifiedPad() const
    if (!fPainter) return;
    fPainter->ModifiedPad();
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Make an TGeoArb8 volume.
 
@@ -2943,7 +2923,7 @@ TGeoVolume *TGeoManager::MakeBox(const char *name, TGeoMedium *medium,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Make in one step a volume pointing to a paralelipiped shape with given medium.
+/// Make in one step a volume pointing to a parallelepiped shape with given medium.
 
 TGeoVolume *TGeoManager::MakePara(const char *name, TGeoMedium *medium,
                                     Double_t dx, Double_t dy, Double_t dz,
@@ -3117,7 +3097,7 @@ TGeoVolume *TGeoManager::MakeXtru(const char *name, TGeoMedium *medium, Int_t nz
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates an aligneable object with unique name corresponding to a path
+/// Creates an alignable object with unique name corresponding to a path
 /// and adds it to the list of alignables. An optional unique ID can be
 /// provided, in which case PN entries can be searched fast by uid.
 
@@ -3144,7 +3124,7 @@ TGeoPNEntry *TGeoManager::SetAlignableEntry(const char *unique_name, const char 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retreives an existing alignable object.
+/// Retrieves an existing alignable object.
 
 TGeoPNEntry *TGeoManager::GetAlignableEntry(const char *name) const
 {
@@ -3153,7 +3133,7 @@ TGeoPNEntry *TGeoManager::GetAlignableEntry(const char *name) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retreives an existing alignable object at a given index.
+/// Retrieves an existing alignable object at a given index.
 
 TGeoPNEntry *TGeoManager::GetAlignableEntry(Int_t index) const
 {
@@ -3162,7 +3142,7 @@ TGeoPNEntry *TGeoManager::GetAlignableEntry(Int_t index) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retreives an existing alignable object having a preset UID.
+/// Retrieves an existing alignable object having a preset UID.
 
 TGeoPNEntry *TGeoManager::GetAlignableEntryByUID(Int_t uid) const
 {
@@ -3173,7 +3153,7 @@ TGeoPNEntry *TGeoManager::GetAlignableEntryByUID(Int_t uid) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retreives number of PN entries with or without UID.
+/// Retrieves number of PN entries with or without UID.
 
 Int_t TGeoManager::GetNAlignable(Bool_t with_uid) const
 {
@@ -3391,7 +3371,7 @@ TGeoElementTable *TGeoManager::GetElementTable()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Make a rectiliniar step of length fStep from current point (fPoint) on current
+/// Make a rectilinear step of length fStep from current point (fPoint) on current
 /// direction (fDirection). If the step is imposed by geometry, is_geom flag
 /// must be true (default). The cross flag specifies if the boundary should be
 /// crossed in case of a geometry step (default true). Returns new node after step.
@@ -3403,7 +3383,7 @@ TGeoNode *TGeoManager::Step(Bool_t is_geom, Bool_t cross)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// shoot npoints randomly in a box of 1E-5 arround current point.
+/// shoot npoints randomly in a box of 1E-5 around current point.
 /// return minimum distance to points outside
 
 TGeoNode *TGeoManager::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil,
@@ -3459,9 +3439,9 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
       if (fClosed) nav->GetCache()->BuildInfoBranch();
    }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Define different tracking media.
-///   printf("List of materials :\n");
 
 void TGeoManager::SelectTrackingMedia()
 {
@@ -3551,11 +3531,14 @@ void TGeoManager::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Opt
 /// STAGE 1: extensive overlap checking by sampling per volume. Stdout need to be
 ///  checked by user to get report, then TGeoVolume::CheckOverlaps(0.01, "s") can
 ///  be called for the suspicious volumes.
+///
 /// STAGE2 : normal overlap checking using the shapes mesh - fills the list of
 ///  overlaps.
+///
 /// STAGE3 : shooting NRAYS rays from VERTEX and counting the total number of
 ///  crossings per volume (rays propagated from boundary to boundary until
 ///  geometry exit). Timing computed and results stored in a histo.
+///
 /// STAGE4 : shooting 1 mil. random rays inside EACH volume and calling
 ///  FindNextBoundary() + Safety() for each call. The timing is normalized by the
 ///  number of crossings computed at stage 2 and presented as percentage.
@@ -3701,18 +3684,18 @@ void TGeoManager::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 ////////////////////////////////////////////////////////////////////////////////
 /// Export this geometry to a file
 ///
-/// -Case 1: root file or root/xml file
-///  if filename end with ".root". The key will be named name
-///  By default the geometry is saved without the voxelisation info.
-///  Use option 'v" to save the voxelisation info.
-///  if filename end with ".xml" a root/xml file is produced.
+///  - Case 1: root file or root/xml file
+///    if filename end with ".root". The key will be named name
+///    By default the geometry is saved without the voxelisation info.
+///    Use option 'v" to save the voxelisation info.
+///    if filename end with ".xml" a root/xml file is produced.
 ///
-/// -Case 2: C++ script
-///  if filename end with ".C"
+///  - Case 2: C++ script
+///    if filename end with ".C"
 ///
-/// -Case 3: gdml file
-///  if filename end with ".gdml"
-///  NOTE that to use this option, the PYTHONPATH must be defined like
+///  - Case 3: gdml file
+///    if filename end with ".gdml"
+///    NOTE that to use this option, the PYTHONPATH must be defined like
 ///      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/geom/gdml
 ///
 
@@ -3759,6 +3742,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
    }
    return 0;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Lock current geometry so that no other geometry can be imported.
 
@@ -3785,8 +3769,8 @@ Bool_t TGeoManager::IsLocked()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set verbosity level (static function).
-/// 0 - suppress messages related to geom-painter visibility level
-/// 1 - default value
+///  - 0 - suppress messages related to geom-painter visibility level
+///  - 1 - default value
 
 Int_t TGeoManager::GetVerboseLevel()
 {
@@ -3805,18 +3789,18 @@ void TGeoManager::SetVerboseLevel(Int_t vl)
 ///static function
 ///Import a geometry from a gdml or ROOT file
 ///
-/// -Case 1: gdml
-///  if filename ends with ".gdml" the foreign geometry described with gdml
-///  is imported executing some python scripts in $ROOTSYS/gdml.
-///  NOTE that to use this option, the PYTHONPATH must be defined like
+///  - Case 1: gdml
+///    if filename ends with ".gdml" the foreign geometry described with gdml
+///    is imported executing some python scripts in $ROOTSYS/gdml.
+///    NOTE that to use this option, the PYTHONPATH must be defined like
 ///      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/gdml
 ///
-/// -Case 2: root file (.root) or root/xml file (.xml)
-///  Import in memory from filename the geometry with key=name.
-///  if name="" (default), the first TGeoManager object in the file is returned.
+///  - Case 2: root file (.root) or root/xml file (.xml)
+///    Import in memory from filename the geometry with key=name.
+///    if name="" (default), the first TGeoManager object in the file is returned.
 ///
-///Note that this function deletes the current gGeoManager (if one)
-///before importing the new object.
+/// Note that this function deletes the current gGeoManager (if one)
+/// before importing the new object.
 
 TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_t * /*option*/)
 {
@@ -3975,7 +3959,7 @@ void TGeoManager::TopToMaster(const Double_t *top, Double_t *master) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a parallel world for prioritized navigation. This can be populated
+/// Create a parallel world for prioritised navigation. This can be populated
 /// with physical nodes and can be navigated independently using its API.
 /// In case the flag SetUseParallelWorldNav is set, any navigation query in the
 /// main geometry is checked against the parallel geometry, which gets priority
