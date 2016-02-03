@@ -1712,7 +1712,11 @@ L110:
 
                   }
 
-                  strftime(label, 256, timeformattmp.Data(), utctis);
+                  if (utctis != nullptr) {
+                     strftime(label, 256, timeformattmp.Data(), utctis);
+                  } else {
+                     strncpy(label, "invalid", 256);
+                  }
                   strncpy(chtemp, &label[0], 256);
                   first = 0; last=strlen(label)-1;
                   wlabel = wTimeIni + (k+1)*dwlabel;
@@ -2342,8 +2346,12 @@ void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
    // to different time zones
    utctis = gmtime(&timeoff);
 
-   strftime(tmp, 20,"%Y-%m-%d %H:%M:%S",utctis);
-   fTimeFormat.Append(tmp);
+   if (utctis != nullptr) {
+      strftime(tmp, 20,"%Y-%m-%d %H:%M:%S",utctis);
+      fTimeFormat.Append(tmp);
+   } else {
+      fTimeFormat.Append("1970-01-01 00:00:00");
+   }
 
    // append the decimal part of the time offset
    Double_t ds = toffset-(Int_t)toffset;
