@@ -55,7 +55,7 @@ public:
    virtual void             SavePrimitive(std::ostream &out, Option_t *option = "");
    void                     SetId(Int_t id)     {fId = id;}
    void                     SetMaterial(TGeoMaterial *mat) {fMaterial = mat;}
-   virtual void             SetCerenkovProperties(TObject* cerenkov) {fMaterial->SetCerenkovProperties(cerenkov);}
+   virtual void             SetCherenkovProperties(TObject* cherenkov) {fMaterial->SetCherenkovProperties(cherenkov);}
    ClassDef(TGeoMedium, 1)              // tracking medium
 
 };

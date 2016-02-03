@@ -45,7 +45,7 @@ TGeoMaterial::TGeoMaterial()
               fPressure(0.),
               fState(kMatStateUndefined),
               fShader(NULL),
-              fCerenkov(NULL),
+              fCherenkov(NULL),
               fElement(NULL),
               fUserExtension(0),
               fFWExtension(0)
@@ -72,7 +72,7 @@ TGeoMaterial::TGeoMaterial(const char *name)
               fPressure(0.),
               fState(kMatStateUndefined),
               fShader(NULL),
-              fCerenkov(NULL),
+              fCherenkov(NULL),
               fElement(NULL),
               fUserExtension(0),
               fFWExtension(0)
@@ -106,7 +106,7 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
               fPressure(0.),
               fState(kMatStateUndefined),
               fShader(NULL),
-              fCerenkov(NULL),
+              fCherenkov(NULL),
               fElement(NULL),
               fUserExtension(0),
               fFWExtension(0)
@@ -146,7 +146,7 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rh
               fPressure(pressure),
               fState(state),
               fShader(NULL),
-              fCerenkov(NULL),
+              fCherenkov(NULL),
               fElement(NULL),
               fUserExtension(0),
               fFWExtension(0)
@@ -179,7 +179,7 @@ TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
               fPressure(0.),
               fState(kMatStateUndefined),
               fShader(NULL),
-              fCerenkov(NULL),
+              fCherenkov(NULL),
               fElement(elem),
               fUserExtension(0),
               fFWExtension(0)
@@ -217,7 +217,7 @@ TGeoMaterial::TGeoMaterial(const TGeoMaterial& gm) :
               fPressure(gm.fPressure),
               fState(gm.fState),
               fShader(gm.fShader),
-              fCerenkov(gm.fCerenkov),
+              fCherenkov(gm.fCherenkov),
               fElement(gm.fElement),
               fUserExtension(gm.fUserExtension->Grab()),
               fFWExtension(gm.fFWExtension->Grab())
@@ -244,7 +244,7 @@ TGeoMaterial& TGeoMaterial::operator=(const TGeoMaterial& gm)
       fPressure=gm.fPressure;
       fState=gm.fState;
       fShader=gm.fShader;
-      fCerenkov=gm.fCerenkov;
+      fCherenkov=gm.fCherenkov;
       fElement=gm.fElement;
       fUserExtension = gm.fUserExtension->Grab();
       fFWExtension = gm.fFWExtension->Grab();
@@ -398,7 +398,7 @@ Bool_t TGeoMaterial::IsEq(const TGeoMaterial *other) const
    if (TMath::Abs(fA-other->GetA())>1E-3) return kFALSE;
    if (TMath::Abs(fZ-other->GetZ())>1E-3) return kFALSE;
    if (TMath::Abs(fDensity-other->GetDensity())>1E-6) return kFALSE;
-   if (GetCerenkovProperties() != other->GetCerenkovProperties()) return kFALSE;
+   if (GetCherenkovProperties() != other->GetCherenkovProperties()) return kFALSE;
 //   if (fRadLen != other->GetRadLen()) return kFALSE;
 //   if (fIntLen != other->GetIntLen()) return kFALSE;
    return kTRUE;
@@ -929,7 +929,7 @@ Bool_t TGeoMixture::IsEq(const TGeoMaterial *other) const
    if (TMath::Abs(fA-other->GetA())>1E-3) return kFALSE;
    if (TMath::Abs(fZ-other->GetZ())>1E-3) return kFALSE;
    if (TMath::Abs(fDensity-other->GetDensity())>1E-6) return kFALSE;
-   if (GetCerenkovProperties() != other->GetCerenkovProperties()) return kFALSE;
+   if (GetCherenkovProperties() != other->GetCherenkovProperties()) return kFALSE;
 //   if (fRadLen != other->GetRadLen()) return kFALSE;
 //   if (fIntLen != other->GetIntLen()) return kFALSE;
    for (Int_t i=0; i<fNelements; i++) {
