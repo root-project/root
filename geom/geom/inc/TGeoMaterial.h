@@ -131,7 +131,7 @@ public:
 
 
 
-   ClassDef(TGeoMaterial, 5)              // base material class
+   ClassDef(TGeoMaterial, 6)              // base material class
 
 //***** Need to add classes and globals to LinkDef.h *****
 };
