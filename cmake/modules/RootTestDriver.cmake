@@ -147,7 +147,7 @@ if(CMD)
       file(WRITE ${ERR} "${_errvar}")
     endif()
 
-    if(DEFINED RC AND (NOT _rc EQUAL RC))
+    if(DEFINED RC AND (NOT "${_rc}" STREQUAL "${RC}"))
       message(FATAL_ERROR "error code: ${_rc}")
     elseif(NOT DEFINED RC AND _rc)
       message(FATAL_ERROR "error code: ${_rc}")
