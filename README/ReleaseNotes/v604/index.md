@@ -1007,7 +1007,7 @@ hostname is looked up and Locate() returns the full url, including the path.
 
 ***
 
-## HEAD of the v6-04-00-patches branch
+## Release 6.04/14
 
 Changes will be part of the future 6.04/14
 
@@ -1027,3 +1027,8 @@ Changes will be part of the future 6.04/14
 ### PyROOT
 
 - Fix handling of `vector<enums>` [ROOT-7916]
+
+
+***
+
+## HEAD of the v6-04-00-patches branch
