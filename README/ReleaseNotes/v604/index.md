@@ -1014,6 +1014,8 @@ Changes will be part of the future 6.04/14
 ### Build system
 
 - Added build option builtin_openssl to build OpenSSL internally. This is specially needed for the lastest Mac OSX (El Capitan) 
+- Fix configuration of threading in LLVM.
+- Fix issue with inconsistent visibility [ROOT-7896]
 
 ### GL
 
@@ -1022,7 +1024,7 @@ Changes will be part of the future 6.04/14
 ### Interpreter
 
 - Update automatic variables if gDirectory changes [ROOT-7830]
-
+- Fix issue with initialization of statics in interpreter [ROOT-7901]
 
 ### PyROOT
 
