@@ -136,8 +136,7 @@ Three methods have been added to manage implicit multi-threading in ROOT: ROOT::
   specified by `SetMaximum()` and `SetMinimum()`.
 
 ## Geometry Libraries
-* In `TGeoMaterial` and `TGeoMedium` the data member "Cerenkov" has been replaced
-  by "Cherenkov". The corresponding setters and getters have been changed too.
+
 
 ## Database Libraries
 

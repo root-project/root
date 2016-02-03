@@ -48,20 +48,20 @@ public:
    };
 
 protected:
-   Int_t                    fIndex;         // material index
-   Double_t                 fA;             // A of material
-   Double_t                 fZ;             // Z of material
-   Double_t                 fDensity;       // density of material
-   Double_t                 fRadLen;        // radiation length
-   Double_t                 fIntLen;        // interaction length
-   Double_t                 fTemperature;   // temperature
-   Double_t                 fPressure;      // pressure
-   EGeoMaterialState        fState;         // material state
-   TObject                 *fShader;        // shader with optical properties
-   TObject                 *fCherenkov;     // pointer to class with Cherenkov properties
-   TGeoElement             *fElement;       // pointer to element composing the material
-   TGeoExtension           *fUserExtension; //! Transient user-defined extension to materials
-   TGeoExtension           *fFWExtension;   //! Transient framework-defined extension to materials
+   Int_t                    fIndex;      // material index
+   Double_t                 fA;          // A of material
+   Double_t                 fZ;          // Z of material
+   Double_t                 fDensity;    // density of material
+   Double_t                 fRadLen;     // radiation length
+   Double_t                 fIntLen;     // interaction length
+   Double_t                 fTemperature; // temperature
+   Double_t                 fPressure;   // pressure
+   EGeoMaterialState        fState;      // material state
+   TObject                 *fShader;     // shader with optical properties
+   TObject                 *fCerenkov;   // pointer to class with Cerenkov properties
+   TGeoElement             *fElement;    // pointer to element composing the material
+   TGeoExtension           *fUserExtension;  //! Transient user-defined extension to materials
+   TGeoExtension           *fFWExtension;    //! Transient framework-defined extension to materials
 
 // methods
    TGeoMaterial(const TGeoMaterial&);
@@ -99,7 +99,7 @@ public:
    virtual Double_t         GetRadLen() const  {return fRadLen;}
    virtual Double_t         GetIntLen() const  {return fIntLen;}
    Int_t                    GetIndex();
-   virtual TObject         *GetCherenkovProperties() const {return fCherenkov;}
+   virtual TObject         *GetCerenkovProperties() const {return fCerenkov;}
    Char_t                   GetTransparency() const {return (fFillStyle<3000 || fFillStyle>3100)?0:Char_t(fFillStyle-3000);}
    Double_t                 GetTemperature() const {return fTemperature;}
    Double_t                 GetPressure() const {return fPressure;}
@@ -118,7 +118,7 @@ public:
    void                     SetZ(Double_t z) {fZ = z; SetRadLen(0);}
    void                     SetDensity(Double_t density) {fDensity = density; SetRadLen(0);}
    void                     SetIndex(Int_t index) {fIndex=index;}
-   virtual void             SetCherenkovProperties(TObject* cherenkov) {fCherenkov = cherenkov;}
+   virtual void             SetCerenkovProperties(TObject* cerenkov) {fCerenkov = cerenkov;}
    void                     SetRadLen(Double_t radlen, Double_t intlen=0.);
    void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kMatUsed, flag);}
    void                     SetTransparency(Char_t transparency=0) {fFillStyle = 3000+transparency;}
