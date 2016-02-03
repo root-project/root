@@ -188,5 +188,20 @@ int main()
    fs.ReadToken(f2);   // read 'Author:'
    Ok(35, fs == "Author:");
    
+   // test tokenizer
+   Ssiz_t from = 0;  
+   TString act;
+   TString option="-FF 1  -FF  2"; // with 2 spaces
+   Int_t results[2] = {1,2};
+   Int_t i = 0;
+ 
+   while( option.Tokenize(act, from, " ")) {
+      if (act == "-FF") {
+         option.Tokenize(act, from, " ");
+         Ok(36, act.Atoi() == results[i]);
+         i++; 
+      }
+   }
+
    return 0;
 }
