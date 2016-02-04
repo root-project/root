@@ -559,5 +559,10 @@ Changes will be part of the future 6.04/14
 ### PyROOT
 
 - Fix case where c++ exception in a constructor were not propagated to python [ROOT-7864]
-- Fix case where PyROOT was unable to call copy constructo [ROOT-7783]
+- Fix case where PyROOT was unable to call copy constructor [ROOT-7783]
 - Fix handling of `vector<enums>` [ROOT-7916]
+- Fix the wrong return value when calling a c++ function returning short, or when retuning a char with a
+  negative value [ROOT-7872]
+- Added a new configuration option (*ROOT.PyConfig.DisableRootLogon*) to disable processing of the 
+  rootlogon[.py|C] macro in addition to the -n option in the command arguments.
+ 
