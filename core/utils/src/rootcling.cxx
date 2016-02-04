@@ -295,12 +295,6 @@ const bool buildingROOT = true;
 bool buildingROOT = false;
 #endif
 
-#ifdef R__EXTERN_LLVMDIR
-# define R__LLVMDIR R__EXTERN_LLVMDIR
-#else
-# define R__LLVMDIR "./interpreter/llvm/inst" // only works for rootbuild for now!
-#endif
-
 namespace {
    // Copy-pasted from TClass.h We cannot #include TClass.h because we are compiling in -fno-rtti mode
    template <typename T> struct IsPointerTClassCopy {
