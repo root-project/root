@@ -1852,12 +1852,10 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       if (!system) {
          // Mark the library in $ROOTSYS/lib as system.
          const char *dirname = DirName(path);
-         TString rootlibdir = TROOT::GetLibDir();
-         system = R__MatchFilename(rootlibdir,dirname);
+         system = R__MatchFilename(TROOT::GetLibDir(), dirname);
 
          if (!system) {
-            TString rootbindir = TROOT::GetBinDir();
-            system = R__MatchFilename(rootbindir,dirname);
+            system = R__MatchFilename(TROOT::GetBinDir(), dirname);
          }
       }
 
@@ -2482,8 +2480,9 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
 #else
    TString touch = "echo > "; touch += "\"" + depfilename + "\"";
 #endif
-   TString builddep = TROOT::GetBinDir();
-   builddep += "/rmkdepend \"-f";
+   TString builddep = "rmkdepend";
+   gSystem->PrependPathName(TROOT::GetBinDir(), builddep);
+   builddep += " \"-f";
    builddep += depfilename;
    builddep += "\" -o_" + extension + "." + gSystem->GetSoExt() + " ";
    if (build_loc.BeginsWith(gSystem->WorkingDirectory())) {
