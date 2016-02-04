@@ -184,5 +184,9 @@ Three methods have been added to manage implicit multi-threading in ROOT: ROOT::
 ## Class Reference Guide
 
 ## Build, Configuration and Testing Infrastructure
+* Added new 'builtin_vc' option to bundle a version of Vc within ROOT. 
+  The default is OFF, however if the Vc package is not found in the system the option is switched to
+  ON if the option 'vc' option is ON.  
+
 
 

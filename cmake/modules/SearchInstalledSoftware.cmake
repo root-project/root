@@ -1113,6 +1113,31 @@ if(geocad)
   endif()
 endif()
 
+#---Check for Vc---------------------------------------------------------------------
+if(vc)
+  if(NOT builtin_vc)
+    message(STATUS "Looking for Vc")
+    find_package(Vc 1.0 CONFIG QUIET)
+    if(NOT Vc_FOUND)
+      message(STATUS "Vc not found. Switching on builtin_vc option")
+      set(builtin_vc ON CACHE BOOL "" FORCE)
+    endif()
+    set(Vc_INCLUDE_DIRS ${Vc_INCLUDE_DIR})    # Missing from VcConfig.cmake
+  endif()
+  if(builtin_vc)
+    set(vc_version 1.1.0)
+    ExternalProject_Add(
+      VC
+      URL ${repository_tarfiles}/Vc-${vc_version}.tar.gz
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+    )
+    set(Vc_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+    set(Vc_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX})
+  endif()
+endif()
+
 #---Report non implemented options---------------------------------------------------
 foreach(opt afs glite sapdb srp)
   if(${opt})
