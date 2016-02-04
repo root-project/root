@@ -156,6 +156,16 @@ Three methods have been added to manage implicit multi-threading in ROOT: ROOT::
 
 ## Language Bindings
 
+### PyROOT
+  * Added a new configuration option to disable processing of the rootlogon[.py|C] macro in addition
+    ro the -n option in the command arguments. To disable processing the rootlogon do the following 
+    before any other command that will trigger initialization:
+    ```
+    >>> import ROOT
+    >>> ROOT.PyConfig.DisableRootLogon = True
+    >>> ...
+    ```
+
 ### Notebook integration
 
   * Refactoring of the Jupyter integration layer into the new package JupyROOT.
