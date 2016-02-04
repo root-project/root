@@ -141,7 +141,7 @@ ClassImp(TRint)
 TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
              Int_t numOptions, Bool_t noLogo):
    TApplication(appClassName, argc, argv, options, numOptions),
-   fCaughtException(kFALSE)
+   fCaughtSignal(0)
 {
    fNcmd          = 0;
    fDefaultPrompt = "root [%d] ";
@@ -415,7 +415,7 @@ void TRint::Run(Bool_t retrn)
             // to call Getlinem(kInit, GetPrompt());
             needGetlinemInit = kTRUE;
 
-            if (error != 0 || fCaughtException) break;
+            if (error != 0 || fCaughtSignal) break;
          }
       } ENDTRY;
 
@@ -423,12 +423,12 @@ void TRint::Run(Bool_t retrn)
          if (retrn) return;
          if (error) {
             retval = error;
-         } else if (fCaughtException) {
-            retval = 1;
+         } else if (fCaughtSignal) {
+            retval = fCaughtSignal + 128;
          }
-         // Bring retval into sensible range, 0..125.
-         if (retval < 0) retval = 1;
-         else if (retval > 125) retval = 1;
+         // Bring retval into sensible range, 0..255.
+         if (retval < 0 || retval > 255)
+            retval = 255;
          Terminate(retval);
       }
 
@@ -444,10 +444,13 @@ void TRint::Run(Bool_t retrn)
    if (QuitOpt()) {
       printf("\n");
       if (retrn) return;
-      Terminate(fCaughtException ? 1 : 0);
+      Terminate(fCaughtSignal ? fCaughtSignal + 128 : 0);
    }
 
    TApplication::Run(retrn);
+
+   // Reset to happiness.
+   fCaughtSignal = 0;
 
    Getlinem(kCleanUp, 0);
 }
@@ -634,13 +637,13 @@ Bool_t TRint::HandleTermInput()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Handle exceptions (kSigBus, kSigSegmentationViolation,
+/// Handle signals (kSigBus, kSigSegmentationViolation,
 /// kSigIllegalInstruction and kSigFloatingException) trapped in TSystem.
 /// Specific TApplication implementations may want something different here.
 
 void TRint::HandleException(Int_t sig)
 {
-   fCaughtException = kTRUE;
+   fCaughtSignal = sig;
    if (TROOT::Initialized()) {
       if (gException) {
          Getlinem(kCleanUp, 0);

@@ -1,15 +1,14 @@
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
-
 set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
-set(LLVM_INCLUDE_EXAMPLES OFF)
-set(LLVM_BUILD_TOOLS OFF)
-set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON)
+set(LLVM_INCLUDE_EXAMPLES OFF CACHE BOOL "")
+set(LLVM_BUILD_TOOLS OFF CACHE BOOL "")
+set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 # We only use llvm/clang through TCling which is (with the help of core/meta) already taking a lock
 # to serialize access to llvm.  We can later review how to make this finer grained by using llvm's own locking
 # mechanism.
-set(LLVM_ENABLE_THREADS OFF)
+set(LLVM_ENABLE_THREADS OFF CACHE BOOL "")
 if(cxx14)
   set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "")
 endif()
@@ -70,10 +69,10 @@ set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
 #--- Do not build cling as part of llvm.
 set(LLVM_NOCLING "YES")
 
-set(CLANG_ENABLE_STATIC_ANALYZER "NO")
-set(CLANG_ENABLE_ARCMT "NO")
-set(CLANG_ENABLE_COMPILER "NO")
-set(CLANG_ENABLE_FORMAT "NO")
+set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
+set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
+set(CLANG_ENABLE_COMPILER OFF CACHE BOOL "")
+set(CLANG_ENABLE_FORMAT OFF CACHE BOOL "")
 
 #---Add the sub-directory excluding all the targets from all-----------------------------------------
 if(CMAKE_GENERATOR MATCHES "Xcode")

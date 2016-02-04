@@ -90,6 +90,3 @@ $(COREDO): CXXFLAGS += $(PCREINC)
 ifeq ($(ARCH),linuxicc)
 $(COREDO):     CXXFLAGS += -wd191
 endif
-
-# rebuild after reconfigure
-$(call stripsrc,$(BASEDIRS)/TROOT.o): config/Makefile.config

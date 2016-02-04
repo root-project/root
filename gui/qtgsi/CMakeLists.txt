@@ -5,7 +5,9 @@
 
 include(${QT_USE_FILE})
 add_definitions(-DQT3_SUPPORT= -DQT3_SUPPORT_CONSTRUCTOR= -DQT_DLL -DQT_THREAD_SUPPORT)
-include_directories(${QT_QT3SUPPORT_INCLUDE_DIR})
+if(QT_QT3SUPPORT_INCLUDE_DIR)
+  include_directories(${QT_QT3SUPPORT_INCLUDE_DIR})
+endif()
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated-register)
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-uninitialized)

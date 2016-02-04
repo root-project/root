@@ -1,3 +1,6 @@
+/* @(#)root/core/cont:$Id$ */
+// Author: Danilo Piparo November 2015
+
 #ifndef ROOT_TSeq
 #define ROOT_TSeq
 
@@ -101,6 +104,12 @@ namespace ROOT {
          }
          T operator-(int v) {
             return fCounter - v;
+         }
+         T operator+(const iterator &other) {
+            return fCounter + other.fCounter;
+         }
+         T operator-(const iterator &other) {
+            return fCounter - other.fCounter;
          }
          iterator &operator--() {
             fCounter -= fStep;

@@ -262,7 +262,7 @@ set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression)
 
 #---Define the primordial tutorials-----------------------------------
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
-                PASSRC 1 FAILREGEX "Error in" "error:" LABELS tutorial)
+                PASSRC 255 FAILREGEX "Error in" "error:" LABELS tutorial)
 ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
                 FAILREGEX "Error in" "error:" LABELS tutorial)
 
@@ -272,7 +272,7 @@ foreach(t ${tutorials})
   if(index EQUAL -1)
     set(rc 0)
   else()
-    set(rc 1)
+    set(rc 255)
   endif()
   string(REPLACE ".C" "" tname ${t})
   string(REPLACE "/" "-" tname ${tname})
@@ -329,7 +329,7 @@ if(ROOT_python_FOUND)
     if(index EQUAL -1)
       set(rc 0)
     else()
-      set(rc 1)
+      set(rc 255)
     endif()
 
     string(REPLACE ".py" "" tname ${t})

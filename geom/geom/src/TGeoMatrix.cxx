@@ -8,164 +8,207 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author : Andrei Gheata - Wed 24 Oct 2001 09:46:13 AM CEST
 
-////////////////////////////////////////////////////////////////////////////////
-// Geometrical transformation package.
-//
-//   All geometrical transformations handled by the modeller are provided as a
-// built-in package. This was designed to minimize memory requirements and
-// optimize performance of point/vector master-to-local and local-to-master
-// computation. We need to have in mind that a transformation in TGeo has 2
-// major use-cases. The first one is for defining the placement of a volume
-// with respect to its container reference frame. This frame will be called
-// 'master' and the frame of the positioned volume - 'local'. If T is a
-// transformation used for positioning volume daughters, then:
-//
-//          MASTER = T * LOCAL
-//
-//   Therefore a local-to-master conversion will be performed by using T, while
-// a master-to-local by using its inverse. The second use case is the computation
-// of the global transformation of a given object in the geometry. Since the
-// geometry is built as 'volumes-inside-volumes', this global transformation
-// represent the pile-up of all local transformations in the corresponding
-// branch. The conversion from the global reference frame and the given object
-// is also called master-to-local, but it is handled by the manager class.
-//   A general homogenous transformation is defined as a 4x4 matrix embeeding
-// a rotation, a translation and a scale. The advantage of this description
-// is that each basic transformation can be represented as a homogenous matrix,
-// composition being performed as simple matrix multiplication.
-//   Rotation:                      Inverse rotation:
-//         r11  r12  r13   0              r11  r21  r31   0
-//         r21  r22  r23   0              r12  r22  r32   0
-//         r31  r32  r33   0              r13  r23  r33   0
-//          0    0    0    1               0    0    0    1
-//
-//   Translation:                   Inverse translation:
-//          1    0    0    tx               1    0    0   -tx
-//          0    1    0    ty               0    1    0   -ty
-//          0    0    1    tz               0    0    1   -tz
-//          0    0    0    1                0    0    0   1
-//
-//   Scale:                         Inverse scale:
-//          sx   0    0    0              1/sx  0    0    0
-//          0    sy   0    0               0   1/sy  0    0
-//          0    0    sz   0               0    0   1/sz  0
-//          0    0    0    1               0    0    0    1
-//
-//  where: rij are the 3x3 rotation matrix components,
-//         tx, ty, tz are the translation components
-//         sx, sy, sz are arbitrary scale constants on the eacks axis,
-//
-//   The disadvantage in using this approach is that computation for 4x4 matrices
-// is expensive. Even combining two translation would become a multiplication
-// of their corresponding matrices, which is quite an undesired effect. On the
-// other hand, it is not a good idea to store a translation as a block of 16
-// numbers. We have therefore chosen to implement each basic transformation type
-// as a class deriving from the same basic abstract class and handling its specific
-// data and point/vector transformation algorithms.
-//
-//Begin_Html
-/*
-<img src="gif/t_transf.jpg">
+/** \class TGeoMatrix
+\ingroup Geometry_classes
+
+Geometrical transformation package.
+
+  All geometrical transformations handled by the modeller are provided as a
+built-in package. This was designed to minimize memory requirements and
+optimize performance of point/vector master-to-local and local-to-master
+computation. We need to have in mind that a transformation in TGeo has 2
+major use-cases. The first one is for defining the placement of a volume
+with respect to its container reference frame. This frame will be called
+'master' and the frame of the positioned volume - 'local'. If T is a
+transformation used for positioning volume daughters, then:
+
+~~~ {.cpp}
+         MASTER = T * LOCAL
+~~~
+
+  Therefore a local-to-master conversion will be performed by using T, while
+a master-to-local by using its inverse. The second use case is the computation
+of the global transformation of a given object in the geometry. Since the
+geometry is built as 'volumes-inside-volumes', this global transformation
+represent the pile-up of all local transformations in the corresponding
+branch. The conversion from the global reference frame and the given object
+is also called master-to-local, but it is handled by the manager class.
+  A general homogenous transformation is defined as a 4x4 matrix embedding
+a rotation, a translation and a scale. The advantage of this description
+is that each basic transformation can be represented as a homogenous matrix,
+composition being performed as simple matrix multiplication.
+
+  Rotation:                      Inverse rotation:
+
+~~~ {.cpp}
+        r11  r12  r13   0              r11  r21  r31   0
+        r21  r22  r23   0              r12  r22  r32   0
+        r31  r32  r33   0              r13  r23  r33   0
+         0    0    0    1               0    0    0    1
+~~~
+
+  Translation:                   Inverse translation:
+
+~~~ {.cpp}
+         1    0    0    tx               1    0    0   -tx
+         0    1    0    ty               0    1    0   -ty
+         0    0    1    tz               0    0    1   -tz
+         0    0    0    1                0    0    0   1
+~~~
+
+  Scale:                         Inverse scale:
+
+~~~ {.cpp}
+         sx   0    0    0              1/sx  0    0    0
+         0    sy   0    0               0   1/sy  0    0
+         0    0    sz   0               0    0   1/sz  0
+         0    0    0    1               0    0    0    1
+~~~
+
+ where:
+       - `rij` are the 3x3 rotation matrix components,
+       - `tx`, `ty`, `tz` are the translation components
+       - `sx`, `sy`, `sz` are arbitrary scale constants on each axis,
+
+  The disadvantage in using this approach is that computation for 4x4 matrices
+is expensive. Even combining two translation would become a multiplication
+of their corresponding matrices, which is quite an undesired effect. On the
+other hand, it is not a good idea to store a translation as a block of 16
+numbers. We have therefore chosen to implement each basic transformation type
+as a class deriving from the same basic abstract class and handling its specific
+data and point/vector transformation algorithms.
+
+\image html geom_transf.jpg
+
+### The base class TGeoMatrix defines abstract metods for:
+
+#### translation, rotation and scale getters. Every derived class stores only
+  its specific data, e.g. a translation stores an array of 3 doubles and a
+  rotation an array of 9. However, asking which is the rotation array of a
+  TGeoTranslation through the base TGeoMatrix interface is a legal operation.
+  The answer in this case is a pointer to a global constant array representing
+  an identity rotation.
+
+~~~ {.cpp}
+     Double_t *TGeoMatrix::GetTranslation()
+     Double_t *TGeoMatrix::GetRotation()
+     Double_t *TGeoMatrix::GetScale()
+~~~
+
+#### MasterToLocal() and LocalToMaster() point and vector transformations :
+
+~~~ {.cpp}
+     void      TGeoMatrix::MasterToLocal(const Double_t *master, Double_t *local)
+     void      TGeoMatrix::LocalToMaster(const Double_t *local, Double_t *master)
+     void      TGeoMatrix::MasterToLocalVect(const Double_t *master, Double_t *local)
+     void      TGeoMatrix::LocalToMasterVect(const Double_t *local, Double_t *master)
+~~~
+
+  These allow correct conversion also for reflections.
+
+#### Transformation type getters :
+
+~~~ {.cpp}
+     Bool_t    TGeoMatrix::IsIdentity()
+     Bool_t    TGeoMatrix::IsTranslation()
+     Bool_t    TGeoMatrix::IsRotation()
+     Bool_t    TGeoMatrix::IsScale()
+     Bool_t    TGeoMatrix::IsCombi() (translation + rotation)
+     Bool_t    TGeoMatrix::IsGeneral() (translation + rotation + scale)
+~~~
+
+  Combinations of basic transformations are represented by specific classes
+deriving from TGeoMatrix. In order to define a matrix as a combination of several
+others, a special class TGeoHMatrix is provided. Here is an example of matrix
+creation :
+
+### Matrix creation example:
+
+~~~ {.cpp}
+  root[0] TGeoRotation r1,r2;
+          r1.SetAngles(90,0,30);        // rotation defined by Euler angles
+          r2.SetAngles(90,90,90,180,0,0); // rotation defined by GEANT3 angles
+          TGeoTranslation t1(-10,10,0);
+          TGeoTranslation t2(10,-10,5);
+          TGeoCombiTrans c1(t1,r1);
+          TGeoCombiTrans c2(t2,r2);
+          TGeoHMatrix h = c1 * c2; // composition is done via TGeoHMatrix class
+  root[7] TGeoHMatrix *ph = new TGeoHMatrix(hm); // this is the one we want to
+                                               // use for positioning a volume
+  root[8] ph->Print();
+          ...
+          pVolume->AddNode(pVolDaughter,id,ph) // now ph is owned by the manager
+~~~
+
+### Rule for matrix creation:
+ Unless explicitly used for positioning nodes (TGeoVolume::AddNode()) all
+matrices deletion have to be managed by users. Matrices passed to geometry
+have to be created by using new() operator and their deletion is done by
+TGeoManager class.
+
+### Available geometrical transformations
+
+#### TGeoTranslation
+Represent a (dx,dy,dz) translation. Data members:
+   Double_t fTranslation[3]. Translations can be added/subtracted.
+
+~~~ {.cpp}
+   TGeoTranslation t1;
+   t1->SetTranslation(-5,10,4);
+   TGeoTranslation *t2 = new TGeoTranslation(4,3,10);
+   t2->Subtract(&t1);
+~~~
+
+#### Rotations
+ Represent a pure rotation. Data members: Double_t fRotationMatrix[3*3].
+   Rotations can be defined either by Euler angles, either, by GEANT3 angles :
+
+~~~ {.cpp}
+   TGeoRotation *r1 = new TGeoRotation();
+   r1->SetAngles(phi, theta, psi); // all angles in degrees
+~~~
+
+   This represent the composition of : first a rotation about Z axis with
+   angle phi, then a rotation with theta about the rotated X axis, and
+   finally a rotation with psi about the new Z axis.
+
+~~~ {.cpp}
+   r1->SetAngles(th1,phi1, th2,phi2, th3,phi3)
+~~~
+
+   This is a rotation defined in GEANT3 style. Theta and phi are the spherical
+   angles of each axis of the rotated coordinate system with respect to the
+   initial one. This construction allows definition of malformed rotations,
+   e.g. not orthogonal. A check is performed and an error message is issued
+   in this case.
+
+   Specific utilities : determinant, inverse.
+
+#### Scale transformations
+     Represent a scale shrinking/enlargement. Data
+     members :Double_t fScale[3]. Not fully implemented yet.
+
+#### Combined transformations
+Represent a rotation followed by a translation.
+Data members: Double_t fTranslation[3], TGeoRotation *fRotation.
+
+~~~ {.cpp}
+   TGeoRotation *rot = new TGeoRotation("rot",10,20,30);
+   TGeoTranslation trans;
+   ...
+   TGeoCombiTrans *c1 = new TGeoCombiTrans(trans, rot);
+   TGeoCombiTrans *c2 = new TGeoCombiTrans("somename",10,20,30,rot)
+~~~
+
+
+#### TGeoGenTrans
+Combined transformations including a scale. Not implemented.
+
+#### TGeoIdentity
+A generic singleton matrix representing a identity transformation
+   NOTE: identified by the global variable gGeoIdentity.
 */
-//End_Html
-//
-// The base class TGeoMatrix defines abstract metods for:
-//
-// - translation, rotation and scale getters. Every derived class stores only
-//   its specific data, e.g. a translation stores an array of 3 doubles and a
-//   rotation an array of 9. However, asking which is the rotation array of a
-//   TGeoTranslation through the base TGeoMatrix interface is a legal operation.
-//   The answer in this case is a pointer to a global constant array representing
-//   an identity rotation.
-//      Double_t *TGeoMatrix::GetTranslation()
-//      Double_t *TGeoMatrix::GetRotation()
-//      Double_t *TGeoMatrix::GetScale()
-//
-// - MasterToLocal() and LocalToMaster() point and vector transformations :
-//      void      TGeoMatrix::MasterToLocal(const Double_t *master, Double_t *local)
-//      void      TGeoMatrix::LocalToMaster(const Double_t *local, Double_t *master)
-//      void      TGeoMatrix::MasterToLocalVect(const Double_t *master, Double_t *local)
-//      void      TGeoMatrix::LocalToMasterVect(const Double_t *local, Double_t *master)
-//   These allow correct conversion also for reflections.
-// - Transformation type getters :
-//      Bool_t    TGeoMatrix::IsIdentity()
-//      Bool_t    TGeoMatrix::IsTranslation()
-//      Bool_t    TGeoMatrix::IsRotation()
-//      Bool_t    TGeoMatrix::IsScale()
-//      Bool_t    TGeoMatrix::IsCombi() (translation + rotation)
-//      Bool_t    TGeoMatrix::IsGeneral() (translation + rotation + scale)
-//
-//   Combinations of basic transformations are represented by specific classes
-// deriving from TGeoMatrix. In order to define a matrix as a combination of several
-// others, a special class TGeoHMatrix is provided. Here is an example of matrix
-// creation :
-//
-// Matrix creation example:
-//
-//   root[0] TGeoRotation r1,r2;
-//           r1.SetAngles(90,0,30);        // rotation defined by Euler angles
-//           r2.SetAngles(90,90,90,180,0,0); // rotation defined by GEANT3 angles
-//           TGeoTranslation t1(-10,10,0);
-//           TGeoTranslation t2(10,-10,5);
-//           TGeoCombiTrans c1(t1,r1);
-//           TGeoCombiTrans c2(t2,r2);
-//           TGeoHMatrix h = c1 * c2; // composition is done via TGeoHMatrix class
-//   root[7] TGeoHMatrix *ph = new TGeoHMatrix(hm); // this is the one we want to
-//                                                // use for positioning a volume
-//   root[8] ph->Print();
-//           ...
-//           pVolume->AddNode(pVolDaughter,id,ph) // now ph is owned by the manager
-//
-// Rule for matrix creation:
-//  - unless explicitly used for positioning nodes (TGeoVolume::AddNode()) all
-// matrices deletion have to be managed by users. Matrices passed to geometry
-// have to be created by using new() operator and their deletion is done by
-// TGeoManager class.
-//
-// Available geometrical transformations
-//
-//   1. TGeoTranslation - represent a (dx,dy,dz) translation. Data members:
-// Double_t fTranslation[3]. Translations can be added/subtracted.
-//         TGeoTranslation t1;
-//         t1->SetTranslation(-5,10,4);
-//         TGeoTranslation *t2 = new TGeoTranslation(4,3,10);
-//         t2->Subtract(&t1);
-//
-//   2. Rotations - represent a pure rotation. Data members: Double_t fRotationMatrix[3*3].
-// Rotations can be defined either by Euler angles, either, by GEANT3 angles :
-//         TGeoRotation *r1 = new TGeoRotation();
-//         r1->SetAngles(phi, theta, psi); // all angles in degrees
-//      This represent the composition of : first a rotation about Z axis with
-//      angle phi, then a rotation with theta about the rotated X axis, and
-//      finally a rotation with psi about the new Z axis.
-//
-//         r1->SetAngles(th1,phi1, th2,phi2, th3,phi3)
-//      This is a rotation defined in GEANT3 style. Theta and phi are the spherical
-//      angles of each axis of the rotated coordinate system with respect to the
-//      initial one. This construction allows definition of malformed rotations,
-//      e.g. not orthogonal. A check is performed and an error message is issued
-//      in this case.
-//
-//      Specific utilities : determinant, inverse.
-//
-//   3. Scale transformations - represent a scale shrinking/enlargement. Data
-//      members :Double_t fScale[3]. Not fully implemented yet.
-//
-//   4. Combined transformations - represent a rotation folowed by a translation.
-//      Data members: Double_t fTranslation[3], TGeoRotation *fRotation.
-//         TGeoRotation *rot = new TGeoRotation("rot",10,20,30);
-//         TGeoTranslation trans;
-//         ...
-//         TGeoCombiTrans *c1 = new TGeoCombiTrans(trans, rot);
-//         TGeoCombiTrans *c2 = new TGeoCombiTrans("somename",10,20,30,rot)
-//
-//   5. TGeoGenTrans - combined transformations including a scale. Not implemented.
-//   6. TGeoIdentity - a generic singleton matrix representing a identity transformation
-//       NOTE: identified by the global variable gGeoIdentity.
-//
-//
 
 #include "Riostream.h"
 #include "TObjArray.h"
@@ -309,12 +352,12 @@ char *TGeoMatrix::GetPointerName() const
 /// The homogenous matrix associated with the transformation is used for
 /// piling up's and visualization. A homogenous matrix is a 4*4 array
 /// containing the translation, the rotation and the scale components
-///
+/// ~~~ {.cpp}
 ///          | R00*sx  R01    R02    dx |
 ///          | R10    R11*sy  R12    dy |
 ///          | R20     R21   R22*sz  dz |
 ///          |  0       0      0      1 |
-///
+/// ~~~
 ///   where Rij is the rotation matrix, (sx, sy, sz) is the scale
 /// transformation and (dx, dy, dz) is the translation.
 
@@ -544,11 +587,11 @@ void TGeoMatrix::RegisterYourself()
 ////////////////////////////////////////////////////////////////////////////////
 /// If no name was supplied in the ctor, the type of transformation is checked.
 /// A letter will be prepended to the name :
-///   t - translation
-///   r - rotation
-///   s - scale
-///   c - combi (translation + rotation)
-///   g - general (tr+rot+scale)
+///  - t - translation
+///  - r - rotation
+///  - s - scale
+///  - c - combi (translation + rotation)
+///  - g - general (tr+rot+scale)
 /// The index of the transformation in gGeoManager list of transformations will
 /// be appended.
 
@@ -568,7 +611,14 @@ void TGeoMatrix::SetDefaultName()
    TString name = TString::Format("%c%d", type, index);
    SetName(name);
 }
-//=============================================================================
+
+/** \class TGeoTranslation -
+\ingroup Geometry_classes
+
+Class describing translations. A translation is
+basically an array of 3 doubles matching the positions 12, 13
+and 14 in the homogenous matrix description.
+*/
 
 ClassImp(TGeoTranslation)
 
@@ -793,7 +843,11 @@ void TGeoTranslation::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*=
    TObject::SetBit(kGeoSavePrimitive);
 }
 
-//=============================================================================
+/** \class TGeoRotation
+\ingroup Geometry_classes
+Class describing rotations. A rotation is a 3*3 array
+Column vectors has to be orthogonal unit vectors.
+*/
 
 ClassImp(TGeoRotation)
 
@@ -1191,7 +1245,7 @@ void TGeoRotation::SetAngles(Double_t theta1, Double_t phi1, Double_t theta2, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retreive rotation angles
+/// Retrieve rotation angles
 
 void TGeoRotation::GetAngles(Double_t &theta1, Double_t &phi1, Double_t &theta2, Double_t &phi2,
                              Double_t &theta3, Double_t &phi3) const
@@ -1212,7 +1266,7 @@ void TGeoRotation::GetAngles(Double_t &theta1, Double_t &phi1, Double_t &theta2,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retreive Euler angles.
+/// Retrieve Euler angles.
 
 void TGeoRotation::GetAngles(Double_t &phi, Double_t &theta, Double_t &psi) const
 {
@@ -1302,7 +1356,13 @@ void TGeoRotation::MultiplyBy(TGeoRotation *rot, Bool_t after)
    }
    memcpy(&fRotationMatrix[0], &newmat[0], kN9);
 }
-//=============================================================================
+
+/** \class TGeoScale
+\ingroup Geometry_classes
+Class describing scale transformations. A scale is an
+array of 3 doubles (sx, sy, sz) multiplying elements 0, 5 and 10
+of the homogenous matrix. A scale is normalized : sx*sy*sz = 1
+*/
 
 ClassImp(TGeoScale)
 
@@ -1472,7 +1532,11 @@ Double_t TGeoScale::MasterToLocal(Double_t dist, const Double_t *dir) const
    return scale*dist;
 }
 
-//=============================================================================
+/** \class TGeoCombiTrans
+\ingroup Geometry_classes
+Class describing rotation + translation. Most frequently used in the description
+of TGeoNode 's
+*/
 
 ClassImp(TGeoCombiTrans)
 
@@ -1950,7 +2014,11 @@ const Double_t *TGeoCombiTrans::GetRotationMatrix() const
    if (!fRotation) return kIdentityMatrix;
    return fRotation->GetRotationMatrix();
 }
-//=============================================================================
+
+/** \class TGeoGenTrans
+\ingroup Geometry_classes
+Most general transformation, holding a translation, a rotation and a scale
+*/
 
 ClassImp(TGeoGenTrans)
 
@@ -2056,7 +2124,13 @@ Bool_t TGeoGenTrans::Normalize()
       fScale[i] /= normfactor;
    return kTRUE;
 }
-//=============================================================================
+
+/** \class TGeoIdentity
+\ingroup Geometry_classes
+An identity transformation. It holds no data member
+and returns pointers to static null translation and identity
+transformations for rotation and scale
+*/
 
 ClassImp(TGeoIdentity)
 
@@ -2087,14 +2161,14 @@ TGeoMatrix &TGeoIdentity::Inverse() const
    return *gGeoIdentity;
 }
 
-/*************************************************************************
- * TGeoHMatrix - Matrix class used for computing global transformations  *
- *     Should NOT be used for node definition. An instance of this class *
- *     is generally used to pile-up local transformations starting from  *
- *     the top level physical node, down to the current node.            *
- *************************************************************************/
+/** \class TGeoHMatrix
+\ingroup Geometry_classes
 
-//=============================================================================
+Matrix class used for computing global transformations
+Should NOT be used for node definition. An instance of this class
+is generally used to pile-up local transformations starting from
+the top level physical node, down to the current node.
+*/
 
 ClassImp(TGeoHMatrix)
 

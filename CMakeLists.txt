@@ -241,9 +241,9 @@ if(WIN32)
                      DEPENDS root.exe Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 else()
   add_custom_command(OUTPUT tutorials/hsimple.root
-                     COMMAND ROOTIGNOREPREFIX=1 $<TARGET_FILE:root> -l -q -b -n -x hsimple.C -e return
+                     COMMAND ROOTIGNOREPREFIX=1 $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
                      WORKING_DIRECTORY tutorials
-                     DEPENDS root root.exe Cling Hist Tree Gpad Graf HistPainter move_artifacts)
+                     DEPENDS root.exe Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 endif()
 install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 

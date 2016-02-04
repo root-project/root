@@ -81,8 +81,9 @@ Exceptions are now caught in the interactive ROOT session, instead of terminatin
 Three methods have been added to manage implicit multi-threading in ROOT: ROOT::EnableImplicitMT(numthreads), ROOT::DisableImplicitMT and ROOT::IsImplicitMTEnabled. They can be used to enable, disable and check the status of the global implicit multi-threading in ROOT, respectively.
 
 ## I/O Libraries
-Custom streamers need to #include TBuffer.h explicitly (see
+* Custom streamers need to #include TBuffer.h explicitly (see
 [section Core Libraries](#core-libs))
+* Check and flag short reads as errors in the xroot plugins. This fixes [ROOT-3341].
 
 
 ## TTree Libraries
@@ -123,7 +124,11 @@ Custom streamers need to #include TBuffer.h explicitly (see
   head, which is usually not what one wants.
   The arrow tip is now drawn using a continuous line.
 * It is now possible to select an histogram on a canvas by clicking on the vertical
-  lines of the bins boundaries. This problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-6649?).
+  lines of the bins boundaries.
+  This problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-6649).
+* When using time format in axis, `TGaxis::PaintAxis()` may in some cases call
+  `strftime()` with invalid parameter causing a crash.
+  This problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-7689).
 
 ## 3D Graphics Libraries
 
