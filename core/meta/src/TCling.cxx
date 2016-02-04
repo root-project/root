@@ -1108,7 +1108,7 @@ TCling::TCling(const char *name, const char *title)
       // TCling::AddIncludePath(".");
 
       // Add the root include directory and etc/ to list searched by default.
-      TCling::AddIncludePath(TROOT::GetIncludeDir().Data());
+      TCling::AddIncludePath(TROOT::GetIncludeDir());
    }
 
    // Don't check whether modules' files exist.

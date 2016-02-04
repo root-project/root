@@ -147,7 +147,7 @@ THttpServer::THttpServer(const char *engine) :
    if (jsrootsys != 0) fJSROOTSYS = jsrootsys;
 
    if (fJSROOTSYS.Length() == 0) {
-      TString jsdir = TString::Format("%s/http", TROOT::GetEtcDir());
+      TString jsdir = TString::Format("%s/http", TROOT::GetEtcDir().Data());
       if (gSystem->ExpandPathName(jsdir)) {
          Warning("THttpServer", "problems resolving '%s', use JSROOTSYS to specify $ROOTSYS/etc/http location", jsdir.Data());
          fJSROOTSYS = ".";
