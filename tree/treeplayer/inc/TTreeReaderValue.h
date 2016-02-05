@@ -122,10 +122,11 @@ namespace Internal {
 template <typename T>
 class TTreeReaderValue: public ROOT::Internal::TTreeReaderValueBase {
 public:
+   using NonConstT_t = typename std::remove_const<T>::type;
    TTreeReaderValue() {}
    TTreeReaderValue(TTreeReader& tr, const char* branchname):
       TTreeReaderValueBase(&tr, branchname,
-                           TDictionary::GetDictionary(typeid(std::remove_const<T>::type))) {}
+                           TDictionary::GetDictionary(typeid(NonConstT_t))) {}
 
    T* Get() {
       if (!fProxy){
