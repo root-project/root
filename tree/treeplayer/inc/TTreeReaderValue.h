@@ -32,6 +32,8 @@
 #include "TBranchProxy.h"
 #endif
 
+#include <type_traits>
+
 class TBranch;
 class TBranchElement;
 class TLeaf;
@@ -122,7 +124,8 @@ class TTreeReaderValue: public ROOT::Internal::TTreeReaderValueBase {
 public:
    TTreeReaderValue() {}
    TTreeReaderValue(TTreeReader& tr, const char* branchname):
-      TTreeReaderValueBase(&tr, branchname, TDictionary::GetDictionary(typeid(T))) {}
+      TTreeReaderValueBase(&tr, branchname,
+                           TDictionary::GetDictionary(typeid(std::remove_const<T>))) {}
 
    T* Get() {
       if (!fProxy){
