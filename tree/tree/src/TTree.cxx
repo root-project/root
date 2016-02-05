@@ -50,7 +50,9 @@ Various kinds of branches can be added to a tree:
 - any object (inheriting from TObject). (we expect this option be the most frequent)
 - a ClonesArray. (a specialized object for collections of same class objects)
 
+
 ## Case A
+
 ~~~ {.cpp}
     TBranch *branch = tree->Branch(branchname, address, leaflist, bufsize)
 ~~~
@@ -86,7 +88,9 @@ Various kinds of branches can be added to a tree:
   TTree (i.e. you will not be able to read it back on a platform with a different
   padding strategy).
 
+
 ## Case B
+
 ~~~ {.cpp}
     TBranch *branch = tree->Branch(branchname, &p_object, bufsize, splitlevel)
     TBranch *branch = tree->Branch(branchname, className, &p_object, bufsize, splitlevel)
@@ -127,7 +131,9 @@ is not taken over by the TTree.  I.e. eventhough an object will be allocated
 by TTree::Branch if the pointer p_object is zero, the object will <b>not</b>
 be deleted when the TTree is deleted.
 
+
 ## Case C
+
 ~~~ {.cpp}
     MyClass object;
     TBranch *branch = tree->Branch(branchname, &object, bufsize, splitlevel)
@@ -146,7 +152,9 @@ Note: The 2nd parameter must be the address of a valid object.
   of the object itself. In case the object member is a TClonesArray,
   it is processed as a TObject*, only one branch.
 
+
 ## Case D
+
 ~~~ {.cpp}
     TBranch *branch = tree->Branch(branchname,clonesarray, bufsize, splitlevel)
     clonesarray is the address of a pointer to a TClonesArray.
@@ -156,7 +164,9 @@ For example, if the TClonesArray is an array of TTrack objects,
 this function will create one subbranch for each data member of
 the object TTrack.
 
+
 ## Case E
+
 ~~~ {.cpp}
     TBranch *branch = tree->Branch( branchname, STLcollection, buffsize, splitlevel);
 ~~~
