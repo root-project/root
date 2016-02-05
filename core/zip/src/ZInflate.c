@@ -1236,6 +1236,101 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   *irep = isize;
 }
 
+void R__unzip_RAC(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep, int offset)
+{
+  long isize;
+  uch  *ibufptr,*obufptr;
+  long  ibufcnt, obufcnt;
+
+  *irep = 0L;
+
+  /*   C H E C K   H E A D E R   */
+
+  if (*srcsize < HDRSIZE) {
+    fprintf(stderr,"R__unzip: too small source\n");
+    return;
+  }
+
+  /*   C H E C K   H E A D E R   */
+  if (!(src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED) &&
+      !(src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED) &&
+      !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0)) {
+    fprintf(stderr,"Error R__unzip: error in header\n");
+    return;
+  }
+
+  ibufptr = src + HDRSIZE;
+  ibufcnt = (long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16);
+  isize   = (long)src[6] | ((long)src[7] << 8) | ((long)src[8] << 16);
+  obufptr = tgt;
+  obufcnt = *tgtsize;
+
+  if (obufcnt < isize) {
+    fprintf(stderr,"R__unzip: too small target\n");
+    return;
+  }
+
+  if (ibufcnt + HDRSIZE != *srcsize) {
+    fprintf(stderr,"R__unzip: discrepancy in source length\n");
+    return;
+  }
+
+  /*   D E C O M P R E S S   D A T A  */
+
+  /* New zlib format */
+  if (src[0] == 'Z' && src[1] == 'L') {
+    z_stream stream; /* decompression stream */
+    int err = 0;
+
+    stream.next_in   = (Bytef*)(&src[HDRSIZE]);
+    stream.avail_in  = (uInt)(*srcsize);
+    stream.next_out  = (Bytef*)tgt;
+    stream.avail_out = (uInt)(*tgtsize);
+    stream.zalloc    = (alloc_func)0;
+    stream.zfree     = (free_func)0;
+    stream.opaque    = (voidpf)0;
+
+    err = inflateInit(&stream);
+    if (err != Z_OK) {
+      fprintf(stderr,"R__unzip: error %d in inflateInit (zlib)\n",err);
+      return;
+    }
+
+    err = inflate(&stream, Z_FINISH);
+    if (err != Z_STREAM_END) {
+      inflateEnd(&stream);
+      fprintf(stderr,"R__unzip: error %d in inflate (zlib)\n",err);
+      return;
+    }
+
+    inflateEnd(&stream);
+
+    *irep = stream.total_out;
+    return;
+  }
+  else if (src[0] == 'X' && src[1] == 'Z') {
+    R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
+    return;
+  }
+
+  /* Old zlib format */
+  if (R__Inflate(&ibufptr, &ibufcnt, &obufptr, &obufcnt)) {
+    fprintf(stderr,"R__unzip: error during decompression\n");
+    return;
+  }
+
+  /* if (obufptr - tgt != isize) {
+    There are some rare cases when a few more bytes are required */
+  if (obufptr - tgt > *tgtsize) {
+    fprintf(stderr,"R__unzip: discrepancy (%ld) with initial size: %ld, tgtsize=%d\n",
+            (long)(obufptr - tgt),isize,*tgtsize);
+    *irep = obufptr - tgt;
+    return;
+  }
+
+  *irep = isize;
+}
+
 #ifndef CHECK_EOF
 static int R__ReadByte (uch** ibufptr, long*  ibufcnt)
 {

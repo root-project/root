@@ -22,6 +22,7 @@ extern "C" void R__zipMultipleAlgorithm_RAC(int cxlevel, int *srcsize, char *src
 extern "C" void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep);
 
 extern "C" void R__unzip(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
+extern "C" void R__unzip_RAC(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep, int offset);
 
 extern "C" int R__unzip_header(int *srcsize, unsigned char *src, int *tgtsize);
 

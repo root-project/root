@@ -145,7 +145,7 @@ public:
            Int_t     FlushOneBasket(UInt_t which);
 
    virtual char     *GetAddress() const {return fAddress;}
-           TBasket  *GetBasket(Int_t basket);
+           TBasket  *GetBasket(Int_t basket, Bool_t random = kTRUE, Long64_t offset = 0);
            Int_t    *GetBasketBytes() const {return fBasketBytes;}
            Long64_t *GetBasketEntry() const {return fBasketEntry;}
    virtual Long64_t  GetBasketSeek(Int_t basket) const;

@@ -442,7 +442,7 @@ void inline TBasket::InitializeCompressedBuffer(Int_t len, TFile* file)
 /// There is a lot of code duplication but it was necesary to assure
 /// the expected behavior when there is no cache.
 
-Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
+Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file, Bool_t random, Long64_t relativeentry)
 {
    if(!fBranch->GetDirectory()) {
       return -1;
@@ -584,6 +584,8 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       Int_t nin, nbuf;
       Int_t nout = 0, noutot = 0, nintot = 0;
 
+      Int_t relativeoffset = 0;
+
       // Unzip all the compressed objects in the compressed object buffer.
       while (1) {
          // Check the header for errors.
@@ -596,8 +598,17 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
             memcpy(rawUncompressedBuffer+fKeylen, rawCompressedObjectBuffer+fKeylen, fObjlen);
             goto AfterBuffer;
          }
-
-         R__unzip(&nin, rawCompressedObjectBuffer, &nbuf, (unsigned char*) rawUncompressedObjectBuffer, &nout);
+         if (!random) {
+            R__unzip(&nin, rawCompressedObjectBuffer, &nbuf, (unsigned char*) rawUncompressedObjectBuffer, &nout);
+         } else {
+            printf("fNevBuf=%d\n",fNevBuf);
+//            for(int i=0; i<fNevBuf; ++i){
+//               printf("fEntryOffset[%d]=%d\n",i,fEntryOffset[i]);
+//               printf("fCompressedEntryOffset[%d]=%d\n",i,fCompressedEntryOffset[i]);
+//            }
+//            relativeoffset = fCompressedEntryOffset[relativeentry];
+            R__unzip_RAC(&nin, rawCompressedObjectBuffer, &nbuf, (unsigned char*) rawUncompressedObjectBuffer, &nout, relativeoffset);
+         }
          if (!nout) break;
          noutot += nout;
          nintot += nin;
@@ -623,7 +634,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       // Nothing is compressed - copy over wholesale.
       memcpy(rawUncompressedBuffer, rawCompressedBuffer, len);
    }
-
+   printf("Before AfterBuffer\n");
 AfterBuffer:
 
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
@@ -651,6 +662,11 @@ AfterBuffer:
       // size of the buffer is too large, so we can not use the
       // fBufferRef->BufferSize()
       fBufferRef->ReadArray(fDisplacement);
+   }
+
+   for(int i=0; i<fNevBuf; ++i){ //##
+      printf("fEntryOffset[%d]=%d\n",i,fEntryOffset[i]);
+//      printf("fCompressedEntryOffset[%d]=%d\n",i,fCompressedEntryOffset[i]);
    }
 
    return 0;
@@ -980,8 +996,12 @@ Int_t TBasket::WriteBuffer()
       //         if (fEntryOffset[z]) fEntryOffset[z] = fEntryOffset[z] - fEntryOffset[z-1];
       //      }
       fBufferRef->WriteArray(fEntryOffset,fNevBuf+1);
+      for(int i=0; i< fNevBuf+1; ++i)
+         printf("fEntryOffset[%d]=%d\n", i, fEntryOffset[i]);
       if (fDisplacement) {
          fBufferRef->WriteArray(fDisplacement,fNevBuf+1);
+         for(int i=0; i< fNevBuf+1; ++i)
+            printf("fEntryOffset[%d]=%d\n", i, fEntryOffset[i]);
          delete [] fDisplacement; fDisplacement = 0;
       }
    }

@@ -84,7 +84,7 @@ public:
            Int_t   GetLast() const {return fLast;}
    virtual void    MoveEntries(Int_t dentries);
    virtual void    PrepareBasket(Long64_t /* entry */) {};
-           Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
+           Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file, Bool_t random = kTRUE, Long64_t relativeentry = 0);
            Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
    virtual void    Reset();
 
