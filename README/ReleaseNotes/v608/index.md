@@ -65,9 +65,7 @@ Also:
   * TPluginManager was made thread-safe [ROOT-7927].
 
 ### Containers
-A pseudo-container (generator) was created, ROOT::TSeq<T>. This template is
-inspired by the xrange built-in function of Python. See the example
-[here](https://root.cern.ch/doc/master/cnt001__basictseq_8C.html).
+* A pseudo-container (generator) was created, ROOT::TSeq<T>. This template is inspired by the xrange built-in function of Python. See the example [here](https://root.cern.ch/doc/master/cnt001__basictseq_8C.html).
 
 ### Dictionaries
 
@@ -78,7 +76,9 @@ Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
 Exceptions are now caught in the interactive ROOT session, instead of terminating ROOT.
 
 ## Parallelisation
-Three methods have been added to manage implicit multi-threading in ROOT: ROOT::EnableImplicitMT(numthreads), ROOT::DisableImplicitMT and ROOT::IsImplicitMTEnabled. They can be used to enable, disable and check the status of the global implicit multi-threading in ROOT, respectively.
+* Three methods have been added to manage implicit multi-threading in ROOT: ROOT::EnableImplicitMT(numthreads), ROOT::DisableImplicitMT and ROOT::IsImplicitMTEnabled. They can be used to enable, disable and check the status of the global implicit multi-threading in ROOT, respectively.
+* Even if the default reduce function specified in the invocation of the MapReduce method of TProcPool returns a pointer to a TObject, the return value of MapReduce is properly casted to the type returned by the map function.
+* Add tutorial showing how to fill randomly histograms using the TProcPool class
 
 ## I/O Libraries
 * Custom streamers need to #include TBuffer.h explicitly (see
