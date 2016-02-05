@@ -399,12 +399,7 @@ TEnv::TEnv(const char *name)
 
       TString sname = "system";
       sname += name;
-#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-      // on iOS etc does not exist and system<name> resides in $ROOTSYS
-      char *s = gSystem->ConcatFileName(TROOT::GetRootSys(), sname);
-#else
       char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sname);
-#endif
       ReadFile(s, kEnvGlobal);
       delete [] s;
       if (!gSystem->Getenv("ROOTENV_NO_HOME")) {

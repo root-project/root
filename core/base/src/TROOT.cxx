@@ -2123,12 +2123,7 @@ void TROOT::ReadGitInfo()
 #endif
 
    TString gitinfo = "gitinfo.txt";
-   char *filename = 0;
-#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-   filename = gSystem->ConcatFileName(TROOT::GetRootSys(), gitinfo);
-#else
-   filename = gSystem->ConcatFileName(TROOT::GetEtcDir(), gitinfo);
-#endif
+   char *filename = gSystem->ConcatFileName(TROOT::GetEtcDir(), gitinfo);
 
    FILE *fp = fopen(filename, "r");
    if (fp) {

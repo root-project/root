@@ -4541,12 +4541,7 @@ void TCling::InitRootmapFile(const char *name)
 
    TString sname = "system";
    sname += name;
-#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-   // on iOS etc does not exist and system<name> resides in $ROOTSYS
-   char *s = gSystem->ConcatFileName(TROOT::GetRootSys(), sname);
-#else
    char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sname);
-#endif
 
    Int_t ret = ReadRootmapFile(s);
    if (ret == -3) // old format
