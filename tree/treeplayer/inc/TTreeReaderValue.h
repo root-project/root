@@ -125,7 +125,7 @@ public:
    TTreeReaderValue() {}
    TTreeReaderValue(TTreeReader& tr, const char* branchname):
       TTreeReaderValueBase(&tr, branchname,
-                           TDictionary::GetDictionary(typeid(std::remove_const<T>))) {}
+                           TDictionary::GetDictionary(typeid(std::remove_const<T>::type))) {}
 
    T* Get() {
       if (!fProxy){
