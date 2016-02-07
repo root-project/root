@@ -10,6 +10,7 @@
 from ctypes import CDLL, c_char_p
 from threading import Thread
 from time import sleep as timeSleep
+from resource import setrlimit, RLIMIT_STACK, RLIM_INFINITY
 
 _lib = CDLL("libJupyROOT.so")
 
@@ -85,6 +86,7 @@ class Runner(object):
     '''
     def __init__(self, function):
         self.function = function
+        setrlimit(RLIMIT_STACK,(RLIM_INFINITY,RLIM_INFINITY))
         self.thread = None
 
     def Run(self, argument):
