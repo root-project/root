@@ -21,7 +21,7 @@ ROOTTEST_GENERATE_DICTIONARY(stl_makeproject_test stl_makeproject_test.h LINKDEF
 ROOTTEST_ADD_TEST(examples
                   COPY_TO_BUILDDIR stl_makeproject_test.h
                   MACRO create_makeproject_examples.C
-                  PRECMD cmake -E remove stl_example.root || :
+                  PRECMD ${CMAKE_COMMAND} -E remove stl_example.root || :
                   OUTREF create_makeproject_examples.ref
                   DEPENDS ${GENERATE_DICTIONARY_TEST})
 
