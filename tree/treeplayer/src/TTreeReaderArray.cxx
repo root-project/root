@@ -192,11 +192,25 @@ namespace {
 
    class TArrayParameterSizeReader : public TObjectArrayReader {
    private:
-      TTreeReaderValue<Int_t> indexReader;
+      // The index can be of type int or unsigned int.
+      std::pair<TTreeReaderValue<Int_t>, TTreeReaderValue<UInt_t>> fIndexReader;
    public:
-      TArrayParameterSizeReader(TTreeReader *treeReader, const char *branchName) : indexReader(*treeReader, branchName) {}
+      TArrayParameterSizeReader(TTreeReader *treeReader, const char *branchName)
+         {
+            if (TLeaf* sizeLeaf = treeReader->GetTree()->FindLeaf(branchName)) {
+               if (sizeLeaf->IsUnsigned()) {
+                  fIndexReader.second = TTreeReaderValue<UInt_t>(*treeReader, branchName);
+               } else {
+                  fIndexReader.first = TTreeReaderValue<Int_t>(*treeReader, branchName);
+               }
+            }
+         }
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/){ return *indexReader; }
+      virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) {
+         if (fIndexReader.first.IsValid())
+            return *fIndexReader.first;
+         return *fIndexReader.second;
+      }
    };
 
    // Reader interface for fixed size arrays
