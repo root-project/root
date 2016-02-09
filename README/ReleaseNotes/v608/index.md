@@ -96,6 +96,7 @@ Exceptions are now caught in the interactive ROOT session, instead of terminatin
 ## Histogram Libraries
 
 * TH2Poly has a functional Merge method.
+* Implemented the `TGraphAsymmErrors` constructor directly from an ASCII file.
 
 ## Math Libraries
 
@@ -158,7 +159,7 @@ Exceptions are now caught in the interactive ROOT session, instead of terminatin
 
 ### PyROOT
   * Added a new configuration option to disable processing of the rootlogon[.py|C] macro in addition
-    ro the -n option in the command arguments. To disable processing the rootlogon do the following 
+    ro the -n option in the command arguments. To disable processing the rootlogon do the following
     before any other command that will trigger initialization:
     ```
     >>> import ROOT
@@ -184,9 +185,9 @@ Exceptions are now caught in the interactive ROOT session, instead of terminatin
 ## Class Reference Guide
 
 ## Build, Configuration and Testing Infrastructure
-* Added new 'builtin_vc' option to bundle a version of Vc within ROOT. 
+* Added new 'builtin_vc' option to bundle a version of Vc within ROOT.
   The default is OFF, however if the Vc package is not found in the system the option is switched to
-  ON if the option 'vc' option is ON.  
+  ON if the option 'vc' option is ON.
 
 
 
