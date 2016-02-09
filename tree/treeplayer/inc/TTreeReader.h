@@ -138,10 +138,12 @@ public:
    };
 
    TTreeReader():
+      fTree(0),
       fDirectory(0),
       fEntryStatus(kEntryNoTree),
       fDirector(0),
-      fLastEntry(-1)
+      fLastEntry(-1),
+      fProxiesSet(false)
    {}
 
    TTreeReader(TTree* tree);
