@@ -72,7 +72,7 @@ public:
   constexpr int GetNDim() const { return DIMENSIONS; }
   /// Number of bins of this histogram, including all overflow and underflow
   /// bins. Simply the product of all axes' number of bins.
-  virtual int GetNBins() const = 0;
+  virtual int GetNBins() const noexcept = 0;
 
   /// Given the coordinate `x`, determine the index of the bin.
   virtual int GetBinIndex(const Coord_t& x) const = 0;
@@ -89,7 +89,7 @@ public:
 
   /// The bin's uncertainty. size() of the vector is a multiple of 2:
   /// several kinds of uncertainty, same number of entries for lower and upper.
-  virtual std::vector<double> GetBinUncertainties(int binidx) const = 0;
+  virtual double GetBinUncertainty(int binidx) const = 0;
 
   /// The bin content, cast to double.
   virtual double GetBinContentAsDouble(int binidx) const = 0;
@@ -131,6 +131,7 @@ public:
   using Coord_t = typename THistImplPrecisionAgnosticBase<DIMENSIONS>::Coord_t;
   /// Type of the bin content (and thus weights).
   using Weight_t = PRECISION;
+  using Stat_t = STATISTICS;
   /// Type of the Fill(x, w) function
   using FillFunc_t = void (THistImplBase::*)(const Coord_t& x, Weight_t w);
 
@@ -157,11 +158,12 @@ public:
   /// Retrieve the pointer to the overridden Fill(x, w) function.
   virtual FillFunc_t GetFillFunc() const = 0;
 
+  /// Get the number of bins in this histogram, including possible under- and
+  /// overflow bins.
+  int GetNBins() const noexcept final { return fContent.size(); }
 
   /// Get the bin content (sum of weights) for bin index `binidx`.
-  PRECISION GetBinContent(int binidx) const final {
-    return fContent[binidx];
-  }
+  PRECISION GetBinContent(int binidx) const { return fContent[binidx]; }
 
   /// Const access to statistics.
   const STATISTICS& GetStat() const noexcept { return *this; }
@@ -221,6 +223,13 @@ struct TGetBinCount {
     return std::get<I>(axes).GetNBins() * TGetBinCount<I - 1, AXES>()(axes);
   }
 };
+
+
+template<class... AXISCONFIG>
+int GetNBinsFromAxes(AXISCONFIG... axisArgs) {
+  using axesTuple = std::tuple<AXISCONFIG...>;
+  return TGetBinCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...});
+}
 
 
 template <int IDX, class HISTIMPL, class AXES, bool GROW>
@@ -356,18 +365,11 @@ public:
     = typename Hist::AxisIterRange_t<NDIM>;
 
 private:
-  /// Get the number of bins in this histograms, including possible under- and
-  /// overflow bins.
-  int GetNBins() const final {
-    return Internal::TGetBinCount<sizeof...(AXISCONFIG) - 1,
-       decltype(fAxes)>()(fAxes);
-  }
-
   std::tuple<AXISCONFIG...> fAxes; ///< The histogram's axes
 
 public:
-  THistImpl(STATISTICS statConfig, AXISCONFIG... axisArgs);
-  THistImpl(std::string_view title, STATISTICS statConfig, AXISCONFIG... axisArgs);
+  THistImpl(AXISCONFIG... axisArgs);
+  THistImpl(std::string_view title, AXISCONFIG... axisArgs);
 
   /// Retrieve the fill function for this histogram implementation, to prevent
   /// the virtual function call for high-frequency fills.
@@ -444,9 +446,8 @@ public:
     }
 #endif
 
-    for (int i = 0; i < xN.size(); ++i) {
+    for (size_t i = 0; i < xN.size(); ++i) {
       Fill(xN[i], weightN[i]);
-      STATISTICS::Fill(xN[i], weightN[i]);
     }
   }
 
@@ -454,23 +455,22 @@ public:
   /// For each element `i`, the weight `weightN[i]` will be added to the bin
   /// at the coordinate `xN[i]`
   void FillN(const std::array_view<Coord_t> xN) final {
-    for (int i = 0; i < xN.size(); ++i) {
-      Fill(xN[i]);
-      STATISTICS::Fill(xN[i]);
+    for (auto&& x: xN) {
+      Fill(x);
     }
   }
 
   /// Return the uncertainties for the given bin.
-  std::vector<double> GetBinUncertainties(int binidx) const final {
-    return STATISTICS::GetBinUncertainties(binidx, *this);
+  double GetBinUncertainty(int binidx) const final {
+    return STATISTICS::GetBinUncertainty(binidx, *this);
   }
 
   /// Add a single weight `w` to the bin at coordinate `x`.
   void Fill(const Coord_t& x, Weight_t w = 1.) {
     int bin = GetBinIndexAndGrow(x);
     if (bin >= 0)
-      AddBinContent(bin, w);
-    STATISTICS::Fill(x, w);
+      ImplBase_t::AddBinContent(bin, w);
+    STATISTICS::Fill(x, bin, w);
   }
 
   /// Get the content of the bin at position `x`.
@@ -506,16 +506,16 @@ public:
 
 template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
 THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::
-THistImpl(STATISTICS statConfig, AXISCONFIG... axisArgs):
-  STATISTICS(statConfig), fAxes{axisArgs...},
-  THistImplBase<DIMENSIONS, PRECISION, STATISTICS>(GetNBins())
+THistImpl(AXISCONFIG... axisArgs):
+  ImplBase_t(Internal::GetNBinsFromAxes(axisArgs...)),
+  fAxes{axisArgs...}
 {}
 
 template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
 THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::
-THistImpl(std::string_view title, STATISTICS statConfig, AXISCONFIG... axisArgs):
-  STATISTICS(statConfig), fAxes{axisArgs...},
-  THistImplBase<DIMENSIONS, PRECISION, STATISTICS>(title, GetNBins())
+THistImpl(std::string_view title, AXISCONFIG... axisArgs):
+  ImplBase_t(title, Internal::GetNBinsFromAxes(axisArgs...)),
+  fAxes{axisArgs...}
 {}
 
 #if 0

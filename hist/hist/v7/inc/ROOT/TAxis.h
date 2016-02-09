@@ -301,8 +301,8 @@ public:
   /// \param high - the high axis range. Any coordinate above that is considered
   ///   as overflow. The last bin's higher edge is at this value.
   TAxisEquidistant(int nbins, double low, double high) noexcept:
-    TAxisBase(nbins), fLow(low),
-    fInvBinWidth(nbins / (high - low)) { }
+    TAxisBase(nbins), fLow(std::min(low, high)),
+    fInvBinWidth(nbins / std::fabs(high - low)) { }
 
   /// Initialize a TAxisEquidistant.
   /// \param[in] title - axis title used for graphics and text representation.
@@ -333,7 +333,7 @@ public:
 
   /// Get the high end of the axis range.
   double GetMaximum() const noexcept {
-    return fLow + fInvBinWidth * GetNBinsNoOver();
+    return fLow + GetNBinsNoOver()/ fInvBinWidth;
   }
 
   /// Get the width of the bins
@@ -454,7 +454,7 @@ public:
   /// Construct a TAxisIrregular from a vector of bin borders.
   /// \note The bin borders must be sorted in increasing order!
   explicit TAxisIrregular(const std::vector<double> &binborders):
-    TAxisBase(binborders.size()), fBinBorders(binborders) {
+    TAxisBase(binborders.size() - 1), fBinBorders(binborders) {
 #ifdef R__DO_RANGE_CHECKS
     if (!std::is_sorted(fBinBorders.begin(), fBinBorders.end()))
       R__ERROR_HERE("HIST") << "Bin borders must be sorted!";
@@ -466,7 +466,7 @@ public:
   /// Faster, noexcept version taking an rvalue of binborders. The compiler will
   /// know when it can take this one.
   explicit TAxisIrregular(std::vector<double> &&binborders) noexcept:
-    TAxisBase(binborders.size()), fBinBorders(std::move(binborders)) {
+    TAxisBase(binborders.size() - 1), fBinBorders(std::move(binborders)) {
 #ifdef R__DO_RANGE_CHECKS
     if (!std::is_sorted(fBinBorders.begin(), fBinBorders.end()))
       R__ERROR_HERE("HIST") << "Bin borders must be sorted!";
@@ -476,7 +476,7 @@ public:
   /// Construct a TAxisIrregular from a vector of bin borders.
   /// \note The bin borders must be sorted in increasing order!
   TAxisIrregular(std::string_view title, const std::vector<double> &binborders):
-    TAxisBase(title, binborders.size()), fBinBorders(binborders) {
+    TAxisBase(title, binborders.size() - 1), fBinBorders(binborders) {
 #ifdef R__DO_RANGE_CHECKS
     if (!std::is_sorted(fBinBorders.begin(), fBinBorders.end()))
       R__ERROR_HERE("HIST") << "Bin borders must be sorted!";
@@ -488,7 +488,7 @@ public:
   /// Faster, noexcept version taking an rvalue of binborders. The compiler will
   /// know when it can take this one.
   TAxisIrregular(std::string_view title, std::vector<double> &&binborders) noexcept:
-    TAxisBase(title, binborders.size()), fBinBorders(std::move(binborders)) {
+    TAxisBase(title, binborders.size() - 1), fBinBorders(std::move(binborders)) {
 #ifdef R__DO_RANGE_CHECKS
     if (!std::is_sorted(fBinBorders.begin(), fBinBorders.end()))
       R__ERROR_HERE("HIST") << "Bin borders must be sorted!";
@@ -690,22 +690,22 @@ public:
 
   /// Represents a `TAxisIrregular` with `binborders`.
   TAxisConfig(const std::vector<double> &binborders):
-    TAxisBase(binborders.size()), fKind(kIrregular),
+    TAxisBase(binborders.size() - 1), fKind(kIrregular),
     fBinBorders(binborders) { }
 
   /// Represents a `TAxisIrregular` with `binborders` and title.
   TAxisConfig(std::string_view title, const std::vector<double> &binborders):
-    TAxisBase(title, binborders.size()), fKind(kIrregular),
+    TAxisBase(title, binborders.size() - 1), fKind(kIrregular),
     fBinBorders(binborders) { }
 
   /// Represents a `TAxisIrregular` with `binborders`.
   TAxisConfig(std::vector<double> &&binborders) noexcept:
-    TAxisBase(binborders.size()), fKind(kIrregular),
+    TAxisBase(binborders.size() - 1), fKind(kIrregular),
     fBinBorders(std::move(binborders)) { }
 
   /// Represents a `TAxisIrregular` with `binborders`.
   TAxisConfig(std::string_view title, std::vector<double> &&binborders) noexcept:
-    TAxisBase(title, binborders.size()), fKind(kIrregular),
+    TAxisBase(title, binborders.size() - 1), fKind(kIrregular),
     fBinBorders(std::move(binborders)) { }
 
   /// Represents a `TAxisLabels` with `labels`.
@@ -780,7 +780,7 @@ template<>
 struct AxisConfigToType<TAxisConfig::kEquidistant> {
   using Axis_t = TAxisEquidistant;
 
-  Axis_t operator()(TAxisConfig cfg) noexcept {
+  Axis_t operator()(const TAxisConfig& cfg) noexcept {
     return TAxisEquidistant(cfg.GetNBinsNoOver(),
                             cfg.GetBinBorders()[0], cfg.GetBinBorders()[1]);
   }
@@ -790,7 +790,7 @@ template<>
 struct AxisConfigToType<TAxisConfig::kGrow> {
   using Axis_t = TAxisGrow;
 
-  Axis_t operator()(TAxisConfig cfg) noexcept {
+  Axis_t operator()(const TAxisConfig& cfg) noexcept {
     return TAxisGrow(cfg.GetNBinsNoOver(),
                      cfg.GetBinBorders()[0], cfg.GetBinBorders()[1]);
   }
@@ -799,7 +799,7 @@ template<>
 struct AxisConfigToType<TAxisConfig::kIrregular> {
   using Axis_t = TAxisIrregular;
 
-  Axis_t operator()(TAxisConfig cfg) {
+  Axis_t operator()(const TAxisConfig& cfg) {
     return TAxisIrregular(cfg.GetBinBorders());
   }
 };
@@ -808,7 +808,7 @@ template<>
 struct AxisConfigToType<TAxisConfig::kLabels> {
   using Axis_t = TAxisLabels;
 
-  Axis_t operator()(TAxisConfig cfg) {
+  Axis_t operator()(const TAxisConfig& cfg) {
     return TAxisLabels(cfg.GetBinLabels());
   }
 };

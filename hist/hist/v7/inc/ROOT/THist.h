@@ -77,6 +77,7 @@ public:
   using const_iterator = THistBinIter<ImplBase_t>;
 
   THist() = default;
+  THist(THist&&) = default;
 
   /// Create a histogram from an `array` of axes (`TAxisConfig`s) and possibly
   /// an initial `STATISTICS` object. The latter is usually just fine when
@@ -95,50 +96,45 @@ public:
   /// double curlies.
   ///
   ///     THist<2,int> h2i({{ {10, 0., 1.}, {{-1., 0., 1., 10., 100.}} }});
-  THist(std::array<TAxisConfig, DIMENSIONS> axes, STATISTICS statConfig = STATISTICS());
+  explicit THist(std::array<TAxisConfig, DIMENSIONS> axes);
 
   /// Constructor overload taking the histogram title
-  THist(std::string_view histTitle, std::array<TAxisConfig, DIMENSIONS> axes,
-        STATISTICS statConfig = STATISTICS());
+  THist(std::string_view histTitle, std::array<TAxisConfig, DIMENSIONS> axes);
 
   /// Constructor overload that's only available for DIMENSIONS == 1.
   template<class = typename std::enable_if<DIMENSIONS == 1>>
-  THist(const TAxisConfig &xaxis, STATISTICS statConfig = STATISTICS()):
-    THist({{xaxis}}, statConfig) { }
+  THist(const TAxisConfig &xaxis):
+    THist(std::array<TAxisConfig, 1>{{xaxis}}) { }
 
   /// Constructor overload that's only available for DIMENSIONS == 1, also
   /// passing the histogram title.
   template<class = typename std::enable_if<DIMENSIONS == 1>>
-  THist(std::string_view histTitle, const TAxisConfig &xaxis,
-        STATISTICS statConfig = STATISTICS()):
-    THist(histTitle, {{xaxis}}, statConfig) { }
+  THist(std::string_view histTitle, const TAxisConfig &xaxis):
+    THist(histTitle, std::array<TAxisConfig, 1>{{xaxis}}) { }
 
   /// Constructor overload that's only available for DIMENSIONS == 2.
   template<class = typename std::enable_if<DIMENSIONS == 2>>
-  THist(const TAxisConfig &xaxis, const TAxisConfig &yaxis,
-        STATISTICS statConfig = STATISTICS()):
-    THist({{xaxis, yaxis}}, statConfig) { }
+  THist(const TAxisConfig &xaxis, const TAxisConfig &yaxis):
+    THist(std::array<TAxisConfig, 2>{{xaxis, yaxis}}) { }
 
   /// Constructor overload that's only available for DIMENSIONS == 2, also
   /// passing histogram and axis titles.
   template<class = typename std::enable_if<DIMENSIONS == 2>>
-  THist(std::string_view histTitle, const TAxisConfig &xaxis, const TAxisConfig &yaxis,
-        STATISTICS statConfig = STATISTICS()):
-    THist(histTitle, {{xaxis, yaxis}}, statConfig) { }
+  THist(std::string_view histTitle, const TAxisConfig &xaxis, const TAxisConfig &yaxis):
+    THist(histTitle, std::array<TAxisConfig, 2>{{xaxis, yaxis}}) { }
 
   /// Constructor overload that's only available for DIMENSIONS == 3.
   template<class = typename std::enable_if<DIMENSIONS == 3>>
   THist(const TAxisConfig &xaxis, const TAxisConfig &yaxis,
-        const TAxisConfig &zaxis, STATISTICS statConfig = STATISTICS()):
-    THist({{xaxis, yaxis, zaxis}}, statConfig) { }
+        const TAxisConfig &zaxis):
+    THist(std::array<TAxisConfig, 3>{{xaxis, yaxis, zaxis}}) { }
 
 
   template<class = typename std::enable_if<DIMENSIONS == 3>>
   THist(std::string_view histTitle,
         const TAxisConfig &xaxis, const TAxisConfig &yaxis,
-        const TAxisConfig &zaxis,
-        STATISTICS statConfig = STATISTICS()):
-    THist(histTitle, {{xaxis, yaxis, zaxis}}, statConfig) { }
+        const TAxisConfig &zaxis):
+    THist(histTitle, std::array<TAxisConfig, 3>{{xaxis, yaxis, zaxis}}) { }
 
 
   /// Number of dimensions of the coordinates
@@ -183,8 +179,8 @@ public:
   const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBins()); }
 
 private:
-  FillFunc_t fFillFunc = nullptr; ///< Pinter to THistImpl::Fill() member function
   std::unique_ptr<ImplBase_t> fImpl; ///< The actual histogram implementation
+  FillFunc_t fFillFunc = nullptr; ///< Pinter to THistImpl::Fill() member function
 
   friend THist HistFromImpl<>(std::unique_ptr<ImplBase_t>);
   friend void swap<>(THist<DIMENSIONS, PRECISION> &a,
@@ -228,13 +224,12 @@ struct HistImplGen_t {
   std::unique_ptr<Detail::THistImplBase<DIMENSIONS, PRECISION, STATISTICS>>
   MakeNextAxis(std::string_view title,
                const std::array<TAxisConfig, DIMENSIONS> &axes,
-               const STATISTICS &statConfig,
                PROCESSEDAXISCONFIG... processedAxisArgs) {
     typename AxisConfigToType<KIND>::Axis_t nextAxis
       = AxisConfigToType<KIND>()(axes[IDIM]);
     return HistImplGen_t<DIMENSIONS, IDIM + 1, PRECISION, STATISTICS,
       PROCESSEDAXISCONFIG..., typename AxisConfigToType<KIND>::Axis_t>()
-      (title, axes, statConfig, processedAxisArgs..., nextAxis);
+      (title, axes, processedAxisArgs..., nextAxis);
   }
 
   /// Make a THistImpl-derived object reflecting the TAxisConfig array.
@@ -252,17 +247,16 @@ struct HistImplGen_t {
   std::unique_ptr<Detail::THistImplBase<DIMENSIONS, PRECISION, STATISTICS>>
   operator()(std::string_view title,
              const std::array <TAxisConfig, DIMENSIONS> &axes,
-             const STATISTICS &statConfig,
              PROCESSEDAXISCONFIG... processedAxisArgs) {
     switch (axes[IDIM].GetKind()) {
       case TAxisConfig::kEquidistant:
-        return MakeNextAxis<TAxisConfig::kEquidistant>(title, axes, statConfig,
+        return MakeNextAxis<TAxisConfig::kEquidistant>(title, axes,
                                                        processedAxisArgs...);
       case TAxisConfig::kGrow:
-        return MakeNextAxis<TAxisConfig::kGrow>(title, axes, statConfig,
+        return MakeNextAxis<TAxisConfig::kGrow>(title, axes,
                                                 processedAxisArgs...);
       case TAxisConfig::kIrregular:
-        return MakeNextAxis<TAxisConfig::kIrregular>(title, axes, statConfig,
+        return MakeNextAxis<TAxisConfig::kIrregular>(title, axes,
                                                      processedAxisArgs...);
       default:
         R__ERROR_HERE("HIST") << "Unhandled axis kind";
@@ -280,11 +274,10 @@ struct HistImplGen_t<DIMENSIONS, DIMENSIONS, PRECISION, STATISTICS,
   PROCESSEDAXISCONFIG...> {
   std::unique_ptr <Detail::THistImplBase<DIMENSIONS, PRECISION, STATISTICS>>
   operator()(std::string_view title, const std::array<TAxisConfig, DIMENSIONS> &,
-             const STATISTICS &statConfig,
              PROCESSEDAXISCONFIG... axisArgs) {
     using HistImplt_t
     = Detail::THistImpl<DIMENSIONS, PRECISION, STATISTICS, PROCESSEDAXISCONFIG...>;
-    return std::make_unique<HistImplt_t>(title, statConfig, axisArgs...);
+    return std::make_unique<HistImplt_t>(title, axisArgs...);
   }
 };
 } // namespace Internal
@@ -292,22 +285,18 @@ struct HistImplGen_t<DIMENSIONS, DIMENSIONS, PRECISION, STATISTICS,
 
 template<int DIMENSIONS, class PRECISION, class STATISTICS>
 THist<DIMENSIONS, PRECISION, STATISTICS>
-::THist(std::array<TAxisConfig, DIMENSIONS> axes,
-        STATISTICS statConfig /*= STATISTICS()*/):
+::THist(std::array<TAxisConfig, DIMENSIONS> axes):
   fImpl{std::move(
-    Internal::HistImplGen_t<DIMENSIONS, 0, PRECISION, STATISTICS>()("", axes,
-                                                                    statConfig))},
+    Internal::HistImplGen_t<DIMENSIONS, 0, PRECISION, STATISTICS>()("", axes))},
   fFillFunc{} {
   fFillFunc = fImpl->GetFillFunc();
 }
 
 template<int DIMENSIONS, class PRECISION, class STATISTICS>
 THist<DIMENSIONS, PRECISION, STATISTICS>
-::THist(std::string_view title, std::array<TAxisConfig, DIMENSIONS> axes,
-        STATISTICS statConfig /*= STATISTICS()*/):
+::THist(std::string_view title, std::array<TAxisConfig, DIMENSIONS> axes):
   fImpl{std::move(
-    Internal::HistImplGen_t<DIMENSIONS, 0, PRECISION, STATISTICS>()(title, axes,
-                                                                    statConfig))},
+    Internal::HistImplGen_t<DIMENSIONS, 0, PRECISION, STATISTICS>()(title, axes))},
   fFillFunc{} {
   fFillFunc = fImpl->GetFillFunc();
 }

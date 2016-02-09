@@ -291,6 +291,23 @@ if(ROOT_imt_FOUND)
   endif()
 endif()
 
+#--Vc basic test-----------------------------------------------------------------------------------
+if(ROOT_vc_FOUND)
+  include_directories(${Vc_INCLUDE_DIRS})
+  
+  ROOT_ADD_CXX_FLAG(vc_flags -Wno-unused-parameter)
+  ROOT_ADD_CXX_FLAG(vc_flags -Wno-missing-braces)
+  ROOT_ADD_CXX_FLAG(vc_flags -Wno-conditional-uninitialized)
+  set_source_files_properties(testVc.cxx PROPERTIES COMPILE_FLAGS "${vc_flags}")
+  ROOT_EXECUTABLE(testVc testVc.cxx LIBRARIES ${Vc_LIBRARIES})
+  ROOT_ADD_TEST(test-Vc COMMAND testVc FAILREGEX "FAILED|Error in")
+
+  if(builtin_vc)
+    add_dependencies(testVc VC)
+  endif()
+
+endif()
+
 #--g2root------------------------------------------------------------------------------------------
 if(TARGET g2root)
   ROOT_ADD_TEST(test-g2root COMMAND g2root)

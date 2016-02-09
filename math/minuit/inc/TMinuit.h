@@ -8,9 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// ---------------------------------- minuit.h
-
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -161,7 +158,7 @@ public:
         Int_t        fStatus;           //Status flag for the last called Minuit function
         Int_t        fKe1cr;            //
         Int_t        fKe2cr;            //
-        Bool_t       fLwarn;            //true if warning messges are to be put out (default=true)
+        Bool_t       fLwarn;            //true if warning messages are to be put out (default=true)
         Bool_t       fLrepor;           //true if exceptional conditions are put out (default=false)
         Bool_t       fLimset;           //true if a parameter is up against limits (for MINOS)
         Bool_t       fLnolim;           //true if there are no limits on any parameters (not yet used)

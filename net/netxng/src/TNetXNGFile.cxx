@@ -402,10 +402,16 @@ Bool_t TNetXNGFile::ReadBuffer(char *buffer, Long64_t position, Int_t length)
    uint32_t bytesRead = 0;
    XRootDStatus st = fFile->Read(fOffset, length, buffer, bytesRead);
    if (gDebug > 0)
-      Info("ReadBuffer", "%s bytes read: %d", st.ToStr().c_str(), bytesRead);
+      Info("ReadBuffer", "%s bytes read: %u", st.ToStr().c_str(), bytesRead);
 
    if (!st.IsOK()) {
       Error("ReadBuffer", "%s", st.ToStr().c_str());
+      return kTRUE;
+   }
+
+   if ((Int_t)bytesRead != length) {
+      Error("ReadBuffer", "error reading all requested bytes, got %u of %d",
+            bytesRead, length);
       return kTRUE;
    }
 

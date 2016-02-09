@@ -213,7 +213,7 @@ endmacro()
 #                                                    STAGE1 LINKDEF linkdef OPTIONS opt1 opt2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT" "MODULE" "LINKDEF;OPTIONS;DEPENDENCIES" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL" "MODULE" "LINKDEF;OPTIONS;DEPENDENCIES" ${ARGN})
 
   #---roottest compability---------------------------------
   if(CMAKE_ROOTTEST_DICT)
@@ -298,7 +298,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   else()
     set(library_name ${libprefix}${deduced_arg_module}${libsuffix})
-    set(pcm_name ${dictionary}_rdict.pcm)
+    set(newargs -s ${library_output_dir}/${library_name})
+    set(pcm_name ${library_output_dir}/${libprefix}${deduced_arg_module}_rdict.pcm)
     set(rootmap_name ${library_output_dir}/${libprefix}${deduced_arg_module}.rootmap)
   endif()
 
@@ -338,7 +339,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   get_filename_component(dictname ${dictionary} NAME)
 
   #---roottest compability
-  if(CMAKE_ROOTTEST_DICT OR (NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY))
+  if(ARG_NOINSTALL OR CMAKE_ROOTTEST_DICT OR (NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY))
     add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
   else()
     add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)

@@ -45,18 +45,19 @@
 // Include the necessary headers to interface with the Windows registry and
 // environment.
 #ifdef _MSC_VER
-  #define WIN32_LEAN_AND_MEAN
-  #define NOGDI
-  #define NOMINMAX
-  #include <Windows.h>
-  #include <direct.h>
-  #define popen _popen
-  #define pclose _pclose
-  #define getcwd_func _getcwd
-  #pragma comment(lib, "Advapi32.lib")
+# define WIN32_LEAN_AND_MEAN
+# define NOGDI
+# define NOMINMAX
+# include <Windows.h>
+# include <direct.h>
+# include <sstream>
+# define popen _popen
+# define pclose _pclose
+# define getcwd_func _getcwd
+# pragma comment(lib, "Advapi32.lib")
 #else
-#include <unistd.h>
-  #define getcwd_func getcwd
+# include <unistd.h>
+# define getcwd_func getcwd
 #endif
 
 using namespace clang;
@@ -524,6 +525,12 @@ namespace {
 
 // https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
 #ifdef _GLIBCXX_USE_CXX11_ABI
+
+# if _GLIBCXX_USE_CXX11_ABI
+#  error "cling does not support the GCC 5 ABI yet."
+#  error "See https://sft.its.cern.ch/jira/browse/ROOT-7947"
+# endif
+
     PPOpts.addMacroDef("_GLIBCXX_USE_CXX11_ABI="
                        ClingStringify(_GLIBCXX_USE_CXX11_ABI));
 #endif

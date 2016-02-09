@@ -65,9 +65,7 @@ Also:
   * TPluginManager was made thread-safe [ROOT-7927].
 
 ### Containers
-A pseudo-container (generator) was created, ROOT::TSeq<T>. This template is
-inspired by the xrange built-in function of Python. See the example
-[here](https://root.cern.ch/doc/master/cnt001__basictseq_8C.html).
+* A pseudo-container (generator) was created, ROOT::TSeq<T>. This template is inspired by the xrange built-in function of Python. See the example [here](https://root.cern.ch/doc/master/cnt001__basictseq_8C.html).
 
 ### Dictionaries
 
@@ -78,17 +76,22 @@ Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
 Exceptions are now caught in the interactive ROOT session, instead of terminating ROOT.
 
 ## Parallelisation
-Three methods have been added to manage implicit multi-threading in ROOT: ROOT::EnableImplicitMT(numthreads), ROOT::DisableImplicitMT and ROOT::IsImplicitMTEnabled. They can be used to enable, disable and check the status of the global implicit multi-threading in ROOT, respectively.
+* Three methods have been added to manage implicit multi-threading in ROOT: ROOT::EnableImplicitMT(numthreads), ROOT::DisableImplicitMT and ROOT::IsImplicitMTEnabled. They can be used to enable, disable and check the status of the global implicit multi-threading in ROOT, respectively.
+* Even if the default reduce function specified in the invocation of the MapReduce method of TProcPool returns a pointer to a TObject, the return value of MapReduce is properly casted to the type returned by the map function.
+* Add tutorial showing how to fill randomly histograms using the TProcPool class
 
 ## I/O Libraries
-Custom streamers need to #include TBuffer.h explicitly (see
+* Custom streamers need to #include TBuffer.h explicitly (see
 [section Core Libraries](#core-libs))
+* Check and flag short reads as errors in the xroot plugins. This fixes [ROOT-3341].
 
 
 ## TTree Libraries
 
+* Update TChain::LoadTree so that the user call back routine is actually called for each input file even those containing TTree objects with no entries.
 * Repair setting the branch address of a leaflist style branch taking directly the address of the struct.  (Note that leaflist is nonetheless still deprecated and declaring the struct to the interpreter and passing the object directly to create the branch is much better).
 * Provide an implicitly parallel implementation of TTree::GetEntry. The approach is based on creating a task per top-level branch in order to do the reading, unzipping and deserialisation in parallel. In addition, a getter and a setter methods are provided to check the status and enable/disable implicit multi-threading for that tree (see Parallelisation section for more information about implicit multi-threading).
+* Properly support std::cin (and other stream that can not be rewound) in TTree::ReadStream. This fixes [ROOT-7588].
 
 ## Histogram Libraries
 
@@ -121,7 +124,11 @@ Custom streamers need to #include TBuffer.h explicitly (see
   head, which is usually not what one wants.
   The arrow tip is now drawn using a continuous line.
 * It is now possible to select an histogram on a canvas by clicking on the vertical
-  lines of the bins boundaries. This problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-6649?).
+  lines of the bins boundaries.
+  This problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-6649).
+* When using time format in axis, `TGaxis::PaintAxis()` may in some cases call
+  `strftime()` with invalid parameter causing a crash.
+  This problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-7689).
 
 ## 3D Graphics Libraries
 
@@ -149,6 +156,16 @@ Custom streamers need to #include TBuffer.h explicitly (see
 
 ## Language Bindings
 
+### PyROOT
+  * Added a new configuration option to disable processing of the rootlogon[.py|C] macro in addition
+    ro the -n option in the command arguments. To disable processing the rootlogon do the following 
+    before any other command that will trigger initialization:
+    ```
+    >>> import ROOT
+    >>> ROOT.PyConfig.DisableRootLogon = True
+    >>> ...
+    ```
+
 ### Notebook integration
 
   * Refactoring of the Jupyter integration layer into the new package JupyROOT.
@@ -167,5 +184,9 @@ Custom streamers need to #include TBuffer.h explicitly (see
 ## Class Reference Guide
 
 ## Build, Configuration and Testing Infrastructure
+* Added new 'builtin_vc' option to bundle a version of Vc within ROOT. 
+  The default is OFF, however if the Vc package is not found in the system the option is switched to
+  ON if the option 'vc' option is ON.  
+
 
 

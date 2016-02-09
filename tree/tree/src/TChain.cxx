@@ -1516,6 +1516,15 @@ Long64_t TChain::LoadTree(Long64_t entry)
       // Below we must test >= in case the tree has no entries.
       if (entry >= fTreeOffset[fTreeNumber+1]) {
          if ((fTreeNumber < (fNtrees - 1)) && (entry < fTreeOffset[fTreeNumber+2])) {
+
+            // Before trying to read the file file/tree, notify the user
+            // that we have switched trees if requested; the user might need
+            // to properly account for the number of files/trees even if they
+            // have no entries.
+            if (fNotify) {
+               fNotify->Notify();
+            }
+
             return LoadTree(entry);
          } else {
             treeReadEntry = fReadEntry = -2;

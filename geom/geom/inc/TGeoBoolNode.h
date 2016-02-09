@@ -16,15 +16,6 @@
 #include "TObject.h"
 #endif
 
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-// TGeoBoolNode - Base class for boolean nodes. A boolean node has pointers //
-//  to two shapes having two transformations with respect to the mother     //
-//  composite shape they belong to. It represents the boolean operation     //
-//  between the two component shapes.                                       //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
-
 // forward declarations
 class TGeoShape;
 class TGeoMatrix;

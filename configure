@@ -7375,6 +7375,9 @@ fi
 if test ! "x$macosx106" = "x"; then
    rm -f bin/python64 bin/ruby64
 fi
+if test -f lib/libXrdProofd.so ; then
+   mv lib/libXrdProofd.so lib/-libXrdProofd.so
+fi
 rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  etc/svninfo.txt lib/libProofGui* bin/libProofGui* \
  lib/libMySQL* bin/libMySQL* lib/libGedOld* bin/libGedOld* \
@@ -7440,6 +7443,9 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  bin/drop_from_path bin/genreflex bin/genreflex.bat bin/genreflex-rootcint \
  bin/genreflex-rootcint.bat \
  include/TListOfTypes.h lib/*_RootCling.rootmap bin/rlibmap
+if test -f lib/-libXrdProofd.so ; then
+   mv lib/-libXrdProofd.so lib/libXrdProofd.so
+fi
 
 # if previous build was in non-c++11 mode, run "make maintainer-clean" first
 run_maintainer_clean="no"

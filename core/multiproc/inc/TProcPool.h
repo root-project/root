@@ -303,8 +303,7 @@ auto TProcPool::MapReduce(F func, T &args, R redfunc) -> decltype(++(args.begin(
       std::make_move_iterator(std::begin(args)),
       std::make_move_iterator(std::end(args))
    );
-   const auto &reslist = MapReduce(func, vargs, redfunc);
-   return reslist;
+   return MapReduce(func, vargs, redfunc);
 }
 
 /// \cond doxygen should ignore these methods
@@ -330,15 +329,16 @@ template<class F, class T, class R>
 auto TProcPool::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> decltype(func(*args.begin()))
 {
    std::vector<T> vargs(std::move(args));
-   const auto &reslist = MapReduce(func, vargs, redfunc);
-   return reslist;
+   return MapReduce(func, vargs, redfunc);
 }
-
 
 template<class F, class T, class R>
 auto TProcPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(func(args.front()))
 {
-   using retType = decltype(func(args.front()));
+   using retTypeCand = decltype(func(args.front()));
+   using retTypeCandNoPtr = typename std::remove_pointer<retTypeCand>::type;
+   using TObjType = typename std::conditional<std::is_pointer<retTypeCand>::value, TObject*, TObject>::type;
+   using retType = typename std::conditional<std::is_base_of<TObject, retTypeCandNoPtr>::value, TObjType, retTypeCand>::type;
    //prepare environment
    Reset();
    fTask = ETask::kMapRedWithArg;
@@ -352,7 +352,7 @@ auto TProcPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(f
    SetNWorkers(oldNWorkers);
    if (!ok) {
       std::cerr << "[E][C] Could not fork. Aborting operation\n";
-      return retType();
+      return retTypeCand();
    }
 
    //give workers their first task
@@ -368,7 +368,7 @@ auto TProcPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(f
 
    ReapWorkers();
    fTask = ETask::kNoTask;
-   return redfunc(reslist);
+   return ROOT::Internal::PoolUtils::ResultCaster<retType, retTypeCand>::CastIfNeeded(redfunc(reslist));
 }
 /// \endcond
 

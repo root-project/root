@@ -9,13 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*************************************************************************
- * TGeoMaterial - package description
- *
- *
- *
- *************************************************************************/
-
 #ifndef ROOT_TGeoMaterial
 #define ROOT_TGeoMaterial
 
@@ -34,12 +27,6 @@
 
 // forward declarations
 class TGeoExtension;
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoMaterial - base class describing materials                         //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 // Some units used in G4
 static const Double_t STP_temperature = 273.15;     // [K]

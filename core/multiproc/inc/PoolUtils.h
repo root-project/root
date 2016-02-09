@@ -24,7 +24,7 @@ namespace PoolCode {
    //////////////////////////////////////////////////////////////////////////
 
    enum EPoolCode : unsigned {
-   //not an enum class because we want to be able to easily cast back and forth from unsigned
+      //not an enum class because we want to be able to easily cast back and forth from unsigned
       /* TPool::Map */
       kExecFunc = 0,    ///< Execute function without arguments
       kExecFuncWithArg, ///< Execute function with the argument contained in the message
@@ -50,7 +50,33 @@ namespace PoolCode {
 ///
 //////////////////////////////////////////////////////////////////////////
 namespace PoolUtils {
-   TObject* ReduceObjects(const std::vector<TObject *>& objs);
+   TObject *ReduceObjects(const std::vector<TObject *> &objs);
 }
+
+namespace ROOT {
+   namespace Internal {
+      namespace PoolUtils {
+         // The caster casts a pointer to a TObject to a specialised type F and leaves
+         // unaltered the other cases.
+         template <class O, class F>
+         class ResultCaster {
+         public:
+            static O CastIfNeeded(O &&obj)
+            {
+               return obj;
+            }
+         };
+         template <class F>
+         class ResultCaster<TObject *, F> {
+         public:
+            static typename std::enable_if<std::is_pointer<F>::value, F>::type CastIfNeeded(TObject *obj)
+            {
+               return static_cast<F>(obj);
+            }
+         };
+      }
+   }
+}
+
 
 #endif

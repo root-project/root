@@ -16,16 +16,6 @@
 #include "TGeoShape.h"
 #endif
 
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-// TGeoBBox - box class. All shape primitives inherit from this, their       //
-//   constructor filling automatically the parameters of the box that bounds //
-//   the given shape. Defined by 6 parameters :                              //
-//      fDX, fDY, fDZ - half lengths on X, Y and Z axis                      //
-//      fOrigin[3]    - position of box origin                               //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
 class TGeoBBox : public TGeoShape
 {
 protected :

@@ -35,10 +35,14 @@ class TIndexIter:
 public std::iterator<std::random_access_iterator_tag, REFERENCE, POINTER> {
   size_t fIndex;
 protected:
-  size_t GetIndex() const noexcept { return fIndex; }
   static constexpr size_t fgEndIndex = (size_t) -1;
 
 public:
+  TIndexIter(size_t idx): fIndex(idx) {}
+
+  /// Get the current index value.
+  size_t GetIndex() const noexcept { return fIndex; }
+
   ///\{
   ///\name Index modifiers
   /// ++i
