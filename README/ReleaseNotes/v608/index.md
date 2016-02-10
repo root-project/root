@@ -73,12 +73,15 @@ Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
 
 ### Interpreter Library
 
-Exceptions are now caught in the interactive ROOT session, instead of terminating ROOT.
+* Exceptions are now caught in the interactive ROOT session, instead of terminating ROOT.
+* A ValuePrinter for tuple and pair has been added to visualise the content of these entities at the prompt.
 
 ## Parallelisation
 * Three methods have been added to manage implicit multi-threading in ROOT: ROOT::EnableImplicitMT(numthreads), ROOT::DisableImplicitMT and ROOT::IsImplicitMTEnabled. They can be used to enable, disable and check the status of the global implicit multi-threading in ROOT, respectively.
 * Even if the default reduce function specified in the invocation of the MapReduce method of TProcPool returns a pointer to a TObject, the return value of MapReduce is properly casted to the type returned by the map function.
-* Add tutorial showing how to fill randomly histograms using the TProcPool class
+* Add the TThreadedObject class which helps making objects thread private and merging them.
+* Add tutorial showing how to fill randomly histograms using the TProcPool class.
+* Add tutorial showing how to fill randomly histograms from multiple threads.
 
 ## I/O Libraries
 * Custom streamers need to #include TBuffer.h explicitly (see
