@@ -100,7 +100,8 @@ namespace ROOT {
       }
 
       /// Merge all the thread private objects. Can be called once: it does not
-      /// create any new object but destroys the present bookkeping.
+      /// create any new object but destroys the present bookkeping collapsing
+      /// all objects into the one at slot 0.
       std::shared_ptr<T> Merge(TThreadedObjectUtils::MergeFunctionType<T> mergeFunction = TThreadedObjectUtils::MergeTObjects<T>)
       {
          // We do not return if we already merged.
