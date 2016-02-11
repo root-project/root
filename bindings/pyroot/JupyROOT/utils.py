@@ -47,7 +47,7 @@ _jsMagicHighlight = "IPython.CodeCell.config_defaults.highlight_modes['magic_{cp
 _jsNotDrawableClassesPatterns = ["TGraph[23]D","TH3*","TGraphPolar","TProf*","TEve*","TF[23]","TGeo*","TPolyLine3D"]
 
 
-_jsROOTSourceDir = "https://root.cern.ch/js/dev/"
+_jsROOTSourceDir = "https://root.cern.ch/js/notebook/"
 _jsCanvasWidth = 800
 _jsCanvasHeight = 600
 
@@ -57,23 +57,20 @@ _jsCode = """
 </div>
 
 <script>
-requirejs.config(
-{{
-  paths: {{
-    'JSRootCore'       : '{jsROOTSourceDir}/scripts/JSRootCore',
-    'JSRootPainter'    : '{jsROOTSourceDir}/scripts/JSRootPainter',
-    'JSRootGeoPainter' : '{jsROOTSourceDir}/scripts/JSRootGeoPainter',
-  }}
-}}
-);
-require(['JSRootCore', 'JSRootPainter', 'JSRootGeoPainter'],
-        function(Core, Painter) {{
-          var obj = Core.parse('{jsonContent}');
-          Painter.draw("{jsDivId}", obj, "{jsDrawOptions}");
-        }}
-);
+ requirejs.config({{
+     paths: {{
+       'JSRootCore' : '{jsROOTSourceDir}/scripts/JSRootCore',
+     }}
+   }});
+ require(['JSRootCore'],
+     function(Core) {{
+       var obj = Core.parse('{jsonContent}');
+       Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
+     }}
+ );
 </script>
 """
+
 
 _enableJSVis = False
 _enableJSVisDebug = False
