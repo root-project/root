@@ -67,7 +67,9 @@ public:
 
    ~TXftFontData()
    {
-      if (fXftFont) XftFontClose((Display*)gVirtualX->GetDisplay(), fXftFont);
+      if (References() == 1) {
+         if (fXftFont) XftFontClose((Display*)gVirtualX->GetDisplay(), fXftFont);
+      }
    }
 };
 
@@ -111,12 +113,23 @@ public:
 
    void AddFont(TXftFontData *data)
    {
+      // Loop over all existing TXftFontData, if we already have one with the same
+      // font data, set the reference counter of this one beyond 1 so it does
+      // delete the font pointer
+      TIter next(fList);
+      TXftFontData *d = 0;
+
+      while ((d = (TXftFontData*) next())) {
+         if (d->fXftFont == data->fXftFont) {
+           data->AddReference();
+         }
+      }
+
       fList->Add(data);
    }
 
    void FreeFont(TXftFontData *data)
    {
-      if (data->RemoveReference() > 0)  return;
       fList->Remove(data);
       delete data;
    }
@@ -597,7 +610,6 @@ FontStruct_t TGX11TTF::LoadQueryFont(const char *font_name)
 
    // already loaded
    if (data) {
-      data->AddReference();
       return (FontStruct_t)data->fXftFont;
    }
 
