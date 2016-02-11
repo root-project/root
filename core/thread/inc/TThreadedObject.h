@@ -1,3 +1,5 @@
+// Author: Danilo Piparo, CERN  11/2/2015
+
 #ifndef ROOT_TTHREADEDOBJECT
 #define ROOT_TTHREADEDOBJECT
 
