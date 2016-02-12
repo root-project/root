@@ -40,8 +40,15 @@ Int_t mt201_parallelHistoFill(UInt_t poolSize = 4)
    // The function used to fill the histograms in each thread.
    auto fillRandomHisto = [&](int seed = 0) {
       TRandom3 rndm(seed);
+      // IMPORTANT!
+      // It is important to realise that a copy on the stack of the object we
+      // would like to perform operations on is the most efficient way of
+      // accessing it, in particular in presence of a tight loop like the one
+      // below where any overhead put on top of the Fill function call would
+      // have an impact.
+      auto histogram = ts_h->Get()
       for (auto i : ROOT::TSeqI(1000000)) {
-         ts_h->Fill(rndm.Gaus(0, 1));
+         histogram->Fill(rndm.Gaus(0, 1));
       }
    };
 
