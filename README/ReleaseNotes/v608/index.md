@@ -133,7 +133,9 @@ Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
 * When using time format in axis, `TGaxis::PaintAxis()` may in some cases call
   `strftime()` with invalid parameter causing a crash.
   This problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-7689).
-* Apply the patch suggested [here](https://sft.its.cern.ch/jira/browse/ROOT-7985).
+* Having "X11.UseXft: yes" activated in .rootrc file and running
+  [this](https://sft.its.cern.ch/jira/browse/ROOT-7985) little program,
+  resulted in a crash.
 
 ## 3D Graphics Libraries
 
