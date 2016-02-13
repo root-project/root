@@ -77,13 +77,13 @@ namespace ROOT {
    template<class T>
    class TThreadedObject {
    public:
-      static unsigned gMaxSlots; ///< The maximum number of processing slots (distinct threads) which the instances can manage
+      static unsigned fgMaxSlots; ///< The maximum number of processing slots (distinct threads) which the instances can manage
       /// Construct the TThreaded object and the "model" of the thread private
       /// objects.
       /// \tparam ARGS Arguments of the constructor of T
       template<class ...ARGS>
       TThreadedObject(ARGS... args):
-      fModel(std::forward<ARGS>(args)...), fObjPointers(gMaxSlots, nullptr) {};
+      fModel(std::forward<ARGS>(args)...), fObjPointers(fgMaxSlots, nullptr) {};
 
       /// Access a particular processing slot. This
       /// method is *thread-unsafe*: it cannot be invoked from two different
@@ -193,7 +193,7 @@ namespace ROOT {
 
    };
 
-   template<class T> unsigned TThreadedObject<T>::gMaxSlots = 64;
+   template<class T> unsigned TThreadedObject<T>::fgMaxSlots = 64;
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Obtain a TThreadedObject instance
