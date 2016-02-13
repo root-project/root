@@ -46,7 +46,7 @@ Int_t mt201_parallelHistoFill(UInt_t poolSize = 4)
       // accessing it, in particular in presence of a tight loop like the one
       // below where any overhead put on top of the Fill function call would
       // have an impact.
-      auto histogram = ts_h->Get()
+      auto histogram = ts_h.Get();
       for (auto i : ROOT::TSeqI(1000000)) {
          histogram->Fill(rndm.Gaus(0, 1));
       }
