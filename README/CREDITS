@@ -337,7 +337,7 @@ D: editline terminal interface
 
 N: Enrico Guiraud
 E: enrico.guiraud@gmail.com
-D: author of the multiproc module 
+D: author of the multiproc module
 
 N: Thorsten Glebe
 E: T.Glebe@mpi-hd.mpg.de
@@ -943,3 +943,7 @@ D: ROOT-R, JupyROOT, TMVA
 N: Sergei Gleyzer
 E: Sergei.Gleyzer@cern.ch
 D: TMVA
+
+N: Jeromy Tompkins
+E: Tompkins@nscl.msu.edu
+D: COL2 drawing option

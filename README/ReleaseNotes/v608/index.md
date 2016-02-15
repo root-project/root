@@ -153,6 +153,29 @@ Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
 * When painting a `TH3` as 3D boxes, `TMarker3DBox` ignored the max and min values
   specified by `SetMaximum()` and `SetMinimum()`.
 
+## New histogram drawing options
+
+* COL2 is a new rendering technique providing potential performance improvements
+  compared to the standard COL option. The performance comparison of the COL2 to
+  the COL option depends on the histogram and the size of the rendering region in
+  the current pad. In general, a small (approx. less than 100 bins per axis),
+  parsely populated TH2 will render faster with the COL option.
+
+  However, for larger histograms (approx. more than 100 bins per axis) that are
+  not sparse, the COL2 option will provide up to 20 times performance improvements.
+  For example, a 1000x1000 bin TH2 that is not sparse will render an order of
+  magnitude faster with the COL2 option.
+
+  The COL2 option will also scale its performance based on the size of the pixmap
+  the histogram image is being rendered into. It also is much better optimized for
+  sessions where the user is forwarding X11 windows through an `ssh` connection.
+
+  For the most part, the COL2 and COLZ2 options are a drop in replacement to the COL
+  and COLZ options. There is one major difference and that concerns the treatment of
+  bins with zero content. The COL2 and COLZ2 options color these bins the color of zero.
+
+  This has been implemented by Jeromy Tompkins <Tompkins@nscl.msu.edu>
+
 ## Geometry Libraries
 
 
