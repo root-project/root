@@ -93,6 +93,8 @@ const Int_t kObjFirstPage        = 51; // First page object
 // Number of fonts
 const Int_t kNumberOfFonts = 15;
 
+Int_t TPDF::fgLineJoin = 0;
+
 ClassImp(TPDF)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1267,6 +1269,10 @@ void TPDF::NewPage()
    WriteReal(ymargin);
    PrintStr(" cm");
    if (fPageOrientation == 2) PrintStr(" 0 1 -1 0 0 0 cm");
+   if (fgLineJoin) {
+      WriteInteger(fgLineJoin);
+      PrintFast(2," j");
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1311,6 +1317,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    fBlue      = -1;
    fAlpha     = -1.;
    fType      = abs(wtype);
+   SetLineJoin(gStyle->GetJoinLinePS());
    SetLineScale(gStyle->GetLineScalePS()/4.);
    gStyle->GetPaperSize(fXsize, fYsize);
    Float_t xrange, yrange;
@@ -2090,6 +2097,28 @@ void TPDF::SetFillPatterns(Int_t ipat, Int_t color)
 void TPDF::SetLineColor( Color_t cindex )
 {
    fLineColor = cindex;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the global parameter TPDF::fgLineJoin.
+/// This parameter determines the appearance of joining lines in a PDF
+/// output.
+/// It takes one argument which may be:
+///   - 0 (miter join)
+///   - 1 (round join)
+///   - 2 (bevel join)
+/// The default value is 0 (miter join).
+///
+/// \image html postscript_1.png
+///
+/// To change the line join behaviour just do:
+/// ~~~ {.cpp}
+/// gStyle->SetLineJoinPS(2); // Set the PDF line join to bevel.
+/// ~~~
+
+void TPDF::SetLineJoin( Int_t linejoin )
+{
+   fgLineJoin = linejoin;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

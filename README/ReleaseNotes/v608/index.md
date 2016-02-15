@@ -136,6 +136,16 @@ Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
 * Having "X11.UseXft: yes" activated in .rootrc file and running
   [this](https://sft.its.cern.ch/jira/browse/ROOT-7985) little program,
   resulted in a crash.
+* Ease the setting of the appearance of joining lines for PostScript and PDF
+  output. [TPostScript::SetLineJoin](https://root.cern.ch/doc/master/classTPostScript.html#ae4917bab9cc6b11fdc88478be03367d1)
+  allowed to set the line joining style for PostScript files. But the setting this
+  parameter implied to create a `TPostScript` object. Now a `TStyle` setting has been
+  implemented and it is enough to do:
+  ~~~ {.cpp}
+  gStyle->SetLineJoinPS(2);
+  ~~~
+  Also this setting is now active for PDF output.
+  This enhancement was triggered by [this forum question](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=21077).
 
 ## 3D Graphics Libraries
 

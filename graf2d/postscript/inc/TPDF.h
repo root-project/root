@@ -52,6 +52,8 @@ protected:
    Bool_t             fCompress;        //True when fBuffer must be compressed
    Bool_t             fRange;           //True when a range has been defined
 
+   static Int_t       fgLineJoin;       //Appearance of joining lines
+
 public:
    TPDF();
    TPDF(const char *filename, Int_t type=-111);
@@ -91,6 +93,7 @@ public:
    void     SetFillColor( Color_t cindex=1);
    void     SetFillPatterns(Int_t ipat, Int_t color);
    void     SetLineColor( Color_t cindex=1);
+   void     SetLineJoin(Int_t linejoin=0);
    void     SetLineScale(Float_t scale=1) {fLineScale = scale;}
    void     SetLineStyle(Style_t linestyle = 1);
    void     SetLineWidth(Width_t linewidth = 1);
@@ -107,7 +110,7 @@ public:
    Double_t XtoPDF(Double_t x);
    Double_t YtoPDF(Double_t y);
 
-   ClassDef(TPDF,0)  //PDF driver
+   ClassDef(TPDF,1)  //PDF driver
 };
 
 #endif
