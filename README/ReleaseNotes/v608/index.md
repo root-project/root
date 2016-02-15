@@ -87,6 +87,7 @@ Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
 * Custom streamers need to #include TBuffer.h explicitly (see
 [section Core Libraries](#core-libs))
 * Check and flag short reads as errors in the xroot plugins. This fixes [ROOT-3341].
+* Added support for AWS temporary security credentials to TS3WebFile by allowing the security token to be given.
 
 
 ## TTree Libraries
