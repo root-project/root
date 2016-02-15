@@ -301,6 +301,7 @@ TFormula::TFormula(const char *name, const char *formula, bool addToGlobList)   
    fNdim = 0;
    fNpar = 0;
    fNumber = 0;
+   fMethod = 0;
    fLambdaPtr = nullptr;
 
    FillDefaults();
@@ -338,6 +339,7 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
    fReadyToExecute = false;
     fClingInitialized = false;
    fNpar = 0;
+   fMethod = 0;
    fLambdaPtr = nullptr;
 
 
