@@ -2,7 +2,7 @@
 // Author: Danilo Piparo November 2015
 
 /*************************************************************************
- * Copyright (C) 2016, CERN                                              *
+ * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
