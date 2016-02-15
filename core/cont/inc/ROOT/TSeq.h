@@ -1,6 +1,14 @@
 /* @(#)root/core/cont:$Id$ */
 // Author: Danilo Piparo November 2015
 
+/*************************************************************************
+ * Copyright (C) 2016, CERN                                              *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TSeq
 #define ROOT_TSeq
 

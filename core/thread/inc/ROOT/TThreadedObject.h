@@ -1,4 +1,14 @@
-// Author: Danilo Piparo, CERN 11/2/2015
+// @(#)root/thread:$Id$
+// Author: Danilo Piparo, CERN  11/2/2015
+
+/*************************************************************************
+ * Copyright (C) 2016, CERN                                              *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TThreadedObject
 #define ROOT_TThreadedObject
 
