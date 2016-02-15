@@ -1022,7 +1022,9 @@ Begin_Macro(source)
 }
 End_Macro
 
+\since **ROOT version 6.07/03:**
 A second rendering technique is also available with the COL2 and COLZ2 options.
+
 These options provide potential performance improvements compared to the standard
 COL option. The performance comparison of the COL2 to the COL option depends on
 the histogram and the size of the rendering region in the current pad. In general,
