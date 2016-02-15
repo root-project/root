@@ -350,8 +350,9 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
 
        for (int tries = 1, maxtries = 4; tries <= maxtries; ++tries) {
           //	 status = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
-          status = minim.minimize(minimizer, algorithm);  
-          if (status%1000 == 0) {  // ignore erros from Improve 
+          status = minim.minimize(minimizer, algorithm);
+          // RooMinimizer::minimize returns -1  when the fit fails
+          if (status >= 0) {  
              break;
           } else { 
              if (tries == 1) {
@@ -376,8 +377,8 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
        
        RooFitResult * result = 0; 
 
-
-       if (status%100 == 0) { // ignore errors in Hesse or in Improve
+       // ignore errors in Hesse or in Improve and also when matrix was made pos def (status returned = 1)
+       if (status >= 0) {
           result = minim.save();
        }
        if (result){
@@ -504,7 +505,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
 
    // this tolerance is used to avoid having negative qmu due to numerical errors
-   double tol = 1.E-4 * ROOT::Math::MinimizerOptions::DefaultTolerance();
+   double tol = 2.E-3 * std::max(1.,ROOT::Math::MinimizerOptions::DefaultTolerance());
    if (qmu < -tol || TMath::IsNaN(fNLLObs) ) {
 
       if (qmu < 0) 
