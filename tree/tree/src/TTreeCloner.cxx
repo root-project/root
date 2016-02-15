@@ -468,8 +468,7 @@ void TTreeCloner::CopyStreamerInfos()
       TStreamerInfo *curInfo = 0;
       TClass *cl = TClass::GetClass(oldInfo->GetName());
 
-      if ((cl->IsLoaded() && (cl->GetNew()!=0 || cl->HasDefaultConstructor()))
-          || !cl->IsLoaded())  {
+      if (!cl->IsLoaded() || cl->GetNew()) {
          // Insure that the TStreamerInfo is loaded
          curInfo = (TStreamerInfo*)cl->GetStreamerInfo(oldInfo->GetClassVersion());
          if (oldInfo->GetClassVersion()==1) {
