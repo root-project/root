@@ -16,13 +16,6 @@
 #include "TGeoBBox.h"
 #endif
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoScaledShape - A scaled shape. Has a pointer to a shape and to a    //
-//   TGeoScale.                                                           //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-
 class TGeoScale;
 class TGeoShape;
 
