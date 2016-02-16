@@ -16,18 +16,6 @@
 #include "TGeoBBox.h"
 #endif
 
-
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-// TGeoPcon - a composite polycone. It has at least 9 parameters :          //
-//            - the lower phi limit;                                        //
-//            - the range in phi;                                           //
-//            - the number of z planes (at least two) where the inner/outer //
-//              radii are changing;                                         //
-//            - z coordinate, inner and outer radius for each z plane       //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
-
 class TGeoPcon : public TGeoBBox
 {
 protected:
