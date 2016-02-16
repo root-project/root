@@ -9,61 +9,64 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-// TGeoNode
-//_________
-//   A node represent a volume positioned inside another.They store links to both
-// volumes and to the TGeoMatrix representing the relative positioning. Node are
-// never instanciated directly by users, but created as a result of volume operations.
-// Adding a volume named A with a given user ID inside a volume B will create a node
-// node named A_ID. This will be added to the list of nodes stored by B. Also,
-// when applying a division operation in N slices to a volume A, a list of nodes
-// B_1, B_2, ..., B_N is also created. A node B_i does not represent a unique
-// object in the geometry because its container A might be at its turn positioned
-// as node inside several other volumes. Only when a complete branch of nodes
-// is fully defined up to the top node in the geometry, a given path like:
-//       /TOP_1/.../A_3/B_7 will represent an unique object. Its global transformation
-// matrix can be computed as the pile-up of all local transformations in its
-// branch. We will therefore call "logical graph" the hierarchy defined by nodes
-// and volumes. The expansion of the logical graph by all possible paths defines
-// a tree sructure where all nodes are unique "touchable" objects. We will call
-// this the "physical tree". Unlike the logical graph, the physical tree can
-// become a huge structure with several milions of nodes in case of complex
-// geometries, therefore it is not always a good idea to keep it transient
-// in memory. Since a the logical and physical structures are correlated, the
-// modeller rather keeps track only of the current branch, updating the current
-// global matrix at each change of the level in geometry. The current physical node
-// is not an object that can be asked for at a given moment, but rather represented
-// by the combination: current node + current global matrix. However, physical nodes
-// have unique ID's that can be retreived for a given modeler state. These can be
-// fed back to the modeler in order to force a physical node to become current.
-// The advantage of this comes from the fact that all navigation queries check
-// first the current node, therefore knowing the location of a point in the
-// geometry can be saved as a starting state for later use.
-//
-//   Nodes can be declared as "overlapping" in case they do overlap with other
-// nodes inside the same container or extrude this container. Non-overlapping
-// nodes can be created with:
-//
-//      TGeoVolume::AddNode(TGeoVolume *daughter, Int_t copy_No, TGeoMatrix *matr);
-//
-// The creation of overapping nodes can be done with a similar prototype:
-//
-//      TGeoVolume::AddNodeOverlap(same arguments);
-//
-// When closing the geometry, overlapping nodes perform a check of possible
-// overlaps with their neighbours. These are stored and checked all the time
-// during navigation, therefore navigation is slower when embedding such nodes
-// into geometry.
-//
-//   Node have visualization attributes as volume have. When undefined by users,
-// painting a node on a pad will take the corresponding volume attributes.
-//
-//Begin_Html
-/*
-<img src="gif/t_node.jpg">
+/** \class TGeoNode
+\ingroup Geometry_classes
+
+  A node represent a volume positioned inside another.They store links to both
+volumes and to the TGeoMatrix representing the relative positioning. Node are
+never instantiated directly by users, but created as a result of volume operations.
+Adding a volume named A with a given user ID inside a volume B will create a node
+node named A_ID. This will be added to the list of nodes stored by B. Also,
+when applying a division operation in N slices to a volume A, a list of nodes
+B_1, B_2, ..., B_N is also created. A node B_i does not represent a unique
+object in the geometry because its container A might be at its turn positioned
+as node inside several other volumes. Only when a complete branch of nodes
+is fully defined up to the top node in the geometry, a given path like:
+
+   /TOP_1/.../A_3/B_7 will represent an unique object.
+
+Its global transformation matrix can be computed as the pile-up of all local
+transformations in its branch. We will therefore call "logical graph" the
+hierarchy defined by nodes and volumes. The expansion of the logical graph by
+all possible paths defines a tree structure where all nodes are unique
+"touchable" objects. We will call this the "physical tree". Unlike the logical
+graph, the physical tree can become a huge structure with several milions of nodes
+in case of complex geometries, therefore it is not always a good idea to keep it
+transient in memory. Since a the logical and physical structures are correlated, the
+modeller rather keeps track only of the current branch, updating the current
+global matrix at each change of the level in geometry. The current physical node
+is not an object that can be asked for at a given moment, but rather represented
+by the combination: current node + current global matrix. However, physical nodes
+have unique ID's that can be retrieved for a given modeler state. These can be
+fed back to the modeler in order to force a physical node to become current.
+The advantage of this comes from the fact that all navigation queries check
+first the current node, therefore knowing the location of a point in the
+geometry can be saved as a starting state for later use.
+
+  Nodes can be declared as "overlapping" in case they do overlap with other
+nodes inside the same container or extrude this container. Non-overlapping
+nodes can be created with:
+
+~~~ {.cpp]
+     TGeoVolume::AddNode(TGeoVolume *daughter, Int_t copy_No, TGeoMatrix *matr);
+~~~
+
+The creation of overlapping nodes can be done with a similar prototype:
+
+~~~ {.cpp]
+     TGeoVolume::AddNodeOverlap(same arguments);
+~~~
+
+When closing the geometry, overlapping nodes perform a check of possible
+overlaps with their neighbours. These are stored and checked all the time
+during navigation, therefore navigation is slower when embedding such nodes
+into geometry.
+
+  Node have visualization attributes as volume have. When undefined by users,
+painting a node on a pad will take the corresponding volume attributes.
+
+\image html geom_t_node.png
 */
-//End_Html
 
 #include "Riostream.h"
 
@@ -318,7 +321,7 @@ void TGeoNode::InspectNode() const
    if (IsOverlapping()) printf("(Node is MANY)\n");
    else printf("\n");
    if (fOverlaps && fMother) {
-      printf("   possibly overlaping with : ");
+      printf("   possibly overlapping with : ");
       for (Int_t i=0; i<fNovlp; i++)
          printf(" %s ", fMother->GetNode(fOverlaps[i])->GetName());
       printf("\n");
@@ -486,10 +489,9 @@ void TGeoNode::SaveAttributes(std::ostream &out)
 /// Connect user-defined extension to the node. The node "grabs" a copy, so
 /// the original object can be released by the producer. Release the previously
 /// connected extension if any.
-///==========================================================================
+///
 /// NOTE: This interface is intended for user extensions and is guaranteed not
 /// to be used by TGeo
-///==========================================================================
 
 void TGeoNode::SetUserExtension(TGeoExtension *ext)
 {
@@ -502,10 +504,9 @@ void TGeoNode::SetUserExtension(TGeoExtension *ext)
 /// Connect framework defined extension to the node. The node "grabs" a copy,
 /// so the original object can be released by the producer. Release the previously
 /// connected extension if any.
-///==========================================================================
+///
 /// NOTE: This interface is intended for the use by TGeo and the users should
 ///       NOT connect extensions using this method
-///==========================================================================
 
 void TGeoNode::SetFWExtension(TGeoExtension *ext)
 {
@@ -597,7 +598,6 @@ void TGeoNode::Paint(Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// print daughters candidates for containing current point
-///   cd();
 
 void TGeoNode::PrintCandidates() const
 {
@@ -647,7 +647,6 @@ void TGeoNode::PrintCandidates() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// print possible overlapping nodes
-///   if (!IsOverlapping()) {printf("node %s is ONLY\n", GetName()); return;}
 
 void TGeoNode::PrintOverlaps() const
 {
@@ -701,20 +700,12 @@ void TGeoNode::VisibleDaughters(Bool_t vis)
    gGeoManager->ModifiedPad();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// TGeoNodeMatrix - a node containing local transformation
-//
-//
-//
-//
-//Begin_Html
-/*
-<img src=".gif">
+/** \class TGeoNodeMatrix
+\ingroup Geometry_classes
+A node containing local transformation.
 */
-//End_Html
 
 ClassImp(TGeoNodeMatrix)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -773,9 +764,9 @@ Int_t TGeoNodeMatrix::GetByteCount() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Returns type of optimal voxelization for this node.
-/// type = 0 -> cartesian
-/// type = 1 -> cylindrical
+/// Returns type of optimal voxelization for this node.
+///  - type = 0 -> cartesian
+///  - type = 1 -> cylindrical
 
 Int_t TGeoNodeMatrix::GetOptimalVoxels() const
 {
@@ -828,12 +819,12 @@ void TGeoNodeMatrix::SetMatrix(const TGeoMatrix *matrix)
    if (!fMatrix) fMatrix = gGeoIdentity;
 }
 
-/*************************************************************************
- * TGeoNodeOffset - node containing an offset
- *
- *************************************************************************/
-ClassImp(TGeoNodeOffset)
+/** \class TGeoNodeOffset
+\ingroup Geometry_classes
+Node containing an offset.
+*/
 
+ClassImp(TGeoNodeOffset)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -870,7 +861,7 @@ TGeoNodeOffset::TGeoNodeOffset(const TGeoNodeOffset& gno) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignment operator
+/// Assignment operator
 
 TGeoNodeOffset& TGeoNodeOffset::operator=(const TGeoNodeOffset& gno)
 {
@@ -899,7 +890,7 @@ Int_t TGeoNodeOffset::GetIndex() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// make a copy of this node
+/// Make a copy of this node
 
 TGeoNode *TGeoNodeOffset::MakeCopyNode() const
 {
@@ -918,78 +909,94 @@ TGeoNode *TGeoNodeOffset::MakeCopyNode() const
    return node;
 }
 
-/*************************************************************************
- * TGeoIterator - a geometry iterator
- *
- *************************************************************************/
+/** \class TGeoIterator
+\ingroup Geometry_classes
+A geometry iterator.
 
-////////////////////////////////////////////////////////////////////////////////
-// TGeoIterator
-//==============
-// A geometry iterator that sequentially follows all nodes of the geometrical
-// hierarchy of a volume. The iterator has to be initiated with a top volume
-// pointer:
-//
-//    TGeoIterator next(myVolume);
-//
-// One can use the iterator as any other in ROOT:
-//
-//    TGeoNode *node;
-//    while ((node=next())) {
-//       ...
-//    }
-//
-// The iterator can perform 2 types of iterations that can be selected via:
-//
-//    next.SetType(Int_t type);
-//
-// Here TYPE can be:
-//    0 (default) - 'first daughter next' behavior
-//    1           - iteration at the current level only
-//
-// Supposing the tree structure looks like:
-//
-// TOP ___ A_1 ___ A1_1 ___ A11_1
-//    |       |        |___ A12_1
-//    |      |_____A2_1 ___ A21_1
-//    |                |___ A21_2
-//    |___ B_1 ...
-//
-// The order of iteration for TYPE=0 is: A_1, A1_1, A11_1, A12_1, A2_1, A21_1,
-// A21_2, B_1, ...
-// The order of iteration for TYPE=1 is: A_1, B_1, ...
-// At any moment during iteration, TYPE can be changed. If the last iterated node
-// is for instance A1_1 and the iteration type was 0, one can do:
-//
-//    next.SetType(1);
-// The next iterated nodes will be the rest of A daughters: A2,A3,... The iterator
-// will return 0 after finishing all daughters of A.
-//
-// During iteration, the following can be retreived:
-// - Top volume where iteration started:    TGeoIterator::GetTopVolume()
-// - Node at level I in the current branch: TGeoIterator::GetNode(Int_t i)
-// - Iteration type:                        TGeoIterator::GetType()
-// - Global matrix of the current node with respect to the top volume:
-//                                          TGeoIterator::GetCurrentMatrix()
-//
-// The iterator can be reset by changing (or not) the top volume:
-//
-//    TGeoIterator::Reset(TGeoVolume *top);
-//
-// Example:
-//==========
-// We want to find out a volume named "MyVol" in the hierarchy of TOP volume.
-//
-//    TIter next(TOP);
-//    TGeoNode *node;
-//    TString name("MyVol");
-//    while ((node=next()))
-//       if (name == node->GetVolume()->GetName()) return node->GetVolume();
-//
-////////////////////////////////////////////////////////////////////////////////
+A geometry iterator that sequentially follows all nodes of the geometrical
+hierarchy of a volume. The iterator has to be initiated with a top volume
+pointer:
+
+~~~ {.cpp}
+   TGeoIterator next(myVolume);
+~~~
+
+One can use the iterator as any other in ROOT:
+
+~~~ {.cpp}
+   TGeoNode *node;
+   while ((node=next())) {
+      ...
+   }
+~~~
+
+The iterator can perform 2 types of iterations that can be selected via:
+
+~~~ {.cpp}
+   next.SetType(Int_t type);
+~~~
+
+Here TYPE can be:
+  - 0 (default) - 'first daughter next' behavior
+  - 1           - iteration at the current level only
+
+Supposing the tree structure looks like:
+
+~~~ {.cpp}
+TOP ___ A_1 ___ A1_1 ___ A11_1
+   |       |        |___ A12_1
+   |      |_____A2_1 ___ A21_1
+   |                |___ A21_2
+   |___ B_1 ...
+~~~
+
+The order of iteration for TYPE=0 is: A_1, A1_1, A11_1, A12_1, A2_1, A21_1,
+A21_2, B_1, ...
+
+The order of iteration for TYPE=1 is: A_1, B_1, ...
+At any moment during iteration, TYPE can be changed. If the last iterated node
+is for instance A1_1 and the iteration type was 0, one can do:
+
+~~~ {.cpp}
+   next.SetType(1);
+~~~
+
+The next iterated nodes will be the rest of A daughters: A2,A3,... The iterator
+will return 0 after finishing all daughters of A.
+
+During iteration, the following can be retrieved:
+  - Top volume where iteration started:    TGeoIterator::GetTopVolume()
+  - Node at level I in the current branch: TGeoIterator::GetNode(Int_t i)
+  - Iteration type:                        TGeoIterator::GetType()
+  - Global matrix of the current node with respect to the top volume:
+                                         TGeoIterator::GetCurrentMatrix()
+
+The iterator can be reset by changing (or not) the top volume:
+
+~~~ {.cpp}
+   TGeoIterator::Reset(TGeoVolume *top);
+~~~
+
+### Example:
+
+We want to find out a volume named "MyVol" in the hierarchy of TOP volume.
+
+~~~ {.cpp}
+   TIter next(TOP);
+   TGeoNode *node;
+   TString name("MyVol");
+   while ((node=next()))
+      if (name == node->GetVolume()->GetName()) return node->GetVolume();
+~~~
+*/
+
+/** \class TGeoIteratorPlugin
+\ingroup Geometry_classes
+*/
 
 ClassImp(TGeoIteratorPlugin)
 ClassImp(TGeoIterator)
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Geometry iterator for a branch starting with a TOP node.
 
