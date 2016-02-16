@@ -165,6 +165,8 @@ extern "C" {
    {
       if (!JupyROOTExecutorHandler_ptr) {
          JupyROOTExecutorHandler_ptr = new JupyROOTExecutorHandler();
+         // Fixes for ROOT-7999
+         gInterpreter->ProcessLine("SetErrorHandler((ErrorHandlerFunc_t)&DefaultErrorHandler)");
       }
    }
 
