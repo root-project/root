@@ -66,6 +66,9 @@ using namespace RooFit;
 using namespace RooStats;
 using namespace std;
 
+// structure defining the options 
+struct HypoTestInvOptions { 
+
 bool plotHypoTestResult = true;          // plot test statistic result at each point
 bool writeResult = true;                 // write HypoTestInverterResult in a file
 TString resultFileName;                  // file with results (by default is built automatically using the workspace input file name)
@@ -93,16 +96,20 @@ int randomSeed = -1;                     // random seed (if = -1: use default va
 int nAsimovBins = 0;                     // number of bins in observables used for Asimov data sets (0 is the default and it is given by workspace, typically is 100)
 
 bool reuseAltToys = false;                // reuse same toys for alternate hypothesis (if set one gets more stable bands)
-double confidenceLevel = 0.95;            // confidence level value
+double confLevel = 0.95;                // confidence level value
 
 
 
-std::string massValue = "";              // extra string to tag output file of result
 std::string  minimizerType = "";                  // minimizer type (default is what is in ROOT::Math::MinimizerOptions::DefaultMinimizerType()
+std::string massValue = "";              // extra string to tag output file of result
 int   printLevel = 0;                    // print level for debugging PL test statistics and calculators
 
 bool useNLLOffset = false;               // use NLL offset when fitting (this increase stability of fits)
 
+};
+
+
+HypoTestInvOptions optHTInv;  
 
 // internal class to run the inverter and more
 
@@ -368,30 +375,30 @@ StandardHypoTestInvDemo(const char * infile = 0,
    HypoTestInvTool calc;
 
    // set parameters
-   calc.SetParameter("PlotHypoTestResult", plotHypoTestResult);
-   calc.SetParameter("WriteResult", writeResult);
-   calc.SetParameter("Optimize", optimize);
-   calc.SetParameter("UseVectorStore", useVectorStore);
-   calc.SetParameter("GenerateBinned", generateBinned);
-   calc.SetParameter("NToysRatio", nToysRatio);
-   calc.SetParameter("MaxPOI", maxPOI);
-   calc.SetParameter("UseProof", useProof);
-   calc.SetParameter("EnableDetailedOutput", enableDetailedOutput);
-   calc.SetParameter("NWorkers", nworkers);
-   calc.SetParameter("Rebuild", rebuild);
-   calc.SetParameter("ReuseAltToys", reuseAltToys);
-   calc.SetParameter("NToyToRebuild", nToyToRebuild);
-   calc.SetParameter("RebuildParamValues", rebuildParamValues);
-   calc.SetParameter("MassValue", massValue.c_str());
-   calc.SetParameter("MinimizerType", minimizerType.c_str());
-   calc.SetParameter("PrintLevel", printLevel);
-   calc.SetParameter("InitialFit",initialFit);
-   calc.SetParameter("ResultFileName",resultFileName);
-   calc.SetParameter("RandomSeed",randomSeed);
-   calc.SetParameter("AsimovBins",nAsimovBins);
+   calc.SetParameter("PlotHypoTestResult", optHTInv.plotHypoTestResult);
+   calc.SetParameter("WriteResult", optHTInv.writeResult);
+   calc.SetParameter("Optimize", optHTInv.optimize);
+   calc.SetParameter("UseVectorStore", optHTInv.useVectorStore);
+   calc.SetParameter("GenerateBinned", optHTInv.generateBinned);
+   calc.SetParameter("NToysRatio", optHTInv.nToysRatio);
+   calc.SetParameter("MaxPOI", optHTInv.maxPOI);
+   calc.SetParameter("UseProof", optHTInv.useProof);
+   calc.SetParameter("EnableDetailedOutput", optHTInv.enableDetailedOutput);
+   calc.SetParameter("NWorkers", optHTInv.nworkers);
+   calc.SetParameter("Rebuild", optHTInv.rebuild);
+   calc.SetParameter("ReuseAltToys", optHTInv.reuseAltToys);
+   calc.SetParameter("NToyToRebuild", optHTInv.nToyToRebuild);
+   calc.SetParameter("RebuildParamValues", optHTInv.rebuildParamValues);
+   calc.SetParameter("MassValue", optHTInv.massValue.c_str());
+   calc.SetParameter("MinimizerType", optHTInv.minimizerType.c_str());
+   calc.SetParameter("PrintLevel", optHTInv.printLevel);
+   calc.SetParameter("InitialFit", optHTInv.initialFit);
+   calc.SetParameter("ResultFileName", optHTInv.resultFileName);
+   calc.SetParameter("RandomSeed", optHTInv.randomSeed);
+   calc.SetParameter("AsimovBins", optHTInv.nAsimovBins);
 
    // enable offset for all roostats
-   if (useNLLOffset) RooStats::UseNLLOffset(true);
+   if (optHTInv.useNLLOffset) RooStats::UseNLLOffset(true);
 
    RooWorkspace * w = dynamic_cast<RooWorkspace*>( file->Get(wsName) );
    HypoTestInverterResult * r = 0;
@@ -544,7 +551,7 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
 
    // plot test statistics distributions for the two hypothesis
    if (mPlotHypoTestResult) {
-      TCanvas * c2 = new TCanvas();
+      TCanvas * c2 = new TCanvas("c2");
       if (nEntries > 1) {
          int ny = TMath::CeilNint(TMath::Sqrt(nEntries));
          int nx = TMath::CeilNint(double(nEntries)/ny);
@@ -557,7 +564,7 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
          pl->Draw();
       }
    }
-
+   gPad = c1; 
 
 }
 
@@ -621,7 +628,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
 
    // case of no systematics
    // remove nuisance parameters from model
-   if (noSystematics) {
+   if (optHTInv.noSystematics) {
       const RooArgSet * nuisPar = sbModel->GetNuisanceParameters();
       if (nuisPar && nuisPar->getSize() > 0) {
          std::cout << "StandardHypoTestInvDemo" << "  -  Switch off all systematics by setting them constant to their initial values" << std::endl;
@@ -694,14 +701,14 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    // fit the data first (need to use constraint )
    TStopwatch tw;
 
-   bool doFit = initialFit;
-   if (testStatType == 0 && initialFit == -1) doFit = false;  // case of LEP test statistic
-   if (type == 3  && initialFit == -1) doFit = false;         // case of Asymptoticcalculator with nominal Asimov
+   bool doFit = mInitialFit;
+   if (testStatType == 0 && mInitialFit == -1) doFit = false;  // case of LEP test statistic
+   if (type == 3  && mInitialFit == -1) doFit = false;         // case of Asymptoticcalculator with nominal Asimov
    double poihat = 0;
 
-   if (minimizerType.size()==0) minimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+   if (mMinimizerType.size()==0) mMinimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
    else
-      ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerType.c_str());
+      ROOT::Math::MinimizerOptions::SetDefaultMinimizer(mMinimizerType.c_str());
 
    Info("StandardHypoTestInvDemo","Using %s as minimizer for computing the test statistic",
         ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str() );
@@ -718,10 +725,10 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
       RooStats::RemoveConstantParameters(&constrainParams);
       tw.Start();
       RooFitResult * fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(false), Hesse(false),
-                                                       Minimizer(minimizerType.c_str(),"Migrad"), Strategy(0), PrintLevel(mPrintLevel), Constrain(constrainParams), Save(true), Offset(RooStats::IsNLLOffset()) );
+                                                       Minimizer(mMinimizerType.c_str(),"Migrad"), Strategy(0), PrintLevel(mPrintLevel), Constrain(constrainParams), Save(true), Offset(RooStats::IsNLLOffset()) );
       if (fitres->status() != 0) {
          Warning("StandardHypoTestInvDemo","Fit to the model failed - try with strategy 1 and perform first an Hesse computation");
-         fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(true), Hesse(false),Minimizer(minimizerType.c_str(),"Migrad"), Strategy(1), PrintLevel(mPrintLevel+1), Constrain(constrainParams),
+         fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(true), Hesse(false),Minimizer(mMinimizerType.c_str(),"Migrad"), Strategy(1), PrintLevel(mPrintLevel+1), Constrain(constrainParams),
                                            Save(true), Offset(RooStats::IsNLLOffset()) );
       }
       if (fitres->status() != 0)
@@ -768,13 +775,13 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    ropl.SetSubtractMLE(false);
    if (testStatType == 11) ropl.SetSubtractMLE(true);
    ropl.SetPrintLevel(mPrintLevel);
-   ropl.SetMinimizer(minimizerType.c_str());
+   ropl.SetMinimizer(mMinimizerType.c_str());
    if (mEnableDetOutput) ropl.EnableDetailedOutput();
 
    ProfileLikelihoodTestStat profll(*sbModel->GetPdf());
    if (testStatType == 3) profll.SetOneSided(true);
    if (testStatType == 4) profll.SetSigned(true);
-   profll.SetMinimizer(minimizerType.c_str());
+   profll.SetMinimizer(mMinimizerType.c_str());
    profll.SetPrintLevel(mPrintLevel);
    if (mEnableDetOutput) profll.EnableDetailedOutput();
 
@@ -860,7 +867,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    }
 
    // specify if need to re-use same toys
-   if (reuseAltToys) {
+   if (mReuseAltToys) {
       hc->UseSameAltToys();
    }
 
@@ -924,10 +931,15 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
       if (testStatType != 2 && testStatType != 3)
          Warning("StandardHypoTestInvDemo","Only the PL test statistic can be used with AsymptoticCalculator - use by default a two-sided PL");
    }
-   else if (type == 0 || type == 1) {
+   else if (type == 0 ) {
       ((FrequentistCalculator*) hc)->SetToys(ntoys,ntoys/mNToysRatio);
       // store also the fit information for each poi point used by calculator based on toys
       if (mEnableDetOutput) ((FrequentistCalculator*) hc)->StoreFitInfo(true);
+   }
+   else if (type == 1 ) {
+      ((HybridCalculator*) hc)->SetToys(ntoys,ntoys/mNToysRatio);
+      // store also the fit information for each poi point used by calculator based on toys
+      //if (mEnableDetOutput) ((HybridCalculator*) hc)->StoreFitInfo(true);
    }
 
    // Get the result
@@ -936,7 +948,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
 
 
    HypoTestInverter calc(*hc);
-   calc.SetConfidenceLevel(confidenceLevel);
+   calc.SetConfidenceLevel(optHTInv.confLevel);
 
 
    calc.UseCLs(useCLs);
@@ -999,7 +1011,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
              RooStats::SetAllConstant(*poiModel,true);
 
              sbModel->GetPdf()->fitTo(*data,InitialHesse(false), Hesse(false),
-                                      Minimizer(minimizerType.c_str(),"Migrad"), Strategy(0), PrintLevel(mPrintLevel), Constrain(constrainParams), Offset(RooStats::IsNLLOffset()) );
+                                      Minimizer(mMinimizerType.c_str(),"Migrad"), Strategy(0), PrintLevel(mPrintLevel), Constrain(constrainParams), Offset(RooStats::IsNLLOffset()) );
 
 
              std::cout << "rebuild using fitted parameter value for B-model snapshot" << std::endl;
