@@ -21,13 +21,6 @@ class TGeoManager;
 class TGeoPhysicalNode;
 class TGeoVolume;
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoParallelWorld - base class for a flat world that can be navigated  //
-//   in parallel                                                          //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-
 class TGeoParallelWorld : public TNamed
 {
 protected :
@@ -60,7 +53,7 @@ public:
    void              AddOverlap(const char *volname, Bool_t activate=kTRUE);
    // The normal PW mode (without declaring overlaps) does detect them
    Int_t             PrintDetectedOverlaps() const;
-   
+
    // Closing a parallel geometry is mandatory
    Bool_t            CloseGeometry();
    // Refresh structures in case of re-alignment
@@ -80,7 +73,7 @@ public:
    void              CheckOverlaps(Double_t ovlp=0.001); // default 10 microns
    void              Draw(Option_t *option);
 
-   ClassDef(TGeoParallelWorld, 3)     // parallel world base clas
+   ClassDef(TGeoParallelWorld, 3)     // parallel world base class
 };
 
 #endif

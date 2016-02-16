@@ -8,17 +8,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_____________________________________________________________________________
-// TGeoParallelWorld    - base class for a flat parallel geometry.
-//   The parallel geometry can be composed by both normal volumes added
-// using the AddNode interface (not implemented yet) or by physical nodes
-// which will use as position their actual global matrix with respect to the top
-// volume of the main geometry.
-//   All these nodes are added as daughters to the "top" volume of
-// the parallel world which acts as a navigation helper in this parallel
-// world. The parallel world has to be closed before calling any navigation
-// method.
-//_____________________________________________________________________________
+/** \class TGeoParallelWorld
+\ingroup Geometry_classes
+Base class for a flat parallel geometry.
+
+  The parallel geometry can be composed by both normal volumes added
+using the AddNode interface (not implemented yet) or by physical nodes
+which will use as position their actual global matrix with respect to the top
+volume of the main geometry.
+
+  All these nodes are added as daughters to the "top" volume of
+the parallel world which acts as a navigation helper in this parallel
+world. The parallel world has to be closed before calling any navigation
+method.
+*/
 
 #include "TGeoParallelWorld.h"
 #include "TObjString.h"
@@ -93,7 +96,7 @@ void TGeoParallelWorld::AddOverlap(const char *volname, Bool_t activate)
    while ((vol=(TGeoVolume*)next())) {
       if (!strcmp(vol->GetName(), volname)) vol->SetOverlappingCandidate(kTRUE);
    }
-}      
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the overlaps which were detected during real tracking
@@ -108,9 +111,9 @@ Int_t TGeoParallelWorld::PrintDetectedOverlaps() const
          if (noverlaps==0) Info("PrintDetectedOverlaps", "List of detected volumes overlapping with the PW");
          noverlaps++;
          printf("volume: %s at index: %d\n", vol->GetName(), vol->GetNumber());
-      }   
+      }
    }
-   return noverlaps;  
+   return noverlaps;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -224,7 +227,7 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
    if (fLastState && fLastState->IsMatchingState(nav)) return 0;
 //   while ((pnode = (TGeoPhysicalNode*)next())) {
 //      if (pnode->IsMatchingState(nav)) return 0;
-//   }   
+//   }
    Double_t snext = TGeoShape::Big();
    step = stepmax;
    TGeoVoxelFinder *voxels = fVolume->GetVoxels();
@@ -286,7 +289,7 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
          if (!fUseOverlaps && !nav->GetCurrentVolume()->IsOverlappingCandidate()) {
             AddOverlap(nav->GetCurrentVolume(),kFALSE);
 //            printf("object %s overlapping with pn: %s\n", fGeoManager->GetPath(), pnode->GetName());
-         }   
+         }
          return pnode;
       }
    }
@@ -301,7 +304,7 @@ Double_t TGeoParallelWorld::Safety(Double_t point[3], Double_t safmax)
 {
    TGeoNavigator *nav = fGeoManager->GetCurrentNavigator();
    // Fast return if the state matches the last one recorded
-   if (fLastState && fLastState->IsMatchingState(nav)) return TGeoShape::Big();   
+   if (fLastState && fLastState->IsMatchingState(nav)) return TGeoShape::Big();
    // Fast return if not in an overlapping candidate
    if (fUseOverlaps && !nav->GetCurrentVolume()->IsOverlappingCandidate()) return TGeoShape::Big();
    Double_t local[3];
