@@ -15,13 +15,6 @@
 #include "TNamed.h"
 #endif
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TVirtualMagField - ABC for magnetic field. Derived classes must        //
-// implement the method: Field(const Double_t *x, Double_t *B)            //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-
 class TVirtualMagField : public TNamed
 {
 public:
@@ -37,7 +30,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
-// TGeoUniformMagField - Uniform magnetic field class.                       //
+// TGeoUniformMagField - Uniform magnetic field class.                    //
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
