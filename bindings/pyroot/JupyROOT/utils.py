@@ -218,7 +218,7 @@ def invokeAclic(cell):
 
 class StreamCapture(object):
     def __init__(self, stream, ip=get_ipython()):
-        nbStreamsPyStreamsMap={sys.stderr:sys.__stderr__,sys.stdout:sys.__stdout__}
+        nbStreamsPyStreamsMap={sys.stderr:sys.__stderr__, sys.stdout:sys.__stdout__}
         self.shell = ip
         self.nbStream = stream
         self.pyStream = nbStreamsPyStreamsMap[stream]
@@ -232,6 +232,15 @@ class StreamCapture(object):
            declareCppCode("void %s(){fflush(nullptr);};" %flushFunctionName)
         self.flush = getattr(ROOT,flushFunctionName)
 
+    def pre_execute(self):
+        # Unify C++ and Python outputs
+        if self.pyStream == sys.__stdout__:
+            self.nbStream = sys.stdout
+            sys.stdout = sys.__stdout__
+        if self.pyStream == sys.__stderr__:
+            self.nbStream = sys.stderr
+            sys.stderr = sys.__stderr__
+
     def more_data(self):
         r, _, _ = select.select([self.pipe_out], [], [], 0)
         return bool(r)
@@ -243,10 +252,16 @@ class StreamCapture(object):
                 out += os.read(self.pipe_out, 8192)
 
         self.flush()
+
+        # Restore the stream
+        if self.pyStream == sys.__stdout__: sys.stdout = self.nbStream
+        if self.pyStream == sys.__stderr__: sys.stderr = self.nbStream
+
         self.nbStream.write(out) # important to print the value printing output
         return 0
 
     def register(self):
+        self.shell.events.register('pre_execute', self.pre_execute)
         self.shell.events.register('post_execute', self.post_execute)
 
 def GetCanvasDrawers():
