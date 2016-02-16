@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TGeoCompositeShape -
+/** \class TGeoCompositeShape
 \ingroup Geometry_classes
 
 Class handling Boolean composition of shapes

@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TGeoNavigator -
+/** \class TGeoNavigator
 \ingroup Geometry_classes
 
   Class providing navigation API for TGeo geometries. Several instances are

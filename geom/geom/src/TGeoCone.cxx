@@ -10,7 +10,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TGeoCone -
+/** \class TGeoCone
 \ingroup Geometry_classes
 
 Conical tube  class. It has 5 parameters :

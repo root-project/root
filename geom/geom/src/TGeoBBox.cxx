@@ -10,7 +10,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TGeoBBox -
+/** \class TGeoBBox
 \ingroup Geometry_classes
 
 Box class. All shape primitives inherit from this, their

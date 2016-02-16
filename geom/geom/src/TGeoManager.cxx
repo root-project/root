@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TGeoManager -
+/** \class TGeoManager
 \ingroup Geometry_classes
 
 The manager class for any TGeo geometry. Provides user

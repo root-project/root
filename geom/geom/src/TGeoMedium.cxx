@@ -10,7 +10,7 @@
  *************************************************************************/
 
 
-/** \class TGeoMedium -
+/** \class TGeoMedium
 \ingroup Geometry_classes
 
 Media are used to store properties related to tracking and which are useful
