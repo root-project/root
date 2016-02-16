@@ -4871,9 +4871,8 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
    auto xRegions = ComputeRenderingRegions(fXaxis, nXPixels, Hoption.Logx);
    auto yRegions = ComputeRenderingRegions(fYaxis, nYPixels, Hoption.Logy);
    if (xRegions.size() == 0 || yRegions.size() == 0) {
-      TString errmsg("Encountered error while computing rendering regions.");
       Error("THistPainter::PaintColorLevelFast(Option_t*)",
-            errmsg.Data());
+            "Encountered error while computing rendering regions.");
       return;
    }
 
