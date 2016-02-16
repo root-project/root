@@ -9,41 +9,52 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_____________________________________________________________________________
-// TGeoPhysicalNode, TGeoPNEntry
-//
-// Physical nodes are the actual 'touchable' objects in the geometry, representing
-// a path of positioned volumes starting with the top node:
-//    path=/TOP/A_1/B_4/C_3 , where A, B, C represent names of volumes.
-// The number of physical nodes is given by the total number of possible of
-// branches in the geometry hierarchy. In case of detector geometries and
-// specially for calorimeters this number can be of the order 1e6-1e9, therefore
-// it is impossible to create all physical nodes as objects in memory. In TGeo,
-// physical nodes are represented by the class TGeoPhysicalNode and can be created
-// on demand for alignment purposes:
-//
-//    TGeoPhysicalNode *pn = new TGeoPhysicalNode("path_to_object")
-//
-// Once created, a physical node can be misaligned, meaning that its position
-// or even shape can be changed:
-//
-//    pn->Align(TGeoMatrix* newmat, TGeoShape* newshape, Bool_t check=kFALSE)
-//
-// The knowledge of the path to the objects that need to be misaligned is
-// essential since there is no other way of identifying them. One can however
-// create 'symbolic links' to any complex path to make it more representable
-// for the object it designates:
-//
-//    TGeoPNEntry *pne = new TGeoPNEntry("TPC_SECTOR_2", "path_to_tpc_sect2");
-//    pne->SetPhysicalNode(pn)
-//
-// Such a symbolic link hides the complexity of the path to the align object and
-// replaces it with a more meaningful name. In addition, TGeoPNEntry objects are
-// faster to search by name and they may optionally store an additional user
-// matrix.
-//
-// For more details please read the misalignment section in the Users Guide.
-//_____________________________________________________________________________
+/** \class TGeoPhysicalNode
+\ingroup Geometry_classes
+
+Physical nodes are the actual 'touchable' objects in the geometry, representing
+a path of positioned volumes starting with the top node:
+     path=/TOP/A_1/B_4/C_3 , where A, B, C represent names of volumes.
+
+The number of physical nodes is given by the total number of possible of
+branches in the geometry hierarchy. In case of detector geometries and
+specially for calorimeters this number can be of the order 1e6-1e9, therefore
+it is impossible to create all physical nodes as objects in memory. In TGeo,
+physical nodes are represented by the class TGeoPhysicalNode and can be created
+on demand for alignment purposes:
+
+~~~ {.cpp}
+   TGeoPhysicalNode *pn = new TGeoPhysicalNode("path_to_object")
+~~~
+
+Once created, a physical node can be misaligned, meaning that its position
+or even shape can be changed:
+
+~~~ {.cpp}
+   pn->Align(TGeoMatrix* newmat, TGeoShape* newshape, Bool_t check=kFALSE)
+~~~
+*/
+
+/** \class TGeoPNEntry
+\ingroup Geometry_classes
+
+The knowledge of the path to the objects that need to be misaligned is
+essential since there is no other way of identifying them. One can however
+create 'symbolic links' to any complex path to make it more representable
+for the object it designates:
+
+~~~ {.cpp}
+   TGeoPNEntry *pne = new TGeoPNEntry("TPC_SECTOR_2", "path_to_tpc_sect2");
+   pne->SetPhysicalNode(pn)
+~~~
+
+Such a symbolic link hides the complexity of the path to the align object and
+replaces it with a more meaningful name. In addition, TGeoPNEntry objects are
+faster to search by name and they may optionally store an additional user
+matrix.
+
+For more details please read the misalignment section in the Users Guide.
+*/
 
 #include "TClass.h"
 #include "TGeoManager.h"

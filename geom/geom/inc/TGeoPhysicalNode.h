@@ -102,7 +102,7 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-// TGeoPNEntry - class representing phisical node entry having a unique name //
+// TGeoPNEntry - class representing physical node entry having a unique name //
 //   associated to a path.                                                   //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
