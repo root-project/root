@@ -254,7 +254,7 @@ The problem was reported [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=
 
 ### TGraph2D
 
-Add a new implementation for Delauney interpolation using the triangle code from Jonathan Shewchuk, see [[ http://www.cs.cmu.edu/~quake/triangle.html ]]. 
+Add a new implementation for Delauney interpolation using the triangle code from Jonathan Shewchuk, see [[ http://www.cs.cmu.edu/~quake/triangle.html ]].
 A new class for Delauney triangulator and interpolation has been added in the MathCore library  ( `ROOT::Math::Delauney2D` ).
 
 
@@ -267,7 +267,7 @@ A new class for Delauney triangulator and interpolation has been added in the Ma
 ### TFormula
 
 * Fix several bugs in the new TFormula class.
-* Add as new pre-defined functions: `crystalball`, `breitwigner` and `cheb0,cheb1,...cheb10` for the Chebyshev polynomials. 
+* Add as new pre-defined functions: `crystalball`, `breitwigner` and `cheb0,cheb1,...cheb10` for the Chebyshev polynomials.
 
 ## Math Libraries
 
@@ -280,16 +280,16 @@ ROOT random engines, GSL random engines and random engines provided by the C++ s
 ## R Interface
 
 Apply several improvements in the interface to R, allowing to use R functions within ROOT.
-See more at the [ROOT-R User Guide](http://oproject.org/tiki-index.php?page=ROOT%20R%20Users%20Guide). 
+See more at the [ROOT-R User Guide](http://oproject.org/tiki-index.php?page=ROOT%20R%20Users%20Guide).
 
 ## TMVA
 
-Add new TMVA plug-in based on R and Python (using Scikit-Learn) 
+Add new TMVA plug-in based on R and Python (using Scikit-Learn)
 * See the [RMVA Web page](http://oproject.org/tiki-index.php?page=RMVA) for a detailed description of the new TMVA method based on R
 * See the [PyMVA Web page](http://oproject.org/tiki-index.php?page=PyMVA) for detailed description of the machine learning methods added in TMVA and based on the Python Scikit-Learn package.
 
 ## RooFit Libraries
-  
+
 
 ## 2D Graphics Libraries
 
@@ -541,7 +541,7 @@ Minor changes in the build system:
 
 ## HEAD of the v6-06-00-patches branch
 
-Changes will be part of the future 6.04/14
+Changes will be part of the future 6.06/02
 
 ### Core
 
@@ -556,6 +556,11 @@ Changes will be part of the future 6.04/14
 
 - Ignore access check when evaluating [ROOT-7426]
 
+### TColor
+
+- Import `TColor` from master to make sure the high quality palettes are defined only ones.
+  This was requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8003).
+
 ### PyROOT
 
 - Fix case where c++ exception in a constructor were not propagated to python [ROOT-7864]
@@ -563,6 +568,6 @@ Changes will be part of the future 6.04/14
 - Fix handling of `vector<enums>` [ROOT-7916]
 - Fix the wrong return value when calling a c++ function returning short, or when retuning a char with a
   negative value [ROOT-7872]
-- Added a new configuration option (*ROOT.PyConfig.DisableRootLogon*) to disable processing of the 
+- Added a new configuration option (*ROOT.PyConfig.DisableRootLogon*) to disable processing of the
   rootlogon[.py|C] macro in addition to the -n option in the command arguments.
- 
+
