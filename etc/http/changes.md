@@ -1,5 +1,18 @@
 # JSROOT changelog
 
+## Changes in 4.2
+1. Significant performance improvements in 3D drawings - TGeo/TH2/TH3 
+2. Implement TGeoPara, TGeoGtra, TGeoXtru and TGeoEltu shapes
+3. Optimize (reduce vertices number) for others TGeo shapes 
+4. Correct rotation/translation/scaling of TGeo nodes 
+5. Workaround for axis reflection (not directly supported in three.js) 
+6. Support array of objects in I/O (like in TAxis3D)
+7. Correct reading of multi-dim arrays like Double_t fXY[8][2];
+8. Provide canvas toolbar for actions like savepng or unzoom  
+9. Implement JSROOT.resize() function to let resize drawing after changes in page layout 
+10. Fix error with title display/update 
+ 
+
 ## Changes in 4.1
 1. Introduce object inspector - one could browse object members of any class
 2. Let draw sub-items from TCanvas list of primitives like sub-pad or TLatex
