@@ -317,32 +317,23 @@
 
 
 /*--------------------------------------------------|
-| tooltip style                                     |
+| tooltip style for 3d drawings                     |
 |--------------------------------------------------*/
 
-#tt {
-   position:absolute;
-   display:block;
-}
-#tttop {
+.tt3d_border {
    display:block;
    height:5px;
    margin-left:5px;
    overflow:hidden;
 }
-#ttcont {
+
+.tt3d_cont {
    display:block;
    padding:2px 12px 3px 7px;
    margin-left:5px;
    font-size: 11px;
    background:#777;
    color:#fff;
-}
-#ttbot {
-   display:block;
-   height:5px;
-   margin-left:5px;
-   overflow:hidden;
 }
 
 /* from JSRootD3Painter */
@@ -362,6 +353,7 @@ rect.zoom {
     stroke: steelblue;
     fill-opacity: 0.1;
 }
+
 /* Correct overflow not hidden in IE9 */
 svg:not(:root) { overflow: hidden; }
 
@@ -434,4 +426,96 @@ svg:not(:root) { overflow: hidden; }
    margin-right : 10px;
    margin-top : 3px;
    margin-bottom : 3px;
+}
+
+/* stylesheet for toolbar buttons */
+
+.toolbar {
+   position:absolute;
+   bottom:2px;
+   left:2px;
+   z-index:1001;
+   background:rgba(255,255,255,0.7)
+}
+
+.toolbar--hover {
+   opacity:0;
+   -webkit-transition: opacity 0.3s ease 0s;
+   -moz-transition: opacity 0.3s ease 0s;
+   -ms-transition:opacity 0.3s ease 0s;
+   -o-transition:opacity 0.3s ease 0s;
+   transition:opacity 0.3s ease 0s;
+}
+
+hover .toolbar--hover {
+   opacity:1;
+}
+
+.toolbar-group {
+   float:left;
+   display:inline-block;
+   box-sizing:border-box;
+   position:relative;
+   bottom:23px;
+   vertical-align:middle;
+   white-space:nowrap;
+}
+
+.toolbar-group:first-child {
+   margin-left:2px;
+}
+
+.toolbar-btn {
+   position:relative;
+   font-size:16px;
+   padding:3px 4px;
+   cursor:pointer;
+   line-height:normal;
+   box-sizing:border-box;
+}
+
+.toolbar-btn svg {
+   position:relative;
+   top:2px;
+}
+
+.toolbar-btn path {
+   fill:rgba(0,31,95,0.2);
+}
+
+.toolbar-btn.active path, .toolbar-btn:hover path {
+   fill:rgba(0,22,72,0.5);
+}
+
+[data-title]:before, [data-title]:after {
+   position:absolute;
+   -webkit-transform:translate3d(0, 0, 0);
+   -moz-transform:translate3d(0, 0, 0);
+   -ms-transform:translate3d(0, 0, 0);
+   -o-transform:translate3d(0, 0, 0);
+   transform:translate3d(0, 0, 0);
+   display:none;
+   opacity:0;
+   z-index:1001;
+   pointer-events:none;
+   bottom:100%;
+   left:100%;
+}
+
+[data-title]:hover:before, [data-title]:hover:after {
+   display:block;
+   opacity:0.9;
+}
+
+[data-title]:after {
+   content:attr(data-title);
+   background:#69738a;
+   color:white;
+   padding:4px 5px;
+   font-family:'Open Sans', verdana, arial, sans-serif;
+   font-size:11px;
+   line-height:11px;
+   white-space:nowrap;
+   margin-left:-18px;
+   border-radius:2px;
 }

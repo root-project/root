@@ -1618,10 +1618,42 @@
                case JSROOT.IO.kOffsetL+JSROOT.IO.kLong64:
                case JSROOT.IO.kOffsetL+JSROOT.IO.kFloat:
                case JSROOT.IO.kOffsetL+JSROOT.IO.kDouble32:
-                  member['arrlength'] = element['fArrayLength'];
-                  member['func'] = function(buf, obj) {
-                     obj[this.name] = buf.ReadFastArray(this.arrlength, this.type - JSROOT.IO.kOffsetL);
-                  };
+                  if (element.fArrayDim === 1) {
+                     member['arrlength'] = element.fArrayLength;
+                     member['func'] = function(buf, obj) {
+                        obj[this.name] = buf.ReadFastArray(this.arrlength, this.type - JSROOT.IO.kOffsetL);
+                     };
+                  } else
+                  if (element.fArrayDim === 2) {
+                     member['arrlength'] = element.fMaxIndex[1];
+                     member['maxindx'] = element.fMaxIndex[0];
+                     member['func'] = function(buf, obj) {
+                        obj[this.name] = [];
+                        for (var n=0;n<this.maxindx;++n)
+                           obj[this.name].push(buf.ReadFastArray(this.arrlength, this.type - JSROOT.IO.kOffsetL));
+                     };
+                  } else {
+                     member['maxdim'] = element.fArrayDim - 1;
+                     member['maxindx'] = element.fMaxIndex;
+                     member['arrlength'] = element.fArrayLength;
+                     member['func'] = function(buf, obj) {
+                        var tmp = buf.ReadFastArray(this.arrlength, this.type - JSROOT.IO.kOffsetL);
+                        var indx = [], arr = [];
+                        for (var n=0; n<=this.maxdim; ++n) { indx[n] = 0; arr[n] = []; }
+                        for (var i=0;i<tmp.length;++i) {
+                           arr[this.maxdim].push(tmp[i]);
+                           ++indx[this.maxdim];
+                           var k = this.maxdim;
+                           while ((indx[k] === this.maxindx[k]) && (k>0)) {
+                              indx[k] = 0;
+                              arr[k-1].push(arr[k]);
+                              arr[k] = [];
+                              ++indx[--k];
+                           }
+                        }
+                        obj[this.name] = arr[0];
+                     };
+                  }
                   break;
                case JSROOT.IO.kOffsetP+JSROOT.IO.kInt:
                case JSROOT.IO.kOffsetP+JSROOT.IO.kDouble:
@@ -1663,6 +1695,33 @@
                      member['classname'] = classname;
                      member['func'] = function(buf, obj) {
                         obj[this.name] = buf.ClassStreamer({}, this.classname);
+                     };
+                  }
+                  break;
+               case JSROOT.IO.kOffsetL + JSROOT.IO.kObject:
+               case JSROOT.IO.kOffsetL + JSROOT.IO.kAny:
+               case JSROOT.IO.kOffsetL + JSROOT.IO.kAnyp:
+               case JSROOT.IO.kOffsetL + JSROOT.IO.kObjectp:
+                  member['arrlength'] = element['fArrayLength'];
+                  var classname = element['fTypeName'];
+                  if (classname.charAt(classname.length-1) == "*")
+                     classname = classname.substr(0, classname.length - 1);
+
+                  var arrkind = JSROOT.IO.GetArrayKind(classname);
+
+                  if (arrkind > 0) {
+                     member['arrkind'] = arrkind;
+                     member['func'] = function(buf, obj) {
+                        obj[this.name] = [];
+                        for (var k=0;k<this.arrlength;++k)
+                           obj[this.name].push(buf.ReadFastArray(buf.ntou4(), this.arrkind));
+                     };
+                  } else {
+                     member['classname'] = classname;
+                     member['func'] = function(buf, obj) {
+                        obj[this.name] = [];
+                        for (var k=0;k<this.arrlength;++k)
+                           obj[this.name].push(buf.ClassStreamer({}, this.classname));
                      };
                   }
                   break;

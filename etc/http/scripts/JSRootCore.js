@@ -30,8 +30,7 @@
             'MathJax'              : 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG&amp;delayStartupUntil=configured',
             'saveSvgAsPng'         : dir+'saveSvgAsPng'+ext,
             'THREE'                : dir+'three'+ext,
-            'three.extra'          : dir+'three.extra'+ext,
-            'THREE_ALL'            : dir+'jquery.mousewheel'+ext,
+            'THREE_ALL'            : dir+'three.extra'+ext,
             'JSRootCore'           : dir+'JSRootCore'+ext,
             'JSRootMath'           : dir+'JSRootMath'+ext,
             'JSRootInterface'      : dir+'JSRootInterface'+ext,
@@ -39,7 +38,8 @@
             'JSRootPainter'        : dir+'JSRootPainter'+ext,
             'JSRootPainter.more'   : dir+'JSRootPainter.more'+ext,
             'JSRootPainter.jquery' : dir+'JSRootPainter.jquery'+ext,
-            'JSRoot3DPainter'      : dir+'JSRoot3DPainter'+ext
+            'JSRoot3DPainter'      : dir+'JSRoot3DPainter'+ext,
+            'JSRootGeoPainter'     : dir+'JSRootGeoPainter'+ext
          };
 
       // check if modules are already loaded
@@ -52,8 +52,7 @@
        paths: paths,
        shim: {
          'touch-punch': { deps: ['jquery'] },
-         'three.extra': { deps: ['THREE'] },
-         'THREE_ALL': { deps: ['jquery', 'jquery-ui', 'THREE', 'three.extra'] },
+         'THREE_ALL': { deps: ['THREE'] },
          'MathJax': {
              exports: 'MathJax',
              init: function () {
@@ -86,7 +85,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "4.1 13/01/2016";
+   JSROOT.version = "4.2 17/02/2016";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -94,7 +93,7 @@
    JSROOT.id_counter = 0;
 
    JSROOT.touches = false;
-   JSROOT.browser = { isOpera:false, isFirefox:true, isSafari:false, isChrome:false, isIE:false };
+   JSROOT.browser = { isOpera:false, isFirefox:true, isSafari: false, isChrome: false, isIE: false };
 
    if ((typeof document !== "undefined") && (typeof window !== "undefined")) {
       JSROOT.touches = ('ontouchend' in document); // identify if touch events are supported
@@ -114,6 +113,7 @@
          Zooming : true,
          MoveResize : true,   // enable move and resize of elements like statbox, title, pave, colz
          DragAndDrop : true,  // enables drag and drop functionality
+         ToolBar : true,    // show additional tool buttons on the canvas
          OptimizeDraw : 1, // drawing optimization: 0 - disabled, 1 - only for large (>5000 1d bins, >50 2d bins) histograms, 2 - always
          DefaultCol : 1,  // default col option 1-svg, 2-canvas
          AutoStat : true,
@@ -130,7 +130,8 @@
          MathJax : 0,  // 0 - never, 1 - only for complex cases, 2 - always
          Interpolate : "basis", // d3.js interpolate methods, used in TGraph and TF1 painters
          ProgressBox : true,  // show progress box
-         Embed3DinSVG : 2  // 0 - no embed, 1 - overlay over SVG (IE), 2 - embed into SVG (works only with Firefox and Chrome)
+         Embed3DinSVG : 2,  // 0 - no embed, 1 - overlay over SVG (IE), 2 - embed into SVG (works only with Firefox and Chrome)
+         NoWebGL : false // if true, WebGL will be disabled
       };
 
    JSROOT.BIT = function(n) { return 1 << (n); }
@@ -224,76 +225,102 @@
 
    JSROOT.debug = 0;
 
-   // This should be similar to the jQuery.extend method
+   // This is simple replacement of jQuery.extend method
    // Just copy (not clone) all fields from source to the target object
    JSROOT.extend = function(tgt, src, map, deep_copy) {
       if ((src === null) || (typeof src !== 'object')) return src;
-
-      if (typeof deep_copy === "undefined") deep_copy = 0;
-
-      if (deep_copy > 0) {
-         if (!map) map = { obj:[], clones:[] };
-         var i = map.obj.indexOf(src);
-         if (i>=0) return map.clones[i];
-
-         var proto = Object.prototype.toString.apply(src);
-
-         // process normal array
-         if (proto === '[object Array]') {
-            tgt = [];
-            map.obj.push(src);
-            map.clones.push(tgt);
-            for (i = 0; i < src.length; ++i)
-               tgt.push(JSROOT.extend(null, src[i], map, deep_copy));
-
-            return tgt;
-         }
-
-         // process typed array
-         if ((proto.indexOf('[object ') == 0) && (proto.indexOf('Array]')==proto.length-6)) {
-            tgt = [];
-            map.obj.push(src);
-            map.clones.push(tgt);
-            for (i = 0; i < src.length; ++i)
-               tgt.push(src[i]);
-
-            return tgt;
-         }
-
-         if ((tgt==null) || (typeof tgt != 'object')) {
-            tgt = {};
-            map.obj.push(src);
-            map.clones.push(tgt);
-         }
-      } else {
-         if ((tgt===null) || (typeof tgt !== 'object')) tgt = {};
-      }
+      if ((tgt === null) || (typeof tgt !== 'object')) tgt = {};
 
       for (var k in src)
-         switch (deep_copy) {
-            case 0:
-               tgt[k] = src[k];
-               break;
-            case 1:
-               tgt[k] = JSROOT.extend(tgt[k], src[k], map, deep_copy);
-               break;
-            case 2:
-               if (typeof(src[k]) !== 'function')
-                  tgt[k] = JSROOT.extend(tgt[k], src[k], map, deep_copy);
-               break;
-
-            default:
-               tgt[k] = src[k];
-         }
+         tgt[k] = src[k];
 
       return tgt;
    }
 
-   // Instead of jquery use JSROOT.extend function
-   // Make deep_copy of the object, including all sub-objects
-   JSROOT.clone = function(obj, nofunc) {
-      return JSROOT.extend(null, obj, null, nofunc ? 2 : 1);
+   // Make deep clone of the object, including all sub-objects
+   JSROOT.clone = function(src, map) {
+      if (src === null) return null;
+
+      if (!map) {
+         map = { obj:[], clones:[] };
+      } else {
+         var i = map.obj.indexOf(src);
+         if (i>=0) return map.clones[i];
+      }
+
+      var proto = Object.prototype.toString.apply(src);
+
+      // process normal array
+      if (proto === '[object Array]') {
+         var tgt = [];
+         map.obj.push(src);
+         map.clones.push(tgt);
+         for (var i = 0; i < src.length; ++i)
+            tgt.push(JSROOT.clone(src[i], map));
+
+         return tgt;
+      }
+
+      // process typed array
+      if ((proto.indexOf('[object ') == 0) && (proto.indexOf('Array]') == proto.length-6)) {
+         var tgt = [];
+         map.obj.push(src);
+         map.clones.push(tgt);
+         for (var i = 0; i < src.length; ++i)
+            tgt.push(src[i]);
+
+         return tgt;
+      }
+
+      var tgt = {};
+      map.obj.push(src);
+      map.clones.push(tgt);
+
+      for (var k in src) {
+         if (typeof src[k] === 'object')
+            tgt[k] = JSROOT.clone(src[k], map);
+         else
+            tgt[k] = src[k];
+      }
+
+      return tgt;
    }
+
+   // method can be used to delete all functions from objects
+   // only such objects can be cloned when transfer to Worker
+   JSROOT.clear_func = function(src, map) {
+      if (src === null) return;
+
+      var proto = Object.prototype.toString.apply(src);
+
+      if (proto === '[object Array]') {
+         for (var n=0;n<src.length;n++)
+            if (typeof src[n] === 'object')
+               JSROOT.clear_func(src[n], map);
+         return;
+      }
+
+      if ((proto.indexOf('[object ') == 0) && (proto.indexOf('Array]') == proto.length-6)) return;
+
+      if (!map) map = [];
+      var nomap = (map.length == 0);
+      if ('__clean_func__' in src) return;
+
+      map.push(src);
+      src['__clean_func__'] = true;
+
+      for (var k in src) {
+         if (typeof src[k] === 'object')
+            JSROOT.clear_func(src[k], map);
+         else
+         if (typeof src[k] === 'function') delete src[k];
+      }
+
+      if (nomap)
+         for (var n=0;n<map.length;++n)
+            delete map[n]['__clean_func__'];
+   }
+
 
    JSROOT.parse = function(arg) {
       if ((arg==null) || (arg=="")) return null;
@@ -311,7 +338,10 @@
       if (arguments.length < 3) dflt = null;
       if ((opt==null) || (typeof opt != 'string') || (opt.length==0)) return dflt;
 
-      if (!url) url = document.URL;
+      if (!url) {
+         if (typeof document === 'undefined') return dflt;
+         url = document.URL;
+      }
 
       var pos = url.indexOf("?");
       if (pos<0) return dflt;
@@ -723,14 +753,9 @@
       if ((kind.indexOf("3d;")>=0) || (kind.indexOf("geom;")>=0)) {
          mainfiles += "$$$scripts/three" + ext + ".js;" +
                       "$$$scripts/three.extra" + ext + ".js;";
-         modules.push('THREE', "three.extra");
-      }
-
-      if (kind.indexOf("3d;")>=0) {
-         need_jquery = true;
-         mainfiles += "$$$scripts/jquery.mousewheel" + ext + ".js;" +
-                      "$$$scripts/JSRoot3DPainter" + ext + ".js;";
-         modules.push('THREE_ALL', 'JSRoot3DPainter');
+         modules.push("THREE_ALL");
+         mainfiles += "$$$scripts/JSRoot3DPainter" + ext + ".js;";
+         modules.push('JSRoot3DPainter');
       }
 
       if (kind.indexOf("geom;")>=0) {
@@ -759,11 +784,11 @@
          var has_jq = (typeof jQuery != 'undefined'), lst_jq = "";
 
          if (has_jq)
-            jsroot.console('Reuse existing jQuery ' + jQuery.fn.jquery + ", required 2.1.1", debugout);
+            jsroot.console('Reuse existing jQuery ' + jQuery.fn.jquery + ", required 2.1.4", debugout);
          else
             lst_jq += "$$$scripts/jquery.min.js;";
          if (has_jq && typeof $.ui != 'undefined')
-            jsroot.console('Reuse existing jQuery-ui ' + $.ui.version + ", required 1.11.0", debugout);
+            jsroot.console('Reuse existing jQuery-ui ' + $.ui.version + ", required 1.11.4", debugout);
          else {
             lst_jq += '$$$scripts/jquery-ui.min.js;';
             extrafiles += '$$$style/jquery-ui' + ext + '.css;';
@@ -1093,12 +1118,15 @@
               _func = _func.replace(/\b(abs)\b/g, 'TMath::Abs');
               _func = _func.replace('TMath::Exp(', 'Math.exp(');
               _func = _func.replace('TMath::Abs(', 'Math.abs(');
-              _func = _func.replace('TMath::Prob(', 'JSROOT.Math.Prob(');
-              _func = _func.replace('gaus(', 'JSROOT.Math.gaus(this, x, ');
-              _func = _func.replace('gausn(', 'JSROOT.Math.gausn(this, x, ');
-              _func = _func.replace('expo(', 'JSROOT.Math.expo(this, x, ');
-              _func = _func.replace('landau(', 'JSROOT.Math.landau(this, x, ');
-              _func = _func.replace('landaun(', 'JSROOT.Math.landaun(this, x, ');
+              if (typeof JSROOT.Math == 'object') {
+                 this['_math'] = JSROOT.Math;
+                 _func = _func.replace('TMath::Prob(', 'this._math.Prob(');
+                 _func = _func.replace('gaus(', 'this._math.gaus(this, x, ');
+                 _func = _func.replace('gausn(', 'this._math.gausn(this, x, ');
+                 _func = _func.replace('expo(', 'this._math.expo(this, x, ');
+                 _func = _func.replace('landau(', 'this._math.landau(this, x, ');
+                 _func = _func.replace('landaun(', 'this._math.landaun(this, x, ');
+              }
               _func = _func.replace('pi', 'Math.PI');
               for (var i=0;i<this['fNpar'];++i) {
                  while(_func.indexOf('['+i+']') != -1)
@@ -1350,9 +1378,17 @@
          if (pos<0) continue;
 
          JSROOT.source_dir = src.substr(0, pos);
-         JSROOT.source_min = src.indexOf("scripts/JSRootCore.min.js")>=0;
+         JSROOT.source_min = src.indexOf("scripts/JSRootCore.min.js") >= 0;
 
-         JSROOT.console("Set JSROOT.source_dir to " + JSROOT.source_dir);
+         JSROOT.console("Set JSROOT.source_dir to " + JSROOT.source_dir + ", " + JSROOT.version);
+
+         if (JSROOT.source_min) {
+            if ( typeof define === "function" && define.amd ) {
+               // all references are done with 'JSRootCore' name,
+               // define it directly, otherwise it will be loaded once again
+               define('JSRootCore', [], JSROOT);
+            }
+         }
 
          if (JSROOT.GetUrlOption('gui', src) !== null)
             return window_on_load( function() { JSROOT.BuildSimpleGUI(); } );
