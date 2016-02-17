@@ -262,7 +262,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // TGeoVolumeMulti - class storing a list of volumes that have to         //
-//   be handled togeather at build time                                   //
+//   be handled together at build time                                   //
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 

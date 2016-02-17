@@ -10,337 +10,372 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//Begin_Html
-/*
-<img src="gif/t_volume.jpg">
-*/
-//End_Html
+/** \class TGeoVolume
+\ingroup Geometry_classes
 
-////////////////////////////////////////////////////////////////////////////////
-//   TGeoVolume, TGeoVolumeMulti, TGeoVolumeAssembly - the volume classes
-//
-//   Volumes are the basic objects used in building the geometrical hierarchy.
-// They represent unpositioned objects but store all information about the
-// placement of the other volumes they may contain. Therefore a volume can
-// be replicated several times in the geometry. In order to create a volume, one
-// has to put together a shape and a medium which are already defined. Volumes
-// have to be named by users at creation time. Every different name may represent a
-// an unique volume object, but may also represent more general a family (class)
-// of volume objects having the same shape type and medium, but possibly
-// different shape parameters. It is the user's task to provide different names
-// for different volume families in order to avoid ambiguities at tracking time.
-// A generic family rather than a single volume is created only in two cases :
-// when a generic shape is provided to the volume constructor or when a division
-// operation is applied. Each volume in the geometry stores an unique
-// ID corresponding to its family. In order to ease-up their creation, the manager
-// class is providing an API that allows making a shape and a volume in a single step.
-//
-//   Volumes are objects that can be visualized, therefore having visibility,
-// colour, line and fill attributes that can be defined or modified any time after
-// the volume creation. It is advisable however to define these properties just
-// after the first creation of a volume namespace, since in case of volume families
-// any new member created by the modeler inherits these properties.
-//
-//    In order to provide navigation features, volumes have to be able to find
-// the proper container of any point defined in the local reference frame. This
-// can be the volume itself, one of its positioned daughter volumes or none if
-// the point is actually outside. On the other hand, volumes have to provide also
-// other navigation methods such as finding the distances to its shape boundaries
-// or which daughter will be crossed first. The implementation of these features
-// is done at shape level, but the local mother-daughters management is handled
-// by volumes that builds additional optimisation structures upon geometry closure.
-// In order to have navigation features properly working one has to follow the
-// general rules for building a valid geometry (see TGeoManager class).
-//
-//   Now let's make a simple volume representing a copper wire. We suppose that
-// a medium is already created (see TGeoMedium class on how to create media).
-// We will create a TUBE shape for our wire, having Rmin=0cm, Rmax=0.01cm
-// and a half-length dZ=1cm :
-//
-//   TGeoTube *tube = new TGeoTube("wire_tube", 0, 0.01, 1);
-//
-// One may ommit the name for the shape if no retreiving by name is further needed
-// during geometry building. The same shape can be shared by different volumes
-// having different names and materials. Now let's make the volume for our wire.
-// The prototype for volumes constructor looks like :
-//
-//   TGeoVolume::TGeoVolume(const char *name, TGeoShape *shape, TGeoMedium *med)
-//
-// Since TGeoTube derives from the base shape class, we can provide it to the volume
-// constructor :
-//
-//   TGeoVolume *wire_co = new TGeoVolume("WIRE_CO", tube, ptrCOPPER);
-//
-// Do not bother to delete neither the media, shapes or volumes that you have
-// created since all will be automatically cleaned on exit by the manager class.
-// If we would have taken a look inside TGeoManager::MakeTube() method, we would
-// have been able to create our wire with a single line :
-//
-//   TGeoVolume *wire_co = gGeoManager->MakeTube("WIRE_CO", ptrCOPPER, 0, 0.01, 1);
-//
-// The same applies for all primitive shapes, for which there can be found
-// corresponding MakeSHAPE() methods. Their usage is much more convenient unless
-// a shape has to be shared between more volumes. Let's make now an aluminium wire
-// having the same shape, supposing that we have created the copper wire with the
-// line above :
-//
-//   TGeoVolume *wire_al = new TGeoVolume("WIRE_AL", wire_co->GetShape(), ptrAL);
-//
-// Now that we have learned how to create elementary volumes, let's see how we
-// can create a geometrical hierarchy.
-//
-//
-//   Positioning volumes
-// -----------------------
-//
-//   When creating a volume one does not specify if this will contain or not other
-// volumes. Adding daughters to a volume implies creating those and adding them
-// one by one to the list of daughters. Since the volume has to know the position
-// of all its daughters, we will have to supply at the same time a geometrical
-// transformation with respect to its local reference frame for each of them.
-// The objects referencing a volume and a transformation are called NODES and
-// their creation is fully handled by the modeler. They represent the link
-// elements in the hierarchy of volumes. Nodes are unique and distinct geometrical
-// objects ONLY from their container point of view. Since volumes can be replicated
-// in the geometry, the same node may be found on different branches.
-//
-//Begin_Html
-/*
-<img src="gif/t_example.jpg">
+TGeoVolume, TGeoVolumeMulti, TGeoVolumeAssembly are the volume classes
+
+  Volumes are the basic objects used in building the geometrical hierarchy.
+They represent unpositioned objects but store all information about the
+placement of the other volumes they may contain. Therefore a volume can
+be replicated several times in the geometry. In order to create a volume, one
+has to put together a shape and a medium which are already defined. Volumes
+have to be named by users at creation time. Every different name may represent a
+an unique volume object, but may also represent more general a family (class)
+of volume objects having the same shape type and medium, but possibly
+different shape parameters. It is the user's task to provide different names
+for different volume families in order to avoid ambiguities at tracking time.
+A generic family rather than a single volume is created only in two cases :
+when a generic shape is provided to the volume constructor or when a division
+operation is applied. Each volume in the geometry stores an unique
+ID corresponding to its family. In order to ease-up their creation, the manager
+class is providing an API that allows making a shape and a volume in a single step.
+
+  Volumes are objects that can be visualized, therefore having visibility,
+colour, line and fill attributes that can be defined or modified any time after
+the volume creation. It is advisable however to define these properties just
+after the first creation of a volume namespace, since in case of volume families
+any new member created by the modeler inherits these properties.
+
+   In order to provide navigation features, volumes have to be able to find
+the proper container of any point defined in the local reference frame. This
+can be the volume itself, one of its positioned daughter volumes or none if
+the point is actually outside. On the other hand, volumes have to provide also
+other navigation methods such as finding the distances to its shape boundaries
+or which daughter will be crossed first. The implementation of these features
+is done at shape level, but the local mother-daughters management is handled
+by volumes that builds additional optimisation structures upon geometry closure.
+In order to have navigation features properly working one has to follow the
+general rules for building a valid geometry (see TGeoManager class).
+
+  Now let's make a simple volume representing a copper wire. We suppose that
+a medium is already created (see TGeoMedium class on how to create media).
+We will create a TUBE shape for our wire, having Rmin=0cm, Rmax=0.01cm
+and a half-length dZ=1cm :
+
+~~~ {.cpp}
+  TGeoTube *tube = new TGeoTube("wire_tube", 0, 0.01, 1);
+~~~
+
+One may omit the name for the shape if no retrieving by name is further needed
+during geometry building. The same shape can be shared by different volumes
+having different names and materials. Now let's make the volume for our wire.
+The prototype for volumes constructor looks like :
+
+  TGeoVolume::TGeoVolume(const char *name, TGeoShape *shape, TGeoMedium *med)
+
+Since TGeoTube derives from the base shape class, we can provide it to the volume
+constructor :
+
+~~~ {.cpp}
+  TGeoVolume *wire_co = new TGeoVolume("WIRE_CO", tube, ptrCOPPER);
+~~~
+
+Do not bother to delete neither the media, shapes or volumes that you have
+created since all will be automatically cleaned on exit by the manager class.
+If we would have taken a look inside TGeoManager::MakeTube() method, we would
+have been able to create our wire with a single line :
+
+~~~ {.cpp}
+  TGeoVolume *wire_co = gGeoManager->MakeTube("WIRE_CO", ptrCOPPER, 0, 0.01, 1);
+~~~
+
+The same applies for all primitive shapes, for which there can be found
+corresponding MakeSHAPE() methods. Their usage is much more convenient unless
+a shape has to be shared between more volumes. Let's make now an aluminium wire
+having the same shape, supposing that we have created the copper wire with the
+line above :
+
+~~~ {.cpp}
+  TGeoVolume *wire_al = new TGeoVolume("WIRE_AL", wire_co->GetShape(), ptrAL);
+~~~
+
+Now that we have learned how to create elementary volumes, let's see how we
+can create a geometrical hierarchy.
+
+
+### Positioning volumes
+
+  When creating a volume one does not specify if this will contain or not other
+volumes. Adding daughters to a volume implies creating those and adding them
+one by one to the list of daughters. Since the volume has to know the position
+of all its daughters, we will have to supply at the same time a geometrical
+transformation with respect to its local reference frame for each of them.
+The objects referencing a volume and a transformation are called NODES and
+their creation is fully handled by the modeler. They represent the link
+elements in the hierarchy of volumes. Nodes are unique and distinct geometrical
+objects ONLY from their container point of view. Since volumes can be replicated
+in the geometry, the same node may be found on different branches.
+
+\image html geom_t_example.png
+
+  An important observation is that volume objects are owned by the TGeoManager
+class. This stores a list of all volumes in the geometry, that is cleaned
+upon destruction.
+
+  Let's consider positioning now our wire in the middle of a gas chamber. We
+need first to define the gas chamber :
+
+~~~ {.cpp}
+  TGeoVolume *chamber = gGeoManager->MakeTube("CHAMBER", ptrGAS, 0, 1, 1);
+~~~
+
+Now we can put the wire inside :
+
+~~~ {.cpp}
+  chamber->AddNode(wire_co, 1);
+~~~
+
+If we inspect now the chamber volume in a browser, we will notice that it has
+one daughter. Of course the gas has some container also, but let's keep it like
+that for the sake of simplicity. The full prototype of AddNode() is :
+
+~~~ {.cpp}
+  TGeoVolume::AddNode(TGeoVolume *daughter, Int_t usernumber,
+                      TGeoMatrix *matrix=gGeoIdentity)
+~~~
+
+Since we did not supplied the third argument, the wire will be positioned with
+an identity transformation inside the chamber. One will notice that the inner
+radii of the wire and chamber are both zero - therefore, aren't the two volumes
+overlapping ? The answer is no, the modeler is even relaying on the fact that
+any daughter is fully contained by its mother. On the other hand, neither of
+the nodes positioned inside a volume should overlap with each other. We will
+see that there are allowed some exceptions to those rules.
+
+### Overlapping volumes
+
+  Positioning volumes that does not overlap their neighbours nor extrude
+their container is sometimes quite strong constraint. Some parts of the geometry
+might overlap naturally, e.g. two crossing tubes. The modeller supports such
+cases only if the overlapping nodes are declared by the user. In order to do
+that, one should use TGeoVolume::AddNodeOverlap() instead of TGeoVolume::AddNode().
+  When 2 or more positioned volumes are overlapping, not all of them have to
+be declared so, but at least one. A point inside an overlapping region equally
+belongs to all overlapping nodes, but the way these are defined can enforce
+the modeler to give priorities.
+  The general rule is that the deepest node in the hierarchy containing a point
+have the highest priority. For the same geometry level, non-overlapping is
+prioritised over overlapping. In order to illustrate this, we will consider
+few examples. We will designate non-overlapping nodes as ONLY and the others
+MANY as in GEANT3, where this concept was introduced:
+  1. The part of a MANY node B extruding its container A will never be "seen"
+during navigation, as if B was in fact the result of the intersection of A and B.
+  2. If we have two nodes A (ONLY) and B (MANY) inside the same container, all
+points in the overlapping region of A and B will be designated as belonging to A.
+  3. If A an B in the above case were both MANY, points in the overlapping
+part will be designated to the one defined first. Both nodes must have the
+same medium.
+  4. The slices of a divided MANY will be as well MANY.
+
+One needs to know that navigation inside geometry parts MANY nodes is much
+slower. Any overlapping part can be defined based on composite shapes - this
+is always recommended.
+
+### Replicating volumes
+
+  What can we do if our chamber contains two identical wires instead of one ?
+What if then we would need 1000 chambers in our detector ? Should we create
+2000 wires and 1000 chamber volumes ? No, we will just need to replicate the
+ones that we have already created.
+
+~~~ {.cpp}
+  chamber->AddNode(wire_co, 1, new TGeoTranslation(-0.2,0,0));
+  chamber->AddNode(wire_co, 2, new TGeoTranslation(0.2,0,0));
+~~~
+
+  The 2 nodes that we have created inside chamber will both point to a wire_co
+object, but will be completely distinct : WIRE_CO_1 and WIRE_CO_2. We will
+want now to place symmetrically 1000 chambers on a pad, following a pattern
+of 20 rows and 50 columns. One way to do this will be to replicate our chamber
+by positioning it 1000 times in different positions of the pad. Unfortunately,
+this is far from being the optimal way of doing what we want.
+Imagine that we would like to find out which of the 1000 chambers is containing
+a (x,y,z) point defined in the pad reference. You will never have to do that,
+since the modeller will take care of it for you, but let's guess what it has
+to do. The most simple algorithm will just loop over all daughters, convert
+the point from mother to local reference and check if the current chamber
+contains the point or not. This might be efficient for pads with few chambers,
+but definitely not for 1000. Fortunately the modeler is smarter than that and
+create for each volume some optimization structures called voxels (see Voxelization)
+to minimize the penalty having too many daughters, but if you have 100 pads like
+this in your geometry you will anyway loose a lot in your tracking performance.
+
+  The way out when volumes can be arranged according to simple patterns is the
+usage of divisions. We will describe them in detail later on. Let's think now
+at a different situation : instead of 1000 chambers of the same type, we may
+have several types of chambers. Let's say all chambers are cylindrical and have
+a wire inside, but their dimensions are different. However, we would like all
+to be represented by a single volume family, since they have the same properties.
 */
-//End_Html
-//
-//   An important observation is that volume objects are owned by the TGeoManager
-// class. This stores a list of all volumes in the geometry, that is cleaned
-// upon destruction.
-//
-//   Let's consider positioning now our wire in the middle of a gas chamber. We
-// need first to define the gas chamber :
-//
-//   TGeoVolume *chamber = gGeoManager->MakeTube("CHAMBER", ptrGAS, 0, 1, 1);
-//
-// Now we can put the wire inside :
-//
-//   chamber->AddNode(wire_co, 1);
-//
-// If we inspect now the chamber volume in a browser, we will notice that it has
-// one daughter. Of course the gas has some container also, but let's keep it like
-// that for the sake of simplicity. The full prototype of AddNode() is :
-//
-//   TGeoVolume::AddNode(TGeoVolume *daughter, Int_t usernumber,
-//                       TGeoMatrix *matrix=gGeoIdentity)
-//
-// Since we did not supplied the third argument, the wire will be positioned with
-// an identity transformation inside the chamber. One will notice that the inner
-// radii of the wire and chamber are both zero - therefore, aren't the two volumes
-// overlapping ? The answer is no, the modeler is even relaying on the fact that
-// any daughter is fully contained by its mother. On the other hand, neither of
-// the nodes positioned inside a volume should overlap with each other. We will
-// see that there are allowed some exceptions to those rules.
-//
-// Overlapping volumes
-// --------------------
-//
-//   Positioning volumes that does not overlap their neighbours nor extrude
-// their container is sometimes quite strong constraint. Some parts of the geometry
-// might overlap naturally, e.g. two crossing tubes. The modeller supports such
-// cases only if the overlapping nodes are declared by the user. In order to do
-// that, one should use TGeoVolume::AddNodeOverlap() instead of TGeoVolume::AddNode().
-//   When 2 or more positioned volumes are overlapping, not all of them have to
-// be declared so, but at least one. A point inside an overlapping region equally
-// belongs to all overlapping nodes, but the way these are defined can enforce
-// the modeler to give priorities.
-//   The general rule is that the deepest node in the hierarchy containing a point
-// have the highest priority. For the same geometry level, non-overlapping is
-// prioritized over overlapping. In order to illustrate this, we will consider
-// few examples. We will designate non-overlapping nodes as ONLY and the others
-// MANY as in GEANT3, where this concept was introduced:
-//   1. The part of a MANY node B extruding its container A will never be "seen"
-// during navigation, as if B was in fact the result of the intersection of A and B.
-//   2. If we have two nodes A (ONLY) and B (MANY) inside the same container, all
-// points in the overlapping region of A and B will be designated as belonging to A.
-//   3. If A an B in the above case were both MANY, points in the overlapping
-// part will be designated to the one defined first. Both nodes must have the
-// same medium.
-//   4. The slices of a divided MANY will be as well MANY.
-//
-// One needs to know that navigation inside geometry parts MANY nodes is much
-// slower. Any overlapping part can be defined based on composite shapes - this
-// is always recommended.
-//
-//   Replicating volumes
-// -----------------------
-//
-//   What can we do if our chamber contains two identical wires instead of one ?
-// What if then we would need 1000 chambers in our detector ? Should we create
-// 2000 wires and 1000 chamber volumes ? No, we will just need to replicate the
-// ones that we have already created.
-//
-//   chamber->AddNode(wire_co, 1, new TGeoTranslation(-0.2,0,0));
-//   chamber->AddNode(wire_co, 2, new TGeoTranslation(0.2,0,0));
-//
-//   The 2 nodes that we have created inside chamber will both point to a wire_co
-// object, but will be completely distinct : WIRE_CO_1 and WIRE_CO_2. We will
-// want now to place symetrically 1000 chambers on a pad, following a pattern
-// of 20 rows and 50 columns. One way to do this will be to replicate our chamber
-// by positioning it 1000 times in different positions of the pad. Unfortunatelly,
-// this is far from being the optimal way of doing what we want.
-// Imagine that we would like to find out which of the 1000 chambers is containing
-// a (x,y,z) point defined in the pad reference. You will never have to do that,
-// since the modeller will take care of it for you, but let's guess what it has
-// to do. The most simple algorithm will just loop over all daughters, convert
-// the point from mother to local reference and check if the current chamber
-// contains the point or not. This might be efficient for pads with few chambers,
-// but definitely not for 1000. Fortunately the modeler is smarter than that and
-// create for each volume some optimization structures called voxels (see Voxelization)
-// to minimize the penalty having too many daughters, but if you have 100 pads like
-// this in your geometry you will anyway loose a lot in your tracking performance.
-//
-//   The way out when volumes can be arranged according to simple patterns is the
-// usage of divisions. We will describe them in detail later on. Let's think now
-// at a different situation : instead of 1000 chambers of the same type, we may
-// have several types of chambers. Let's say all chambers are cylindrical and have
-// a wire inside, but their dimensions are different. However, we would like all
-// to be represented by a single volume family, since they have the same properties.
-//
-//   Volume families (TGeoVolumeMulti)
-// -----------------------------------
-// A volume family is represented by the class TGeoVolumeMulti. It represents
-// a class of volumes having the same shape type and each member will be
-// identified by the same name and volume ID. Any operation applied to a
-// TGeoVolume equally affects all volumes in that family. The creation of a
-// family is generally not a user task, but can be forced in particular cases:
-//
-//      TGeoManager::Volume(const char *vname, const char *shape, Int_t nmed);
-//
-// where VNAME is the family name, NMED is the medium number and SHAPE is the
-// shape type that can be:
-//   box    - for TGeoBBox
-//   trd1   - for TGeoTrd1
-//   trd2   - for TGeoTrd2
-//   trap   - for TGeoTrap
-//   gtra   - for TGeoGtra
-//   para   - for TGeoPara
-//   tube, tubs - for TGeoTube, TGeoTubeSeg
-//   cone, cons - for TGeoCone, TgeoCons
-//   eltu   - for TGeoEltu
-//   ctub   - for TGeoCtub
-//   pcon   - for TGeoPcon
-//   pgon   - for TGeoPgon
-//
-// Volumes are then added to a given family upon adding the generic name as node
-// inside other volume:
-//   TGeoVolume *box_family = gGeoManager->Volume("BOXES", "box", nmed);
-//   ...
-//   gGeoManager->Node("BOXES", Int_t copy_no, "mother_name",
-//                     Double_t x, Double_t y, Double_t z, Int_t rot_index,
-//                     Bool_t is_only, Double_t *upar, Int_t npar);
-// here:
-//   BOXES   - name of the family of boxes
-//   copy_no - user node number for the created node
-//   mother_name - name of the volume to which we want to add the node
-//   x,y,z   - translation components
-//   rot_index   - indx of a rotation matrix in the list of matrices
-//   upar    - array of actual shape parameters
-//   npar    - number of parameters
-// The parameters order and number are the same as in the corresponding shape
-// constructors.
-//
-//   Another particular case where volume families are used is when we want
-// that a volume positioned inside a container to match one ore more container
-// limits. Suppose we want to position the same box inside 2 different volumes
-// and we want the Z size to match the one of each container:
-//
-//   TGeoVolume *container1 = gGeoManager->MakeBox("C1", imed, 10,10,30);
-//   TGeoVolume *container2 = gGeoManager->MakeBox("C2", imed, 10,10,20);
-//   TGeoVolume *pvol       = gGeoManager->MakeBox("PVOL", jmed, 3,3,-1);
-//   container1->AddNode(pvol, 1);
-//   container2->AddNode(pvol, 1);
-//
-//   Note that the third parameter of PVOL is negative, which does not make sense
-// as half-length on Z. This is interpreted as: when positioned, create a box
-// replacing all invalid parameters with the corresponding dimensions of the
-// container. This is also internally handled by the TGeoVolumeMulti class, which
-// does not need to be instantiated by users.
-//
-//   Dividing volumes
-// ------------------
-//
-//   Volumes can be divided according a pattern. The most simple division can
-// be done along one axis, that can be: X, Y, Z, Phi, Rxy or Rxyz. Let's take
-// the most simple case: we would like to divide a box in N equal slices along X
-// coordinate, representing a new volume family. Supposing we already have created
-// the initial box, this can be done like:
-//
-//      TGeoVolume *slicex = box->Divide("SLICEX", 1, N);
-//
-// where SLICE is the name of the new family representing all slices and 1 is the
-// slicing axis. The meaning of the axis index is the following: for all volumes
-// having shapes like box, trd1, trd2, trap, gtra or para - 1,2,3 means X,Y,Z; for
-// tube, tubs, cone, cons - 1 means Rxy, 2 means phi and 3 means Z; for pcon and
-// pgon - 2 means phi and 3 means Z; for spheres 1 means R and 2 means phi.
-//   In fact, the division operation has the same effect as positioning volumes
-// in a given order inside the divided container - the advantage being that the
-// navigation in such a structure is much faster. When a volume is divided, a
-// volume family corresponding to the slices is created. In case all slices can
-// be represented by a single shape, only one volume is added to the family and
-// positioned N times inside the divided volume, otherwise, each slice will be
-// represented by a distinct volume in the family.
-//   Divisions can be also performed in a given range of one axis. For that, one
-// have to specify also the starting coordinate value and the step:
-//
-//      TGeoVolume *slicex = box->Divide("SLICEX", 1, N, start, step);
-//
-// A check is always done on the resulting division range : if not fitting into
-// the container limits, an error message is posted. If we will browse the divided
-// volume we will notice that it will contain N nodes starting with index 1 upto
-// N. The first one has the lower X limit at START position, while the last one
-// will have the upper X limit at START+N*STEP. The resulting slices cannot
-// be positioned inside an other volume (they are by default positioned inside the
-// divided one) but can be further divided and may contain other volumes:
-//
-//      TGeoVolume *slicey = slicex->Divide("SLICEY", 2, N1);
-//      slicey->AddNode(other_vol, index, some_matrix);
-//
-//   When doing that, we have to remember that SLICEY represents a family, therefore
-// all members of the family will be divided on Y and the other volume will be
-// added as node inside all.
-//   In the example above all the resulting slices had the same shape as the
-// divided volume (box). This is not always the case. For instance, dividing a
-// volume with TUBE shape on PHI axis will create equal slices having TUBESEG
-// shape. Other divisions can alsoo create slices having shapes with different
-// dimensins, e.g. the division of a TRD1 volume on Z.
-//   When positioning volumes inside slices, one can do it using the generic
-// volume family (e.g. slicey). This should be done as if the coordinate system
-// of the generic slice was the same as the one of the divided volume. The generic
-// slice in case of PHI divisioned is centered with respect to X axis. If the
-// family contains slices of different sizes, any volume positioned inside should
-// fit into the smallest one.
-//    Examples for specific divisions according to shape types can be found inside
-// shape classes.
-//
-//        TGeoVolume::Divide(N, Xmin, Xmax, "X");
-//
-//   The GEANT3 option MANY is supported by TGeoVolumeOverlap class. An overlapping
-// volume is in fact a virtual container that does not represent a physical object.
-// It contains a list of nodes that are not its daughters but that must be checked
-// always before the container itself. This list must be defined by users and it
-// is checked and resolved in a priority order. Note that the feature is non-standard
-// to geometrical modelers and it was introduced just to support conversions of
-// GEANT3 geometries, therefore its extensive usage should be avoided.
-//
-//   Volume assemblies (TGeoVolumeAssembly)
-// ----------------------------------------
-//
-// Assemblies a volumes that have neither a shape or a material/medium. Assemblies
-// behave exactly like normal volumes grouping several daughters together, but
-// the daughters can never extrude the assembly since this has no shape. However,
-// a bounding box and a voxelization structure are built for assemblies as for
-// normal volumes, so that navigation is still optimized. Assemblies are useful
-// for grouping hierarchically volumes which are otherwise defined in a flat
-// manner, but also to avoid clashes between container shapes.
-// To define an assembly one should just input a name, then start adding other
-// volumes (or volume assemblies) as content.
+
+/** \class TGeoVolumeMulti
+\ingroup Geometry_classes
+
+Volume families
+
+A volume family is represented by the class TGeoVolumeMulti. It represents
+a class of volumes having the same shape type and each member will be
+identified by the same name and volume ID. Any operation applied to a
+TGeoVolume equally affects all volumes in that family. The creation of a
+family is generally not a user task, but can be forced in particular cases:
+
+~~~ {.cpp}
+     TGeoManager::Volume(const char *vname, const char *shape, Int_t nmed);
+~~~
+
+where VNAME is the family name, NMED is the medium number and SHAPE is the
+shape type that can be:
+
+~~~ {.cpp}
+  box    - for TGeoBBox
+  trd1   - for TGeoTrd1
+  trd2   - for TGeoTrd2
+  trap   - for TGeoTrap
+  gtra   - for TGeoGtra
+  para   - for TGeoPara
+  tube, tubs - for TGeoTube, TGeoTubeSeg
+  cone, cons - for TGeoCone, TgeoCons
+  eltu   - for TGeoEltu
+  ctub   - for TGeoCtub
+  pcon   - for TGeoPcon
+  pgon   - for TGeoPgon
+~~~
+
+Volumes are then added to a given family upon adding the generic name as node
+inside other volume:
+
+~~~ {.cpp}
+  TGeoVolume *box_family = gGeoManager->Volume("BOXES", "box", nmed);
+  ...
+  gGeoManager->Node("BOXES", Int_t copy_no, "mother_name",
+                    Double_t x, Double_t y, Double_t z, Int_t rot_index,
+                    Bool_t is_only, Double_t *upar, Int_t npar);
+~~~
+
+here:
+
+~~~ {.cpp}
+  BOXES   - name of the family of boxes
+  copy_no - user node number for the created node
+  mother_name - name of the volume to which we want to add the node
+  x,y,z   - translation components
+  rot_index   - indx of a rotation matrix in the list of matrices
+  upar    - array of actual shape parameters
+  npar    - number of parameters
+~~~
+
+The parameters order and number are the same as in the corresponding shape
+constructors.
+
+  Another particular case where volume families are used is when we want
+that a volume positioned inside a container to match one ore more container
+limits. Suppose we want to position the same box inside 2 different volumes
+and we want the Z size to match the one of each container:
+
+~~~ {.cpp}
+  TGeoVolume *container1 = gGeoManager->MakeBox("C1", imed, 10,10,30);
+  TGeoVolume *container2 = gGeoManager->MakeBox("C2", imed, 10,10,20);
+  TGeoVolume *pvol       = gGeoManager->MakeBox("PVOL", jmed, 3,3,-1);
+  container1->AddNode(pvol, 1);
+  container2->AddNode(pvol, 1);
+~~~
+
+  Note that the third parameter of PVOL is negative, which does not make sense
+as half-length on Z. This is interpreted as: when positioned, create a box
+replacing all invalid parameters with the corresponding dimensions of the
+container. This is also internally handled by the TGeoVolumeMulti class, which
+does not need to be instantiated by users.
+
+### Dividing volumes
+
+  Volumes can be divided according a pattern. The most simple division can
+be done along one axis, that can be: X, Y, Z, Phi, Rxy or Rxyz. Let's take
+the most simple case: we would like to divide a box in N equal slices along X
+coordinate, representing a new volume family. Supposing we already have created
+the initial box, this can be done like:
+
+~~~ {.cpp}
+     TGeoVolume *slicex = box->Divide("SLICEX", 1, N);
+~~~
+
+where SLICE is the name of the new family representing all slices and 1 is the
+slicing axis. The meaning of the axis index is the following: for all volumes
+having shapes like box, trd1, trd2, trap, gtra or para - 1,2,3 means X,Y,Z; for
+tube, tubs, cone, cons - 1 means Rxy, 2 means phi and 3 means Z; for pcon and
+pgon - 2 means phi and 3 means Z; for spheres 1 means R and 2 means phi.
+  In fact, the division operation has the same effect as positioning volumes
+in a given order inside the divided container - the advantage being that the
+navigation in such a structure is much faster. When a volume is divided, a
+volume family corresponding to the slices is created. In case all slices can
+be represented by a single shape, only one volume is added to the family and
+positioned N times inside the divided volume, otherwise, each slice will be
+represented by a distinct volume in the family.
+  Divisions can be also performed in a given range of one axis. For that, one
+have to specify also the starting coordinate value and the step:
+
+~~~ {.cpp}
+     TGeoVolume *slicex = box->Divide("SLICEX", 1, N, start, step);
+~~~
+
+A check is always done on the resulting division range : if not fitting into
+the container limits, an error message is posted. If we will browse the divided
+volume we will notice that it will contain N nodes starting with index 1 upto
+N. The first one has the lower X limit at START position, while the last one
+will have the upper X limit at START+N*STEP. The resulting slices cannot
+be positioned inside an other volume (they are by default positioned inside the
+divided one) but can be further divided and may contain other volumes:
+
+~~~ {.cpp}
+     TGeoVolume *slicey = slicex->Divide("SLICEY", 2, N1);
+     slicey->AddNode(other_vol, index, some_matrix);
+~~~
+
+  When doing that, we have to remember that SLICEY represents a family, therefore
+all members of the family will be divided on Y and the other volume will be
+added as node inside all.
+  In the example above all the resulting slices had the same shape as the
+divided volume (box). This is not always the case. For instance, dividing a
+volume with TUBE shape on PHI axis will create equal slices having TUBESEG
+shape. Other divisions can also create slices having shapes with different
+dimensions, e.g. the division of a TRD1 volume on Z.
+  When positioning volumes inside slices, one can do it using the generic
+volume family (e.g. slicey). This should be done as if the coordinate system
+of the generic slice was the same as the one of the divided volume. The generic
+slice in case of PHI division is centered with respect to X axis. If the
+family contains slices of different sizes, any volume positioned inside should
+fit into the smallest one.
+   Examples for specific divisions according to shape types can be found inside
+shape classes.
+
+~~~ {.cpp}
+       TGeoVolume::Divide(N, Xmin, Xmax, "X");
+~~~
+
+  The GEANT3 option MANY is supported by TGeoVolumeOverlap class. An overlapping
+volume is in fact a virtual container that does not represent a physical object.
+It contains a list of nodes that are not its daughters but that must be checked
+always before the container itself. This list must be defined by users and it
+is checked and resolved in a priority order. Note that the feature is non-standard
+to geometrical modelers and it was introduced just to support conversions of
+GEANT3 geometries, therefore its extensive usage should be avoided.
+*/
+
+/** \class TGeoVolumeAssembly
+\ingroup Geometry_classes
+
+Volume assemblies
+
+Assemblies a volumes that have neither a shape or a material/medium. Assemblies
+behave exactly like normal volumes grouping several daughters together, but
+the daughters can never extrude the assembly since this has no shape. However,
+a bounding box and a voxelization structure are built for assemblies as for
+normal volumes, so that navigation is still optimized. Assemblies are useful
+for grouping hierarchically volumes which are otherwise defined in a flat
+manner, but also to avoid clashes between container shapes.
+To define an assembly one should just input a name, then start adding other
+volumes (or volume assemblies) as content.
+*/
 
 #include "Riostream.h"
 #include "TString.h"
@@ -597,8 +632,12 @@ void TGeoVolume::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Do
 /// Overlap checking tool. Check for illegal overlaps within a limit OVLP.
 /// Use option="s[number]" to force overlap checking by sampling volume with
 /// [number] points.
-/// Ex: myVol->CheckOverlaps(0.01, "s10000000"); // shoot 10000000 points
+///
+/// Ex:
+/// ~~~ {.cpp}
+///     myVol->CheckOverlaps(0.01, "s10000000"); // shoot 10000000 points
 ///     myVol->CheckOverlaps(0.01, "s"); // shoot the default value of 1e6 points
+/// ~~~
 
 void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
 {
@@ -658,8 +697,6 @@ void TGeoVolume::ClearShape()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// check for negative parameters in shapes.
-/// THIS METHOD LEAVES SOME GARBAGE NODES -> memory leak, to be fixed
-///   printf("---Checking daughters of volume %s\n", GetName());
 
 void TGeoVolume::CheckShapes()
 {
@@ -710,10 +747,10 @@ void TGeoVolume::CheckShapes()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Count total number of subnodes starting from this volume, nlevels down
-/// option = 0 (default) - count only once per volume
-/// option = 1           - count every time
-/// option = 2           - count volumes on visible branches
-/// option = 3           - return maximum level counted already with option = 0
+///  - option = 0 (default) - count only once per volume
+///  - option = 1           - count every time
+///  - option = 2           - count volumes on visible branches
+///  - option = 3           - return maximum level counted already with option = 0
 
 Int_t TGeoVolume::CountNodes(Int_t nlevels, Int_t option)
 {
@@ -804,7 +841,6 @@ void TGeoVolume::InvisibleAll(Bool_t flag)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return TRUE if volume contains nodes
-///   return (GetNdaughters()?kTRUE:kFALSE);
 
 Bool_t TGeoVolume::IsFolder() const
 {
@@ -887,15 +923,16 @@ TGeoVolume *TGeoVolume::Import(const char *filename, const char *name, Option_t 
 ////////////////////////////////////////////////////////////////////////////////
 /// Export this volume to a file.
 ///
-/// -Case 1: root file or root/xml file
-///  if filename end with ".root". The key will be named name
-///  if filename end with ".xml" a root/xml file is produced.
+///  - Case 1: root file or root/xml file
+///    if filename end with ".root". The key will be named name
+///    if filename end with ".xml" a root/xml file is produced.
 ///
-/// -Case 2: C++ script
-///  if filename end with ".C"
+///  - Case 2: C++ script
+///    if filename end with ".C"
 ///
-/// -Case 3: gdml file
-///  if filename end with ".gdml"
+///  - Case 3: gdml file
+///    if filename end with ".gdml"
+///
 ///  NOTE that to use this option, the PYTHONPATH must be defined like
 ///      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/gdml
 ///
@@ -1057,11 +1094,11 @@ void TGeoVolume::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat,
 /// all range of IAXIS will be divided and the resulting number of divisions will be centered on
 /// IAXIS. If STEP<=0, the real STEP will be computed as the full range of IAXIS divided by NDIV.
 /// Options (case insensitive):
-///  N  - divide all range in NDIV cells (same effect as STEP<=0) (GSDVN in G3)
-///  NX - divide range starting with START in NDIV cells          (GSDVN2 in G3)
-///  S  - divide all range with given STEP. NDIV is computed and divisions will be centered
+///  - N  - divide all range in NDIV cells (same effect as STEP<=0) (GSDVN in G3)
+///  - NX - divide range starting with START in NDIV cells          (GSDVN2 in G3)
+///  - S  - divide all range with given STEP. NDIV is computed and divisions will be centered
 ///         in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
-///  SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
+///  - SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
 
 TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed, Option_t *option)
 {
@@ -1194,7 +1231,7 @@ void TGeoVolume::DrawOnly(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Perform an exensive sampling to find which type of voxelization is
+/// Perform an extensive sampling to find which type of voxelization is
 /// most efficient.
 
 Bool_t TGeoVolume::OptimizeVoxels()
@@ -1403,10 +1440,9 @@ void TGeoVolume::SaveAs(const char *filename, Option_t *option) const
 /// Connect user-defined extension to the volume. The volume "grabs" a copy, so
 /// the original object can be released by the producer. Release the previously
 /// connected extension if any.
-///==========================================================================
+///
 /// NOTE: This interface is intended for user extensions and is guaranteed not
 /// to be used by TGeo
-///==========================================================================
 
 void TGeoVolume::SetUserExtension(TGeoExtension *ext)
 {
@@ -1419,10 +1455,9 @@ void TGeoVolume::SetUserExtension(TGeoExtension *ext)
 /// Connect framework defined extension to the volume. The volume "grabs" a copy,
 /// so the original object can be released by the producer. Release the previously
 /// connected extension if any.
-///==========================================================================
+///
 /// NOTE: This interface is intended for the use by TGeo and the users should
 ///       NOT connect extensions using this method
-///==========================================================================
 
 void TGeoVolume::SetFWExtension(TGeoExtension *ext)
 {
@@ -1633,7 +1668,7 @@ TGeoNode *TGeoVolume::FindNode(const char *name) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the index of a daugther within check_list by providing the node pointer.
+/// Get the index of a daughter within check_list by providing the node pointer.
 
 Int_t TGeoVolume::GetNodeIndex(const TGeoNode *node, Int_t *check_list, Int_t ncheck) const
 {
@@ -1672,7 +1707,7 @@ char *TGeoVolume::GetObjectInfo(Int_t px, Int_t py) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Returns true if cylindrical voxelization is optimal.
+/// Returns true if cylindrical voxelization is optimal.
 
 Bool_t TGeoVolume::GetOptimalVoxels() const
 {
@@ -2102,7 +2137,7 @@ Int_t TGeoVolume::GetByteCount() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// loop all nodes marked as overlaps and find overlaping brothers
+/// loop all nodes marked as overlaps and find overlapping brothers
 
 void TGeoVolume::FindOverlaps() const
 {
@@ -2933,7 +2968,7 @@ TGeoVolume *TGeoVolumeAssembly::Divide(const char *, Int_t, Int_t, Double_t, Dou
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Assign to the assembly a collection of identical volumes positioned according
-/// a predefined pattern. The option can be spacedout or touching depending on the empty
+/// a predefined pattern. The option can be spaced out or touching depending on the empty
 /// space between volumes.
 
 TGeoVolume *TGeoVolumeAssembly::Divide(TGeoVolume *cell, TGeoPatternFinder *pattern, Option_t *option)
