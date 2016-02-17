@@ -19,11 +19,6 @@
 class TGeoVolume;
 struct TGeoStateInfo;
 
-/*************************************************************************
- * TGeoVoxelFinder - finder class handling voxels
- *
- *************************************************************************/
-
 class TGeoVoxelFinder : public TObject
 {
 public:
