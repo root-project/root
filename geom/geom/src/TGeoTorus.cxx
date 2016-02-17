@@ -439,7 +439,7 @@ Double_t TGeoTorus::DistFromOutside(const Double_t *point, const Double_t *dir, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Divide this torus shape belonging to volume "voldiv" into ndiv volumes
+/// Divide this torus shape belonging to volume "voldiv" into ndiv volumes
 /// called divname, from start position with the given step.
 
 TGeoVolume *TGeoTorus::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
@@ -492,7 +492,7 @@ Double_t TGeoTorus::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// Fill vector param[4] with the bounding cylinder parameters. The order
 /// is the following : Rmin, Rmax, Phi1, Phi2, dZ
 
 void TGeoTorus::GetBoundingCylinder(Double_t *param) const
