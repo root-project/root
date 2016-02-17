@@ -754,10 +754,95 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = . \
-                         ../../geom/geom
-
-#                         ../../math/minuit
-
+                         ../../bindings/pyroot/ \
+                         ../../bindings/r/ \
+                         ../../bindings/ruby/ \
+                         ../../core/base/ \
+                         ../../core/cont/ \
+                         ../../core/macosx/ \
+                         ../../core/meta/ \
+                         ../../core/metautils/ \
+                         ../../core/multiproc/ \
+                         ../../core/rint/ \
+                         ../../core/thread/ \
+                         ../../core/unix/ \
+                         ../../core/winnt/ \
+                         ../../geom/gdml/ \
+                         ../../geom/geocad/ \
+                         ../../geom/geom \
+                         ../../geom/geombuilder/ \
+                         ../../geom/geompainter/ \
+                         ../../graf2d/asimage/ \
+                         ../../graf2d/cocoa/ \
+                         ../../graf2d/fitsio/ \
+                         ../../graf2d/gpad/ \
+                         ../../graf2d/graf/ \
+                         ../../graf2d/gviz/ \
+                         ../../graf2d/postscript/ \
+                         ../../graf2d/quartz/ \
+                         ../../graf2d/win32gdk/ \
+                         ../../graf2d/x11/ \
+                         ../../graf2d/x11ttf/ \
+                         ../../graf3d/eve/ \
+                         ../../graf3d/g3d/ \
+                         ../../graf3d/gl/ \
+                         ../../graf3d/gviz3d/ \
+                         ../../gui/fitpanel/ \
+                         ../../gui/ged/ \
+                         ../../gui/gui/ \
+                         ../../gui/guibuilder/ \
+                         ../../gui/guihtml/ \
+                         ../../gui/qtgsi/ \
+                         ../../gui/qtroot/ \
+                         ../../gui/recorder/ \
+                         ../../gui/sessionviewer/ \
+                         ../../hist/ \
+                         ../../html/ \
+                         ../../io/castor/ \
+                         ../../io/chirp/ \
+                         ../../io/dcache/ \
+                         ../../io/gfal/ \
+                         ../../io/hdfs/ \
+                         ../../io/io/ \
+                         ../../io/rfio/ \
+                         ../../io/sql/ \
+                         ../../io/xml/ \
+                         ../../io/xmlparser/ \
+                         ../../math/ \
+                         ../../misc/memstat/ \
+                         ../../misc/table/ \
+                         ../../montecarlo/ \
+                         ../../net/alien/ \
+                         ../../net/auth/ \
+                         ../../net/bonjour/ \
+                         ../../net/davix/ \
+                         ../../net/glite/ \
+                         ../../net/http/ \
+                         ../../net/krb5auth/ \
+                         ../../net/ldap/ \
+                         ../../net/monalisa/ \
+                         ../../net/net/ \
+                         ../../net/netx/ \
+                         ../../net/netxng/ \
+                         ../../proof/ \
+                         ../../tmva/ \
+                         ../../roofit/ \
+                         ../../tree/ \
+                         ../../sql/ \
+                         ../../tutorials/
+#                         ../../core/clib/
+#                         ../../core/lzma/
+#                         ../../core/newdelete/
+#                         ../../core/textinput/
+#                         ../../core/zip/
+#                         ../../graf2d/ios/
+#                         ../../graf2d/qt/ \
+#                         ../../graf2d/mathtext/
+#                         ../../graf3d/ftgl/
+#                         ../../graf3d/glew/
+#                         ../../graf3d/x3d/
+#                         ../../net/rootd/
+#                         ../../net/rpdutils/
 
 
 # This tag can be used to specify the character encoding of the source files
@@ -1025,7 +1110,7 @@ USE_HTAGS              = NO
 VERBATIM_HEADERS       = YES
 
 # If the CLANG_ASSISTED_PARSING tag is set to YES, then doxygen will use the
-# clang parser (see: http://clang.llvm.org/) for more acurate parsing at the
+# clang parser (see: http://clang.llvm.org/) for more accurate parsing at the
 # cost of reduced performance. This can be particularly helpful with template
 # rich C++ code for which doxygen's built-in parser lacks the necessary type
 # information.
@@ -1158,7 +1243,7 @@ HTML_EXTRA_FILES       = rootlogo_s.gif
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen
 # will adjust the colors in the stylesheet and background images according to
-# this color. Hue is specified as an angle on a colorwheel, see
+# this color. Hue is specified as an angle on a color-wheel, see
 # http://en.wikipedia.org/wiki/Hue for more information. For instance the value
 # 0 represents red, 60 is yellow, 120 is green, 180 is cyan, 240 is blue, 300
 # purple, and 360 is red again.
@@ -1168,7 +1253,7 @@ HTML_EXTRA_FILES       = rootlogo_s.gif
 HTML_COLORSTYLE_HUE    = 220
 
 # The HTML_COLORSTYLE_SAT tag controls the purity (or saturation) of the colors
-# in the HTML output. For a value of 0 the output will use grayscales only. A
+# in the HTML output. For a value of 0 the output will use gray-scales only. A
 # value of 255 will produce the most vivid colors.
 # Minimum value: 0, maximum value: 255, default value: 100.
 # This tag requires that the tag GENERATE_HTML is set to YES.
@@ -1476,7 +1561,7 @@ FORMULA_TRANSPARENT    = YES
 
 # Enable the USE_MATHJAX option to render LaTeX formulas using MathJax (see
 # http://www.mathjax.org) which uses client side Javascript for the rendering
-# instead of using prerendered bitmaps. Use this if you do not have LaTeX
+# instead of using pre-rendered bitmaps. Use this if you do not have LaTeX
 # installed or if you want to formulas look prettier in the HTML output. When
 # enabled you may also need to install MathJax separately and configure the path
 # to it using the MATHJAX_RELPATH option.
@@ -2023,7 +2108,7 @@ PREDEFINED             =
 EXPAND_AS_DEFINED      =
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES then doxygen's preprocessor will
-# remove all refrences to function-like macros that are alone on a line, have an
+# remove all references to function-like macros that are alone on a line, have an
 # all uppercase name, and do not end with a semicolon. Such function macros are
 # typically used for boiler-plate code, and will confuse the parser if not
 # removed.
