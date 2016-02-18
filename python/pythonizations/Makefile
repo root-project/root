@@ -3,7 +3,7 @@
 .PHONY: Pythonizables_C
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog __pycache__
+CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog __pycache__ foo.root
 
 #Set the list of target to make while testing
 TEST_TARGETS += PyROOT_pythonizationtest PyROOT_smartptrtest

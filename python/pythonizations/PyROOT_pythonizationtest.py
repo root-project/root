@@ -55,6 +55,24 @@ class TestClassROOT_PYTHONIZATIONS:
 
         import ROOT
 
+        assert ROOT.kRed # place-holder
+
+    def test02_tfile(self):
+        """TFile life time control of objects read from file: ensure cache"""
+
+        import ROOT
+
+        ROOT.gEnv.SetValue("RooFit.Banner", "0")
+        ws = ROOT.RooWorkspace('w')
+        ws.factory("x[0, 10]")
+        ws.writeToFile("foo.root")
+        del ws
+
+        f = ROOT.TFile.Open("foo.root")
+        assert f.w.var("x").getVal() == 5
+        f.w.var("x").setVal(6)
+        assert f.w.var("x").getVal() == 6   # uncached would give 5
+
 
 ## actual test run
 if __name__ == '__main__':
