@@ -548,13 +548,17 @@ Changes will be part of the future 6.06/02
 - Make TListOfFunctions::Get thread-safe
 - Make TPluginManager thread-safe [ROOT-7927]
 
-### Histogram Libraries
+### Dictionaries
 
-- Protect access to TROOT::GetListOfGlobalFunctions in TFormula
+- Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as the user actually expects) the header files #included in the linkdef file, if any, as the top level headers.
 
 ### Interpreter
 
 - Ignore access check when evaluating [ROOT-7426]
+
+### Histogram Libraries
+
+- Protect access to TROOT::GetListOfGlobalFunctions in TFormula
 
 ### TColor
 
