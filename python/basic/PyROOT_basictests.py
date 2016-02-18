@@ -351,11 +351,15 @@ class Basic5PythonizationTestCase( MyTestCase ):
       l3 = l[6:8]
       self.assertEqual( list(l2+l3), ['j', 'i', 'b', '5', '4'] )
 
+      if sys.hexversion >= 0x3000000:
+         next = '__next__'
+      else:
+         next = 'next'
       i = iter(l2)
-      self.assertEqual( i.next(), 'j' )
-      self.assertEqual( i.next(), 'i' )
-      self.assertEqual( i.next(), 'b' )
-      self.assertRaises( StopIteration, i.next )
+      self.assertEqual( getattr( i, next )(), 'j' )
+      self.assertEqual( getattr( i, next )(), 'i' )
+      self.assertEqual( getattr( i, next )(), 'b' )
+      self.assertRaises( StopIteration, getattr( i, next ) )
 
    def test3TVector( self ):
       """Test TVector2/3/T behavior"""
