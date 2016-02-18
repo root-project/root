@@ -4967,8 +4967,7 @@ bool ROOT::TMetaUtils::BeginsWith(const std::string &theString, const std::strin
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::vector<const clang::Decl *> &decls,
-      const cling::Interpreter &interp)
+const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::vector<const clang::Decl *> &decls, cling::Interpreter::IgnoreFilesFunc_t ignoreFiles, const cling::Interpreter &interp)
 {
    clang::Sema &sema = interp.getSema();
    cling::Transaction theTransaction(sema);
@@ -4980,7 +4979,7 @@ const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::v
    }
    std::string newFwdDecl;
    llvm::raw_string_ostream llvmOstr(newFwdDecl);
-   interp.forwardDeclare(theTransaction, sema, llvmOstr, true, nullptr);
+   interp.forwardDeclare(theTransaction, sema, llvmOstr, true, nullptr, ignoreFiles);
    llvmOstr.flush();
    return newFwdDecl;
 }
