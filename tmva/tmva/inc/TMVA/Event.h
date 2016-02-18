@@ -146,4 +146,14 @@ namespace TMVA {
    };
 }
 
+namespace std {
+    template <>
+    struct hash<TMVA::Event*> {
+        size_t operator()(const TMVA::Event* x) const {
+            static_assert(sizeof(TMVA::Event*) == sizeof(size_t), "");
+            return hash<size_t>()(reinterpret_cast<size_t>(x) >> 3);
+        }
+    };
+}
+
 #endif

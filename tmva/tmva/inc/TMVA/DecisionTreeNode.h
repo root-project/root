@@ -382,4 +382,14 @@ namespace TMVA {
    };
 } // namespace TMVA
 
+namespace std {
+    template <>
+    struct hash<TMVA::DecisionTreeNode*> {
+        size_t operator()(const TMVA::DecisionTreeNode* x) const {
+            static_assert(sizeof(TMVA::DecisionTreeNode*) == sizeof(size_t), "");
+            return hash<size_t>()(reinterpret_cast<size_t>(x) >> 3);
+        }
+    };
+}
+
 #endif
