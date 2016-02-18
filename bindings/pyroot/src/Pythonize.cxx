@@ -2469,7 +2469,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    else if ( name.find( "iterator" ) != std::string::npos ) {
       ((PyTypeObject*)pyclass)->tp_iternext = (iternextfunc)StlIterNext;
-      Utility::AddToClass( pyclass, "next", (PyCFunction) StlIterNext, METH_NOARGS );
+      Utility::AddToClass( pyclass, PYROOT__next__, (PyCFunction) StlIterNext, METH_NOARGS );
 
    // special case, if operator== is a global overload and included in the dictionary
       if ( ! HasAttrDirect( pyclass, PyStrings::gCppEq, kTRUE ) )
@@ -2515,7 +2515,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__iter__", (PyCFunction) PyObject_SelfIter, METH_NOARGS );
 
       ((PyTypeObject*)pyclass)->tp_iternext = (iternextfunc)TIterNext;
-      Utility::AddToClass( pyclass, "next", (PyCFunction) TIterNext, METH_NOARGS );
+      Utility::AddToClass( pyclass, PYROOT__next__, (PyCFunction) TIterNext, METH_NOARGS );
 
    }
 
