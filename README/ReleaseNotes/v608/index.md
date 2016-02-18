@@ -70,7 +70,8 @@ Also:
 
 ### Dictionaries
 
-Fix ROOT-7760: fully allow the usage of the dylib extension on OSx.
+Fix ROOT-7760: Fully allow the usage of the dylib extension on OSx.
+Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as the user actually expects) the header files #included in the linkdef file, if any, as the top level headers.
 
 ### Interpreter Library
 
