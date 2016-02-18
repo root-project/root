@@ -663,6 +663,8 @@ bool IsSelectionXml(const char *filename)
 
 bool IsLinkdefFile(const char *filename)
 {
+   // Note, should change this into take llvm::StringRef.
+
    if ((strstr(filename, "LinkDef") || strstr(filename, "Linkdef") ||
          strstr(filename, "linkdef")) && strstr(filename, ".h")) {
       return true;
@@ -680,6 +682,13 @@ bool IsLinkdefFile(const char *filename)
    } else {
       return false;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool IsLinkdefFile(const clang::PresumedLoc& PLoc)
+{
+   return IsLinkdefFile(PLoc.getFilename());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3659,7 +3668,7 @@ std::string GenerateFwdDeclString(const RScanner &scan,
    // The "R\"DICTFWDDCLS(\n" ")DICTFWDDCLS\"" pieces have been moved to
    // TModuleGenerator to be able to make the diagnostics more telling in presence
    // of an issue ROOT-6752.
-   fwdDeclString += Decls2FwdDecls(selectedDecls,interp);
+   fwdDeclString += Decls2FwdDecls(selectedDecls,IsLinkdefFile,interp);
 
    // Functions
 //    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){

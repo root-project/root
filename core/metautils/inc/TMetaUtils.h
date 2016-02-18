@@ -41,6 +41,7 @@ namespace clang {
    class Module;
    class NamedDecl;
    class ParmVarDecl;
+   class PresumedLoc;
    class QualType;
    class RecordDecl;
    class SourceLocation;
@@ -731,6 +732,7 @@ namespace AST2SourceTools {
 
 //______________________________________________________________________________
 const std::string Decls2FwdDecls(const std::vector<const clang::Decl*> &decls,
+                                 bool (*ignoreFiles)(const clang::PresumedLoc&) ,
                                  const cling::Interpreter& interp);
 
 //______________________________________________________________________________
