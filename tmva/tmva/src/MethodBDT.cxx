@@ -1473,28 +1473,27 @@ Double_t TMVA::MethodBDT::GetWeightedQuantile(vector<  std::pair<Double_t, Doubl
 
 Double_t TMVA::MethodBDT::GradBoost(const std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt, UInt_t cls)
 {
-   std::unordered_map<TMVA::DecisionTreeNode*, std::vector<Double_t>> leaves;
+   struct LeafInfo {
+      Double_t sumWeightTarget = 0;
+      Double_t sum2 = 0;
+   };
+
+   std::unordered_map<TMVA::DecisionTreeNode*, LeafInfo> leaves;
    for (auto e : eventSample) {
       Double_t weight = e->GetWeight();
       TMVA::DecisionTreeNode* node = dt->GetEventNode(*e);
       auto &v = leaves[node];
       auto target = e->GetTarget(cls);
-      if (v.empty()) {
-         v.push_back(target * weight);
-         v.push_back(fabs(target) * (1.0-fabs(target)) * weight * weight);
-      }
-      else {
-         v[0] += target * weight;
-         v[1] += fabs(target) * (1.0-fabs(target)) * weight * weight;
-      }
+      v.sumWeightTarget += target * weight;
+      v.sum2 += fabs(target) * (1.0-fabs(target)) * weight * weight;
    }
 
    for (auto &iLeave : leaves) {
       constexpr auto minValue = 1e-30;
-      if (iLeave.second[1] < minValue) {
-         iLeave.second[1] = minValue;
+      if (iLeave.second.sum2 < minValue) {
+         iLeave.second.sum2 = minValue;
       }
-      iLeave.first->SetResponse(fShrinkage/DataInfo().GetNClasses() * iLeave.second[0]/iLeave.second[1]);
+      iLeave.first->SetResponse(fShrinkage/DataInfo().GetNClasses() * iLeave.second.sumWeightTarget/iLeave.second.sum2);
    }
 
    //call UpdateTargets before next tree is grown
