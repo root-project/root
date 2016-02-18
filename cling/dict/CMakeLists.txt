@@ -28,4 +28,18 @@ ROOTTEST_ADD_TEST(exectemplatetemplateTest
                   OUTREF exectemplatetemplateTest.ref
                   LABELS roottest regression cling)
 
+
+# ROOT-7879
+ROOTTEST_ADD_TEST(skipLinkDefDict
+                  COMMAND ${ROOT_rootcling_CMD} -f libSkippingDict.cxx -rmf libSkipping.rootmap -rml libSkipping.so  ${CMAKE_CURRENT_SOURCE_DIR}/skippingHeader.h ${CMAKE_CURRENT_SOURCE_DIR}/skipLinkDef.h
+                  OUTREF skipLinkDefDict.ref)
+
+
+ROOTTEST_ADD_TEST(skipLinkDef
+                  COMMAND grep clingAutoload libSkippingDict.cxx
+                  DEPENDS skipLinkDefDict
+                  OUTREF skippingDict.ref)
+
+
+
 ROOTTEST_ADD_TESTDIRS()
