@@ -2210,8 +2210,12 @@ namespace {
                        PyROOT_PyUnicode_AsString( astr ) );
          Py_DECREF( astr );
          Py_DECREF( result );
-         return 0;
+         return nullptr;
       }
+
+   // caching behavior seems to be more clear to the user; can always override said
+   // behavior (i.e. re-read from file) with an explicit Get() call
+      PyObject_SetAttr( self, attr, result );
       return result;
    }
 
