@@ -213,6 +213,14 @@ class TestClassOVERLOADS:
         assert cppyy.gbl.global_builtin_overload(1, 1 ) == "char"
         assert cppyy.gbl.global_builtin_overload(1, 1.) == "double"
 
+    def test10_tmath_overloads(self):
+        """Overloads on small integers with TMath"""
+
+        import cppyy
+
+      # fails if short int selected for overload
+        assert cppyy.gbl.TMath.Abs(104125) == 104125
+
 
 ## actual test run
 if __name__ == '__main__':
