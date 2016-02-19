@@ -693,8 +693,6 @@
       entryInfo += "<div class='collapsible_draw' id='" + hid + "'></div>\n";
       $("#" + topid).append(entryInfo);
 
-      var pthis = this;
-
       $('#' + uid)
             .addClass("ui-accordion-header ui-helper-reset ui-state-default ui-corner-top ui-corner-bottom")
             .hover(function() { $(this).toggleClass("ui-state-hover"); })
@@ -702,7 +700,7 @@
                      $(this).toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
                            .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s")
                            .end().next().toggleClass("ui-accordion-content-active").slideToggle(0);
-                     pthis.CheckResize($(this).next().attr('id'));
+                     JSROOT.resize($(this).next().attr('id'));
                      return false;
                   })
             .next()
@@ -711,17 +709,17 @@
 
       $('#' + uid).find(" .jsroot_collaps_closebtn")
            .button({ icons: { primary: "ui-icon-close" }, text: false })
-           .click(function(){ $(this).parent().next().andSelf().remove(); });
-
+           .click(function(){
+              JSROOT.cleanup($(this).parent().next().attr('id'));
+              $(this).parent().next().andSelf().remove();
+           });
 
       $('#' + uid)
             .toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
             .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s").end().next()
             .toggleClass("ui-accordion-content-active").slideToggle(0);
 
-      $("#" + hid).prop('title', title);
-
-      return $("#" + hid).get(0);
+      return $("#" + hid).attr('title', title).css('overflow','hidden').get(0);
    }
 
    // ================================================
@@ -768,8 +766,6 @@
             + '</a><span class="ui-icon ui-icon-close" style="float: left; margin: 0.4em 0.2em 0 0; cursor: pointer;" role="presentation">Remove Tab</span></li>';
       var cont = '<div class="tabs_draw" id="' + hid + '"></div>';
 
-      var pthis = this;
-
       if (document.getElementById(topid) == null) {
          $("#" + this.frameid).append('<div id="' + topid + '">' + ' <ul>' + li + ' </ul>' + cont + '</div>');
 
@@ -779,12 +775,13 @@
                           heightStyle : "fill",
                           activate : function (event,ui) {
                              $(ui.newPanel).css('overflow', 'hidden');
-                             pthis.CheckResize($(ui.newPanel).attr('id'));
+                             JSROOT.resize($(ui.newPanel).attr('id'));
                            }
                           });
 
          tabs.delegate("span.ui-icon-close", "click", function() {
             var panelId = $(this).closest("li").remove().attr("aria-controls");
+            JSROOT.cleanup(panelId);
             $("#" + panelId).remove();
             tabs.tabs("refresh");
             if ($('#' + topid + '> .tabs_draw').length == 0)
@@ -801,6 +798,8 @@
          .empty()
          .css('overflow', 'hidden')
          .prop('title', title);
+
+      console.log('create tab ' + hid);
 
       return $('#' + hid).get(0);
    }
@@ -898,8 +897,8 @@
                       .css('top', main.prop('original_top'));
          }
 
-         if (state!="minimal")
-            JSROOT.CheckElementResize(main.find(".flex_draw").get(0));
+         if (state !== "minimal")
+            JSROOT.resize(main.find(".flex_draw").get(0));
       }
 
       $("#" + subid)
@@ -915,7 +914,7 @@
             },
             stop: function(event, ui) {
                var rect = { width : ui.size.width-1, height : ui.size.height - $(this).find(".flex_header").height()-1 };
-               JSROOT.CheckElementResize($(this).find(".flex_draw").get(0), rect);
+               JSROOT.resize($(this).find(".flex_draw").get(0), rect);
             }
           })
           .draggable({
@@ -923,6 +922,15 @@
             start: function(event, ui) {
                // bring element to front when start dragging
                $(this).appendTo($(this).parent());
+               var ddd = $(this).find(".flex_draw");
+
+               if (ddd.prop('flex_block_drag') === true) {
+                  // block dragging when mouse below header
+                  var elementMouseIsOver = document.elementFromPoint(event.clientX, event.clientY);
+                  var isparent = false;
+                  $(elementMouseIsOver).parents().map(function() { if ($(this).get(0) === ddd.get(0)) isparent = true; });
+                  if (isparent) return false;
+               }
             }
          })
        .find('.flex_header')
@@ -935,7 +943,11 @@
            .first()
            .attr('title','close canvas')
            .button({ icons: { primary: "ui-icon-close" }, text: false })
-           .click(function() { $(this).parent().parent().remove(); })
+           .click(function() {
+              var main = $(this).parent().parent();
+              JSROOT.cleanup(main.find(".flex_draw").get(0));
+              main.remove();
+           })
            .next()
            .attr('title','maximize canvas')
            .addClass('jsroot_maxbutton')
