@@ -93,7 +93,7 @@ namespace ROOT {
       /// \tparam ARGS Arguments of the constructor of T
       template<class ...ARGS>
       TThreadedObject(ARGS... args):
-      fModel(std::forward<ARGS>(args)...), fObjPointers(fgMaxSlots, nullptr) {};
+      fModel(std::forward<ARGS>(args)...), fObjPointers(fgMaxSlots, nullptr) {}
 
       /// Access a particular processing slot. This
       /// method is *thread-unsafe*: it cannot be invoked from two different
