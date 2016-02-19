@@ -498,7 +498,7 @@ PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* args, 
 
    // add a comma, as needed
       if ( i != nArgs - 1 )
-         PyROOT_PyUnicode_AppendAndDel( &pyname, PyROOT_PyUnicode_FromString( "," ) );
+         PyROOT_PyUnicode_AppendAndDel( &pyname, PyROOT_PyUnicode_FromString( ", " ) );
    }
 
 // close template name; prevent '>>', which should be '> >'

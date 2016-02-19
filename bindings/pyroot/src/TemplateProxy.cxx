@@ -232,7 +232,11 @@ namespace {
       for ( Int_t i = 0; i < nArgs; ++i ) {
          PyObject* itemi = PyTuple_GET_ITEM( args, i );
          if ( PyType_Check( itemi ) ) isType = kTRUE;
+#if PY_VERSION_HEX >= 0x03000000         
+         else if ( ! isType && PyUnicode_Check( itemi ) ) nStrings += 1;
+#else
          else if ( ! isType && PyBytes_Check( itemi ) ) nStrings += 1;
+#endif         
       // special case for arrays
          PyObject* pytc = PyObject_GetAttr( itemi, PyStrings::gTypeCode );
          if ( ! ( pytc && PyROOT_PyUnicode_Check( pytc ) ) ) {
