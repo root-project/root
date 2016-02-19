@@ -170,7 +170,7 @@ def compose_method(match_class, match_method, g):
          if not self.match_class.match(name):
             return
          g = self.g
-         for k in dir(obj): #.__dict__:
+         for k in obj.__dict__:
             if not self.match_method.match(k):
                continue
             try:

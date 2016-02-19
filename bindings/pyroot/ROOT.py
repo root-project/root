@@ -501,7 +501,7 @@ class ModuleFacade( types.ModuleType ):
          return buf
 
       cppyy.add_pythonization(
-         cppyy.compose_method("TGraph$", "Get[XY]$", set_size))
+         cppyy.compose_method("^TGraph(2D)?$|^TGraph.*Errors$", "GetE?[XYZ]$", set_size))
 
     # custom logon file (must be after creation of ROOT globals)
       if hasargv and not '-n' in sys.argv and not PyConfig.DisableRootLogon:
