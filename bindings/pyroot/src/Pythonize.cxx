@@ -2633,7 +2633,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    }
 
-   else if ( name.substr(0,6) == "TArray" ) {    // allow proper iteration
+   else if ( name.substr(0,6) == "TArray" && name != "TArray" ) {    // allow proper iteration
       // __len__ is already set from GetSize()
       Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
       Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
@@ -2647,7 +2647,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddUsingToClass( pyclass, "plotOn" );
 
 
-// TODO: store these on the pythonizations module, nog on gRootModule
+// TODO: store these on the pythonizations module, not on gRootModule
 // TODO: externalize this code and use update handlers on the python side
    PyObject* userPythonizations = PyObject_GetAttrString( gRootModule, "UserPythonizations" );
    PyObject* pythonizationScope = PyObject_GetAttrString( gRootModule, "PythonizationScope" );
