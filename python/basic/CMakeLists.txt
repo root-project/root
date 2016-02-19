@@ -1,7 +1,7 @@
 if(ROOT_python_FOUND)
   ROOTTEST_ADD_TEST(basic
                     MACRO PyROOT_basictests.py
-                    PRECMD root -b -q -l -e .L\ ArgumentPassingCompiled.C+
+                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ ArgumentPassingCompiled.C+
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                     OUTREF PyROOT_basictests.ref)
 
@@ -12,7 +12,7 @@ if(ROOT_python_FOUND)
 
   ROOTTEST_ADD_TEST(operator
                     MACRO PyROOT_operatortests.py
-                    PRECMD root -b -q -l -e .L\ Operators.C+
+                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Operators.C+
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                     OUTREF PyROOT_operatortests.ref)
 

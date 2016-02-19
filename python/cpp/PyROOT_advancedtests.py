@@ -205,7 +205,7 @@ class Cpp02TemplateLookup( MyTestCase ):
 
       self.assertEqual( m.GetSize( 'char' )(),   m.GetCharSize() )
       self.assertEqual( m.GetSize( int )(),      m.GetIntSize() )
-      self.assertEqual( m.GetSize( pylong )(),   m.GetLongSize() )
+      self.assertEqual( m.GetSize( 'long' )(),   m.GetLongSize() )
       self.assertEqual( m.GetSize( float )(),    m.GetFloatSize() )
       self.assertEqual( m.GetSize( 'double' )(), m.GetDoubleSize() )
 
@@ -223,7 +223,7 @@ class Cpp02TemplateLookup( MyTestCase ):
     # note that the function and template arguments are reverted
       self.assertRaises( TypeError, m.GetSize2( 'char', 'long' ), 'a', 1 )
       self.assertEqual( m.GetSize2( 'char', 'long' )( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
-      self.assertEqual( m.GetSize2( long(256), 1. ), m.GetFloatSize() - m.GetLongSize() )
+      self.assertEqual( m.GetSize2(ROOT.Long(256), 1.), m.GetFloatSize() - m.GetLongSize() )
 
    def test6OverloadedTemplateMemberFunctions( self ):
       """Test overloaded template member functions lookup and calls"""
