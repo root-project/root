@@ -495,6 +495,14 @@ class ModuleFacade( types.ModuleType ):
          if hasattr( attr_1, 'cout' ):
             self.__dict__[ 'cout' ] = attr_1.cout
 
+    # python side pythonizations (should live in their own file, if we get many)
+      def set_size(self, buf):
+         buf.SetSize(self.GetN())
+         return buf
+
+      cppyy.add_pythonization(
+         cppyy.compose_method("TGraph$", "Get[XY]$", set_size))
+
     # custom logon file (must be after creation of ROOT globals)
       if hasargv and not '-n' in sys.argv and not PyConfig.DisableRootLogon:
          rootlogon = os.path.expanduser( '~/.rootlogon.py' )
