@@ -150,7 +150,7 @@ Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as 
   ~~~
   Also this setting is now active for PDF output.
   This enhancement was triggered by [this forum question](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=21077).
-* Make sure the palette axis tilte is correct after a histogram cloning. This
+* Make sure the palette axis title is correct after a histogram cloning. This
   problem was mentioned [here](https://sft.its.cern.ch/jira/browse/ROOT-8007).
 
 ## 3D Graphics Libraries
@@ -164,7 +164,7 @@ Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as 
   compared to the standard COL option. The performance comparison of the COL2 to
   the COL option depends on the histogram and the size of the rendering region in
   the current pad. In general, a small (approx. less than 100 bins per axis),
-  parsely populated TH2 will render faster with the COL option.
+  sparsely populated TH2 will render faster with the COL option.
 
   However, for larger histograms (approx. more than 100 bins per axis) that are
   not sparse, the COL2 option will provide up to 20 times performance improvements.
