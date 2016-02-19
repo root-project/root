@@ -38,7 +38,19 @@ class TestClassPYTHONIZATIONS:
         cppyy.add_pythonization(
             cppyy.compose_method('MyBufferReturner$', 'Get[XY]$', set_size))
 
-        m = cppyy.gbl.MyBufferReturner
+        m = cppyy.gbl.pythonizables.MyBufferReturner
+
+    def test02_type_pinning(self):
+        """Verify pinnability of returns"""
+
+        import cppyy
+        cppyy.gbl.pythonizables.GimeDerived._creates = True
+
+        result = cppyy.gbl.pythonizables.GimeDerived()
+        assert type(result) == cppyy.gbl.pythonizables.MyDerived
+
+        cppyy.make_interface(cppyy.gbl.pythonizables.MyBase)
+        assert type(result) == cppyy.gbl.pythonizables.MyDerived
 
 
 class TestClassPYTHONIZATIONS_FRAGILITY:

@@ -1,3 +1,5 @@
+namespace pythonizables {
+
 //===========================================================================
 class MyBufferReturner {
 public:
@@ -16,3 +18,18 @@ private:
     double* m_Ybuf;
     int m_size;
 };
+
+
+//===========================================================================
+class MyBase {
+public:
+    virtual ~MyBase();
+};
+class MyDerived : public MyBase {
+public:
+    virtual ~MyDerived();
+};
+
+MyBase* GimeDerived();
+
+} // namespace pythonizables

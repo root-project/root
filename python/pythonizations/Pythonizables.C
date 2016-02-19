@@ -2,7 +2,7 @@
 
 
 //===========================================================================
-MyBufferReturner::MyBufferReturner(int size) : m_size(size) {
+pythonizables::MyBufferReturner::MyBufferReturner(int size) : m_size(size) {
     m_Xbuf = new double[size];
     m_Ybuf = new double[size];
 
@@ -12,12 +12,21 @@ MyBufferReturner::MyBufferReturner(int size) : m_size(size) {
     }
 }
 
-MyBufferReturner::~MyBufferReturner() {
+pythonizables::MyBufferReturner::~MyBufferReturner() {
     delete[] m_Xbuf;
     delete[] m_Ybuf;
 }
 
-int MyBufferReturner::GetN() { return m_size; }
+int pythonizables::MyBufferReturner::GetN() { return m_size; }
 
-double* MyBufferReturner::GetX() { return m_Xbuf; }
-double* MyBufferReturner::GetY() { return m_Ybuf; }
+double* pythonizables::MyBufferReturner::GetX() { return m_Xbuf; }
+double* pythonizables::MyBufferReturner::GetY() { return m_Ybuf; }
+
+
+//===========================================================================
+pythonizables::MyBase::~MyBase() {}
+pythonizables::MyDerived::~MyDerived() {}
+
+pythonizables::MyBase* pythonizables::GimeDerived() {
+   return new MyDerived();
+}
