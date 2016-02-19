@@ -150,6 +150,8 @@ Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as 
   ~~~
   Also this setting is now active for PDF output.
   This enhancement was triggered by [this forum question](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=21077).
+* Make sure the palette axis tilte is correct after a histogram cloning. This
+  problem was mentioned [here](https://sft.its.cern.ch/jira/browse/ROOT-8007).
 
 ## 3D Graphics Libraries
 

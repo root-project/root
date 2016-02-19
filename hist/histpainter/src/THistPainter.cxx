@@ -7154,6 +7154,8 @@ void THistPainter::PaintPalette()
             delete palette; palette = 0;
          }
       }
+      if (palette) // make sur the axis title is correct. It might not be after a Clone()
+         palette->GetHistogram()->GetZaxis()->SetTitle(fH->GetZaxis()->GetTitle());
    }
 
    if (!palette) {

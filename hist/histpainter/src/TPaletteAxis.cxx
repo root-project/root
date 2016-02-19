@@ -39,7 +39,7 @@ can be retrieved doing:
 
     TPaletteAxis *palette = (TPaletteAxis*)h->GetListOfFunctions()->FindObject("palette");
 
-then the pointer `palette` can be used to change the pallette attributes.
+then the pointer `palette` can be used to change the palette attributes.
 
 Because the palette is created at painting time only, one must issue a:
 

@@ -52,6 +52,7 @@ public:
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
    TGaxis       *GetAxis() {return &fAxis;}
    Int_t         GetBinColor(Int_t i, Int_t j);
+   TH1*          GetHistogram(){return fH;}
    Option_t     *GetName() const {return fName.Data();}
    virtual char *GetObjectInfo(Int_t px, Int_t py) const;
    Int_t         GetValueColor(Double_t zc);
