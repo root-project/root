@@ -36,9 +36,18 @@ class TestClassPYTHONIZATIONS:
             return buf
 
         cppyy.add_pythonization(
-            cppyy.compose_method('MyBufferReturner$', 'Get[XY]$', set_size))
+            cppyy.compose_method("pythonizables::MyBufferReturner$", "Get[XY]$", set_size))
 
-        m = cppyy.gbl.pythonizables.MyBufferReturner
+        bsize, xval, yval = 3, 2, 5
+        m = cppyy.gbl.pythonizables.MyBufferReturner(bsize, xval, yval)
+
+        x = m.GetX()
+        assert len(x) == bsize
+        assert list(x) == map(lambda x: x*xval, range(bsize))
+
+        y = m.GetY()
+        assert len(y) == bsize
+        assert list(y) == map(lambda x: x*yval, range(bsize))
 
     def test02_type_pinning(self):
         """Verify pinnability of returns"""
@@ -65,9 +74,21 @@ class TestClassROOT_PYTHONIZATIONS:
     def test01_tgraph(self):
         """TGraph has GetN() mapped as size to its various buffer returns"""
 
-        import ROOT
+        import ROOT, array
 
-        assert ROOT.kRed # place-holder
+        N = 5; xval, yval = 3, 7
+        ax = array.array('d', map(lambda x: x*xval, xrange(N)))
+        ay = array.array('d', map(lambda x: x*yval, xrange(N)))
+
+        g = ROOT.TGraph(N, ax, ay)
+
+        x = g.GetX()
+        assert len(x) == N
+        assert list(x) == list(ax)
+
+        y = g.GetY()
+        assert len(y) == N
+        assert list(y) == list(ay)
 
     def test02_tfile(self):
         """TFile life time control of objects read from file: ensure cache"""

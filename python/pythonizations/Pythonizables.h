@@ -3,7 +3,7 @@ namespace pythonizables {
 //===========================================================================
 class MyBufferReturner {
 public:
-    MyBufferReturner(int size);
+    MyBufferReturner(int size, double valx, double valy);
     MyBufferReturner(const MyBufferReturner&) = delete;
     MyBufferReturner& operator=(const MyBufferReturner&) = delete;
     ~MyBufferReturner();

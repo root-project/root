@@ -2,13 +2,13 @@
 
 
 //===========================================================================
-pythonizables::MyBufferReturner::MyBufferReturner(int size) : m_size(size) {
+pythonizables::MyBufferReturner::MyBufferReturner(int size, double valx, double valy) : m_size(size) {
     m_Xbuf = new double[size];
     m_Ybuf = new double[size];
 
     for (int i=0; i<size; ++i) {
-        m_Xbuf[i] = 2.0;
-        m_Ybuf[i] = 5.0;
+        m_Xbuf[i] = valx*i;
+        m_Ybuf[i] = valy*i;
     }
 }
 
