@@ -32,7 +32,7 @@
       // instead of BoxGeometry create all vertices and faces ourself
       // reduce number of allocated objects
 
-      //return new THREE.BoxGeometry( 2*shape['fDX'], 2*shape['fDY'], 2*shape['fDZ'] );
+      //return new THREE.BoxGeometry( 2*shape.fDX, 2*shape.fDY, 2*shape.fDZ );
 
       var geom = new THREE.Geometry();
 
@@ -47,7 +47,7 @@
 
       var indicies = [0,2,1, 2,3,1, 4,6,5, 6,7,5, 4,5,1, 5,0,1, 7,6,2, 6,3,2, 5,7,0, 7,2,0, 1,3,4, 3,6,4];
 
-      // set normal for pair of faces
+      // normals for each  pair of faces
       var normals = [ 1,0,0, -1,0,0, 0,1,0, 0,-1,0, 0,0,1,  0,0,-1 ];
 
       var color = new THREE.Color();
@@ -85,55 +85,44 @@
       for (var i = 0; i < verticesOfShape.length; i += 3)
          geom.vertices.push( new THREE.Vector3( verticesOfShape[i], verticesOfShape[i+1], verticesOfShape[i+2] ) );
 
+      var color = new THREE.Color();
+
       for (var i = 0; i < indicesOfFaces.length; i += 3)
-         geom.faces.push( new THREE.Face3( indicesOfFaces[i], indicesOfFaces[i+1], indicesOfFaces[i+2] ) );
+         geom.faces.push( new THREE.Face3( indicesOfFaces[i], indicesOfFaces[i+1], indicesOfFaces[i+2], null, color, 0 ) );
 
       geom.computeFaceNormals();
 
       return geom;
    }
 
+
    JSROOT.GEO.createTrapezoid = function( shape ) {
 
       var verticesOfShape;
 
-      if (shape._typename == "TGeoArb8" || shape._typename == "TGeoTrap" || shape._typename == "TGeoGtra") {
-         // Arb8
+      if (shape._typename == "TGeoTrd1")
          verticesOfShape = [
-            shape['fXY'][0][0], shape['fXY'][0][1], -shape['fDZ'],
-            shape['fXY'][1][0], shape['fXY'][1][1], -shape['fDZ'],
-            shape['fXY'][2][0], shape['fXY'][2][1], -shape['fDZ'],
-            shape['fXY'][3][0], shape['fXY'][3][1], -shape['fDZ'],
-            shape['fXY'][4][0], shape['fXY'][4][1],  shape['fDZ'],
-            shape['fXY'][5][0], shape['fXY'][5][1],  shape['fDZ'],
-            shape['fXY'][6][0], shape['fXY'][6][1],  shape['fDZ'],
-            shape['fXY'][7][0], shape['fXY'][7][1],  shape['fDZ']
+            -shape.fDx1,  shape.fDY, -shape.fDZ,
+             shape.fDx1,  shape.fDY, -shape.fDZ,
+             shape.fDx1, -shape.fDY, -shape.fDZ,
+            -shape.fDx1, -shape.fDY, -shape.fDZ,
+            -shape.fDx2,  shape.fDY,  shape.fDZ,
+             shape.fDx2,  shape.fDY,  shape.fDZ,
+             shape.fDx2, -shape.fDY,  shape.fDZ,
+            -shape.fDx2, -shape.fDY,  shape.fDZ
          ];
-      }
-      else if (shape._typename == "TGeoTrd1") {
+      else
          verticesOfShape = [
-            -shape['fDx1'],  shape['fDY'], -shape['fDZ'],
-             shape['fDx1'],  shape['fDY'], -shape['fDZ'],
-             shape['fDx1'], -shape['fDY'], -shape['fDZ'],
-            -shape['fDx1'], -shape['fDY'], -shape['fDZ'],
-            -shape['fDx2'],  shape['fDY'],  shape['fDZ'],
-             shape['fDx2'],  shape['fDY'],  shape['fDZ'],
-             shape['fDx2'], -shape['fDY'],  shape['fDZ'],
-            -shape['fDx2'], -shape['fDY'],  shape['fDZ']
+            -shape.fDx1,  shape.fDy1, -shape.fDZ,
+             shape.fDx1,  shape.fDy1, -shape.fDZ,
+             shape.fDx1, -shape.fDy1, -shape.fDZ,
+            -shape.fDx1, -shape.fDy1, -shape.fDZ,
+            -shape.fDx2,  shape.fDy2,  shape.fDZ,
+             shape.fDx2,  shape.fDy2,  shape.fDZ,
+             shape.fDx2, -shape.fDy2,  shape.fDZ,
+            -shape.fDx2, -shape.fDy2,  shape.fDZ
          ];
-      }
-      else if (shape._typename == "TGeoTrd2") {
-         verticesOfShape = [
-            -shape['fDx1'],  shape['fDy1'], -shape['fDZ'],
-             shape['fDx1'],  shape['fDy1'], -shape['fDZ'],
-             shape['fDx1'], -shape['fDy1'], -shape['fDZ'],
-            -shape['fDx1'], -shape['fDy1'], -shape['fDZ'],
-            -shape['fDx2'],  shape['fDy2'],  shape['fDZ'],
-             shape['fDx2'],  shape['fDy2'],  shape['fDZ'],
-             shape['fDx2'], -shape['fDy2'],  shape['fDZ'],
-            -shape['fDx2'], -shape['fDy2'],  shape['fDZ']
-         ];
-      }
+
       var indicesOfFaces = [
           4,5,6,   4,7,6,   0,3,7,   7,4,0,
           4,5,1,   1,0,4,   6,2,1,   1,5,6,
@@ -143,86 +132,164 @@
       for (var i = 0; i < 24; i += 3)
          geometry.vertices.push( new THREE.Vector3( verticesOfShape[i], verticesOfShape[i+1], verticesOfShape[i+2] ) );
 
+      var color = new THREE.Color();
+
       for (var i = 0; i < 36; i += 3)
-         geometry.faces.push( new THREE.Face3( indicesOfFaces[i], indicesOfFaces[i+1], indicesOfFaces[i+2] ) );
+         geometry.faces.push( new THREE.Face3( indicesOfFaces[i], indicesOfFaces[i+1], indicesOfFaces[i+2], null, color, 0 ) );
 
       geometry.computeFaceNormals();
       return geometry;
    }
 
-   JSROOT.GEO.createSphere = function( shape ) {
 
-      var outerRadius = shape['fRmax'];
-      var innerRadius = shape['fRmin'];
-      var phiStart = shape['fPhi1'] + 180;
-      var phiLength = shape['fPhi2'] - shape['fPhi1'];
-      var thetaStart = shape['fTheta1'];
-      var thetaLength = shape['fTheta2'] - shape['fTheta1'];
+   JSROOT.GEO.createArb8 = function( shape ) {
 
-      var widthSegments = Math.floor(phiLength / 6);
-      if (widthSegments < 8) widthSegments = 8;
+      var verticesOfShape = [
+            shape.fXY[0][0], shape.fXY[0][1], -shape.fDZ,
+            shape.fXY[1][0], shape.fXY[1][1], -shape.fDZ,
+            shape.fXY[2][0], shape.fXY[2][1], -shape.fDZ,
+            shape.fXY[3][0], shape.fXY[3][1], -shape.fDZ,
+            shape.fXY[4][0], shape.fXY[4][1],  shape.fDZ,
+            shape.fXY[5][0], shape.fXY[5][1],  shape.fDZ,
+            shape.fXY[6][0], shape.fXY[6][1],  shape.fDZ,
+            shape.fXY[7][0], shape.fXY[7][1],  shape.fDZ
+         ];
 
-      var heightSegments = Math.floor(thetaLength / 6);
-      if (heightSegments < 8) heightSegments = 8;
-      if (innerRadius <= 0) innerRadius = 0.0000001;
+      var indicies = [];
 
-      var outerSphere = new THREE.SphereGeometry( outerRadius, widthSegments, heightSegments,
-                                                 phiStart*Math.PI/180, phiLength*Math.PI/180, thetaStart*Math.PI/180, thetaLength*Math.PI/180);
-      outerSphere.applyMatrix( new THREE.Matrix4().makeRotationX( Math.PI / 2 ) );
-
-      var innerSphere = new THREE.SphereGeometry( innerRadius, widthSegments, heightSegments,
-                                                phiStart*Math.PI/180, phiLength*Math.PI/180, thetaStart*Math.PI/180, thetaLength*Math.PI/180);
-      innerSphere.applyMatrix( new THREE.Matrix4().makeRotationX( Math.PI / 2 ) );
+      var indicesOfFaces = [
+          4,5,6,   4,7,6,   0,3,7,   7,4,0,
+          4,5,1,   1,0,4,   6,2,1,   1,5,6,
+          7,3,2,   2,6,7,   1,2,3,   3,0,1 ];
 
       var geometry = new THREE.Geometry();
+      for (var i = 0; i < 8; ++i) {
+         var ii = i*3;
+         if ((i>0) && (verticesOfShape[ii] === verticesOfShape[ii-3]) &&
+             (verticesOfShape[ii+1] === verticesOfShape[ii-2]) &&
+             (verticesOfShape[ii+2] === verticesOfShape[ii-1])) {
+            indicies[i] = indicies[i-1];
+            continue;
+         }
 
-      // add inner sphere
-      for (var n=0; n < innerSphere.vertices.length; ++n)
-         geometry.vertices.push(innerSphere.vertices[n]);
+         indicies[i] = geometry.vertices.length;
 
-      for (var n=0; n < innerSphere.faces.length; ++n)
-         geometry.faces.push(innerSphere.faces[n]);
+         geometry.vertices.push( new THREE.Vector3( verticesOfShape[ii], verticesOfShape[ii+1], verticesOfShape[ii+2] ) );
+      }
 
-      var shift = geometry.vertices.length;
+      var color = new THREE.Color();
+
+      for (var i = 0; i < 36; i += 3) {
+         var a = indicies[indicesOfFaces[i]],
+             b = indicies[indicesOfFaces[i+1]],
+             c = indicies[indicesOfFaces[i+2]];
+         if ((a!==b) && (b!==c) && (a!==c))
+            geometry.faces.push( new THREE.Face3( a, b, c, null, color, 0 ) );
+      }
+
+      geometry.computeFaceNormals();
+      return geometry;
+   }
+
+
+   JSROOT.GEO.createSphere = function( shape ) {
+      var outerRadius = shape.fRmax;
+      var innerRadius = shape.fRmin;
+      var phiStart = shape.fPhi1 + 180;
+      var phiLength = shape.fPhi2 - shape.fPhi1;
+      var thetaStart = shape.fTheta1;
+      var thetaLength = shape.fTheta2 - shape.fTheta1;
+      var widthSegments = shape.fNseg;
+      var heightSegments = shape.fNz;
+
+      var sphere = new THREE.SphereGeometry( outerRadius, widthSegments, heightSegments,
+                                             phiStart*Math.PI/180, phiLength*Math.PI/180, thetaStart*Math.PI/180, thetaLength*Math.PI/180);
+      sphere.applyMatrix( new THREE.Matrix4().makeRotationX( Math.PI / 2 ) );
+
+      var geometry = new THREE.Geometry();
+      var color = new THREE.Color();
 
       // add outer sphere
-      for (var n=0; n < outerSphere.vertices.length; ++n)
-         geometry.vertices.push(outerSphere.vertices[n]);
+      for (var n=0; n < sphere.vertices.length; ++n)
+         geometry.vertices.push(sphere.vertices[n]);
 
-      for (var n=0; n < outerSphere.faces.length; ++n) {
-         var face = outerSphere.faces[n];
-         face.a += shift; face.b += shift; face.c += shift;
-         geometry.faces.push(face);
+      // add faces
+      for (var n=0; n < sphere.faces.length; ++n) {
+         var face = sphere.faces[n];
+         geometry.faces.push(new THREE.Face3( face.a, face.b, face.c, null, color, 0 ) );
       }
 
-      // add top cap
-      for (var i = 0; i < widthSegments; ++i) {
-         geometry.faces.push( new THREE.Face3( i+0, i+1, i+shift ) );
-         geometry.faces.push( new THREE.Face3( i+1, i+shift+1, i+shift ) );
+      var shift = geometry.vertices.length;
+      var noInside = (innerRadius <= 0);
+
+      if (noInside) {
+         // simple sphere without inner cut
+         if ((thetaLength === 180) && (phiLength === 360)) {
+            geometry.computeFaceNormals();
+            return geometry;
+         }
+
+         geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+      } else {
+         var k = innerRadius / outerRadius;
+
+         // add inner sphere
+         for (var n=0; n < sphere.vertices.length; ++n) {
+            var v = sphere.vertices[n];
+            geometry.vertices.push(new THREE.Vector3(k*v.x, k*v.y, k*v.z));
+         }
+         for (var n=0; n < sphere.faces.length; ++n) {
+            var face = sphere.faces[n];
+            geometry.faces.push(new THREE.Face3( shift+face.a, shift+face.b, shift+face.c, null, color, 0 ) );
+         }
       }
 
-      var dshift = outerSphere.vertices.length - widthSegments - 1;
+      if (thetaLength !== 180) {
+         // add top cap
+         for (var i = 0; i < widthSegments; ++i) {
+            if (noInside) {
+               geometry.faces.push( new THREE.Face3( i+0, i+1, shift, null, color, 0 ) );
+            } else {
+               geometry.faces.push( new THREE.Face3( i+0, i+1, i+shift, null, color, 0 ) );
+               geometry.faces.push( new THREE.Face3( i+1, i+shift+1, i+shift, null, color, 0 ) );
+            }
+         }
 
-      // add bottom cap
-      for (var i = dshift; i < dshift + widthSegments; ++i) {
-         geometry.faces.push( new THREE.Face3( i+0, i+1, i+shift ) );
-         geometry.faces.push( new THREE.Face3( i+1, i+shift+1, i+shift ) );
+         var dshift = sphere.vertices.length - widthSegments - 1;
+
+         // add bottom cap
+         for (var i = dshift; i < dshift + widthSegments; ++i) {
+            if (noInside) {
+               geometry.faces.push( new THREE.Face3( i+0, i+1, shift, null, color, 0 ) );
+            } else {
+               geometry.faces.push( new THREE.Face3( i+0, i+1, i+shift, null, color, 0 ) );
+               geometry.faces.push( new THREE.Face3( i+1, i+shift+1, i+shift, null, color, 0 ) );
+            }
+         }
       }
 
       if (phiLength !== 360) {
          // one cuted side
-         for (var j=0;j<heightSegments;j++) {
+         for (var j=0; j<heightSegments; j++) {
             var i1 = j*(widthSegments+1);
             var i2 = (j+1)*(widthSegments+1);
-            geometry.faces.push( new THREE.Face3( i1, i2, i1+shift ) );
-            geometry.faces.push( new THREE.Face3( i2, i2+shift, i1+shift));
+            if (noInside) {
+               geometry.faces.push( new THREE.Face3( i1, i2, shift, null, color, 0 ) );
+            } else {
+               geometry.faces.push( new THREE.Face3( i1, i2, i1+shift, null, color, 0 ) );
+               geometry.faces.push( new THREE.Face3( i2, i2+shift, i1+shift, null, color, 0 ));
+            }
          }
          // another cuted side
          for (var j=0;j<heightSegments;j++) {
             var i1 = (j+1)*(widthSegments+1) - 1;
             var i2 = (j+2)*(widthSegments+1) - 1;
-            geometry.faces.push( new THREE.Face3( i1, i2, i1+shift ) );
-            geometry.faces.push( new THREE.Face3( i2, i2+shift, i1+shift));
+            if (noInside) {
+               geometry.faces.push( new THREE.Face3( i1, i2, shift, null, color, 0 ) );
+            } else {
+               geometry.faces.push( new THREE.Face3( i1, i2, i1+shift, null, color, 0 ) );
+               geometry.faces.push( new THREE.Face3( i2, i2+shift, i1+shift, null, color, 0));
+            }
          }
       }
 
@@ -231,95 +298,143 @@
       return geometry;
    }
 
+
    JSROOT.GEO.createTube = function( shape ) {
       var outerRadius1, innerRadius1, outerRadius2, innerRadius2;
       if ((shape._typename == "TGeoCone") || (shape._typename == "TGeoConeSeg")) {
-         outerRadius1 = shape['fRmax2'];
-         innerRadius1 = shape['fRmin2'];
-         outerRadius2 = shape['fRmax1'];
-         innerRadius2 = shape['fRmin1'];
+         outerRadius1 = shape.fRmax2;
+         innerRadius1 = shape.fRmin2;
+         outerRadius2 = shape.fRmax1;
+         innerRadius2 = shape.fRmin1;
       } else {
-         outerRadius1 = outerRadius2 = shape['fRmax'];
-         innerRadius1 = innerRadius2 = shape['fRmin'];
+         outerRadius1 = outerRadius2 = shape.fRmax;
+         innerRadius1 = innerRadius2 = shape.fRmin;
       }
-      if (innerRadius1 <= 0) innerRadius1 = 0.0000001;
-      if (innerRadius2 <= 0) innerRadius2 = 0.0000001;
+
+      var hasrmin = (innerRadius1 > 0) || (innerRadius2 > 0);
+
+      if (hasrmin) {
+         if (innerRadius1 <= 0) { innerRadius1 = 0.0000001; console.warn('zero inner radius1 in tube - not yet supported'); }
+         if (innerRadius2 <= 0) { innerRadius2 = 0.0000001; console.warn('zero inner radius1 in tube - not yet supported'); }
+      }
 
       var thetaStart = 0, thetaLength = 360;
       if ((shape._typename == "TGeoConeSeg") || (shape._typename == "TGeoTubeSeg") || (shape._typename == "TGeoCtub")) {
-         thetaStart = shape['fPhi1'];
-         thetaLength = shape['fPhi2'] - shape['fPhi1'];
+         thetaStart = shape.fPhi1;
+         thetaLength = shape.fPhi2 - shape.fPhi1;
       }
 
       var radiusSegments = Math.floor(thetaLength/6);
       if (radiusSegments < 4) radiusSegments = 4;
 
+      var extrapnt = (thetaLength < 360) ? 1 : 0;
+
+      var nsegm = radiusSegments + extrapnt;
+
       var phi0 = thetaStart*Math.PI/180, dphi = thetaLength/radiusSegments*Math.PI/180;
 
       // calculate all sin/cos tables in advance
-      var _sin = new Float32Array(radiusSegments+1),
-          _cos = new Float32Array(radiusSegments+1);
-      for (var seg=0; seg<=radiusSegments; ++seg) {
-         var phi = phi0 + seg*dphi;
-         _cos[seg] = Math.cos(phi);
-         _sin[seg] = Math.sin(phi);
+      var _sin = new Float32Array(nsegm), _cos = new Float32Array(nsegm);
+      for (var seg=0; seg<nsegm; ++seg) {
+         _cos[seg] = Math.cos(phi0+seg*dphi);
+         _sin[seg] = Math.sin(phi0+seg*dphi);
       }
 
       var geometry = new THREE.Geometry();
 
       // add inner tube vertices
-      for (var seg=0; seg<=radiusSegments; ++seg)
-         geometry.vertices.push( new THREE.Vector3( innerRadius1*_cos[seg], innerRadius1*_sin[seg], shape['fDZ']));
-      for (var seg=0; seg<=radiusSegments; ++seg)
-         geometry.vertices.push( new THREE.Vector3( innerRadius2*_cos[seg], innerRadius2*_sin[seg], -shape['fDZ']));
+
+      if (hasrmin) {
+         for (var seg=0; seg<nsegm; ++seg)
+            geometry.vertices.push( new THREE.Vector3( innerRadius1*_cos[seg], innerRadius1*_sin[seg], shape.fDZ));
+         for (var seg=0; seg<nsegm; ++seg)
+            geometry.vertices.push( new THREE.Vector3( innerRadius2*_cos[seg], innerRadius2*_sin[seg], -shape.fDZ));
+      } else {
+         geometry.vertices.push( new THREE.Vector3( 0, 0, shape.fDZ));
+         geometry.vertices.push( new THREE.Vector3( 0, 0, -shape.fDZ));
+      }
 
       var shift = geometry.vertices.length;
 
       // add outer tube vertices
-      for (var seg=0; seg<=radiusSegments; ++seg)
-         geometry.vertices.push( new THREE.Vector3( outerRadius1*_cos[seg], outerRadius1*_sin[seg], shape['fDZ']));
-      for (var seg=0; seg<=radiusSegments; ++seg)
-         geometry.vertices.push( new THREE.Vector3( outerRadius2*_cos[seg], outerRadius2*_sin[seg], -shape['fDZ']));
+      for (var seg=0; seg<nsegm; ++seg)
+         geometry.vertices.push( new THREE.Vector3( outerRadius1*_cos[seg], outerRadius1*_sin[seg], shape.fDZ));
+      for (var seg=0; seg<nsegm; ++seg)
+         geometry.vertices.push( new THREE.Vector3( outerRadius2*_cos[seg], outerRadius2*_sin[seg], -shape.fDZ));
+
+      // recalculate Z of all vertices for ctub shape
+      if (shape._typename == "TGeoCtub")
+         for (var n=0;n<geometry.vertices.length;++n) {
+            var vertex = geometry.vertices[n];
+            if (vertex.z<0) vertex.z = -shape.fDz-(vertex.x*shape.fNlow[0]+vertex.x*shape.fNlow[1])/shape.fNlow[2];
+                       else vertex.z = shape.fDz-(vertex.y*shape.fNhigh[0]+vertex.y*shape.fNhigh[1])/shape.fNhigh[2];
+         }
+
+      var color = new THREE.Color(); // make dummy color for all faces
 
       // add inner tube faces
-      for (var seg=0; seg<radiusSegments; ++seg) {
-         geometry.faces.push( new THREE.Face3( seg, seg+radiusSegments+1, seg+1 ) );
-         geometry.faces.push( new THREE.Face3( seg+radiusSegments+1, seg+radiusSegments+2, seg+1 ) );
-      }
+      if (hasrmin)
+         for (var seg=0; seg<radiusSegments; ++seg) {
+            var seg1 = (extrapnt === 1) ? (seg + 1) : (seg + 1) % radiusSegments;
+            geometry.faces.push( new THREE.Face3( seg, nsegm + seg, seg1, null, color, 0 ) );
+            geometry.faces.push( new THREE.Face3( nsegm + seg, nsegm + seg1, seg1, null, color, 0 ) );
+         }
 
       // add outer tube faces
-      for (var seg=shift; seg < shift+radiusSegments; ++seg) {
-         geometry.faces.push( new THREE.Face3( seg, seg+1, seg+radiusSegments+1 ) );
-         geometry.faces.push( new THREE.Face3( seg+radiusSegments+1, seg+1, seg+radiusSegments+2 ) );
+      for (var seg=0; seg<radiusSegments; ++seg) {
+         var seg1 = (extrapnt === 1) ? (seg + 1) : (seg + 1) % radiusSegments;
+         geometry.faces.push( new THREE.Face3( shift+seg, shift + nsegm + seg, shift + seg1, null, color, 0 ) );
+         geometry.faces.push( new THREE.Face3( shift + nsegm + seg, shift + nsegm + seg1, shift + seg1, null, color, 0 ) );
       }
+
 
       // add top cap
       for (var i = 0; i < radiusSegments; ++i){
-         geometry.faces.push( new THREE.Face3( i+0, i+shift, i+1 ) );
-         geometry.faces.push( new THREE.Face3( i+shift, i+shift+1, i+1 ) );
+         var i1 = (extrapnt === 1) ? (i+1) : (i+1) % radiusSegments;
+         if (hasrmin) {
+            geometry.faces.push( new THREE.Face3( i, i+shift, i1, null, color, 0 ) );
+            geometry.faces.push( new THREE.Face3( i+shift, i1+shift, i1, null, color, 0 ) );
+         } else {
+            geometry.faces.push( new THREE.Face3( i+shift, 0, i1+shift, null, color, 0 ) );
+         }
       }
 
-      // add endcap cap
-      for (var i = radiusSegments+1; i < 2*radiusSegments+1; ++i){
-         geometry.faces.push( new THREE.Face3( i+0, i+1, i+shift ) );
-         geometry.faces.push( new THREE.Face3( i+shift, i+1, i+shift+1 ) );
+      // add bottom cap
+      for (var i = 0; i < radiusSegments; ++i) {
+         var i1 = (extrapnt === 1) ? (i+1) : (i+1) % radiusSegments;
+         if (hasrmin) {
+            geometry.faces.push( new THREE.Face3( nsegm+i, nsegm+i+shift, nsegm+i1, null, color, 0 ) );
+            geometry.faces.push( new THREE.Face3( nsegm+i+shift, nsegm+i1+shift, nsegm+i1, null, color, 0 ) );
+         } else {
+            geometry.faces.push( new THREE.Face3( nsegm+i+shift, 1, nsegm+i1+shift, null, color, 0 ) );
+         }
       }
 
       // close cut regions
-      if (thetaLength !== 360) {
-          geometry.faces.push( new THREE.Face3( 0, radiusSegments+1 , shift+radiusSegments+1 ) );
-          geometry.faces.push( new THREE.Face3( 0, shift+radiusSegments+1, shift ) );
+      if (extrapnt === 1) {
+          if (hasrmin) {
+             geometry.faces.push( new THREE.Face3( 0, nsegm, shift+nsegm, null, color, 0 ) );
+             geometry.faces.push( new THREE.Face3( 0, shift+nsegm, shift, null, color, 0 ) );
+          } else {
+             geometry.faces.push( new THREE.Face3( 0, 1, shift+nsegm, null, color, 0 ) );
+             geometry.faces.push( new THREE.Face3( 0, shift+nsegm, shift, null, color, 0 ) );
+             console.log('very special case of tube with cut');
+          }
 
-          geometry.faces.push( new THREE.Face3( radiusSegments, 2*radiusSegments+1, shift+2*radiusSegments+1 ) );
-          geometry.faces.push( new THREE.Face3( radiusSegments, shift+2*radiusSegments+1, shift + radiusSegments ) );
+          if (hasrmin) {
+             geometry.faces.push( new THREE.Face3( radiusSegments, 2*radiusSegments+1, shift+2*radiusSegments+1, null, color, 0 ) );
+             geometry.faces.push( new THREE.Face3( radiusSegments, shift+2*radiusSegments+1, shift + radiusSegments, null, color, 0 ) );
+          } else {
+             geometry.faces.push( new THREE.Face3( 0, 1, shift+2*radiusSegments+1, null, color, 0 ) );
+             geometry.faces.push( new THREE.Face3( 0, shift+2*radiusSegments+1, shift + radiusSegments, null, color, 0 ) );
+          }
       }
 
       geometry.computeFaceNormals();
 
-      // console.log(shape._typename + ' vertices ' + geometry.vertices.length + ' faces ' + geometry.faces.length);
-
       return geometry;
    }
+
 
    JSROOT.GEO.createEltu = function( shape ) {
       var geometry = new THREE.Geometry();
@@ -344,21 +459,23 @@
          geometry.vertices.push( new THREE.Vector3( x[seg], y[seg], +shape.fDZ));
       geometry.vertices.push( new THREE.Vector3( 0, 0, shape.fDZ));
 
+      var color = new THREE.Color();
+
       // create tube faces
       for (var seg=0; seg<radiusSegments; ++seg) {
          var seg1 = (seg + 1) % radiusSegments;
-         geometry.faces.push( new THREE.Face3( seg, seg+radiusSegments+1, seg1 ) );
-         geometry.faces.push( new THREE.Face3( seg+radiusSegments+1, seg1+radiusSegments+1, seg1 ) );
+         geometry.faces.push( new THREE.Face3( seg, seg+radiusSegments+1, seg1, null, color, 0 ) );
+         geometry.faces.push( new THREE.Face3( seg+radiusSegments+1, seg1+radiusSegments+1, seg1, null, color, 0 ) );
       }
 
       // create bottom cap
       for (var seg=0; seg<radiusSegments; ++seg)
-         geometry.faces.push( new THREE.Face3( seg, (seg + 1) % radiusSegments, radiusSegments));
+         geometry.faces.push( new THREE.Face3( seg, (seg + 1) % radiusSegments, radiusSegments, null, color, 0 ));
 
       // create upper cap
       var shift = radiusSegments + 1;
       for (var seg=0; seg<radiusSegments; ++seg)
-         geometry.faces.push( new THREE.Face3( shift+seg, shift+ (seg + 1) % radiusSegments, shift+radiusSegments));
+         geometry.faces.push( new THREE.Face3( shift+seg, shift+ (seg + 1) % radiusSegments, shift+radiusSegments, null, color, 0 ));
 
       geometry.computeFaceNormals();
       return geometry;
@@ -366,16 +483,17 @@
 
 
    JSROOT.GEO.createTorus = function( shape ) {
-      var radius = shape['fR'];
-      var innerTube = shape['fRmin'];
-      var outerTube = shape['fRmax'];
-      var arc = shape['fDphi'] - shape['fPhi1'];
-      var rotation = shape['fPhi1'];
+      var radius = shape.fR;
+      var innerTube = shape.fRmin;
+      var outerTube = shape.fRmax;
+      var arc = shape.fDphi - shape.fPhi1;
+      var rotation = shape.fPhi1;
       var radialSegments = 30;
       var tubularSegments = Math.floor(arc/6);
       if (tubularSegments < 8) tubularSegments = 8;
 
       var geometry = new THREE.Geometry();
+      var color = new THREE.Color();
 
       var outerTorus = new THREE.TorusGeometry( radius, outerTube, radialSegments, tubularSegments, arc*Math.PI/180);
       outerTorus.applyMatrix( new THREE.Matrix4().makeRotationZ( rotation*Math.PI/180) );
@@ -387,8 +505,10 @@
       for (var n=0; n < innerTorus.vertices.length; ++n)
          geometry.vertices.push(innerTorus.vertices[n]);
 
-      for (var n=0; n < innerTorus.faces.length; ++n)
-         geometry.faces.push(innerTorus.faces[n]);
+      for (var n=0; n < innerTorus.faces.length; ++n) {
+         var face = innerTorus.faces[n];
+         geometry.faces.push(new THREE.Face3( face.a, face.b, face.c, null, color, 0 ) );
+      }
 
       var shift = geometry.vertices.length;
 
@@ -398,8 +518,7 @@
 
       for (var n=0; n < outerTorus.faces.length; ++n) {
          var face = outerTorus.faces[n];
-         face.a += shift; face.b += shift; face.c += shift;
-         geometry.faces.push(face);
+         geometry.faces.push(new THREE.Face3( shift+face.a, shift+face.b, shift+face.c, null, color, 0 ) );
       }
 
       if (arc !== 360) {
@@ -407,16 +526,16 @@
          for (var j=0;j<radialSegments;j++) {
             var i1 = j*(tubularSegments+1);
             var i2 = (j+1)*(tubularSegments+1);
-            geometry.faces.push( new THREE.Face3( i1, i2, i1+shift ) );
-            geometry.faces.push( new THREE.Face3( i2, i2+shift, i1+shift));
+            geometry.faces.push( new THREE.Face3( i1, i2, i1+shift, null, color, 0 ) );
+            geometry.faces.push( new THREE.Face3( i2, i2+shift, i1+shift, null, color, 0 ));
          }
 
          // another cuted side
          for (var j=0;j<radialSegments;j++) {
             var i1 = (j+1)*(tubularSegments+1) - 1;
             var i2 = (j+2)*(tubularSegments+1) - 1;
-            geometry.faces.push( new THREE.Face3( i1, i2, i1+shift ) );
-            geometry.faces.push( new THREE.Face3( i2, i2+shift, i1+shift));
+            geometry.faces.push( new THREE.Face3( i1, i2, i1+shift, null, color, 0 ) );
+            geometry.faces.push( new THREE.Face3( i2, i2+shift, i1+shift, null, color, 0 ));
          }
       }
 
@@ -425,16 +544,14 @@
       return geometry;
    }
 
+
    JSROOT.GEO.createPolygon = function( shape ) {
 
-      // TODO: if same in/out radius on the top/bottom,
-      //         skip duplicated vertices and zero faces
-
-      var thetaStart = shape['fPhi1'], thetaLength = shape['fDphi'];
+      var thetaStart = shape.fPhi1, thetaLength = shape.fDphi;
 
       var radiusSegments = 60;
       if ( shape._typename == "TGeoPgon" ) {
-         radiusSegments = shape['fNedges'];
+         radiusSegments = shape.fNedges;
       } else {
          radiusSegments = Math.floor(thetaLength/6);
          if (radiusSegments < 4) radiusSegments = 4;
@@ -442,19 +559,25 @@
 
       var geometry = new THREE.Geometry();
 
+      var color = new THREE.Color();
+
       var phi0 = thetaStart*Math.PI/180, dphi = thetaLength/radiusSegments*Math.PI/180;
 
       // calculate all sin/cos tables in advance
-      var _sin = new Float32Array(radiusSegments+1),
-          _cos = new Float32Array(radiusSegments+1);
+      var _sin = new Float32Array(radiusSegments+1), _cos = new Float32Array(radiusSegments+1);
       for (var seg=0;seg<=radiusSegments;++seg) {
-         var phi = phi0 + seg*dphi;
-         _cos[seg] = Math.cos(phi);
-         _sin[seg] = Math.sin(phi);
+         _cos[seg] = Math.cos(phi0+seg*dphi);
+         _sin[seg] = Math.sin(phi0+seg*dphi);
       }
 
-      var indxs = [[],[]], len = null; // remember indexes and len for each layer
-      if (thetaLength !== 360) len = [[],[]];
+      var indxs = [[],[]], pnts = null, edges = null; // remember indexes for each layer
+      var layerVerticies = radiusSegments; // how many verticies in one layer
+
+      if (thetaLength !== 360) {
+         pnts = []; // coordinate of point on cut edge (x,z)
+         edges = [];  // number of layer for that points
+         layerVerticies+=1; // one need one more vertice
+      }
 
       for (var side = 0; side < 2; ++side) {
 
@@ -468,46 +591,44 @@
             // first create points for the layer
             var layerz = shape.fZ[layer], rad = shape[rside][layer];
 
-            var only_end_sides = false;
-
             if ((layer > 0) && (layer < shape.fNz-1)) {
-               if ((shape.fZ[layer-1] === layerz) && (shape[rside][layer-1] === rad)) {
-                  // same Z and R - just use vertices from previous layer
-                  //only_end_sides = true;
+               if (((shape.fZ[layer-1] === layerz) && (shape[rside][layer-1] === rad)) ||
+                   ((shape[rside][layer+1] === rad) && (shape[rside][layer-1] === rad))) {
+
+                  // same Z and R as before - ignore
+                  // or same R before and after
                   indxs[side][layer] = indxs[side][layer-1];
-                  if (len) len[side][layer] = len[side][layer-1];
+                  // if (len) len[side][layer] = len[side][layer-1];
                   continue;
                }
-
-               // same R before and after - just add end points
-               if ((shape[rside][layer+1] === rad) && (shape[rside][layer-1] === rad))
-                  only_end_sides = true;
             }
 
             if (rad <= 0.) rad = 0.000001;
 
-            if (only_end_sides) {
-               if (len) {
-                  len[side][layer] = 1;
-                  geometry.vertices.push( new THREE.Vector3( rad*_cos[0], rad*_sin[0], layerz ));
-                  geometry.vertices.push( new THREE.Vector3( rad*_cos[radiusSegments], rad*_sin[radiusSegments], layerz ));
+            var curr_indx = geometry.vertices.length;
+
+            // create vertices for the layer
+            for (var seg=0; seg < layerVerticies; ++seg)
+               geometry.vertices.push( new THREE.Vector3( rad*_cos[seg], rad*_sin[seg], layerz ));
+
+            if (pnts !== null) {
+               if (side === 0) {
+                  pnts.push(new THREE.Vector2(rad, layerz));
+                  edges.push(curr_indx);
+               } else {
+                  pnts.unshift(new THREE.Vector2(rad, layerz));
+                  edges.unshift(curr_indx);
                }
-            } else {
-               if (len) len[side][layer] = radiusSegments;
-               var curr_indx = geometry.vertices.length;
-
-               // create vertices for the layer
-               for (var seg=0; seg <= radiusSegments; ++seg)
-                  geometry.vertices.push( new THREE.Vector3( rad*_cos[seg], rad*_sin[seg], layerz ));
-
-               if (layer>0)  // create faces
-                  for (var seg=0;seg<radiusSegments;++seg) {
-                     geometry.faces.push( new THREE.Face3( prev_indx + seg, curr_indx + seg, curr_indx + seg + 1 ) );
-                     geometry.faces.push( new THREE.Face3( prev_indx + seg, curr_indx + seg + 1, prev_indx + seg + 1));
-                  }
-
-                prev_indx = curr_indx;
             }
+
+            if (layer>0)  // create faces
+               for (var seg=0;seg < radiusSegments;++seg) {
+                  var seg1 = (seg + 1) % layerVerticies;
+                  geometry.faces.push( new THREE.Face3( prev_indx + seg, curr_indx + seg, curr_indx + seg1, null, color, 0 ) );
+                  geometry.faces.push( new THREE.Face3( prev_indx + seg, curr_indx + seg1, prev_indx + seg1, null, color, 0 ));
+               }
+
+            prev_indx = curr_indx;
          }
       }
 
@@ -515,31 +636,44 @@
       for (var top = 0; top < 2; ++top) {
          var inside = (top === 0) ? indxs[1][0] : indxs[1][shape.fNz-1];
          var outside = (top === 0) ? indxs[0][0] : indxs[0][shape.fNz-1];
-         for (var seg=0; seg<radiusSegments; ++seg) {
-            geometry.faces.push( new THREE.Face3( outside + seg, inside + seg, inside + seg + 1 ) );
-            geometry.faces.push( new THREE.Face3( outside + seg, inside + seg + 1, outside + seg + 1));
+         for (var seg=0; seg < radiusSegments; ++seg) {
+            var seg1 = (seg + 1) % layerVerticies;
+            geometry.faces.push( new THREE.Face3( outside + seg, inside + seg, inside + seg1, null, color, 0 ) );
+            geometry.faces.push( new THREE.Face3( outside + seg, inside + seg1, outside + seg1, null, color, 0 ));
          }
       }
 
-      // add faces for cuted region
-      if (len !== null) {
-         for (var layer=1; layer < shape.fNz; ++layer) {
-            if (shape['fZ'][layer-1] === shape['fZ'][layer]) continue;
+      if (pnts!==null) {
+         var faces = [];
+         if (pnts.length === shape.fNz * 2) {
+            // special case - all layers are there, create faces ourself
+            for (var layer = shape.fNz-1; layer>0; --layer) {
+               if (shape.fZ[layer] === shape.fZ[layer-1]) continue;
+               var right = 2*shape.fNz - 1 - layer;
+               faces.push([right, layer, layer - 1]);
+               faces.push([right, layer-1, right + 1]);
+            }
 
-            geometry.faces.push( new THREE.Face3( indxs[0][layer-1], indxs[1][layer-1], indxs[1][layer] ) );
-            geometry.faces.push( new THREE.Face3( indxs[0][layer-1], indxs[1][layer], indxs[0][layer]) );
+         } else {
+            // let three.js calculate our faces
+            faces = THREE.ShapeUtils.triangulateShape(pnts, []);
+         }
 
-            geometry.faces.push( new THREE.Face3( indxs[0][layer-1] + len[0][layer-1], indxs[1][layer-1] + len[1][layer-1], indxs[1][layer] + len[1][layer] ) );
-            geometry.faces.push( new THREE.Face3( indxs[0][layer-1] + len[0][layer-1], indxs[1][layer] + len[1][layer], indxs[0][layer] + len[0][layer]) );
+         for (var i = 0; i < faces.length; ++i) {
+            var f = faces[i];
+            geometry.faces.push( new THREE.Face3( edges[f[0]], edges[f[1]], edges[f[2]], null, color, 0) );
+         }
+         for (var i = 0; i < faces.length; ++i) {
+            var f = faces[i];
+            geometry.faces.push( new THREE.Face3( edges[f[0]] + radiusSegments, edges[f[2]] + radiusSegments, edges[f[1]] + radiusSegments, null, color, 0) );
          }
       }
 
       geometry.computeFaceNormals();
 
-      // console.log(shape._typename + ' vertices ' + geometry.vertices.length + ' faces ' + geometry.faces.length);
-
       return geometry;
    }
+
 
    JSROOT.GEO.createXtru = function( shape ) {
 
@@ -584,43 +718,207 @@
       return geometry;
    }
 
-   JSROOT.GEO.isShapeSupported = function ( shape ) {
-      if ((shape === undefined) || ( shape === null )) return false;
-      if (! ('supported_shapes' in this))
-         this.supported_shapes =
-            [ "TGeoBBox", "TGeoPara", "TGeoArb8", "TGeoTrd1", "TGeoTrd2", "TGeoTrap", "TGeoGtra", "TGeoSphere",
-              "TGeoCone", "TGeoConeSeg", "TGeoTube", "TGeoTubeSeg", "TGeoEltu", "TGeoTorus", "TGeoPcon", "TGeoPgon", "TGeoXtru" ];
-      if (this.supported_shapes.indexOf(shape._typename) >= 0) return true;
 
-      if (!('unsupported_shapes' in this)) this.unsupported_shapes = [];
-      if (this.unsupported_shapes.indexOf(shape._typename) < 0) {
-         this.unsupported_shapes.push(shape._typename);
-         console.warn('Not supported ' + shape._typename);
+   JSROOT.GEO.createParaboloid = function( shape ) {
+
+      var radiusSegments = Math.round(360/6);
+      var heightSegments = 30;
+
+      // calculate all sin/cos tables in advance
+      var _sin = new Float32Array(radiusSegments), _cos = new Float32Array(radiusSegments);
+      for (var seg=0;seg<radiusSegments;++seg) {
+         _cos[seg] = Math.cos(seg/radiusSegments*2*Math.PI);
+         _sin[seg] = Math.sin(seg/radiusSegments*2*Math.PI);
       }
 
-      return false;
+      var geometry = new THREE.Geometry();
+      var fcolor = new THREE.Color();
+
+      var zmin = -shape.fDZ, zmax = shape.fDZ, rmin = shape.fRlo, rmax = shape.fRhi;
+
+      // if no radius at -z, find intersection
+      if (shape.fA >= 0) {
+         if (shape.fB > zmin) zmin = shape.fB;
+      } else {
+         if (shape.fB < zmax) zmax = shape.fB;
+      }
+
+      var ttmin = Math.atan2(zmin, rmin), ttmax = Math.atan2(zmax, rmax);
+
+      var prev_indx = 0, prev_radius = 0;
+
+      for (var layer = 0; layer <= heightSegments + 1; ++layer) {
+         var layerz = zmax, radius = 0;
+
+         if ((layer === heightSegments + 1) && (prev_radius === 0)) break;
+
+         switch (layer) {
+            case 0: layerz = zmin; radius = rmin; break;
+            case heightSegments: layerz = zmax; radius = rmax; break;
+            case heightSegments + 1: layerz = zmax; radius = 0; break;
+            default: {
+               var tt = Math.tan(ttmin + (ttmax-ttmin) * layer / heightSegments);
+               var delta = tt*tt - 4*shape.fA*shape.fB; // should be always positive (a*b<0)
+               radius = 0.5*(tt+Math.sqrt(delta))/shape.fA;
+               if (radius < 1e-6) radius = 0;
+               layerz = radius*tt;
+            }
+         }
+
+         var curr_indx = geometry.vertices.length;
+
+         if (radius === 0) {
+            geometry.vertices.push( new THREE.Vector3( 0, 0, layerz ));
+         } else {
+            for (var seg=0; seg<radiusSegments; ++seg)
+               geometry.vertices.push( new THREE.Vector3( radius*_cos[seg], radius*_sin[seg], layerz));
+         }
+
+         // add faces of next layer
+         if (layer>0) {
+            for (var seg=0; seg<radiusSegments; ++seg) {
+               var seg1 = (seg+1) % radiusSegments;
+               if (prev_radius === 0) {
+                  geometry.faces.push( new THREE.Face3( prev_indx, curr_indx + seg, curr_indx + seg1, null, fcolor, 0) );
+               } else
+               if (radius == 0) {
+                  geometry.faces.push( new THREE.Face3( prev_indx + seg, curr_indx, prev_indx + seg1, null, fcolor, 0) );
+               } else {
+                  geometry.faces.push( new THREE.Face3( prev_indx + seg, curr_indx + seg, curr_indx + seg1, null, fcolor, 0) );
+                  geometry.faces.push( new THREE.Face3( prev_indx + seg, curr_indx + seg1, prev_indx + seg1, null, fcolor, 0) );
+               }
+            }
+         }
+
+         prev_radius = radius;
+         prev_indx = curr_indx;
+      }
+
+      geometry.computeFaceNormals();
+
+      return geometry;
    }
+
+
+   JSROOT.GEO.createHype = function( shape ) {
+
+      if ((shape.fTin===0) && (shape.fTout===0))
+         return JSROOT.GEO.createTube(shape);
+
+      var radiusSegments = Math.round(360/6);
+      var heightSegments = 30;
+
+      // calculate all sin/cos tables in advance
+      var _sin = new Float32Array(radiusSegments), _cos = new Float32Array(radiusSegments);
+      for (var seg=0;seg<radiusSegments;++seg) {
+         _cos[seg] = Math.cos(seg/radiusSegments*2*Math.PI);
+         _sin[seg] = Math.sin(seg/radiusSegments*2*Math.PI);
+      }
+
+      var geometry = new THREE.Geometry();
+      var fcolor = new THREE.Color();
+
+      var indexes = [[],[]];
+
+      // in-out side
+      for (var side=0;side<2;++side) {
+
+         // add only points, no faces
+         if ((side===0) && (shape.fRmin <= 0)) {
+            indexes[side][0] = geometry.vertices.length;
+            geometry.vertices.push( new THREE.Vector3( 0, 0, -shape.fDz ) );
+            indexes[side][heightSegments] = geometry.vertices.length;
+            geometry.vertices.push( new THREE.Vector3( 0, 0, shape.fDz ) );
+            continue;
+         }
+
+         var prev_indx = 0;
+         var r0 = (side===0) ? shape.fRmin : shape.fRmax;
+         var tsq = (side===0) ? shape.fTinsq : shape.fToutsq;
+
+         // vertical layers
+         for (var layer=0;layer<=heightSegments;++layer) {
+            var layerz = -shape.fDz + layer/heightSegments*2*shape.fDz;
+
+            var radius = Math.sqrt(r0*r0+tsq*layerz*layerz);
+            var curr_indx = geometry.vertices.length;
+
+            indexes[side][layer] = curr_indx;
+
+            for (var seg=0; seg<radiusSegments; ++seg)
+               geometry.vertices.push( new THREE.Vector3( radius*_cos[seg], radius*_sin[seg], layerz));
+
+            // add faces of next layer
+            if (layer>0) {
+               for (var seg=0; seg<radiusSegments; ++seg) {
+                  var seg1 = (seg+1) % radiusSegments;
+                  geometry.faces.push( new THREE.Face3( prev_indx + seg, curr_indx + seg, curr_indx + seg1, null, fcolor, 0) );
+                  geometry.faces.push( new THREE.Face3( prev_indx + seg, curr_indx + seg1, prev_indx + seg1, null, fcolor, 0) );
+               }
+            }
+
+            prev_indx = curr_indx;
+         }
+      }
+
+      // add caps
+      for(var layer=0; layer<=heightSegments; layer+=heightSegments) {
+         var inside = indexes[0][layer], outside = indexes[1][layer];
+         for (var seg=0; seg<radiusSegments; ++seg) {
+            var seg1 = (seg+1) % radiusSegments;
+            if (shape.fRmin <= 0) {
+               geometry.faces.push( new THREE.Face3( inside, outside + seg, outside + seg1, null, fcolor, 0) );
+            } else {
+               geometry.faces.push( new THREE.Face3( inside + seg, outside + seg, outside + seg1, null, fcolor, 0) );
+               geometry.faces.push( new THREE.Face3( inside + seg, outside + seg1, inside + seg1, null, fcolor, 0) );
+            }
+         }
+      }
+
+      geometry.computeFaceNormals();
+
+      return geometry;
+   }
+
+
+   JSROOT.GEO.createComposite = function ( shape ) {
+
+      return null;
+
+      var geom1 = JSROOT.GEO.createGeometry(shape.fNode.fLeft);
+
+      var geom2 = JSROOT.GEO.createGeometry(shape.fNode.fRight);
+
+      // var geometry = new THREE.Geometry();
+
+      return geom1;
+   }
+
 
    JSROOT.GEO.createGeometry = function( shape ) {
 
       switch (shape._typename) {
          case "TGeoBBox": return JSROOT.GEO.createCube( shape );
          case "TGeoPara": return JSROOT.GEO.createPara( shape );
-         case "TGeoArb8":
          case "TGeoTrd1":
-         case "TGeoTrd2":
+         case "TGeoTrd2": return JSROOT.GEO.createTrapezoid( shape );
+         case "TGeoArb8":
          case "TGeoTrap":
-         case "TGeoGtra": return JSROOT.GEO.createTrapezoid( shape );
+         case "TGeoGtra": return JSROOT.GEO.createArb8( shape );
          case "TGeoSphere": return JSROOT.GEO.createSphere( shape );
          case "TGeoCone":
          case "TGeoConeSeg":
          case "TGeoTube":
-         case "TGeoTubeSeg": return JSROOT.GEO.createTube( shape );
+         case "TGeoTubeSeg":
+         case "TGeoCtub": return JSROOT.GEO.createTube( shape );
          case "TGeoEltu": return JSROOT.GEO.createEltu( shape );
          case "TGeoTorus": return JSROOT.GEO.createTorus( shape );
          case "TGeoPcon":
          case "TGeoPgon": return JSROOT.GEO.createPolygon( shape );
-         case "TGeoXtru": return JSROOT.GEO.createXtru(shape);
+         case "TGeoXtru": return JSROOT.GEO.createXtru( shape );
+         case "TGeoParaboloid": return JSROOT.GEO.createParaboloid( shape );
+         case "TGeoHype": return JSROOT.GEO.createHype( shape );
+         case "TGeoCompositeShape": return JSROOT.GEO.createComposite( shape );
       }
 
       return null;
@@ -662,26 +960,13 @@
 
    JSROOT.TGeoPainter = function( geometry ) {
       JSROOT.TObjectPainter.call( this, geometry );
-      this._worker = null;
-      this._isworker = false;
+
+      this.Cleanup(true);
 
       if ((geometry !== null) && (geometry['_typename'].indexOf('TGeoVolume') === 0))
          geometry = { _typename:"TGeoNode", fVolume: geometry, fName:"TopLevel" };
 
       this._geometry = geometry;
-      this._scene = null;
-      this._scene_width = 0;
-      this._scene_height = 0;
-      this._renderer = null;
-      this._toplevel = null;
-      this._stack = null;
-      this._camera = null;
-
-      this.first_render_tm = 0;
-
-      this._controls = null;
-      this._tcontrols = null;
-      this._toolbar = null;
    }
 
    JSROOT.TGeoPainter.prototype = Object.create( JSROOT.TObjectPainter.prototype );
@@ -714,7 +999,7 @@
    }
 
    JSROOT.TGeoPainter.prototype.decodeOptions = function(opt) {
-      var res = { _grid: false, _bound: false, _debug: false, _full: false, maxlvl: -1, _axis:false };
+      var res = { _grid: false, _bound: false, _debug: false, _full: false, maxlvl: -1, _axis:false, scale: new THREE.Vector3(1,1,1) };
 
       var _opt = JSROOT.GetUrlOption('_grid');
       if (_opt !== null && _opt == "true") res._grid = true;
@@ -732,6 +1017,18 @@
       if (opt.indexOf("limit")>=0) {
          res.maxlvl = 1111;
          opt = opt.replace("limit", " ");
+      }
+      if (opt.indexOf("invx")>=0) {
+         res.scale.x = -1;
+         opt = opt.replace("invx", " ");
+      }
+      if (opt.indexOf("invy")>=0) {
+         res.scale.y = -1;
+         opt = opt.replace("invy", " ");
+      }
+      if (opt.indexOf("invz")>=0) {
+         res.scale.z = -1;
+         opt = opt.replace("invz", " ");
       }
 
       var p = opt.indexOf("maxlvl");
@@ -757,6 +1054,8 @@
       if (this._controls !== null) return;
 
       var painter = this;
+
+      this.select_main().property('flex_block_drag', true);
 
       this._controls = new THREE.OrbitControls(this._camera, this._renderer.domElement);
       this._controls.enableDamping = true;
@@ -813,7 +1112,7 @@
          this._tcontrols.addEventListener( 'change', function() { painter.Render3D(0); } );
       }
 
-      var painter = this, raycaster = new THREE.Raycaster(), INTERSECTED = null;
+      var raycaster = new THREE.Raycaster(), INTERSECTED = null;
 
       function findIntersection(mouse) {
          // find intersections
@@ -849,13 +1148,13 @@
       };
 
       function mousemove(e) {
-
          var mouse_x = ('offsetX' in e) ? e.offsetX : e.layerX;
          var mouse_y = ('offsetY' in e) ? e.offsetY : e.layerY;
          var mouse = { x: (mouse_x / painter._renderer.domElement.width) * 2 - 1,
                    y: -(mouse_y / painter._renderer.domElement.height) * 2 + 1 };
 
          findIntersection(mouse);
+         e.preventDefault();
       }
 
       this._renderer.domElement.addEventListener('mousemove', mousemove);
@@ -868,22 +1167,24 @@
       this._num_meshes = 0;
    }
 
-   JSROOT.TGeoPainter.prototype.accountGeom = function(geom) {
+   JSROOT.TGeoPainter.prototype.accountGeom = function(geom, shape_typename) {
       // used to calculate statistic over created geometry
-      if (geom === null) return;
+      if (geom === null) {
+         if (!('unsupported_shapes' in this)) this.unsupported_shapes = [];
+         if ((shape_typename !== undefined) && (this.unsupported_shapes.indexOf(shape_typename) < 0)) {
+             this.unsupported_shapes.push(shape_typename);
+             console.warn('Not supported ' + shape_typename);
+         }
+         return;
+      }
 
       this._num_geom++;
-      if ('vertices' in geom) {
+      if (('vertices' in geom) && ('faces' in geom)) {
          this._num_vertices += geom.vertices.length;
          this._num_faces += geom.faces.length;
       } else {
 
-         console.log('get attr ' + (typeof geom));
-
          var attr = geom.getAttribute('position');
-
-         console.log('get position ' + (typeof attr));
-
          // this._num_vertices += attr.count() / 3;
          // this._num_faces += geom.index.count() / 3;
       }
@@ -1148,10 +1449,13 @@
 
       var geom = null;
 
+      if ((prop.shape === null) && arg.node._visible)
+         arg.node._visible = false;
+
       if (arg.node._visible) {
          if (typeof prop.shape._geom === 'undefined') {
             prop.shape._geom = JSROOT.GEO.createGeometry(prop.shape);
-            this.accountGeom(prop.shape._geom);
+            this.accountGeom(prop.shape._geom, prop.shape._typename);
          }
 
          geom = prop.shape._geom;
@@ -1167,11 +1471,19 @@
       }
 
       var has_childs = (chlds !== null) && (chlds.length > 0);
+      var work_around = false;
 
-      if (arg.node._visible)
+      // this is only for debugging - test invertion of whole geometry
+      if (arg.main && (this.options.scale !== null)) {
+         if ((this.options.scale.x<0) || (this.options.scale.y<0) || (this.options.scale.z<0)) {
+            prop.matrix.scale(this.options.scale);
+         }
+      }
+
+      if (arg.node._visible && (geom !== null)) {
          geom = this.checkFlipping(arg.toplevel, prop.matrix, prop.shape, geom, has_childs);
-
-      var work_around = arg.node._visible && has_childs && (geom === null);
+         work_around = has_childs && (geom === null);
+      }
 
       if (geom === null) geom = new THREE.Geometry();
 
@@ -1253,7 +1565,6 @@
                for (var n=0;n<this.map.length;++n) {
                   delete this.map[n]._refcnt;
                   delete this.map[n]._numchld;
-                  delete this.map[n]._canshow;
                   delete this.map[n]._visible;
                }
                this.map = [];
@@ -1285,7 +1596,6 @@
       } else {
          obj._refcnt = 1;
          obj._numchld = 0;
-         obj._canshow = JSROOT.GEO.isShapeSupported(shape);
          arg.map.push(obj);
 
          /*
@@ -1302,7 +1612,7 @@
          }
          */
 
-         if (obj._canshow && vis && !('_visible' in obj)) {
+         if (vis && !('_visible' in obj) && (shape!==null)) {
             obj._visible = true;
             arg.viscnt++;
          }
@@ -1413,9 +1723,6 @@
 
       this._toplevel = new THREE.Object3D();
 
-      // this is just initial rotation for better positioning relative to spectator
-      //this._toplevel.rotation.x = 45 * Math.PI / 180;
-      // this._toplevel.rotation.y = -45 * Math.PI / 180;
       this._scene.add(this._toplevel);
 
       this._overall_size = 10;
@@ -1425,11 +1732,11 @@
    JSROOT.TGeoPainter.prototype.startDrawGeometry = function() {
       if (this._geometry['_typename'] == "TGeoNode")  {
          this._nodedraw = true;
-         this._stack = [ { toplevel: this._toplevel, node: this._geometry } ];
+         this._stack = [ { toplevel: this._toplevel, node: this._geometry, main: true } ];
       }
       else if (this._geometry['_typename'] == 'TEveGeoShapeExtract') {
          this._nodedraw = false;
-         this._stack = [ { toplevel: this._toplevel, node: this._geometry } ];
+         this._stack = [ { toplevel: this._toplevel, node: this._geometry, main: true } ];
       }
 
       this.accountClear();
@@ -1534,11 +1841,10 @@
    JSROOT.TGeoPainter.prototype.DrawGeometry = function(opt) {
       if (typeof opt !== 'string') opt = "";
 
-      var size = this.size_for_3d();
-
-      if (opt == 'count') {
+      if (opt === 'count')
          return this.drawCount();
-      }
+
+      var size = this.size_for_3d();
 
       this.options = this.decodeOptions(opt);
 
@@ -1699,23 +2005,31 @@
    }
 
 
-   JSROOT.TGeoPainter.prototype.Cleanup = function() {
-      this.helpText();
-      if (this._scene === null) return;
+   JSROOT.TGeoPainter.prototype.Cleanup = function(first_time) {
 
-      this.deleteChildren(this._scene);
-      //this._renderer.initWebGLObjects(this._scene);
-      delete this._scene;
+      if (first_time === undefined) {
+         this.helpText();
+         if (this._scene !== null)
+            this.deleteChildren(this._scene);
+         if ( this._tcontrols !== null)
+            this._tcontrols.dispose();
+         if (this._controls !== null)
+            this._controls.dispose();
+      }
+
       this._scene = null;
-      if ( this._tcontrols !== null ) {
-         this._tcontrols.dispose();
-         this._tcontrols = null;
-      }
-      if (this._controls !== null) {
-         this._controls.dispose();
-         this._controls = null;
-      }
+      this._scene_width = 0;
+      this._scene_height = 0;
       this._renderer = null;
+      this._toplevel = null;
+      this._stack = null;
+      this._camera = null;
+
+      this.first_render_tm = 0;
+
+      this._controls = null;
+      this._tcontrols = null;
+      this._toolbar = null;
    }
 
    JSROOT.TGeoPainter.prototype.helpText = function(msg) {
@@ -1858,7 +2172,6 @@
 
       var box = new THREE.Box3().setFromObject(main._toplevel);
 
-      // TODO: factor 2 in geometries
       this.xmin = box.min.x; this.xmax = box.max.x;
       this.ymin = box.min.y; this.ymax = box.max.y;
       this.zmin = box.min.z; this.zmax = box.max.z;

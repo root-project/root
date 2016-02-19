@@ -1012,11 +1012,13 @@
 
       var rect = render_to.node().getBoundingClientRect();
 
-      // this is size where canvas should be rendered
-      rect.width = Math.round(rect.width - this.GetStyleValue(render_to, 'padding-left') - this.GetStyleValue(render_to, 'padding-right'));
-      rect.height = Math.round(rect.height - this.GetStyleValue(render_to, 'padding-top') - this.GetStyleValue(render_to, 'padding-bottom'));
+      var res = {};
 
-      return rect;
+      // this is size where canvas should be rendered
+      res.width = Math.round(rect.width - this.GetStyleValue(render_to, 'padding-left') - this.GetStyleValue(render_to, 'padding-right'));
+      res.height = Math.round(rect.height - this.GetStyleValue(render_to, 'padding-top') - this.GetStyleValue(render_to, 'padding-bottom'));
+
+      return res;
    }
 
 
@@ -1222,12 +1224,12 @@
 
          var rect = this.main_visible_rect();
 
-         if ((rect.height < 10) && (rect.width>10)) {
+         if ((rect.height<10) && (rect.width>10)) {
             rect.height = Math.round(0.66*rect.width);
             this.select_main().style('height', rect.height + "px");
          }
-
-         return { x: 0, y: 0, width: rect.width, height: rect.height };
+         rect.x = 0; rect.y = 0;
+         return rect;
       }
 
       var elem = pad;
@@ -2189,7 +2191,7 @@
       // this is svg:g object - container for every other items belonging to frame
       var frame_g = this.svg_pad().select(".root_frame");
 
-      var top_rect = null;
+      var top_rect = null, main_svg = null;
 
       if (frame_g.empty()) {
          frame_g = this.svg_pad().select(".frame_layer").append("svg:g").attr("class", "root_frame");
@@ -2199,18 +2201,17 @@
          // append for the moment three layers - for drawing and axis
          frame_g.append('svg:g').attr('class','grid_layer');
 
-         frame_g.append('svg:svg').attr('class','main_layer')
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("width", Math.round(w))
-                .attr("height", Math.round(h))
-                .attr("viewBox", "0 0 " + Math.round(w) + " " + Math.round(h))
-                .attr('overflow', 'hidden');
+         main_svg = frame_g.append('svg:svg')
+                           .attr('class','main_layer')
+                           .attr("x", 0)
+                           .attr("y", 0)
+                           .attr('overflow', 'hidden');
 
          frame_g.append('svg:g').attr('class','axis_layer');
          frame_g.append('svg:g').attr('class','upper_layer');
       } else {
          top_rect = frame_g.select("rect");
+         main_svg = frame_g.select(".main_layer");
       }
 
       // calculate actual NDC coordinates, use them to properly locate PALETTE
@@ -2243,6 +2244,10 @@
               .attr("height", h)
               .call(framecolor.func)
               .call(lineatt.func);
+
+      main_svg.attr("width", w)
+              .attr("height", h)
+              .attr("viewBox", "0 0 " + w + " " + h);
    }
 
    JSROOT.TFramePainter.prototype.Redraw = function() {
@@ -3528,7 +3533,7 @@
          }
 
          if ((check_resize==1) && (oldw>0) && (oldh>0) && !svg.property('redraw_by_resize'))
-            if ((w/oldw>0.5) && (w/oldw<2) && (h/oldh>0.5) && (h/oldh<2)) {
+            if ((w/oldw>0.66) && (w/oldw<1.5) && (h/oldh>0.66) && (h/oldh<1.5)) {
                // not significant change in actual sizes, keep as it is
                // let browser scale SVG without our help
                return false;
@@ -8231,7 +8236,7 @@
       // method dedicated to iterate over existing panels
       // provided userfunc is called with arguemnts (frame)
 
-      alert("ForEachFrame not implemented");
+      console.warn("ForEachFrame not implemented in MDIDisplay");
    }
 
    JSROOT.MDIDisplay.prototype.ForEachPainter = function(userfunc, only_visible) {
@@ -8287,12 +8292,12 @@
    }
 
    JSROOT.MDIDisplay.prototype.Reset = function() {
-      this.ForEachPainter(function(painter) {
-         if ((painter.GetItemName()!=null) && (typeof painter['Cleanup'] == 'function'))
-            painter.Cleanup();
+
+      this.ForEachFrame(function(frame) {
+         JSROOT.cleanup(frame);
       });
 
-      d3.select("#"+this.frameid).html('').property('mdi', null);
+      d3.select("#"+this.frameid).html("").property('mdi', null);
    }
 
    JSROOT.MDIDisplay.prototype.Draw = function(title, obj, drawopt) {
@@ -8366,6 +8371,8 @@
 
    JSROOT.SimpleDisplay.prototype.CreateFrame = function(title) {
 
+      JSROOT.cleanup(this.frameid+"_simple_display");
+
       return d3.select("#"+this.frameid)
                .html("")
                .append("div")
@@ -8438,6 +8445,8 @@
       var main = d3.select("#" + this.frameid);
       if (main.empty()) return null;
 
+      var drawid = this.frameid;
+
       if (!this.IsSingle()) {
          var topid = this.frameid + '_grid';
          if (d3.select("#" + topid).empty()) {
@@ -8460,11 +8469,13 @@
             main.selectAll('.grid_cell').style({ 'width':  w + 'px', 'height': h + 'px', 'overflow' : 'hidden'});
          }
 
-         main = d3.select( "#" + topid + "_" + this.cnt);
+         drawid = topid + "_" + this.cnt;
          if (++this.cnt >= this.sizex * this.sizey) this.cnt = 0;
       }
 
-      return main.html("").property('title', title).node();
+      JSROOT.cleanup(drawid);
+
+      return d3.select("#" + drawid).html("").property('title', title).node();
    }
 
    JSROOT.GridDisplay.prototype.Reset = function() {
@@ -8488,16 +8499,6 @@
    }
 
    // =========================================================================
-
-   JSROOT.CheckElementResize = function(dom_node, size) {
-      if (dom_node === null) return;
-      var dummy = new JSROOT.TObjectPainter(), done = false;
-      dummy.SetDivId(dom_node, -1);
-      dummy.ForEachPainter(function(painter) {
-         if (!done && typeof painter['CheckResize'] == 'function')
-            done = painter.CheckResize(size);
-      });
-   }
 
    JSROOT.RegisterForResize = function(handle, delay) {
       // function used to react on browser window resize event
@@ -8534,7 +8535,7 @@
                if (mdi) {
                   mdi.CheckMDIResize();
                } else {
-                  JSROOT.CheckElementResize(node.node());
+                  JSROOT.resize(node.node());
                }
             }
          }
@@ -8766,8 +8767,8 @@
       dummy.SetDivId(divid, -1);
       var can_painter = dummy.pad_painter();
 
-      if (can_painter != null) {
-         if (obj._typename=="TCanvas") {
+      if (can_painter !== null) {
+         if (obj._typename === "TCanvas") {
             can_painter.RedrawObject(obj);
             return can_painter;
          }
@@ -8799,7 +8800,27 @@
    JSROOT.resize = function(divid, arg) {
       if (arg === true) arg = { force: true }; else
       if (typeof arg !== 'object') arg = null;
-      JSROOT.CheckElementResize(divid, arg);
+
+      var dummy = new JSROOT.TObjectPainter(), done = false;
+      dummy.SetDivId(divid, -1);
+      dummy.ForEachPainter(function(painter) {
+         if (!done && typeof painter['CheckResize'] == 'function')
+            done = painter.CheckResize(arg);
+      });
+   }
+
+   // for compatibility, keep old name
+   JSROOT.CheckElementResize = JSROOT.resize;
+
+   // safely remove all JSROOT objects from specified element
+   JSROOT.cleanup = function(divid) {
+      var dummy = new JSROOT.TObjectPainter();
+      dummy.SetDivId(divid, -1);
+      dummy.ForEachPainter(function(painter) {
+         if (typeof painter['Cleanup'] === 'function')
+            painter.Cleanup();
+      });
+      dummy.select_main().html("");
    }
 
    // function to display progress message in the left bottom corner

@@ -1,5 +1,17 @@
 # JSROOT changelog
 
+## Changes in 4.3
+1. Implement TGeoCtub, TGeoParaboloid and TGeoHype shapes
+2. Support TGeoTube with Rmin==0 
+3. Exclude empty faces in TGeoArb8  
+4. Improve TGeoSphere creation - handle all parameters combinations  
+5. Introduce JSROOT.cleanup() function to safely clear all drawn objects 
+6. Fix wrong resize method in 'tabs' and 'collapsible' layouts
+7. Fix canvas resize problem (issue #27)
+8. Fix zero-height canvas when draw TGgeo in collapsible layout
+9. Fix problem of simultaneous move TGeo drawings and canvas in flexible layout
+ 
+
 ## Changes in 4.2
 1. Significant performance improvements in 3D drawings - TGeo/TH2/TH3 
 2. Implement TGeoPara, TGeoGtra, TGeoXtru and TGeoEltu shapes
