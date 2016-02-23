@@ -25,41 +25,54 @@ namespace ROOT {
    // and http://agentzlerich.blogspot.com/2011/01/converting-to-and-from-human-readable.html
 
 
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// Return the size expressed in 'human readeable' format.
 /// \param bytes the size in bytes to be converted
 /// \param si whether to use the SI units or not.
 /// \param coeff return the size expressed in the new unit.
-/// \param units return a point to the string representation of the new unit
-void ToHumanReadableSize(Long64_t bytes,
+/// \param units return a pointer to the string representation of the new unit
+template <typename value_type>
+void ToHumanReadableSize(value_type bytes,
                          Bool_t si,
-                         double *coeff,
+                         Double_t *coeff,
                          const char **units)
 {
    // Static lookup table of byte-based SI units
    static const char *const suffix[][2] =
-     { { "B",  "B"   },
-       { "kB", "KiB" },
-       { "MB", "MiB" },
-       { "GB", "GiB" },
-       { "TB", "TiB" },
-       { "EB", "EiB" },
-       { "ZB", "ZiB" },
-       { "YB", "YiB" } };
-   int unit = si ? 1000 : 1024;
+   { { "B",  "B"   },
+     { "KB", "KiB" },
+     { "MB", "MiB" },
+     { "GB", "GiB" },
+     { "TB", "TiB" },
+     { "EB", "EiB" },
+     { "ZB", "ZiB" },
+     { "YB", "YiB" } };
+   unsigned int unit = si ? 1000 : 1024;
    int exp = 0;
    if (bytes > 0) {
       exp = std::min( (int) (std::log(bytes) / std::log(unit)),
-                      (int) (sizeof(suffix) / sizeof(suffix[0]) - 1));
+                     (int) (sizeof(suffix) / sizeof(suffix[0]) - 1));
    }
    *coeff = bytes / std::pow(unit, exp);
    *units  = suffix[exp][!!si];
 }
 
-// Convert strings like the following into byte counts
-//    5MB, 5 MB, 5M, 3.7GB, 123b, 456kB
-// with some amount of forgiveness baked into the parsing.
-Long64_t FromHumanReadableSize(std::string_view str)
+enum class EFromHumanReadableSize {
+   kSuccess,
+   kParseFail,
+   kOverflow
+};
+
+///////////////////////////////////////////////////////////////////////////////
+/// Convert strings like the following into byte counts
+///    5MB, 5 MB, 5M, 3.7GB, 123b, 456kB
+/// with some amount of forgiveness baked into the parsing.
+/// \param str the string to be parsed
+/// \param value will be updated with the result if and only if the parse is sucessfull and does not overflow for the type of value.
+/// \return return a EFromHumanReadableSize enum value indicating the success or failure of the parse.
+///
+template <typename T>
+EFromHumanReadableSize FromHumanReadableSize(std::string_view str, T &value)
 {
    try {
       size_t size = str.size();
@@ -74,8 +87,14 @@ Long64_t FromHumanReadableSize(std::string_view str)
       int exp  = 0;
       int unit = 1024;
 
-      auto result = [coeff,&exp,&unit]() {
-         return exp ? coeff * std::pow(unit, exp / 3) : coeff;
+      auto result = [coeff,&exp,&unit,&value]() {
+         double v = exp ? coeff * std::pow(unit, exp / 3) : coeff;
+         if (v < std::numeric_limits<T>::max()) {
+            value = (T)v;
+            return EFromHumanReadableSize::kSuccess;
+         } else {
+            return EFromHumanReadableSize::kOverflow;
+         }
       };
       if (cur==size) return result();
 
@@ -89,7 +108,7 @@ Long64_t FromHumanReadableSize(std::string_view str)
          case 'Z':  exp = 18; break;
          case 'Y':  exp = 21; break;
 
-         default:   return -1;
+         default:   return EFromHumanReadableSize::kParseFail;
       }
       ++cur;
 
@@ -109,7 +128,7 @@ Long64_t FromHumanReadableSize(std::string_view str)
 
          case '\0': return result();
 
-         default:   return -1;
+         default:   return EFromHumanReadableSize::kParseFail;
       }
 
       // Skip any remaining white space
@@ -120,10 +139,8 @@ Long64_t FromHumanReadableSize(std::string_view str)
       // if (cur<size) return -1;
 
       return result();
-      //done:
-      //   return exp ? coeff * pow(unit, exp / 3) : coeff;
    } catch (...) {
-      return -1;
+      return EFromHumanReadableSize::kParseFail;
    }
 
 }
