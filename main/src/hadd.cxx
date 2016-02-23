@@ -68,6 +68,7 @@
 #include "Riostream.h"
 #include "TClass.h"
 #include "TSystem.h"
+#include "ROOT/StringConv.h"
 #include <stdlib.h>
 
 #include "TFileMerger.h"
@@ -87,12 +88,21 @@ int main( int argc, char **argv )
       std::cout << "If the option -O is used, when merging TTree, the basket size is re-optimized" <<std::endl;
       std::cout << "If the option -v is used, explicitly set the verbosity level; 0 request no output, 99 is the default" <<std::endl;
       std::cout << "If the option -n is used, hadd will open at most 'maxopenedfiles' at once, use 0 to request to use the system maximum." << std::endl;
+      std::cout << "If the option -cachedsize is used, hadd will resize (or disable if 0) the\n"
+                   "   prefetching cache to speed up operations." << std::endl;
       std::cout << "When -the -f option is specified, one can also specify the compression" <<std::endl;
       std::cout << "level of the target file. By default the compression level is 1, but" <<std::endl;
       std::cout << "if \"-f0\" is specified, the target file will not be compressed." <<std::endl;
       std::cout << "if \"-f6\" is specified, the compression level 6 will be used.  See  TFile::SetCompressionSettings for the support range of value." <<std::endl;
       std::cout << "if Target and source files have different compression settings"<<std::endl;
-      std::cout << " a slower method is used"<<std::endl;
+      std::cout << "  a slower method is used"<<std::endl;
+      std::cout << "For options that takes a size as argument, a decimal number of bytes is expected.\n"
+                   "If the number ends with a ``k'', ``m'', ``g'', etc., the number is multiplied\n"
+                   "   by 1024 (1K), 1048576 (1M), 1073741824 (1G), etc. \n"
+                   "If this prefix is following by i, the number is multipled by 1000 (1KiB),\n"
+                   "   1000000 (1MiB), 1000000000 (1KiB), etc. \n"
+                   "The prefix can be optionally followed by B whose casing is ignored,\n"
+                   "   eg. 1k, 1K, 1Kb and 1KB are the same."<<std::endl;
       return 1;
    }
 
@@ -102,6 +112,7 @@ int main( int argc, char **argv )
    Bool_t noTrees = kFALSE;
    Int_t maxopenedfiles = 0;
    Int_t verbosity = 99;
+   TString cacheSize;
 
    int outputPlace = 0;
    int ffirst = 2;
@@ -118,6 +129,51 @@ int main( int argc, char **argv )
          ++ffirst;
       } else if ( strcmp(argv[a],"-O") == 0 ) {
          reoptimize = kTRUE;
+         ++ffirst;
+      } else if ( strcmp(argv[a],"-cachesize=") == 0 ) {
+         int size;
+         static const size_t arglen = strlen("-cachesize=");
+         auto parseResult = ROOT::FromHumanReadableSize(argv[a]+arglen,size);
+         if (parseResult == ROOT::EFromHumanReadableSize::kParseFail) {
+            std::cerr << "Error: could not parse the cache size passed after -cachesize: "
+                      << argv[a + 1] << ". We will use the default value.\n";
+         } else if (parseResult == ROOT::EFromHumanReadableSize::kOverflow) {
+            double m;
+            const char *munit = nullptr;
+            ROOT::ToHumanReadableSize(INT_MAX,false,&m,&munit);
+            std::cerr << "Error: the cache size passed after -cachesize is too large: "
+                      << argv[a + 1] << " is greater than " << m << munit
+                      << ". We will use the default value.\n";
+         } else {
+            cacheSize = "cachesize=";
+            cacheSize.Append(argv[a]+1);
+         }
+         ++ffirst;
+      } else if ( strcmp(argv[a],"-cachesize") == 0 ) {
+         if (a+1 >= argc) {
+            std::cerr << "Error: no cache size number was provided after -cachesize.\n";
+         } else {
+            int size;
+            auto parseResult = ROOT::FromHumanReadableSize(argv[a+1],size);
+            if (parseResult == ROOT::EFromHumanReadableSize::kParseFail) {
+               std::cerr << "Error: could not parse the cache size passed after -cachesize: "
+                         << argv[a + 1] << ". We will use the default value.\n";
+            } else if (parseResult == ROOT::EFromHumanReadableSize::kOverflow) {
+               double m;
+               const char *munit = nullptr;
+               ROOT::ToHumanReadableSize(INT_MAX,false,&m,&munit);
+               std::cerr << "Error: the cache size passed after -cachesize is too large: "
+                         << argv[a + 1] << " is greater than " << m << munit
+                         << ". We will use the default value.\n";
+               ++a;
+               ++ffirst;
+            } else {
+               cacheSize = "cachesize=";
+               cacheSize.Append(argv[a+1]);
+               ++a;
+               ++ffirst;
+            }
+         }
          ++ffirst;
       } else if ( strcmp(argv[a],"-n") == 0 ) {
          if (a+1 >= argc) {
@@ -229,6 +285,7 @@ int main( int argc, char **argv )
       }
    }
    merger.SetNotrees(noTrees);
+   merger.SetMergeOptions(cacheSize);
    Bool_t status = merger.Merge();
 
    if (status) {
