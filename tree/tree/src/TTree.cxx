@@ -391,6 +391,7 @@ End_Macro
 #include "TBranchSTL.h"
 #include "TSchemaRuleSet.h"
 #include "TFileMergeInfo.h"
+#include "ROOT/StringConv.h"
 
 #include <chrono>
 #include <cstddef>
@@ -3380,6 +3381,24 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
    } else {
       onIndexError = kBuild;
    }
+   Ssiz_t cacheSizeLoc = opt.Index("cachesize=");
+   Int_t cacheSize = -1;
+   if (cacheSizeLoc != TString::kNPOS) {
+      // If the parse faile, cacheSize stays at -1.
+      Ssiz_t cacheSizeEnd = opt.Index(" ",cacheSizeLoc+10) - (cacheSizeLoc+10);
+      TSubString cacheSizeStr( opt(cacheSizeLoc+10,cacheSizeEnd) );
+      auto parseResult = ROOT::FromHumanReadableSize(cacheSizeStr,cacheSize);
+      if (parseResult == ROOT::EFromHumanReadableSize::kParseFail) {
+         Warning("CopyEntries","The cachesize option can not be parsed: %s. The default size will be used.",cacheSizeStr.String().Data());
+      } else if (parseResult == ROOT::EFromHumanReadableSize::kOverflow) {
+         double m;
+         const char *munit = nullptr;
+         ROOT::ToHumanReadableSize(std::numeric_limits<decltype(cacheSize)>::max(),false,&m,&munit);
+
+         Warning("CopyEntries","The cachesize option is too large: %s (%g%s max). The default size will be used.",cacheSizeStr.String().Data(),m,munit);
+      }
+   }
+   if (gDebug > 0 && cacheSize != -1) Info("CopyEntries","Using Cache size: %d\n",cacheSize);
 
    Long64_t nbytes = 0;
    Long64_t treeEntries = tree->GetEntriesFast();
@@ -3410,6 +3429,7 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
          TTreeCloner cloner(tree->GetTree(), this, option, TTreeCloner::kNoWarnings);
          if (cloner.IsValid()) {
             this->SetEntries(this->GetEntries() + tree->GetTree()->GetEntries());
+            if (cacheSize != -1) cloner.SetCacheSize(cacheSize);
             cloner.Exec();
          } else {
             if (i == 0) {
