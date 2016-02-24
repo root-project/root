@@ -70,8 +70,8 @@ Also:
 
 ### Dictionaries
 
-Fix ROOT-7760: Fully allow the usage of the dylib extension on OSx.
-Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as the user actually expects) the header files #included in the linkdef file, if any, as the top level headers.
+* Fix ROOT-7760: Fully allow the usage of the dylib extension on OSx.
+* Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as the user actually expects) the header files #included in the linkdef file, if any, as the top level headers.
 
 ### Interpreter Library
 
@@ -79,26 +79,32 @@ Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as 
 * A ValuePrinter for tuple and pair has been added to visualise the content of these entities at the prompt.
 
 ## Parallelisation
-* Three methods have been added to manage implicit multi-threading in ROOT: ROOT::EnableImplicitMT(numthreads), ROOT::DisableImplicitMT and ROOT::IsImplicitMTEnabled. They can be used to enable, disable and check the status of the global implicit multi-threading in ROOT, respectively.
-* Even if the default reduce function specified in the invocation of the MapReduce method of TProcPool returns a pointer to a TObject, the return value of MapReduce is properly casted to the type returned by the map function.
-* Add the TThreadedObject class which helps making objects thread private and merging them.
-* Add tutorial showing how to fill randomly histograms using the TProcPool class.
+* Three methods have been added to manage implicit multi-threading in ROOT: `ROOT::EnableImplicitMT(numthreads)`, `ROOT::DisableImplicitMT` and `ROOT::IsImplicitMTEnabled`. They can be used to enable, disable and check the status of the global implicit multi-threading in ROOT, respectively.
+* Even if the default reduce function specified in the invocation of the `MapReduce` method of `TProcPool` returns a pointer to a `TObject`, the return value of `MapReduce` is properly casted to the type returned by the map function.
+* Add a new class named `TThreadedObject` which helps making objects thread private and merging them.
+* Add tutorial showing how to fill randomly histograms using the `TProcPool` class.
 * Add tutorial showing how to fill randomly histograms from multiple threads.
 
 ## I/O Libraries
-* Custom streamers need to #include TBuffer.h explicitly (see
-[section Core Libraries](#core-libs))
+
+* Custom streamers need to #include TBuffer.h explicitly (see [section Core Libraries](#core-libs))
 * Check and flag short reads as errors in the xroot plugins. This fixes [ROOT-3341].
 * Added support for AWS temporary security credentials to TS3WebFile by allowing the security token to be given.
 
 
 ## TTree Libraries
 
-* Update TChain::LoadTree so that the user call back routine is actually called for each input file even those containing TTree objects with no entries.
+### Fast Cloning
+
+We added a cache specifically for the fast option of the TTreeCloner to significantly reduce the run-time when fast-cloning remote files to address [ROOT-5078].  It can be controlled from the `TTreeCloner`, `TTree::CopyEntries` or `hadd` interfaces.  The new cache is enabled by default, to update the size of the cache or disable it from `TTreeCloner` use: `TTreeCloner::SetCacheSize`.  To do the same from `TTree::CopyEntries` add to the option string "cachesize=SIZE".  To update the size of the cache or disable it from `hadd`, use the command line option `-cachesize SIZE`.  `SIZE` shouyld be given in number bytes and can be expressed in 'human readable form' (number followed by size unit like MB, MiB, GB or GiB, etc. or SIZE  can be set zero to disable the cache.
+
+### Other Changes
+
+* Update `TChain::LoadTree` so that the user call back routine is actually called for each input file even those containing `TTree` objects with no entries.
 * Repair setting the branch address of a leaflist style branch taking directly the address of the struct.  (Note that leaflist is nonetheless still deprecated and declaring the struct to the interpreter and passing the object directly to create the branch is much better).
-* Provide an implicitly parallel implementation of TTree::GetEntry. The approach is based on creating a task per top-level branch in order to do the reading, unzipping and deserialisation in parallel. In addition, a getter and a setter methods are provided to check the status and enable/disable implicit multi-threading for that tree (see Parallelisation section for more information about implicit multi-threading).
-* Properly support std::cin (and other stream that can not be rewound) in TTree::ReadStream. This fixes [ROOT-7588].
-* Prevent TTreeCloner::CopyStreamerInfos() from causing an autoparse on an abstract base class.
+* Provide an implicitly parallel implementation of `TTree::GetEntry`. The approach is based on creating a task per top-level branch in order to do the reading, unzipping and deserialisation in parallel. In addition, a getter and a setter methods are provided to check the status and enable/disable implicit multi-threading for that tree (see Parallelisation section for more information about implicit multi-threading).
+* Properly support std::cin (and other stream that can not be rewound) in `TTree::ReadStream`. This fixes [ROOT-7588].
+* Prevent `TTreeCloner::CopyStreamerInfos()` from causing an autoparse on an abstract base class.
 
 ## Histogram Libraries
 
