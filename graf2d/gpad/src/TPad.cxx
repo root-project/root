@@ -4161,26 +4161,26 @@ static Bool_t ContainsTImage(TList *li)
 /// Save Canvas contents in a file in one of various formats.
 ///
 /// option can be:
-///       -          0   - as "ps"
-///       -        "ps"  - Postscript file is produced (see special cases below)
-///       -   "Portrait" - Postscript file is produced (Portrait)
-///       -  "Landscape" - Postscript file is produced (Landscape)
-///       -     "Title:" - The character string after "Title:" becomes a table
-///       -                of content entry (for PDF files).
-///       -        "eps" - an Encapsulated Postscript file is produced
-///       -    "Preview" - an Encapsulated Postscript file with preview is produced.
-///       -        "pdf" - a PDF file is produced
-///       -        "svg" - a SVG file is produced
-///       -        "tex" - a TeX file is produced
-///       -        "gif" - a GIF file is produced
-///       -     "gif+NN" - an animated GIF file is produced, where NN is delay in 10ms units NOTE: See other variants for looping animation in TASImage::WriteImage
-///       -        "xpm" - a XPM file is produced
-///       -        "png" - a PNG file is produced
-///       -        "jpg" - a JPEG file is produced. NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
-///        -      "tiff" - a TIFF file is produced
-///        -       "cxx" - a C++ macro file is produced
-///        -       "xml" - a XML file
-///        -      "root" - a ROOT binary file
+///  -           0  as "ps"
+///  -        "ps"  Postscript file is produced (see special cases below)
+///  -  "Portrait"  Postscript file is produced (Portrait)
+///  - "Landscape"  Postscript file is produced (Landscape)
+///  -    "Title:"  The character string after "Title:" becomes a table
+///                 of content entry (for PDF files).
+///  -       "eps"  an Encapsulated Postscript file is produced
+///  -   "Preview"  an Encapsulated Postscript file with preview is produced.
+///  -       "pdf"  a PDF file is produced
+///  -       "svg"  a SVG file is produced
+///  -       "tex"  a TeX file is produced
+///  -       "gif"  a GIF file is produced
+///  -    "gif+NN"  an animated GIF file is produced, where NN is delay in 10ms units NOTE: See other variants for looping animation in TASImage::WriteImage
+///  -       "xpm"  a XPM file is produced
+///  -       "png"  a PNG file is produced
+///  -       "jpg"  a JPEG file is produced. NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
+///  -      "tiff"  a TIFF file is produced
+///  -       "cxx"  a C++ macro file is produced
+///  -       "xml"  a XML file
+///  -      "root"  a ROOT binary file
 ///
 ///     filename = 0 - filename  is defined by the GetName and its
 ///                    extension is defined with the option
