@@ -222,8 +222,6 @@ namespace TMVA {
       Bool_t                          fBaggedBoost;     // turn bagging in combination with boost on/off
       Bool_t                          fBaggedGradBoost; // turn bagging in combination with grad boost on/off
       Double_t                        fSumOfWeights;    // sum of all event weights
-      std::unordered_map< const TMVA::Event*, std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
-      std::unordered_map< const TMVA::Event*,std::vector<double> > fResiduals; // individual event residuals for gradient boost
 
       //options for the decision Tree
       SeparationBase                 *fSepType;         // the separation used in node splitting

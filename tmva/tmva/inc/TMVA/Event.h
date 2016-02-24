@@ -138,6 +138,12 @@ namespace TMVA {
       mutable std::vector<Float_t>   fSpectators;      // "visisting" variables not used in MVAs ; mutable, to be able to copy the dynamic values in there
       mutable std::vector<UInt_t>*   fVariableArrangement;  // needed for MethodCategories, where we can train on other than the main variables
 
+   public:
+      // Residuals: weighted for BDT Regression, fResiduals for Classification (one element in vector) and Multiclass (nClasses elements in vector)
+      mutable std::pair<Double_t, Double_t>  fWeightedResiduals;  // weighted regression residuals (target, weight)
+      mutable std::vector<Double_t>          fResiduals; // individual event residuals for gradient boost
+   private:
+
       UInt_t                         fClass;           // class number
       Double_t                       fWeight;          // event weight (product of global and individual weights)
       mutable Double_t               fBoostWeight;     // internal weight to be set by boosting algorithm

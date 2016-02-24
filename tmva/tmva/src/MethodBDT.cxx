@@ -709,7 +709,7 @@ void TMVA::MethodBDT::Reset( void )
    fBoostWeights.clear();
    if (fMonitorNtuple) fMonitorNtuple->Delete(); fMonitorNtuple=NULL;
    fVariableImportance.clear();
-   fResiduals.clear();
+   for (auto e : fEventSample) e->fResiduals.clear();
    // now done in "InitEventSample" which is called in "Train"
    // reset all previously stored/accumulated BOOST weights in the event sample
    //for (UInt_t iev=0; iev<fEventSample.size(); iev++) fEventSample[iev]->SetBoostWeight(1.);
@@ -1392,9 +1392,9 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
          expCache.resize(nClasses);
       }
       for (auto e : eventSample) {
-         fResiduals[e].at(cls) += fForest.back()->CheckEvent(e, kFALSE);
+         e->fResiduals.at(cls) += fForest.back()->CheckEvent(e, kFALSE);
          if (cls == nClasses - 1) {
-            auto &residualsThisEvent = fResiduals[e];
+            auto &residualsThisEvent = e->fResiduals;
             std::transform(residualsThisEvent.begin(),
                            residualsThisEvent.begin() + nClasses,
                            expCache.begin(), [](Double_t d) { return exp(d); });
@@ -1413,7 +1413,7 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
       }
    } else {
       for (auto e : eventSample) {
-         auto &residualAt0 = fResiduals[e].at(0);
+         auto &residualAt0 = e->fResiduals.at(0);
          residualAt0 += fForest.back()->CheckEvent(e, kFALSE);
          Double_t p_sig = 1.0 / (1.0 + exp(-2.0 * residualAt0));
          Double_t res = (DataInfo().IsSignal(e) ? 1 : 0) - p_sig;
@@ -1429,7 +1429,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
 {
    if (!first) {
       for (auto e : fEventSample) {
-         fWeightedResiduals[e].first -= fForest.back()->CheckEvent(e, kFALSE);
+         e->fWeightedResiduals.first -= fForest.back()->CheckEvent(e, kFALSE);
       }
    }
 
@@ -1437,7 +1437,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
    vector< std::pair<Double_t, Double_t> > temp;
    temp.reserve(eventSample.size());
    for (auto e : eventSample) {
-      auto &weightedResidualForEvent = fWeightedResiduals[e];
+      auto &weightedResidualForEvent = e->fWeightedResiduals;
       temp.emplace_back(fabs(weightedResidualForEvent.first), weightedResidualForEvent.second);
       fSumOfWeights += e->GetWeight();
    }
@@ -1446,9 +1446,9 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
    Int_t i = 0;
    for (auto e : eventSample) {
       if (temp[i].first <= fTransitionPoint)
-         const_cast<TMVA::Event*>(e)->SetTarget(0, fWeightedResiduals[e].first);
+         const_cast<TMVA::Event*>(e)->SetTarget(0, e->fWeightedResiduals.first);
       else
-         const_cast<TMVA::Event*>(e)->SetTarget(0, fTransitionPoint*(fWeightedResiduals[e].first < 0 ? -1.0 : 1.0));
+         const_cast<TMVA::Event*>(e)->SetTarget(0, fTransitionPoint*(e->fWeightedResiduals.first < 0 ? -1.0 : 1.0));
       i++;
    }
 }
@@ -1517,7 +1517,7 @@ Double_t TMVA::MethodBDT::GradBoostRegression(const std::vector<const TMVA::Even
       auto eventWeight = e->GetWeight();
       TMVA::DecisionTreeNode* node = dt->GetEventNode(*e);
       auto &nodeInfo = nodeInfos[node];
-      nodeInfo.leaves.push_back(make_pair(fWeightedResiduals[e].first, eventWeight));
+      nodeInfo.leaves.push_back(make_pair(e->fWeightedResiduals.first, eventWeight));
       nodeInfo.leafWeight += eventWeight;
    }
 
@@ -1545,18 +1545,18 @@ void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSampl
    fSepType=NULL; //set fSepType to NULL (regression trees are used for both classification an regression)
    std::vector<std::pair<Double_t, Double_t> > temp;
    if(DoRegression()){
-      for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-         fWeightedResiduals[*e]= make_pair((*e)->GetTarget(0), (*e)->GetWeight());
-         fSumOfWeights+=(*e)->GetWeight();
-         temp.push_back(make_pair(fWeightedResiduals[*e].first,fWeightedResiduals[*e].second));
+      for (auto e : eventSample) {
+         e->fWeightedResiduals= make_pair(e->GetTarget(0), e->GetWeight());
+         fSumOfWeights += e->GetWeight();
+         temp.push_back(make_pair(e->fWeightedResiduals.first, e->fWeightedResiduals.second));
       }
-      Double_t weightedMedian = GetWeightedQuantile(temp,0.5, fSumOfWeights);
+      Double_t weightedMedian = GetWeightedQuantile(temp, 0.5, fSumOfWeights);
      
       //Store the weighted median as a first boosweight for later use
       fBoostWeights.push_back(weightedMedian);
-      for (auto &r : fWeightedResiduals) {
+      for (auto e : eventSample) {
          //substract the gloabl median from all residuals
-         r.second.first -= weightedMedian;
+          e->fWeightedResiduals.first -= weightedMedian;
       }
 
       UpdateTargetsRegression(*fTrainSample,kTRUE);
@@ -1565,20 +1565,22 @@ void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSampl
    }
    else if(DoMulticlass()){
       UInt_t nClasses = DataInfo().GetNClasses();
-      for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+      for (auto e : eventSample) {
+         e->fResiduals.clear();
          for (UInt_t i=0;i<nClasses;i++){
             //Calculate initial residua, assuming equal probability for all classes
-            Double_t r = (*e)->GetClass()==i?(1-1.0/nClasses):(-1.0/nClasses);
-            const_cast<TMVA::Event*>(*e)->SetTarget(i,r);
-            fResiduals[*e].push_back(0);   
+            Double_t r = e->GetClass()==i?(1-1.0/nClasses):(-1.0/nClasses);
+            const_cast<TMVA::Event*>(e)->SetTarget(i,r);
+            e->fResiduals.push_back(0);
          }
       }
    }
    else{
-      for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-         Double_t r = (DataInfo().IsSignal(*e)?1:0)-0.5; //Calculate initial residua
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,r);
-         fResiduals[*e].push_back(0);         
+      for (auto e : eventSample) {
+         e->fResiduals.clear();
+         Double_t r = (DataInfo().IsSignal(e)?1:0)-0.5; //Calculate initial residua
+         const_cast<TMVA::Event*>(e)->SetTarget(0,r);
+         e->fResiduals.push_back(0);
       }
    }
 
