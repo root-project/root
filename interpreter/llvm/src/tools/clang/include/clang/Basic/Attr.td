@@ -144,6 +144,7 @@ class TypeArgument<string name, bit opt = 0> : Argument<name, opt>;
 class UnsignedArgument<string name, bit opt = 0> : Argument<name, opt>;
 class VariadicUnsignedArgument<string name> : Argument<name, 1>;
 class VariadicExprArgument<string name> : Argument<name, 1>;
+class VariadicStringArgument<string name> : Argument<name, 1>;
 
 // A version of the form major.minor[.subminor].
 class VersionArgument<string name, bit opt = 0> : Argument<name, opt>;
@@ -335,6 +336,14 @@ class IgnoredAttr : Attr {
 //
 // Attributes begin here
 //
+
+def AbiTag : Attr {
+  let Spellings = [GCC<"abi_tag">];
+  let Args = [VariadicStringArgument<"Tags">];
+  let Subjects = SubjectList<[Struct, Var, Function, Namespace], ErrorDiag,
+                             "ExpectedStructClassVariableFunctionMethodOrInlineNamespace">;
+  let Documentation = [Undocumented];
+}
 
 def AddressSpace : TypeAttr {
   let Spellings = [GNU<"address_space">];
