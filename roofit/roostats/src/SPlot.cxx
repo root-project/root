@@ -358,7 +358,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
     }
   
   // Fit yields to the data with all other variables held constant
-  // This is necessary because SPlot assumes the yields minimixe -Log(likelihood)
+  // This is necessary because SPlot assumes the yields minimise -Log(likelihood)
 
   pdf->fitTo(*fSData, RooFit::Extended(kTRUE), RooFit::SumW2Error(kTRUE), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1) );
 
