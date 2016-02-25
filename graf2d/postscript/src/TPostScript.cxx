@@ -2425,6 +2425,8 @@ void TPostScript::SetLineColor( Color_t cindex )
 void TPostScript::SetLineJoin( Int_t linejoin )
 {
    fgLineJoin = linejoin;
+   if (fgLineJoin<0) fgLineJoin=0;
+   if (fgLineJoin>2) fgLineJoin=2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
