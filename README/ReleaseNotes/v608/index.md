@@ -60,13 +60,19 @@ by including a ROOT header. For example:
 
 Other improvements, which may cause compilation errors in third party code:
   * If you get std::type_info from Rtypeinfo.h, type_info should be spelled
-    std::type_info.
+    `std::type_info`.
 
 Also:
-  * TPluginManager was made thread-safe [ROOT-7927].
+  * `TPluginManager` was made thread-safe [ROOT-7927].
 
 ### Containers
+
 * A pseudo-container (generator) was created, ROOT::TSeq<T>. This template is inspired by the xrange built-in function of Python. See the example [here](https://root.cern.ch/doc/master/cnt001__basictseq_8C.html).
+
+### Meta Library
+
+Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and any derived class should not be split.  This included a rework the mechanism checking the base classes.  Instead of using `InheritsFrom`, which lead in some cases, including the case where the class derived from an STL collection, to spurrious autoparsing (to look at the base class of the collection!), we use a custom walk through the tree of base classes that checks their value of `fCanSplit`.  This also has the side-effect of allowing the extension of the concept 'base class that prevent its derived class from being split' to any user class.  This fixes [ROOT-7972].
+
 
 ### Dictionaries
 
@@ -79,6 +85,7 @@ Also:
 * A ValuePrinter for tuple and pair has been added to visualise the content of these entities at the prompt.
 
 ## Parallelisation
+
 * Three methods have been added to manage implicit multi-threading in ROOT: `ROOT::EnableImplicitMT(numthreads)`, `ROOT::DisableImplicitMT` and `ROOT::IsImplicitMTEnabled`. They can be used to enable, disable and check the status of the global implicit multi-threading in ROOT, respectively.
 * Even if the default reduce function specified in the invocation of the `MapReduce` method of `TProcPool` returns a pointer to a `TObject`, the return value of `MapReduce` is properly casted to the type returned by the map function.
 * Add a new class named `TThreadedObject` which helps making objects thread private and merging them.
