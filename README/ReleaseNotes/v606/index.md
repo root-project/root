@@ -547,6 +547,7 @@ Changes will be part of the future 6.06/02
 
 - Make TListOfFunctions::Get thread-safe
 - Make TPluginManager thread-safe [ROOT-7927]
+- Properly handle the case of an executable with a space in its full pathname when search for linked in library.  This fixes [ROOT-8019].
 
 ### Dictionaries
 
