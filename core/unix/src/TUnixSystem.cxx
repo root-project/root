@@ -2787,7 +2787,7 @@ const char *TUnixSystem::GetLinkedLibraries()
    TRegexp sovers = "\\.so\\.[0-9]+";
 #endif
 #endif
-   FILE *p = OpenPipe(TString::Format("%s %s", cLDD, exe), "r");
+   FILE *p = OpenPipe(TString::Format("%s '%s'", cLDD, exe), "r");
    if (p) {
       TString ldd;
       while (ldd.Gets(p)) {
