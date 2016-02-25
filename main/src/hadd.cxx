@@ -70,6 +70,7 @@
 #include "TSystem.h"
 #include "ROOT/StringConv.h"
 #include <stdlib.h>
+#include <climits>
 
 #include "TFileMerger.h"
 
