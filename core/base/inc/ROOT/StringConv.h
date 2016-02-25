@@ -23,7 +23,10 @@ namespace ROOT {
    // Adapted from http://stackoverflow.com/questions/3758606/
    // how-to-convert-byte-size-into-human-readable-format-in-java
    // and http://agentzlerich.blogspot.com/2011/01/converting-to-and-from-human-readable.html
-
+   // However those sources use the 'conventional' 'legacy' nomenclature,
+   // rather than the official Standrard Units.  See
+   // http://physics.nist.gov/cuu/Units/binary.html
+   // and http://www.dr-lex.be/info-stuff/bytecalc.html for example.
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Return the size expressed in 'human readeable' format.
@@ -54,7 +57,7 @@ void ToHumanReadableSize(value_type bytes,
                      (int) (sizeof(suffix) / sizeof(suffix[0]) - 1));
    }
    *coeff = bytes / std::pow(unit, exp);
-   *units  = suffix[exp][!!si];
+   *units  = suffix[exp][!si];
 }
 
 enum class EFromHumanReadableSize {
@@ -65,8 +68,10 @@ enum class EFromHumanReadableSize {
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Convert strings like the following into byte counts
-///    5MB, 5 MB, 5M, 3.7GB, 123b, 456kB
+///    5MB, 5 MB, 5M, 3.7GB, 123b, 456kB, 3.7GiB, 5MiB
 /// with some amount of forgiveness baked into the parsing.
+/// For this routine we use the official SI unit where the [i] is reserved
+/// for the 'legacy' power of two units.  1KB = 1000 bytes, 1KiB = 1024 bytes.
 /// \param str the string to be parsed
 /// \param value will be updated with the result if and only if the parse is sucessfull and does not overflow for the type of value.
 /// \return return a EFromHumanReadableSize enum value indicating the success or failure of the parse.
@@ -85,7 +90,7 @@ EFromHumanReadableSize FromHumanReadableSize(std::string_view str, T &value)
 
       // Read off first character which should be an SI prefix
       int exp  = 0;
-      int unit = 1024;
+      int unit = 1000;
 
       auto result = [coeff,&exp,&unit,&value]() {
          double v = exp ? coeff * std::pow(unit, exp / 3) : coeff;
@@ -112,10 +117,10 @@ EFromHumanReadableSize FromHumanReadableSize(std::string_view str, T &value)
       }
       ++cur;
 
-      // If an 'i' or 'I' is present use SI factor-of-1000 units
+      // If an 'i' or 'I' is present use non-SI factor-of-1024 units
       if (cur<size && toupper(str[cur]) == 'I') {
          ++cur;
-         unit = 1000;
+         unit = 1024;
       }
 
       if (cur==size) return result();
