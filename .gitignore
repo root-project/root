@@ -790,7 +790,6 @@ root/tree/addresses/converterIssues/test_file.root
 
 # /root/tree/split/
 /root/tree/split/abstract.root
-/root/tree/split/customClassTree.root
 
 # /root/tree/stl/
 root/tree/stl/vecptr.root
