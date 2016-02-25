@@ -5114,12 +5114,7 @@ void TBranchElement::SetReadLeavesPtr()
       } else if (fStreamerType == TVirtualStreamerInfo::kCounter) {
          fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesMemberCounter;
       } else {
-         Bool_t hasCustomStreamer = !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != 0 || fBranchClass.GetClass()->TestBit(TClass::kHasCustomStreamerMember));
-         if (hasCustomStreamer) {
-            fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesCustomStreamer;
-         } else {
-            fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesMember;
-         }
+         fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesMember;
       }
    } else {
       Fatal("SetReadLeavePtr","Unexpected branch type %d for %s",fType,GetName());
