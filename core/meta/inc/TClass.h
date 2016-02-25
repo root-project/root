@@ -247,6 +247,7 @@ private:
    mutable std::atomic<StreamerImpl_t> fStreamerImpl;  //! Pointer to the function implementing the right streaming behavior for the class represented by this object.
 #endif
 
+   Bool_t             CanSplitBaseAllow();
    TListOfFunctions  *GetMethodList();
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *FindClassOrBaseMethodWithId(DeclId_t faddr);
