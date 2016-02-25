@@ -96,7 +96,11 @@ class TestClassROOT_PYTHONIZATIONS:
         import ROOT
 
         ROOT.gEnv.SetValue("RooFit.Banner", "0")
-        ws = ROOT.RooWorkspace('w')
+        try:
+            ws = ROOT.RooWorkspace('w')
+        except AttributeError, e:
+            if 'RooWorkspace' in str(e):
+                return            # no roofit enabled, just declare success
         ws.factory("x[0, 10]")
         ws.writeToFile("foo.root")
         del ws
