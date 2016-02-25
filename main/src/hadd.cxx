@@ -26,7 +26,7 @@
    where h1 will be the sum of the 2 histograms in f1 and f2
          T1 will be the merge of the Trees in f1 and f2
 
-   The files may contain sub-directories.
+  The files may contain sub-directories.
 
   if the source files contains histograms and Trees, one can skip
   the Trees with
@@ -47,6 +47,17 @@
   the merge will be done without  unzipping or unstreaming the baskets
   (i.e. direct copy of the raw byte on disk). The "fast" mode is typically
   5 times faster than the mode unzipping and unstreaming the baskets.
+
+  If the option -cachedsize is used, hadd will resize (or disable if 0) the
+  prefetching cache use to speed up I/O operations.
+
+  For options that takes a size as argument, a decimal number of bytes is expected.
+  If the number ends with a ``k'', ``m'', ``g'', etc., the number is multiplied
+  by 1000 (1K), 1000000 (1MB), 1000000000 (1G), etc.
+  If this prefix is followed by i, the number is multipled by the traditional
+  1024 (1KiB), 1048576 (1MiB), 1073741824 (1GiB), etc.
+  The prefix can be optionally followed by B whose casing is ignored,
+  eg. 1k, 1K, 1Kb and 1KB are the same.
 
   NOTE1: By default histograms are added. However hadd does not support the case where
          histograms have their bit TH1::kIsAverage set.
@@ -90,7 +101,7 @@ int main( int argc, char **argv )
       std::cout << "If the option -v is used, explicitly set the verbosity level; 0 request no output, 99 is the default" <<std::endl;
       std::cout << "If the option -n is used, hadd will open at most 'maxopenedfiles' at once, use 0 to request to use the system maximum." << std::endl;
       std::cout << "If the option -cachedsize is used, hadd will resize (or disable if 0) the\n"
-                   "   prefetching cache to speed up operations." << std::endl;
+                   "   prefetching cache use to speed up I/O operations." << std::endl;
       std::cout << "When -the -f option is specified, one can also specify the compression" <<std::endl;
       std::cout << "level of the target file. By default the compression level is 1, but" <<std::endl;
       std::cout << "if \"-f0\" is specified, the target file will not be compressed." <<std::endl;
@@ -99,11 +110,12 @@ int main( int argc, char **argv )
       std::cout << "  a slower method is used"<<std::endl;
       std::cout << "For options that takes a size as argument, a decimal number of bytes is expected.\n"
                    "If the number ends with a ``k'', ``m'', ``g'', etc., the number is multiplied\n"
-                   "   by 1024 (1K), 1048576 (1M), 1073741824 (1G), etc. \n"
-                   "If this prefix is following by i, the number is multipled by 1000 (1KiB),\n"
-                   "   1000000 (1MiB), 1000000000 (1KiB), etc. \n"
+                   "   by 1000 (1K), 1000000 (1MB), 1000000000 (1G), etc. \n"
+                   "If this prefix is followed by i, the number is multipled by the traditional\n"
+                   "   1024 (1KiB), 1048576 (1MiB), 1073741824 (1GiB), etc. \n"
                    "The prefix can be optionally followed by B whose casing is ignored,\n"
                    "   eg. 1k, 1K, 1Kb and 1KB are the same."<<std::endl;
+
       return 1;
    }
 
