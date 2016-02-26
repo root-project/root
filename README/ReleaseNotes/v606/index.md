@@ -557,6 +557,16 @@ Changes will be part of the future 6.06/02
 
 - Ignore access check when evaluating [ROOT-7426]
 
+### Meta Library
+
+Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and any derived class should not be split.  This included a rework the mechanism checking the base classes.  Instead of using `InheritsFrom`, which lead in some cases, including the case where the class derived from an STL collection, to spurrious autoparsing (to look at the base class of the collection!), we use a custom walk through the tree of base classes that checks their value of `fCanSplit`.  This also has the side-effect of allowing the extension of the concept 'base class that prevent its derived class from being split' to any user class.  This fixes [ROOT-7972].
+
+### TTree
+
+##### Fast Cloning
+
+We added a cache specifically for the fast option of the TTreeCloner to significantly reduce the run-time when fast-cloning remote files to address [ROOT-5078].  It can be controlled from the `TTreeCloner`, `TTree::CopyEntries` or `hadd` interfaces.  The new cache is enabled by default, to update the size of the cache or disable it from `TTreeCloner` use: `TTreeCloner::SetCacheSize`.  To do the same from `TTree::CopyEntries` add to the option string "cachesize=SIZE".  To update the size of the cache or disable it from `hadd`, use the command line option `-cachesize SIZE`.  `SIZE` shouyld be given in number bytes and can be expressed in 'human readable form' (number followed by size unit like MB, MiB, GB or GiB, etc. or SIZE  can be set zero to disable the cache.
+
 ### Histogram Libraries
 
 - Protect access to TROOT::GetListOfGlobalFunctions in TFormula
