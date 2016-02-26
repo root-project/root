@@ -69,15 +69,16 @@ int assertFromHumanReadable()
    printf("Checking FromHumanReadableSize\n");
    int num_failed = 0;
    num_failed += checkFail("wrong");
-   num_failed += checkFail("8ZB");
-   num_failed += checkFail("9.3ZiB");
+   num_failed += checkFail("8ZiB");
+   num_failed += checkFail("9.3ZB");
    num_failed += checkParsing("1",1);
-   num_failed += checkParsing("1K",1024);
-   num_failed += checkParsing("1Ki",1000);
-   num_failed += checkParsing("1Kib",1000);
-   num_failed += checkParsing("1KiB",1000);
-   num_failed += checkParsing("1k",1024);
-   num_failed += checkParsing("1.2 k",1.2*1024);
+   num_failed += checkParsing("1K",1000);
+   num_failed += checkParsing("1Ki",1024);
+   num_failed += checkParsing("1Kib",1024);
+   num_failed += checkParsing("1KiB",1024);
+   num_failed += checkParsing("1k",1000);
+   num_failed += checkParsing("1.2 k",1.2*1000);
+   num_failed += checkParsing("1.2 ki",1.2*1024);
 
 
    static const char *const suffix[][2] =
@@ -95,8 +96,8 @@ int assertFromHumanReadable()
 
    exps.push_back(p);
    for(unsigned int i = 1; i < size; ++i) {
-      p.first *= 1024;
-      p.second*= 1000;
+      p.first *= 1000;
+      p.second*= 1024;
       exps.push_back(p);
    }
 
@@ -169,8 +170,11 @@ int assertToHumanReadable()
 
    num_failed += checkToHumanReadable(0LL,false,0,"B");
    num_failed += checkToHumanReadable(16LL,false,16,"B");
-   num_failed += checkToHumanReadable(1024LL,false,1,"KB");
-   num_failed += checkToHumanReadable(1024LL,true,1.024,"KiB");
+   num_failed += checkToHumanReadable(1024LL,false,1,"KiB");
+   num_failed += checkToHumanReadable(0LL,true,0,"B");
+   num_failed += checkToHumanReadable(16LL,true,16,"B");
+   num_failed += checkToHumanReadable(1000LL,true,1,"KB");
+   num_failed += checkToHumanReadable(1024LL,true,1.024,"KB");
 
    Long64_t value = 1024;
    double expectedCoeff = 1;
@@ -190,8 +194,8 @@ int assertToHumanReadable()
    for(unsigned int i = 1; i < size-2; ++i) {
 
       // printf("Checking %lld vs %g%s an %g%s\n",value,expectedSiCoeff,suffix[i][1],expectedCoeff,suffix[i][0]);
-      num_failed += checkToHumanReadable(value,false,expectedCoeff,suffix[i][0]);
-      num_failed += checkToHumanReadable(value,true,expectedSiCoeff,suffix[i][1]);
+      num_failed += checkToHumanReadable(value,false,expectedCoeff,suffix[i][1]);
+      num_failed += checkToHumanReadable(value,true,expectedSiCoeff,suffix[i][0]);
 
       value = 2 * 1024 * value;
       expectedSiCoeff = 2 * expectedSiCoeff * 1.024;
@@ -200,8 +204,8 @@ int assertToHumanReadable()
    value = 2* std::pow(1024, 6);
    expectedSiCoeff = 2.30584300921;
    expectedCoeff = 2;
-   num_failed += checkToHumanReadable(value,false,expectedCoeff,suffix[size-2][0]);
-   num_failed += checkToHumanReadable(value,true,expectedSiCoeff,suffix[size-2][1]);
+   num_failed += checkToHumanReadable(value,false,expectedCoeff,suffix[size-2][1]);
+   num_failed += checkToHumanReadable(value,true,expectedSiCoeff,suffix[size-2][0]);
 
 
    double dvalue = 16;
@@ -210,8 +214,8 @@ int assertToHumanReadable()
    for(unsigned int i = 0; i < size; ++i) {
 
       // printf("Checking %g vs %g%s and %g%s\n",dvalue,expectedSiCoeff,suffix[i][1],expectedCoeff,suffix[i][0]);
-      num_failed += checkToHumanReadable(dvalue,false,expectedCoeff,suffix[i][0]);
-      num_failed += checkToHumanReadable(dvalue,true,expectedSiCoeff,suffix[i][1]);
+      num_failed += checkToHumanReadable(dvalue,false,expectedCoeff,suffix[i][1]);
+      num_failed += checkToHumanReadable(dvalue,true,expectedSiCoeff,suffix[i][0]);
 
       dvalue = 1.5 * 1024 * dvalue;
       expectedSiCoeff = 1.5 * expectedSiCoeff * 1.024;
