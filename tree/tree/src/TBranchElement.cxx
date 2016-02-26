@@ -1296,7 +1296,7 @@ void TBranchElement::FillLeavesMakeClass(TBuffer& b)
    }
 
    // -- TClonesArray top-level branch.  Write out number of entries, sub-branch writes the entries themselves.
-   if(fType ==3) {
+   if(fType == 3) {
       // fClonesClass can not be zero since we are of type 3, see TBranchElement::Init
       TVirtualStreamerInfo* si = fClonesClass->GetStreamerInfo();
       if (!si) {
