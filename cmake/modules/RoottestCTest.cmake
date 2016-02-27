@@ -36,11 +36,10 @@ add_definitions(
   -DClingWorkAroundMissingAutoLoadingForTemplates
   -DClingWorkAroundAutoParseUsingNamespace
   -DClingWorkAroundTClassUpdateDouble32
-  -DClingWorkAroundAutoParseTooPrecise
   -DClingWorkAroundAutoParseDeclaration  
   -DClingWorkAroundMissingUnloading
-  -DClingWorkAroundJITandInline
   -DClingWorkAroundBrokenUnnamedReturn
+  -DClingWorkAroundUnnamedDetection2
 )
 
 # Variables to be used in CMakeLists.txt files.
@@ -53,11 +52,10 @@ set(ClingWorkAroundNoDotInclude                     TRUE)
 set(ClingWorkAroundMissingAutoLoadingForTemplates   TRUE)
 set(ClingWorkAroundAutoParseUsingNamespace          TRUE)
 set(ClingWorkAroundTClassUpdateDouble32             TRUE)
-set(ClingWorkAroundAutoParseTooPrecise              TRUE)
 set(ClingWorkAroundAutoParseDeclaration             TRUE)
 set(ClingWorkAroundMissingUnloading                 TRUE)
-set(ClingWorkAroundJITandInline                     TRUE)
 set(ClingWorkAroundBrokenUnnamedReturn              TRUE)
+set(ClingWorkAroundUnnamedDetection2                TRUE)
 
 set(PYROOT_EXTRAFLAGS --fixcling)
 

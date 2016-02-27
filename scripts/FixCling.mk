@@ -21,7 +21,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForNamespaces"
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForTemplates"
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
-CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
+#CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndVirtual"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
@@ -29,9 +29,9 @@ CALLROOTEXE += -e "\#define ClingWorkAroundFunctionForwardDeclarations"
 
 # AutoParsing issues
 CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseUsingNamespace"
-CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseRecurse" #see https://sft.its.cern.ch/jira/browse/ROOT-6319
+#CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseRecurse" #see https://sft.its.cern.ch/jira/browse/ROOT-6319
 #CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseDeclaration"
-CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseTooPrecise"
+#CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseTooPrecise"
 
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
 # Features needed for the tutorials
@@ -44,17 +44,18 @@ CALLROOTEXE += -e "\#define ClingWorkAroundNoPrivateClassIO"
 #CALLROOTEXE += -e "\#define ClingWorkAroundBrokenRecovery"
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingSmartInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenUnnamedReturn"
-CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedDetection"
+#CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedDetection"
+CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedDetection2"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundJITfullSymbolResolution"
 CALLROOTEXE += -e "\#define ClingWorkAroundDeletedSourceFile"
-CALLROOTEXE += -e "\#define ClingWorkAroundValuePrinterNotFullyQualified"
+#CALLROOTEXE += -e "\#define ClingWorkAroundValuePrinterNotFullyQualified"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotNamespace"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectFileLoc"
 #CALLROOTEXE += -e "\#define ClingWorkAroundTypeinfoToTypename"
 CALLROOTEXE += -e "\#define ClingWorkAroundTClassUpdateDouble32"
-CALLROOTEXE += -e "\#define ClingWorkAroundStripDefaultArg"
+#CALLROOTEXE += -e "\#define ClingWorkAroundStripDefaultArg"
 
 # Most likely no longer supported.
 # CALLROOTEXE += -e "\#define ClingReinstateRedeclarationAllowed"
@@ -69,11 +70,11 @@ CALLROOTEXE += -e "\#define ClingWorkAroundUnloadingVTABLES"
 # Fixes used when building library via ACLiC
 #CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndInline"
 #CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndVirtual"
-CALLROOTEXEBUILD += -e "\#define ClingWorkAroundJITandInline"
+#CALLROOTEXEBUILD += -e "\#define ClingWorkAroundJITandInline"
 #CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundNoPrivateClassIO"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundTClassUpdateDouble32"
-CALLROOTEXEBUILD += -e "\#define ClingWorkAroundStripDefaultArg"
+#CALLROOTEXEBUILD += -e "\#define ClingWorkAroundStripDefaultArg"
 
 # variable to be used in Makefiles.
 ClingWorkAroundLackOfModule = yes
@@ -90,7 +91,7 @@ ClingWorkAroundUnloadingVTABLES = yes           # See https://sft.its.cern.ch/ji
 #ClingWorkAroundMissingAutoLoading = yes        # See *also* the problem namespace and templates:
                                                #     https://sft.its.cern.ch/jira/browse/ROOT-4786
                                                #     https://sft.its.cern.ch/jira/browse/ROOT-4779
-ClingWorkAroundJITfullSymbolResolution = yes   # See https://sft.its.cern.ch/jira/browse/ROOT-4691
+ClingWorkAroundJITfullSymbolResolution = yes   # See https://sft.its.cern.ch/jira/browse/ROOT-4691 (Marked as fixed but require code change :( )
 #ClingWorkAroundMissingSmartInclude = yes
 ClingWorkAroundBrokenUnnamedReturn = yes       # See https://sft.its.cern.ch/jira/browse/ROOT-4719
 ClingWorkAroundUnnamedIncorrectFileLoc = yes   # see https://sft.its.cern.ch/jira/browse/ROOT-4760
@@ -101,13 +102,14 @@ ClingWorkAroundDeletedSourceFile = yes         # See https://sft.its.cern.ch/jir
 ClingWorkAroundUnnamedInclude = yes            # See https://sft.its.cern.ch/jira/browse/ROOT-4763
 #ClingWorkAroundBrokenRecovery = yes
 ClingWorkAroundNoDotNamespace = yes            # See https://sft.its.cern.ch/jira/browse/ROOT-4773
-ClingWorkAroundJITandInline = yes              # JIT does not instantiate inline even-though they are used (but not actually inlined)
-ClingWorkAroundValuePrinterNotFullyQualified = yes # See https://sft.its.cern.ch/jira/browse/ROOT-4774
+#ClingWorkAroundJITandInline = yes              # JIT does not instantiate inline even-though they are used (but not actually inlined)
+#ClingWorkAroundValuePrinterNotFullyQualified = yes # See https://sft.its.cern.ch/jira/browse/ROOT-4774
 ClingWorkAroundNoDotInclude = yes              # See trello card about .include
 ClingWorkAroundMultipleInclude = yes           # File are included each time a module that contains them is 
                                                # loaded.  Should go away with the modules
 ClingWorkAroundFunctionForwardDeclarations = yes # See https://sft.its.cern.ch/jira/browse/ROOT-6463
-ClingWorkAroundUnnamedDetection = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-4791
+#ClingWorkAroundUnnamedDetection = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-4791
+#ClingWorkAroundUnnamedDetection2 = yes         # See https://sft.its.cern.ch/jira/browse/ROOT-8025
 #ClingWorkAroundIncorrectTearDownOrder = yes    # See https://sft.its.cern.ch/jira/browse/ROOT-4768
 ClingWorkAroundNoPrivateClassIO = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-4865
 #ClingWorkAroundCallfuncAndVirtual = yes        # See https://sft.its.cern.ch/jira/browse/ROOT-4869
@@ -117,13 +119,13 @@ ClingWorkAroundNoPrivateClassIO = yes          # See https://sft.its.cern.ch/jir
 # ClingReinstateTemplateRootIOCtor = yes       # Allow templated constructor to be used as I/O constructor
 #ClingWorkAroundTypeinfoToTypename = yes        # See https://sft.its.cern.ch/jira/browse/ROOT-186
 ClingWorkAroundTClassUpdateDouble32 = yes      # See https://sft.its.cern.ch/jira/browse/ROOT-5857
-ClingWorkAroundStripDefaultArg = yes           # See https://sft.its.cern.ch/jira/browse/ROOT-5862
+#ClingWorkAroundStripDefaultArg = yes           # See https://sft.its.cern.ch/jira/browse/ROOT-5862
 ClingWorkAroundProxyConfusion = yes            # See https://sft.its.cern.ch/jira/browse/ROOT-6000
 
 ClingWorkAroundAutoParseUsingNamespace = yes   # See https://sft.its.cern.ch/jira/browse/ROOT-6317
-ClingWorkAroundAutoParseRecurse = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-6319
+#ClingWorkAroundAutoParseRecurse = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-6319
 #ClingWorkAroundAutoParseDeclaration = yes      # See https://sft.its.cern.ch/jira/browse/ROOT-6320
-ClingWorkAroundAutoParseTooPrecise = yes       # See https://sft.its.cern.ch/jira/browse/ROOT-6321
+#ClingWorkAroundAutoParseTooPrecise = yes       # See https://sft.its.cern.ch/jira/browse/ROOT-6321
 
 ifneq ($(ClingReinstateRedeclarationAllowed)-$(ClingWorkAroundMissingImplicitAuto),yes-)
 ClingWorkAroundSavePrimitive = yes             # stressGraphics use of SavePrimitive currently requires at least implicit auto and allowing redeclaration

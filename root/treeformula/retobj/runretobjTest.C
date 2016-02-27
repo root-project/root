@@ -1,4 +1,4 @@
-#ifdef ClingWorkAroundUnnamedDetection
+#ifdef ClingWorkAroundUnnamedDetection2
 void runretobjTest()
 #endif
 {
