@@ -16,9 +16,6 @@ Error in <TInterpreter::AutoParse>: Error parsing payload code for class AexprMs
 #ifndef ClingWorkAroundMissingDynamicScope
   #define ClingWorkAroundMissingDynamicScope 1
 #endif
-#ifndef ClingWorkAroundUnloadingIOSTREAM
-  #define ClingWorkAroundUnloadingIOSTREAM 1
-#endif
 #ifndef ClingWorkAroundUnnamedInclude
   #define ClingWorkAroundUnnamedInclude 1
 #endif
@@ -37,20 +34,17 @@ Error in <TInterpreter::AutoParse>: Error parsing payload code for class AexprMs
 #ifndef ClingWorkAroundTClassUpdateDouble32
   #define ClingWorkAroundTClassUpdateDouble32 1
 #endif
-#ifndef ClingWorkAroundAutoParseTooPrecise
-  #define ClingWorkAroundAutoParseTooPrecise 1
-#endif
 #ifndef ClingWorkAroundAutoParseDeclaration
   #define ClingWorkAroundAutoParseDeclaration 1
 #endif
 #ifndef ClingWorkAroundMissingUnloading
   #define ClingWorkAroundMissingUnloading 1
 #endif
-#ifndef ClingWorkAroundJITandInline
-  #define ClingWorkAroundJITandInline 1
-#endif
 #ifndef ClingWorkAroundBrokenUnnamedReturn
   #define ClingWorkAroundBrokenUnnamedReturn 1
+#endif
+#ifndef ClingWorkAroundUnnamedDetection2
+  #define ClingWorkAroundUnnamedDetection2 1
 #endif
 
 #define _BACKWARD_BACKWARD_WARNING_H
