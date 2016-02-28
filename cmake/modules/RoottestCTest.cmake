@@ -29,7 +29,6 @@ set(CINT_VERSION cling)
 
 add_definitions(
   -DClingWorkAroundMissingDynamicScope 
-  -DClingWorkAroundUnloadingIOSTREAM
   -DClingWorkAroundUnnamedInclude
   -DClingWorkAroundMissingSmartInclude
   -DClingWorkAroundNoDotInclude
@@ -45,7 +44,6 @@ add_definitions(
 # Variables to be used in CMakeLists.txt files.
 
 set(ClingWorkAroundMissingDynamicScope              TRUE)
-set(ClingWorkAroundUnloadingIOSTREAM                TRUE)
 set(ClingWorkAroundUnnamedInclude                   TRUE)
 set(ClingWorkAroundMissingSmartInclude              TRUE)
 set(ClingWorkAroundNoDotInclude                     TRUE)
