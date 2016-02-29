@@ -98,7 +98,7 @@ class TestClassROOT_PYTHONIZATIONS:
         ROOT.gEnv.SetValue("RooFit.Banner", "0")
         try:
             ws = ROOT.RooWorkspace('w')
-        except (AttributeError, TypeError) as e:
+        except AttributeError as e:
             if 'RooWorkspace' in str(e):
                 return            # no roofit enabled, just declare success
             raise
