@@ -954,9 +954,9 @@ namespace {
 
       if ( pyvalue_type && pyvalue_size ) {
          PyObject* pydata = CallPyObjMethod( v, "data" );
-         if ( Utility::GetBuffer( pydata, '*', 1, vi->vi_data, kFALSE ) == 0 )
+         if ( !pydata || Utility::GetBuffer( pydata, '*', 1, vi->vi_data, kFALSE ) == 0 )
             vi->vi_data = nullptr;
-         Py_DECREF( pydata );
+         Py_XDECREF( pydata );
 
          vi->vi_converter = PyROOT::CreateConverter( PyROOT_PyUnicode_AsString( pyvalue_type ) );
          vi->vi_stride    = PyLong_AsLong( pyvalue_size );
