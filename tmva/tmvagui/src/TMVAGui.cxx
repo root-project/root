@@ -217,7 +217,7 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
    title =Form( "(%i) PDFs of Classifiers (requires \"CreateMVAPdfs\" option set)", ++ic );
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::probas(\"%s\")", fName ),
+                 Form( "TMVA::probas(\"%s\",\"%s\")",dataset.Data(), fName ),
                  "Plots the PDFs of the classifier output distributions for signal and background - if requested (macro probas.cxx)",
                  buttonType, defaultRequiredClassifier );
 

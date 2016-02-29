@@ -39,6 +39,6 @@ namespace TMVA{
 
    // input: - Input file (result from TMVA);
    //        - use of TMVA plotting TStyle
-   void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE );
+   void probas(TString dataset, TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE );
 }
 #endif
