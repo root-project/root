@@ -156,28 +156,28 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
    title =Form( "(%ia) Classifier Output Distributions (test sample)", ++ic );
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::mvas(\"%s\",  TMVA::kMVAType)", fName ),
+                 Form( "TMVA::mvas(\"%s\",\"%s\",  TMVA::kMVAType)",dataset.Data(), fName ),
                  "Plots the output of each classifier for the test data (macro mvas(...,0))",
                  buttonType, defaultRequiredClassifier );
 
    title =Form( "(%ib) Classifier Output Distributions (test and training samples superimposed)", ic );
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::mvas(\"%s\",  TMVA::kCompareType )", fName),
+                 Form( "TMVA::mvas(\"%s\",\"%s\",  TMVA::kCompareType )",dataset.Data(), fName),
                  "Plots the output of each classifier for the test (histograms) and training (dots) data (macro mvas(...,3))",
                  buttonType, defaultRequiredClassifier );
 
    title = Form( "(%ic) Classifier Probability Distributions (test sample)", ic );
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::mvas(\"%s\", TMVA::kProbaType)", fName ),
+                 Form( "TMVA::mvas(\"%s\",\"%s\", TMVA::kProbaType)",dataset.Data(), fName ),
                  "Plots the probability of each classifier for the test data (macro mvas(...,1))",
                  buttonType, defaultRequiredClassifier );
 
    title =Form( "(%id) Classifier Rarity Distributions (test sample)", ic );
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::mvas(\"%s\", TMVA::kRarityType)", fName ),
+                 Form( "TMVA::mvas(\"%s\",\"%s\", TMVA::kRarityType)",dataset.Data(), fName ),
                  "Plots the Rarity of each classifier for the test data (macro mvas(...,2)) - background distribution should be uniform",
                  buttonType, defaultRequiredClassifier );
 
