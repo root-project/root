@@ -634,7 +634,7 @@ void TTreeViewer::BuildInterface()
    fFileMenu->AddEntry("Open &tree file...", kFileBrowse);
    fFileMenu->AddEntry("&Load Library...", kFileLoadLibrary);
    fFileMenu->AddEntry("&Open session",   kFileOpenSession);
-   fFileMenu->AddEntry("&Save source",    kFileSaveMacro);
+   fFileMenu->AddEntry("&Save source...",    kFileSaveMacro);
    fFileMenu->AddSeparator();
    fFileMenu->AddEntry("&Print",           kFilePrint);
    fFileMenu->AddEntry("&Close",           kFileClose);
@@ -2024,7 +2024,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      }
                      break;
                   case kFileSaveMacro:
-                     SaveSource();
+                     fContextMenu->Action(this,(TMethod*)IsA()->GetListOfMethods()->FindObject("SaveSource"));
                      break;
                   case kFilePrint:
                      break;
