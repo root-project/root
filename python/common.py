@@ -49,7 +49,10 @@ def run_pytest(test_file=None):
     import pytest
     import pytest_cov
     # file to run, if any (search used otherwise)
-    args = ['--color=no', '--result-log=stdout', '--minimal=yes']
+    if '-i' in sys.argv:
+        args = filter(lambda x: not x in (test_file, '-i'), sys.argv)
+    else:
+        args = ['--color=no', '--result-log=stdout', '--minimal=yes']
     if test_file: args += [test_file]
     # actual test run
     return pytest.main(args, plugins=[pytest_cov])
