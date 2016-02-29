@@ -98,14 +98,10 @@ class TestClassROOT_PYTHONIZATIONS:
         ROOT.gEnv.SetValue("RooFit.Banner", "0")
         try:
             ws = ROOT.RooWorkspace('w')
-        except AttributeError as e:
+        except (AttributeError, TypeError) as e:
             if 'RooWorkspace' in str(e):
                 return            # no roofit enabled, just declare success
             raise
-        except TypeError as e:
-           if 'RooWorkspace' in str(e):
-              return            # no roofit enabled, just declare success
-           raise
         ws.factory("x[0, 10]")
         ws.writeToFile("foo.root")
         del ws
