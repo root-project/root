@@ -26,7 +26,7 @@ ROOTTEST_ADD_TEST(runusingtemplate
 ROOTTEST_ADD_TEST(runtemplatefriend
                   MACRO runtemplatefriend.C
                   OUTREF templatefriend.ref
-                  DEPENDS templatefriend.cxx
+                  DEPENDS templatefriend.cxx typenameTestDict-build
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(interpreted
