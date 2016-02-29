@@ -1,385 +1,450 @@
 1# File: roottest/python/stl/PyROOT_stltests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/25/05
-# Last: 05/01/15
+# Last: 02/28/16
 
 """STL unit tests for PyROOT package."""
 
 import sys, os, unittest
 sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 
-from ROOT import *
 from common import *
+from pytest import raises
 
-__all__ = [
-   'STL1VectorTestCase',
-   'STL2ListTestCase',
-   'STL3MapTestCase',
-   'STL4STLLikeClassTestCase',
-   'STL5StringHandlingTestCase',
-   'STL6IteratorTestCase',
-   'STL7StreamTestCase',
-]
-
-gROOT.LoadMacro( "StlTypes.C+" )
+def setup_module(mod):
+    import sys, os
+    sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+    err = os.system("make StlTypes.C")
+    if err:
+        raise OSError("'make' failed (see stderr)")
 
 
 ### STL vector test case =====================================================
-class STL1VectorTestCase( MyTestCase ):
-   N = 13
+class TestClasSTLVECTOR:
+    def setup_class(cls):
+        import cppyy
+        cls.test_dct = "StlTypes_C"
+        cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
+        cls.N = 13
 
-   def test1BuiltinVectorType( self ):
-      """Test access to a vector<int> (part of cintdlls)"""
+    def test01_builtin_vector_type(self):
+        """Test access to a vector<int> (part of cintdlls)"""
 
-      a = std.vector( int )( self.N )
-      self.assertEqual( len(a), self.N )
+        from cppyy.gbl import std
 
-      for i in range(self.N):
-         a[i] = i
-         self.assertEqual( a[i], i )
-         self.assertEqual( a.at(i), i )
+        a = std.vector(int)(self.N)
+        assert len(a) == self.N
 
-      self.assertEqual( a.size(), self.N )
-      self.assertEqual( len(a), self.N )
+        for i in range(self.N):
+            a[i] = i
+            assert a[i] == i
+            assert a.at(i) == i
 
-   def test2BuiltinVectorType( self ):
-      """Test access to a vector<double> (part of cintdlls)"""
+        assert a.size() == self.N
+        assert len(a) == self.N
 
-      a = std.vector( 'double' )()
-      for i in range(self.N):
-         a.push_back( i )
-         self.assertEqual( a.size(), i+1 )
-         self.assertEqual( a[i], i )
-         self.assertEqual( a.at(i), i )
+    def test02_builtin_vector_type(self):
+        """Test access to a vector<double> (part of cintdlls)"""
 
-      self.assertEqual( a.size(), self.N )
-      self.assertEqual( len(a), self.N )
+        from cppyy.gbl import std
 
-   def test3GeneratedVectorType( self ):
-      """Test access to a ACLiC generated vector type"""
+        a = std.vector('double')()
+        for i in range(self.N):
+            a.push_back( i )
+            assert a.size() == i+1
+            assert a[i] == i
+            assert a.at(i) == i
 
-      a = std.vector( JustAClass )()
-      self.assert_( hasattr( a, 'size' ) )
-      self.assert_( hasattr( a, 'push_back' ) )
-      self.assert_( hasattr( a, '__getitem__' ) )
-      self.assert_( hasattr( a, 'begin' ) )
-      self.assert_( hasattr( a, 'end' ) )
+        assert a.size() == self.N
+        assert len(a) == self.N
 
-      self.assertEqual( a.size(), 0 )
+    def test03_generated_vector_type(self):
+        """Test access to a ACLiC generated vector type"""
 
-      for i in range(self.N):
-         a.push_back( JustAClass() )
-         a[i].m_i = i
-         self.assertEqual( a[i].m_i, i )
+        from cppyy.gbl import std, JustAClass
 
-      self.assertEqual( len(a), self.N )
+        a = std.vector( JustAClass )()
+        assert hasattr(a, 'size')
+        assert hasattr(a, 'push_back')
+        assert hasattr(a, '__getitem__')
+        assert hasattr(a, 'begin')
+        assert hasattr(a, 'end')
 
-   def test4EmptyVectorType( self ):
-      """Test behavior of empty vector<int> (part of cintdlls)"""
+        assert a.size() == 0
 
-      a = std.vector( int )()
-      for arg in a:
-         pass
+        for i in range(self.N):
+            a.push_back( JustAClass() )
+            a[i].m_i = i
+            assert a[i].m_i == i
 
-   def test5PushbackIterablesWithIAdd( self ):
-      """Test usage of += of iterable on push_back-able container"""
+        assert len(a) == self.N
 
-      a = std.vector( int )()
-      a += [ 1, 2, 3 ]
-      self.assertEqual( len(a), 3 )
+    def test04_empty_vector(self):
+        """Test behavior of empty vector<int> (part of cintdlls)"""
 
-      self.assertEqual( a[0], 1 )
-      self.assertEqual( a[1], 2 )
-      self.assertEqual( a[2], 3 )
+        from cppyy.gbl import std
 
-      a += ( 4, 5, 6 )
-      self.assertEqual( len(a), 6 )
+        a = std.vector(int)()
+        assert len(a) == 0
+        for arg in a:
+            pass
 
-      self.assertEqual( a[3], 4 )
-      self.assertEqual( a[4], 5 )
-      self.assertEqual( a[5], 6 )
+    def test05_pushback_iterables_with_iadd(self):
+        """Test usage of += of iterable on push_back-able container"""
 
-      self.assertRaises( TypeError, a.__iadd__, ( 7, '8' ) )
+        from cppyy.gbl import std
 
-   def test6VectorReturnDowncasting( self ):
-      """Pointer returns of vector indexing must be down cast"""
+        a = std.vector(int)()
+        a += [1, 2, 3]
+        assert len(a) == 3
 
-      v = PR_Test.mkVect()
-      self.assertEqual( type(v), std.vector( 'PR_Test::Base*' ) )
-      self.assertEqual( len(v), 1 )
-      self.assertEqual( type(v[0]), PR_Test.Derived )
-      self.assertEqual( PR_Test.checkType(v[0]), PR_Test.checkType(PR_Test.Derived()) )
+        assert a[0] == 1
+        assert a[1] == 2
+        assert a[2] == 3
 
-      p = PR_Test.check()
-      self.assertEqual( type(p), PR_Test.Derived )
-      self.assertEqual( PR_Test.checkType(p), PR_Test.checkType(PR_Test.Derived()) )
+        a += ( 4, 5, 6 )
+        assert len(a) == 6
+
+        assert a[3] == 4
+        assert a[4] == 5
+        assert a[5] == 6
+
+        raises(TypeError, a.__iadd__, (7, '8'))
+
+    def test06_vector_return_downcasting(self):
+        """Pointer returns of vector indexing must be down cast"""
+
+        from cppyy.gbl import std, PR_Test
+
+        v = PR_Test.mkVect()
+        assert type(v) == std.vector('PR_Test::Base*')
+        assert len(v) == 1
+        assert type(v[0]) == PR_Test.Derived
+        assert PR_Test.checkType(v[0]) == PR_Test.checkType(PR_Test.Derived())
+
+        p = PR_Test.check()
+        assert type(p) == PR_Test.Derived
+        assert PR_Test.checkType(p) == PR_Test.checkType(PR_Test.Derived())
 
 
 ### STL list test case =======================================================
-class STL2ListTestCase( MyTestCase ):
-   N = 13
+class TestClasSTLLIST:
+    def setup_class(cls):
+        import cppyy
+        cls.test_dct = "StlTypes_C"
+        cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
+        cls.N = 13
 
-   def test1BuiltinListType( self ):
-      """Test access to a list<int> (part of cintdlls)"""
+    def test01_builtin_list_type(self):
+        """Test access to a list<int> (part of cintdlls)"""
 
-      a = std.list( int )()
-      for i in range(self.N):
-         a.push_back( i )
+        from cppyy.gbl import std
 
-      self.assertEqual( len(a), self.N )
-      self.failUnless( 11 in a )
+        a = std.list(int)()
+        for i in range(self.N):
+            a.push_back( i )
 
-      ll = list(a)
-      for i in range(self.N):
-         self.assertEqual( ll[i], i )
+        assert len(a) == self.N
+        assert 11 in a
 
-      for val in a:
-         self.assertEqual( ll[ ll.index(val) ], val )
+        ll = list(a)
+        for i in range(self.N):
+            assert ll[i] == i
 
-   def test2EmptyListType( self ):
-      """Test behavior of empty list<int> (part of cintdlls)"""
+        for val in a:
+            assert ll[ ll.index(val) ] == val
 
-      a = std.list( int )()
-      for arg in a:
-         pass
+    def test02_empty_list_type(self):
+        """Test behavior of empty list<int> (part of cintdlls)"""
+
+        from cppyy.gbl import std
+
+        a = std.list(int)()
+        for arg in a:
+            pass
 
 
 ### STL map test case ========================================================
-class STL3MapTestCase( MyTestCase ):
-   N = 13
+class TestClasSTLMAP:
+    def setup_class(cls):
+        import cppyy
+        cls.test_dct = "StlTypes_C"
+        cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
+        cls.N = 13
 
-   def test01BuiltinMapType( self ):
-      """Test access to a map<int,int> (part of cintdlls)"""
+    def test01_builtin_map_type(self):
+        """Test access to a map<int,int> (part of cintdlls)"""
 
-      a = std.map( int, int )()
-      for i in range(self.N):
-         a[i] = i
-         self.assertEqual( a[i], i )
+        from cppyy.gbl import std
 
-      self.assertEqual( len(a), self.N )
+        a = std.map(int, int)()
+        for i in range(self.N):
+            a[i] = i
+            assert a[i] == i
 
-      for key, value in a:
-         self.assertEqual( key, value )
-      self.assertEqual( key,   self.N-1 )
-      self.assertEqual( value, self.N-1 )
+        assert len(a) == self.N
 
-    # add a variation, just in case
-      m = std.map( int, int )()
-      for i in range(self.N):
-         m[i] = i*i
-         self.assertEqual( m[i], i*i )
+        for key, value in a:
+            assert key == value
+        assert key   == self.N-1
+        assert value == self.N-1
 
-      for key, value in m:
-         self.assertEqual( key*key, value )
-      self.assertEqual( key,   self.N-1 )
-      self.assertEqual( value, (self.N-1)*(self.N-1) )
+      # add a variation, just in case
+        m = std.map(int, int)()
+        for i in range(self.N):
+            m[i] = i*i
+            assert m[i] == i*i
 
-   def test02KeyedMapType( self ):
-      """Test access to a map<std::string,int> (part of cintdlls)"""
+        for key, value in m:
+            assert key*key == value
+        assert key   == self.N-1
+        assert value == (self.N-1)*(self.N-1)
 
-      a = std.map( std.string, int )()
-      for i in range(self.N):
-         a[str(i)] = i
-         self.assertEqual( a[str(i)], i )
+    def test02_keyed_map_type(self):
+        """Test access to a map<std::string,int> (part of cintdlls)"""
 
-      self.assertEqual( i, self.N-1 )
-      self.assertEqual( len(a), self.N )
+        from cppyy.gbl import std
 
-   def test03EmptyMapType( self ):
-      """Test behavior of empty map<int,int> (part of cintdlls)"""
+        a = std.map(std.string, int)()
+        for i in range(self.N):
+            a[str(i)] = i
+            assert a[str(i)] == i
 
-      m = std.map( int, int )()
-      for key, value in m:
-         pass
+        assert i == self.N-1
+        assert len(a) == self.N
 
-   def test04UnsignedvalueTypeMapTypes( self ):
-      """Test assignability of maps with unsigned value types (not part of cintdlls)"""
+    def test03_empty_map_type(self):
+        """Test behavior of empty map<int,int> (part of cintdlls)"""
 
-      import math
+        from cppyy.gbl import std
 
-      mui = std.map( str, 'unsigned int' )()
-      mui[ 'one' ] = 1
-      self.assertEqual( mui[ 'one' ], 1 )
-      self.assertRaises( ValueError, mui.__setitem__, 'minus one', -1 )
+        m = std.map(int, int)()
+        for key, value in m:
+            pass
 
-    # UInt_t is always 32b, sys.maxint follows system int
-      maxint32 = int(math.pow(2,31)-1)
-      mui[ 'maxint' ] = maxint32 + 3
-      self.assertEqual( mui[ 'maxint' ], maxint32 + 3 )
+    def test04_unsigned_value_type_map_types(self):
+        """Test assignability of maps with unsigned value types (not part of cintdlls)"""
 
-      mul = std.map( str, 'unsigned long' )()
-      mul[ 'two' ] = 2
-      self.assertEqual( mul[ 'two' ], 2 )
-      mul[ 'maxint' ] = maxvalue + 3
-      self.assertEqual( mul[ 'maxint' ], maxvalue + 3 )
-      self.assertRaises( ValueError, mul.__setitem__, 'minus two', -2 )
+        import math
+        from cppyy.gbl import std
 
-   def test05FreshlyInstantiatedMapType( self ):
-      """Instantiate a map from a newly defined class"""
+        mui = std.map(str, 'unsigned int')()
+        mui['one'] = 1
+        assert mui['one'] == 1
+        raises(ValueError, mui.__setitem__, 'minus one', -1)
 
-      gInterpreter.Declare( 'template<typename T> struct Data { T fVal; };' )
+      # UInt_t is always 32b, sys.maxint follows system int
+        maxint32 = int(math.pow(2,31)-1)
+        mui['maxint'] = maxint32 + 3
+        assert mui['maxint'] == maxint32 + 3
 
-      results = std.map( std.string, Data(int) )()
-      d = Data(int)(); d.fVal = 42
-      results[ 'summary' ] = d
-      self.assertEqual( results.size(), 1 )
-      for tag, data in results:
-         self.assertEqual( data.fVal, 42 )
+        mul = std.map(str, 'unsigned long')()
+        mul['two'] = 2
+        assert mul['two'] == 2
+        mul['maxint'] = maxvalue + 3
+        assert mul['maxint'] == maxvalue + 3
+        raises(ValueError, mul.__setitem__, 'minus two', -2)
+
+    def test05_freshly_instantiated_map_type(self):
+        """Instantiate a map from a newly defined class"""
+
+        import cppyy
+        cppyy.cppdef('template<typename T> struct Data { T fVal; };')
+
+        from cppyy.gbl import std, Data
+
+        results = std.map( std.string, Data(int) )()
+        d = Data(int)(); d.fVal = 42
+        results['summary'] = d
+        assert results.size() == 1
+        for tag, data in results:
+            assert data.fVal == 42
 
 
 ### Protocol mapping for an STL like class ===================================
-class STL4STLLikeClassTestCase( MyTestCase ):
-   def test1STLLikeClassIndexingOverloads( self ):
-      """Test overloading of operator[] in STL like class"""
+class TestClasSTLLIKECLASS:
+    def setup_class(cls):
+        import cppyy
+        cls.test_dct = "StlTypes_C"
+        cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
 
-      a = STLLikeClass( int )()
-      self.assertEqual( a[ "some string" ], 'string' )
-      self.assertEqual( a[ 3.1415 ], 'double' )
+    def test01_STL_like_class_indexing_overloads(self):
+        """Test overloading of operator[] in STL like class"""
 
-   def test2STLLikeClassIterators( self ):
-      """Test the iterator protocol mapping for an STL like class"""
+        from cppyy.gbl import STLLikeClass
 
-      a = STLLikeClass( int )()
-      for i in a:
-         pass
+        a = STLLikeClass(int)()
+        assert a["some string"] == 'string'
+        assert a[3.1415] == 'double'
 
-      self.assertEqual( i, 3 )
+    def test02_STL_like_class_iterators(self):
+        """Test the iterator protocol mapping for an STL like class"""
+
+        from cppyy.gbl import STLLikeClass
+
+        a = STLLikeClass(int)()
+        for i in a:
+            pass
+
+        assert i == 3
 
 
 ### String handling ==========================================================
-class STL5StringHandlingTestCase( MyTestCase ):
-   def test1StringArgumentPassing( self ):
-      """Test mapping of python strings and std::string"""
+class TestClasSTLSTRINGHANDLING:
+    def setup_class(cls):
+        import cppyy
+        cls.test_dct = "StlTypes_C"
+        cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
 
-      c, s = StringyClass(), std.string( "test1" )
+    def test01_string_argument_passing(self):
+        """Test mapping of python strings and std::string"""
 
-    # pass through const std::string&
-      c.SetString1( s )
-      self.assertEqual( type(c.GetString1()), str )
-      self.assertEqual( c.GetString1(), s )
+        from cppyy.gbl import std, StringyClass
 
-      c.SetString1( "test2" )
-      self.assertEqual( c.GetString1(), "test2" )
+        c, s = StringyClass(), std.string("test1")
 
-    # pass through std::string (by value)
-      s = std.string( "test3" )
-      c.SetString2( s )
-      self.assertEqual( c.GetString1(), s )
+      # pass through const std::string&
+        c.SetString1(s)
+        assert type(c.GetString1()) == str
+        assert c.GetString1() == s
 
-      c.SetString2( "test4" )
-      self.assertEqual( c.GetString1(), "test4" )
+        c.SetString1("test2")
+        assert c.GetString1() == "test2"
 
-    # getting through std::string&
-      s2 = std.string()
-      c.GetString2( s2 )
-      self.assertEqual( s2, "test4" )
+      # pass through std::string (by value)
+        s = std.string("test3")
+        c.SetString2(s)
+        assert c.GetString1() == s
 
-      self.assertRaises( TypeError, c.GetString2, "temp string" )
+        c.SetString2("test4")
+        assert c.GetString1() == "test4"
 
-   def test2StringDataAccess( self ):
-      """Test access to std::string object data members"""
+      # getting through std::string&
+        s2 = std.string()
+        c.GetString2(s2)
+        assert s2 == "test4"
 
-      c, s = StringyClass(), std.string( "test string" )
+        raises(TypeError, c.GetString2, "temp string")
 
-      c.m_string = s
-      self.assertEqual( c.m_string, s )
-      self.assertEqual( c.GetString1(), s )
+    def test02_string_data_access(self):
+        """Test access to std::string object data members"""
 
-      c.m_string = "another test"
-      self.assertEqual( c.m_string, "another test" )
-      self.assertEqual( c.GetString1(), "another test" )
+        from cppyy.gbl import std, StringyClass
 
-   def test3StringWithNullCharacter( self ):
-      """Test that strings with NULL do not get truncated"""
+        c, s = StringyClass(), std.string("test string")
+ 
+        c.m_string = s
+        assert c.m_string == s
+        assert c.GetString1() == s
 
-      t0 = "aap\0noot"
-      self.assertEqual( t0, "aap\0noot" )
+        c.m_string = "another test"
+        assert c.m_string == "another test"
+        assert c.GetString1() == "another test"
 
-      c, s = StringyClass(), std.string( t0, len(t0) )
+    def test03_string_with_null_Character(self):
+        """Test that strings with NULL do not get truncated"""
 
-      c.SetString1( s )
-      self.assertEqual( t0, c.GetString1() )
-      self.assertEqual( s, c.GetString1() )
+        from cppyy.gbl import std, StringyClass
+
+        t0 = "aap\0noot"
+        assert t0 == "aap\0noot"
+
+        c, s = StringyClass(), std.string(t0, len(t0))
+
+        c.SetString1( s )
+        assert t0 == c.GetString1()
+        assert s == c.GetString1()
 
 
 ### Iterator comparison ======================================================
-class STL6IteratorComparisonTestCase( MyTestCase ):
-   def __run_tests( self, container ):
-      self.assertEqual( len(container), 1 )
+class TestClasSTLITERATORCOMPARISON:
+    def setup_class(cls):
+        import cppyy
+        cls.test_dct = "StlTypes_C"
+        cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
 
-      b1, e1 = container.begin(), container.end()
-      b2, e2 = container.begin(), container.end()
+    def __run_tests(self, container):
+        assert len(container) == 1
 
-      self.assert_( b1.__eq__( b2 ) )
-      self.assert_( not b1.__ne__( b2 ) )
-      if sys.hexversion < 0x3000000:
-         self.assertEqual( cmp( b1, b2 ), 0 )
+        b1, e1 = container.begin(), container.end()
+        b2, e2 = container.begin(), container.end()
 
-      self.assert_( e1.__eq__( e2 ) )
-      self.assert_( not e1.__ne__( e2 ) )
-      if sys.hexversion < 0x3000000:
-         self.assertEqual( cmp( e1, e2 ), 0 )
+        assert b1.__eq__(b2)
+        assert not b1.__ne__(b2)
+        if sys.hexversion < 0x3000000:
+            assert cmp(b1, b2) == 0
 
-      self.assert_( not b1.__eq__( e1 ) )
-      self.assert_( b1.__ne__( e1 ) )
-      if sys.hexversion < 0x3000000:
-         self.assertNotEqual( cmp( b1, e1 ), 0 )
+        assert e1.__eq__(e2)
+        assert not e1.__ne__(e2)
+        if sys.hexversion < 0x3000000:
+            assert cmp(e1, e2) == 0
 
-      b1.__preinc__()
-      self.assert_( not b1.__eq__( b2 ) )
-      self.assert_( b1.__eq__( e2 ) )
-      if sys.hexversion < 0x3000000:
-         self.assertNotEqual( cmp( b1, b2 ), 0 )
-         self.assertEqual( cmp( b1, e1 ), 0 )
-      self.assertNotEqual( b1, b2 )
-      self.assertEqual( b1, e2 )
+        assert not b1.__eq__(e1)
+        assert b1.__ne__(e1)
+        if sys.hexversion < 0x3000000:
+            assert cmp(b1, e1) != 0
 
-   def test1BuiltinVectorIterators( self ):
-      """Test iterator comparison for vector"""
+        b1.__preinc__()
+        assert not b1.__eq__(b2)
+        assert b1.__eq__(e2)
+        if sys.hexversion < 0x3000000:
+            assert cmp(b1, b2) != 0
+            assert cmp(b1, e1) == 0
+        assert b1 != b2
+        assert b1 == e2
 
-      v = std.vector( int )()
-      v.resize( 1 )
+    def test01_builtin_vector_iterators(self):
+        """Test iterator comparison for vector"""
 
-      self.__run_tests( v )
+        from cppyy.gbl import std
 
-   def test2BuiltinListIterators( self ):
-      """Test iterator comparison for list"""
+        v = std.vector(int)()
+        v.resize(1)
 
-      l = std.list( int )()
-      l.push_back( 1 )
+        self.__run_tests(v)
 
-      self.__run_tests( l )
+    def test02_builtin_list_iterators(self):
+        """Test iterator comparison for list"""
 
-   def test3BuiltinMapIterators( self ):
-      """Test iterator comparison for map"""
+        from cppyy.gbl import std
 
-      m = std.map( int, int )()
-      m[1] = 1
+        l = std.list(int)()
+        l.push_back(1)
 
-      self.__run_tests( m )
+        self.__run_tests(l)
+
+    def test03_builtin_map_iterators(self):
+        """Test iterator comparison for map"""
+
+        from cppyy.gbl import std
+
+        m = std.map(int, int)()
+        m[1] = 1
+
+        self.__run_tests(m)
 
 
 ### Stream usage =============================================================
-class STL7StreamTestCase( MyTestCase ):
-   def test1_PassStringStream( self ):
-      """Pass stringstream through ostream&"""
+class TestClasSTLSTREAM:
+    def setup_class(cls):
+        import cppyy
+        cls.test_dct = "StlTypes_C"
+        cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
 
-      s = std.stringstream()
-      o = StringStreamUser()
+    def test01_pass_stringstream(self):
+        """Pass stringstream through ostream&"""
 
-      o.fillStream( s )
+        from cppyy.gbl import std, StringStreamUser
 
-      self.assertEqual( "StringStreamUser Says Hello!", s.str() )
+        s = std.stringstream()
+        o = StringStreamUser()
+
+        o.fillStream(s)
+
+        assert "StringStreamUser Says Hello!" == s.str()
 
 
 ## actual test run
 if __name__ == '__main__':
-   from MyTextTestRunner import MyTextTestRunner
-
-   loader = unittest.TestLoader()
-   testSuite = loader.loadTestsFromModule( sys.modules[ __name__ ] )
-
-   runner = MyTextTestRunner( verbosity = 2 )
-   result = not runner.run( testSuite ).wasSuccessful()
-
-   sys.exit( result )
+    result = run_pytest(__file__)
+    sys.exit(result)
