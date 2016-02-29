@@ -49,7 +49,7 @@ void TMVA::ActionButton( TControlBar* cbar,
 }
 
 // main GUI
-void TMVA::TMVAGui( const char* fName  ) 
+void TMVA::TMVAGui( const char* fName  , TString dataset) 
 {   
    // Use this script in order to run the various individual macros
    // that plot the output of TMVA (e.g. running TMVAClassification.C),
@@ -79,8 +79,21 @@ void TMVA::TMVAGui( const char* fName  )
       cout << "==> Abort TMVAGui, please verify filename" << endl;
       return;
    }
+   
+   if(file->GetListOfKeys()->GetEntries()<=0)
+   {
+      cout << "==> Abort TMVAGui, please verify if dataset exist" << endl;
+      return;
+   }
+   
+   if(dataset==""||dataset.IsWhitespace())
+   {
+       TKey *key=(TKey*)file->GetListOfKeys()->At(0);
+       dataset=key->GetName();
+   }
+   std::cout<<"DEBUG:"<<dataset<<std::endl;
    // find all references   
-   TMVAGui_keyContent = (TList*)file->GetListOfKeys()->Clone();
+   TMVAGui_keyContent = (TList*)file->GetDirectory(dataset.Data())->GetListOfKeys()->Clone();
 
    // close file
    file->Close();
@@ -110,7 +123,7 @@ void TMVA::TMVAGui( const char* fName  )
       if (tmp.Contains( "Id" )) title = "Input variables (training sample)";
       ActionButton( cbar, 
                     Form( "(%i%c) %s", ic, ch++, title.Data() ),
-                    Form( "TMVA::variables(\"%s\",\"%s\",\"%s\")", fName, str->GetString().Data(), title.Data() ),
+                    Form( "TMVA::variables(\"%s\",\"%s\",\"%s\",\"%s\")",dataset.Data(), fName, str->GetString().Data(), title.Data() ),
                     Form( "Plots all '%s'-transformed input variables (macro variables(...))", str->GetString().Data() ),
                     buttonType, str->GetString() );
    }      
@@ -125,7 +138,7 @@ void TMVA::TMVAGui( const char* fName  )
       if (tmp.Contains( "Id" )) title = "Input variable correlations (scatter profiles)";
       ActionButton( cbar, 
                     Form( "(%i%c) %s", ic, ch++, title.Data() ),
-                    Form( "TMVA::CorrGui(\"%s\",\"%s\",\"%s\")", fName, str->GetString().Data(), title.Data() ),
+                    Form( "TMVA::CorrGui(\"%s\",\"%s\",\"%s\",\"%s\")",dataset.Data(), fName, str->GetString().Data(), title.Data() ),
                     Form( "Plots all correlation profiles between '%s'-transformed input variables (macro CorrGui(...))", 
                           str->GetString().Data() ),
                     buttonType, str->GetString() );
