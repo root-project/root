@@ -191,14 +191,14 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
    title = Form( "(%ib) Classifier Background Rejection vs Signal Efficiency (ROC curve)", ic );
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::efficiencies(\"%s\")", fName ),
+                 Form( "TMVA::efficiencies(\"%s\",\"%s\")",dataset.Data(), fName ),
                  "Plots background rejection vs signal efficiencies (macro efficiencies.cxx) [\"ROC\" stands for \"Receiver Operation Characteristics\"]",
                  buttonType, defaultRequiredClassifier );
 
    title = Form( "(%ib) Classifier 1/(Backgr. Efficiency) vs Signal Efficiency (ROC curve)", ic );
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::efficiencies(\"%s\",%d)", fName, 3 ),
+                 Form( "TMVA::efficiencies(\"%s\",\"%s\",%d)",dataset.Data(), fName, 3 ),
                  "Plots 1/(background eff.)  vs signal efficiencies (macro efficiencies.cxx) [\"ROC\" stands for \"Receiver Operation Characteristics\"]",
                  buttonType, defaultRequiredClassifier );
 
