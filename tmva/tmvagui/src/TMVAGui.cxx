@@ -205,7 +205,7 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
    title = Form( "(%i) Parallel Coordinates (requires ROOT-version >= 5.17)", ++ic );
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::paracoor(\"%s\")", fName ),
+                 Form( "TMVA::paracoor(\"%s\",\"%s\")",dataset.Data(), fName ),
                  "Plots parallel coordinates for classifiers and input variables (macro paracoor.cxx, requires ROOT >= 5.17)",
                  buttonType, defaultRequiredClassifier );
 
