@@ -542,7 +542,7 @@ class TestClassDATATYPES:
 
         # boundary checks
         raises(ValueError, setattr, gbl, 'g_uchar',   -1)
-#        raises(ValueError, setattr, gbl, 'g_ushort',  -1)
+        raises(ValueError, setattr, gbl, 'g_ushort',  -1)
         raises(ValueError, setattr, gbl, 'g_uint',    -1)
         raises(ValueError, setattr, gbl, 'g_ulong',   -1)
         raises(ValueError, setattr, gbl, 'g_ulong64', -1)
