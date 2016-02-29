@@ -230,6 +230,7 @@ set(benchmarks-depends tutorial-hsimple
                        tutorial-fit-fit1
                        tutorial-fit-myfit
                        tutorial-hist-h1draw
+                       tutorial-hist-FirstContour
                        tutorial-geom-na49view
                        tutorial-tree-ntuple1
                        tutorial-tree-spider
