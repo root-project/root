@@ -10,7 +10,7 @@ namespace TMVA{
    // input: - Input file (result from TMVA),
    //        - normal/decorrelated/PCA
    //        - use of TMVA plotting TStyle
-   void correlationscatters( TString fin , TString var= "var3", 
+   void correlationscatters(TString dataset, TString fin , TString var= "var3", 
                              TString dirName_ = "InputVariables_Id", TString title = "TMVA Input Variable",
                              Bool_t isRegression = kFALSE,
                              Bool_t useTMVAStyle = kTRUE );
