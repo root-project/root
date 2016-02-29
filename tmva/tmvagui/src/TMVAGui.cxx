@@ -149,7 +149,7 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
    title =Form( "(%i) Input Variable Linear Correlation Coefficients", ++ic );
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::correlations(\"%s\")", fName ),
+                 Form( "TMVA::correlations(\"%s\",\"%s\")",dataset.Data(), fName ),
                  "Plots signal and background correlation summaries for all input variables (macro correlations.C)", 
                  buttonType );
 
