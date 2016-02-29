@@ -102,6 +102,10 @@ class TestClassROOT_PYTHONIZATIONS:
             if 'RooWorkspace' in str(e):
                 return            # no roofit enabled, just declare success
             raise
+        except TypeError as e:
+           if 'RooWorkspace' in str(e):
+              return            # no roofit enabled, just declare success
+           raise
         ws.factory("x[0, 10]")
         ws.writeToFile("foo.root")
         del ws
