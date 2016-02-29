@@ -7,7 +7,7 @@
 #include "TKey.h"
 namespace TMVA{
 
-   void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir=0);
-   void efficiencies( TString fin = "TMVA.root", Int_t type = 2, Bool_t useTMVAStyle = kTRUE );
+   void plot_efficiencies(TString dataset, TFile* file, Int_t type = 2, TDirectory* BinDir=0);
+   void efficiencies(TString dataset, TString fin = "TMVA.root", Int_t type = 2, Bool_t useTMVAStyle = kTRUE );
 }
 #endif
