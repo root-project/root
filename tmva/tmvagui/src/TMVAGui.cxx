@@ -224,7 +224,7 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
    title = Form( "(%i) Likelihood Reference Distributiuons", ++ic);
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::likelihoodrefs(\"%s\")", fName ), 
+                 Form( "TMVA::likelihoodrefs(\"%s\",\"%s\")",dataset.Data(), fName ), 
                  "Plots to verify the likelihood reference distributions (macro likelihoodrefs.cxx)",
                  buttonType, "Likelihood" );
 

@@ -12,7 +12,7 @@
 //        - use of TMVA plotting TStyle
 
 
-void TMVA::likelihoodrefs( TDirectory *lhdir ) {
+void TMVA::likelihoodrefs(TString dataset, TDirectory *lhdir ) {
    Bool_t newCanvas = kTRUE;
    
    const UInt_t maxCanvas = 200;
@@ -159,7 +159,7 @@ void TMVA::likelihoodrefs( TDirectory *lhdir ) {
             c[ic]->Update();
 
             // write to file
-            TString fname = Form( "plots/%s_refs_c%i", titName.Data(), ic+1 );
+            TString fname = Form( "%s/plots/%s_refs_c%i",dataset.Data(), titName.Data(), ic+1 );
             TMVAGlob::imgconv( c[ic], fname );
             //	c[ic]->Update();
 
@@ -170,18 +170,18 @@ void TMVA::likelihoodrefs( TDirectory *lhdir ) {
    }
 }
 
-void TMVA::likelihoodrefs( TString fin , Bool_t useTMVAStyle )
+void TMVA::likelihoodrefs(TString dataset, TString fin , Bool_t useTMVAStyle )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
   
    // checks if file with name "fin" is already open, and if not opens one
-   TMVAGlob::OpenFile( fin );  
+   TFile *file=TMVAGlob::OpenFile( fin );  
 
    // get all titles of the method likelihood
    TList titles;
    TString metlike="Method_Likelihood";
-   UInt_t ninst = TMVAGlob::GetListOfTitles(metlike,titles);
+   UInt_t ninst = TMVAGlob::GetListOfTitles(metlike,titles,file->GetDirectory(dataset.Data()));
    if (ninst==0) {
       cout << "Could not locate directory 'Method_Likelihood' in file " << fin << endl;
       return;
@@ -192,7 +192,7 @@ void TMVA::likelihoodrefs( TString fin , Bool_t useTMVAStyle )
    TKey *key;
    while ((key = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
       lhdir = (TDirectory *)key->ReadObj();
-      likelihoodrefs( lhdir );
+      likelihoodrefs(dataset, lhdir );
    }
 }
 
