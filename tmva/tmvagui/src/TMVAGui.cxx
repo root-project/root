@@ -184,7 +184,7 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
    title =Form( "(%ia) Classifier Cut Efficiencies", ++ic );
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::mvaeffs(\"%s\")", fName ),
+                 Form( "TMVA::mvaeffs(\"%s\",\"%s\")",dataset.Data(), fName ),
                  "Plots signal and background efficiencies versus cut on classifier output (macro mvaeffs.cxx)",
                  buttonType, defaultRequiredClassifier );
 
