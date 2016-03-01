@@ -749,7 +749,6 @@ Int_t TBranch::Fill()
    if (TestBit(kDoNotProcess)) {
       return 0;
    }
-
    TBasket* basket = GetBasket(fWriteBasket);
    if (!basket) {
       basket = fTree->CreateBasket(this); //  create a new basket
@@ -760,9 +759,7 @@ Int_t TBranch::Fill()
    TBuffer* buf = basket->GetBufferRef();
 
    // Fill basket buffer.
-
    Int_t nsize  = 0;
-
    if (buf->IsReading()) {
       basket->SetWriteMode();
    }
@@ -771,7 +768,6 @@ Int_t TBranch::Fill()
 
    Int_t lnew = 0;
    Int_t nbytes = 0;
-
    if (fEntryBuffer) {
       nbytes = FillEntryBuffer(basket,buf,lnew);
    } else {
@@ -1115,7 +1111,6 @@ TBasket* TBranch::GetBasket(Int_t basketnumber, Bool_t random, Long64_t relative
    TBasket *basket = (TBasket*)fBaskets.UncheckedAt(basketnumber);
    if (basket) return basket;
    if (basketnumber == fWriteBasket) return 0;
-
    // create/decode basket parameters from buffer
    TFile *file = GetFile(0);
    if (file == 0) {
@@ -1277,7 +1272,6 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
       }
       fCurrentBasket = basket;
    }
-   printf("first entry in this basket is %lld\n", first);
    basket->PrepareBasket(entry);
    TBuffer* buf = basket->GetBufferRef();
 
@@ -2640,7 +2634,6 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
       }
       delete basket;
    }
-
    return nout;
 }
 

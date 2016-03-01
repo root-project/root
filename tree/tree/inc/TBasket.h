@@ -77,7 +77,9 @@ public:
            Int_t   GetBufferSize() const {return fBufferSize;}
            Int_t  *GetDisplacement() const {return fDisplacement;}
            Int_t  *GetEntryOffset() const {return fEntryOffset;}
+           Int_t  *GetCompressedEntryOffset() const {return fCompressedEntryOffset;}
            Int_t   GetEntryPointer(Int_t Entry);
+           Int_t   GetCompressedEntryPointer(Int_t Entry);
            Int_t   GetNevBuf() const {return fNevBuf;}
            Int_t   GetNevBufSize() const {return fNevBufSize;}
            Bool_t  IsRandomAccessCompression() const {return fRandomAccessCompression;}

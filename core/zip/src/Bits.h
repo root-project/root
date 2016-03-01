@@ -17,6 +17,7 @@
 #include "ZipLZMA.h"
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <assert.h>
 
 /*
@@ -712,7 +713,7 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   }
 }
 
-void R__zipMultipleAlgorithm_RAC(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm, int entries, int *entryoffsets, int *compressedentryoffsets)
+void R__zipMultipleAlgorithm_RAC(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm, int entries, bool haveoffset, int lastbyte, int *entryoffsets, int *compressedentryoffsets)
      /* int cxlevel;                      compression level */
      /* int  *srcsize, *tgtsize, *irep;   source and target sizes, replay */
      /* char *tgt, *src;                  source and target buffers */
@@ -836,7 +837,47 @@ void R__zipMultipleAlgorithm_RAC(int cxlevel, int *srcsize, char *src, int *tgts
        return;
     }
 
-    err = deflate(&stream, Z_FINISH);
+//    err = deflate(&stream, Z_FINISH);
+/* ZZ: deal with the local compression */
+//    err = deflate(&stream, Z_FULL_FLUSH);
+
+    // process last element
+    //   1. if there is no entry offset table, last element must be the last block.
+    //   2. if there is an entry offset table appended to the end of the buffer, last element is not the last block but the table is
+    if (haveoffset) {
+       int bufsize = (uInt)(*tgtsize);
+       int have    = 0;
+       printf("run into here, entries=%d\n",entries);
+       compressedentryoffsets[0] = entryoffsets[0] + HDRSIZE;
+       int i;
+       for (i=1; i<entries; ++i) {
+          stream.next_in   = (Bytef*)src + entryoffsets[i-1] - entryoffsets[0];
+//          stream.avail_in  = entryoffsets[i] - entryoffsets[i-1];
+          stream.avail_in  = (i == entries-1) ? (lastbyte - entryoffsets[i-1]) : (entryoffsets[i] - entryoffsets[i-1]);
+          stream.next_out  = (Bytef*)(&tgt[HDRSIZE]) + compressedentryoffsets[i-1] - compressedentryoffsets[0];
+          stream.avail_out = bufsize;
+          err = deflate(&stream, Z_FULL_FLUSH);
+          if (err != Z_OK) {
+             printf("deflate error\n");
+             return;
+          }
+          have = bufsize - stream.avail_out;
+          printf("1.bufsize=%d,have=%d, i=%d, lastbyte=%d, entryoffsets[%d]=%d,entryoffsets[%d]=%d,compressedentryoffsets[%d]=%d,compressedentryoffsets[%d]=%d\n",bufsize, have, i, lastbyte, i-1,entryoffsets[i-1],i,entryoffsets[i],i-1,compressedentryoffsets[i-1],i,compressedentryoffsets[i]);
+          compressedentryoffsets[i] = compressedentryoffsets[i-1] + have;
+          printf("2.bufsize=%d,have=%d, i=%d, lastbyte=%d, entryoffsets[%d]=%d,entryoffsets[%d]=%d,compressedentryoffsets[%d]=%d,compressedentryoffsets[%d]=%d\n",bufsize,  have, i, lastbyte, i-1,entryoffsets[i-1],i,entryoffsets[i],i-1,compressedentryoffsets[i-1],i,compressedentryoffsets[i]);
+       }
+
+       stream.next_in   = (Bytef*)src + lastbyte - entryoffsets[0];
+       stream.avail_in  = bufsize + entryoffsets[0] - lastbyte; // bufsize is the fObjlen, entryoffsets[0] is the fKeylen, their sum is the total length of fBufferRef
+       stream.next_out  = (Bytef*)(&tgt[HDRSIZE]) + compressedentryoffsets[entries-1] - compressedentryoffsets[0];
+       stream.avail_out = bufsize;
+       err = deflate(&stream, Z_FINISH);
+    } else {
+       err = deflate(&stream, Z_FINISH);
+    }
+
+/* ZZ: end */
+
     if (err != Z_STREAM_END) {
        deflateEnd(&stream);
        /* No need to print an error message. We simply abandon the compression
@@ -863,6 +904,7 @@ void R__zipMultipleAlgorithm_RAC(int cxlevel, int *srcsize, char *src, int *tgts
     tgt[8] = (char)((l_in_size >> 16) & 0xff);
 
     *irep = stream.total_out + HDRSIZE;
+    printf("irep=%d\n", *irep);
     return;
   }
 }
