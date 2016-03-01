@@ -4176,9 +4176,6 @@ Int_t TTree::Fill()
    //   Note that calling FlushBaskets too often increases the IO time.
    //   Note that calling AutoSave too often increases the IO time and also the file size.
 
-   // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
-
    Int_t nbytes = 0;
    Int_t nerror = 0;
    Int_t nb = fBranches.GetEntriesFast();
