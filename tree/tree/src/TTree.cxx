@@ -4366,9 +4366,6 @@ void TTree::DropBuffers(Int_t)
 
 Int_t TTree::Fill()
 {
-   // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
-
    Int_t nbytes = 0;
    Int_t nerror = 0;
    Int_t nb = fBranches.GetEntriesFast();
