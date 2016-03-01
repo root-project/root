@@ -159,6 +159,8 @@ We added support for template parameter packs in class name involved in the I/O.
 
 ## TTree Libraries
 
+* Do not automatically setup read cache during TTree::Fill(). This fixes [ROOT-8031].
+
 ### Improvement of handling of default number of entries
 
 A new const expression value: `TTree::kMaxEntries` has been introduced to
