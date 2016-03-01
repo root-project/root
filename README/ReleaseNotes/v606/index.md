@@ -159,8 +159,6 @@ We added support for template parameter packs in class name involved in the I/O.
 
 ## TTree Libraries
 
-* Do not automatically setup read cache during TTree::Fill(). This fixes [ROOT-8031].
-
 ### Improvement of handling of default number of entries
 
 A new const expression value: `TTree::kMaxEntries` has been introduced to
@@ -564,6 +562,8 @@ Changes will be part of the future 6.06/02
 Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and any derived class should not be split.  This included a rework the mechanism checking the base classes.  Instead of using `InheritsFrom`, which lead in some cases, including the case where the class derived from an STL collection, to spurrious autoparsing (to look at the base class of the collection!), we use a custom walk through the tree of base classes that checks their value of `fCanSplit`.  This also has the side-effect of allowing the extension of the concept 'base class that prevent its derived class from being split' to any user class.  This fixes [ROOT-7972].
 
 ### TTree
+
+* Do not automatically setup read cache during TTree::Fill(). This fixes [ROOT-8031].
 
 ##### Fast Cloning
 
