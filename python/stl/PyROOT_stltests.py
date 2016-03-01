@@ -11,6 +11,8 @@ sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 from common import *
 from pytest import raises
 
+from ROOT import kRed   # needed (?!) to load iterator comparison funcs on Mac
+
 def setup_module(mod):
     import sys, os
     sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
