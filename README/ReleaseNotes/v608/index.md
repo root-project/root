@@ -167,6 +167,9 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   This enhancement was triggered by [this forum question](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=21077).
 * Make sure the palette axis title is correct after a histogram cloning. This
   problem was mentioned [here](https://sft.its.cern.ch/jira/browse/ROOT-8007).
+* `TASImage` When the first or last point of a wide line is exactly on the
+  window limit the line is drawn vertically or horizontally.
+  This problem was mentioned [here](https://sft.its.cern.ch/jira/browse/ROOT-8021)
 
 ## 3D Graphics Libraries
 
