@@ -94,7 +94,7 @@ In THashList and THashTable, GetListForObject now returns a pointer to const as 
 
 In TSeqCollection::Merge, we no longer delete the object in the case where the original collection is marked as a owner.
 
-We esolve a memory leakage occuring as a consequence of repeated calls to `TClonesArray::AbsorbObjects` and `TClonesArray::Clear` [ROOT-6996].  A similar problem was affecting `TClonesArray::operator=`, `TClonesArray::Expand` and `TClonesArray::ExpandCreate` and was also solved.  `TClonesArray` reliance on global state during object clearly was decreased (removing use of `TObject::SetDtorOnly`)
+We resolved a memory leakage occuring as a consequence of repeated calls to `TClonesArray::AbsorbObjects` and `TClonesArray::Clear` [ROOT-6996].  A similar problem was affecting `TClonesArray::operator=`, `TClonesArray::Expand` and `TClonesArray::ExpandCreate` and was also solved.  `TClonesArray` reliance on global state during the destruction of the elements was decreased (removing use of `TObject::SetDtorOnly`)
 
 ### Global resources.
 
