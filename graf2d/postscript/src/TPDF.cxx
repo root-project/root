@@ -16,7 +16,7 @@ Interface to PDF.
 
 Like PostScript, PDF is a vector graphics output format allowing a very high
 graphics output quality. The functionalities provided by this class are very
-similar to those provided by <tt>TPostScript</tt>.
+similar to those provided by `TPostScript`.
 
 Compare to PostScript output, the PDF files are usually smaller because some
 parts of them can be compressed.
@@ -525,11 +525,12 @@ void TPDF::DrawPolyLine(Int_t nn, TPoints *xy)
 /// Draw a PolyLine in NDC space
 ///
 ///  Draw a polyline through the points xy.
-///  If NN=1 moves only to point x,y.
-///  If NN=0 the x,y are  written in the PDF file
-///     according to the current transformation.
-///  If NN>0 the line is clipped as a line.
-///  If NN<0 the line is clipped as a fill area.
+///
+///  - If NN=1 moves only to point x,y.
+///  - If NN=0 the x,y are  written in the PDF file
+///       according to the current transformation.
+///  - If NN>0 the line is clipped as a line.
+///  - If NN<0 the line is clipped as a fill area.
 
 void TPDF::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 {
@@ -858,6 +859,7 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 /// Draw a PolyLine
 ///
 ///  Draw a polyline through the points xw,yw.
+///
 ///  - If nn=1 moves only to point xw,yw.
 ///  - If nn=0 the XW(1) and YW(1) are  written  in the PDF file
 ///            according to the current NT.
@@ -2371,7 +2373,7 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a string of characters
 ///
-/// This method writes the string chars into a PostScript file
+/// This method writes the string chars into a PDF file
 /// at position xx,yy in world coordinates.
 
 void TPDF::Text(Double_t, Double_t, const wchar_t *)
