@@ -133,6 +133,24 @@ When investigating misuse of TClonesArray, please make sure of the following:
 
 ClassImp(TClonesArray)
 
+/// Internal Utility routine to correctly release the memory for an object
+static inline void R__ReleaseMemory(TClass *cl, TObject *obj)
+{
+   if (obj && obj->TestBit(TObject::kNotDeleted)) {
+      // -- The TObject destructor has not been called.
+      cl->Destructor(obj);
+   } else {
+      // -- The TObject destructor was called, just free memory.
+      //
+      // remove any possible entries from the ObjectTable
+      if (TObject::GetObjectStat() && gObjectTable) {
+         gObjectTable->RemoveQuietly(obj);
+      }
+      ::operator delete(obj);
+   }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Constructor.
 
@@ -229,11 +247,9 @@ TClonesArray& TClonesArray::operator=(const TClonesArray& tc)
 
    for (i = 0; i < fSize; i++)
       if (fKeep->fCont[i]) {
-         if (TObject::GetObjectStat() && gObjectTable)
-            gObjectTable->RemoveQuietly(fKeep->fCont[i]);
-         ::operator delete(fKeep->fCont[i]);
-         fKeep->fCont[i] = 0;
-         fCont[i] = 0;
+         R__ReleaseMemory(fClass,fKeep->fCont[i]);
+         fKeep->fCont[i] = nullptr;
+         fCont[i] = nullptr;
       }
 
    BypassStreamer(kTRUE);
@@ -255,21 +271,8 @@ TClonesArray::~TClonesArray()
 {
    if (fKeep) {
       for (Int_t i = 0; i < fKeep->fSize; i++) {
-         TObject* p = fKeep->fCont[i];
-         if (p && p->TestBit(kNotDeleted)) {
-            // -- The TObject destructor has not been called.
-            fClass->Destructor(p);
-            fKeep->fCont[i] = 0;
-         } else {
-            // -- The TObject destructor was called, just free memory.
-            //
-            // remove any possible entries from the ObjectTable
-            if (TObject::GetObjectStat() && gObjectTable) {
-               gObjectTable->RemoveQuietly(p);
-            }
-            ::operator delete(p);
-            fKeep->fCont[i] = 0;
-         }
+         R__ReleaseMemory(fClass,fKeep->fCont[i]);
+         fKeep->fCont[i] = nullptr;
       }
    }
    SafeDelete(fKeep);
@@ -482,10 +485,8 @@ void TClonesArray::Expand(Int_t newSize)
       // Expand() will shrink correctly
       for (int i = newSize; i < fSize; i++)
          if (fKeep->fCont[i]) {
-            if (TObject::GetObjectStat() && gObjectTable)
-               gObjectTable->RemoveQuietly(fKeep->fCont[i]);
-            ::operator delete(fKeep->fCont[i]);
-            fKeep->fCont[i] = 0;
+            R__ReleaseMemory(fClass,fKeep->fCont[i]);
+            fKeep->fCont[i] = nullptr;
          }
    }
 
@@ -523,11 +524,9 @@ void TClonesArray::ExpandCreate(Int_t n)
 
    for (i = n; i < fSize; i++)
       if (fKeep->fCont[i]) {
-         if (TObject::GetObjectStat() && gObjectTable)
-            gObjectTable->RemoveQuietly(fKeep->fCont[i]);
-         ::operator delete(fKeep->fCont[i]);
-         fKeep->fCont[i] = 0;
-         fCont[i] = 0;
+         R__ReleaseMemory(fClass,fKeep->fCont[i]);
+         fKeep->fCont[i] = nullptr;
+         fCont[i] = nullptr;
       }
 
    fLast = n - 1;
@@ -1052,7 +1051,7 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
    for (Int_t i = idx1; i <= idx2; i++) {
       Int_t newindex = oldSize+i -idx1;
       fCont[newindex] = tc->fCont[i];
-      ::operator delete(fKeep->fCont[newindex]);
+      R__ReleaseMemory(fClass,fKeep->fCont[newindex]);
       (*fKeep)[newindex] = (*(tc->fKeep))[i];
       tc->fCont[i] = 0;
       (*(tc->fKeep))[i] = 0;
