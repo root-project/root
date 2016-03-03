@@ -734,7 +734,6 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 \
 \
 
-<a name="patchreleases"></a>
 # Patch Releases
 
 ## Release 6.04/02
