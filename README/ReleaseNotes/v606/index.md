@@ -539,9 +539,11 @@ Minor changes in the build system:
 - Renamed build option POSTGRESQL_LIBRARIES to POSTGRESQL_LIBRARY
 - Added build option `builtin_openssl` to build OpenSSL internally. This is specially needed for the latest Mac OSX (El Capitan)
 
-## HEAD of the v6-06-00-patches branch
 
-Changes will be part of the future 6.06/02
+<a name="patchreleases"></a>
+# Patch Releases
+
+## Release 6.06/02
 
 ### Core
 
@@ -564,14 +566,15 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 ### TTree
 
 * Do not automatically setup read cache during TTree::Fill(). This fixes [ROOT-8031].
-
-##### Fast Cloning
-
-We added a cache specifically for the fast option of the TTreeCloner to significantly reduce the run-time when fast-cloning remote files to address [ROOT-5078].  It can be controlled from the `TTreeCloner`, `TTree::CopyEntries` or `hadd` interfaces.  The new cache is enabled by default, to update the size of the cache or disable it from `TTreeCloner` use: `TTreeCloner::SetCacheSize`.  To do the same from `TTree::CopyEntries` add to the option string "cachesize=SIZE".  To update the size of the cache or disable it from `hadd`, use the command line option `-cachesize SIZE`.  `SIZE` shouyld be given in number bytes and can be expressed in 'human readable form' (number followed by size unit like MB, MiB, GB or GiB, etc. or SIZE  can be set zero to disable the cache.
+* Fast Cloning
+  We added a cache specifically for the fast option of the TTreeCloner to significantly reduce the run-time when fast-cloning remote files to address [ROOT-5078].  It can be controlled from the `TTreeCloner`, `TTree::CopyEntries` or `hadd` interfaces.  The new cache is enabled by default, to update the size of the cache or disable it from `TTreeCloner` use: `TTreeCloner::SetCacheSize`.  To do the same from `TTree::CopyEntries` add to the option string "cachesize=SIZE".  To update the size of the cache or disable it from `hadd`, use the command line option `-cachesize SIZE`.  `SIZE` shouyld be given in number bytes and can be expressed in 'human readable form' (number followed by size unit like MB, MiB, GB or GiB, etc. or SIZE  can be set zero to disable the cache.
 
 ### Histogram Libraries
 
 - Protect access to TROOT::GetListOfGlobalFunctions in TFormula
+
+### Math
+- Update MixMax random number generator for 32 bit architectures.
 
 ### TColor
 
@@ -587,4 +590,37 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   negative value [ROOT-7872]
 - Added a new configuration option (*ROOT.PyConfig.DisableRootLogon*) to disable processing of the
   rootlogon[.py|C] macro in addition to the -n option in the command arguments.
+
+### Bug Fixes and Tasks
+
+*   [[ROOT-7426](https://sft.its.cern.ch/jira/browse/ROOT-7426)] - Cannot print elements of vector<string> on Mac
+*   [[ROOT-7739](https://sft.its.cern.ch/jira/browse/ROOT-7739)] - TVectorD times double returns a TH1 on ROOT command line
+*   [[ROOT-7825](https://sft.its.cern.ch/jira/browse/ROOT-7825)] - wrong value passed to function expecting "const T*&"
+*   [[ROOT-7830](https://sft.its.cern.ch/jira/browse/ROOT-7830)] - Cling automatic RooFit objects always reloaded from file
+*   [[ROOT-7862](https://sft.its.cern.ch/jira/browse/ROOT-7862)] - CMake Error: CMake can not determine linker language for target: g2root
+*   [[ROOT-7864](https://sft.its.cern.ch/jira/browse/ROOT-7864)] - Segfault in __cf_15 and FastCall (c++ exception in a constructor is not propagated to python)
+*   [[ROOT-7865](https://sft.its.cern.ch/jira/browse/ROOT-7865)] - root commandline tools are not executable after installation
+*   [[ROOT-7872](https://sft.its.cern.ch/jira/browse/ROOT-7872)] - PyROOT: wrong return value when calling a c++ function returning short
+*   [[ROOT-7879](https://sft.its.cern.ch/jira/browse/ROOT-7879)] - Autoloader (parser?) tries to follow #includes from LinkDef.h
+*   [[ROOT-7881](https://sft.its.cern.ch/jira/browse/ROOT-7881)] - Uninitialized member access in TFormula => undefined behaviour
+*   [[ROOT-7891](https://sft.its.cern.ch/jira/browse/ROOT-7891)] - installation instructions for root notebooks incomplete
+*   [[ROOT-7892](https://sft.its.cern.ch/jira/browse/ROOT-7892)] - Incoherent version of Python when building tmva/pymva
+*   [[ROOT-7896](https://sft.its.cern.ch/jira/browse/ROOT-7896)] - CMake: visibility inconsistency
+*   [[ROOT-7901](https://sft.its.cern.ch/jira/browse/ROOT-7901)] - Double-free in TROOT::EndOfProcessCleanups redux
+*   [[ROOT-7912](https://sft.its.cern.ch/jira/browse/ROOT-7912)] - Failure with -Dbuiltin_davix=ON on 64bit Ubuntu
+*   [[ROOT-7916](https://sft.its.cern.ch/jira/browse/ROOT-7916)] - pyroot problem with std::vector of enum
+*   [[ROOT-7927](https://sft.its.cern.ch/jira/browse/ROOT-7927)] - TPluginHandler::CheckForExecPlugin is not thread safe
+*   [[ROOT-7935](https://sft.its.cern.ch/jira/browse/ROOT-7935)] - Need a better way stop PyROOT from reading .rootlogon.(py|C)
+*   [[ROOT-7940](https://sft.its.cern.ch/jira/browse/ROOT-7940)] - Incorrect handling of LLVM Threading
+*   [[ROOT-8003](https://sft.its.cern.ch/jira/browse/ROOT-8003)] - Root 6.06 slow to
+*   [[ROOT-8015](https://sft.its.cern.ch/jira/browse/ROOT-8015)] - cmake not honoring -Dbuiltin_lzma=OFF
+*   [[ROOT-8019](https://sft.its.cern.ch/jira/browse/ROOT-8019)] - Warning with spaces in the binary name
+*   [[ROOT-8031](https://sft.its.cern.ch/jira/browse/ROOT-8031)] - TTree auto (read) cache setup during Fill
+*   [[ROOT-7776](https://sft.its.cern.ch/jira/browse/ROOT-7776)] - Integrate GSL 2.0 in ROOT
+
+## HEAD of the v6-06-00-patches branch
+
+Changes will be part of the future 6.06/04
+
+
 
