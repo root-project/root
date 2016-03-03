@@ -94,6 +94,8 @@ In THashList and THashTable, GetListForObject now returns a pointer to const as 
 
 In TSeqCollection::Merge, we no longer delete the object in the case where the original collection is marked as a owner.
 
+We esolve a memory leakage occuring as a consequence of repeated calls to `TClonesArray::AbsorbObjects` and `TClonesArray::Clear` [ROOT-6996].  A similar problem was affecting `TClonesArray::operator=`, `TClonesArray::Expand` and `TClonesArray::ExpandCreate` and was also solved.  `TClonesArray` reliance on global state during object clearly was decreased (removing use of `TObject::SetDtorOnly`)
+
 ### Global resources.
 
 Several tweaks to if and when, resources held by the global ROOT object (TROOT, TApplication) are deleted.  When the default TApplication is replaced by a user provide TApplication, do not call EndOfProcessCleanups and co. and thus do not delete TFiles, TSockets or TColors that have already been created.  In EndOfProcessCleanups, we now delete the objects held in TROOT's TDirectory part.  If the libCling library is unloaded, this now induces an immediate tear down of the ROOT resources; consequently objects might be deleted sooner in the process tear down process on some platforms.
