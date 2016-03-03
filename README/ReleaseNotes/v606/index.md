@@ -539,8 +539,6 @@ Minor changes in the build system:
 - Renamed build option POSTGRESQL_LIBRARIES to POSTGRESQL_LIBRARY
 - Added build option `builtin_openssl` to build OpenSSL internally. This is specially needed for the latest Mac OSX (El Capitan)
 
-
-<a name="patchreleases"></a>
 # Patch Releases
 
 ## Release 6.06/02
