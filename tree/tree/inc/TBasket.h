@@ -56,7 +56,7 @@ protected:
    Bool_t      fHeaderOnly;      //True when only the basket header must be read/written
    Int_t      *fDisplacement;    //![fNevBuf] Displacement of entries in fBuffer(TKey)
    Int_t      *fEntryOffset;     //[fNevBuf] Offset of entries in fBuffer(TKey)
-   Int_t      *fCompressedEntryOffset;  // Offset of compressed entries
+   Int_t      *fCompressedEntryOffset;  //[fNevBuf] Offset of compressed entries in fBuffer(TKey)
    TBranch    *fBranch;          //Pointer to the basket support branch
    TBuffer    *fCompressedBufferRef; //! Compressed buffer.
    Bool_t      fOwnsCompressedBuffer; //! Whether or not we own the compressed buffer.

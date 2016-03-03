@@ -793,6 +793,9 @@ Int_t TBranch::Fill()
          basket->SetNevBufSize(nbytes);
       }
    }
+//##
+   printf("GetName=%s,GetTitle=%s\n",GetName(),GetTitle());
+//##
 
    // Should we create a new basket?
    // fSkipZip force one entry per buffer (old stuff still maintained for CDF)
@@ -2590,7 +2593,6 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
       // Increase the array ...
       fEntryOffsetLen = 2*nevbuf; // assume some fluctuations.
    }
-
    Int_t nout  = basket->WriteBuffer();    //  Write buffer
    fBasketBytes[where]  = basket->GetNbytes();
    fBasketSeek[where]   = basket->GetSeekKey();
