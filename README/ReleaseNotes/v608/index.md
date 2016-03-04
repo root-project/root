@@ -170,6 +170,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * `TASImage` When the first or last point of a wide line is exactly on the
   window limit the line is drawn vertically or horizontally.
   This problem was mentioned [here](https://sft.its.cern.ch/jira/browse/ROOT-8021)
+* Make sure that `TLatex` text strings containing "\" (ie: rendered using `TMathText`)
+  produce an output in PDF et SVG files.
 
 ## 3D Graphics Libraries
 
