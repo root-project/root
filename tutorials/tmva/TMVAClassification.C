@@ -124,6 +124,7 @@ int TMVAClassification( TString myMethodList = "" )
    Use["MLPBNN"]          = 1; // Recommended ANN with BFGS training method and bayesian regulator
    Use["CFMlpANN"]        = 0; // Depreciated ANN from ALEPH
    Use["TMlpANN"]         = 0; // ROOT's own ANN
+   Use["NN"]              = 1; // improved implementation of a NN
    //
    // --- Support Vector Machine 
    Use["SVM"]             = 1;
@@ -164,6 +165,22 @@ int TMVAClassification( TString myMethodList = "" )
 
    // --- Here the preparation phase begins
 
+   // Read training and test data
+   // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
+   TString fname = "./tmva_class_example.root";
+   
+   if (gSystem->AccessPathName( fname ))  // file does not exist in local directory
+      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
+   
+   TFile *input = TFile::Open( fname );
+   
+   std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
+   
+   // --- Register the training and test trees
+
+   TTree *signal     = (TTree*)input->Get("TreeS");
+   TTree *background = (TTree*)input->Get("TreeB");
+   
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
    TString outfileName( "TMVA.root" );
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
@@ -201,21 +218,6 @@ int TMVAClassification( TString myMethodList = "" )
    dataloader->AddSpectator( "spec1 := var1*2",  "Spectator 1", "units", 'F' );
    dataloader->AddSpectator( "spec2 := var1*3",  "Spectator 2", "units", 'F' );
 
-   // Read training and test data
-   // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
-   TString fname = "./tmva_class_example.root";
-   
-   if (gSystem->AccessPathName( fname ))  // file does not exist in local directory
-      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
-   
-   TFile *input = TFile::Open( fname );
-   
-   std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
-   
-   // --- Register the training and test trees
-
-   TTree *signal     = (TTree*)input->Get("TreeS");
-   TTree *background = (TTree*)input->Get("TreeB");
    
    // global event weights per tree (see below for setting event-wise weights)
    Double_t signalWeight     = 1.0;
@@ -422,6 +424,38 @@ int TMVAClassification( TString myMethodList = "" )
 
    if (Use["MLPBNN"])
       factory->BookMethod( dataloader, TMVA::Types::kMLP, "MLPBNN", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:TrainingMethod=BFGS:UseRegulator" ); // BFGS training with bayesian regulators
+
+
+   // improved neural network implementation 
+   if (Use["NN"])
+   {
+//       TString layoutString ("Layout=TANH|(N+100)*2,LINEAR");
+//       TString layoutString ("Layout=SOFTSIGN|100,SOFTSIGN|50,SOFTSIGN|20,LINEAR");
+//       TString layoutString ("Layout=RELU|300,RELU|100,RELU|30,RELU|10,LINEAR");
+//       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|30,SOFTSIGN|20,SOFTSIGN|10,LINEAR");
+//       TString layoutString ("Layout=TANH|50,TANH|30,TANH|20,TANH|10,LINEAR");
+//       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|20,LINEAR");
+       TString layoutString ("Layout=TANH|100,TANH|50,LINEAR");
+
+       TString training0 ("LearningRate=1e-2,Momentum=0.3,Repetitions=1,ConvergenceSteps=50,BatchSize=20,TestRepetitions=15,WeightDecay=0.001,Regularization=NONE,DropConfig=0.0+0.5+0.5+0.5,DropRepetitions=1,Multithreading=True");
+       TString training1 ("LearningRate=1e-3,Momentum=0.5,Repetitions=1,ConvergenceSteps=50,BatchSize=30,TestRepetitions=7,WeightDecay=0.001,Regularization=L2,Multithreading=True,DropConfig=0.0+0.1+0.1+0.1,DropRepetitions=1");
+       TString training2 ("LearningRate=1e-4,Momentum=0.3,Repetitions=1,ConvergenceSteps=50,BatchSize=40,TestRepetitions=7,WeightDecay=0.0001,Regularization=L2,Multithreading=True");
+       TString training3 ("LearningRate=1e-5,Momentum=0.1,Repetitions=1,ConvergenceSteps=50,BatchSize=70,TestRepetitions=7,WeightDecay=0.0001,Regularization=NONE,Multithreading=True");
+
+       TString trainingStrategyString ("TrainingStrategy=");
+       trainingStrategyString += training0 + "|" + training1 + "|" + training2 + "|" + training3;
+
+      
+//       TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CROSSENTROPY");
+       TString nnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=G:WeightInitialization=XAVIERUNIFORM");
+//       TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CHECKGRADIENTS");
+       nnOptions.Append (":"); nnOptions.Append (layoutString);
+       nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
+
+       factory->BookMethod( dataloader, TMVA::Types::kNN, "NN", nnOptions ); // NN
+   }
+
+
 
    // CF(Clermont-Ferrand)ANN
    if (Use["CFMlpANN"])

@@ -34,7 +34,7 @@ using std::endl;
 
 namespace TMVA{
 
-   void mvaeffs( TString fin = "TMVA.root", 
+   void mvaeffs( TString fin = "TMVA.root", TString fDatasetName = "dataset", 
                  Bool_t useTMVAStyle = kTRUE, TString formula="S/sqrt(S+B)" );
 
    // this macro plots the signal and background efficiencies

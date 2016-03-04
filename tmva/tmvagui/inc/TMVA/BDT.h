@@ -120,7 +120,7 @@ namespace TMVA{
    static std::vector<TControlBar*> BDT_Global__cbar;
 
    // intermediate GUI
-   void BDT( const TString& fin = "TMVA.root" );
+   void BDT( const TString& fin = "TMVA.root", TString fDatasetName = "dataset" );
    void BDT_DeleteTBar(int i);
    void BDT( Int_t itree, TString wfile = "weights/TMVAnalysis_test_BDT.weights.txt", TString methName = "BDT", Bool_t useTMVAStyle = kTRUE ) ;
 

@@ -30,7 +30,7 @@ namespace TMVA{
 
    void draw_activation(TCanvas* c, Double_t cx, Double_t cy, 
                         Double_t radx, Double_t rady, Int_t whichActivation);
-   void network( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE );
+   void network( TString fin = "TMVA.root", TString fDatasetName = "dataset", Bool_t useTMVAStyle = kTRUE );
 
 }
 #endif

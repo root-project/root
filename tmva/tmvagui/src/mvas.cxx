@@ -13,7 +13,7 @@
 
 // input: - Input file (result from TMVA)
 //        - use of TMVA plotting TStyle
-void TMVA::mvas( TString fin, HistType htype, Bool_t useTMVAStyle )
+void TMVA::mvas( TString fin, TString fDatasetName, HistType htype, Bool_t useTMVAStyle )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
@@ -23,7 +23,8 @@ void TMVA::mvas( TString fin, HistType htype, Bool_t useTMVAStyle )
 
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
-
+   file->cd (fDatasetName);
+   
    // define Canvas layout here!
    const Int_t width = 600;   // size of canvas
 
@@ -34,7 +35,7 @@ void TMVA::mvas( TString fin, HistType htype, Bool_t useTMVAStyle )
    Int_t countCanvas = 0;
 
    // search for the right histograms in full list of keys
-   TIter next(file->GetListOfKeys());
+   TIter next(gDirectory->GetListOfKeys());
    TKey *key(0);   
    while ((key = (TKey*)next())) {
 

@@ -13,13 +13,15 @@ using std::vector;
 
 // plot parallel coordinates
 
-void TMVA::paracoor( TString fin , Bool_t useTMVAStyle )
+void TMVA::paracoor( TString fin , TString fDatasetName, Bool_t useTMVAStyle )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
 
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
+   TFile* file = TMVAGlob::OpenFile( fin );
+   file->cd (fDatasetName);
+   
    TTree* tree = (TTree*)file->Get("TestTree");
    if(!tree) {
       cout << "--- No TestTree saved in ROOT file. Parallel coordinates will not be plotted" << endl;

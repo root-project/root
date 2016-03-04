@@ -509,7 +509,7 @@ void TMVA::StatDialogMVAEffs::PrintResults( const MethodInfo* info )
    }
 }
 
-void TMVA::mvaeffs( TString fin , 
+void TMVA::mvaeffs( TString fin , TString fDatasetName, 
               Bool_t useTMVAStyle, TString formula )
 {
    TMVAGlob::Initialize( useTMVAStyle );
@@ -517,6 +517,7 @@ void TMVA::mvaeffs( TString fin ,
    StatDialogMVAEffs* gGui = new StatDialogMVAEffs(gClient->GetRoot(), 1000, 1000);
 
    TFile* file = TMVAGlob::OpenFile( fin );
+   gDirectory->cd (fDatasetName);
    gGui->ReadHistograms(file);
    gGui->SetFormula(formula);
    gGui->UpdateSignificanceHists();

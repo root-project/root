@@ -61,14 +61,15 @@ void TMVA::annconvergencetest( TDirectory *lhdir )
    TMVAGlob::imgconv( c, fname );
 }
 
-void TMVA::annconvergencetest( TString fin , Bool_t useTMVAStyle  )
+void TMVA::annconvergencetest( TString fin , TString fDatasetName, Bool_t useTMVAStyle  )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
   
    // checks if file with name "fin" is already open, and if not opens one
    //TFile* file =
-   TMVAGlob::OpenFile( fin );  
+   TMVAGlob::OpenFile( fin );
+   gDirectory->cd (fDatasetName);
 
    // get all titles of the method likelihood
    TList titles;
