@@ -64,6 +64,7 @@ Other improvements, which may cause compilation errors in third party code:
 
 Also:
   * `TPluginManager` was made thread-safe [ROOT-7927].
+  * On MacOSX, backtraces are now generated without external tools [ROOT-6667].
 
 ### Containers
 
