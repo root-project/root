@@ -115,10 +115,11 @@ SYSTEMDICTH   = -DSYSTEM_TYPE_unix $(SYSTEMDH)
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
-ifeq $(PLATFORM),macosx)
+ifeq ($(PLATFORM),macosx)
 CORELIBEXTRA += -F /System/Library/PrivateFrameworks -framework CoreSymbolication
-endif
-endif
+endif # macos
+endif # not win32gcc
+endif # not win32
 
 ifeq ($(BUILDCOCOA),yes)
 MODULES += core/macosx
@@ -550,7 +551,7 @@ endif
 ifeq ($(BUILDCOCOA),yes)
 STATICEXTRALIBS += -framework Cocoa -framework OpenGL
 endif
-ifeq $(PLATFORM),macosx)
+ifeq ($(PLATFORM),macosx)
 STATICEXTRALIBS += -F /System/Library/PrivateFrameworks -framework CoreSymbolication
 endif
 
