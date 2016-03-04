@@ -2170,7 +2170,9 @@ void macosx_backtrace() {
 
   CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid());
 
-  for (int i = /*skip 7*/ 7; i < numstacks; ++i) {
+  // skip TUnixSystem::Backtrace(), macosx_backtrace()
+  static const int skipFrames = 2;
+  for (int i = skipFrames; i < numstacks; ++i) {
     CSSourceInfoRef sourceInfo
     = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator,
                                                    (vm_address_t)addrlist[i],
