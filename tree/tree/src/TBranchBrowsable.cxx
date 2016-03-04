@@ -528,8 +528,8 @@ Bool_t TMethodBrowsable::IsMethodBrowsable(const TMethod* m)
 {
    long property = m->Property();
    if (m->GetNargs() - m->GetNargsOpt() == 0
-       && (property & kIsConstant
-           & ~kIsPrivate & ~kIsProtected & ~kIsPureVirtual )
+       && (property & kIsConstant)
+       && !(property & (kIsPrivate | kIsProtected | kIsPureVirtual) )
        && m->GetReturnTypeName()
        && strcmp("void",m->GetReturnTypeName())
        && !strstr(m->GetName(),"DeclFile")
