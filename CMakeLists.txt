@@ -236,7 +236,8 @@ if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall
                        WORKING_DIRECTORY tutorials DEPENDS root.exe Cling Hist Tree Gpad Graf HistPainter)
   else()
     add_custom_command(OUTPUT tutorials/hsimple.root
-                       COMMAND $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
+                       COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}} 
+                               $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
                        WORKING_DIRECTORY tutorials DEPENDS root.exe Cling Hist Tree Gpad Graf HistPainter)
   endif()
   install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
