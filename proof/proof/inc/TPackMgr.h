@@ -95,7 +95,7 @@ public:
 
    void              Show(const char *title = 0);
    Int_t             Clean(const char *pack);
-   Int_t             Remove(const char *pack = 0);
+   Int_t             Remove(const char *pack = 0, Bool_t dolock = kTRUE);
    TList            *GetList() const;
 
    void              ShowEnabled(const char *title = 0);
