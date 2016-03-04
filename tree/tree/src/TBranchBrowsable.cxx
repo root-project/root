@@ -526,8 +526,9 @@ Int_t TMethodBrowsable::GetBrowsables(TList& li, const TBranch* branch,
 
 Bool_t TMethodBrowsable::IsMethodBrowsable(const TMethod* m)
 {
-   if (m->GetNargs()-m->GetNargsOpt()==0
-       && (m->Property() & kIsConstant
+   long property = m->Property();
+   if (m->GetNargs() - m->GetNargsOpt() == 0
+       && (property & kIsConstant
            & ~kIsPrivate & ~kIsProtected & ~kIsPureVirtual )
        && m->GetReturnTypeName()
        && strcmp("void",m->GetReturnTypeName())
