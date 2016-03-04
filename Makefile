@@ -115,6 +115,8 @@ SYSTEMDICTH   = -DSYSTEM_TYPE_unix $(SYSTEMDH)
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
+ifeq $(PLATFORM),macosx)
+CORELIBEXTRA += -F /System/Library/PrivateFrameworks -framework CoreSymbolication
 endif
 endif
 
@@ -547,6 +549,9 @@ STATICEXTRALIBS += -lXft
 endif
 ifeq ($(BUILDCOCOA),yes)
 STATICEXTRALIBS += -framework Cocoa -framework OpenGL
+endif
+ifeq $(PLATFORM),macosx)
+STATICEXTRALIBS += -F /System/Library/PrivateFrameworks -framework CoreSymbolication
 endif
 
 ##### libCore #####
