@@ -331,7 +331,7 @@ endfunction(ROOTTEST_ADD_TEST)
 #
 # function ROOTTEST_ADD_UNITTEST_DIR(libraries...)
 #
-# This function defines a roottest unit test. It adds employs Google Test.
+# This function defines a roottest unit test using Google Test.
 # All files in this directory will end up in a unit test binary and run as a
 # single test.
 #
@@ -340,7 +340,8 @@ endfunction(ROOTTEST_ADD_TEST)
 function(ROOTTEST_ADD_UNITTEST_DIR)
   # Test name
   ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
-  set(fulltestname ${testprefix}-unittests)
+  set(fulltestname ${testprefix}_unittests)
+  set(binary ${testprefix}_exe)
   file(GLOB unittests_SRC
     "*.h"
     "*.hh"
@@ -352,9 +353,8 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
     "*.C"
     )
 
-  add_executable(unittests ${unittests_SRC})
-  target_include_directories(unittests PRIVATE ${ROOTTEST_DIR}/googletest/include)
-  target_link_libraries(unittests gtest_main ${ARGV})
-  add_test(${fulltestname} unittests)
-
+  add_executable(${binary} ${unittests_SRC})
+  target_include_directories(${binary} PRIVATE ${ROOTTEST_DIR}/googletest/include)
+  target_link_libraries(${binary} gtest_main ${ARGV})
+  add_test(${fulltestname} ${binary})
 endfunction(ROOTTEST_ADD_UNITTEST_DIR)
