@@ -3284,7 +3284,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
    using namespace clang;
    SourceLocation headerLoc = decl.getLocation();
 
-   static const char invalidFilename[] = "invalid";
+   static const char invalidFilename[] = "";
    if (!headerLoc.isValid()) return invalidFilename;
 
    HeaderSearch& HdrSearch = interp.getCI()->getPreprocessor().getHeaderSearchInfo();
