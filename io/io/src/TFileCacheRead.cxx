@@ -329,7 +329,10 @@ void TFileCacheRead::Print(Option_t *option) const
    printf("Cached Reading.....................: %lld bytes in %d transactions\n",this->GetBytesRead(), this->GetReadCalls());
    printf("Reading............................: %lld bytes in %d uncached transactions\n",this->GetNoCacheBytesRead(), this->GetNoCacheReadCalls());
    printf("Readahead..........................: %d bytes with overhead = %lld bytes\n",TFile::GetReadaheadSize(),this->GetBytesReadExtra());
-   printf("Average transaction................: %f Kbytes\n",0.001*Double_t(this->GetBytesRead())/Double_t(this->GetReadCalls()));
+   if (this->GetReadCalls() > 0)
+      printf("Average transaction................: %f Kbytes\n",0.001*Double_t(this->GetBytesRead())/Double_t(this->GetReadCalls()));
+   else
+      printf("Average transaction................: No read calls yet\n");
    printf("Number of blocks in current cache..: %d, total size: %d\n",fNseek,fNtot);
    if (fPrefetch){
      printf("Prefetching .......................: %lli blocks\n", fPrefetchedBlocks);
