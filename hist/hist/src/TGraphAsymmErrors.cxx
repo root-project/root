@@ -584,13 +584,38 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    //entries
    Bool_t bEffective = false;
    //compare sum of weights with sum of squares of weights
-   Double_t stats[TH1::kNstat];
-   pass->GetStats(stats);
-   if (TMath::Abs(stats[0] -stats[1]) > 1e-6)
+   // re-compute here to be sure to get the right values
+   Double_t psumw = 0;
+   Double_t psumw2 = 0; 
+   if (pass->GetSumw2()->fN > 0) {
+      for (int i = 0; i < pass->GetNcells(); ++i) {
+         psumw += pass->GetBinContent(i);
+         psumw2 += pass->GetSumw2()->At(i);
+      }
+   }
+   else {
+      psumw = pass->GetSumOfWeights();
+      psumw2 = psumw;
+   }
+   if (TMath::Abs(psumw - psumw2) > 1e-6)
       bEffective = true;
-   total->GetStats(stats);
-   if (TMath::Abs(stats[0] -stats[1]) > 1e-6)
+
+   Double_t tsumw = 0;
+   Double_t tsumw2 = 0; 
+   if (total->GetSumw2()->fN > 0) {
+      for (int i = 0; i < total->GetNcells(); ++i) {
+         tsumw += total->GetBinContent(i);
+         tsumw2 += total->GetSumw2()->At(i);
+      }
+   }
+   else {
+      tsumw = pass->GetSumOfWeights();
+      tsumw2 = tsumw;
+   }
+   if (TMath::Abs(tsumw - tsumw2) > 1e-6)
       bEffective = true;
+
+
 
    // we do not want to ignore the weights
    // if (bEffective && (pass->GetSumw2()->fN == 0 || total->GetSumw2()->fN == 0) ) {
@@ -617,7 +642,10 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    if(option.Contains("v")) {
       option.ReplaceAll("v","");
       bVerbose = true;
+      if (bEffective)
+         Info("Divide","weight will be considered in the Histogram Ratio"); 
    }
+
 
    //confidence level
    if(option.Contains("cl=")) {
@@ -770,30 +798,39 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
           {
              // tw += pw;
              // tw2 += pw2;
-             // compute effective entries
-             // special case is (pw=0, pw2=0) in this case is like unweighted
+             // compute ratio on the effective entries ( p and t) 
+             // special case is when (pw=0, pw2=0) in this case we cannot get the bin weight.
+             // we use then the overall weight of the full histogram 
              if (pw == 0 && pw2 == 0)
-                p = pw;
+                p = 0;
              else
                 p = (pw*pw)/pw2;
 
              if (tw == 0 && tw2 == 0)
-                t = tw;
+                t = 0;
              else
                 t = (tw*tw)/tw2;
 
-             if (p > 0 && tw > 0)
+             if (pw > 0 && tw > 0)
+                // this is the ratio of the two bin weights ( pw/p  / t/tw )
                 wratio = (pw*t)/(p * tw);
-             else if (p == 0 && tw > 0)
-                wratio = t/tw;
+             else if (pw == 0 && tw > 0)
+                // case p histogram has zero  compute the weights from all the histogram
+                // weight of histogram - sumw2/sumw
+                wratio = (psumw2 * t) /(psumw * tw );
+             else if (tw == 0 && pw > 0)
+                // case t histogram has zero  compute the weights from all the histogram
+                // weight of histogram - sumw2/sumw
+                wratio = (pw * tsumw) /(p * tsumw2 );
              else if (p > 0)
-                wratio = pw/p;
+                wratio = pw/p; //not sure if needed 
              else {
                 // case both pw and tw are zero - we skip these bins
                 if (!plot0Bins) continue; // skip bins with total <= 0
              }
 
              t += p;
+             //std::cout << p << "   " << t << "  " << wratio << std::endl;
           }
           else
              if (tw <= 0 && !plot0Bins) continue; // skip bins with total <= 0
