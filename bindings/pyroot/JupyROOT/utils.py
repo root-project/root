@@ -437,7 +437,7 @@ captures = []
 
 def loadExtensionsAndCapturers():
     global captures
-    extNames = ["JupyROOT.magics." + name for name in ["cppmagic"]]
+    extNames = ["JupyROOT.magics." + name for name in ["cppmagic","jsrootmagic"]]
     ip = get_ipython()
     extMgr = ExtensionManager(ip)
     for extName in extNames:
