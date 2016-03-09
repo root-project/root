@@ -14,6 +14,8 @@ import pty
 import itertools
 import re
 import fnmatch
+import handlers
+import time
 from hashlib import sha1
 from contextlib import contextmanager
 from subprocess import check_output
@@ -217,52 +219,73 @@ def invokeAclic(cell):
         processCppCode(".L %s+" %fileName)
 
 class StreamCapture(object):
-    def __init__(self, stream, ip=get_ipython()):
-        nbStreamsPyStreamsMap={sys.stderr:sys.__stderr__, sys.stdout:sys.__stdout__}
+    def __init__(self, ip=get_ipython()):
+        # For the registration
         self.shell = ip
-        self.nbStream = stream
-        self.pyStream = nbStreamsPyStreamsMap[stream]
-        self.pipe_out, self.pipe_in = pty.openpty()
-        os.dup2(self.pipe_in, self.pyStream.fileno())
-        # Platform independent flush
-        # With ctypes, the name of the libc library is not known a priori
-        # We use jitted function
-        flushFunctionName='_JupyROOT_Flush'
-        if (not hasattr(ROOT,flushFunctionName)):
-           declareCppCode("void %s(){fflush(nullptr);};" %flushFunctionName)
-        self.flush = getattr(ROOT,flushFunctionName)
+
+        self.nbOutStream = sys.stdout
+        self.nbErrStream = sys.stderr
+
+        self.pyOutStream = sys.__stdout__
+        self.pyErrStream = sys.__stderr__
+
+        self.outStreamPipe_in = pty.openpty()[1]
+        self.errStreamPipe_in = pty.openpty()[1]
+
+        os.dup2(self.outStreamPipe_in, self.pyOutStream.fileno())
+        os.dup2(self.errStreamPipe_in, self.pyErrStream.fileno())
+
+        self.ioHandler = handlers.IOHandler()
+        self.flag = True
+        self.outString = ""
+        self.errString = ""
+
+        self.asyncCapturer = handlers.Runner(self.syncCapture)
+
+    def syncCapture(self, defout = ''):
+        self.outString = defout
+        self.errString = defout
+        waitTimes = [.01, .01, .02, .04, .06, .08, .1]
+        lenWaitTimes = 7
+
+        iterIndex = 0
+        while self.flag:
+            self.ioHandler.Poll()
+            if not self.flag: return
+            waitTime = .1 if iterIndex >= lenWaitTimes else waitTimes[iterIndex]
+            time.sleep(waitTime)
 
     def pre_execute(self):
         # Unify C++ and Python outputs
-        if self.pyStream == sys.__stdout__:
-            self.nbStream = sys.stdout
-            sys.stdout = sys.__stdout__
-        if self.pyStream == sys.__stderr__:
-            self.nbStream = sys.stderr
-            sys.stderr = sys.__stderr__
+        self.nbOutStream = sys.stdout
+        sys.stdout = sys.__stdout__
+        self.nbErrStream = sys.stderr
+        sys.stderr = sys.__stderr__
 
-    def more_data(self):
-        r, _, _ = select.select([self.pipe_out], [], [], 0)
-        return bool(r)
+        self.flag = True
+        self.ioHandler.Clear()
+        self.ioHandler.InitCapture()
+        self.asyncCapturer.AsyncRun('')
 
     def post_execute(self):
-        out = ''
-        if self.pipe_out:
-            while self.more_data():
-                out += os.read(self.pipe_out, 8192)
-
-        self.flush()
+        self.flag = False
+        self.asyncCapturer.Wait()
+        self.ioHandler.Poll()
+        self.ioHandler.EndCapture()
 
         # Restore the stream
-        if self.pyStream == sys.__stdout__: sys.stdout = self.nbStream
-        if self.pyStream == sys.__stderr__: sys.stderr = self.nbStream
+        sys.stdout = self.nbOutStream
+        sys.stderr = self.nbErrStream
 
-        self.nbStream.write(out) # important to print the value printing output
+        # Print for the notebook
+        self.nbOutStream.write(self.ioHandler.GetStdout())
+        self.nbErrStream.write(self.ioHandler.GetStderr())
         return 0
 
     def register(self):
         self.shell.events.register('pre_execute', self.pre_execute)
         self.shell.events.register('post_execute', self.post_execute)
+
 
 def GetCanvasDrawers():
     lOfC = ROOT.gROOT.GetListOfCanvases()
@@ -443,8 +466,7 @@ def loadExtensionsAndCapturers():
     for extName in extNames:
         extMgr.load_extension(extName)
     cppcompleter.load_ipython_extension(ip)
-    captures.append(StreamCapture(sys.stderr))
-    captures.append(StreamCapture(sys.stdout))
+    captures.append(StreamCapture())
     captures.append(CaptureDrawnPrimitives())
 
     for capture in captures: capture.register()
