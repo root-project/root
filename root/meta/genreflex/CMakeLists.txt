@@ -1,5 +1,12 @@
 ROOTTEST_ADD_TESTDIRS()
 
+# ROOT-3745
+ROOTTEST_ADD_TEST(ioreadrulesfailonwarning
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/ioreadrulesfailonwarning.h
+                          --fail_on_warnings --select=${CMAKE_CURRENT_SOURCE_DIR}/ioreadrulesfailonwarning_selection.xml
+                  OUTREF ioreadrulesfailonwarning.eref
+                  PASSRC 1)
+
 #ROOT-7760
 # This test runs only on apple platforms as it probes a platform specific feature.
 if(APPLE)
