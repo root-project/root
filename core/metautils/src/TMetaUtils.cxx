@@ -57,15 +57,8 @@
 
 #include "TMetaUtils.h"
 
-int ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError;
-
-static unsigned int gNumberOfWarningsAndErrors = 0;
-
 namespace ROOT {
 namespace TMetaUtils {
-
-unsigned int GetNumberOfWarningsAndErrors(){return gNumberOfWarningsAndErrors;}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2709,101 +2702,6 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void ROOT::TMetaUtils::LevelPrint(bool prefix, int level, const char *location, const char *fmt, va_list ap)
-{
-   if (level < ROOT::TMetaUtils::gErrorIgnoreLevel)
-      return;
-
-   const char *type = 0;
-
-   if (level >= ROOT::TMetaUtils::kInfo)
-      type = "Info";
-   if (level >= ROOT::TMetaUtils::kNote)
-      type = "Note";
-   if (level >= ROOT::TMetaUtils::kThrowOnWarning)
-      type = "Warning";
-   if (level >= ROOT::TMetaUtils::kError)
-      type = "Error";
-   if (level >= ROOT::TMetaUtils::kSysError)
-      type = "SysError";
-   if (level >= ROOT::TMetaUtils::kFatal)
-      type = "Fatal";
-
-   if (!location || !location[0]) {
-      if (prefix) fprintf(stderr, "%s: ", type);
-      vfprintf(stderr, (const char*)va_(fmt), ap);
-   } else {
-      if (prefix) fprintf(stderr, "%s in <%s>: ", type, location);
-      else fprintf(stderr, "In <%s>: ", location);
-      vfprintf(stderr, (const char*)va_(fmt), ap);
-   }
-
-   fflush(stderr);
-
-   if (ROOT::TMetaUtils::gErrorIgnoreLevel == ROOT::TMetaUtils::kThrowOnWarning ||
-       ROOT::TMetaUtils::gErrorIgnoreLevel > ROOT::TMetaUtils::kError){
-      gNumberOfWarningsAndErrors++;
-   }
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Use this function in case an error occured.
-
-void ROOT::TMetaUtils::Error(const char *location, const char *va_(fmt), ...)
-{
-   va_list ap;
-   va_start(ap,va_(fmt));
-   LevelPrint(true, ROOT::TMetaUtils::kError, location, va_(fmt), ap);
-   va_end(ap);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Use this function in case a system (OS or GUI) related error occured.
-
-void ROOT::TMetaUtils::SysError(const char *location, const char *va_(fmt), ...)
-{
-   va_list ap;
-   va_start(ap, va_(fmt));
-   LevelPrint(true, ROOT::TMetaUtils::kSysError, location, va_(fmt), ap);
-   va_end(ap);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Use this function for informational messages.
-
-void ROOT::TMetaUtils::Info(const char *location, const char *va_(fmt), ...)
-{
-   va_list ap;
-   va_start(ap,va_(fmt));
-   LevelPrint(true, ROOT::TMetaUtils::kInfo, location, va_(fmt), ap);
-   va_end(ap);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Use this function in warning situations.
-
-void ROOT::TMetaUtils::Warning(const char *location, const char *va_(fmt), ...)
-{
-   va_list ap;
-   va_start(ap,va_(fmt));
-   LevelPrint(true, ROOT::TMetaUtils::kWarning, location, va_(fmt), ap);
-   va_end(ap);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Use this function in case of a fatal error. It will abort the program.
-
-void ROOT::TMetaUtils::Fatal(const char *location, const char *va_(fmt), ...)
-{
-   va_list ap;
-   va_start(ap,va_(fmt));
-   LevelPrint(true, ROOT::TMetaUtils::kFatal, location, va_(fmt), ap);
-   va_end(ap);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Add any unspecified template parameters to the class template instance,
 /// mentioned anywhere in the type.
 ///
@@ -5214,12 +5112,12 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
 
    if (auto tmplSpecDeclPtr = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&recordDecl)){
       std::string argFwdDecl;
-      if (ROOT::TMetaUtils::gErrorIgnoreLevel == ROOT::TMetaUtils::kInfo)
+      if (GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo)
          std::cout << "Class " << recordDecl.getNameAsString()
                    << " is a template specialisation. Treating its arguments.\n";
       for(auto arg : tmplSpecDeclPtr->getTemplateArgs().asArray()){
          int retCode = TreatSingleTemplateArg(arg, argFwdDecl, interpreter, acceptStl);
-         if (ROOT::TMetaUtils::gErrorIgnoreLevel == ROOT::TMetaUtils::kInfo){
+         if (GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo){
             std::cout << " o Template argument ";
             if (retCode==0){
                std::cout << "successfully treated. Arg fwd decl: " << argFwdDecl << std::endl;
@@ -5321,7 +5219,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::T
          fwdDeclString+=tdnFwdDecl;
    } else if (auto CXXRcdDeclPtr = immediatelyUnderlyingType->getAsCXXRecordDecl()){
       std::string classFwdDecl;
-      if (ROOT::TMetaUtils::gErrorIgnoreLevel == ROOT::TMetaUtils::kInfo)
+      if (GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo)
          std::cout << "Typedef " << tdnDecl.getNameAsString() << " hides a class: "
                    << CXXRcdDeclPtr->getNameAsString() << std::endl;
       int retCode = FwdDeclFromRcdDecl(*CXXRcdDeclPtr,
