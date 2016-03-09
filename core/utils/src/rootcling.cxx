@@ -3828,22 +3828,22 @@ int RootCling(int argc,
    }
 #endif
    if (!strcmp(argv[ic], "-v")) {
-      ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError; // The default is kError
+      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kError; // The default is kError
       ic++;
    } else if (!strcmp(argv[ic], "-v0")) {
-      ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kFatal; // Explicitly remove all messages
+      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kFatal; // Explicitly remove all messages
       ic++;
    } else if (!strcmp(argv[ic], "-v1")) {
-      ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError; // Only error message (default)
+      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kError; // Only error message (default)
       ic++;
    } else if (!strcmp(argv[ic], "-v2")) {
-      ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kWarning; // error and warning message
+      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kWarning; // error and warning message
       ic++;
    } else if (!strcmp(argv[ic], "-v3")) {
-      ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kNote; // error, warning and note
+      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kNote; // error, warning and note
       ic++;
    } else if (!strcmp(argv[ic], "-v4")) {
-      ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kInfo; // Display all information (same as -v)
+      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kInfo; // Display all information (same as -v)
       genreflex::verbose = true;
       ic++;
    }
@@ -4103,7 +4103,7 @@ int RootCling(int argc,
 
          if (strcmp("-failOnWarnings", argv[ic]) == 0) {
             // Fail on Warnings and Errors
-            ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kThrowOnWarning;
+            ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kThrowOnWarning;
             ic += 1;
             continue;
          }
@@ -4590,9 +4590,9 @@ int RootCling(int argc,
    int scannerVerbLevel = 0;
    {
       using namespace ROOT::TMetaUtils;
-      scannerVerbLevel = gErrorIgnoreLevel == kInfo; // 1 if true, 0 if false
+      scannerVerbLevel = GetErrorIgnoreLevel() == kInfo; // 1 if true, 0 if false
       if (isGenreflex){
-         scannerVerbLevel = gErrorIgnoreLevel < kWarning;
+         scannerVerbLevel = GetErrorIgnoreLevel() < kWarning;
       }
    }
 
@@ -4626,7 +4626,7 @@ int RootCling(int argc,
    if (genreflex::verbose)
       selectionRules.PrintSelectionRules();
 
-   if (ROOT::TMetaUtils::gErrorIgnoreLevel != ROOT::TMetaUtils::kFatal &&
+   if (ROOT::TMetaUtils::GetErrorIgnoreLevel() != ROOT::TMetaUtils::kFatal &&
          !onepcm &&
          !dictSelRulesPresent &&
          !selectionRules.AreAllSelectionRulesUsed()) {
@@ -5696,7 +5696,7 @@ int GenReflex(int argc, char **argv)
       return 1;
    }
 
-   ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kNote;
+   ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kNote;
 
    // The verbosity: debug wins over quiet
    //std::string verbosityOption("-v4"); // To be uncommented for the testing phase. It should be -v
