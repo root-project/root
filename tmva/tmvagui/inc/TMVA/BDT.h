@@ -36,18 +36,15 @@ namespace TMVA{
 
    // this macro displays a decision tree read in from the weight file
 
-   // static const Int_t kSigColorF = TColor::GetColor( "#2244a5" );  // novel blue 
-   // static const Int_t kBkgColorF = TColor::GetColor( "#dd0033" );  // novel red  
-   // static const Int_t kIntColorF = TColor::GetColor( "#33aa77" );  // novel green
 
-   static const Int_t kSigColorF = TColor::GetColor( "#0000FF" );  // Pure Signal
-   static const Int_t kBkgColorF = TColor::GetColor( "#FF0000" );  // Pure Backgr.
-   static const Int_t kIntColorF = TColor::GetColor( "#33aa77" );  // novel green
+   inline Int_t getSigColorF () {return  TColor::GetColor( "#0000FF" );}  // Pure Signal
+   inline Int_t getBkgColorF () {return  TColor::GetColor( "#FF0000" );}  // Pure Backgr.
+   inline Int_t getIntColorF () {return  TColor::GetColor( "#33aa77" );}  // novel green
 
 
-   static const Int_t kSigColorT = 10;
-   static const Int_t kBkgColorT = 10;
-   static const Int_t kIntColorT = 10;
+   inline Int_t getSigColorT () {return  10;}
+   inline Int_t getBkgColorT () {return  10;}
+   inline Int_t getIntColorT () {return  10;}
 
 
 

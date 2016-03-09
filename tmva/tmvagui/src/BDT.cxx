@@ -339,9 +339,9 @@ void TMVA::StatDialogBDT::DrawTree( Int_t itree )
    TPaveText *signalleaf = new TPaveText(0.02,ydown ,0.15,yup, "NDC");
    signalleaf->SetBorderSize(1);
    signalleaf->SetFillStyle(1001);
-   signalleaf->SetFillColor( kSigColorF );
+   signalleaf->SetFillColor( getSigColorF() );
    signalleaf->AddText("Pure Signal Nodes");
-   signalleaf->SetTextColor( kSigColorT );
+   signalleaf->SetTextColor( getSigColorT() );
    signalleaf->Draw();
 
    ydown = ydown - ystep/2.5 -dy;
@@ -349,10 +349,10 @@ void TMVA::StatDialogBDT::DrawTree( Int_t itree )
    TPaveText *backgroundleaf = new TPaveText(0.02,ydown,0.15,yup, "NDC");
    backgroundleaf->SetBorderSize(1);
    backgroundleaf->SetFillStyle(1001);
-   backgroundleaf->SetFillColor( kBkgColorF );
+   backgroundleaf->SetFillColor( getBkgColorF() );
 
    backgroundleaf->AddText("Pure Backgr. Nodes");
-   backgroundleaf->SetTextColor( kBkgColorT );
+   backgroundleaf->SetTextColor( getBkgColorT() );
    backgroundleaf->Draw();
 
 

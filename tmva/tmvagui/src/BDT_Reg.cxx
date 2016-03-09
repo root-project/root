@@ -182,9 +182,9 @@ void TMVA::StatDialogBDTReg::DrawNode( TMVA::DecisionTreeNode *n,
    t->SetBorderSize(1);
 
    t->SetFillStyle(1001);
-   if      (n->GetNodeType() ==  1) { t->SetFillColor( kSigColorF ); t->SetTextColor( kSigColorT ); }
-   else if (n->GetNodeType() == -1) { t->SetFillColor( kBkgColorF ); t->SetTextColor( kBkgColorT ); }
-   else if (n->GetNodeType() ==  0) { t->SetFillColor( kIntColorF ); t->SetTextColor( kIntColorT ); }
+   if      (n->GetNodeType() ==  1) { t->SetFillColor( getSigColorF() ); t->SetTextColor( getSigColorT() ); }
+   else if (n->GetNodeType() == -1) { t->SetFillColor( getBkgColorF() ); t->SetTextColor( getBkgColorT() ); }
+   else if (n->GetNodeType() ==  0) { t->SetFillColor( getIntColorF() ); t->SetTextColor( getIntColorT() ); }
 
    char buffer[25];
    //   sprintf( buffer, "N=%f", n->GetNEvents() );
@@ -323,9 +323,9 @@ void TMVA::StatDialogBDTReg::DrawTree( Int_t itree )
    TPaveText *intermediate = new TPaveText(0.02,ydown,0.15,yup, "NDC");
    intermediate->SetBorderSize(1);
    intermediate->SetFillStyle(1001);
-   intermediate->SetFillColor( kIntColorF );
+   intermediate->SetFillColor( getIntColorF() );
    intermediate->AddText("Intermediate Nodes");
-   intermediate->SetTextColor( kIntColorT );
+   intermediate->SetTextColor( getIntColorT() );
    intermediate->Draw();
 
    ydown = ydown - ystep/2.5 -dy;
@@ -333,9 +333,9 @@ void TMVA::StatDialogBDTReg::DrawTree( Int_t itree )
    TPaveText *signalleaf = new TPaveText(0.02,ydown ,0.15,yup, "NDC");
    signalleaf->SetBorderSize(1);
    signalleaf->SetFillStyle(1001);
-   signalleaf->SetFillColor( kSigColorF );
+   signalleaf->SetFillColor( getSigColorF() );
    signalleaf->AddText("Leaf Nodes");
-   signalleaf->SetTextColor( kSigColorT );
+   signalleaf->SetTextColor( getSigColorT() );
    signalleaf->Draw();
 /*
    ydown = ydown - ystep/2.5 -dy;
