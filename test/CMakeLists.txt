@@ -41,6 +41,13 @@ ROOT_LINKER_LIBRARY(Event Event.cxx EventDict.cxx LIBRARIES Hist MathCore)
 ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree Hist Net)
 ROOT_ADD_TEST(test-event COMMAND eventexe)
 
+#---localcompression-------------------------------------------------------------------------------------
+ROOT_GENERATE_DICTIONARY(LocalcompressionDict ${CMAKE_CURRENT_SOURCE_DIR}/Localcompression.h MODULE Localcompression LINKDEF LocalcompressionLinkDef.h)
+ROOT_LINKER_LIBRARY(Localcompression Localcompression.cxx LocalcompressionDict.cxx LIBRARIES Hist MathCore)
+
+ROOT_EXECUTABLE(localcompressionexe MainLocalcompression.cxx LIBRARIES Localcompression RIO Tree Hist Net)
+ROOT_ADD_TEST(test-localcompression COMMAND localcompressionexe)
+
 #---hsimple------------------------------------------------------------------------------------
 #ROOT_EXECUTABLE(hsimple hsimple.cxx LIBRARIES RIO Tree Hist)
 #ROOT_ADD_TEST(test-hsimple COMMAND hsimple)

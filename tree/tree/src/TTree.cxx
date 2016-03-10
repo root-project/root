@@ -3547,6 +3547,7 @@ TBasket* TTree::CreateBasket(TBranch* branch)
    if (!branch) {
       return 0;
    }
+   printf("tree creating basket\n");
    return new TBasket(branch->GetName(), GetName(), branch);
 }
 

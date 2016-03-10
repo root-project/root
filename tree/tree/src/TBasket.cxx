@@ -64,6 +64,7 @@ TBasket::TBasket() : fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLa
    fLast          = 0;
    fBranch        = 0;
    fRandomAccessCompression = gROOT->IsRandomAccessCompression();
+   printf("TBasket(1):random=%s\n",fRandomAccessCompression?"True":"False");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,6 +84,7 @@ TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir),fCompressedBufferRef(0
    fLast          = 0;
    fBranch        = 0;
    fRandomAccessCompression = gROOT->IsRandomAccessCompression();
+   printf("TBasket(2):random=%s\n",fRandomAccessCompression?"True":"False");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +123,9 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
          fOwnsCompressedBuffer = kTRUE;
       }
    }
+   printf("before streamer\n");
    Streamer(*fBufferRef);
+   printf("end streamer\n");
    fKeylen      = fBufferRef->Length();
    fObjlen      = fBufferSize - fKeylen;
    fLast        = fKeylen;
@@ -134,8 +138,10 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
    }
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
    fRandomAccessCompression = gROOT->IsRandomAccessCompression();
+   printf("TBasket(3):random=%s\n",fRandomAccessCompression?"True":"False");
 
    if (fRandomAccessCompression!=0 && fNevBufSize!=0) {
+      printf("Allocating fCompressedEntryOffset\n");
       fCompressedEntryOffset = new Int_t[fNevBufSize];
       for (Int_t i=0;i<fNevBufSize;i++) fCompressedEntryOffset[i] = 0;
    }
@@ -610,11 +616,24 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file, Bool_t ra
 
       memcpy(rawUncompressedBuffer, rawCompressedBuffer, fKeylen);
       char *rawUncompressedObjectBuffer = rawUncompressedBuffer+fKeylen;
-      UChar_t *rawCompressedObjectBuffer = (UChar_t*)rawCompressedBuffer+fKeylen;
+      UChar_t *rawCompressedObjectBuffer;
+
+      // the following two parameters help us to find the boundary of this entry
+      Int_t relativeoffset = 0; // start offset of this entry
+      Int_t relativelength = 0; // length of this entry
+      if (random & fRandomAccessCompression) {
+         rawCompressedObjectBuffer = (UChar_t*)rawCompressedBuffer+fKeylen+sizeof(Int_t)*(fNevBuf+1+1);
+         relativeoffset = fCompressedEntryOffset[relativeentry];
+         relativelength = fCompressedEntryOffset[relativeentry+1] - relativeoffset;
+      } else {
+         rawCompressedObjectBuffer = (UChar_t*)rawCompressedBuffer+fKeylen;
+         for(int cnt=0;cnt<1024;++cnt){
+            printf("rawCompressedBuffer[%d]=%c(%d), ",cnt,rawCompressedBuffer[cnt],rawCompressedBuffer[cnt]);
+            if(cnt%6==0) printf("\n");
+         }
+      }
       Int_t nin, nbuf;
       Int_t nout = 0, noutot = 0, nintot = 0;
-
-      Int_t relativeoffset = 0;
 
       // Unzip all the compressed objects in the compressed object buffer.
       while (1) {
@@ -628,19 +647,42 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file, Bool_t ra
             memcpy(rawUncompressedBuffer+fKeylen, rawCompressedObjectBuffer+fKeylen, fObjlen);
             goto AfterBuffer;
          }
+         printf("nin=%d,nbuf=%d\n",nin,nbuf);
          if (!random) {
+            printf("run R__unzip\n");
             R__unzip(&nin, rawCompressedObjectBuffer, &nbuf, (unsigned char*) rawUncompressedObjectBuffer, &nout);
          } else {
-//            for(int i=0; i<fNevBuf; ++i){
-//               printf("fEntryOffset[%d]=%d\n",i,fEntryOffset[i]);
-//               printf("fCompressedEntryOffset[%d]=%d\n",i,fCompressedEntryOffset[i]);
-//            }
-//            relativeoffset = fCompressedEntryOffset[relativeentry];
-            R__unzip_RAC(&nin, rawCompressedObjectBuffer, &nbuf, (unsigned char*) rawUncompressedObjectBuffer, &nout, relativeoffset);
+            R__unzip_RAC(&nin, rawCompressedObjectBuffer, &nbuf, (unsigned char*) rawUncompressedObjectBuffer, &nout, relativeoffset, relativelength);
          }
+         printf("nout=%d\n",nout);
          if (!nout) break;
          noutot += nout;
          nintot += nin;
+         if (random & fRandomAccessCompression) { // if random access compression, do not wait until noutot >= fObjlen since single entry is high likely smaller than fObjlen
+            fObjlen     = nout;
+            fBufferSize = fKeylen + nout;
+            fLast       = fBufferSize;
+            fNevBuf     = 0;
+            fNevBufSize = 0;
+            
+            if (fEntryOffset) {
+               delete [] fEntryOffset;
+               fEntryOffset = 0;
+            }
+            if (fDisplacement) {
+               delete [] fDisplacement;
+               fDisplacement = 0;
+            }
+            fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
+            len = fObjlen+fKeylen;
+            TVirtualPerfStats* temp = gPerfStats;
+            if (fBranch->GetTree()->GetPerfStats() != 0) gPerfStats = fBranch->GetTree()->GetPerfStats();
+            if (R__unlikely(gPerfStats)) {
+               gPerfStats->UnzipEvent(fBranch->GetTree(),pos,start,nintot,fObjlen);
+            }
+            gPerfStats = temp;
+            return 0;
+         }
          if (noutot >= fObjlen) break;
          rawCompressedObjectBuffer += nin;
          rawUncompressedObjectBuffer += nout;
@@ -694,7 +736,6 @@ AfterBuffer:
 
    for(int i=0; i<fNevBuf; ++i){ //##
       printf("fEntryOffset[%d]=%d\n",i,fEntryOffset[i]);
-//      printf("fCompressedEntryOffset[%d]=%d\n",i,fCompressedEntryOffset[i]);
    }
 
    return 0;
@@ -863,14 +904,15 @@ void TBasket::Streamer(TBuffer &b)
          delete [] fCompressedEntryOffset;
          fCompressedEntryOffset = new Int_t[fNevBufSize];
          if (fNevBuf) b.ReadArray(fCompressedEntryOffset);
-         for(int i=0; i<fNevBuf; ++i) printf("in streamer read, fCompressedEntryOffset[%d]=%d\n",i,fCompressedEntryOffset[i]);
+         for(int i=0; i<fNevBuf+1; ++i) printf("in streamer read, fCompressedEntryOffset[%d]=%d\n",i,fCompressedEntryOffset[i]);
          return;
       }
       if (flag%10 != 2 && flag%10 != 4) {
+         printf("flag is neither 2 nor 4, indicating there exists fEntryOffset, flag=%d\n",flag);
          delete [] fEntryOffset;
          fEntryOffset = new Int_t[fNevBufSize];
          if (fNevBuf) b.ReadArray(fEntryOffset);
-         for(int i=0; i<fNevBuf; ++i) printf("in streamer read, fEntryOffset[%d]=%d\n",i,fEntryOffset[i]);
+         for(int i=0; i<fNevBuf+1; ++i) printf("in streamer read, fEntryOffset[%d]=%d\n",i,fEntryOffset[i]);
          if (20<flag && flag<40) {
             for(int i=0; i<fNevBuf; i++){
                fEntryOffset[i] &= ~kDisplacementMask;
@@ -888,6 +930,7 @@ void TBasket::Streamer(TBuffer &b)
          if (v > 1) b.ReadFastArray(buf,fLast);
          else       b.ReadArray(buf);
          fBufferRef->SetBufferOffset(fLast);
+         printf("in streamer read, fLast=%d,fBufferSize=%d\n",fLast,fBufferSize);
          // This is now done in the TBranch streamer since fBranch might not
          // yet be set correctly.
          //   fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
@@ -942,8 +985,13 @@ void TBasket::Streamer(TBuffer &b)
             flag = 5;
             b << flag;
             if (fNevBuf) {
-               b.WriteArray(fCompressedEntryOffset, fNevBuf);
-               for(int i=0; i<fNevBuf; ++i) printf("in streamer write, flag=%d,fBufferSize=%d,fNevBufSize=%d,fNevBuf=%d,fLast=%d,fCompressedEntryOffset[%d]=%d\n",flag,fBufferSize,fNevBufSize,fNevBuf,fLast,i,fCompressedEntryOffset[i]);
+               b.WriteArray(fCompressedEntryOffset, fNevBuf+1);
+               if(fEntryOffset) {
+                  printf("fEntryOffset is not null\n");
+                  for(int i=0; i<fNevBuf+1; ++i) printf("in streamer write, flag=%d,fBufferSize=%d,fNevBufSize=%d,fNevBuf=%d,fLast=%d,fEntryOffset[%d]=%d,fCompressedEntryOffset[%d]=%d\n",flag,fBufferSize,fNevBufSize,fNevBuf,fLast,i,fEntryOffset[i],i,fCompressedEntryOffset[i]);
+               } else {
+                  printf("fEntryOffset is null\n");
+               }
             }
          } else {
             b << flag;
@@ -967,8 +1015,13 @@ void TBasket::Streamer(TBuffer &b)
          b << flag;
 
          if (fRandomAccessCompression && fCompressedEntryOffset && fNevBuf) {
-            b.WriteArray(fCompressedEntryOffset, fNevBuf);
-            for(int i=0; i<fNevBuf; ++i) printf("in streamer write, flag=%d,fBufferSize=%d,fNevBufSize=%d,fNevBuf=%d,fLast=%d,fCompressedEntryOffset[%d]=%d\n",flag,fBufferSize,fNevBufSize,fNevBuf,fLast,i,fCompressedEntryOffset[i]);
+            b.WriteArray(fCompressedEntryOffset, fNevBuf+1);
+            if(fEntryOffset){
+               printf("fEntryOffset is not null 2\n");
+               for(int i=0; i<fNevBuf+1; ++i) printf("in streamer write, flag=%d,fBufferSize=%d,fNevBufSize=%d,fNevBuf=%d,fLast=%d,fEntryOffset[%d]=%d,fCompressedEntryOffset[%d]=%d\n",flag,fBufferSize,fNevBufSize,fNevBuf,fLast,i,fEntryOffset[i],i,fCompressedEntryOffset[i]);
+            } else {
+               printf("fEntryOffset is null 2\n");
+            }
          }
 
          if (fEntryOffset && fNevBuf) {
@@ -976,6 +1029,7 @@ void TBasket::Streamer(TBuffer &b)
             if (fDisplacement) b.WriteArray(fDisplacement, fNevBuf);
          }
          if (fBufferRef) {
+            printf("in streamer write, write fBufferRef data\n");
             char *buf  = fBufferRef->Buffer();
             b.WriteFastArray(buf, fLast);
          }
@@ -1082,13 +1136,6 @@ Int_t TBasket::WriteBuffer()
          delete [] fDisplacement; fDisplacement = 0;
       }
    }
-//##
-   if (fCompressedEntryOffset) {
-      for(int i=0; i< fNevBuf+1; ++i)
-         printf("Name:%s, fCompressedEntryOffset[%d]=%d\n", this->GetBranch()->GetName(), i, fCompressedEntryOffset[i]);
-   }
-   printf("WriteBuffer():fNevBuf=%d,fNevBufSize=%d\n",fNevBuf,fNevBufSize);
-//##
    Int_t lbuf, nout, noutot, bufmax, nzip;
    lbuf       = fBufferRef->Length();
    fObjlen    = lbuf - fKeylen;
@@ -1100,11 +1147,11 @@ Int_t TBasket::WriteBuffer()
    if (cxlevel > 0) {
       Int_t nbuffers = 1 + (fObjlen - 1) / kMAXZIPBUF;
       Int_t buflen;
-      if (!IsRandomAccessCompression()) {
+      if (!fRandomAccessCompression) {
          buflen = fKeylen + fObjlen + 9 * nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap
       } else {
          if (fCompressedEntryOffset && fNevBuf) {
-            compoffkey = sizeof(Int_t)*fNevBuf;
+            compoffkey = sizeof(Int_t)*(fNevBuf+1+1);
          }
          buflen = fKeylen + compoffkey + 2 * fObjlen + 9 * nbuffers + 28; //reserve enough space for compressed entry offsets
       }
@@ -1116,14 +1163,16 @@ Int_t TBasket::WriteBuffer()
       fCompressedBufferRef->SetWriteMode();
       fBuffer = fCompressedBufferRef->Buffer();
       char *objbuf = fBufferRef->Buffer() + fKeylen;
+      printf("compoffkey=%d,fRandomAccessCompression=%s\n",compoffkey,(fRandomAccessCompression?"True":"False"));
       char *bufcur = &fBuffer[fKeylen+compoffkey];//reserve space for compressed buffer
       noutot = 0;
       nzip   = 0;
       for (Int_t i = 0; i < nbuffers; ++i) {
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
          else bufmax = kMAXZIPBUF;
+         printf("kMAXZIPBUF=%d,bufmax=%d,nbuffers=%d,fObjlen=%d,nzip=%d\n",kMAXZIPBUF,bufmax,nbuffers,fObjlen,nzip);
          //compress the buffer
-         if (!IsRandomAccessCompression()) {
+         if (!fRandomAccessCompression) {
             R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
          } else {
             Int_t entries = fNevBuf+1;
@@ -1132,6 +1181,7 @@ Int_t TBasket::WriteBuffer()
             Int_t *entryoffset = fEntryOffset;
             Int_t *compressedentryoffset = fCompressedEntryOffset;
             Int_t compressedbufmax = 2 * bufmax;
+            printf("bufmax=%d,fKeylen=%d,fObjlen=%d,lbuf=%d\n",bufmax,fKeylen,fObjlen,lbuf);
             R__zipMultipleAlgorithm_RAC(cxlevel, &bufmax, objbuf, &compressedbufmax, bufcur, &nout, cxAlgorithm, entries, haveoffset, lastbyte, entryoffset, compressedentryoffset);
          }
          // test if buffer has really been compressed. In case of small buffers
@@ -1162,11 +1212,17 @@ Int_t TBasket::WriteBuffer()
       Create(noutot,file);
       fBufferRef->SetBufferOffset(0);
       printf("streamer4\n");
-      fRandomAccessCompression = 0;// make sure compressed entry offsets are not streamed into uncompressed buffer
-      Streamer(*fBufferRef);         //write key itself again
-      memcpy(fBuffer,fBufferRef->Buffer(),fKeylen);
-      fRandomAccessCompression = 1;// streaming compressed entry offsets into compressed buffer
-      Streamer(*fCompressedBufferRef);
+      Bool_t random = fRandomAccessCompression;
+      if (random) {
+         fRandomAccessCompression = 0;// make sure compressed entry offsets are not streamed into uncompressed buffer
+         Streamer(*fBufferRef);         //write key itself again
+         memcpy(fBuffer,fBufferRef->Buffer(),fKeylen);
+         fRandomAccessCompression = 1;// streaming compressed entry offsets into compressed buffer
+         Streamer(*fCompressedBufferRef);
+      } else {
+         Streamer(*fBufferRef);         //write key itself again
+         memcpy(fBuffer,fBufferRef->Buffer(),fKeylen);
+      }         
    } else {
       fBuffer = fBufferRef->Buffer();
       Create(fObjlen,file);

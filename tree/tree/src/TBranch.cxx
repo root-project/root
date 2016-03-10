@@ -746,6 +746,7 @@ void TBranch::ExpandBasketArrays()
 
 Int_t TBranch::Fill()
 {
+   printf("in TBranch::Fill\n");
    if (TestBit(kDoNotProcess)) {
       return 0;
    }
@@ -1100,6 +1101,7 @@ Int_t TBranch::FlushOneBasket(UInt_t ibasket)
 
 TBasket* TBranch::GetBasket(Int_t basketnumber, Bool_t random, Long64_t relativeentry)
 {
+   printf("TBranch::GetBasket\n");
    // This counter in the sequential case collects errors coming also from
    // different files (suppose to have a program reading f1.root, f2.root ...)
    // In the mt case, it is made atomic: it safely collects errors from
@@ -1134,6 +1136,8 @@ TBasket* TBranch::GetBasket(Int_t basketnumber, Bool_t random, Long64_t relative
    }
 
    //now read basket
+   printf("basketnumber=%d, random=%s, relativeentry=%lld\n", basketnumber, (random?"True":"False"), relativeentry);
+
    Int_t badread = basket->ReadBasketBuffers(fBasketSeek[basketnumber],fBasketBytes[basketnumber],file, random, relativeentry);
    if (badread || basket->GetSeekKey() != fBasketSeek[basketnumber]) {
       nerrors++;
@@ -1264,6 +1268,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
       if (!basket) {
          basket = GetBasket(fReadBasket, random, relativeentry);
          if (!basket) {
+            printf("run into here\n");
             fCurrentBasket = 0;
             fFirstBasketEntry = -1;
             fNextBasketEntry = -1;
@@ -1289,22 +1294,31 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    if (R__unlikely(!buf->IsReading())) {
       basket->SetReadMode();
    }
-   Int_t* entryOffset = basket->GetEntryOffset();
    Int_t bufbegin = 0;
-   if (entryOffset) {
-      bufbegin = entryOffset[entry-first];
+
+   random &= basket->IsRandomAccessCompression();
+   if (random) {
+      bufbegin = basket->GetKeylen();
+      printf("bufbegin=%d\n", bufbegin);
       buf->SetBufferOffset(bufbegin);
-      Int_t* displacement = basket->GetDisplacement();
-      if (R__unlikely(displacement)) {
-         buf->SetBufferDisplacement(displacement[entry-first]);
-      }
    } else {
-      bufbegin = basket->GetKeylen() + ((entry-first) * basket->GetNevBufSize());
-      buf->SetBufferOffset(bufbegin);
+      Int_t* entryOffset = basket->GetEntryOffset();
+      if (entryOffset) {
+         bufbegin = entryOffset[entry-first];
+         buf->SetBufferOffset(bufbegin);
+         Int_t* displacement = basket->GetDisplacement();
+         if (R__unlikely(displacement)) {
+            buf->SetBufferDisplacement(displacement[entry-first]);
+         }
+      } else {
+         bufbegin = basket->GetKeylen() + ((entry-first) * basket->GetNevBufSize());
+         buf->SetBufferOffset(bufbegin);
+      }
    }
 
    // Int_t bufbegin = buf->Length();
    (this->*fReadLeaves)(*buf);
+   printf("buf->Lenth()=%d\n",buf->Length());
    return buf->Length() - bufbegin;
 }
 
@@ -1441,6 +1455,7 @@ TFile* TBranch::GetFile(Int_t mode)
 
 TBasket* TBranch::GetFreshBasket()
 {
+   printf("in TBranch::GetFreshBasket\n");
    TBasket *basket = 0;
    if (GetTree()->MemoryFull(0)) {
       if (fNBaskets==1) {
@@ -1722,6 +1737,7 @@ void TBranch::KeepCircular(Long64_t maxEntries)
 
 Int_t TBranch::LoadBaskets()
 {
+   printf("TBranch::LoadBaskets\n");
    Int_t nimported = 0;
    Int_t nbaskets = fWriteBasket;
    TFile *file = GetFile(0);
@@ -2347,6 +2363,7 @@ void TBranch::SetStatus(Bool_t status)
 
 void TBranch::Streamer(TBuffer& b)
 {
+   printf("TBranch::Streamer\n");
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       fTree = 0; // Will be set by TTree::Streamer
@@ -2360,19 +2377,22 @@ void TBranch::Streamer(TBuffer& b)
       fNextBasketEntry  = -1;
 
       Version_t v = b.ReadVersion(&R__s, &R__c);
+      printf("after ReadVersion\n");
       if (v > 9) {
          b.ReadClassBuffer(TBranch::Class(), this, v, R__s, R__c);
-
+         printf("test 1\n");
          if (fWriteBasket>=fBaskets.GetSize()) {
             fBaskets.Expand(fWriteBasket+1);
          }
+         printf("test 2\n");
          fDirectory = 0;
          fNleaves = fLeaves.GetEntriesFast();
+         printf("test 3\n");
          for (Int_t i=0;i<fNleaves;i++) {
             TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
             leaf->SetBranch(this);
          }
-
+         printf("between 1\n");
          fNBaskets = fBaskets.GetEntries();
          for (Int_t j=fWriteBasket,n=0;j>=0 && n<fNBaskets;--j) {
             TBasket *bk = (TBasket*)fBaskets.UncheckedAt(j);
@@ -2382,6 +2402,7 @@ void TBranch::Streamer(TBuffer& b)
                ++n;
             }
          }
+         printf("between 2\n");
          if (fWriteBasket >= fMaxBaskets) {
             //old versions may need this fix
             ExpandBasketArrays();
@@ -2390,8 +2411,10 @@ void TBranch::Streamer(TBuffer& b)
             fBasketSeek [fWriteBasket] = fBasketSeek [fWriteBasket-1];
 
          }
+         printf("between 3\n");
          if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
          gROOT->SetReadingObject(kFALSE);
+         printf("between 4\n");
          if (IsA() == TBranch::Class()) {
             if (fNleaves == 0) {
                fReadLeaves = &TBranch::ReadLeaves0Impl;
@@ -2405,6 +2428,7 @@ void TBranch::Streamer(TBuffer& b)
          }
          return;
       }
+      printf("in between\n");
       //====process old versions before automatic schema evolution
       Int_t n,i,j,ijunk;
       if (v > 5) {
@@ -2425,7 +2449,9 @@ void TBranch::Streamer(TBuffer& b)
 
          fBranches.Streamer(b);
          fLeaves.Streamer(b);
+         printf("before fBaskets.Streamer\n");
          fBaskets.Streamer(b);
+         printf("after fBaskets.Streamer\n");
          fBasketBytes = new Int_t[fMaxBaskets];
          fBasketEntry = new Long64_t[fMaxBaskets];
          fBasketSeek  = new Long64_t[fMaxBaskets];
@@ -2520,6 +2546,7 @@ void TBranch::Streamer(TBuffer& b)
       } else {
          for (n=0;n<fMaxBaskets;n++) fBasketBytes[n] = 0;
       }
+      printf("before getbasket in TBranch::Streamer\n");
       if (v < 2) {
          fBasketSeek = new Long64_t[fMaxBaskets];
          for (n=0;n<fWriteBasket;n++) {
@@ -2538,6 +2565,7 @@ void TBranch::Streamer(TBuffer& b)
       if (v > 2) {
          fFileName.Streamer(b);
       }
+      printf("after fFileName.Streamer\n");
       fDirectory = 0;
       if (v < 4) SetAutoDelete(kTRUE);
       if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;

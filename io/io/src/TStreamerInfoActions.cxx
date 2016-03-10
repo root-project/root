@@ -177,6 +177,7 @@ namespace TStreamerInfoActions
    template <typename T>
    INLINE_TEMPLATE_ARGS Int_t ReadBasicType(TBuffer &buf, void *addr, const TConfiguration *config)
    {
+      printf("ReadBasicType 1\n");
       T *x = (T*)( ((char*)addr) + config->fOffset );
       // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
       buf >> *x;
@@ -206,6 +207,7 @@ namespace TStreamerInfoActions
    template <>
    INLINE_TEMPLATE_ARGS Int_t ReadBasicType<BitsMarker>(TBuffer &buf, void *addr, const TConfiguration *config)
    {
+      printf("ReadBasicType BitsMarker\n");
       UInt_t *x = (UInt_t*)( ((char*)addr) + config->fOffset );
       // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
       // Idea: This code really belongs inside TBuffer[File]
@@ -220,6 +222,7 @@ namespace TStreamerInfoActions
    template <typename T>
    INLINE_TEMPLATE_ARGS Int_t WriteBasicType(TBuffer &buf, void *addr, const TConfiguration *config)
    {
+      printf("WriteBasicType 1\n");
       T *x = (T*)( ((char*)addr) + config->fOffset );
       // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
       buf << *x;
@@ -240,7 +243,7 @@ namespace TStreamerInfoActions
    {
       // Stream a Float16 or Double32 where a factor has been specified.
       //a range was specified. We read an integer and convert it back to a double.
-
+      printf("in ReadBasicType_WithFactor\n");
       TConfWithFactor *conf = (TConfWithFactor *)config;
       buf.ReadWithFactor((T*)( ((char*)addr) + config->fOffset ), conf->fFactor, conf->fXmin);
       return 0;
@@ -261,7 +264,7 @@ namespace TStreamerInfoActions
 
       TConfNoFactor *conf = (TConfNoFactor *)config;
       Int_t nbits = conf->fNbits;
-
+      printf("in ReadBasicType_NoFactor\n");
       buf.ReadWithNbits( (T*)( ((char*)addr) + config->fOffset ), nbits );
       return 0;
    }
@@ -272,6 +275,8 @@ namespace TStreamerInfoActions
 
       // Idea: We could separate the TString Streamer in its two parts and
       // avoid the if (buf.IsReading()) and try having it inlined.
+      const char *temp = ((TString*)(((char*)addr)+config->fOffset))->TString::Data();//##
+      printf("in ReadTString and temp=%s\n",temp);
       ((TString*)(((char*)addr)+config->fOffset))->TString::Streamer(buf);
       return 0;
    }
@@ -282,6 +287,7 @@ namespace TStreamerInfoActions
 
       // Idea: We could separate the TObject Streamer in its two parts and
       // avoid the if (buf.IsReading()).
+      ((TObject*)(((char*)addr)+config->fOffset))->TObject::Dump();//##
       ((TObject*)(((char*)addr)+config->fOffset))->TObject::Streamer(buf);
       return 0;
    }
@@ -295,6 +301,7 @@ namespace TStreamerInfoActions
       // Idea: We could extract the code from ReadClassBuffer and avoid one function
       // code.
       static const TClass *TNamed_cl = TNamed::Class();
+      TNamed_cl->Dump(); //##
       return buf.ReadClassBuffer(TNamed_cl,(((char*)addr)+config->fOffset));
    }
 
@@ -463,7 +470,7 @@ namespace TStreamerInfoActions
    INLINE_TEMPLATE_ARGS void ReadSTLMemberWiseSameClass(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers)
    {
       // Collection was saved member-wise
-
+      printf("In ReadSTLMemberWiseSameClass\n");
       TConfigSTL *config = (TConfigSTL*)conf;
       vers &= ~( TBufferFile::kStreamedMemberWise );
 
@@ -529,6 +536,7 @@ namespace TStreamerInfoActions
    INLINE_TEMPLATE_ARGS void ReadArraySTLMemberWiseSameClass(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers)
    {
       // Collection was saved member-wise
+      printf("In ReadArraySTLMemberWiseSameClass\n");
 
       TConfigSTL *config = (TConfigSTL*)conf;
       vers &= ~( TBufferFile::kStreamedMemberWise );
@@ -607,6 +615,7 @@ namespace TStreamerInfoActions
    INLINE_TEMPLATE_ARGS void ReadSTLMemberWiseChangedClass(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers)
    {
       // Collection was saved member-wise
+      printf("In ReadSTLMemberWiseChangedClass\n");
 
       TConfigSTL *config = (TConfigSTL*)conf;
 
@@ -651,6 +660,7 @@ namespace TStreamerInfoActions
    INLINE_TEMPLATE_ARGS void ReadArraySTLMemberWiseChangedClass(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers)
    {
       // Collection was saved member-wise
+      printf("In ReadArraySTLMemberWiseChangedClass\n");
 
       TConfigSTL *config = (TConfigSTL*)conf;
 
@@ -701,19 +711,21 @@ namespace TStreamerInfoActions
 
    INLINE_TEMPLATE_ARGS void ReadSTLObjectWiseFastArray(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t /* vers */, UInt_t /* start */)
    {
+      printf("In ReadSTLObjectWiseFastArray\n");
       TConfigSTL *config = (TConfigSTL*)conf;
       // Idea: This needs to be unrolled, it currently calls the TGenCollectionStreamer ....
       buf.ReadFastArray(addr,config->fNewClass,conf->fLength,(TMemberStreamer*)0,config->fOldClass);
    }
    INLINE_TEMPLATE_ARGS void ReadSTLObjectWiseStreamer(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t /* vers */, UInt_t /* start */)
    {
+      printf("In ReadSTLObjectWiseStreamer\n");
       TConfigSTL *config = (TConfigSTL*)conf;
       (*config->fStreamer)(buf,addr,conf->fLength);
    }
    INLINE_TEMPLATE_ARGS void ReadSTLObjectWiseFastArrayV2(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers, UInt_t start)
    {
       // case of old TStreamerInfo
-
+      printf("In ReadSTLObjectWiseFastArrayV2\n");
       TConfigSTL *config = (TConfigSTL*)conf;
       //  Backward compatibility. Some TStreamerElement's where without
       //  Streamer but were not removed from element list
@@ -727,6 +739,7 @@ namespace TStreamerInfoActions
    {
       // case of old TStreamerInfo
 
+      printf("In ReadSTLObjectWiseStreamerV2\n");
       TConfigSTL *config = (TConfigSTL*)conf;
       //  Backward compatibility. Some TStreamerElement's where without
       //  Streamer but were not removed from element list
@@ -740,6 +753,7 @@ namespace TStreamerInfoActions
              void (*objectwise)(TBuffer&,void *,const TConfiguration*, Version_t, UInt_t)>
    INLINE_TEMPLATE_ARGS Int_t ReadSTL(TBuffer &buf, void *addr, const TConfiguration *conf)
    {
+      printf("In ReadSTL\n");
       TConfigSTL *config = (TConfigSTL*)conf;
       UInt_t start, count;
       Version_t vers = buf.ReadVersion(&start, &count, config->fOldClass);
@@ -756,6 +770,7 @@ namespace TStreamerInfoActions
    struct ConvertBasicType {
       static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *addr, const TConfiguration *config)
       {
+         printf("in ConvertBasicType and Action 1\n");
          // Simple conversion from a 'From' on disk to a 'To' in memory.
          From temp;
          buf >> temp;
@@ -768,6 +783,7 @@ namespace TStreamerInfoActions
    struct ConvertBasicType<BitsMarker,To> {
       static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *addr, const TConfiguration *config)
       {
+         printf("in ConvertBasicType and Action 2\n");
          // Simple conversion from a 'From' on disk to a 'To' in memory
          UInt_t temp;
          buf >> temp;
@@ -785,6 +801,7 @@ namespace TStreamerInfoActions
    struct ConvertBasicType<WithFactorMarker<From>,To> {
       static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *addr, const TConfiguration *config)
       {
+         printf("in ConvertBasicType and Action 3\n");
          // Simple conversion from a 'From' on disk to a 'To' in memory.
          TConfWithFactor *conf = (TConfWithFactor *)config;
          From temp;
@@ -798,6 +815,7 @@ namespace TStreamerInfoActions
    struct ConvertBasicType<NoFactorMarker<From>,To> {
       static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *addr, const TConfiguration *config)
       {
+         printf("in ConvertBasicType and Action 4\n");
          // Simple conversion from a 'From' on disk to a 'To' in memory.
          TConfNoFactor *conf = (TConfNoFactor *)config;
          From temp;
@@ -839,6 +857,7 @@ namespace TStreamerInfoActions
 
    INLINE_TEMPLATE_ARGS Int_t UseCache(TBuffer &b, void *addr, const TConfiguration *conf)
    {
+      printf("in UseCache\n");
       TConfigurationUseCache *config = (TConfigurationUseCache*)conf;
 
       Int_t bufpos = b.Length();
@@ -861,6 +880,7 @@ namespace TStreamerInfoActions
 
    INLINE_TEMPLATE_ARGS Int_t UseCacheVectorPtrLoop(TBuffer &b, void *start, const void *end, const TConfiguration *conf)
    {
+      printf("in UseCacheVectorPtrLoop\n");
       TConfigurationUseCache *config = (TConfigurationUseCache*)conf;
       Int_t bufpos = b.Length();
 
@@ -887,6 +907,7 @@ namespace TStreamerInfoActions
 
    INLINE_TEMPLATE_ARGS Int_t UseCacheVectorLoop(TBuffer &b, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *conf)
    {
+      printf("in UseCacheVectorPtrLoop 2\n");
       TConfigurationUseCache *config = (TConfigurationUseCache*)conf;
 
       Int_t bufpos = b.Length();
@@ -913,6 +934,7 @@ namespace TStreamerInfoActions
 
    INLINE_TEMPLATE_ARGS Int_t UseCacheGenericCollection(TBuffer &b, void *, const void *, const TLoopConfiguration *loopconfig, const TConfiguration *conf)
    {
+      printf("in UseCacheGenericCollection\n");
       TConfigurationUseCache *config = (TConfigurationUseCache*)conf;
 
       Int_t bufpos = b.Length();
@@ -974,6 +996,7 @@ namespace TStreamerInfoActions
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadBasicType(TBuffer &buf, void *iter, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration *config)
       {
+         printf("In VectorLooper and ReadBasicType\n");
          const Int_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
          iter = (char*)iter + config->fOffset;
          end = (char*)end + config->fOffset;
@@ -988,6 +1011,7 @@ namespace TStreamerInfoActions
       struct ConvertBasicType {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *iter, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration *config)
          {
+            printf("In VectorLooper and Action 1\n");
             // Simple conversion from a 'From' on disk to a 'To' in memory.
             From temp;
             const Int_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
@@ -1005,6 +1029,7 @@ namespace TStreamerInfoActions
       struct ConvertBasicType<BitsMarker,To> {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *iter, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration *config)
          {
+            printf("In VectorLooper and Action 2\n");
             // Simple conversion from a 'From' on disk to a 'To' in memory.
             UInt_t temp;
             const Int_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
@@ -1027,6 +1052,7 @@ namespace TStreamerInfoActions
       struct ConvertBasicType<WithFactorMarker<From>,To> {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *iter, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration *config)
          {
+            printf("In VectorLooper and Action 3\n");
             // Simple conversion from a 'From' on disk to a 'To' in memory.
             TConfWithFactor *conf = (TConfWithFactor *)config;
             From temp;
@@ -1045,6 +1071,7 @@ namespace TStreamerInfoActions
       struct ConvertBasicType<NoFactorMarker<From>,To> {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *iter, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration *config)
          {
+            printf("In VectorLooper and Action 4\n");
             // Simple conversion from a 'From' on disk to a 'To' in memory.
             TConfNoFactor *conf = (TConfNoFactor *)config;
             From temp;
@@ -1062,6 +1089,7 @@ namespace TStreamerInfoActions
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t WriteBasicType(TBuffer &buf, void *iter, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration *config)
       {
+         printf("In VectorLooper and WriteBasicType\n");
          const Int_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
          iter = (char*)iter + config->fOffset;
          end = (char*)end + config->fOffset;
@@ -1075,6 +1103,7 @@ namespace TStreamerInfoActions
       template <Int_t (*iter_action)(TBuffer&,void *,const TConfiguration*)>
       static INLINE_TEMPLATE_ARGS Int_t ReadAction(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration *config)
       {
+         printf("In VectorLooper and ReadAction 1\n");
          const Int_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
          //Idea: can we factor out the addition of fOffset
          //  iter = (char*)iter + config->fOffset;
@@ -1086,6 +1115,7 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t ReadBase(TBuffer &buf, void *start, const void *end, const TLoopConfiguration * loopconfig, const TConfiguration *config)
       {
+         printf("In VectorLooper and ReadBase 1\n");
          // Well the implementation is non trivial since we do not have a proxy for the container of _only_ the base class.  For now
          // punt.
 
@@ -1124,6 +1154,7 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t GenericRead(TBuffer &buf, void *start, const void *end, const TLoopConfiguration * loopconfig, const TConfiguration *config)
       {
+         printf("In VectorLooper and GenericRead 1\n");
          // Well the implementation is non trivial. For now punt.
 
          UInt_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
@@ -1140,6 +1171,7 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t GenericWrite(TBuffer &buf, void *start, const void *end, const TLoopConfiguration * loopconfig, const TConfiguration *config)
       {
+         printf("In VectorLooper and GenericWrite 1\n");
          // Well the implementation is non trivial. For now punt.
 
          UInt_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
@@ -1157,6 +1189,7 @@ namespace TStreamerInfoActions
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBasicType(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In VectorLooper and ReadCollectionBasicType 1\n");
          // Collection of numbers.  Memberwise or not, it is all the same.
 
          TConfigSTL *config = (TConfigSTL*)conf;
@@ -1183,6 +1216,7 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBool(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In VectorLooper and ReadCollectionBool 1\n");
          // Collection of numbers.  Memberwise or not, it is all the same.
 
          TConfigSTL *config = (TConfigSTL*)conf;
@@ -1214,6 +1248,7 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionFloat16(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In VectorLooper and ReadCollectionFloat16 1\n");
          // Collection of numbers.  Memberwise or not, it is all the same.
 
          TConfigSTL *config = (TConfigSTL*)conf;
@@ -1240,6 +1275,7 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionDouble32(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In VectorLooper and ReadCollectionDouble32 1\n");
          // Collection of numbers.  Memberwise or not, it is all the same.
 
          TConfigSTL *config = (TConfigSTL*)conf;
@@ -1268,6 +1304,7 @@ namespace TStreamerInfoActions
       struct ConvertCollectionBasicType {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *addr, const TConfiguration *conf)
          {
+            printf("In VectorLooper and BasicType Action 1\n");
             // Collection of numbers.  Memberwise or not, it is all the same.
 
             TConfigSTL *config = (TConfigSTL*)conf;
@@ -1295,6 +1332,7 @@ namespace TStreamerInfoActions
       struct ConvertCollectionBasicType<NoFactorMarker<From>,To> {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *addr, const TConfiguration *conf)
          {
+            printf("In VectorLooper and BasicType Action 2\n");
             // Collection of numbers.  Memberwise or not, it is all the same.
 
             TConfigSTL *config = (TConfigSTL*)conf;
@@ -1321,6 +1359,7 @@ namespace TStreamerInfoActions
       template <typename To>
       static INLINE_TEMPLATE_ARGS Int_t ConvertCollectionDouble32(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In VectorLooper and BasicType Action 3\n");
          // Collection of numbers.  Memberwise or not, it is all the same.
 
          TConfigSTL *config = (TConfigSTL*)conf;
@@ -1350,6 +1389,7 @@ namespace TStreamerInfoActions
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadBasicType(TBuffer &buf, void *iter, const void *end, const TConfiguration *config)
       {
+         printf("In VectorPtrLooper and ReadBasicType 1\n");
          const Int_t offset = config->fOffset;
 
          for(; iter != end; iter = (char*)iter + sizeof(void*) ) {
@@ -1363,6 +1403,7 @@ namespace TStreamerInfoActions
       struct ConvertBasicType {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *iter, const void *end, const TConfiguration *config)
          {
+            printf("In VectorPtrLooper and BasicType Action 1\n");
             // Simple conversion from a 'From' on disk to a 'To' in memory.
             From temp;
             const Int_t offset = config->fOffset;
@@ -1379,6 +1420,7 @@ namespace TStreamerInfoActions
       struct ConvertBasicType<BitsMarker,To> {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *iter, const void *end, const TConfiguration *config)
          {
+            printf("In VectorPtrLooper and BasicType Action 2\n");
             // Simple conversion from a 'From' on disk to a 'To' in memory.
             UInt_t temp;
             const Int_t offset = config->fOffset;
@@ -1400,6 +1442,7 @@ namespace TStreamerInfoActions
       struct ConvertBasicType<WithFactorMarker<From>,To> {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *iter, const void *end, const TConfiguration *config)
          {
+            printf("In VectorPtrLooper and BasicType Action 3\n");
             // Simple conversion from a 'From' on disk to a 'To' in memory.
             TConfWithFactor *conf = (TConfWithFactor *)config;
             From temp;
@@ -1417,6 +1460,7 @@ namespace TStreamerInfoActions
       struct ConvertBasicType<NoFactorMarker<From>,To> {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *iter, const void *end, const TConfiguration *config)
          {
+            printf("In VectorPtrLooper and BasicType Action 4\n");
             // Simple conversion from a 'From' on disk to a 'To' in memory.
             TConfNoFactor *conf = (TConfNoFactor *)config;
             From temp;
@@ -1433,6 +1477,7 @@ namespace TStreamerInfoActions
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t WriteBasicType(TBuffer &buf, void *iter, const void *end, const TConfiguration *config)
       {
+         printf("In VectorPtrLooper and BasicType WriteBasicType 1\n");
          const Int_t offset = config->fOffset;
 
          for(; iter != end; iter = (char*)iter + sizeof(void*) ) {
@@ -1445,6 +1490,7 @@ namespace TStreamerInfoActions
       template <Int_t (*action)(TBuffer&,void *,const TConfiguration*)>
       static INLINE_TEMPLATE_ARGS Int_t ReadAction(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
       {
+         printf("In VectorPtrLooper and BasicType ReadAction 1\n");
          for(void *iter = start; iter != end; iter = (char*)iter + sizeof(void*) ) {
             action(buf, *(void**)iter, config);
          }
@@ -1453,6 +1499,7 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t ReadBase(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
       {
+         printf("In VectorPtrLooper and BasicType ReadBase 1\n");
          // Well the implementation is non trivial since we do not have a proxy for the container of _only_ the base class.  For now
          // punt.
 
@@ -1461,6 +1508,7 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t GenericRead(TBuffer &buf, void *iter, const void *end, const TConfiguration *config)
       {
+         printf("In VectorPtrLooper and BasicType GenericRead 1\n");
          Int_t n = ( ((void**)end) - ((void**)iter) );
          char **arr = (char**)iter;
          return ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, arr, &(config->fCompInfo), /*first*/ 0, /*last*/ 1, /*narr*/ n, config->fOffset, 1|2 );
@@ -1468,6 +1516,7 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t GenericWrite(TBuffer &buf, void *iter, const void *end, const TConfiguration *config)
       {
+         printf("In VectorPtrLooper and BasicType GenericWrite 1\n");
          Int_t n = ( ((void**)end) - ((void**)iter) );
          char **arr = (char**)iter;
          return ((TStreamerInfo*)config->fInfo)->WriteBufferAux(buf, arr, &(config->fCompInfo), /*first*/ 0, /*last*/ 1, n, config->fOffset, 1|2 );
@@ -1496,6 +1545,7 @@ namespace TStreamerInfoActions
       template <typename T,void (*action)(TBuffer&,void *,Int_t)>
       static INLINE_TEMPLATE_ARGS Int_t ReadNumericalCollection(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In AssociativeLooper and ReadNumericalCollection 1\n");
          // Collection of numbers.  Memberwise or not, it is all the same.
 
          TConfigSTL *config = (TConfigSTL*)conf;
@@ -1533,22 +1583,26 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBool(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In AssociativeLooper and ReadCollectionBool 1\n");
          return ReadNumericalCollection<bool,SimpleRead<bool> >(buf,addr,conf);
       }
 
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionFloat16(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In AssociativeLooper and ReadCollectionFloat16 1\n");
          return ReadNumericalCollection<Float_t,SimpleReadFloat16 >(buf,addr,conf);
       }
 
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionDouble32(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In AssociativeLooper and ReadCollectionDouble32 1\n");
          return ReadNumericalCollection<Double_t,SimpleReadDouble32 >(buf,addr,conf);
       }
 
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBasicType(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In AssociativeLooper and ReadCollectionBasicType 1\n");
          return ReadNumericalCollection<T,SimpleRead<T> >(buf,addr,conf);
       }
 
@@ -1556,6 +1610,7 @@ namespace TStreamerInfoActions
       struct ConvertRead {
          static INLINE_TEMPLATE_ARGS void Action(TBuffer &buf, void *addr, Int_t nvalues)
          {
+         printf("In AssociativeLooper and ConvertRead Action 1\n");
             From *temp = new From[nvalues];
             buf.ReadFastArray(temp, nvalues);
             To *vec = (To*)addr;
@@ -1570,6 +1625,7 @@ namespace TStreamerInfoActions
       struct ConvertRead<NoFactorMarker<From>,To> {
          static INLINE_TEMPLATE_ARGS void Action(TBuffer &buf, void *addr, Int_t nvalues)
          {
+         printf("In AssociativeLooper and ConvertRead Action 2\n");
             From *temp = new From[nvalues];
             buf.ReadFastArrayWithNbits(temp, nvalues,0);
             To *vec = (To*)addr;
@@ -1584,6 +1640,7 @@ namespace TStreamerInfoActions
       struct ConvertRead<WithFactorMarker<From>,To> {
          static INLINE_TEMPLATE_ARGS void Action(TBuffer &buf, void *addr, Int_t nvalues)
          {
+         printf("In AssociativeLooper and ConvertRead Action 3\n");
             From *temp = new From[nvalues];
             double factor,min; // needs to be initialized.
             buf.ReadFastArrayWithFactor(temp, nvalues, factor, min);
@@ -1599,6 +1656,7 @@ namespace TStreamerInfoActions
       struct ConvertCollectionBasicType {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *addr, const TConfiguration *conf)
          {
+            printf("In AssociativeLooper and ConvertCollectionBasicType Action 1\n");
             return ReadNumericalCollection<To,ConvertRead<From,To>::Action >(buf,addr,conf);
          }
       };
@@ -1610,6 +1668,7 @@ namespace TStreamerInfoActions
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadBasicType(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
       {
+         printf("In AssociativeLooper and ConvertCollectionBasicType ReadBasicType 1\n");
          TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
 
          Next_t next = loopconfig->fNext;
@@ -1631,6 +1690,7 @@ namespace TStreamerInfoActions
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t WriteBasicType(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
       {
+         printf("In AssociativeLooper and ConvertCollectionBasicType WriteBasicType 1\n");
          TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
 
          Next_t next = loopconfig->fNext;
@@ -1652,6 +1712,7 @@ namespace TStreamerInfoActions
       template <Int_t (*iter_action)(TBuffer&,void *,const TConfiguration*)>
       static INLINE_TEMPLATE_ARGS Int_t ReadAction(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
       {
+         printf("In AssociativeLooper and ConvertCollectionBasicType ReadAction 1\n");
          TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
 
          // const Int_t offset = config->fOffset;
@@ -1716,6 +1777,7 @@ namespace TStreamerInfoActions
       struct ConvertBasicType {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
          {
+            printf("In AssociativeLooper and ConvertBasicType Action 1\n");
             // Simple conversion from a 'From' on disk to a 'To' in memory.
 
             TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
@@ -1734,6 +1796,7 @@ namespace TStreamerInfoActions
       struct ConvertBasicType<BitsMarker, To, Generic> {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
          {
+            printf("In AssociativeLooper and ConvertBasicType Action 2\n");
             // Simple conversion from a 'From' on disk to a 'To' in memory.
 
             TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
@@ -1771,6 +1834,7 @@ namespace TStreamerInfoActions
       struct ConvertBasicType<WithFactorMarker<From>,To,Converter > {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
          {
+            printf("In AssociativeLooper and ConvertBasicType Action 3\n");
             // Simple conversion from a 'From' on disk to a 'To' in memory.
 
             TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
@@ -1791,6 +1855,7 @@ namespace TStreamerInfoActions
       struct ConvertBasicType<NoFactorMarker<From>,To,Converter > {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
          {
+            printf("In AssociativeLooper and ConvertBasicType Action 4\n");
             // Simple conversion from a 'From' on disk to a 'To' in memory.
 
             TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
@@ -1809,6 +1874,7 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t ReadBase(TBuffer &buf, void *start, const void *end, const TLoopConfiguration * loopconfig, const TConfiguration *config)
       {
+         printf("In AssociativeLooper and ConvertBasicType ReadBase 1\n");
          // Well the implementation is non trivial since we do not have a proxy for the container of _only_ the base class.  For now
          // punt.
 
@@ -1817,6 +1883,7 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t GenericRead(TBuffer &buf, void *, const void *, const TLoopConfiguration * loopconf, const TConfiguration *config)
       {
+         printf("In AssociativeLooper and ConvertBasicType GenericRead 1\n");
          TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
          TVirtualCollectionProxy *proxy = loopconfig->fProxy;
          return ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, *proxy, &(config->fCompInfo), /*first*/ 0, /*last*/ 1, /*narr*/ proxy->Size(), config->fOffset, 1|2 );
@@ -1824,6 +1891,7 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t GenericWrite(TBuffer &buf, void *, const void *, const TLoopConfiguration * loopconf, const TConfiguration *config)
       {
+         printf("In AssociativeLooper and ConvertBasicType GnericWrite 1\n");
          TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
          TVirtualCollectionProxy *proxy = loopconfig->fProxy;
          return ((TStreamerInfo*)config->fInfo)->WriteBufferAux(buf, *proxy, &(config->fCompInfo), /*first*/ 0, /*last*/ 1, proxy->Size(), config->fOffset, 1|2 );
@@ -1832,16 +1900,19 @@ namespace TStreamerInfoActions
       template <typename T>
       static INLINE_TEMPLATE_ARGS void SimpleRead(TBuffer &buf, void *addr)
       {
+         printf("In AssociativeLooper and ConvertBasicType SimpleRead 1\n");
          buf >> *(T*)addr;
       }
 
       static INLINE_TEMPLATE_ARGS void SimpleReadFloat16(TBuffer &buf, void *addr)
       {
+         printf("In AssociativeLooper and ConvertBasicType SimpleReadFloat16 1\n");
          buf.ReadWithNbits((float*)addr,12);
       }
 
       static INLINE_TEMPLATE_ARGS void SimpleReadDouble32(TBuffer &buf, void *addr)
       {
+         printf("In AssociativeLooper and ConvertBasicType SimpleReadDouble32 1\n");
          //we read a float and convert it to double
          Float_t afloat;
          buf >> afloat;
@@ -1851,6 +1922,7 @@ namespace TStreamerInfoActions
       template <typename ActionHolder>
       static INLINE_TEMPLATE_ARGS Int_t ReadNumericalCollection(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In AssociativeLooper and ConvertBasicType ReadNumbericalCollection 1\n");
          // Collection of numbers.  Memberwise or not, it is all the same.
 
          TConfigSTL *config = (TConfigSTL*)conf;
@@ -1889,16 +1961,19 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBool(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In AssociativeLooper and ConvertBasicType ReadCoolectionBOOl 1\n");
          return ReadNumericalCollection<ConvertBasicType<bool,bool,Numeric > >(buf,addr,conf);
       }
 
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionFloat16(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In AssociativeLooper and ConvertBasicType ReadCollectionFloat16 1\n");
          return ReadNumericalCollection<ConvertBasicType<NoFactorMarker<float>,float,Numeric > >(buf,addr,conf);
       }
 
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionDouble32(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In AssociativeLooper and ConvertBasicType ReadCollectionDouble32 1\n");
          return ReadNumericalCollection<ConvertBasicType<float,double,Numeric > >(buf,addr,conf);
          // Could also use:
          // return ReadNumericalCollection<ConvertBasicType<NoFactorMarker<double>,double,Numeric > >(buf,addr,conf);
@@ -1907,6 +1982,7 @@ namespace TStreamerInfoActions
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBasicType(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         printf("In AssociativeLooper and ConvertBasicType ReadCollectionBasicType 1\n");
          return ReadNumericalCollection<ConvertBasicType<T,T,Numeric > >(buf,addr,conf);
       }
 
@@ -1914,6 +1990,7 @@ namespace TStreamerInfoActions
       struct ConvertCollectionBasicType {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *addr, const TConfiguration *conf)
          {
+            printf("In AssociativeLooper and ConvertCollectionBasicType Action 1\n");
             // return ReadNumericalCollection<To,ConvertRead<From,To>::Action >(buf,addr,conf);
             return ReadNumericalCollection<ConvertBasicType<From,To,Numeric > >(buf,addr,conf);
          }

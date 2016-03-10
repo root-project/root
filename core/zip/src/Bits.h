@@ -845,33 +845,49 @@ void R__zipMultipleAlgorithm_RAC(int cxlevel, int *srcsize, char *src, int *tgts
     //   1. if there is no entry offset table, last element must be the last block.
     //   2. if there is an entry offset table appended to the end of the buffer, last element is not the last block but the table is
     if (haveoffset) {
-       int bufsize = (uInt)(*tgtsize);
+       int inbufsize  = (uInt)(*srcsize);
+       int outbufsize = (uInt)(*tgtsize);
        int have    = 0;
-       printf("run into here, entries=%d\n",entries);
-       compressedentryoffsets[0] = entryoffsets[0] + HDRSIZE;
+       int cnt;
+       for(cnt=0; cnt<256; ++cnt) {
+          printf("src[%d]=%c(0x%x), ", cnt, src[cnt], src[cnt]);
+          if(cnt%6==0) printf("\n");
+       }
+       compressedentryoffsets[0] = 0;
        int i;
        for (i=1; i<entries; ++i) {
           stream.next_in   = (Bytef*)src + entryoffsets[i-1] - entryoffsets[0];
 //          stream.avail_in  = entryoffsets[i] - entryoffsets[i-1];
           stream.avail_in  = (i == entries-1) ? (lastbyte - entryoffsets[i-1]) : (entryoffsets[i] - entryoffsets[i-1]);
           stream.next_out  = (Bytef*)(&tgt[HDRSIZE]) + compressedentryoffsets[i-1] - compressedentryoffsets[0];
-          stream.avail_out = bufsize;
+          stream.avail_out = outbufsize;
+          printf("in buffer, avail_in=%d, avail_out=%d\n", stream.avail_in, stream.avail_out);
+          
           err = deflate(&stream, Z_FULL_FLUSH);
+
+          printf("after deflate stream.avail_out=%u, stream.avail_in=%u\n", stream.avail_out,stream.avail_in);
           if (err != Z_OK) {
              printf("deflate error\n");
              return;
           }
-          have = bufsize - stream.avail_out;
-          printf("1.bufsize=%d,have=%d, i=%d, lastbyte=%d, entryoffsets[%d]=%d,entryoffsets[%d]=%d,compressedentryoffsets[%d]=%d,compressedentryoffsets[%d]=%d\n",bufsize, have, i, lastbyte, i-1,entryoffsets[i-1],i,entryoffsets[i],i-1,compressedentryoffsets[i-1],i,compressedentryoffsets[i]);
+          have = outbufsize - stream.avail_out;
+          printf("1.outbufsize=%d,have=%d, i=%d, lastbyte=%d, entryoffsets[%d]=%d,entryoffsets[%d]=%d,compressedentryoffsets[%d]=%d,compressedentryoffsets[%d]=%d\n",outbufsize, have, i, lastbyte, i-1,entryoffsets[i-1],i,entryoffsets[i],i-1,compressedentryoffsets[i-1],i,compressedentryoffsets[i]);
           compressedentryoffsets[i] = compressedentryoffsets[i-1] + have;
-          printf("2.bufsize=%d,have=%d, i=%d, lastbyte=%d, entryoffsets[%d]=%d,entryoffsets[%d]=%d,compressedentryoffsets[%d]=%d,compressedentryoffsets[%d]=%d\n",bufsize,  have, i, lastbyte, i-1,entryoffsets[i-1],i,entryoffsets[i],i-1,compressedentryoffsets[i-1],i,compressedentryoffsets[i]);
+          printf("2.outbufsize=%d,have=%d, i=%d, lastbyte=%d, entryoffsets[%d]=%d,entryoffsets[%d]=%d,compressedentryoffsets[%d]=%d,compressedentryoffsets[%d]=%d\n",outbufsize,  have, i, lastbyte, i-1,entryoffsets[i-1],i,entryoffsets[i],i-1,compressedentryoffsets[i-1],i,compressedentryoffsets[i]);
        }
 
        stream.next_in   = (Bytef*)src + lastbyte - entryoffsets[0];
-       stream.avail_in  = bufsize + entryoffsets[0] - lastbyte; // bufsize is the fObjlen, entryoffsets[0] is the fKeylen, their sum is the total length of fBufferRef
+       stream.avail_in  = inbufsize + entryoffsets[0] - lastbyte; // bufsize is the fObjlen, entryoffsets[0] is the fKeylen, their sum is the total length of fBufferRef
        stream.next_out  = (Bytef*)(&tgt[HDRSIZE]) + compressedentryoffsets[entries-1] - compressedentryoffsets[0];
-       stream.avail_out = bufsize;
+       stream.avail_out = outbufsize;
+       printf("before, avail_in=%d,avail_out=%d\n",stream.avail_in,stream.avail_out);
        err = deflate(&stream, Z_FINISH);
+       printf("after, avail_in=%d,avail_out=%d\n",stream.avail_in,stream.avail_out);
+//##
+       for(cnt=0; cnt<256; ++cnt) {
+          printf("tgt[%d]=%c(0x%x), ", cnt, tgt[cnt], tgt[cnt]);
+          if(cnt%6==0) printf("\n");
+       }
     } else {
        err = deflate(&stream, Z_FINISH);
     }
