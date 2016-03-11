@@ -515,10 +515,10 @@ void TUnixSigHandling::DispatchSignals(ESignals sig)
 {
    switch (sig) {
    case kSigAlarm:
-//      gSystem->DispatchTimers(kFALSE);
+      ((TUnixSystem *)gSystem)->DispatchTimers(kFALSE);
       break;
    case kSigChild:
-//      gSystem->CheckChilds();
+      ((TUnixSystem *)gSystem)->CheckChilds();
       break;
    case kSigBus:
       SignalSafeErrWrite("\n\nA fatal system signal has occurred: bus error");
