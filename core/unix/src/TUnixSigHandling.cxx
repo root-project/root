@@ -299,7 +299,7 @@ void TUnixSigHandling::Init()
 #endif
 
 #ifndef ROOTPREFIX
-   gRootDir = Getenv("ROOTSYS");
+   gRootDir = gSystem->Getenv("ROOTSYS");
    if (gRootDir == 0)
       gRootDir= "/usr/local/root";
 #else
@@ -329,43 +329,6 @@ void TUnixSigHandling::Init()
    gStackTraceHelper.fChildToParent[1] = -1;
 
    StackTraceHelperInit();
-}
-
-//---- Misc --------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get environment variable.
-
-const char *TUnixSigHandling::Getenv(const char *name)
-{
-   return ::getenv(name);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get process id.
-
-int TUnixSigHandling::GetPid()
-{
-   return ::getpid();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///// Exit the application.
-
-void TUnixSigHandling::Exit(int code, Bool_t mode)
-{
-   // Insures that the files and sockets are closed before any library is unloaded
-   // and before emptying CINT.
-   if (gROOT) {
-      gROOT->EndOfProcessCleanups();
-   } else if (gInterpreter) {
-      gInterpreter->ResetGlobals();
-   }
-
-   if (mode)
-      ::exit(code);
-   else
-      ::_exit(code);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -575,7 +538,7 @@ void TUnixSigHandling::DispatchSignals(ESignals sig)
       else
          //map to the real signal code + set the
          //high order bit to indicate a signal (?)
-         Exit(gSignalMap[sig].fCode + 0x80);
+         gSystem->Exit(gSignalMap[sig].fCode + 0x80);
       break;
    case kSigSystem:
    case kSigPipe:
@@ -767,7 +730,7 @@ void TUnixSigHandling::StackTrace()
 
 void TUnixSigHandling::StackTraceHelperInit()
 {
-   if(snprintf(gStackTraceHelper.fPidNum, kStringLength-1, "%d", GetPid()) >= kStringLength) {
+   if(snprintf(gStackTraceHelper.fPidNum, kStringLength-1, "%d", gSystem->GetPid()) >= kStringLength) {
       SignalSafeErrWrite("Unable to pre-allocate process id information");
       return;
    }
@@ -810,7 +773,7 @@ void TUnixSigHandling::StackTraceMonitorThread()
          SignalSafeErrWrite("\n\nTraceback helper thread failed to read from parent: ");
          SignalSafeErrWrite(strerror(-result));
          SignalSafeErrWrite("\n");
-         Exit(1, kFALSE);
+         gSystem->Exit(1, kFALSE);
       }
       if (buf[0] == '1') {
           UnixSetDefaultSignals();
@@ -829,7 +792,7 @@ void TUnixSigHandling::StackTraceMonitorThread()
           SignalSafeErrWrite("\n\nTraceback helper thread got unknown command from parent: ");
           SignalSafeErrWrite(buf);
           SignalSafeErrWrite("\n");
-          Exit(1, kFALSE);
+          gSystem->Exit(1, kFALSE);
       }
    }
    return;
@@ -871,7 +834,7 @@ void TUnixSigHandling::StackTraceForkThread()
 #else
       fork();
    if (childStackPtr) {} // Suppress 'unused variable' warning on non-Linux
-   if (pid == 0) { StackTraceExecScript(nullptr); Exit(0, kFALSE); }
+   if (pid == 0) { StackTraceExecScript(nullptr); gSystem->Exit(0, kFALSE); }
 #endif
    if (pid == -1) {
       SignalSafeErrWrite("(Attempt to perform stack dump failed.)\n");
@@ -879,9 +842,9 @@ void TUnixSigHandling::StackTraceForkThread()
       int status;
       if (waitpid(pid, &status, 0) == -1) {
          SignalSafeErrWrite("(Failed to wait on stack dump output.)\n");
-         Exit(1, kFALSE);
+         gSystem->Exit(1, kFALSE);
       } else {
-         Exit(0, kFALSE);
+         gSystem->Exit(0, kFALSE);
       }
    }
 }
@@ -898,6 +861,6 @@ int TUnixSigHandling::StackTraceExecScript(void * /*arg*/)
 #else
    execv("/bin/sh", argv);
 #endif
-   Exit(0, kFALSE);
+   gSystem->Exit(0, kFALSE);
    return 0;
 }
