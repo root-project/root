@@ -93,6 +93,15 @@ Bool_t TSigHandling::HaveTrappedSignal(Bool_t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Dispatch signals.
+ 
+void TSigHandling::DispatchSignals(ESignals /*sig*/)
+{
+   AbstractMethod("DispatchSignals");
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add a signal handler to list of system signal handlers. Only adds
 /// the handler if it is not already in the list of signal handlers.
 

@@ -537,7 +537,7 @@ void TSystem::AddSignalHandler(TSignalHandler *h)
 
 TSignalHandler *TSystem::RemoveSignalHandler(TSignalHandler *h)
 {
-   return (TSignalHandler *)gSigHandling->RemoveSignalHandler(h);
+   return gSigHandling->RemoveSignalHandler(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -737,7 +737,6 @@ void TSystem::StackTrace()
 {
    AbstractMethod("StackTrace");
 }
-
 
 //---- Directories -------------------------------------------------------------
 
