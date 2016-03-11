@@ -239,6 +239,7 @@ const char *rootClingHelp =
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Value.h"
 #include "clang/AST/CXXInheritance.h"
+#include "clang/AST/Mangle.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
@@ -2927,6 +2928,41 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
             if (reqName != nullptr && 0 != strcmp(reqName, "") && reqName != normalizedName) {
                classesListForRootmap.push_back(reqName);
             }
+
+            // Also register typeinfo::name(), unless we have pseudo-strong typedefs:
+            if (normalizedName.find("Double32_t") == std::string::npos
+                && normalizedName.find("Float16_t") == std::string::npos) {
+               std::unique_ptr<clang::MangleContext> mangleCtx(rDecl->getASTContext().createMangleContext());
+               std::string mangledName;
+               {
+                  llvm::raw_string_ostream sstr(mangledName);
+                  if (const clang::TypeDecl* TD = llvm::dyn_cast<clang::TypeDecl>(rDecl)) {
+                     mangleCtx->mangleTypeName(clang::QualType(TD->getTypeForDecl(), 0), sstr);
+                  }
+               }
+               if (!mangledName.empty()) {
+                  int errDemangle = 0;
+                  char* demangledTIName = TClassEdit::DemangleName(mangledName.c_str(), errDemangle);
+                  if (!errDemangle && demangledTIName) {
+                     static const char typeinfoNameFor[] = "typeinfo name for ";
+                     if (!strncmp(demangledTIName, typeinfoNameFor, strlen(typeinfoNameFor))) {
+                        std::string demangledName = demangledTIName + strlen(typeinfoNameFor);
+                        // See the operations in TCling::AutoLoad(type_info)
+                        TClassEdit::TSplitType splitname( demangledName.c_str(), (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
+                        splitname.ShortType(demangledName, TClassEdit::kDropStlDefault | TClassEdit::kDropStd);
+
+                        if (demangledName != normalizedName && (!reqName || demangledName != reqName)) {
+                           classesListForRootmap.push_back(demangledName);
+                        } // if demangledName != other name
+                     } else {
+                        ROOT::TMetaUtils::Error("ExtractSelectedClassesAndTemplateDefs",
+                                                "Demangled typeinfo name '%s' does not start with 'typeinfo name for'\n",
+                                                demangledTIName);
+                     } // if demangled type_info starts with "typeinfo name for "
+                  } // if demangling worked
+                  free(demangledTIName);
+               } // if mangling worked
+            } // if no pseudo-strong typedef involved
          }
       }
    }
