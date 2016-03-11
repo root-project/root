@@ -620,5 +620,6 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 
 Changes will be part of the future 6.06/04
 
+- Reduce autoparse occasions by autoloading libraries also based on their type_info-derived name, instead of only their normalized name [ROOT-7972].
 
 
