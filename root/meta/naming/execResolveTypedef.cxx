@@ -151,6 +151,8 @@ int execResolveTypedef()
    testing("vec<const int>",TClassEdit::ResolveTypedef("vec< const int>"));
    testing("vec<const int>",TClassEdit::ResolveTypedef("vec<  const int>"));
    testing("vec<const int>",TClassEdit::ResolveTypedef("vec< const Int_t>"));
+   testing("vec<const int>",TClassEdit::ResolveTypedef("vec< Int_t  const>"));
+   testing("vec<const int>",TClassEdit::ResolveTypedef("vec<int const>"));
 
    printf("Starting GetNormalizedName tests\n");
 
