@@ -1,5 +1,5 @@
 // @(#)root/unix:$Id: 887c618d89c4ed436e4034fc133f468fecad651b $
-// Author: Fons Rademakers   15/09/95
+// Author: Zhe Zhang   10/03/16
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -133,7 +133,7 @@ static void SetRootSys()
 static void SigHandler(ESignals sig)
 {
    if (gSigHandling)
-      ((TUnixSigHandling*)gSigHandling)->DispatchSignals(sig);
+      gSigHandling->DispatchSignals(sig);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -515,10 +515,10 @@ void TUnixSigHandling::DispatchSignals(ESignals sig)
 {
    switch (sig) {
    case kSigAlarm:
-//      DispatchTimers(kFALSE);
+//      gSystem->DispatchTimers(kFALSE);
       break;
    case kSigChild:
-//      CheckChilds();
+//      gSystem->CheckChilds();
       break;
    case kSigBus:
       SignalSafeErrWrite("\n\nA fatal system signal has occurred: bus error");
@@ -530,19 +530,13 @@ void TUnixSigHandling::DispatchSignals(ESignals sig)
       SignalSafeErrWrite("\n\nA fatal system signal has occurred: illegal instruction error");
       break;
    case kSigFloatingException:
-      Break("TUnixSigHandling::DispatchSignals", "%s", UnixSigname(sig));
-      StackTrace();
-      if (gApplication)
-         //sig is ESignal, should it be mapped to the correct signal number?
-         gApplication->HandleException(sig);
-      else
-         //map to the real signal code + set the
-         //high order bit to indicate a signal (?)
-         gSystem->Exit(gSignalMap[sig].fCode + 0x80);
+      SignalSafeErrWrite("\n\nA fatal system signal has occurred: floating exception error");
       break;
    case kSigSystem:
+      SignalSafeErrWrite("\n\nA fatal system signal has occurred: system error");
+      break;
    case kSigPipe:
-      Break("TUnixSigHandling::DispatchSignals", "%s", UnixSigname(sig));
+      SignalSafeErrWrite("\n\nA fatal system signal has occurred: pipe error");
       break;
    case kSigWindowChanged:
       Gl_windowchanged();
@@ -553,11 +547,18 @@ void TUnixSigHandling::DispatchSignals(ESignals sig)
       break;
    }
 
-   if ((sig == kSigIllegalInstruction) || (sig == kSigSegmentationViolation) || (sig == kSigBus))
+   if ((sig == kSigIllegalInstruction) || (sig == kSigSegmentationViolation) || (sig == kSigBus) || (sig == kSigFloatingException))
    {
       StackTraceTriggerThread();
       signal(sig, SIG_DFL);
       raise(sig);
+      if (gApplication)
+         //sig is ESignal, should it be mapped to the correct signal number?
+         gApplication->HandleException(sig);
+      else
+         //map to the real signal code + set the
+         //high order bit to indicate a signal (?)
+         gSystem->Exit(gSignalMap[sig].fCode + 0x80, 0);
    }
 
    // check a-synchronous signals

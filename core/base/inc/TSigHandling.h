@@ -77,6 +77,7 @@ public:
 
    //---- Handling of system signals
    virtual Bool_t          HaveTrappedSignal(Bool_t pendingOnly);
+   virtual void            DispatchSignals(ESignals sig); 
    virtual void            AddSignalHandler(TSignalHandler *sh);
    virtual TSignalHandler *RemoveSignalHandler(TSignalHandler *sh);
    virtual void            ResetSignal(ESignals sig, Bool_t reset = kTRUE);
