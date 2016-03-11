@@ -22,13 +22,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
 #include <stdio.h>
 #include <ctype.h>
 #include <fcntl.h>
 #ifndef WIN32
 #include <unistd.h>
-#endif
 #endif
 
 #ifndef ROOT_TNamed
