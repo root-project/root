@@ -1036,6 +1036,7 @@ Changes will be part of the future 6.04/16
 ### Core
 
 - Properly handle the case of an executable with a space in its full pathname when search for linked in library.  This fixes [ROOT-8019].
+- Reduce autoparse occasions by autoloading libraries also based on their type_info-derived name, instead of only their normalized name.
 
 ### Meta Library
 
