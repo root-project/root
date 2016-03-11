@@ -1036,7 +1036,6 @@ Changes will be part of the future 6.04/16
 ### Core
 
 - Properly handle the case of an executable with a space in its full pathname when search for linked in library.  This fixes [ROOT-8019].
-- Reduce autoparse occasions by autoloading libraries also based on their type_info-derived name, instead of only their normalized name.
 
 ### Meta Library
 
@@ -1047,6 +1046,8 @@ Changes will be part of the future 6.04/16
   of `fCanSplit`.
 - This also has the side-effect of allowing the extension of the concept 'base class that prevent its
   derived class from being split' to any user class.  This fixes [ROOT-7972].
+- Reduce autoparse occasions by autoloading libraries also based on their type_info-derived name, instead of only their normalized name.
+- Improve TClassEdit's handling of STL's default allocator, in particular for std::map [ROOT-8048]
 
 ### TTree
 
