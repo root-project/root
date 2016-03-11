@@ -58,9 +58,6 @@ public:
    virtual ~TUnixSigHandling();
 
    //---- Misc -------------------------------------------------
-   static const char *Getenv(const char *name);
-   static int         GetPid();
-   static void        Exit(int code, Bool_t mode = kTRUE);
    void               Init();
    
    //---- Handling of system events ----------------------------
