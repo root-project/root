@@ -253,7 +253,7 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
    title = Form( "(%i) Decision Tree Control Plots (BDT)", ++ic );
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::BDTControlPlots(\"%s\")", fName ),
+                 Form( "TMVA::BDTControlPlots(\"%s\",\"%s\")",dataset.Data() , fName ),
                  "Plots to monitor boosting and pruning of decision trees (macro BDTControlPlots.cxx)",
                  buttonType, "BDT" );
    //    ActionButton( cbar,  
