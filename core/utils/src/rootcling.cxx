@@ -2672,6 +2672,7 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
                          const std::list<std::string> &nsNames,
                          const std::list<std::string> &tdNames,
                          const std::list<std::string> &enNames,
+                         const std::list<std::string> &varNames,
                          const HeadersDeclsMap_t &headersClassesMap,
                          const std::unordered_set<std::string> headersToIgnore)
 {
@@ -2688,7 +2689,8 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
 
 
    // Add the "section"
-   if (!classesNames.empty() || !nsNames.empty() || !tdNames.empty() || !enNames.empty()) {
+   if (!classesNames.empty() || !nsNames.empty() || !tdNames.empty() ||
+      !enNames.empty() || !varNames.empty()) {
 
       // Add the template definitions
       if (!classesDefsList.empty()) {
@@ -2749,6 +2751,14 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
          for (const auto & autoloadKey : enNames)
             if (classesKeys.insert(autoloadKey).second)
                rootmapFile << "enum " << autoloadKey << std::endl;
+      }
+
+      // And variables.
+      if (!varNames.empty()){
+         rootmapFile << "# List of selected vars\n";
+         for (const auto & autoloadKey : varNames)
+            if (classesKeys.insert(autoloadKey).second)
+               rootmapFile << "var " << autoloadKey << std::endl;
       }
 
    }
@@ -2834,6 +2844,20 @@ bool ProcessAndAppendIfNotThere(const std::string &el,
    }
 
    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int ExtractNamespacesForVariables(RScanner &scan,
+                                  std::list<std::string> &fwdDeclarationsList)
+{
+   std::unordered_set<std::string> availableFwdDecls;
+   for (auto const & selVar : scan.fSelectedVariables) {
+      std::string fwdDeclaration;
+      int retCode = ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(*selVar, fwdDeclaration);
+      if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
+   }
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3700,6 +3724,9 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 
    for (auto* TD: scan.fSelectedTypedefs)
       selectedDecls.push_back(TD);
+
+//    for (auto* VAR: scan.fSelectedVariables)
+//       selectedDecls.push_back(VAR);
 
    // The "R\"DICTFWDDCLS(\n" ")DICTFWDDCLS\"" pieces have been moved to
    // TModuleGenerator to be able to make the diagnostics more telling in presence
@@ -4754,6 +4781,11 @@ int RootCling(int argc,
 
    if (doSplit && splitDictStreamPtr) delete splitDictStreamPtr;
 
+   std::list<std::string> varNames;
+   for (auto&& var : scan.fSelectedVariables) {
+      varNames.push_back(var->getQualifiedNameAsString());
+   }
+
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
    HeadersDeclsMap_t headersClassesMap;
@@ -4850,6 +4882,10 @@ int RootCling(int argc,
                                                    classesNamesForRootmap,
                                                    classesDefsList,
                                                    interp);
+
+   rootclingRetCode += ExtractNamespacesForVariables(scan,
+                                                     classesDefsList);
+
    std::list<std::string> enumNames;
    rootclingRetCode += ExtractEnumAutoloadKeys(enumNames,
                                       scan.fSelectedEnums,
@@ -4893,6 +4929,7 @@ int RootCling(int argc,
                                           nsNames,
                                           typedefsRootmapLines,
                                           enumNames,
+                                          varNames,
                                           headersClassesMap,
                                           headersToIgnore);
 
