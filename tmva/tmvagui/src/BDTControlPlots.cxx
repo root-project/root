@@ -9,14 +9,14 @@
 // input: - Input file (result from TMVA),
 //        - use of TMVA plotting TStyle
 
-void TMVA::BDTControlPlots( TString fin , Bool_t useTMVAStyle  )
+void TMVA::BDTControlPlots(TString dataset, TString fin , Bool_t useTMVAStyle  )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
   
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file;
-   file = TMVAGlob::OpenFile( fin );  
+   TFile* file = TMVAGlob::OpenFile( fin );  
+   
    if (file == NULL) {
       cout << "Problems with input file, tried to open " << fin << " but somehow did not succeed .." << endl;
       return;
@@ -25,7 +25,7 @@ void TMVA::BDTControlPlots( TString fin , Bool_t useTMVAStyle  )
    // get all titles of the method BDT
    TList titles;
    TString methodName = "Method_BDT";
-   UInt_t ninst = TMVAGlob::GetListOfTitles(methodName,titles);
+   UInt_t ninst = TMVAGlob::GetListOfTitles(methodName,titles,file->GetDirectory(dataset.Data()));
    if (ninst==0) {
       cout << "Could not locate directory 'Method_BDT' in file " << fin << endl;
       return;
@@ -36,11 +36,11 @@ void TMVA::BDTControlPlots( TString fin , Bool_t useTMVAStyle  )
    TKey *key;
    while ((key = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
       bdtdir = (TDirectory *)key->ReadObj();
-      bdtcontrolplots( bdtdir );
+      bdtcontrolplots(dataset, bdtdir );
    }
 }
 
-void TMVA::bdtcontrolplots( TDirectory *bdtdir ) {
+void TMVA::bdtcontrolplots(TString dataset, TDirectory *bdtdir ) {
 
    const Int_t nPlots = 6;
 
@@ -129,11 +129,11 @@ void TMVA::bdtcontrolplots( TDirectory *bdtdir ) {
    }
 
    // write to file
-   TString fname = Form( "plots/%s_ControlPlots", titName.Data() );
+   TString fname = dataset+Form( "/plots/%s_ControlPlots", titName.Data() );
    TMVAGlob::imgconv( c, fname );
    
    if (c2){
-      fname = Form( "plots/%s_ControlPlots2", titName.Data() );
+      fname = dataset+Form( "/plots/%s_ControlPlots2", titName.Data() );
       TMVAGlob::imgconv( c2, fname );
    }
 

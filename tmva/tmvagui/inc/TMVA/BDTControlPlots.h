@@ -10,10 +10,10 @@ namespace TMVA{
 
    // input: - Input file (result from TMVA),
    //        - use of TMVA plotting TStyle
-   void bdtcontrolplots(TDirectory *);
+   void bdtcontrolplots(TString dataset,TDirectory *);
 
-   void BDTControlPlots( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE );
-   void bdtcontrolplots( TDirectory *bdtdir ); 
+   void BDTControlPlots(TString dataset, TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE );
+   void bdtcontrolplots(TString dataset, TDirectory *bdtdir ); 
   
   
 }
