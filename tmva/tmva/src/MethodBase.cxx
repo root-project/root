@@ -1919,34 +1919,27 @@ void TMVA::MethodBase::ReadTargetsFromXML( void* tarnode )
 TDirectory* TMVA::MethodBase::BaseDir() const
 {
    if (fBaseDir != 0) return fBaseDir;
-   Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " not set yet --> check if already there.." <<Endl;
+   Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodName() << " not set yet --> check if already there.." <<Endl;
 
    TDirectory* methodDir = MethodBaseDir();
    if (methodDir==0)
       Log() << kFATAL <<Form("Dataset[%s] : ",DataInfo().GetName())<< "MethodBase::BaseDir() - MethodBaseDir() return a NULL pointer!" << Endl;
 
-   TDirectory* dir = 0;
-
-   TString defaultDir = GetMethodTypeName();
-
-   TObject* o = methodDir->FindObject(defaultDir);
-   if (o!=0 && o->InheritsFrom(TDirectory::Class())) dir = (TDirectory*)o;
-
-   if (dir != 0) {
-      Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " existed, return it.." <<Endl;
-      return dir;
+   TString defaultDir = GetMethodName();
+   TDirectory *sdir = methodDir->GetDirectory(defaultDir.Data());
+   if(!sdir)
+   {
+        Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " does not exist yet--> created it" <<Endl;
+        sdir = methodDir->mkdir(defaultDir);
+        sdir->cd();
+         // write weight file name into target file
+        TObjString wfilePath( gSystem->WorkingDirectory() );
+        TObjString wfileName( GetWeightFileName() );
+        wfilePath.Write( "TrainingPath" );
+        wfileName.Write( "WeightFileName" );
    }
 
-   Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " does not exist yet--> created it" <<Endl;
-   TDirectory *sdir = methodDir->mkdir(defaultDir);
-
-   // write weight file name into target file
-   sdir->cd();
-   TObjString wfilePath( gSystem->WorkingDirectory() );
-   TObjString wfileName( GetWeightFileName() );
-   wfilePath.Write( "TrainingPath" );
-   wfileName.Write( "WeightFileName" );
-
+   Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " existed, return it.." <<Endl;
    return sdir;
 }
 
@@ -1959,17 +1952,23 @@ TDirectory* TMVA::MethodBase::MethodBaseDir() const
    if (fMethodBaseDir != 0) return fMethodBaseDir;
 
    Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " not set yet --> check if already there.." <<Endl;
-
-   const TString dirName(Form("%s/Method_%s",DataInfo().GetName(),GetMethodTypeName().Data()));
-
-   TDirectory * dir = Factory::RootBaseDir()->GetDirectory(dirName);
-   if (dir != 0) {
-      Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " existed, return it.." <<Endl;
-      return dir;
+   
+   
+   TDirectory *fFactoryBaseDir=Factory::RootBaseDir();
+   
+   fMethodBaseDir = fFactoryBaseDir->GetDirectory(DataInfo().GetName());
+   if(!fMethodBaseDir) //creating dataset directory
+   {
+       fMethodBaseDir = fFactoryBaseDir->mkdir(DataInfo().GetName(),Form("Base directory for dataset %s",DataInfo().GetName()));
+       if(!fMethodBaseDir)Log()<<kFATAL<<"Can not create dir "<<DataInfo().GetName();
    }
-
-   Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " does not exist yet--> created it" <<Endl;
-   fMethodBaseDir = Factory::RootBaseDir()->mkdir(dirName,Form("Directory for all %s methods", GetMethodTypeName().Data()));
+   TString _methodDir = Form("Method_%s",GetMethodName().Data());
+   fMethodBaseDir = fMethodBaseDir->GetDirectory(_methodDir.Data());
+   
+   if(!fMethodBaseDir){
+       fMethodBaseDir = fFactoryBaseDir->GetDirectory(DataInfo().GetName())->mkdir(_methodDir.Data(),Form("Directory for all %s methods", GetMethodTypeName().Data()));
+       Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodName() << " does not exist yet--> created it" <<Endl;
+   }
 
    Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<"Return from MethodBaseDir() after creating base directory "<<Endl;
    return fMethodBaseDir;
