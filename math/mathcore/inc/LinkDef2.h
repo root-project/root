@@ -22,8 +22,6 @@
 //#pragma link C++ class ROOT::Math;
 #endif
 
-#pragma link C++ class std::vector<Double_t>+;
-#pragma link C++ operators std::vector<Double_t>;
 #ifdef G__VECTOR_HAS_CLASS_ITERATOR
 #pragma link C++ class std::vector<Double_t>::iterator;
 #pragma link C++ class std::vector<Double_t>::const_iterator;
