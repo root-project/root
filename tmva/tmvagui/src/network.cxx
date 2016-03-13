@@ -26,7 +26,7 @@ static Int_t c_DarkBackground = TColor::GetColor( "#6e7a85" );
 
 Bool_t MovieMode = kFALSE;
 
-void TMVA::draw_network( TFile* f, TDirectory* d, const TString& hName, 
+void TMVA::draw_network(TString dataset, TFile* f, TDirectory* d, const TString& hName, 
                    Bool_t movieMode , const TString& epoch  )
 {
    Bool_t __PRINT_LOGO__ = kTRUE;
@@ -68,13 +68,20 @@ void TMVA::draw_network( TFile* f, TDirectory* d, const TString& hName,
    while ((key = (TKey*)next())) {
 
       TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TH2F")) continue;    
- 
+      if (!cl->InheritsFrom("TH2F")) 
+      {
+       continue;          
+      }else
+      {
+       std::cout<<key->GetClassName()<<"----"<<cl->InheritsFrom("TH2F")<<"----"<<hName<<std::endl;          
+      }
+  
       TH2F* h = (TH2F*)key->ReadObj();    
       if (!h) {
          cout << "Big troubles in \"draw_network\" (1)" << endl;
          exit(1);
       }
+      std::cout<<h->GetName()<<"----"<<hName<<std::endl;
       if (TString(h->GetName()).Contains( hName )){
          numHists++;
  
@@ -114,7 +121,7 @@ void TMVA::draw_network( TFile* f, TDirectory* d, const TString& hName,
       //cout << (h->GetName()) << endl;
       if (TString(h->GetName()).Contains( hName )) {
          //cout << (h->GetName()) << endl;
-         draw_layer(c, h, count++, numHists+1, maxWeight);
+         draw_layer(dataset,c, h, count++, numHists+1, maxWeight);
       }
       //cout << "check4d" << endl;
 
@@ -150,7 +157,7 @@ void TMVA::draw_network( TFile* f, TDirectory* d, const TString& hName,
       delete c;
    }
    else {
-      TString fname = "plots/network";
+      TString fname = dataset+"/plots/network";
       TMVAGlob::imgconv( c, fname );
    }
 
@@ -188,7 +195,7 @@ void TMVA::draw_layer_labels(Int_t nLayers)
    }
 }
 
-void TMVA::draw_input_labels(Int_t nInputs, Double_t* cy, 
+void TMVA::draw_input_labels(TString dataset,Int_t nInputs, Double_t* cy, 
                        Double_t rad, Double_t layerWidth)
 {
    const Double_t LABEL_HEIGHT = 0.04;
@@ -197,7 +204,7 @@ void TMVA::draw_input_labels(Int_t nInputs, Double_t* cy,
    Double_t margX = 0.01;
    Double_t effHeight = 0.8*LABEL_HEIGHT;
 
-   TString *varNames = get_var_names(nInputs);
+   TString *varNames = get_var_names(dataset,nInputs);
    if (varNames == 0) exit(1);
 
    TString input;
@@ -219,7 +226,7 @@ void TMVA::draw_input_labels(Int_t nInputs, Double_t* cy,
    delete[] varNames;
 }
 
-TString* TMVA::get_var_names( Int_t nVars )
+TString* TMVA::get_var_names(TString dataset, Int_t nVars )
 {
    const TString directories[6] = { "InputVariables_NoTransform",
                                     "InputVariables_DecorrTransform",
@@ -230,7 +237,7 @@ TString* TMVA::get_var_names( Int_t nVars )
    
    TDirectory* dir = 0;
    for (Int_t i=0; i<6; i++) {
-      dir = (TDirectory*)Network_GFile->Get( directories[i] );
+      dir = (TDirectory*)Network_GFile->GetDirectory(dataset.Data())->Get( directories[i] );
       if (dir != 0) break;
    }
    if (dir==0) {
@@ -312,7 +319,7 @@ void TMVA::draw_activation(TCanvas* c, Double_t cx, Double_t cy,
    c->cd();
 }
 
-void TMVA::draw_layer(TCanvas* c, TH2F* h, Int_t iHist, 
+void TMVA::draw_layer(TString dataset,TCanvas* c, TH2F* h, Int_t iHist, 
                 Int_t nLayers, Double_t maxWeight)
 {
    const Double_t MAX_NEURONS_NICE = 12;
@@ -358,7 +365,7 @@ void TMVA::draw_layer(TCanvas* c, TH2F* h, Int_t iHist,
       }
    }
 
-   if (iHist == 0) draw_input_labels(nNeurons1, cy1, rad, (1.0-LABEL_WIDTH)/nLayers);
+   if (iHist == 0) draw_input_labels(dataset,nNeurons1, cy1, rad, (1.0-LABEL_WIDTH)/nLayers);
 
    Double_t effRad2 = rad;
    if (nNeurons2 > MAX_NEURONS_NICE)
@@ -415,14 +422,14 @@ void TMVA::draw_synapse(Double_t cx1, Double_t cy1, Double_t cx2, Double_t cy2,
 
 // input: - Input file (result from TMVA),
 //        - use of TMVA plotting TStyle
-void TMVA::network( TString fin , Bool_t useTMVAStyle )
+void TMVA::network(TString dataset, TString fin , Bool_t useTMVAStyle )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
 
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
-   TIter next(file->GetListOfKeys());
+   TIter next(file->GetDirectory(dataset.Data())->GetListOfKeys());
    TKey *key(0);
    while( (key = (TKey*)next()) ) {      
       if (!TString(key->GetName()).BeginsWith("Method_MLP")) continue;
@@ -445,7 +452,7 @@ void TMVA::network( TString fin , Bool_t useTMVAStyle )
            cout << "No titles found for Method_MLP" << endl;
            return;
         }
-        draw_network( file, dir );
+        draw_network(dataset, file, dir );
       }
    }
 

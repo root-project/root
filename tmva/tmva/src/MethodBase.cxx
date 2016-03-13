@@ -1927,17 +1927,17 @@ TDirectory* TMVA::MethodBase::BaseDir() const
 
    TDirectory* dir = 0;
 
-   TString defaultDir = GetMethodName();
+   TString defaultDir = GetMethodTypeName();
 
    TObject* o = methodDir->FindObject(defaultDir);
    if (o!=0 && o->InheritsFrom(TDirectory::Class())) dir = (TDirectory*)o;
 
    if (dir != 0) {
-      Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodName() << " existed, return it.." <<Endl;
+      Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " existed, return it.." <<Endl;
       return dir;
    }
 
-   Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodName() << " does not exist yet--> created it" <<Endl;
+   Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " does not exist yet--> created it" <<Endl;
    TDirectory *sdir = methodDir->mkdir(defaultDir);
 
    // write weight file name into target file

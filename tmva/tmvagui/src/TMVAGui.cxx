@@ -229,7 +229,7 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
                  buttonType, "Likelihood" );
 
    title = Form( "(%ia) Network Architecture (MLP)", ++ic );
-   TString call = Form( "TMVA::network(\"%s\")", fName );
+   TString call = Form( "TMVA::network(\"%s\",\"%s\")", dataset.Data(),fName );
    ActionButton( cbar,  
                  title,
                  call, 
