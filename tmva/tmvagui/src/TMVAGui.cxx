@@ -85,13 +85,34 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
       cout << "==> Abort TMVAGui, please verify if dataset exist" << endl;
       return;
    }
-   
-   if(dataset==""||dataset.IsWhitespace())
+   if( (dataset==""||dataset.IsWhitespace()) && (file->GetListOfKeys()->GetEntries()==1))
    {
        TKey *key=(TKey*)file->GetListOfKeys()->At(0);
        dataset=key->GetName();
+   }else if((dataset==""||dataset.IsWhitespace()) && (file->GetListOfKeys()->GetEntries()>=1))
+   {
+       gROOT->Reset();
+       gStyle->SetScreenFactor(2); // if you have a large screen, select 1,2 or 1.4
+       
+       TControlBar *bar=new TControlBar("vertical","Select dataset", 0, 0);
+       bar->SetButtonWidth(300);
+       for(int i=0;i<file->GetListOfKeys()->GetEntries();i++)
+       {
+           TKey *key=(TKey*)file->GetListOfKeys()->At(i);
+           dataset=key->GetName();
+           bar->AddButton(dataset.Data(),Form("TMVA::TMVAGui(\"%s\",\"%s\")",fName,dataset.Data()),dataset.Data());
+       }
+       
+       bar->AddSeparator();
+       bar->AddButton( "Quit",   ".q", "Quit", "button");
+
+       // set the style 
+       bar->SetTextColor("black");
+       bar->Show();
+       gROOT->SaveContext();
+       return ;
    }
-   std::cout<<"DEBUG:"<<dataset<<std::endl;
+   
    // find all references   
    TMVAGui_keyContent = (TList*)file->GetDirectory(dataset.Data())->GetListOfKeys()->Clone();
 
