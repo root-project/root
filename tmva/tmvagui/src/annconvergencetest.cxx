@@ -10,7 +10,7 @@
 // input: - Input file (result from TMVA),
 //        - use of TMVA plotting TStyle
 
-void TMVA::annconvergencetest( TDirectory *lhdir )
+void TMVA::annconvergencetest(TString dataset, TDirectory *lhdir )
 {
    TString jobName = lhdir->GetName();
    static int icanvas = -1;
@@ -57,23 +57,22 @@ void TMVA::annconvergencetest( TDirectory *lhdir )
    TMVAGlob::plot_logo(); // don't understand why this doesn't work ... :-(
    c->Update();
 
-   TString fname = "plots/annconvergencetest";
+   TString fname = dataset+"/plots/annconvergencetest";
    TMVAGlob::imgconv( c, fname );
 }
 
-void TMVA::annconvergencetest( TString fin , Bool_t useTMVAStyle  )
+void TMVA::annconvergencetest(TString dataset, TString fin , Bool_t useTMVAStyle  )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
   
    // checks if file with name "fin" is already open, and if not opens one
-   //TFile* file =
-   TMVAGlob::OpenFile( fin );  
+   TFile* file = TMVAGlob::OpenFile( fin );  
 
    // get all titles of the method likelihood
    TList titles;
    TString metmlp="Method_MLP"; 
-   UInt_t ninst = TMVAGlob::GetListOfTitles(metmlp,titles);
+   UInt_t ninst = TMVAGlob::GetListOfTitles(metmlp,titles,file->GetDirectory(dataset.Data()));
    if (ninst==0) {
       cout << "Could not locate directory 'Method_MLP' in file " << fin << endl;
       return;
@@ -84,6 +83,6 @@ void TMVA::annconvergencetest( TString fin , Bool_t useTMVAStyle  )
    TKey *key;
    while ((key = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
       lhdir = (TDirectory *)key->ReadObj();
-      annconvergencetest( lhdir );
+      annconvergencetest(dataset, lhdir );
    }
 }
