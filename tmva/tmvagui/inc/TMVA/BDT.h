@@ -57,7 +57,7 @@ namespace TMVA{
 
    public:
 
-      StatDialogBDT( const TGWindow* p, TString wfile = "weights/TMVAClassification_BDT.weights.txt", 
+      StatDialogBDT(TString dataset, const TGWindow* p, TString wfile = "weights/TMVAClassification_BDT.weights.txt", 
                      TString methName = "BDT", Int_t itree = 0 );
       virtual ~StatDialogBDT() {
          TMVA::DecisionTreeNode::fgIsTraining=false;
@@ -69,7 +69,7 @@ namespace TMVA{
       }
    
       // draw method
-      void DrawTree( Int_t itree );
+      void DrawTree(Int_t itree );
 
       void RaiseDialog() { if (fMain) { fMain->RaiseWindow(); fMain->Layout(); fMain->MapWindow(); } }
    
@@ -97,7 +97,7 @@ namespace TMVA{
 
       TString fWfile;
       TString fMethName;
-
+      TString fDataset;
       Int_t   fColorOffset;
 
    public:
@@ -120,9 +120,9 @@ namespace TMVA{
    static std::vector<TControlBar*> BDT_Global__cbar;
 
    // intermediate GUI
-   void BDT( const TString& fin = "TMVA.root" );
+   void BDT(TString dataset, const TString& fin = "TMVA.root" );
    void BDT_DeleteTBar(int i);
-   void BDT( Int_t itree, TString wfile = "weights/TMVAnalysis_test_BDT.weights.txt", TString methName = "BDT", Bool_t useTMVAStyle = kTRUE ) ;
+   void BDT(TString dataset, Int_t itree, TString wfile , TString methName = "BDT", Bool_t useTMVAStyle = kTRUE ) ;
 
 }
 #endif
