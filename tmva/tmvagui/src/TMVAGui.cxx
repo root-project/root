@@ -239,7 +239,7 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
    title = Form( "(%ib) Network Convergence Test (MLP)", ic );
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::annconvergencetest(\"%s\")", fName ), 
+                 Form( "TMVA::annconvergencetest(\"%s\",\"%s\")",dataset.Data(), fName ), 
                  "Plots error estimator versus training epoch for training and test samples (macro annconvergencetest.C)",
                  buttonType, "MLP" );
 

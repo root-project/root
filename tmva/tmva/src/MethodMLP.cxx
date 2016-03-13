@@ -138,8 +138,7 @@ TMVA::MethodMLP::~MethodMLP()
 
 void TMVA::MethodMLP::Train()
 { 
-SetMethodBaseDir(MethodBaseDir()->GetDirectory("Method_MLP"));
-Train(NumCycles()); 
+  Train(NumCycles()); 
 }
 
 
