@@ -265,14 +265,14 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
    title = Form( "(%i) Plot Foams (PDEFoam)", ++ic );
    ActionButton( cbar,  
                  title,
-                 Form("TMVA::PlotFoams(\"weights/TMVAClassification_PDEFoam.weights_foams.root\")"),
+                 Form("TMVA::PlotFoams(\"%s/weights/TMVAClassification_PDEFoam.weights_foams.root\")",dataset.Data()),
                  "Plot Foams (macro PlotFoams.cxx)",
                  buttonType, "PDEFoam" );
 
    title = Form( "(%i) General Boost Control Plots", ++ic );
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::BoostControlPlots(\"%s\")", fName ),
+                 Form( "TMVA::BoostControlPlots(\"%s\",\"%s\")",dataset.Data() , fName ),
                  "Plots to monitor boosting of general classifiers (macro BoostControlPlots)",
                  buttonType, "Boost" );
 

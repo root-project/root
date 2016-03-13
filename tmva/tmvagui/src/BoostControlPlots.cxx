@@ -9,19 +9,18 @@
 // input: - Input file (result from TMVA),
 //        - use of TMVA plotting TStyle
 // this macro is based on BDTControlPlots.C
-void TMVA::BoostControlPlots( TString fin , Bool_t useTMVAStyle  )
+void TMVA::BoostControlPlots(TString dataset, TString fin , Bool_t useTMVAStyle  )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
   
    // checks if file with name "fin" is already open, and if not opens one
-   //TFile* file =
-   TMVAGlob::OpenFile( fin );  
+   TFile* file = TMVAGlob::OpenFile( fin );  
 
    // get all titles of the method Boost
    TList titles;
    TString dirname="Method_Boost";
-   UInt_t ninst = TMVA::TMVAGlob::GetListOfTitles(dirname,titles);
+   UInt_t ninst = TMVA::TMVAGlob::GetListOfTitles(dirname,titles,file->GetDirectory(dataset.Data()));
    if (ninst==0) {
       cout << "Could not locate directory 'Method_Boost' in file " << fin << endl;
       return;
@@ -32,11 +31,11 @@ void TMVA::BoostControlPlots( TString fin , Bool_t useTMVAStyle  )
    TKey *key;
    while ((key = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
       boostdir = (TDirectory *)key->ReadObj();
-      boostcontrolplots( boostdir );
+      boostcontrolplots(dataset, boostdir );
    }
 }
 
-void TMVA::boostcontrolplots( TDirectory *boostdir ) {
+void TMVA::boostcontrolplots(TString dataset, TDirectory *boostdir ) {
 
    const Int_t nPlots = 6;
 
@@ -133,7 +132,7 @@ void TMVA::boostcontrolplots( TDirectory *boostdir ) {
    }
 
    // write to file
-   TString fname = Form( "plots/%s_ControlPlots", titName.Data() );
+   TString fname = dataset+Form( "/plots/%s_ControlPlots", titName.Data() );
    TMVAGlob::imgconv( c, fname );
 
 }
