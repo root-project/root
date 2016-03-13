@@ -246,7 +246,7 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
    title = Form( "(%i) Decision Trees (BDT)", ++ic );
    ActionButton( cbar,  
                  title,
-                 Form( "TMVA::BDT(\"%s\")", fName ),
+                 Form( "TMVA::BDT(\"%s\",\"%s\")",dataset.Data() , fName ),
                  "Plots the Decision Trees trained by BDT algorithms (macro BDT(itree,...))",
                  buttonType, "BDT" );
    
