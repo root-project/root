@@ -102,6 +102,7 @@ TMVA::MethodMLP::MethodMLP( const TString& jobName,
      fDeviationsFromTargets(0),
      fWeightRange     (1.0)
 {
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,6 +135,14 @@ TMVA::MethodMLP::MethodMLP( DataSetInfo& theData,
 TMVA::MethodMLP::~MethodMLP()
 {
 }
+
+void TMVA::MethodMLP::Train()
+{ 
+SetMethodBaseDir(MethodBaseDir()->GetDirectory("Method_MLP"));
+Train(NumCycles()); 
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// MLP can handle classification with 2 classes and regression with one regression-target
@@ -225,6 +234,7 @@ void TMVA::MethodMLP::DeclareOptions()
                     "Take the events for the estimator calculations from small deviations from the desired value to large deviations only over the weight range");
 
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// process user options
