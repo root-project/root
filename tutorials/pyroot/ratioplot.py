@@ -1,8 +1,13 @@
-#!/usr/bin/env python
-# ratioplot.py - example displaying two histograms and their ratio
-#   Original c++ code: Olivier Couet
-#   Python port: Michael Moran
-
+## \file
+## \ingroup tutorial_pyroot
+## Display two histograms and their ratio.
+##
+## This program illustrates how to plot two histograms and their
+## ratio on the same canvas. Original macro by Olivier Couet.
+##
+## \macro_code
+##
+## \author Michael Moran
 
 from ROOT import TCanvas, TColor, TGaxis, TH1F, TPad
 from ROOT import kBlack, kBlue, kRed
