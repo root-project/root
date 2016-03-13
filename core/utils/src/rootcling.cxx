@@ -4070,6 +4070,7 @@ int RootCling(int argc,
    bool multiDict = false;
    bool writeEmptyRootPCM = false;
    bool selSyntaxOnly = false;
+   bool noIncludePaths = false;
 
    // Temporary to decide if the new format is to be used
    bool useNewRmfFormat = true;
@@ -4188,6 +4189,12 @@ int RootCling(int argc,
             continue;
          }
 
+         if (strcmp("-noIncludePaths", argv[ic]) == 0) {
+            noIncludePaths = true;
+            ic += 1;
+            continue;
+         }
+
          if (int skip = ShouldIgnoreClingArgument(argv[ic])) {
             ic += skip;
             continue;
@@ -4215,8 +4222,10 @@ int RootCling(int argc,
 
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
-      if (clingArgs[parg] != "-c")
-         pcmArgs.push_back(clingArgs[parg]);
+      auto thisArg = clingArgs[parg];
+      if (thisArg == "-c" ||
+          (noIncludePaths && ROOT::TMetaUtils::BeginsWith(thisArg,"-I"))) continue;
+      pcmArgs.push_back(thisArg);
    }
 
    // cling-only arguments
@@ -5098,6 +5107,7 @@ namespace genreflex {
                        bool isDeep,
                        bool writeEmptyRootPCM,
                        bool selSyntaxOnly,
+                       bool noIncludePaths,
                        const std::vector<std::string> &headersNames,
                        bool failOnWarnings,
                        const std::string &ofilename)
@@ -5196,6 +5206,10 @@ namespace genreflex {
       if (selSyntaxOnly)
          argvVector.push_back(string2charptr("-selSyntaxOnly"));
 
+      // No include paths
+      if (noIncludePaths)
+         argvVector.push_back(string2charptr("-noIncludePaths"));
+
       // Fail on warnings
       if (failOnWarnings)
          argvVector.push_back(string2charptr("-failOnWarnings"));
@@ -5256,6 +5270,7 @@ namespace genreflex {
                            bool isDeep,
                            bool writeEmptyRootPCM,
                            bool selSyntaxOnly,
+                           bool noIncludePaths,
                            const std::vector<std::string> &headersNames,
                            bool failOnWarnings,
                            const std::string &outputDirName_const = "")
@@ -5293,6 +5308,7 @@ namespace genreflex {
                                           isDeep,
                                           writeEmptyRootPCM,
                                           selSyntaxOnly,
+                                          noIncludePaths,
                                           namesSingleton,
                                           failOnWarnings,
                                           ofilenameFullPath);
@@ -5408,6 +5424,7 @@ int GenReflex(int argc, char **argv)
                        SPLIT,
                        NOMEMBERTYPEDEFS,
                        NOTEMPLATETYPEDEFS,
+                       NOINCLUDEPATHS,
                        // Don't show up in the help
                        PREPROCDEFINE,
                        PREPROCUNDEFINE,
@@ -5676,6 +5693,14 @@ int GenReflex(int argc, char **argv)
          "--selSyntaxOnly\tValidate selection file w/o generating the dictionary.\n"
       },
 
+      {
+         NOINCLUDEPATHS,
+         NOTYPE ,
+         "" , "noIncludePaths",
+         ROOT::option::Arg::None,
+         "--noIncludePaths\tDo not store the include paths. Rely at runtime on the ROOT_INCLUDE_PATH.\n"
+      },
+
       // Left intentionally empty not to be shown in the help, like in the first genreflex
       {
          INCLUDE,
@@ -5853,6 +5878,11 @@ int GenReflex(int argc, char **argv)
       selSyntaxOnly = true;
    }
 
+   bool noIncludePaths = false;
+   if (options[NOINCLUDEPATHS]) {
+      noIncludePaths = true;
+   }
+
    bool failOnWarnings = false;
    if (options[FAILONWARNINGS]) {
       failOnWarnings = true;
@@ -5921,6 +5951,7 @@ int GenReflex(int argc, char **argv)
                                     isDeep,
                                     writeEmptyRootPCM,
                                     selSyntaxOnly,
+                                    noIncludePaths,
                                     headersNames,
                                     failOnWarnings,
                                     ofileName);
@@ -5944,6 +5975,7 @@ int GenReflex(int argc, char **argv)
                                         isDeep,
                                         writeEmptyRootPCM,
                                         selSyntaxOnly,
+                                        noIncludePaths,
                                         headersNames,
                                         failOnWarnings,
                                         ofileName);
