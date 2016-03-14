@@ -921,9 +921,12 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    functions.insert(make_pair(make_pair("gaus",2),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2)","")));
    functions.insert(make_pair(make_pair("landau",2),make_pair("[0]*TMath::Landau({V0},[1],[2],false)*TMath::Landau({V1},[3],[4],false)","")));
    functions.insert(make_pair(make_pair("expo",2),make_pair("exp([0]+[1]*{V0})","exp([0]+[1]*{V0}+[2]*{V1})")));
+   // gaussian with correlations
+   functions.insert(make_pair(make_pair("bigaus",2),make_pair("[0]*ROOT::Math::bigaussian_pdf({V0},{V1},[2],[4],[5],[1],[3])","[0]*ROOT::Math::bigaussian_pdf({V0},{V1},[2],[4],[5],[1],[3])")));
 
    map<TString,Int_t> functionsNumbers;
    functionsNumbers["gaus"] = 100;
+   functionsNumbers["bigaus"] = 102;
    functionsNumbers["landau"] = 400;
    functionsNumbers["expo"] = 200;
    functionsNumbers["crystalball"] = 500;
@@ -932,11 +935,14 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    formula.ReplaceAll("xygaus","gaus[x,y]");
    formula.ReplaceAll("xylandau","landau[x,y]");
    formula.ReplaceAll("xyexpo","expo[x,y]");
+   // at the moment pre-defined functions have no more than 3 dimensions
+   const char * defaultVariableNames[] = { "x","y","z"};  
 
    for(map<pair<TString,Int_t>,pair<TString,TString> >::iterator it = functions.begin(); it != functions.end(); ++it)
    {
 
       TString funName = it->first.first;
+      Int_t funDim = it->first.second; 
       Int_t funPos = formula.Index(funName);
 
 
@@ -950,7 +956,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 
          // check that first and last character is not alphanumeric
          Int_t iposBefore = funPos - 1;
-         //std::cout << "looping on  funpos is " << funPos << " formula is " << formula << std::endl;
+         //std::cout << "looping on  funpos is " << funPos << " formula is " << formula << " function " << funName << std::endl;
          if (iposBefore >= 0) {
             assert( iposBefore < formula.Length() );
             if (isalpha(formula[iposBefore] ) ) {
@@ -981,17 +987,18 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          std::vector<TString> variables;
          Int_t dim = 0;
          TString varList = "";
-         Bool_t defaultVariable = false;
+         Bool_t defaultVariables = false;
 
          // check if function has specified the [...] e.g. gaus[x,y]
          Int_t openingBracketPos = funPos + funName.Length() + (isNormalized ? 1 : 0);
          Int_t closingBracketPos = kNPOS;
          if(openingBracketPos > formula.Length() || formula[openingBracketPos] != '[')
          {
-            dim = 1;
+            dim = funDim;
             variables.resize(dim);
-            variables[0] = "x";
-            defaultVariable = true;
+            for (Int_t idim = 0; idim < dim; ++idim)
+               variables[idim] = defaultVariableNames[idim];
+            defaultVariables = true;
          }
          else
          {
@@ -1021,12 +1028,13 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             }
          }
          // chech if dimension obtained from [...] is compatible with existing pre-defined functions
-         if(dim != it->first.second)
+         if(dim != funDim)
          {
             pair<TString,Int_t> key = make_pair(funName,dim);
             if(functions.find(key) == functions.end())
             {
-               Error("PreProcessFormula","%d dimension function %s is not defined as parametrized function.",dim,funName.Data());
+               Error("PreProcessFormula","Dimension of function %s is dedected to be of dimension %d and is not compatible with existing pre-dedined function which has dim %d",
+                     funName.Data(),dim,funDim);
                return;
             }
             break;
@@ -1085,27 +1093,27 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             }
          }
          TString pattern;
-         if(defaultCounter && defaultVariable)
+         if(defaultCounter && defaultVariables)
          {
             pattern = TString::Format("%s%s",
                            funName.Data(),
                            (isNormalized ? "n" : ""));
          }
-         if(!defaultCounter && defaultVariable)
+         if(!defaultCounter && defaultVariables)
          {
             pattern = TString::Format("%s%s(%d)",
                            funName.Data(),
                            (isNormalized ? "n" : ""),
                            counter);
          }
-         if(defaultCounter && !defaultVariable)
+         if(defaultCounter && !defaultVariables)
          {
             pattern = TString::Format("%s%s[%s]",
                            funName.Data(),
                            (isNormalized ? "n":""),
                            varList.Data());
          }
-         if(!defaultCounter && !defaultVariable)
+         if(!defaultCounter && !defaultVariables)
          {
             pattern = TString::Format("%s%s[%s](%d)",
                            funName.Data(),
@@ -1119,6 +1127,8 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          if (fNumber == 0 && formula.Length() <= (pattern.Length()-funPos) +1 ) { // leave 1 extra
             fNumber = functionsNumbers[funName] + 10*(dim-1);
          }
+
+         //std::cout << " replace " << pattern << " with " << replacement << std::endl;
 
          formula.Replace(funPos,pattern.Length(),replacement,replacement.Length());
 
@@ -1899,6 +1909,15 @@ void TFormula::SetPredefinedParamNames() {
       SetParName(2,"SigmaX");
       SetParName(3,"MeanY");
       SetParName(4,"SigmaY");
+      return;
+   }
+   if (fNumber == 112) {  // bigaus
+      SetParName(0,"Constant");
+      SetParName(1,"MeanX");
+      SetParName(2,"SigmaX");
+      SetParName(3,"MeanY");
+      SetParName(4,"SigmaY");
+      SetParName(5,"Rho");
       return;
    }
    if (fNumber == 200) { // exponential
