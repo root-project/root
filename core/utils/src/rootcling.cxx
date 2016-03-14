@@ -196,7 +196,9 @@ const char *rootClingHelp =
    " -inlineInputHeader\tAdd the argument header to the code of the dictionary  \n"
    "  This allows the header to be inlined within the dictionary.               \n"
    "                                                                            \n"
-   " -interpreteronly\tNo IO information in the dictionary                      \n";
+   " -interpreteronly\tNo IO information in the dictionary                      \n"
+   " -noIncludePaths\tDon't keep track of the include paths passed to rootcling \n";
+
 
 
 #include "RConfigure.h"
