@@ -123,7 +123,8 @@ RooFitResult::~RooFitResult()
   if (_CM) delete _CM ;
   if (_VM) delete _VM ;
   if (_GC) delete _GC ;
-
+  
+  _corrMatrix.RemoveAll();
   _corrMatrix.Delete();
 
   removeFromDir(this) ;
@@ -1390,7 +1391,9 @@ void RooFitResult::Streamer(TBuffer &R__b)
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);     
     if (R__v>3) {    
-      R__b.ReadClassBuffer(RooFitResult::Class(),this,R__v,R__s,R__c);    
+      R__b.ReadClassBuffer(RooFitResult::Class(),this,R__v,R__s,R__c);
+      RooAbsArg::ioStreamerPass2Finalize();
+      _corrMatrix.SetOwner();
     } else {
       // backward compatibitily streaming 
       TNamed::Streamer(R__b);
