@@ -2617,38 +2617,19 @@ void GetMostExternalEnclosingClassNameFromDecl(const clang::Decl &theDecl,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void ExtractTypedefAutoloadKeys(std::list<std::string> &tdNames,
-                                const std::vector<clang::TypedefNameDecl *> &typedefDecls,
-                                const cling::Interpreter &interp)
+template<class COLL>
+int ExtractAutoloadKeys(std::list<std::string> &names,
+                        const COLL &decls,
+                        const cling::Interpreter &interp)
 {
-   if (!typedefDecls.empty()) {
+   if (!decls.empty()) {
       std::string autoLoadKey;
-      for (auto & tDef : typedefDecls) {
+      for (auto & d : decls) {
          autoLoadKey = "";
-         GetMostExternalEnclosingClassNameFromDecl(*tDef, autoLoadKey, interp);
+         GetMostExternalEnclosingClassNameFromDecl(*d, autoLoadKey, interp);
          // If there is an outer class, it is already considered
          if (autoLoadKey.empty()) {
-            tdNames.push_back(tDef->getQualifiedNameAsString());
-         }
-      }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-int ExtractEnumAutoloadKeys(std::list<std::string> &enumNames,
-                            const std::vector<clang::EnumDecl *> &enumDecls,
-                            const cling::Interpreter &interp)
-{
-   if (!enumDecls.empty()) {
-      std::string autoLoadKey;
-      for (auto & en : enumDecls) {
-         autoLoadKey = "";
-         GetMostExternalEnclosingClassNameFromDecl(*en, autoLoadKey, interp);
-         // If there is an outer class, it is already considered
-         if (autoLoadKey.empty()) {
-            enumNames.push_back(en->getQualifiedNameAsString());
+            names.push_back(d->getQualifiedNameAsString());
          }
       }
    }
@@ -2848,21 +2829,7 @@ bool ProcessAndAppendIfNotThere(const std::string &el,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int ExtractNamespacesForVariables(RScanner &scan,
-                                  std::list<std::string> &fwdDeclarationsList)
-{
-   std::unordered_set<std::string> availableFwdDecls;
-   for (auto const & selVar : scan.fSelectedVariables) {
-      std::string fwdDeclaration;
-      int retCode = ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(*selVar, fwdDeclaration);
-      if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
-   }
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
+int  ExtractClassesListAndDeclLines(RScanner &scan,
       std::list<std::string> &classesList,
       std::list<std::string> &classesListForRootmap,
       std::list<std::string> &fwdDeclarationsList,
@@ -2880,6 +2847,19 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
    std::string attrName, attrValue;
    bool isClassSelected;
    std::unordered_set<std::string> availableFwdDecls;
+   std::string fwdDeclaration;
+   for (auto const & selVar : scan.fSelectedVariables) {
+      fwdDeclaration = "";
+      int retCode = ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(*selVar, fwdDeclaration);
+      if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
+   }
+
+   for (auto const & selEnum : scan.fSelectedEnums) {
+      fwdDeclaration = "";
+      int retCode = ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(*selEnum, fwdDeclaration);
+      if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
+   }
+
    // Loop on selected classes and put them in a list
    for (auto const & selClass : scan.fSelectedClasses) {
       isClassSelected = true;
@@ -2902,7 +2882,7 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
       const char *reqName(selClass.GetRequestedName());
 
       // Get always the containing namespace, put it in the list if not there
-      std::string fwdDeclaration;
+      fwdDeclaration = "";
       int retCode = ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(*rDecl, fwdDeclaration);
       if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
 
@@ -2979,7 +2959,7 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
                            classesListForRootmap.push_back(demangledName);
                         } // if demangledName != other name
                      } else {
-                        ROOT::TMetaUtils::Error("ExtractSelectedClassesAndTemplateDefs",
+                        ROOT::TMetaUtils::Error("ExtractClassesListAndDeclLines",
                                                 "Demangled typeinfo name '%s' does not start with 'typeinfo name for'\n",
                                                 demangledTIName);
                      } // if demangled type_info starts with "typeinfo name for "
@@ -4781,11 +4761,6 @@ int RootCling(int argc,
 
    if (doSplit && splitDictStreamPtr) delete splitDictStreamPtr;
 
-   std::list<std::string> varNames;
-   for (auto&& var : scan.fSelectedVariables) {
-      varNames.push_back(var->getQualifiedNameAsString());
-   }
-
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
    HeadersDeclsMap_t headersClassesMap;
@@ -4877,19 +4852,21 @@ int RootCling(int argc,
    std::list<std::string> classesNamesForRootmap;
    std::list<std::string> classesDefsList;
 
-   rootclingRetCode = ExtractSelectedClassesAndTemplateDefs(scan,
-                                                   classesNames,
-                                                   classesNamesForRootmap,
-                                                   classesDefsList,
-                                                   interp);
-
-   rootclingRetCode += ExtractNamespacesForVariables(scan,
-                                                     classesDefsList);
+   rootclingRetCode = ExtractClassesListAndDeclLines(scan,
+                                                     classesNames,
+                                                     classesNamesForRootmap,
+                                                     classesDefsList,
+                                                     interp);
 
    std::list<std::string> enumNames;
-   rootclingRetCode += ExtractEnumAutoloadKeys(enumNames,
-                                      scan.fSelectedEnums,
-                                      interp);
+   rootclingRetCode += ExtractAutoloadKeys(enumNames,
+                                           scan.fSelectedEnums,
+                                           interp);
+
+   std::list<std::string> varNames;
+   rootclingRetCode += ExtractAutoloadKeys(varNames,
+                                           scan.fSelectedVariables,
+                                           interp);
 
    if (0 != rootclingRetCode) return rootclingRetCode;
 
@@ -4918,9 +4895,9 @@ int RootCling(int argc,
       }
 
       std::list<std::string> typedefsRootmapLines;
-      ExtractTypedefAutoloadKeys(typedefsRootmapLines,
-                                 scan.fSelectedTypedefs,
-                                 interp);
+      rootclingRetCode += ExtractAutoloadKeys(typedefsRootmapLines,
+                                              scan.fSelectedTypedefs,
+                                              interp);
 
       rootclingRetCode = CreateNewRootMapFile(rootmapFileName,
                                           rootmapLibName,
