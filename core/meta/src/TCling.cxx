@@ -4434,7 +4434,7 @@ const char* TCling::TypeName(const char* typeDesc)
 
 int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString)
 {
-   // For "class ", "namespace ", "typedef ", "header ", "enum " respectively
+   // For "class ", "namespace ", "typedef ", "header ", "enum ", "var " respectively
    const std::map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8},{'h',7},{'e',5},{'v',4}};
 
    if (rootmapfile && *rootmapfile) {
