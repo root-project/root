@@ -124,7 +124,7 @@ del isfunction, ismethod
 
 ### configuration ---------------------------------------------------------------
 class _Configuration( object ):
-   __slots__ = [ 'IgnoreCommandLineOptions', 'StartGuiThread', 'ExposeCppMacros', 
+   __slots__ = [ 'IgnoreCommandLineOptions', 'StartGuiThread', 'ExposeCppMacros',
                  '_gts', 'DisableRootLogon' ]
 
    def __init__( self ):
@@ -565,10 +565,6 @@ class ModuleFacade( types.ModuleType ):
 
     # set the display hook
       sys.displayhook = _displayhook
-
-    # manually load libMathCore, for example to obtain gRandom
-    # This can be removed once autoloading on selected variables is available
-      _root.gSystem.Load( "libMathCore" )
 
 sys.modules[ __name__ ] = ModuleFacade( sys.modules[ __name__ ] )
 del ModuleFacade
