@@ -177,19 +177,19 @@ void TMVA::TMVARegGui( const char* fName ,TString dataset)
 
    RegGuiActionButton( cbar,  
                  Form( "(%ia) Network Architecture", ++ic ),
-                 Form( "TMVA::network(\"%s\")", fName ), 
+                 Form( "TMVA::network(\"%s\",\"%s\")",dataset.Data(), fName ), 
                  "Plots the MLP weights (macro network.cxx)",
                  buttonType, "MLP" );
 
    RegGuiActionButton( cbar,  
                  Form( "(%ib) Network Convergence Test", ic ),
-                 Form( "TMVA::annconvergencetest(\"%s\")", fName ), 
+                 Form( "TMVA::annconvergencetest(\"%s\",\"%s\")",dataset.Data() , fName ), 
                  "Plots error estimator versus training epoch for training and test samples (macro annconvergencetest.cxx)",
                  buttonType, "MLP" );
 
    RegGuiActionButton( cbar,  
                  Form( "(%i) Plot Foams", ++ic ),
-                 "TMVA::PlotFoams(\"weights/TMVARegression_PDEFoam.weights_foams.root\")",
+                 Form("TMVA::PlotFoams(\"%s/weights/TMVARegression_PDEFoam.weights_foams.root\")",dataset.Data()),
                  "Plot Foams (macro PlotFoams.cxx)",
                  buttonType, "PDEFoam" );
 
