@@ -387,9 +387,7 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
    Int_t  offset = 0;
 
    Long_t endpos = Long_t(fBuffer) + startpos + bcnt + sizeof(UInt_t);
-   printf("In TBufferFile::CheckByteCount, startpos=%u, bcnt=%u, endpos=%ld\n", startpos, bcnt, endpos);
-   if(fBufCur)printf("fBufCur=%ld\n",Long_t(fBufCur));//##
-   else printf("fBufCur=0\n");//##
+   printf("In TBufferFile::CheckByteCount, fBuffer=%ld, startpos=%u, bcnt=%u, endpos=%ld, fBufCur=%ld\n", Long_t(fBuffer), startpos, bcnt, endpos, fBufCur);
    if (Long_t(fBufCur) != endpos) {
       offset = Int_t(Long_t(fBufCur) - endpos);
 
@@ -3989,6 +3987,7 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
          printf("In loop all active members, TConfiguredAction=%s\n",(*iter).GetName());
          (*iter).PrintDebug(*this,obj);//##
          (*iter)(*this,obj);
+         printf("In loop all active members, end\n");
       }
    }
 
