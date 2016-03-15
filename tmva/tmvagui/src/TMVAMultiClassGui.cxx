@@ -177,14 +177,14 @@ void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset)
    title =Form( "(%ia) Classifier Output Distributions (test sample)", ++ic );
    MultiClassActionButton( cbar,  
                  title,
-                 Form( "TMVA::mvasMulticlass(\"%s\",TMVA::kMVAType)", fName ),
+                 Form( "TMVA::mvasMulticlass(\"%s\",\"%s\",TMVA::kMVAType)",dataset.Data() , fName ),
                  "Plots the output of each classifier for the test data (macro mvas(...,0))",
                  buttonType, defaultRequiredClassifier );
 
    title =Form( "(%ib) Classifier Output Distributions (test and training samples superimposed)", ic );
    MultiClassActionButton( cbar,  
                  title,
-                 Form( "TMVA::mvasMulticlass(\"%s\",TMVA::kCompareType)", fName ),
+                 Form( "TMVA::mvasMulticlass(\"%s\",\"%s\",TMVA::kCompareType)",dataset.Data(), fName ),
                  "Plots the output of each classifier for the test (histograms) and training (dots) data (macro mvas(...,3))",
                  buttonType, defaultRequiredClassifier );
    /*
@@ -247,7 +247,7 @@ void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset)
    */
    
    title = Form( "(%ia) Network Architecture (MLP)", ++ic );
-   TString call = Form( "TMVA::network(\"%s\")", fName );
+   TString call = Form( "TMVA::network(\"%s\",\"%s\")",dataset.Data() , fName );
    MultiClassActionButton( cbar,  
                  title,
                  call, 
@@ -257,14 +257,14 @@ void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset)
    title = Form( "(%ib) Network Convergence Test (MLP)", ic );
    MultiClassActionButton( cbar,  
                  title,
-                 Form( "TMVA::annconvergencetest(\"%s\")", fName ), 
+                 Form( "TMVA::annconvergencetest(\"%s\",\"%s\")",dataset.Data() , fName ), 
                  "Plots error estimator versus training epoch for training and test samples (macro annconvergencetest.cxx)",
                  buttonType, "MLP" );
 
    title = Form( "(%i) Decision Trees (BDT)", ++ic );
    MultiClassActionButton( cbar,  
                  title,
-                 Form( "TMVA::BDT(\"%s\")", fName ),
+                 Form( "TMVA::BDT(\"%s\",\"%s\")",dataset.Data() , fName ),
                  "Plots the Decision Trees trained by BDT algorithms (macro BDT(itree,...))",
                  buttonType, "BDT" );
 
@@ -280,7 +280,7 @@ void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset)
    title = Form( "(%i) Plot Foams (PDEFoam)", ++ic );
    MultiClassActionButton( cbar,  
                  title,
-                 "TMVA::PlotFoams(\"weights/TMVAMulticlass_PDEFoam.weights_foams.root\")",
+                 Form("TMVA::PlotFoams(\"%s/weights/TMVAMulticlass_PDEFoam.weights_foams.root\")",dataset.Data()),
                  "Plot Foams (macro PlotFoams.cxx)",
                  buttonType, "PDEFoam" );
    /*
