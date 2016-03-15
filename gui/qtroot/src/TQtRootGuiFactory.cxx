@@ -8,14 +8,6 @@
 **
 *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-/// PluginManager creation function
-
-TGuiFactory* ROOT_Plugin_TQtRootGuiFactory() {
-   return new TQtRootGuiFactory();
-}
-
-
 //________________________________________________________________________
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -51,6 +43,14 @@ TGuiFactory* ROOT_Plugin_TQtRootGuiFactory() {
 #include "TRootContextMenu.h"
 
 #include "TGQt.h"
+
+//////////////////////////////////////////////////////////////////////////
+/// PluginManager creation function
+
+TGuiFactory* ROOT_Plugin_TQtRootGuiFactory() {
+   return new TQtRootGuiFactory();
+}
+
 
 TGClient *TQtRootGuiFactory::gfQtClient = 0;
 ClassImp(TQtRootGuiFactory)
