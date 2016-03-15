@@ -47,7 +47,7 @@ void TMVA::MultiClassActionButton( TControlBar* cbar,
 }
 
 // main GUI
-void TMVA::TMVAMultiClassGui( const char* fName ) 
+void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset) 
 {   
    // Use this script in order to run the various individual macros
    // that plot the output of TMVA (e.g. running TMVAClassification.cxx),
@@ -79,8 +79,42 @@ void TMVA::TMVAMultiClassGui( const char* fName )
       std::cout << "==> Abort TMVAMultiClassGui, please verify filename" << std::endl;
       return;
    }
+   
+   if(file->GetListOfKeys()->GetEntries()<=0)
+   {
+      cout << "==> Abort TMVAGui, please verify if dataset exist" << endl;
+      return;
+   }
+   if( (dataset==""||dataset.IsWhitespace()) && (file->GetListOfKeys()->GetEntries()==1))
+   {
+       TKey *key=(TKey*)file->GetListOfKeys()->At(0);
+       dataset=key->GetName();
+   }else if((dataset==""||dataset.IsWhitespace()) && (file->GetListOfKeys()->GetEntries()>=1))
+   {
+       gROOT->Reset();
+       gStyle->SetScreenFactor(2); // if you have a large screen, select 1,2 or 1.4
+       
+       TControlBar *bar=new TControlBar("vertical","Select dataset", 0, 0);
+       bar->SetButtonWidth(300);
+       for(int i=0;i<file->GetListOfKeys()->GetEntries();i++)
+       {
+           TKey *key=(TKey*)file->GetListOfKeys()->At(i);
+           dataset=key->GetName();
+           bar->AddButton(dataset.Data(),Form("TMVA::TMVAMultiClassGui(\"%s\",\"%s\")",fName,dataset.Data()),dataset.Data());
+       }
+       
+       bar->AddSeparator();
+       bar->AddButton( "Quit",   ".q", "Quit", "button");
+
+       // set the style 
+       bar->SetTextColor("black");
+       bar->Show();
+       gROOT->SaveContext();
+       return ;
+   }
+   
    // find all references   
-   TMVAMultiClassGui_keyContent = (TList*)file->GetListOfKeys()->Clone();
+   TMVAMultiClassGui_keyContent = (TList*)file->GetDirectory(dataset.Data())->GetListOfKeys()->Clone();
 
    //close file
    file->Close();
@@ -110,7 +144,7 @@ void TMVA::TMVAMultiClassGui( const char* fName )
       if (tmp.Contains( "Id" )) title = "Input variables (training sample)";
       MultiClassActionButton( cbar, 
                     Form( "(%i%c) %s", ic, ch++, title.Data() ),
-                    Form( "TMVA::variablesMultiClass(\"%s\",\"%s\",\"%s\")", fName, str->GetString().Data(), title.Data() ),
+                    Form( "TMVA::variablesMultiClass(\"%s\",\"%s\",\"%s\",\"%s\")",dataset.Data(), fName, str->GetString().Data(), title.Data() ),
                     Form( "Plots all '%s'-transformed input variables (macro variablesMultiClass(...))", str->GetString().Data() ),
                     buttonType, str->GetString() );
    }      
