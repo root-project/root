@@ -1052,32 +1052,22 @@ TMatrixDSym RooFitResult::reducedCovarianceMatrix(const RooArgList& params) cons
     }
   }
   delete iter ;
-
-  // Need to order params in vector in same order as in covariance matrix
-  RooArgList params3 ;
-  iter = _finalPars->createIterator() ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    if (params2.find(arg->GetName())) {
-      params3.add(*arg) ;
-    }
-  }
-  delete iter ;
-
-  // Find (subset) of parameters that are stored in the covariance matrix
-  vector<int> map1, map2 ;
-  for (int i=0 ; i<_finalPars->getSize() ; i++) {
-    if (params3.find(_finalPars->at(i)->GetName())) {
-      map1.push_back(i) ;
-    } else {
-      map2.push_back(i) ;
-    }
-  }
-
-  TMatrixDSym S11, S22 ;
-  TMatrixD S12, S21 ;
-  RooMultiVarGaussian::blockDecompose(V,map1,map2,S11,S12,S21,S22) ;
-
-  return S11 ;
+   
+   // fix for bug ROOT-8044
+   // use same order given bby vector params
+   vector<int> indexMap(params2.getSize());
+   for (int i=0 ; i<params2.getSize() ; i++) {
+      indexMap[i] = _finalPars->index(params2[i].GetName());
+      assert(indexMap[i] < V.GetNrows());
+   }
+   
+   TMatrixDSym Vred(indexMap.size());
+   for (int i = 0; i < Vred.GetNrows(); ++i) {
+      for (int j = 0; j < Vred.GetNcols(); ++j) {
+         Vred(i,j) = V( indexMap[i], indexMap[j]);
+      }
+   }
+   return Vred;
 }
 
 
