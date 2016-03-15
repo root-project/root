@@ -31,7 +31,7 @@ int main(int argc, char **argv)
    if (argc > 3)  read   = atoi(argv[3]);
    if (argc > 4)  small  = atoi(argv[4]);
 
-   gROOT->SetRandomAccessCompression(1);
+//   gROOT->SetRandomAccessCompression(1);
 
    Int_t branchStyle = 1; //new style by default
 
