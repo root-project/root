@@ -1,11 +1,12 @@
 // @(#)root/netx:$Id$
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -27,6 +28,15 @@
 #include <XrdCl/XrdClFileSystem.hh>
 #include <XrdCl/XrdClXRootDResponses.hh>
 #include <XrdSys/XrdSysDNS.hh>
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// PluginManager creation function
+
+TSystem* ROOT_Plugin_TNetXNGSystem(const char *url, Bool_t owner) {
+   return new TNetXNGSystem(url, owner);
+}
+
 
 ClassImp(TNetXNGSystem);
 
